@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!-- Screenshot/dev harness: seeds state to skip the disclaimer and
+     jumps to a screen via #path / #stats / #settings / #lesson / #pop / #done / #fail -->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>قدراتي — معاينة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script>
+  window.onerror = function (msg, src, line, col) {
+    var d = document.createElement("div");
+    d.style.cssText = "position:fixed;top:0;left:0;right:0;background:#FF4B4B;color:#fff;font:14px monospace;padding:8px;z-index:9999;direction:ltr;white-space:pre-wrap";
+    d.textContent = "JS ERROR: " + msg + "\n" + (src || "").split("/").pop() + ":" + line + ":" + col;
+    (document.body || document.documentElement).appendChild(d);
+  };
+  localStorage.setItem("qudratState", JSON.stringify({
+    v: 1, disclaimer: true, track: "sci", sound: false,
+    user: location.hash === "#login" ? null : { name: "سارة", guest: false },
+    xp: 527, streak: { count: 12, last: null },
+    lessons: { "arithmetic.fractions": { stars: 3, plays: 1 } },
+    qstats: {}
+  }));
+</script>
+</head>
+<body>
+  <div id="app" class="app"></div>
+  <script src="js/data/arithmetic.js"></script>
+  <script src="js/data/algebra.js"></script>
+  <script src="js/data/geometry.js"></script>
+  <script src="js/data/statistics.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    (function () {
+      const h = location.hash.replace("#", "") || "path";
+      if (["stats", "settings"].includes(h)) A.go(h);
+      else if (h === "lesson") {
+        const d = window.QBANK.arithmetic;
+        A.startLesson("arithmetic", d.lessons[0].key);
+      } else if (h === "pop") {
+        const node = document.querySelector(".node:not(.node-locked):not(.node-done)");
+        if (node) node.click();
+      } else if (h === "fb") {
+        const d = window.QBANK.arithmetic;
+        A.startLesson("arithmetic", d.lessons[0].key);
+        A.pick(0); A.check();
+      } else if (h === "done") {
+        const d = window.QBANK.arithmetic;
+        A.startLesson("arithmetic", d.lessons[0].key);
+        for (let i = 0; i < 200 && document.querySelector(".choices .choice"); i++) {
+          A.pick(A.debugCurrent().answer); A.check(); A.next();
+        }
+      } else if (h === "fail") {
+        const d = window.QBANK.arithmetic;
+        A.startLesson("arithmetic", d.lessons[0].key);
+        for (let i = 0; i < 3; i++) {
+          const q = A.debugCurrent();
+          A.pick((q.answer + 1) % (q.format === "comparison" ? 4 : q.choices.length));
+          A.check(); A.next();
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

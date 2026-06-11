@@ -1,0 +1,14 @@
+# Dev / local
+node_modules/
+.claude/
+*.log
+.env
+
+# Local scratch files (dev notes, not part of the app)
+figkit.json
+WelcomeSVG.txt
+قدرات GAME.txt
+
+# OS
+Thumbs.db
+.DS_Store
