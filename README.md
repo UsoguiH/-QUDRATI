@@ -8,10 +8,14 @@
 
 عربية بالكامل · واجهة RTL · بدون خادم · بدون تثبيت
 
+[![Play Now](https://img.shields.io/badge/%F0%9F%8E%AE%20%D8%A7%D9%84%D8%B9%D8%A8%20%D8%A7%D9%84%D8%A2%D9%86-qudrati--lime.vercel.app-58cc02.svg?style=for-the-badge)](https://qudrati-lime.vercel.app/)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Made with Vanilla JS](https://img.shields.io/badge/Made%20with-Vanilla%20JS-f7df1e.svg)](js/app.js)
 [![RTL Arabic](https://img.shields.io/badge/%D8%A7%D9%84%D9%84%D8%BA%D8%A9-%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9-2ecc71.svg)](#)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#-المساهمة)
+
+**[🎮 جرّب اللعبة الآن — qudrati-lime.vercel.app](https://qudrati-lime.vercel.app/)**
 
 [📱 تحميل تطبيق أندرويد (APK)](Qudrati.apk) · [🚀 التشغيل](#-التشغيل) · [✨ الميزات](#-الميزات) · [➕ إضافة أسئلة](#-إضافة-أسئلة)
 
@@ -37,7 +41,9 @@
 
 ## 🚀 التشغيل
 
-لا يحتاج خادماً ولا تثبيتاً:
+**أسرع طريقة:** العب مباشرة من المتصفح — **[qudrati-lime.vercel.app](https://qudrati-lime.vercel.app/)** 🎮
+
+أو شغّلها محلياً (لا تحتاج خادماً ولا تثبيتاً):
 
 1. حمّل المشروع أو انسخه:
    ```bash
@@ -117,6 +123,8 @@ node tools/validate.js
 ## QUDRATI — Duolingo-style GAT Quantitative Trainer
 
 A fully Arabic, RTL, dependency-free web game for practicing the quantitative section of the Saudi General Aptitude Test (GAT / Qiyas) — Duolingo style.
+
+**▶️ Play it now: [qudrati-lime.vercel.app](https://qudrati-lime.vercel.app/)**
 
 **Highlights**
 
