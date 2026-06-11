@@ -299,76 +299,78 @@ svg.ic { display: block; }
 @keyframes flakeSpin { to { transform: rotate(360deg); } }
 
 /* ============================================================
-   In-level hint power-ups — sit under the choices; gem-paid,
-   Duolingo-style chunky buttons with a colored icon badge
+   In-level hint power-ups — a floating "+" beside the check
+   button; tapping it GOOEY-blooms the two power-up bubbles out
+   of it (SVG #goo filter melts them together like liquid)
    ============================================================ */
-.hint-bar {
-  max-width: 430px; margin: 20px auto 6px; padding-top: 14px;
-  border-top: 2px dashed var(--line);
-  animation: fadeUp .4s ease backwards;
-}
-.hint-bar-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.hint-bar-title { font-weight: 800; font-size: 15px; color: var(--gray); }
-.hint-bal {
-  display: flex; align-items: center; gap: 5px;
-  font-weight: 800; font-size: 15px; color: var(--blue);
-  background: var(--blue-light); border-radius: 999px; padding: 4px 12px;
-}
-.hint-row { display: flex; gap: 12px; }
-/* The real Duolingo button: solid colored bottom "lip", and an INSTANT
-   press (no transition on transform/box-shadow) that pushes flush onto
-   the lip. Each flavor sets --lip / --edge / --ink. */
-.hint-btn {
-  --lip: var(--gray-shadow); --edge: var(--line); --ink: var(--ink);
-  position: relative;
-  flex: 1; min-width: 0;
-  display: flex; align-items: center; gap: 10px;
-  background: #fff; border: 2px solid var(--edge); border-radius: 16px;
-  box-shadow: 0 4px 0 var(--lip);
-  padding: 11px 12px; font-family: var(--font); color: var(--ink);
-  cursor: pointer; user-select: none;
-  transition: background .18s, border-color .18s, opacity .15s; /* NOT transform/shadow → snappy */
-  animation: hintPop .45s cubic-bezier(.3,1.6,.5,1) backwards;
-}
-.hint-row .hint-btn:nth-child(2) { animation-delay: .08s; }
-@keyframes hintPop { 0% { opacity: 0; transform: translateY(14px) scale(.9); } 100% { opacity: 1; transform: none; } }
-/* the tactile push: down by the lip height, lip collapses to 0 — instant */
-.hint-btn:not(:disabled):active { transform: translateY(4px); box-shadow: 0 0 0 var(--lip); }
-.hint-btn:disabled { cursor: default; }
-.hint-btn:disabled:not(.used) { opacity: .5; }
-.hint-badge {
-  flex-shrink: 0; width: 38px; height: 38px; border-radius: 12px;
-  display: flex; align-items: center; justify-content: center;
-  color: #fff; font-weight: 900; font-size: 18px;
-}
-.hint-badge svg { width: 22px; height: 22px; }
-.hint-txt { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
-.hint-label { font-weight: 800; font-size: 14px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.hint-cost { display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 800; color: var(--ink); }
-/* freeze flavor (icy blue) — SOLID badge, no gradient */
-.freeze-btn { --edge: #84D8FF; --lip: #1CB0F6; --ink: var(--blue-dk); }
-.freeze-btn .hint-badge { background: #1CB0F6; box-shadow: 0 3px 0 #1899D6; }
-.freeze-btn:not(.used) .hint-badge svg { animation: flakeSpin 8s linear infinite; will-change: transform; }
-/* 50/50 flavor (orange) — SOLID badge, no gradient */
-.fifty-btn { --edge: #FFC56B; --lip: #FF9600; --ink: #C56A00; }
-.fifty-btn .hint-badge { background: #FF9600; box-shadow: 0 3px 0 #E07D00; }
-.fifty-btn:not(.used) .hint-badge svg { animation: snip 2.6s ease-in-out infinite; transform-origin: 28% 50%; will-change: transform; }
-@keyframes snip { 0%, 100% { transform: rotate(0); } 45% { transform: rotate(-13deg); } 62% { transform: rotate(7deg); } }
+.action-bar.has-fab { display: flex; gap: 12px; align-items: flex-start; }
+.action-bar.has-fab .btn { flex: 1; min-width: 0; }
 
-/* ---- the "use" moment: kept minimal & smooth — the button simply
-   settles into its used tint (via the background transition) and the
-   checkmark eases in. No button jump, no ring → no flicker. ---- */
-.hint-btn.just-used .hint-badge { animation: badgeIn .3s ease-out; }
+.hint-fab { position: relative; width: 48px; height: 48px; flex-shrink: 0; }
+.goo-defs { position: absolute; width: 0; height: 0; }
+.fab-goo { position: absolute; inset: 0; filter: url(#goo); }
+
+.fab-main {
+  position: absolute; inset: 0;
+  border: 0; border-radius: 50%; padding: 0;
+  background: var(--blue); color: #fff;
+  box-shadow: 0 4px 0 #1899D6;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; user-select: none;
+  transition: transform .08s, box-shadow .08s;
+}
+.fab-main svg { width: 22px; height: 22px; transition: transform .4s cubic-bezier(.3,1.7,.5,1); }
+.fab-main:active { transform: translateY(4px); box-shadow: 0 0 0 #1899D6; }
+.hint-fab.open .fab-main svg { transform: rotate(135deg); } /* + melts into × */
+
+/* the two bubbles start swallowed inside the +, then squirt upward;
+   while they travel, the goo filter stretches them off the + like a drop */
+.fab-bubble {
+  position: absolute; left: -1px; bottom: -1px; /* 50px bubble centered on the 48px + */
+  width: 50px; height: 50px;
+  border: 0; border-radius: 50%; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; cursor: pointer; user-select: none;
+  transform: scale(.4);
+  transition: transform .5s cubic-bezier(.3,1.65,.45,1);
+}
+.fab-bubble svg { width: 24px; height: 24px; }
+.fab-freeze { background: #1CB0F6; }
+.fab-fifty  { background: #FF9600; }
+.hint-fab.open .fab-freeze { transform: translateY(-70px) scale(1); }
+.hint-fab.open .fab-fifty  { transform: translateY(-136px) scale(1); transition-delay: .07s; }
+/* squishy press while open (keeps the lift, sinks into the goo) */
+.hint-fab.open .fab-freeze:not(:disabled):active { transform: translateY(-66px) scale(.92); transition-duration: .08s; }
+.hint-fab.open .fab-fifty:not(:disabled):active  { transform: translateY(-132px) scale(.92); transition-duration: .08s; }
+
+.fab-bubble:not(:disabled):not(.used) svg { will-change: transform; }
+.hint-fab.open .fab-freeze:not(.used) svg { animation: flakeSpin 8s linear infinite; }
+.hint-fab.open .fab-fifty:not(.used) svg { animation: snip 2.6s ease-in-out infinite; transform-origin: 28% 50%; }
+@keyframes snip { 0%, 100% { transform: rotate(0); } 45% { transform: rotate(-13deg); } 62% { transform: rotate(7deg); } }
+.fab-bubble:disabled:not(.used) { cursor: default; filter: grayscale(1) brightness(1.12); }
+.fab-bubble.used { cursor: default; }
+.fab-bubble.just-used svg { animation: badgeIn .3s ease-out; }
 @keyframes badgeIn {
   0%   { transform: scale(.6); opacity: .3; }
   100% { transform: scale(1); opacity: 1; }
 }
-/* used resting state — SOLID badge (normal checkmark), shallow lip */
-.hint-btn.used { opacity: 1; box-shadow: 0 2px 0 var(--lip); }
-.freeze-btn.used { background: var(--blue-light); border-color: var(--blue-border); }
-.freeze-btn.used .hint-badge { background: #1CB0F6; box-shadow: 0 2px 0 #1899D6; }
-.fifty-btn.used { background: #FFF1DF; border-color: #FFB020; }
-.fifty-btn.used .hint-badge { background: #FF9600; box-shadow: 0 2px 0 #E07D00; }
+
+/* label chips live OUTSIDE the goo layer so the text stays crisp */
+.fab-chip {
+  position: absolute; left: 58px; z-index: 46;
+  display: flex; align-items: center; gap: 4px; white-space: nowrap;
+  background: #fff; border: 2px solid var(--line); border-radius: 12px;
+  padding: 4px 12px; font-size: 13px; font-weight: 800; color: var(--ink);
+  opacity: 0; transform: translateX(-10px) scale(.85); pointer-events: none;
+  transition: opacity .22s, transform .35s cubic-bezier(.3,1.6,.5,1);
+}
+.chip-freeze { bottom: 80px; color: var(--blue-dk); border-color: #84D8FF; }
+.chip-fifty  { bottom: 146px; color: #C56A00; border-color: #FFC56B; }
+.chip-bal    { bottom: 200px; left: 2px; color: var(--blue); background: var(--blue-light); border-color: transparent; }
+.hint-fab.open .fab-chip { opacity: 1; transform: none; }
+.hint-fab.open .chip-freeze { transition-delay: .14s; }
+.hint-fab.open .chip-fifty  { transition-delay: .22s; }
+.hint-fab.open .chip-bal    { transition-delay: .3s; }
 
 /* a 50/50-removed choice blurs out — clearly "deleted" */
 .choice.eliminated {

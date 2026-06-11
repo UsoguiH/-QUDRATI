@@ -43,6 +43,10 @@
       } else if (h === "pop") {
         const node = document.querySelector(".node:not(.node-locked):not(.node-done)");
         if (node) node.click();
+      } else if (h === "fab") {
+        const d = window.QBANK.arithmetic;
+        A.startLesson("arithmetic", d.lessons[0].key);
+        A.toggleHints();
       } else if (h === "fb") {
         const d = window.QBANK.arithmetic;
         A.startLesson("arithmetic", d.lessons[0].key);

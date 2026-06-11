@@ -245,8 +245,8 @@ function renderSession() {
         <span class="sess-hearts" id="sesHearts">${ico("heart", 22)} ${toAr(SES.hearts)}</span>
       </div>
       ${timerBar()}
-      <div class="q-area">${questionBody(q, SES.sel, false)}${hintBar()}</div>
-      <div class="action-bar"><button class="btn" id="checkBtn" onclick="A.check()" ${SES.sel === null ? "disabled" : ""}>تحقق</button></div>
+      <div class="q-area">${questionBody(q, SES.sel, false)}</div>
+      <div class="action-bar has-fab"><button class="btn" id="checkBtn" onclick="A.check()" ${SES.sel === null ? "disabled" : ""}>تحقق</button>${hintFab()}</div>
       <div class="feedback" id="fb"></div>
     </div>`;
   startQTimer();
@@ -296,36 +296,45 @@ const SCISSORS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" str
   <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.6 8.6L21 21M8.6 15.4L21 3M12 12l3 3"/></svg>`;
 
 const CHECK_BADGE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.2 4.2L19 6.8"/></svg>`;
-function hintBar() {
+const PLUS_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`;
+
+/* Floating "+" in the action bar; tapping it gooey-blooms the two
+   power-up bubbles out of it (SVG #goo filter does the liquid merge) */
+function hintFab() {
   const freezeOk = !SES.frozen && S.xp >= FREEZE_COST;
   const fiftyOk = !SES.fiftyUsed && S.xp >= FIFTY_COST;
-  return `<div class="hint-bar" id="hintBar">
-    <div class="hint-bar-head">
-      <span class="hint-bar-title">مساعدات</span>
-      <span class="hint-bal" title="رصيدك من الجواهر">${ico("gem", 18)} ${toAr(S.xp)}</span>
+  return `<div class="hint-fab" id="hintFab">
+    <svg class="goo-defs" width="0" height="0" aria-hidden="true"><defs><filter id="goo">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b"/>
+      <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -11" result="g"/>
+      <feComposite in="SourceGraphic" in2="g" operator="atop"/>
+    </filter></defs></svg>
+    <div class="fab-goo">
+      <button class="fab-bubble fab-fifty fifty-btn ${SES.fiftyUsed ? "used" : ""}" onclick="A.useFifty()" ${fiftyOk ? "" : "disabled"}>${SES.fiftyUsed ? CHECK_BADGE : SCISSORS}</button>
+      <button class="fab-bubble fab-freeze freeze-btn ${SES.frozen ? "used" : ""}" onclick="A.useFreeze()" ${freezeOk ? "" : "disabled"}>${SES.frozen ? CHECK_BADGE : SNOWFLAKE}</button>
+      <button class="fab-main" onclick="A.toggleHints()" aria-label="المساعدات" title="المساعدات">${PLUS_SVG}</button>
     </div>
-    <div class="hint-row">
-      <button class="hint-btn freeze-btn ${SES.frozen ? "used" : ""}" onclick="A.useFreeze()" ${freezeOk ? "" : "disabled"}>
-        <span class="hint-badge">${SES.frozen ? CHECK_BADGE : SNOWFLAKE}</span>
-        <span class="hint-txt">
-          <span class="hint-label">${SES.frozen ? "تم التجميد" : "تجميد الوقت"}</span>
-          <span class="hint-cost">${ico("gem", 14)} ${toAr(FREEZE_COST)}</span>
-        </span>
-      </button>
-      <button class="hint-btn fifty-btn ${SES.fiftyUsed ? "used" : ""}" onclick="A.useFifty()" ${fiftyOk ? "" : "disabled"}>
-        <span class="hint-badge">${SES.fiftyUsed ? CHECK_BADGE : SCISSORS}</span>
-        <span class="hint-txt">
-          <span class="hint-label">${SES.fiftyUsed ? "تم الحذف" : "حذف إجابتين"}</span>
-          <span class="hint-cost">${ico("gem", 14)} ${toAr(FIFTY_COST)}</span>
-        </span>
-      </button>
-    </div>
+    <span class="fab-chip chip-freeze">${SES.frozen ? "تم التجميد" : `تجميد الوقت ${ico("gem", 14)} ${toAr(FREEZE_COST)}`}</span>
+    <span class="fab-chip chip-fifty">${SES.fiftyUsed ? "تم الحذف" : `حذف إجابتين ${ico("gem", 14)} ${toAr(FIFTY_COST)}`}</span>
+    <span class="fab-chip chip-bal hint-bal" title="رصيدك من الجواهر">${ico("gem", 16)} ${toAr(S.xp)}</span>
   </div>`;
+}
+A.toggleHints = function () {
+  const f = document.getElementById("hintFab");
+  if (!f) return;
+  if (f.classList.toggle("open"))
+    setTimeout(() => document.addEventListener("click", closeFabOutside), 0);
+};
+function closeFabOutside(e) {
+  const f = document.getElementById("hintFab");
+  if (f && f.classList.contains("open") && f.contains(e.target)) return;
+  if (f) f.classList.remove("open");
+  document.removeEventListener("click", closeFabOutside);
 }
 /* Update hints in place (no DOM nuke) so the press/use animation actually plays */
 function setHintBalance() {
   const b = document.querySelector(".hint-bal");
-  if (b) b.innerHTML = `${ico("gem", 18)} ${toAr(S.xp)}`;
+  if (b) b.innerHTML = `${ico("gem", 16)} ${toAr(S.xp)}`;
 }
 function syncHintAffordability() {
   const fr = document.querySelector(".freeze-btn"), fi = document.querySelector(".fifty-btn");
@@ -337,14 +346,15 @@ function markHintUsed(which) {
   if (btn) {
     btn.disabled = true;
     btn.classList.add("used", "just-used");
-    const badge = btn.querySelector(".hint-badge");
-    if (badge) badge.innerHTML = CHECK_BADGE;
-    const label = btn.querySelector(".hint-label");
-    if (label) label.textContent = which === "freeze" ? "تم التجميد" : "تم الحذف";
+    btn.innerHTML = CHECK_BADGE;
     setTimeout(() => btn.classList.remove("just-used"), 650);
   }
+  const chip = document.querySelector(which === "freeze" ? ".chip-freeze" : ".chip-fifty");
+  if (chip) chip.textContent = which === "freeze" ? "تم التجميد" : "تم الحذف";
   setHintBalance();
   syncHintAffordability();
+  // let the checkmark breathe, then tuck the menu back into the +
+  setTimeout(() => { const f = document.getElementById("hintFab"); if (f) f.classList.remove("open"); }, 1100);
 }
 let toastT = null;
 function toast(msg, kind) {
