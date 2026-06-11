@@ -8,16 +8,26 @@
 
 عربية بالكامل · واجهة RTL · بدون خادم · بدون تثبيت
 
-[![Play Now](https://img.shields.io/badge/%F0%9F%8E%AE%20%D8%A7%D9%84%D8%B9%D8%A8%20%D8%A7%D9%84%D8%A2%D9%86-qudrati--lime.vercel.app-58cc02.svg?style=for-the-badge)](https://qudrati-lime.vercel.app/)
+<br>
+
+# 🎮 [اضغط هنا للعب الآن](https://qudrati-lime.vercel.app/) 🎮
+
+### العب مجاناً من المتصفح — بدون تحميل وبدون تسجيل
+
+[![العب الآن](https://img.shields.io/badge/%E2%96%B6%EF%B8%8F%20%D8%A7%D9%84%D8%B9%D8%A8%20%D8%A7%D9%84%D8%A2%D9%86-qudrati--lime.vercel.app-58cc02.svg?style=for-the-badge&logoColor=white)](https://qudrati-lime.vercel.app/)
+
+```
+🔗  https://qudrati-lime.vercel.app
+```
+
+<br>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Made with Vanilla JS](https://img.shields.io/badge/Made%20with-Vanilla%20JS-f7df1e.svg)](js/app.js)
 [![RTL Arabic](https://img.shields.io/badge/%D8%A7%D9%84%D9%84%D8%BA%D8%A9-%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9-2ecc71.svg)](#)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#-المساهمة)
 
-**[🎮 جرّب اللعبة الآن — qudrati-lime.vercel.app](https://qudrati-lime.vercel.app/)**
-
-[📱 تحميل تطبيق أندرويد (APK)](Qudrati.apk) · [🚀 التشغيل](#-التشغيل) · [✨ الميزات](#-الميزات) · [➕ إضافة أسئلة](#-إضافة-أسئلة)
+[🕹️ كيف تلعب](#%EF%B8%8F-كيف-تلعب) · [📱 تحميل APK](Qudrati.apk) · [✨ الميزات](#-الميزات) · [➕ إضافة أسئلة](#-إضافة-أسئلة)
 
 </div>
 
@@ -39,13 +49,26 @@
 - 📱 **متجاوب**: يعمل على الجوال والحاسب (بعرض تطبيق جوال 430px)، ومتوفر كتطبيق أندرويد عبر Capacitor.
 - ⚖️ **إخلاء مسؤولية** عند أول تشغيل وفي «حول التطبيق»، مع رابط لموقع هيئة تقويم التعليم والتدريب الرسمي.
 
-## 🚀 التشغيل
+## 🕹️ كيف تلعب؟
 
-**أسرع طريقة:** العب مباشرة من المتصفح — **[qudrati-lime.vercel.app](https://qudrati-lime.vercel.app/)** 🎮
+اللعبة تعمل مباشرة من المتصفح — على الجوال أو الحاسب — بدون تحميل ولا تثبيت ولا إنشاء حساب:
 
-أو شغّلها محلياً (لا تحتاج خادماً ولا تثبيتاً):
+### 1️⃣ افتح الرابط: [qudrati-lime.vercel.app](https://qudrati-lime.vercel.app/) ← هذا كل ما تحتاجه!
 
-1. حمّل المشروع أو انسخه:
+2. **اختر مسارك** — علمي 🔬 أو أدبي 📖 (يمكن تغييره لاحقاً من الإعدادات).
+3. **ابدأ من أول درس** في مسار الدروس المتعرّج، وافتح الدروس التالية بالتتابع.
+4. **حافظ على قلوبك** ❤️ — لديك ٣ قلوب لكل مستوى و⏰ ٩٠ ثانية لكل سؤال.
+5. **تقدّمك يُحفظ تلقائياً** في جهازك — أغلق الصفحة وارجع متى شئت من نفس المتصفح.
+
+> 💡 **نصيحة للجوال:** افتح الرابط ثم من قائمة المتصفح اختر «إضافة إلى الشاشة الرئيسية» لتحصل على أيقونة تفتح اللعبة كأنها تطبيق.
+
+**🤖 تفضّل تطبيق أندرويد؟** حمّل [`Qudrati.apk`](Qudrati.apk) وثبّته مباشرة — نفس اللعبة بغلاف Capacitor.
+
+## 🧑‍💻 للمطوّرين — التشغيل محلياً
+
+لا تحتاج خادماً ولا تثبيتاً:
+
+1. انسخ المشروع:
    ```bash
    git clone https://github.com/UsoguiH/-QUDRATI.git
    ```
@@ -54,8 +77,6 @@
 **للمعاينة أثناء التطوير:** افتح `preview.html#<screen>` حيث `<screen>` إحدى:
 `path` | `lesson` | `pop` | `fb` | `done` | `exam` | `stats` | `settings`
 (يتجاوز شاشة الإخلاء ويملأ حالة تجريبية).
-
-**تطبيق الأندرويد:** ملف [`Qudrati.apk`](Qudrati.apk) جاهز للتثبيت المباشر (نسخة Capacitor من اللعبة نفسها).
 
 ## 🗂 بنية المشروع
 
@@ -124,7 +145,9 @@ node tools/validate.js
 
 A fully Arabic, RTL, dependency-free web game for practicing the quantitative section of the Saudi General Aptitude Test (GAT / Qiyas) — Duolingo style.
 
-**▶️ Play it now: [qudrati-lime.vercel.app](https://qudrati-lime.vercel.app/)**
+### ▶️ How to play — just open this link: **[qudrati-lime.vercel.app](https://qudrati-lime.vercel.app/)**
+
+Works in any browser on phone or desktop — no download, no install, no sign-up. Pick your track (scientific/humanities), start the first lesson, and your progress saves automatically on your device. Prefer a native app? Install [`Qudrati.apk`](Qudrati.apk).
 
 **Highlights**
 
