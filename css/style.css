@@ -166,8 +166,8 @@ svg.ic { display: block; }
 .node:active:not(:disabled) { transform: translateY(7px); box-shadow: 0 0 0 var(--node-s, var(--purple-dk)); }
 .node-done   { --node-c: var(--gold); --node-s: var(--gold-dk); --node-h: var(--gold-shine); }
 .node-locked { --node-c: var(--line); --node-s: var(--gray-shadow); --node-h: transparent; cursor: default; }
-.node-ring { /* progress ring around current level */
-  position: absolute; top: -8px; left: 50%; margin-left: -44.5px;
+.node-ring { /* progress ring around current level; node face+lip spans y 10-75, ring height 84 → top 0 centers it */
+  position: absolute; top: 0; left: 50%; margin-left: -44.5px;
   width: 89px; height: 84px; pointer-events: none;
 }
 .node-tip {
