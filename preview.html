@@ -18,7 +18,9 @@
     (document.body || document.documentElement).appendChild(d);
   };
   var examIn43 = new Date(Date.now() + 43 * 864e5);
+  var tdy = new Date(), todayK = tdy.getFullYear() + "-" + (tdy.getMonth() + 1) + "-" + tdy.getDate();
   localStorage.setItem("qudratState", JSON.stringify({
+    daily: { day: todayK, n: location.hash === "#chest" || location.hash === "#chestready" ? 10 : location.hash === "#claimed" ? 10 : 6, claimed: location.hash === "#claimed" },
     v: 1, disclaimer: true, track: "sci", sound: false,
     user: location.hash === "#login" ? null : { name: "سارة", guest: false },
     xp: 527, streak: { count: 12, last: null },
@@ -41,6 +43,7 @@
     (function () {
       const h = location.hash.replace("#", "") || "path";
       if (["stats", "settings"].includes(h)) A.go(h);
+      else if (h === "chest") A.openChest();
       else if (h === "lesson") {
         const d = window.QBANK.arithmetic;
         A.startLesson("arithmetic", d.lessons[0].key);

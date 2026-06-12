@@ -6,6 +6,7 @@
 
 /* ---------------- helpers ---------------- */
 const $app = document.getElementById("app");
+window.A = {}; // global handlers (filled in throughout the file)
 const AR_DIGITS = "٠١٢٣٤٥٦٧٨٩";
 const toAr = n => String(n).replace(/[0-9]/g, d => AR_DIGITS[d]);
 const CMP_CHOICES = ["القيمة الأولى أكبر", "القيمة الثانية أكبر", "القيمتان متساويتان", "المعطيات غير كافية"];
@@ -22,6 +23,7 @@ const LEVEL_HEARTS = 3;      // hearts per level — lose them all and you retry
 const Q_SECS = 90;           // seconds allowed per question
 const FREEZE_COST = 10;      // blue gems to freeze the timer for the current question
 const FIFTY_COST = 15;       // blue gems to remove two wrong choices (50/50)
+const DAILY_GOAL = 10;       // questions to answer for today's quest chest
 const todayKey = () => { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
 const fmtTime = s => toAr(String(Math.floor(Math.max(0, s) / 60)).padStart(2, "0")) + ":" + toAr(String(Math.max(0, s) % 60).padStart(2, "0"));
 
@@ -29,7 +31,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false };
+const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null };
 let S;
 try { S = Object.assign({}, DEFAULT_STATE, JSON.parse(localStorage.getItem("qudratState") || "{}")); }
 catch (e) { S = Object.assign({}, DEFAULT_STATE); }
@@ -68,6 +70,7 @@ const sndLose = () => beep([[440, .16], [392, .16], [330, .18], [262, .42]]);
 const sndTick = () => beep([[1080, .05]]);
 const sndFreeze = () => beep([[1568, .07], [2093, .1], [1318, .18]]); // icy shimmer
 const sndFifty = () => beep([[880, .06], [587, .14]]);                 // two-snip
+const sndChest = () => beep([[392, .09], [523, .09], [659, .09], [784, .1], [1047, .14], [1568, .3]]); // treasure fanfare
 
 /* ---------------- data access ---------------- */
 function domains() { return DOMAIN_ORDER.map(k => (window.QBANK || {})[k]).filter(Boolean); }
@@ -96,6 +99,19 @@ function readiness() {
   const acc = (r + w) ? r / (r + w) : 0;
   return Math.round(100 * (0.7 * earned / (flat.length * 3) + 0.3 * acc));
 }
+/* ---------------- daily quest (answer N questions → chest) ---------------- */
+function dailyReset() {
+  const t = todayKey();
+  if (!S.daily || S.daily.day !== t) S.daily = { day: t, n: 0, claimed: false };
+}
+function dailyTick() {
+  dailyReset();
+  if (S.daily.n >= DAILY_GOAL) return;
+  S.daily.n++;
+  if (S.daily.n === DAILY_GOAL)
+    setTimeout(() => toast(`🎁 اكتمل تمرين اليوم! صندوقك بانتظارك في الرئيسية`, "quest"), 1200);
+}
+
 function dayPhrase(n) {
   if (n === 1) return "يوم واحد";
   if (n === 2) return "يومان";
@@ -148,6 +164,103 @@ function countdownCard() {
   </div>`;
 }
 
+/* ---------------- daily quest card + chest ---------------- */
+/* Own chest art in the design system's chunky style (browns + gold
+   clasp from the palette) — lid is a separate group so it can swing open */
+function chestSVG(cls) {
+  return `<svg class="qc-chest ${cls || ""}" viewBox="0 0 48 44" fill="none" aria-hidden="true">
+    <ellipse class="ch-glow" cx="24" cy="21" rx="15" ry="6" fill="#FFE700"/>
+    <g class="ch-base">
+      <rect x="5" y="21" width="38" height="18" rx="5" fill="#AA572A"/>
+      <rect x="5" y="33" width="38" height="6" rx="3" fill="#90461F"/>
+      <rect x="21" y="21" width="6" height="18" fill="#FFC800"/>
+      <rect x="21" y="35" width="6" height="4" fill="#E6A000"/>
+      <rect x="18.5" y="18.5" width="11" height="11" rx="3" fill="#FFC800"/>
+      <rect x="18.5" y="25.5" width="11" height="4" rx="2" fill="#E6A000"/>
+      <circle cx="24" cy="23.5" r="2" fill="#90461F"/>
+    </g>
+    <g class="ch-lid">
+      <path d="M5 21 V14 Q5 4 15 4 H33 Q43 4 43 14 V21 Z" fill="#C07F41"/>
+      <path d="M5 21 V14 Q5 4 15 4 H20 Q10 4 10 14 V21 Z" fill="#E5AE7C"/>
+      <rect x="5" y="18" width="38" height="3" fill="#90461F"/>
+      <rect x="21" y="4" width="6" height="17" fill="#FFC800"/>
+      <rect x="21" y="4" width="6" height="3" fill="#FFE700"/>
+    </g>
+  </svg>`;
+}
+
+function dailyQuestCard() {
+  dailyReset();
+  const n = S.daily.n, done = n >= DAILY_GOAL;
+  if (done && S.daily.claimed) {
+    return `<div class="quest-card quest-claimed">
+      <div class="qc-row">${chestSVG("qc-mini")}
+        <div class="qc-txt"><b>أنجزت تمرين اليوم!</b><span>عُد غداً لصندوق جديد 🎁</span></div>
+        <span class="qc-done-badge">${ico("check", 24)}</span>
+      </div></div>`;
+  }
+  if (done) {
+    return `<div class="quest-card quest-ready" onclick="A.openChest()">
+      <div class="qc-row">${chestSVG("qc-mini qc-bounce")}
+        <div class="qc-txt"><b>اكتمل تمرين اليوم!</b><span>اضغط لفتح صندوقك</span></div>
+        <span class="qc-tap">افتح!</span>
+      </div></div>`;
+  }
+  return `<div class="quest-card">
+    <div class="qc-head"><b>تمرين اليوم</b>${ico("lightning", 18)}</div>
+    <div class="qc-task">حل ${toAr(DAILY_GOAL)} أسئلة</div>
+    <div class="qc-barrow">
+      <div class="duo-bar qc-bar"><i style="width:${Math.round(n / DAILY_GOAL * 100)}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft);animation-delay:.5s"></i>
+        <b class="qc-count">${toAr(n)} / ${toAr(DAILY_GOAL)}</b></div>
+      ${chestSVG(n >= DAILY_GOAL - 2 ? "qc-excited" : "")}
+    </div>
+  </div>`;
+}
+
+/* Chest-opening ceremony: veil → chest drops & lands with a squash →
+   anticipation shakes → lid swings open with sunrays, flash, flying
+   gems → reward pops in → claim */
+A.openChest = function () {
+  dailyReset();
+  if (S.daily.n < DAILY_GOAL || S.daily.claimed) return;
+  const gems = 12 + Math.floor(Math.random() * 7); // 12–18
+  const veil = document.createElement("div");
+  veil.className = "chest-veil";
+  veil.innerHTML = `<div class="chest-scene">
+    <span class="cs-rays"></span>
+    <span class="cs-flash"></span>
+    <div class="cs-chest">${chestSVG("qc-big")}</div>
+    <div class="cs-burst"></div>
+    <div class="cs-reward">${ico("gem", 36)}<b>+${toAr(gems)}</b></div>
+    <h2 class="cs-title">صندوق اليوم!</h2>
+    <button class="btn cs-btn" onclick="A.claimChest(${gems})">رائع!</button>
+  </div>`;
+  document.body.appendChild(veil);
+  requestAnimationFrame(() => veil.classList.add("drop"));
+  setTimeout(() => veil.classList.add("shake"), 850);
+  setTimeout(() => {
+    veil.classList.add("open");
+    sndChest();
+    const burst = veil.querySelector(".cs-burst");
+    for (let i = 0; i < 12; i++) {
+      const dx = (Math.random() * 2 - 1) * 130;
+      const up = -(70 + Math.random() * 120);
+      const el = document.createElement("img");
+      el.src = "assets/icons/gem.svg";
+      el.className = "cs-gem";
+      el.style.cssText = `--dx:${dx.toFixed(0)}px;--up:${up.toFixed(0)}px;--rot:${((Math.random() * 2 - 1) * 220).toFixed(0)}deg;animation-delay:${(i * 0.045).toFixed(2)}s;width:${(16 + Math.random() * 14).toFixed(0)}px`;
+      burst.appendChild(el);
+    }
+  }, 1650);
+  setTimeout(() => veil.classList.add("rewarded"), 2150);
+};
+A.claimChest = function (gems) {
+  S.xp += gems; S.daily.claimed = true; save();
+  const v = document.querySelector(".chest-veil");
+  if (v) { v.classList.add("out"); setTimeout(() => { v.remove(); render(); }, 380); }
+  else render();
+};
+
 /* ---------------- PATH (home) ---------------- */
 function renderPath() {
   const ds = domains();
@@ -191,7 +304,7 @@ function renderPath() {
     });
     html += `</div>`;
   });
-  $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${html}<div style="height:20px"></div></div>` + bottomnav("path");
+  $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${dailyQuestCard()}${html}<div style="height:20px"></div></div>` + bottomnav("path");
 }
 
 
@@ -206,7 +319,6 @@ function pickLessonQuestions(lesson, key) {
   return chosen.sort((a, b) => a.difficulty - b.difficulty);
 }
 
-window.A = {}; // global handlers
 A.go = go;
 
 /* Lesson-start popup (Figma "Select Lesson" purple sheet) */
@@ -441,6 +553,7 @@ function timeUp() {
     b.disabled = true;
     if (j === q.answer) b.classList.add("correct"); else b.classList.add("dim");
   });
+  dailyTick();
   const isCmp = q.format === "comparison";
   const correctTxt = LETTERS[q.answer] + " — " + (isCmp ? CMP_CHOICES[q.answer] : q.choices[q.answer]);
   sndBad();
@@ -514,6 +627,7 @@ A.check = function () {
   const qs = S.qstats[q.id] = S.qstats[q.id] || { r: 0, w: 0 };
   correct ? qs.r++ : qs.w++;
   if (!(q.id in SES.firstTry)) SES.firstTry[q.id] = correct;
+  dailyTick();
 
   document.querySelectorAll(".choice").forEach((b, j) => {
     b.disabled = true;
