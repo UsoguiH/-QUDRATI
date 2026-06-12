@@ -24,6 +24,8 @@ const Q_SECS = 90;           // seconds allowed per question
 const FREEZE_COST = 10;      // blue gems to freeze the timer for the current question
 const FIFTY_COST = 15;       // blue gems to remove two wrong choices (50/50)
 const DAILY_GOAL = 10;       // questions to answer for today's quest chest
+const MOCK_PLAN = { arithmetic: 8, algebra: 4, geometry: 5, statistics: 3 }; // ~real GAT quant mix
+const MOCK_SECS = 25 * 60;   // one timed section, like the real thing
 const todayKey = () => { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
 const fmtTime = s => toAr(String(Math.floor(Math.max(0, s) / 60)).padStart(2, "0")) + ":" + toAr(String(Math.max(0, s) % 60).padStart(2, "0"));
 
@@ -31,7 +33,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null };
+const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [] };
 let S;
 try { S = Object.assign({}, DEFAULT_STATE, JSON.parse(localStorage.getItem("qudratState") || "{}")); }
 catch (e) { S = Object.assign({}, DEFAULT_STATE); }
@@ -122,7 +124,7 @@ const fmtExamDate = d => { const x = new Date(d + "T00:00:00"); return toAr(x.ge
 
 /* ---------------- screens / router ---------------- */
 let view = "path";
-function render() { ({ path: renderPath, stats: renderStats, settings: renderSettings })[view](); }
+function render() { ({ path: renderPath, mock: renderMockHome, stats: renderStats, settings: renderSettings })[view](); }
 function go(v) { view = v; render(); window.scrollTo(0, 0); }
 
 const ico = (name, size) => `<img class="ic" src="assets/icons/${name}.svg" width="${size}" height="${size}" alt="">`;
@@ -140,7 +142,7 @@ A.chestTap = function () {
   toast(`باقي ${toAr(DAILY_GOAL - S.daily.n)} أسئلة لفتح صندوق اليوم 🎁`);
 };
 function bottomnav(active) {
-  const items = [["path", "nav-home"], ["stats", "nav-chest"], ["settings", "nav-more"]];
+  const items = [["path", "nav-home"], ["mock", "nav-trophy"], ["stats", "nav-chest"], ["settings", "nav-more"]];
   return `<nav class="bottomnav">` + items.map(([k, i]) =>
     `<button class="navbtn ${active === k ? "active" : ""}" onclick="A.go('${k}')" aria-label="${k}">${ico(i, 30)}</button>`).join("") + `</nav>`;
 }
@@ -348,7 +350,7 @@ A.startLesson = function (domKey, lesKey) {
   renderSession();
 };
 
-function questionBody(q, selIdx, lockHandlers) {
+function questionBody(q, selIdx, lockHandlers, pickFn) {
   const isCmp = q.format === "comparison";
   const choices = isCmp ? CMP_CHOICES : q.choices;
   let h = `<div class="q-kicker">${isCmp ? "قارن بين القيمتين ثم اختر:" : "اختر الإجابة الصحيحة:"}</div>`;
@@ -358,7 +360,7 @@ function questionBody(q, selIdx, lockHandlers) {
       <div class="cmp-box"><div class="cmp-t">القيمة الأولى</div><div class="cmp-v">${q.value1}</div></div>
       <div class="cmp-box"><div class="cmp-t">القيمة الثانية</div><div class="cmp-v">${q.value2}</div></div></div>`;
   h += `<div class="choices">` + choices.map((c, i) =>
-    `<button class="choice ${selIdx === i ? "sel" : ""}" data-ci="${i}" style="--d:${0.05 + i * 0.07}s" ${lockHandlers ? "" : `onclick="A.pick(${i})"`}>
+    `<button class="choice ${selIdx === i ? "sel" : ""}" data-ci="${i}" style="--d:${0.05 + i * 0.07}s" ${lockHandlers ? "" : `onclick="${pickFn || "A.pick"}(${i})"`}>
        <span class="ch-letter">${LETTERS[i]}</span><span>${c}</span></button>`).join("") + `</div>`;
   return h;
 }
@@ -662,6 +664,7 @@ A.check = function () {
 A.toggleSol = function () { const s = document.getElementById("sol"); s.style.display = s.style.display === "none" ? "block" : "none"; };
 
 A.debugCurrent = function () { return SES && SES.queue[SES.idx]; }; // dev harness (preview.html) only
+A.debugMock = function () { return MOCK && MOCK.queue[MOCK.idx].q; }; // dev harness only
 
 A.next = function () {
   if (SES.hearts <= 0) { sessionFailed(); return; }
@@ -783,6 +786,166 @@ function countUp(el, to, suffix) {
     if (p < 1) requestAnimationFrame(f);
   })(t0);
 }
+
+/* ============================================================
+   MOCK EXAM (محاكاة الاختبار) — one timed section like the real
+   GAT: 20 mixed questions, 25 minutes, no hints, no feedback
+   until the end. Result: predicted score + per-domain breakdown
+   + mistakes review.
+   ============================================================ */
+let MOCK = null;
+
+function renderMockHome() {
+  const mocks = S.mocks || [];
+  const best = mocks.reduce((b, m) => Math.max(b, Math.round(m.score / m.total * 100)), 0);
+  const last = mocks[mocks.length - 1];
+  const estOf = m => Math.round(35 + 65 * m.score / m.total);
+  $app.innerHTML = statbar() + `<div class="screen"><div class="page">
+    <h1>محاكاة الاختبار</h1><div class="sub">جرّب جو الاختبار الحقيقي وقس مستواك</div>
+    <div class="mock-hero-card">
+      <div class="mh-trophy">${ico("nav-trophy", 54)}</div>
+      <div class="mh-rules">
+        <div class="mh-rule">${ico("guide", 20)} ${toAr(20)} سؤالاً من جميع الأقسام</div>
+        <div class="mh-rule">${ico("timer", 20)} ${toAr(25)} دقيقة لكل الأسئلة</div>
+        <div class="mh-rule"><span class="mh-x">✕</span> بدون مساعدات وبدون قلوب — مثل الاختبار تماماً</div>
+      </div>
+      <button class="btn" onclick="A.startMock()">ابدأ المحاكاة</button>
+    </div>
+    ${mocks.length ? `<div class="tiles">
+      <div class="tile">${ico("nav-trophy", 26)}<div><div class="t-v">${toAr(best)}٪</div><div class="t-l">أفضل نتيجة</div></div></div>
+      <div class="tile">${ico("target", 26)}<div><div class="t-v">~${toAr(estOf(last))}</div><div class="t-l">آخر تقدير (من ١٠٠)</div></div></div>
+    </div>` : `<div class="card mock-first-note">أول محاكاة لك ستحدد خط البداية — لا تقلق من النتيجة، المهم أن تعرف أين أنت الآن 💪</div>`}
+  </div></div>` + bottomnav("mock");
+}
+
+A.startMock = function () {
+  const items = [];
+  DOMAIN_ORDER.forEach(k => {
+    const d = (window.QBANK || {})[k];
+    if (!d) return;
+    let pool = [];
+    d.lessons.forEach(l => pool.push(...trackFilter(l.questions)));
+    shuffle(pool).slice(0, MOCK_PLAN[k]).forEach(q => items.push({ q, dom: k }));
+  });
+  if (items.length < 5) { showModal("⭐", "لا توجد أسئلة", "بنك الأسئلة غير متاح.", "حسناً"); return; }
+  MOCK = { queue: shuffle(items), idx: 0, sel: null, answers: [], left: MOCK_SECS, timer: null, t0: Date.now() };
+  renderMockQ();
+  MOCK.timer = setInterval(() => {
+    MOCK.left--;
+    const n = document.getElementById("mkNum"), f = document.getElementById("mkFill"), w = document.getElementById("mkWrap");
+    if (n) n.textContent = fmtTime(MOCK.left);
+    if (f) f.style.width = (MOCK.left / MOCK_SECS * 100) + "%";
+    if (w) { w.classList.toggle("low", MOCK.left <= 120 && MOCK.left > 30); w.classList.toggle("crit", MOCK.left <= 30); }
+    if (MOCK.left <= 0) finishMock(true);
+  }, 1000);
+};
+
+function renderMockQ() {
+  const { q } = MOCK.queue[MOCK.idx];
+  $app.innerHTML = `
+    <div class="screen screen-full">
+      <div class="session-top">
+        <button class="x-btn" onclick="A.quitMock()">${X_SVG}</button>
+        <div class="qtimer mock-timer" id="mkWrap">
+          <span class="qt-ico">${CLOCK_SVG}</span>
+          <div class="qt-track"><i class="qt-fill" id="mkFill" style="width:${MOCK.left / MOCK_SECS * 100}%"></i></div>
+          <b class="qt-num" id="mkNum">${fmtTime(MOCK.left)}</b>
+        </div>
+        <span class="mock-count">${toAr(MOCK.idx + 1)}/${toAr(MOCK.queue.length)}</span>
+      </div>
+      <div class="q-area">${questionBody(q, MOCK.sel, false, "A.mockPick")}</div>
+      <div class="action-bar"><button class="btn" id="mockNextBtn" onclick="A.mockNext()" ${MOCK.sel === null ? "disabled" : ""}>${MOCK.idx + 1 === MOCK.queue.length ? "إنهاء" : "التالي"}</button></div>
+    </div>`;
+}
+
+A.mockPick = function (i) {
+  if (!MOCK) return;
+  MOCK.sel = i;
+  document.querySelectorAll(".choice").forEach((b, j) => b.classList.toggle("sel", j === i));
+  document.getElementById("mockNextBtn").disabled = false;
+};
+
+A.mockNext = function () {
+  if (!MOCK || MOCK.sel === null) return;
+  const { q, dom } = MOCK.queue[MOCK.idx];
+  const correct = MOCK.sel === q.answer;
+  const qs = S.qstats[q.id] = S.qstats[q.id] || { r: 0, w: 0 };
+  correct ? qs.r++ : qs.w++;
+  dailyTick();
+  MOCK.answers.push({ q, dom, picked: MOCK.sel, correct });
+  MOCK.idx++; MOCK.sel = null;
+  save();
+  if (MOCK.idx >= MOCK.queue.length) { finishMock(false); return; }
+  renderMockQ();
+};
+
+A.quitMock = function () {
+  if (confirm("هل تريد إنهاء المحاكاة؟ لن تُحسب نتيجتها.")) {
+    clearInterval(MOCK.timer); MOCK = null; go("mock");
+  }
+};
+
+function finishMock(timedOut) {
+  clearInterval(MOCK.timer);
+  const answers = MOCK.answers, total = MOCK.queue.length;
+  const score = answers.filter(a => a.correct).length;
+  const est = Math.round(35 + 65 * score / total);
+  const mins = Math.round((MOCK_SECS - Math.max(0, MOCK.left)) / 60);
+  const perDom = {};
+  DOMAIN_ORDER.forEach(k => perDom[k] = { r: 0, n: 0 });
+  MOCK.queue.forEach(it => perDom[it.dom].n++);
+  answers.forEach(a => { if (a.correct) perDom[a.dom].r++; });
+  const wrong = answers.filter(a => !a.correct);
+  const skipped = total - answers.length;
+  S.mocks = (S.mocks || []).concat([{ d: todayKey(), score, total, est }]).slice(-10);
+  bumpStreak(); save();
+  score / total >= 0.5 ? sndWin() : sndLose();
+
+  const domRows = DOMAIN_ORDER.map((k, i) => {
+    const d = window.QBANK[k]; if (!d || !perDom[k].n) return "";
+    const u = UNIT_COLORS[d.color] || UNIT_COLORS.green;
+    const p = Math.round(perDom[k].r / perDom[k].n * 100);
+    return `<div class="dom-stat"><div class="ds-head"><span>${d.title}</span><span>${toAr(perDom[k].r)}/${toAr(perDom[k].n)}</span></div>
+      <div class="duo-bar"><i style="width:${p}%;--bar-c:${u.c};--bar-shine:${u.h};animation-delay:${(0.9 + i * 0.13).toFixed(2)}s"></i></div></div>`;
+  }).join("");
+
+  const wrongList = wrong.length ? `<div class="card"><h3>أخطاؤك (${toAr(wrong.length)})</h3>` +
+    wrong.map((a, i) => {
+      const isCmp = a.q.format === "comparison";
+      const ch = isCmp ? CMP_CHOICES : a.q.choices;
+      return `<div class="review-item">
+        <div class="ri-q">${a.q.stem || "قارن بين القيمتين"}</div>
+        <div class="ri-row" style="color:var(--red)">✕ إجابتك: ${ch[a.picked]}</div>
+        <div class="ri-row" style="color:var(--green-dk)">✓ الصحيحة: ${ch[a.q.answer]}</div>
+        <button class="fb-solution-toggle" onclick="A.toggleEl('msol${i}')">اعرض الحل</button>
+        <div class="fb-solution" id="msol${i}" style="display:none">${esc(a.q.solution)}</div>
+      </div>`;
+    }).join("") + `</div>` : "";
+
+  MOCK = null;
+  $app.innerHTML = `<div class="screen"><div class="complete mock-result" style="min-height:auto;padding-top:26px">
+    ${starHero(120)}
+    <h1 class="win-title">${timedOut ? "انتهى الوقت!" : "انتهت المحاكاة!"}</h1>
+    <p class="win-sub">${skipped ? `${toAr(skipped)} أسئلة لم تصل إليها — ` : ""}السرعة والدقة معاً هما سر قدرات</p>
+    <div class="result-cards">
+      <div class="rcard rc-gold"><div class="rc-t">نتيجتك</div><div class="rc-v">${ico("nav-trophy", 20)} <span id="mv-score">٠</span>/${toAr(total)}</div></div>
+      <div class="rcard rc-blue"><div class="rc-t">تقديرك التقريبي</div><div class="rc-v">${ico("target", 20)} ~<span id="mv-est">٠</span></div></div>
+      <div class="rcard rc-green"><div class="rc-t">الوقت</div><div class="rc-v">${TIMER_SVG} ${toAr(mins)} د</div></div>
+    </div>
+    <div class="card" style="text-align:right;width:100%"><h3>أداؤك حسب القسم</h3>${domRows}</div>
+    ${wrongList}
+    <div class="fail-actions" style="width:100%">
+      <button class="btn" onclick="A.startMock()">محاكاة جديدة</button>
+      <button class="btn btn-ghost" onclick="A.go('mock')">رجوع</button>
+    </div>
+  </div></div>`;
+  window.scrollTo(0, 0);
+  setTimeout(() => {
+    const s = document.getElementById("mv-score"), e = document.getElementById("mv-est");
+    if (s) countUp(s, score); if (e) countUp(e, est);
+  }, 600);
+}
+A.toggleEl = function (id) { const el = document.getElementById(id); el.style.display = el.style.display === "none" ? "block" : "none"; };
 
 /* ---------------- STATS ---------------- */
 function renderStats() {

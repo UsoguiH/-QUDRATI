@@ -42,8 +42,18 @@
   <script>
     (function () {
       const h = location.hash.replace("#", "") || "path";
-      if (["stats", "settings"].includes(h)) A.go(h);
+      if (["stats", "settings", "mock"].includes(h)) A.go(h);
       else if (h === "chest") A.openChest();
+      else if (h === "mocktest") A.startMock();
+      else if (h === "mockdone") {
+        A.startMock();
+        for (let i = 0; i < 25 && document.getElementById("mockNextBtn"); i++) {
+          const q = A.debugMock();
+          const n = q.format === "comparison" ? 4 : q.choices.length;
+          A.mockPick(i % 3 === 0 ? (q.answer + 1) % n : q.answer);
+          A.mockNext();
+        }
+      }
       else if (h === "lesson") {
         const d = window.QBANK.arithmetic;
         A.startLesson("arithmetic", d.lessons[0].key);

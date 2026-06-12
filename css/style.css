@@ -1481,3 +1481,28 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .chest-float.ready { animation: questGlowSoft 1.6s ease-in-out infinite; }
 .chest-float.claimed .cf-chest { filter: saturate(.5) opacity(.78) drop-shadow(0 4px 0 rgba(0,0,0,.08)); }
 .sc-done svg { width: 12px; height: 12px; color: #fff; display: block; }
+
+/* ============================================================
+   Mock exam (محاكاة الاختبار)
+   ============================================================ */
+.mock-hero-card {
+  background: #fff; border: 2px solid var(--line); border-radius: 16px;
+  padding: 18px 16px 16px; margin-bottom: 14px; text-align: center;
+  animation: fadeUp .4s cubic-bezier(.3,1.3,.5,1) backwards;
+}
+.mh-trophy { margin-bottom: 6px; animation: chestBounce 2.6s cubic-bezier(.3,1.6,.4,1) 1s infinite; display: inline-block; }
+.mh-rules { text-align: right; margin: 10px 2px 16px; }
+.mh-rule {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 600; font-size: 15px; color: var(--ink);
+  padding: 7px 2px;
+}
+.mh-rule + .mh-rule { border-top: 1.5px solid #F1F1F1; }
+.mh-x { color: var(--red); font-weight: 800; width: 20px; text-align: center; }
+.mock-first-note { font-size: 14.5px; font-weight: 600; color: var(--gray); line-height: 1.9; }
+.mock-timer { flex: 1; }
+.mock-timer .qt-num { min-width: 52px; }
+.mock-count { font-weight: 800; font-size: 15px; color: var(--gray); white-space: nowrap; }
+.mock-result .result-cards { width: 100%; }
+.mock-result .rcard .rc-t { font-size: 12px; }
+.mock-result h3 { margin-bottom: 10px; }
