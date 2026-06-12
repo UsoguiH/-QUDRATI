@@ -9,6 +9,9 @@ figkit.json
 WelcomeSVG.txt
 قدرات GAME.txt
 
+# Figma reference assets (Duolingo IP — local reference only, never publish)
+design-ref/
+
 # OS
 Thumbs.db
 .DS_Store
