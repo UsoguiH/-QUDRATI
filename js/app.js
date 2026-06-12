@@ -142,7 +142,7 @@ function countdownCard() {
     <div class="ec-row">${ico("timer", 28)}<div class="ec-head">${head}</div><span class="ec-edit" aria-hidden="true">✎</span></div>
     <div class="ec-ready">
       <span class="ec-label">جاهزيتك</span>
-      <div class="ec-bar"><i style="width:${pct}%"></i></div>
+      <div class="ec-bar duo-bar"><i style="width:${pct}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft);animation-delay:.35s"></i></div>
       <b class="ec-pct">${toAr(pct)}٪</b>
     </div>
   </div>`;
@@ -681,13 +681,13 @@ function renderStats() {
   let r = 0, w = 0;
   Object.values(S.qstats).forEach(s => { r += s.r; w += s.w; });
   const acc = (r + w) ? Math.round(r / (r + w) * 100) : 0;
-  const domBars = domains().map(d => {
+  const domBars = domains().map((d, i) => {
     let dr = 0, dw = 0;
     d.lessons.forEach(l => l.questions.forEach(q => { const s = S.qstats[q.id]; if (s) { dr += s.r; dw += s.w; } }));
     const p = (dr + dw) ? Math.round(dr / (dr + dw) * 100) : 0;
-    const c = (UNIT_COLORS[d.color] || UNIT_COLORS.green).c;
+    const u = UNIT_COLORS[d.color] || UNIT_COLORS.green;
     return `<div class="dom-stat"><div class="ds-head"><span>${d.title}</span><span>${(dr + dw) ? toAr(p) + "٪" : "—"}</span></div>
-      <div class="rb-track" style="display:block;height:14px;border-radius:8px;background:var(--swan);overflow:hidden"><span class="rb-fill" style="display:block;height:100%;width:${p}%;background:${c}"></span></div></div>`;
+      <div class="duo-bar"><i style="width:${p}%;--bar-c:${u.c};--bar-shine:${u.h};animation-delay:${(0.25 + i * 0.13).toFixed(2)}s"></i></div></div>`;
   }).join("");
   $app.innerHTML = statbar() + `<div class="screen"><div class="page">
     <h1>إحصائياتي</h1><div class="sub">تابع تقدمك نحو درجة أعلى</div>

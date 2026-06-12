@@ -1259,15 +1259,21 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .ec-edit { color: var(--gray-icon); font-size: 17px; }
 .ec-ready { display: flex; align-items: center; gap: 10px; margin-top: 11px; }
 .ec-label { font-size: 13px; font-weight: 700; color: var(--gray); }
-.ec-bar {
-  flex: 1; height: 16px; border-radius: 64px; background: var(--line); overflow: hidden;
+.ec-bar { flex: 1; }
+
+/* --- shared Duolingo bar: 16px r64 track, solid fill, 5px r6 inset
+   shine stripe (exact anatomy from the Figma Progress Bar set),
+   fill grows 0 → value on appear --- */
+@keyframes barGrow { from { width: 0; } }
+.duo-bar { height: 16px; border-radius: 64px; background: var(--line); overflow: hidden; }
+.duo-bar > i {
+  display: block; height: 100%; border-radius: 64px; position: relative;
+  background: var(--bar-c, var(--green)); min-width: 9px;
+  animation: barGrow .9s cubic-bezier(.25, 1, .4, 1) backwards;
 }
-.ec-bar i {
-  display: block; height: 100%; border-radius: 64px;
-  background: var(--gold);
-  box-shadow: inset 0 -4px 0 rgba(0,0,0,.12), inset 0 3px 0 var(--gold-shine);
-  transition: width .6s cubic-bezier(.3,1.2,.5,1);
-  min-width: 6px;
+.duo-bar > i::after {
+  content: ''; position: absolute; top: 4px; right: 8px; left: 8px;
+  height: 5px; border-radius: 6px; background: var(--bar-shine, rgba(255,255,255,.45));
 }
 .ec-pct { font-size: 14px; color: var(--gold-dk); min-width: 34px; text-align: left; }
 .exam-card-empty .ec-txt { flex: 1; }
