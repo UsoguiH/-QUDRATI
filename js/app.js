@@ -134,7 +134,7 @@ function statbar() {
     <div class="stat stat-streak">${ico("streak", 23)}${toAr(S.streak.count)}</div>
     <button class="stat-chest ${ready ? "ready" : ""} ${S.daily.claimed ? "claimed" : ""}" onclick="A.chestTap()" aria-label="صندوق اليوم">
       ${chestSVG("sc-chest" + (ready ? " qc-bounce" : n >= DAILY_GOAL - 2 && !S.daily.claimed ? " qc-excited" : ""))}
-      ${S.daily.claimed ? `<span class="sc-pill sc-done">${ico("check", 12)}</span>`
+      ${S.daily.claimed ? `<span class="sc-pill sc-done">${CHECK_BADGE}</span>`
         : ready ? `<span class="sc-pill sc-open">افتح!</span>`
           : `<span class="sc-pill sc-count">${toAr(n)}/${toAr(DAILY_GOAL)}</span>`}
     </button>
@@ -207,31 +207,23 @@ function chestSVG(cls) {
   </svg>`;
 }
 
-function dailyQuestCard() {
+/* Floating quest pill (Duolingo style): fixed above the bottom nav,
+   stays visible while scrolling the path. Hides once today's chest
+   is claimed — the statbar chest carries the ✓. */
+function floatingQuest() {
   dailyReset();
   const n = S.daily.n, done = n >= DAILY_GOAL;
-  if (done && S.daily.claimed) {
-    return `<div class="quest-card quest-claimed">
-      <div class="qc-row">
-        <span class="qc-done-badge">${ico("check", 24)}</span>
-        <div class="qc-txt"><b>أنجزت تمرين اليوم!</b><span>عُد غداً لصندوق جديد 🎁</span></div>
-      </div></div>`;
-  }
+  if (S.daily.claimed) return "";
   if (done) {
-    return `<div class="quest-card quest-ready" onclick="A.openChest()">
-      <div class="qc-row">
-        <div class="qc-txt"><b>اكتمل تمرين اليوم!</b><span>اضغط لفتح صندوقك</span></div>
-        <span class="qc-tap">افتح!</span>
-      </div></div>`;
+    return `<button class="quest-float qf-ready" onclick="A.openChest()">🎁 افتح صندوقك!</button>`;
   }
-  return `<div class="quest-card">
-    <div class="qc-head"><b>تمرين اليوم</b>${ico("lightning", 18)}</div>
-    <div class="qc-task">حل ${toAr(DAILY_GOAL)} أسئلة</div>
-    <div class="qc-barrow">
-      <div class="duo-bar qc-bar"><i style="width:${Math.round(n / DAILY_GOAL * 100)}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft);animation-delay:.5s"></i>
-        <b class="qc-count">${toAr(n)} / ${toAr(DAILY_GOAL)}</b></div>
-    </div>
-  </div>`;
+  return `<button class="quest-float" onclick="A.chestTap()">
+    <span class="qf-cap">${ico("lightning", 15)} تمرين اليوم</span>
+    <span class="qf-row">
+      <span class="duo-bar qf-bar"><i style="width:${Math.round(n / DAILY_GOAL * 100)}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft);animation-delay:.55s"></i></span>
+      <b class="qf-count">${toAr(n)}/${toAr(DAILY_GOAL)}</b>
+    </span>
+  </button>`;
 }
 
 /* Chest-opening ceremony: veil → chest drops & lands with a squash →
@@ -321,7 +313,7 @@ function renderPath() {
     });
     html += `</div>`;
   });
-  $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${dailyQuestCard()}${html}<div style="height:20px"></div></div>` + bottomnav("path");
+  $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${html}<div style="height:20px"></div></div>` + floatingQuest() + bottomnav("path");
 }
 
 
