@@ -142,7 +142,7 @@ A.chestTap = function () {
   toast(`باقي ${toAr(DAILY_GOAL - S.daily.n)} أسئلة لفتح صندوق اليوم 🎁`);
 };
 function bottomnav(active) {
-  const items = [["path", "nav-home"], ["mock", "nav-trophy"], ["stats", "nav-chest"], ["settings", "nav-more"]];
+  const items = [["path", "nav-home"], ["mock", "nav-exam"], ["stats", "nav-chest"], ["settings", "nav-more"]];
   return `<nav class="bottomnav">` + items.map(([k, i]) =>
     `<button class="navbtn ${active === k ? "active" : ""}" onclick="A.go('${k}')" aria-label="${k}">${ico(i, 30)}</button>`).join("") + `</nav>`;
 }

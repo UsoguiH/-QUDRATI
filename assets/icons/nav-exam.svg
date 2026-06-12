@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- clipboard (from exam_tab.jpeg): blue board, clip, white sheet -->
+  <rect x="7" y="6" width="36" height="39" rx="7" fill="#1899D6"/>
+  <rect x="7" y="5" width="36" height="38" rx="7" fill="#1CB0F6"/>
+  <rect x="11" y="9" width="28" height="30" rx="4" fill="#FFFFFF"/>
+  <rect x="17" y="3" width="16" height="8" rx="3" fill="#1899D6"/>
+  <rect x="21" y="1" width="8" height="6" rx="3" fill="#1899D6"/>
+  <!-- answer circles: أ (top-left in LTR coords = top-right visually RTL) -->
+  <circle cx="32" cy="18.5" r="5.8" stroke="#D9D9D9" stroke-width="1.9"/>
+  <circle cx="32" cy="32.5" r="5.8" stroke="#D9D9D9" stroke-width="1.9"/>
+  <circle cx="18" cy="32.5" r="5.8" stroke="#D9D9D9" stroke-width="1.9"/>
+  <text x="32" y="21.8" font-size="9.5" font-weight="700" fill="#1CB0F6" text-anchor="middle" font-family="'Segoe UI',Tahoma,sans-serif">أ</text>
+  <text x="32" y="35.2" font-size="9.5" font-weight="700" fill="#1CB0F6" text-anchor="middle" font-family="'Segoe UI',Tahoma,sans-serif">ج</text>
+  <text x="18" y="35.2" font-size="9.5" font-weight="700" fill="#1CB0F6" text-anchor="middle" font-family="'Segoe UI',Tahoma,sans-serif">د</text>
+  <!-- green scribble marking ب -->
+  <g>
+    <circle cx="18" cy="18.5" r="6.6" fill="#58CC02"/>
+    <circle cx="14.6" cy="16.2" r="3.4" fill="#58CC02"/>
+    <circle cx="21.6" cy="15.6" r="3.1" fill="#58CC02"/>
+    <circle cx="21.9" cy="21.4" r="3.2" fill="#58CC02"/>
+    <circle cx="14.8" cy="21.2" r="3" fill="#58CC02"/>
+    <text x="18" y="21.8" font-size="9.5" font-weight="700" fill="#FFFFFF" text-anchor="middle" font-family="'Segoe UI',Tahoma,sans-serif">ب</text>
+  </g>
+  <!-- pencil pointing at the marked answer -->
+  <g transform="translate(12.2,24.2) rotate(38)">
+    <path d="M-2.6 7.5 L0 1.2 L2.6 7.5 Z" fill="#E5AE7C"/>
+    <path d="M-1 5.4 L0 1.2 L1 5.4 Z" fill="#4B4B4B"/>
+    <rect x="-2.9" y="7" width="5.8" height="16" rx="1.6" fill="#FFC800"/>
+    <rect x="-0.9" y="7" width="1.8" height="16" fill="#E6A000"/>
+    <rect x="-2.9" y="21.4" width="5.8" height="4.6" rx="2" fill="#FF9DA0"/>
+  </g>
+</svg>
