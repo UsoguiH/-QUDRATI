@@ -820,7 +820,7 @@ function renderMockHome() {
       <button class="btn" onclick="A.startMock()">ابدأ المحاكاة</button>
     </div>
     ${mocks.length ? `<div class="tiles">
-      <div class="tile">${ico("star-done", 26)}<div><div class="t-v">${toAr(best)}٪</div><div class="t-l">أفضل نتيجة</div></div></div>
+      <div class="tile">${ico("star-gold", 26)}<div><div class="t-v">${toAr(best)}٪</div><div class="t-l">أفضل نتيجة</div></div></div>
       <div class="tile">${ico("target", 26)}<div><div class="t-v">~${toAr(estOf(last))}</div><div class="t-l">آخر تقدير (من ١٠٠)</div></div></div>
     </div>` : `<div class="card mock-first-note">أول محاكاة لك ستحدد خط البداية — لا تقلق من النتيجة، المهم أن تعرف أين أنت الآن 💪</div>`}
   </div></div>` + bottomnav("mock");
@@ -1017,7 +1017,7 @@ function finishMock(timedOut) {
     <h1 class="win-title">${timedOut ? "انتهى الوقت!" : "انتهت المحاكاة!"}</h1>
     <p class="win-sub">${unanswered ? `${toAr(unanswered)} أسئلة بلا إجابة — ` : ""}السرعة والدقة معاً هما سر قدرات</p>
     <div class="result-cards">
-      <div class="rcard rc-gold"><div class="rc-t">نتيجتك</div><div class="rc-v">${ico("star-done", 20)} <span id="mv-score">٠</span>/${toAr(total)}</div></div>
+      <div class="rcard rc-gold"><div class="rc-t">نتيجتك</div><div class="rc-v">${ico("star-gold", 20)} <span id="mv-score">٠</span>/${toAr(total)}</div></div>
       <div class="rcard rc-blue"><div class="rc-t">تقديرك التقريبي</div><div class="rc-v">${ico("target", 20)} ~<span id="mv-est">٠</span></div></div>
       <div class="rcard rc-green"><div class="rc-t">الوقت</div><div class="rc-v">${TIMER_SVG} ${toAr(mins)} د</div></div>
     </div>
