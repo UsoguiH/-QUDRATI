@@ -1464,33 +1464,20 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 }
 .stat-chest:active .sc-chest { transform: scale(.92); }
 
-/* --- floating daily-quest pill (visible while scrolling the path) --- */
-.quest-float {
-  position: fixed; bottom: calc(var(--nav-h) + 14px); left: 12px; z-index: 40;
-  display: flex; flex-direction: column; gap: 6px; width: 152px;
-  background: #fff; border: 2px solid var(--line); border-radius: 16px;
-  padding: 9px 12px 10px; box-shadow: 0 4px 0 var(--line);
-  font-family: var(--font); cursor: pointer;
+/* --- floating daily chest (bottom corner of the path, rides the scroll) --- */
+.chest-float {
+  position: fixed; bottom: calc(var(--nav-h) + 12px); left: 14px; z-index: 40;
+  background: none; border: 0; padding: 4px;
+  display: flex; flex-direction: column; align-items: center;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
   animation: fadeUp .45s .25s cubic-bezier(.3,1.3,.5,1) backwards;
-  -webkit-tap-highlight-color: transparent;
 }
-.quest-float:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--line); }
-.qf-cap {
-  display: flex; align-items: center; justify-content: center; gap: 5px;
-  font-size: 13px; font-weight: 800; color: var(--ink);
+.chest-float .cf-chest {
+  width: 58px; height: 54px; overflow: visible;
+  filter: drop-shadow(0 4px 0 rgba(0,0,0,.13));
 }
-.qf-row { display: flex; align-items: center; gap: 7px; }
-.qf-bar { flex: 1; height: 11px; }
-.qf-bar > i { min-width: 7px; }
-.qf-bar > i::after { top: 2.5px; left: 5px; right: 5px; height: 3px; }
-.qf-count { font-size: 11.5px; color: var(--gold-dk); line-height: 1; }
-.quest-float.qf-ready {
-  width: auto; flex-direction: row; align-items: center;
-  background: var(--gold); border-color: var(--gold-dk); box-shadow: 0 4px 0 var(--gold-dk);
-  color: #fff; font-size: 15px; font-weight: 800; padding: 12px 18px 10px;
-  animation: fadeUp .45s .25s cubic-bezier(.3,1.3,.5,1) backwards, tapPulse 1.6s ease-in-out 1s infinite;
-}
-.quest-float.qf-ready:active { box-shadow: 0 2px 0 var(--gold-dk); }
-
-/* green ✓ inside the statbar chest pill */
+.chest-float .ch-glow { opacity: 0; }
+.chest-float:active .cf-chest { transform: scale(.92); }
+.chest-float.ready { animation: questGlowSoft 1.6s ease-in-out infinite; }
+.chest-float.claimed .cf-chest { filter: saturate(.5) opacity(.78) drop-shadow(0 4px 0 rgba(0,0,0,.08)); }
 .sc-done svg { width: 12px; height: 12px; color: #fff; display: block; }

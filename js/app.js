@@ -128,16 +128,8 @@ function go(v) { view = v; render(); window.scrollTo(0, 0); }
 const ico = (name, size) => `<img class="ic" src="assets/icons/${name}.svg" width="${size}" height="${size}" alt="">`;
 
 function statbar() {
-  dailyReset();
-  const n = S.daily.n, ready = n >= DAILY_GOAL && !S.daily.claimed;
   return `<div class="statbar">
     <div class="stat stat-streak">${ico("streak", 23)}${toAr(S.streak.count)}</div>
-    <button class="stat-chest ${ready ? "ready" : ""} ${S.daily.claimed ? "claimed" : ""}" onclick="A.chestTap()" aria-label="صندوق اليوم">
-      ${chestSVG("sc-chest" + (ready ? " qc-bounce" : n >= DAILY_GOAL - 2 && !S.daily.claimed ? " qc-excited" : ""))}
-      ${S.daily.claimed ? `<span class="sc-pill sc-done">${CHECK_BADGE}</span>`
-        : ready ? `<span class="sc-pill sc-open">افتح!</span>`
-          : `<span class="sc-pill sc-count">${toAr(n)}/${toAr(DAILY_GOAL)}</span>`}
-    </button>
     <div class="stat stat-xp">${ico("gem", 22)}${toAr(S.xp)}</div>
   </div>`;
 }
@@ -207,22 +199,17 @@ function chestSVG(cls) {
   </svg>`;
 }
 
-/* Floating quest pill (Duolingo style): fixed above the bottom nav,
-   stays visible while scrolling the path. Hides once today's chest
-   is claimed — the statbar chest carries the ✓. */
+/* Floating daily chest (Duolingo style): fixed above the bottom nav
+   on the path, stays put while scrolling. The pill under it shows
+   the n/10 count, a pulsing "افتح!" when ready, or a green ✓. */
 function floatingQuest() {
   dailyReset();
-  const n = S.daily.n, done = n >= DAILY_GOAL;
-  if (S.daily.claimed) return "";
-  if (done) {
-    return `<button class="quest-float qf-ready" onclick="A.openChest()">🎁 افتح صندوقك!</button>`;
-  }
-  return `<button class="quest-float" onclick="A.chestTap()">
-    <span class="qf-cap">${ico("lightning", 15)} تمرين اليوم</span>
-    <span class="qf-row">
-      <span class="duo-bar qf-bar"><i style="width:${Math.round(n / DAILY_GOAL * 100)}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft);animation-delay:.55s"></i></span>
-      <b class="qf-count">${toAr(n)}/${toAr(DAILY_GOAL)}</b>
-    </span>
+  const n = S.daily.n, ready = n >= DAILY_GOAL && !S.daily.claimed;
+  return `<button class="chest-float ${ready ? "ready" : ""} ${S.daily.claimed ? "claimed" : ""}" onclick="A.chestTap()" aria-label="صندوق اليوم">
+    ${chestSVG("cf-chest" + (ready ? " qc-bounce" : n >= DAILY_GOAL - 2 && !S.daily.claimed ? " qc-excited" : ""))}
+    ${S.daily.claimed ? `<span class="sc-pill sc-done">${CHECK_BADGE}</span>`
+      : ready ? `<span class="sc-pill sc-open">افتح!</span>`
+        : `<span class="sc-pill sc-count">${toAr(n)}/${toAr(DAILY_GOAL)}</span>`}
   </button>`;
 }
 
