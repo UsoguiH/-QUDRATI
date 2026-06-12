@@ -803,7 +803,7 @@ function renderMockHome() {
   $app.innerHTML = statbar() + `<div class="screen"><div class="page">
     <h1>محاكاة الاختبار</h1><div class="sub">جرّب جو الاختبار الحقيقي وقس مستواك</div>
     <div class="mock-hero-card">
-      <div class="mh-trophy">${ico("nav-trophy", 54)}</div>
+      <div class="mh-trophy">${ico("nav-exam", 62)}</div>
       <div class="mh-rules">
         <div class="mh-rule">${ico("guide", 20)} ${toAr(20)} سؤالاً من جميع الأقسام</div>
         <div class="mh-rule">${ico("timer", 20)} ${toAr(25)} دقيقة لكل الأسئلة</div>
