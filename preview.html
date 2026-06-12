@@ -47,11 +47,16 @@
       else if (h === "mocktest") A.startMock();
       else if (h === "mockdone") {
         A.startMock();
-        for (let i = 0; i < 25 && document.getElementById("mockNextBtn"); i++) {
-          const q = A.debugMock();
-          const n = q.format === "comparison" ? 4 : q.choices.length;
-          A.mockPick(i % 3 === 0 ? (q.answer + 1) % n : q.answer);
-          A.mockNext();
+        for (let s = 0; s < 2; s++) {
+          const total = document.querySelectorAll(".qn-chip").length;
+          for (let i = 0; i < total; i++) {
+            A.mockGo(i);
+            const q = A.debugMock();
+            const n = q.format === "comparison" ? 4 : q.choices.length;
+            A.mockSelect(i % 3 === 0 ? (q.answer + 1) % n : q.answer);
+          }
+          A.mockEndSection();
+          if (s === 0) A.mockNextSection();
         }
       }
       else if (h === "lesson") {

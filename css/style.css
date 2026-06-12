@@ -1506,3 +1506,37 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .mock-result .result-cards { width: 100%; }
 .mock-result .rcard .rc-t { font-size: 12px; }
 .mock-result h3 { margin-bottom: 10px; }
+
+/* --- mock exam: question navigator + action bar + result band --- */
+.qnav {
+  display: flex; gap: 6px; overflow-x: auto; flex-shrink: 0;
+  padding: 8px 16px 6px; scrollbar-width: none;
+}
+.qnav::-webkit-scrollbar { display: none; }
+.qn-chip {
+  min-width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+  border: 2px solid var(--line); background: #fff; position: relative;
+  font-family: var(--font); font-weight: 700; font-size: 14px; color: var(--gray);
+  padding: 3px 0 0; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.qn-chip.done { background: var(--blue-light); border-color: var(--blue-border); color: var(--blue-dk); }
+.qn-chip.cur { border-color: var(--blue); box-shadow: 0 0 0 2.5px rgba(28,176,246,.28); }
+.qn-chip.flagged::after {
+  content: '⚑'; position: absolute; top: -10px; left: -3px;
+  color: var(--gold-dk); font-size: 13px;
+}
+.mock-bar { display: flex; gap: 9px; align-items: stretch; }
+.mock-bar .btn { flex: 1; }
+.mk-flag {
+  width: 52px; flex-shrink: 0; border-radius: 13px;
+  border: 2px solid var(--line); background: #fff;
+  font-size: 21px; color: var(--gray-icon); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mk-flag.on { color: var(--gold-dk); border-color: var(--gold); background: #FFF6D8; }
+.mk-side { flex: 0 0 auto !important; width: auto; padding: 13px 18px 9px; }
+.mock-band {
+  font-size: 17px; font-weight: 800; color: var(--gold-dk);
+  margin: 4px 0 2px; animation: fadeUp .5s .8s ease backwards;
+}
+.mock-note { font-size: 12.5px; font-weight: 600; color: var(--gray-icon); margin-bottom: 14px; }

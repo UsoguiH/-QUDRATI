@@ -24,8 +24,13 @@ const Q_SECS = 90;           // seconds allowed per question
 const FREEZE_COST = 10;      // blue gems to freeze the timer for the current question
 const FIFTY_COST = 15;       // blue gems to remove two wrong choices (50/50)
 const DAILY_GOAL = 10;       // questions to answer for today's quest chest
-const MOCK_PLAN = { arithmetic: 8, algebra: 4, geometry: 5, statistics: 3 }; // ~real GAT quant mix
-const MOCK_SECS = 25 * 60;   // one timed section, like the real thing
+/* Real computerized GAT format (researched 2026): quant sections of 25
+   min each, free navigation + flagging inside a section, sealed once
+   ended. Official topic mix ≈ 40% arithmetic / 24% algebra /
+   23% geometry / 13% statistics; lit track gets a lighter quant load. */
+const MOCK_SECTION_PLAN = { sci: [10, 6, 5, 3], lit: [6, 4, 3, 2] }; // per-section counts in DOMAIN_ORDER
+const MOCK_SECTIONS = 2;
+const MOCK_SECS = 25 * 60;   // per section, like the real thing
 const todayKey = () => { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
 const fmtTime = s => toAr(String(Math.floor(Math.max(0, s) / 60)).padStart(2, "0")) + ":" + toAr(String(Math.max(0, s) % 60).padStart(2, "0"));
 
@@ -665,7 +670,7 @@ A.check = function () {
 A.toggleSol = function () { const s = document.getElementById("sol"); s.style.display = s.style.display === "none" ? "block" : "none"; };
 
 A.debugCurrent = function () { return SES && SES.queue[SES.idx]; }; // dev harness (preview.html) only
-A.debugMock = function () { return MOCK && MOCK.queue[MOCK.idx].q; }; // dev harness only
+A.debugMock = function () { return MOCK && MOCK.sections[MOCK.si].items[MOCK.qi].q; }; // dev harness only
 
 A.next = function () {
   if (SES.hearts <= 0) { sessionFailed(); return; }
@@ -806,9 +811,10 @@ function renderMockHome() {
     <div class="mock-hero-card">
       <div class="mh-trophy"><img class="ic" src="assets/icons/nav-exam-192.png" width="84" height="84" alt=""></div>
       <div class="mh-rules">
-        <div class="mh-rule">${ico("guide", 20)} ${toAr(20)} سؤالاً من جميع الأقسام</div>
-        <div class="mh-rule">${ico("timer", 20)} ${toAr(25)} دقيقة لكل الأسئلة</div>
-        <div class="mh-rule"><span class="mh-x">✕</span> بدون مساعدات وبدون قلوب — مثل الاختبار تماماً</div>
+        <div class="mh-rule">${ico("guide", 20)} قسمان كمّيان × ${toAr(S.track === "lit" ? 15 : 24)} سؤالاً — بالتوزيع الرسمي للمواضيع</div>
+        <div class="mh-rule">${ico("timer", 20)} ${toAr(25)} دقيقة لكل قسم بمؤقّت مستقل</div>
+        <div class="mh-rule">${ico("target", 20)} تنقّل وعلّم الأسئلة داخل القسم — ولا رجوع بعد إنهائه</div>
+        <div class="mh-rule"><span class="mh-x">✕</span> بدون حاسبة وبدون مساعدات — مثل المحوسب تماماً</div>
       </div>
       <button class="btn" onclick="A.startMock()">ابدأ المحاكاة</button>
     </div>
@@ -820,65 +826,136 @@ function renderMockHome() {
 }
 
 A.startMock = function () {
-  const items = [];
+  const plan = MOCK_SECTION_PLAN[S.track === "lit" ? "lit" : "sci"];
+  const pools = {};
   DOMAIN_ORDER.forEach(k => {
     const d = (window.QBANK || {})[k];
-    if (!d) return;
     let pool = [];
-    d.lessons.forEach(l => pool.push(...trackFilter(l.questions)));
-    shuffle(pool).slice(0, MOCK_PLAN[k]).forEach(q => items.push({ q, dom: k }));
+    if (d) d.lessons.forEach(l => pool.push(...trackFilter(l.questions)));
+    pools[k] = shuffle(pool);
   });
-  if (items.length < 5) { showModal("⭐", "لا توجد أسئلة", "بنك الأسئلة غير متاح.", "حسناً"); return; }
-  MOCK = { queue: shuffle(items), idx: 0, sel: null, answers: [], left: MOCK_SECS, timer: null, t0: Date.now() };
-  renderMockQ();
-  MOCK.timer = setInterval(() => {
-    MOCK.left--;
-    const n = document.getElementById("mkNum"), f = document.getElementById("mkFill"), w = document.getElementById("mkWrap");
-    if (n) n.textContent = fmtTime(MOCK.left);
-    if (f) f.style.width = (MOCK.left / MOCK_SECS * 100) + "%";
-    if (w) { w.classList.toggle("low", MOCK.left <= 120 && MOCK.left > 30); w.classList.toggle("crit", MOCK.left <= 30); }
-    if (MOCK.left <= 0) finishMock(true);
-  }, 1000);
+  const sections = [];
+  for (let s = 0; s < MOCK_SECTIONS; s++) {
+    const items = [];
+    DOMAIN_ORDER.forEach((k, i) => {
+      pools[k].slice(s * plan[i], (s + 1) * plan[i]).forEach(q => items.push({ q, dom: k }));
+    });
+    sections.push({
+      items: shuffle(items),
+      answers: new Array(items.length).fill(null),
+      flags: new Array(items.length).fill(false),
+      left: MOCK_SECS
+    });
+  }
+  if (!sections[0].items.length) { showModal("⭐", "لا توجد أسئلة", "بنك الأسئلة غير متاح.", "حسناً"); return; }
+  MOCK = { sections, si: 0, qi: 0, timer: null };
+  startMockSection();
 };
 
+/* each section runs on its own 25-minute clock, like the computerized exam */
+function startMockSection() {
+  MOCK.qi = 0;
+  renderMockQ();
+  clearInterval(MOCK.timer);
+  MOCK.timer = setInterval(() => {
+    const sec = MOCK.sections[MOCK.si];
+    sec.left--;
+    const n = document.getElementById("mkNum"), f = document.getElementById("mkFill"), w = document.getElementById("mkWrap");
+    if (n) n.textContent = fmtTime(sec.left);
+    if (f) f.style.width = (sec.left / MOCK_SECS * 100) + "%";
+    if (w) { w.classList.toggle("low", sec.left <= 120 && sec.left > 30); w.classList.toggle("crit", sec.left <= 30); }
+    if (sec.left <= 0) { toast("⏰ انتهى وقت القسم"); endMockSection(true); }
+  }, 1000);
+}
+
+/* numbered navigator: answered / flagged / current — jump anywhere inside the section */
+function qnavStrip(sec) {
+  return `<div class="qnav">` + sec.items.map((_, i) =>
+    `<button class="qn-chip ${i === MOCK.qi ? "cur" : ""} ${sec.answers[i] !== null ? "done" : ""} ${sec.flags[i] ? "flagged" : ""}" onclick="A.mockGo(${i})">${toAr(i + 1)}</button>`
+  ).join("") + `</div>`;
+}
+
 function renderMockQ() {
-  const { q } = MOCK.queue[MOCK.idx];
+  const sec = MOCK.sections[MOCK.si];
+  const { q } = sec.items[MOCK.qi];
   $app.innerHTML = `
     <div class="screen screen-full">
       <div class="session-top">
         <button class="x-btn" onclick="A.quitMock()">${X_SVG}</button>
         <div class="qtimer mock-timer" id="mkWrap">
           <span class="qt-ico">${CLOCK_SVG}</span>
-          <div class="qt-track"><i class="qt-fill" id="mkFill" style="width:${MOCK.left / MOCK_SECS * 100}%"></i></div>
-          <b class="qt-num" id="mkNum">${fmtTime(MOCK.left)}</b>
+          <div class="qt-track"><i class="qt-fill" id="mkFill" style="width:${sec.left / MOCK_SECS * 100}%"></i></div>
+          <b class="qt-num" id="mkNum">${fmtTime(sec.left)}</b>
         </div>
-        <span class="mock-count">${toAr(MOCK.idx + 1)}/${toAr(MOCK.queue.length)}</span>
+        <span class="mock-count">القسم ${toAr(MOCK.si + 1)}/${toAr(MOCK.sections.length)}</span>
       </div>
-      <div class="q-area">${questionBody(q, MOCK.sel, false, "A.mockPick")}</div>
-      <div class="action-bar"><button class="btn" id="mockNextBtn" onclick="A.mockNext()" ${MOCK.sel === null ? "disabled" : ""}>${MOCK.idx + 1 === MOCK.queue.length ? "إنهاء" : "التالي"}</button></div>
+      ${qnavStrip(sec)}
+      <div class="q-area">${questionBody(q, sec.answers[MOCK.qi], false, "A.mockSelect")}</div>
+      <div class="action-bar mock-bar">
+        <button class="mk-flag ${sec.flags[MOCK.qi] ? "on" : ""}" onclick="A.mockFlag()" aria-label="علّم السؤال للمراجعة">⚑</button>
+        <button class="btn btn-ghost mk-side" onclick="A.mockGo(${MOCK.qi - 1})" ${MOCK.qi === 0 ? "disabled" : ""}>السابق</button>
+        ${MOCK.qi === sec.items.length - 1
+          ? `<button class="btn" onclick="A.mockEndSection()">إنهاء القسم</button>`
+          : `<button class="btn" onclick="A.mockGo(${MOCK.qi + 1})">التالي</button>`}
+      </div>
     </div>`;
 }
 
-A.mockPick = function (i) {
+A.mockSelect = function (i) {
   if (!MOCK) return;
-  MOCK.sel = i;
+  const sec = MOCK.sections[MOCK.si];
+  if (sec.answers[MOCK.qi] === null) dailyTick(); // each question counts once for the daily quest
+  sec.answers[MOCK.qi] = i;
   document.querySelectorAll(".choice").forEach((b, j) => b.classList.toggle("sel", j === i));
-  document.getElementById("mockNextBtn").disabled = false;
+  const chip = document.querySelectorAll(".qn-chip")[MOCK.qi];
+  if (chip) chip.classList.add("done");
+  save();
 };
 
-A.mockNext = function () {
-  if (!MOCK || MOCK.sel === null) return;
-  const { q, dom } = MOCK.queue[MOCK.idx];
-  const correct = MOCK.sel === q.answer;
-  const qs = S.qstats[q.id] = S.qstats[q.id] || { r: 0, w: 0 };
-  correct ? qs.r++ : qs.w++;
-  dailyTick();
-  MOCK.answers.push({ q, dom, picked: MOCK.sel, correct });
-  MOCK.idx++; MOCK.sel = null;
-  save();
-  if (MOCK.idx >= MOCK.queue.length) { finishMock(false); return; }
+A.mockGo = function (i) {
+  if (!MOCK) return;
+  const sec = MOCK.sections[MOCK.si];
+  if (i < 0 || i >= sec.items.length) return;
+  MOCK.qi = i;
   renderMockQ();
 };
+
+A.mockFlag = function () {
+  const sec = MOCK.sections[MOCK.si];
+  sec.flags[MOCK.qi] = !sec.flags[MOCK.qi];
+  renderMockQ();
+};
+
+A.mockEndSection = function () {
+  const sec = MOCK.sections[MOCK.si];
+  const un = sec.answers.filter(a => a === null).length;
+  if (un && !confirm(`لديك ${toAr(un)} أسئلة بلا إجابة — لا يمكن الرجوع للقسم بعد إنهائه. متابعة؟`)) return;
+  endMockSection(false);
+};
+
+/* seal the section into qstats — no going back, like the real exam */
+function endMockSection(timedOut) {
+  clearInterval(MOCK.timer);
+  const sec = MOCK.sections[MOCK.si];
+  sec.items.forEach((it, i) => {
+    const qs = S.qstats[it.q.id] = S.qstats[it.q.id] || { r: 0, w: 0 };
+    sec.answers[i] === it.q.answer ? qs.r++ : qs.w++;
+  });
+  save();
+  if (MOCK.si < MOCK.sections.length - 1) {
+    MOCK.si++;
+    $app.innerHTML = `<div class="screen screen-full exam-setup">
+      <div class="es-hero"><img class="ic" src="assets/icons/nav-exam-192.png" width="96" height="96" alt=""></div>
+      <h1 class="login-title">انتهى القسم ${toAr(MOCK.si)}</h1>
+      <p class="login-sub">خذ نفساً عميقاً — القسم ${toAr(MOCK.si + 1)} مدته ${toAr(25)} دقيقة ويبدأ عندما تضغط</p>
+      <div class="login-form"><button class="btn" onclick="A.mockNextSection()">ابدأ القسم ${toAr(MOCK.si + 1)}</button></div>
+    </div>`;
+    window.scrollTo(0, 0);
+  } else {
+    finishMock(timedOut);
+  }
+}
+A.mockNextSection = function () { startMockSection(); };
 
 A.quitMock = function () {
   if (confirm("هل تريد إنهاء المحاكاة؟ لن تُحسب نتيجتها.")) {
@@ -888,16 +965,29 @@ A.quitMock = function () {
 
 function finishMock(timedOut) {
   clearInterval(MOCK.timer);
-  const answers = MOCK.answers, total = MOCK.queue.length;
-  const score = answers.filter(a => a.correct).length;
-  const est = Math.round(35 + 65 * score / total);
-  const mins = Math.round((MOCK_SECS - Math.max(0, MOCK.left)) / 60);
+  let total = 0, score = 0, unanswered = 0, secsUsed = 0;
   const perDom = {};
   DOMAIN_ORDER.forEach(k => perDom[k] = { r: 0, n: 0 });
-  MOCK.queue.forEach(it => perDom[it.dom].n++);
-  answers.forEach(a => { if (a.correct) perDom[a.dom].r++; });
-  const wrong = answers.filter(a => !a.correct);
-  const skipped = total - answers.length;
+  const wrong = [];
+  MOCK.sections.forEach(sec => {
+    secsUsed += MOCK_SECS - Math.max(0, sec.left);
+    sec.items.forEach((it, i) => {
+      total++; perDom[it.dom].n++;
+      const a = sec.answers[i];
+      if (a === it.q.answer) { score++; perDom[it.dom].r++; }
+      else { if (a === null) unanswered++; wrong.push({ q: it.q, picked: a }); }
+    });
+  });
+  const est = Math.round(35 + 65 * score / total);
+  /* researched national bands: 81+ = top 5%, 85 ≈ top 2.5%, 90 = elite, 65 = mean */
+  const band = est >= 90 ? "ضمن النخبة — أعلى ٠.٥٪ من الطلاب 🏆"
+    : est >= 85 ? "ضمن أفضل ٢.٥٪ من الطلاب 🔥"
+      : est >= 81 ? "ضمن أفضل ٥٪ من الطلاب 🔥"
+        : est >= 75 ? "أعلى من ٨٤٪ من الطلاب 👏"
+          : est >= 70 ? "فوق المتوسط 👍"
+            : est >= 65 ? "حول متوسط الطلاب"
+              : "تحت المتوسط حالياً — التمرين اليومي يرفعك بسرعة 💪";
+  const mins = Math.round(secsUsed / 60);
   S.mocks = (S.mocks || []).concat([{ d: todayKey(), score, total, est }]).slice(-10);
   bumpStreak(); save();
   score / total >= 0.5 ? sndWin() : sndLose();
@@ -916,7 +1006,7 @@ function finishMock(timedOut) {
       const ch = isCmp ? CMP_CHOICES : a.q.choices;
       return `<div class="review-item">
         <div class="ri-q">${a.q.stem || "قارن بين القيمتين"}</div>
-        <div class="ri-row" style="color:var(--red)">✕ إجابتك: ${ch[a.picked]}</div>
+        <div class="ri-row" style="color:var(--red)">✕ إجابتك: ${a.picked === null ? "لم تُجب" : ch[a.picked]}</div>
         <div class="ri-row" style="color:var(--green-dk)">✓ الصحيحة: ${ch[a.q.answer]}</div>
         <button class="fb-solution-toggle" onclick="A.toggleEl('msol${i}')">اعرض الحل</button>
         <div class="fb-solution" id="msol${i}" style="display:none">${esc(a.q.solution)}</div>
@@ -927,12 +1017,14 @@ function finishMock(timedOut) {
   $app.innerHTML = `<div class="screen"><div class="complete mock-result" style="min-height:auto;padding-top:26px">
     ${starHero(120)}
     <h1 class="win-title">${timedOut ? "انتهى الوقت!" : "انتهت المحاكاة!"}</h1>
-    <p class="win-sub">${skipped ? `${toAr(skipped)} أسئلة لم تصل إليها — ` : ""}السرعة والدقة معاً هما سر قدرات</p>
+    <p class="win-sub">${unanswered ? `${toAr(unanswered)} أسئلة بلا إجابة — ` : ""}السرعة والدقة معاً هما سر قدرات</p>
     <div class="result-cards">
       <div class="rcard rc-gold"><div class="rc-t">نتيجتك</div><div class="rc-v">${ico("nav-trophy", 20)} <span id="mv-score">٠</span>/${toAr(total)}</div></div>
       <div class="rcard rc-blue"><div class="rc-t">تقديرك التقريبي</div><div class="rc-v">${ico("target", 20)} ~<span id="mv-est">٠</span></div></div>
       <div class="rcard rc-green"><div class="rc-t">الوقت</div><div class="rc-v">${TIMER_SVG} ${toAr(mins)} د</div></div>
     </div>
+    <div class="mock-band">${band}</div>
+    <div class="mock-note">تقدير تقريبي لأغراض التدريب — النتيجة الرسمية تُحسب بمعادلة قياس المعيارية</div>
     <div class="card" style="text-align:right;width:100%"><h3>أداؤك حسب القسم</h3>${domRows}</div>
     ${wrongList}
     <div class="fail-actions" style="width:100%">
