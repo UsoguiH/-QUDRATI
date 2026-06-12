@@ -800,6 +800,7 @@ function countUp(el, to, suffix) {
    + mistakes review.
    ============================================================ */
 let MOCK = null;
+let MOCK_REVIEW = []; // last finished mock, for the result answer grid
 
 function renderMockHome() {
   const mocks = S.mocks || [];
@@ -968,14 +969,13 @@ function finishMock(timedOut) {
   let total = 0, score = 0, unanswered = 0, secsUsed = 0;
   const perDom = {};
   DOMAIN_ORDER.forEach(k => perDom[k] = { r: 0, n: 0 });
-  const wrong = [];
   MOCK.sections.forEach(sec => {
     secsUsed += MOCK_SECS - Math.max(0, sec.left);
     sec.items.forEach((it, i) => {
       total++; perDom[it.dom].n++;
       const a = sec.answers[i];
       if (a === it.q.answer) { score++; perDom[it.dom].r++; }
-      else { if (a === null) unanswered++; wrong.push({ q: it.q, picked: a }); }
+      else if (a === null) unanswered++;
     });
   });
   const est = Math.round(35 + 65 * score / total);
@@ -986,7 +986,7 @@ function finishMock(timedOut) {
         : est >= 75 ? "أعلى من ٨٤٪ من الطلاب 👏"
           : est >= 70 ? "فوق المتوسط 👍"
             : est >= 65 ? "حول متوسط الطلاب"
-              : "تحت المتوسط حالياً — التمرين اليومي يرفعك بسرعة 💪";
+              : "تحت المتوسط حالياً — التمرين اليومي يرفعك بسرعة";
   const mins = Math.round(secsUsed / 60);
   S.mocks = (S.mocks || []).concat([{ d: todayKey(), score, total, est }]).slice(-10);
   bumpStreak(); save();
@@ -1000,22 +1000,20 @@ function finishMock(timedOut) {
       <div class="duo-bar"><i style="width:${p}%;--bar-c:${u.c};--bar-shine:${u.h};animation-delay:${(0.9 + i * 0.13).toFixed(2)}s"></i></div></div>`;
   }).join("");
 
-  const wrongList = wrong.length ? `<div class="card"><h3>أخطاؤك (${toAr(wrong.length)})</h3>` +
-    wrong.map((a, i) => {
-      const isCmp = a.q.format === "comparison";
-      const ch = isCmp ? CMP_CHOICES : a.q.choices;
-      return `<div class="review-item">
-        <div class="ri-q">${a.q.stem || "قارن بين القيمتين"}</div>
-        <div class="ri-row" style="color:var(--red)">✕ إجابتك: ${a.picked === null ? "لم تُجب" : ch[a.picked]}</div>
-        <div class="ri-row" style="color:var(--green-dk)">✓ الصحيحة: ${ch[a.q.answer]}</div>
-        <button class="fb-solution-toggle" onclick="A.toggleEl('msol${i}')">اعرض الحل</button>
-        <div class="fb-solution" id="msol${i}" style="display:none">${esc(a.q.solution)}</div>
-      </div>`;
-    }).join("") + `</div>` : "";
+  /* numbered answer grid: green = right, red = wrong; tap a number for the full review */
+  MOCK_REVIEW = [];
+  MOCK.sections.forEach(sec => sec.items.forEach((it, i) => MOCK_REVIEW.push({ q: it.q, picked: sec.answers[i] })));
+  const gridCells = MOCK_REVIEW.map((r, i) =>
+    `<button class="mg-cell ${r.picked === r.q.answer ? "ok" : "bad"}" style="--d:${(0.6 + i * 0.035).toFixed(2)}s" onclick="A.mockDetail(${i})">${toAr(i + 1)}</button>`
+  ).join("");
+  const answersCard = `<div class="card" style="text-align:right;width:100%"><h3>إجاباتك — اضغط أي رقم للمراجعة</h3>
+    <div class="mock-grid">${gridCells}</div>
+    <div id="mockDetail"></div>
+  </div>`;
 
   MOCK = null;
-  $app.innerHTML = `<div class="screen"><div class="complete mock-result" style="min-height:auto;padding-top:26px">
-    ${starHero(120)}
+  $app.innerHTML = `<div class="screen"><div class="complete win-scene mock-result" style="min-height:auto;padding-top:26px">
+    ${flameHero(160)}
     <h1 class="win-title">${timedOut ? "انتهى الوقت!" : "انتهت المحاكاة!"}</h1>
     <p class="win-sub">${unanswered ? `${toAr(unanswered)} أسئلة بلا إجابة — ` : ""}السرعة والدقة معاً هما سر قدرات</p>
     <div class="result-cards">
@@ -1026,7 +1024,7 @@ function finishMock(timedOut) {
     <div class="mock-band">${band}</div>
     <div class="mock-note">تقدير تقريبي لأغراض التدريب — النتيجة الرسمية تُحسب بمعادلة قياس المعيارية</div>
     <div class="card" style="text-align:right;width:100%"><h3>أداؤك حسب القسم</h3>${domRows}</div>
-    ${wrongList}
+    ${answersCard}
     <div class="fail-actions" style="width:100%">
       <button class="btn" onclick="A.startMock()">محاكاة جديدة</button>
       <button class="btn btn-ghost" onclick="A.go('mock')">رجوع</button>
@@ -1039,6 +1037,30 @@ function finishMock(timedOut) {
   }, 600);
 }
 A.toggleEl = function (id) { const el = document.getElementById(id); el.style.display = el.style.display === "none" ? "block" : "none"; };
+
+/* tap a grid number → expand that question's review under the grid */
+A.mockDetail = function (i) {
+  const r = MOCK_REVIEW[i];
+  const box = document.getElementById("mockDetail");
+  if (!r || !box) return;
+  const cells = document.querySelectorAll(".mg-cell");
+  const wasOpen = cells[i] && cells[i].classList.contains("sel");
+  cells.forEach(c => c.classList.remove("sel"));
+  if (wasOpen) { box.innerHTML = ""; return; }
+  cells[i].classList.add("sel");
+  const isCmp = r.q.format === "comparison";
+  const ch = isCmp ? CMP_CHOICES : r.q.choices;
+  const ok = r.picked === r.q.answer;
+  box.innerHTML = `<div class="review-item mock-detail">
+    <div class="ri-q">${toAr(i + 1)}. ${r.q.stem || "قارن بين القيمتين"}</div>
+    ${isCmp && r.q.value1 ? `<div class="ri-row" style="color:var(--gray)">القيمة الأولى: ${r.q.value1} — القيمة الثانية: ${r.q.value2}</div>` : ""}
+    ${ok ? `<div class="ri-row" style="color:var(--green-dk)">✓ إجابتك صحيحة: ${ch[r.picked]}</div>`
+      : `<div class="ri-row" style="color:var(--red)">✕ إجابتك: ${r.picked === null ? "لم تُجب" : ch[r.picked]}</div>
+         <div class="ri-row" style="color:var(--green-dk)">✓ الصحيحة: ${ch[r.q.answer]}</div>`}
+    <button class="fb-solution-toggle" onclick="A.toggleEl('mdSol')">اعرض الحل</button>
+    <div class="fb-solution" id="mdSol" style="display:none">${esc(r.q.solution)}</div>
+  </div>`;
+};
 
 /* ---------------- STATS ---------------- */
 function renderStats() {

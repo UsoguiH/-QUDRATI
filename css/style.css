@@ -1509,14 +1509,13 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 
 /* --- mock exam: question navigator + action bar + result band --- */
 .qnav {
-  display: flex; gap: 6px; overflow-x: auto; flex-shrink: 0;
-  padding: 8px 16px 6px; scrollbar-width: none;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 5px;
+  flex-shrink: 0; padding: 8px 12px 6px;
 }
-.qnav::-webkit-scrollbar { display: none; }
 .qn-chip {
-  min-width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+  min-width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
   border: 2px solid var(--line); background: #fff; position: relative;
-  font-family: var(--font); font-weight: 700; font-size: 14px; color: var(--gray);
+  font-family: var(--font); font-weight: 700; font-size: 13px; color: var(--gray);
   padding: 3px 0 0; cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
 .qn-chip.done { background: var(--blue-light); border-color: var(--blue-border); color: var(--blue-dk); }
@@ -1540,3 +1539,26 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
   margin: 4px 0 2px; animation: fadeUp .5s .8s ease backwards;
 }
 .mock-note { font-size: 12.5px; font-weight: 600; color: var(--gray-icon); margin-bottom: 14px; }
+
+/* --- result answer grid: numbered, green/red, springy stagger --- */
+.mock-grid {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+  margin: 4px 0 6px;
+}
+@keyframes cellPop {
+  0% { transform: scale(0) rotate(-8deg); opacity: 0; }
+  70% { transform: scale(1.12) rotate(2deg); }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+.mg-cell {
+  height: 40px; border-radius: 11px; border: 0; cursor: pointer;
+  font-family: var(--font); font-weight: 800; font-size: 15px; color: #fff;
+  padding-top: 3px; -webkit-tap-highlight-color: transparent;
+  animation: cellPop .45s cubic-bezier(.3,1.6,.5,1) var(--d, 0s) backwards;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.mg-cell.ok  { background: var(--green); box-shadow: 0 3px 0 var(--green-lip); }
+.mg-cell.bad { background: var(--red); box-shadow: 0 3px 0 #C73535; }
+.mg-cell:active { transform: translateY(2px); box-shadow: none; }
+.mg-cell.sel { outline: 3px solid var(--blue); outline-offset: 2px; }
+.mock-detail { animation: fadeUp .35s cubic-bezier(.3,1.3,.5,1); margin-top: 8px; }
