@@ -127,7 +127,8 @@ let view = "path";
 function render() { ({ path: renderPath, mock: renderMockHome, stats: renderStats, settings: renderSettings })[view](); }
 function go(v) { view = v; render(); window.scrollTo(0, 0); }
 
-const ico = (name, size) => `<img class="ic" src="assets/icons/${name}.svg" width="${size}" height="${size}" alt="">`;
+const ICO_FILE = { "nav-exam": "nav-exam-64.png" }; // raster icons (user-provided art)
+const ico = (name, size) => `<img class="ic" src="assets/icons/${ICO_FILE[name] || name + ".svg"}" width="${size}" height="${size}" alt="">`;
 
 function statbar() {
   return `<div class="statbar">
@@ -803,7 +804,7 @@ function renderMockHome() {
   $app.innerHTML = statbar() + `<div class="screen"><div class="page">
     <h1>محاكاة الاختبار</h1><div class="sub">جرّب جو الاختبار الحقيقي وقس مستواك</div>
     <div class="mock-hero-card">
-      <div class="mh-trophy">${ico("nav-exam", 62)}</div>
+      <div class="mh-trophy"><img class="ic" src="assets/icons/nav-exam-192.png" width="84" height="84" alt=""></div>
       <div class="mh-rules">
         <div class="mh-rule">${ico("guide", 20)} ${toAr(20)} سؤالاً من جميع الأقسام</div>
         <div class="mh-rule">${ico("timer", 20)} ${toAr(25)} دقيقة لكل الأسئلة</div>
