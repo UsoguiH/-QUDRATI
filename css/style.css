@@ -1229,21 +1229,29 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
   align-items: center; justify-content: center; text-align: center;
   padding: 36px 24px calc(36px + env(safe-area-inset-bottom));
 }
-.exam-setup .es-hero { animation: titleIn .5s .1s cubic-bezier(.3,1.5,.5,1) backwards; }
-.exam-setup .es-hero svg {
-  width: 104px; height: 104px; color: var(--orange);
-  filter: drop-shadow(0 5px 0 rgba(0,0,0,.06));
+.exam-setup .es-hero { animation: titleIn .5s .1s cubic-bezier(.3,1.5,.5,1) backwards; margin-bottom: 6px; }
+.es-cal { width: 128px; height: 124px; animation: calBob 3.2s ease-in-out 1s infinite; }
+@keyframes calBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+.es-halo { animation: haloPulse 1.8s ease-in-out infinite; }
+@keyframes haloPulse { 0%, 100% { opacity: 0; } 50% { opacity: .9; } }
+
+/* --- day / month / year picker --- */
+.date-trio { display: flex; gap: 10px; margin-bottom: 14px; animation: fadeUp .4s .6s ease backwards; }
+.date-trio.err .dt-box { border-color: var(--red); background: var(--red-bg); }
+.date-trio.err { animation: shake .4s ease; }
+.dt-box {
+  flex: 1; display: flex; flex-direction: column; align-items: stretch;
+  background: #F7F7F7; border: 2px solid var(--line); border-radius: 13px;
+  padding: 8px 6px 4px; transition: border-color .15s, background .15s;
 }
-.exam-setup .es-hero .qt-hand { transform-origin: 11px 11px; animation: esTick 2.4s linear infinite; }
-@keyframes esTick {
-  0%, 9% { transform: rotate(0deg); } 12.5%, 21% { transform: rotate(45deg); }
-  25%, 34% { transform: rotate(90deg); } 37.5%, 46% { transform: rotate(135deg); }
-  50%, 59% { transform: rotate(180deg); } 62.5%, 71% { transform: rotate(225deg); }
-  75%, 84% { transform: rotate(270deg); } 87.5%, 96% { transform: rotate(315deg); }
-  100% { transform: rotate(360deg); }
-}
-.login-input[type="date"] {
-  -webkit-appearance: none; appearance: none; text-align: center; min-height: 52px;
+.dt-box:focus-within { border-color: var(--blue-border); background: #fff; }
+.dt-month { flex: 1.5; }
+.dt-cap { font-size: 11.5px; font-weight: 700; color: var(--gray-icon); letter-spacing: .3px; }
+.dt-sel {
+  -webkit-appearance: none; appearance: none;
+  border: 0; background: none; outline: none; width: 100%;
+  font-family: var(--font); font-size: 18px; font-weight: 700; color: var(--ink);
+  text-align: center; text-align-last: center; padding: 2px 0 4px;
 }
 
 /* --- countdown card on the path --- */
@@ -1430,3 +1438,28 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .chest-veil.rewarded .cs-title { animation: fadeUp .45s .15s ease forwards; }
 .cs-btn { max-width: 240px; opacity: 0; }
 .chest-veil.rewarded .cs-btn { animation: fadeUp .45s .3s ease forwards; }
+
+/* --- daily chest lives in the statbar (Duolingo toolbar style) --- */
+.stat-chest {
+  position: relative; background: none; border: 0; padding: 0 6px;
+  display: flex; flex-direction: column; align-items: center;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.stat-chest .sc-chest { width: 40px; height: 37px; overflow: visible; }
+.stat-chest .ch-glow { opacity: 0; }
+.sc-pill {
+  margin-top: -7px; z-index: 1;
+  font-size: 10.5px; font-weight: 800; line-height: 1;
+  padding: 3px 8px 2px; border-radius: 64px;
+  background: #fff; border: 1.5px solid var(--line); color: var(--gray);
+  letter-spacing: .5px;
+}
+.sc-open { background: var(--gold); border-color: var(--gold-dk); color: #fff; animation: tapPulse 1.5s ease-in-out infinite; }
+.sc-done { background: var(--green); border-color: var(--green-lip); display: flex; align-items: center; padding: 2.5px 7px; }
+.stat-chest.claimed .sc-chest { filter: saturate(.5) opacity(.75); }
+.stat-chest.ready { animation: questGlowSoft 1.6s ease-in-out infinite; border-radius: 14px; }
+@keyframes questGlowSoft {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(255,200,0,0)); }
+  50% { filter: drop-shadow(0 0 8px rgba(255,200,0,.75)); }
+}
+.stat-chest:active .sc-chest { transform: scale(.92); }

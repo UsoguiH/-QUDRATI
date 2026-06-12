@@ -128,11 +128,25 @@ function go(v) { view = v; render(); window.scrollTo(0, 0); }
 const ico = (name, size) => `<img class="ic" src="assets/icons/${name}.svg" width="${size}" height="${size}" alt="">`;
 
 function statbar() {
+  dailyReset();
+  const n = S.daily.n, ready = n >= DAILY_GOAL && !S.daily.claimed;
   return `<div class="statbar">
     <div class="stat stat-streak">${ico("streak", 23)}${toAr(S.streak.count)}</div>
+    <button class="stat-chest ${ready ? "ready" : ""} ${S.daily.claimed ? "claimed" : ""}" onclick="A.chestTap()" aria-label="صندوق اليوم">
+      ${chestSVG("sc-chest" + (ready ? " qc-bounce" : n >= DAILY_GOAL - 2 && !S.daily.claimed ? " qc-excited" : ""))}
+      ${S.daily.claimed ? `<span class="sc-pill sc-done">${ico("check", 12)}</span>`
+        : ready ? `<span class="sc-pill sc-open">افتح!</span>`
+          : `<span class="sc-pill sc-count">${toAr(n)}/${toAr(DAILY_GOAL)}</span>`}
+    </button>
     <div class="stat stat-xp">${ico("gem", 22)}${toAr(S.xp)}</div>
   </div>`;
 }
+A.chestTap = function () {
+  dailyReset();
+  if (S.daily.claimed) { toast("🎁 عُد غداً لصندوق جديد"); return; }
+  if (S.daily.n >= DAILY_GOAL) { A.openChest(); return; }
+  toast(`باقي ${toAr(DAILY_GOAL - S.daily.n)} أسئلة لفتح صندوق اليوم 🎁`);
+};
 function bottomnav(active) {
   const items = [["path", "nav-home"], ["stats", "nav-chest"], ["settings", "nav-more"]];
   return `<nav class="bottomnav">` + items.map(([k, i]) =>
@@ -165,26 +179,30 @@ function countdownCard() {
 }
 
 /* ---------------- daily quest card + chest ---------------- */
-/* Own chest art in the design system's chunky style (browns + gold
-   clasp from the palette) — lid is a separate group so it can swing open */
+/* Duolingo-style chest, redrawn by hand from the design-system
+   proportions: big rounded lid with a lighter inner panel hanging
+   over a narrower base, gold strap + latch. Lid is its own group so
+   the ceremony can swing it open. */
 function chestSVG(cls) {
-  return `<svg class="qc-chest ${cls || ""}" viewBox="0 0 48 44" fill="none" aria-hidden="true">
-    <ellipse class="ch-glow" cx="24" cy="21" rx="15" ry="6" fill="#FFE700"/>
+  return `<svg class="qc-chest ${cls || ""}" viewBox="0 0 56 52" fill="none" aria-hidden="true">
+    <ellipse class="ch-glow" cx="28" cy="26" rx="17" ry="7" fill="#FFE700"/>
     <g class="ch-base">
-      <rect x="5" y="21" width="38" height="18" rx="5" fill="#AA572A"/>
-      <rect x="5" y="33" width="38" height="6" rx="3" fill="#90461F"/>
-      <rect x="21" y="21" width="6" height="18" fill="#FFC800"/>
-      <rect x="21" y="35" width="6" height="4" fill="#E6A000"/>
-      <rect x="18.5" y="18.5" width="11" height="11" rx="3" fill="#FFC800"/>
-      <rect x="18.5" y="25.5" width="11" height="4" rx="2" fill="#E6A000"/>
-      <circle cx="24" cy="23.5" r="2" fill="#90461F"/>
+      <path d="M9 26 H47 V42 Q47 48 41 48 H15 Q9 48 9 42 Z" fill="#AA572A"/>
+      <path d="M9 40 H47 V42 Q47 48 41 48 H15 Q9 48 9 42 Z" fill="#90461F"/>
+      <rect x="23" y="26" width="10" height="22" fill="#FFC800"/>
+      <rect x="23" y="44" width="10" height="4" fill="#E6A000"/>
+      <rect x="20" y="23" width="16" height="15" rx="4.5" fill="#FFC800"/>
+      <rect x="20" y="32" width="16" height="6" rx="3" fill="#E6A000"/>
+      <circle cx="28" cy="29" r="2.6" fill="#90461F"/>
+      <rect x="26.7" y="29" width="2.6" height="5" rx="1.3" fill="#90461F"/>
     </g>
     <g class="ch-lid">
-      <path d="M5 21 V14 Q5 4 15 4 H33 Q43 4 43 14 V21 Z" fill="#C07F41"/>
-      <path d="M5 21 V14 Q5 4 15 4 H20 Q10 4 10 14 V21 Z" fill="#E5AE7C"/>
-      <rect x="5" y="18" width="38" height="3" fill="#90461F"/>
-      <rect x="21" y="4" width="6" height="17" fill="#FFC800"/>
-      <rect x="21" y="4" width="6" height="3" fill="#FFE700"/>
+      <rect x="4" y="2" width="48" height="24" rx="10" fill="#C07F41"/>
+      <rect x="10" y="8" width="36" height="13" rx="5.5" fill="#E5AE7C"/>
+      <rect x="4" y="21" width="48" height="5" fill="#90461F"/>
+      <rect x="23" y="2" width="10" height="24" fill="#FFC800"/>
+      <rect x="23" y="2" width="10" height="4" fill="#FFE700"/>
+      <rect x="23" y="21" width="10" height="5" fill="#E6A000"/>
     </g>
   </svg>`;
 }
@@ -194,14 +212,14 @@ function dailyQuestCard() {
   const n = S.daily.n, done = n >= DAILY_GOAL;
   if (done && S.daily.claimed) {
     return `<div class="quest-card quest-claimed">
-      <div class="qc-row">${chestSVG("qc-mini")}
-        <div class="qc-txt"><b>أنجزت تمرين اليوم!</b><span>عُد غداً لصندوق جديد 🎁</span></div>
+      <div class="qc-row">
         <span class="qc-done-badge">${ico("check", 24)}</span>
+        <div class="qc-txt"><b>أنجزت تمرين اليوم!</b><span>عُد غداً لصندوق جديد 🎁</span></div>
       </div></div>`;
   }
   if (done) {
     return `<div class="quest-card quest-ready" onclick="A.openChest()">
-      <div class="qc-row">${chestSVG("qc-mini qc-bounce")}
+      <div class="qc-row">
         <div class="qc-txt"><b>اكتمل تمرين اليوم!</b><span>اضغط لفتح صندوقك</span></div>
         <span class="qc-tap">افتح!</span>
       </div></div>`;
@@ -212,7 +230,6 @@ function dailyQuestCard() {
     <div class="qc-barrow">
       <div class="duo-bar qc-bar"><i style="width:${Math.round(n / DAILY_GOAL * 100)}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft);animation-delay:.5s"></i>
         <b class="qc-count">${toAr(n)} / ${toAr(DAILY_GOAL)}</b></div>
-      ${chestSVG(n >= DAILY_GOAL - 2 ? "qc-excited" : "")}
     </div>
   </div>`;
 }
@@ -993,14 +1010,50 @@ function welcomeHero() {
 }
 
 /* ---------------- exam date setup ---------------- */
+const AR_MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+
+/* Duolingo-style calendar hero: orange header + rings, dot grid,
+   one gold starred date with a soft pulsing halo (opacity-only —
+   safe on every mobile browser) */
+function examCalendarSVG() {
+  const dots = [];
+  for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) {
+    if (r === 1 && c === 2) continue; // the starred cell
+    dots.push(`<circle cx="${30 + c * 15}" cy="${62 + r * 16}" r="4" fill="#E5E5E5"/>`);
+  }
+  return `<svg class="es-cal" viewBox="0 0 120 116" fill="none" aria-hidden="true">
+    <rect x="6" y="18" width="108" height="94" rx="18" fill="#CD7900"/>
+    <rect x="6" y="14" width="108" height="94" rx="18" fill="#FFFFFF"/>
+    <path d="M6 32 Q6 14 24 14 H96 Q114 14 114 32 V46 H6 Z" fill="#FF9600"/>
+    <rect x="28" y="4" width="11" height="20" rx="5.5" fill="#CD7900"/>
+    <rect x="81" y="4" width="11" height="20" rx="5.5" fill="#CD7900"/>
+    <circle cx="33.5" cy="10" r="2.6" fill="#FFB020"/>
+    <circle cx="86.5" cy="10" r="2.6" fill="#FFB020"/>
+    <rect x="26" y="26" width="26" height="8" rx="4" fill="#FFFFFF" opacity=".55"/>
+    ${dots.join("")}
+    <circle class="es-halo" cx="60" cy="78" r="15" fill="none" stroke="#FFC800" stroke-width="3"/>
+    <circle cx="60" cy="78" r="11.5" fill="#FFC800"/>
+    <path d="M60 71.2l1.9 3.9 4.3.6-3.1 3 .7 4.3-3.8-2-3.8 2 .7-4.3-3.1-3 4.3-.6z" fill="#FFFFFF"/>
+  </svg>`;
+}
+
 function renderExamSetup(first) {
-  const iso = d => { const x = new Date(d); return x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0"); };
+  const base = S.exam ? new Date(S.exam + "T00:00:00") : new Date(Date.now() + 45 * 864e5);
+  const yNow = new Date().getFullYear();
+  const opt = (v, label, sel) => `<option value="${v}" ${sel ? "selected" : ""}>${label}</option>`;
+  const days = Array.from({ length: 31 }, (_, i) => opt(i + 1, toAr(i + 1), base.getDate() === i + 1)).join("");
+  const months = AR_MONTHS.map((m, i) => opt(i + 1, m, base.getMonth() === i)).join("");
+  const years = [yNow, yNow + 1].map(y => opt(y, toAr(y), base.getFullYear() === y)).join("");
   $app.innerHTML = `<div class="screen screen-full exam-setup">
-    <div class="es-hero">${TIMER_SVG}</div>
+    <div class="es-hero">${examCalendarSVG()}</div>
     <h1 class="login-title">متى اختبارك؟</h1>
     <p class="login-sub">سنحسب لك العد التنازلي ونتابع جاهزيتك يوماً بيوم حتى موعد الاختبار</p>
     <div class="login-form">
-      <input id="examDate" class="login-input" type="date" min="${iso(Date.now())}" max="${iso(Date.now() + 450 * 864e5)}" value="${S.exam || ""}">
+      <div class="date-trio" id="examTrio">
+        <label class="dt-box"><span class="dt-cap">اليوم</span><select id="exDay" class="dt-sel">${days}</select></label>
+        <label class="dt-box dt-month"><span class="dt-cap">الشهر</span><select id="exMonth" class="dt-sel">${months}</select></label>
+        <label class="dt-box"><span class="dt-cap">السنة</span><select id="exYear" class="dt-sel">${years}</select></label>
+      </div>
       <button class="btn" onclick="A.saveExam()">حفظ الموعد</button>
       <button class="login-skip" onclick="A.skipExam()">${first ? "لم أحجز موعداً بعد — لاحقاً" : "رجوع"}</button>
     </div>
@@ -1008,9 +1061,20 @@ function renderExamSetup(first) {
 }
 A.examSetup = function () { renderExamSetup(false); };
 A.saveExam = function () {
-  const inp = document.getElementById("examDate");
-  if (!inp.value) { inp.classList.remove("err"); void inp.offsetWidth; inp.classList.add("err"); return; }
-  S.exam = inp.value; S.examAsked = true; save(); sndGood(); go("path");
+  const d = +document.getElementById("exDay").value,
+    m = +document.getElementById("exMonth").value,
+    y = +document.getElementById("exYear").value;
+  const date = new Date(y, m - 1, d);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const trio = document.getElementById("examTrio");
+  // reject impossible dates (e.g. 31 February) and past dates
+  if (date.getMonth() !== m - 1 || date < today) {
+    trio.classList.remove("err"); void trio.offsetWidth; trio.classList.add("err");
+    toast(date.getMonth() !== m - 1 ? "هذا التاريخ غير موجود في التقويم!" : "اختر تاريخاً قادماً 😅");
+    return;
+  }
+  S.exam = y + "-" + String(m).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+  S.examAsked = true; save(); sndGood(); go("path");
 };
 A.skipExam = function () { S.examAsked = true; save(); go("path"); };
 
