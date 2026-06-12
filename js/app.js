@@ -29,7 +29,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {} };
+const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false };
 let S;
 try { S = Object.assign({}, DEFAULT_STATE, JSON.parse(localStorage.getItem("qudratState") || "{}")); }
 catch (e) { S = Object.assign({}, DEFAULT_STATE); }
@@ -79,6 +79,31 @@ function allLessons() {
 function trackFilter(qs) { return S.track === "lit" ? qs.filter(q => q.track !== "sci") : qs; }
 function lessonProg(key) { return S.lessons[key] || { stars: 0, plays: 0 }; }
 
+/* ---------------- exam countdown + readiness ---------------- */
+function examDaysLeft() {
+  if (!S.exam) return null;
+  const t = new Date(); t.setHours(0, 0, 0, 0);
+  return Math.round((new Date(S.exam + "T00:00:00") - t) / 864e5);
+}
+/* 0–100: stars earned across all lessons (70%) + overall first-try accuracy (30%) */
+function readiness() {
+  const flat = allLessons();
+  if (!flat.length) return 0;
+  let earned = 0;
+  flat.forEach(x => earned += lessonProg(x.key).stars);
+  let r = 0, w = 0;
+  Object.values(S.qstats).forEach(s => { r += s.r; w += s.w; });
+  const acc = (r + w) ? r / (r + w) : 0;
+  return Math.round(100 * (0.7 * earned / (flat.length * 3) + 0.3 * acc));
+}
+function dayPhrase(n) {
+  if (n === 1) return "يوم واحد";
+  if (n === 2) return "يومان";
+  if (n <= 10) return toAr(n) + " أيام";
+  return toAr(n) + " يوماً";
+}
+const fmtExamDate = d => { const x = new Date(d + "T00:00:00"); return toAr(x.getDate()) + " / " + toAr(x.getMonth() + 1) + " / " + toAr(x.getFullYear()); };
+
 /* ---------------- screens / router ---------------- */
 let view = "path";
 function render() { ({ path: renderPath, stats: renderStats, settings: renderSettings })[view](); }
@@ -96,6 +121,31 @@ function bottomnav(active) {
   const items = [["path", "nav-home"], ["stats", "nav-chest"], ["settings", "nav-more"]];
   return `<nav class="bottomnav">` + items.map(([k, i]) =>
     `<button class="navbtn ${active === k ? "active" : ""}" onclick="A.go('${k}')" aria-label="${k}">${ico(i, 30)}</button>`).join("") + `</nav>`;
+}
+
+/* ---------------- exam countdown card (top of path) ---------------- */
+function countdownCard() {
+  const days = examDaysLeft();
+  if (days === null) {
+    return `<div class="exam-card exam-card-empty" onclick="A.examSetup()">
+      <div class="ec-row">${ico("timer", 28)}
+        <div class="ec-txt"><b>متى اختبار قدراتك؟</b><span>حدد الموعد لنحسب لك العد التنازلي والجاهزية</span></div>
+        <span class="ec-go">+</span>
+      </div>
+    </div>`;
+  }
+  const pct = readiness();
+  const head = days > 0 ? `باقي <b class="ec-days">${dayPhrase(days)}</b> على الاختبار`
+    : days === 0 ? `اختبارك <b class="ec-days">اليوم</b> — بالتوفيق! 💪`
+      : `انتهى موعد اختبارك — حدّث الموعد`;
+  return `<div class="exam-card" onclick="A.examSetup()">
+    <div class="ec-row">${ico("timer", 28)}<div class="ec-head">${head}</div><span class="ec-edit" aria-hidden="true">✎</span></div>
+    <div class="ec-ready">
+      <span class="ec-label">جاهزيتك</span>
+      <div class="ec-bar"><i style="width:${pct}%"></i></div>
+      <b class="ec-pct">${toAr(pct)}٪</b>
+    </div>
+  </div>`;
 }
 
 /* ---------------- PATH (home) ---------------- */
@@ -141,7 +191,7 @@ function renderPath() {
     });
     html += `</div>`;
   });
-  $app.innerHTML = statbar() + `<div class="screen">${html}<div style="height:20px"></div></div>` + bottomnav("path");
+  $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${html}<div style="height:20px"></div></div>` + bottomnav("path");
 }
 
 
@@ -673,6 +723,10 @@ function renderSettings() {
       <div class="r-sub" style="margin-top:8px">المسار الأدبي يركز على الحساب ويخفف الجبر والهندسة المتقدمة.</div>
     </div>
     <div class="card">
+      <div class="row"><div><div class="r-label">موعد الاختبار</div><div class="r-sub">${S.exam ? fmtExamDate(S.exam) : "غير محدد — حدده لمتابعة جاهزيتك"}</div></div>
+        <button class="btn btn-ghost" style="width:auto;padding:8px 18px 6px" onclick="A.examSetup()">${S.exam ? "تغيير" : "تحديد"}</button></div>
+    </div>
+    <div class="card">
       <div class="row"><div><div class="r-label">الأصوات</div><div class="r-sub">مؤثرات صوتية عند الإجابة</div></div>
         <button class="toggle ${S.sound ? "on" : ""}" onclick="A.toggleSound()"></button></div>
     </div>
@@ -824,6 +878,28 @@ function welcomeHero() {
   </div>`;
 }
 
+/* ---------------- exam date setup ---------------- */
+function renderExamSetup(first) {
+  const iso = d => { const x = new Date(d); return x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0"); };
+  $app.innerHTML = `<div class="screen screen-full exam-setup">
+    <div class="es-hero">${TIMER_SVG}</div>
+    <h1 class="login-title">متى اختبارك؟</h1>
+    <p class="login-sub">سنحسب لك العد التنازلي ونتابع جاهزيتك يوماً بيوم حتى موعد الاختبار</p>
+    <div class="login-form">
+      <input id="examDate" class="login-input" type="date" min="${iso(Date.now())}" max="${iso(Date.now() + 450 * 864e5)}" value="${S.exam || ""}">
+      <button class="btn" onclick="A.saveExam()">حفظ الموعد</button>
+      <button class="login-skip" onclick="A.skipExam()">${first ? "لم أحجز موعداً بعد — لاحقاً" : "رجوع"}</button>
+    </div>
+  </div>`;
+}
+A.examSetup = function () { renderExamSetup(false); };
+A.saveExam = function () {
+  const inp = document.getElementById("examDate");
+  if (!inp.value) { inp.classList.remove("err"); void inp.offsetWidth; inp.classList.add("err"); return; }
+  S.exam = inp.value; S.examAsked = true; save(); sndGood(); go("path");
+};
+A.skipExam = function () { S.examAsked = true; save(); go("path"); };
+
 /* ---------------- login (local profile, no server) ---------------- */
 function renderLogin() {
   $app.innerHTML = `<div class="screen screen-full login-screen">
@@ -852,7 +928,9 @@ A.logout = function () { S.user = null; save(); renderLogin(); };
 function afterLogin() {
   if (!S.disclaimer) {
     $app.innerHTML = `<div class="hero">${starHero(140)}<h1>أهلاً ${esc(S.user.name)}! 👋</h1><p>تدرّب على القسم الكمي بأسلوب ممتع — درساً بعد درس</p></div>`;
-    showModal("📜", "إخلاء مسؤولية", DISCLAIMER_HTML, "فهمت، لنبدأ!", () => { S.disclaimer = true; save(); render(); });
+    showModal("📜", "إخلاء مسؤولية", DISCLAIMER_HTML, "فهمت، لنبدأ!", () => { S.disclaimer = true; save(); S.examAsked || S.exam ? render() : renderExamSetup(true); });
+  } else if (!S.examAsked && !S.exam) {
+    renderExamSetup(true);
   } else {
     render();
   }

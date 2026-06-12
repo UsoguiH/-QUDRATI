@@ -1221,3 +1221,60 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .hero .win-hero { margin: 0 auto 10px; }
 .hero h1 { animation: titleIn .5s .3s cubic-bezier(.3,1.5,.5,1) backwards; }
 .hero p { animation: fadeUp .4s .55s ease backwards; }
+
+/* ============================================================
+   Exam countdown — setup screen + path-top card
+   ============================================================ */
+.exam-setup {
+  align-items: center; justify-content: center; text-align: center;
+  padding: 36px 24px calc(36px + env(safe-area-inset-bottom));
+}
+.exam-setup .es-hero { animation: titleIn .5s .1s cubic-bezier(.3,1.5,.5,1) backwards; }
+.exam-setup .es-hero svg {
+  width: 104px; height: 104px; color: var(--orange);
+  filter: drop-shadow(0 5px 0 rgba(0,0,0,.06));
+}
+.exam-setup .es-hero .qt-hand { transform-origin: 11px 11px; animation: esTick 2.4s linear infinite; }
+@keyframes esTick {
+  0%, 9% { transform: rotate(0deg); } 12.5%, 21% { transform: rotate(45deg); }
+  25%, 34% { transform: rotate(90deg); } 37.5%, 46% { transform: rotate(135deg); }
+  50%, 59% { transform: rotate(180deg); } 62.5%, 71% { transform: rotate(225deg); }
+  75%, 84% { transform: rotate(270deg); } 87.5%, 96% { transform: rotate(315deg); }
+  100% { transform: rotate(360deg); }
+}
+.login-input[type="date"] {
+  -webkit-appearance: none; appearance: none; text-align: center; min-height: 52px;
+}
+
+/* --- countdown card on the path --- */
+.exam-card {
+  background: #fff; border: 2px solid var(--line); border-radius: 16px;
+  padding: 14px 16px; margin: 4px 16px 18px; cursor: pointer;
+  animation: fadeUp .4s cubic-bezier(.3,1.3,.5,1) backwards;
+}
+.exam-card:active { transform: translateY(1px); }
+.ec-row { display: flex; align-items: center; gap: 10px; }
+.ec-head { flex: 1; font-weight: 700; font-size: 16px; }
+.ec-head .ec-days { color: var(--orange); }
+.ec-edit { color: var(--gray-icon); font-size: 17px; }
+.ec-ready { display: flex; align-items: center; gap: 10px; margin-top: 11px; }
+.ec-label { font-size: 13px; font-weight: 700; color: var(--gray); }
+.ec-bar {
+  flex: 1; height: 16px; border-radius: 64px; background: var(--line); overflow: hidden;
+}
+.ec-bar i {
+  display: block; height: 100%; border-radius: 64px;
+  background: var(--gold);
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,.12), inset 0 3px 0 var(--gold-shine);
+  transition: width .6s cubic-bezier(.3,1.2,.5,1);
+  min-width: 6px;
+}
+.ec-pct { font-size: 14px; color: var(--gold-dk); min-width: 34px; text-align: left; }
+.exam-card-empty .ec-txt { flex: 1; }
+.exam-card-empty .ec-txt b { display: block; font-size: 16px; }
+.exam-card-empty .ec-txt span { font-size: 13px; color: var(--gray); font-weight: 500; }
+.ec-go {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: var(--green); color: #fff; box-shadow: 0 3px 0 var(--green-lip);
+  font-size: 22px; font-weight: 700; line-height: 32px; text-align: center;
+}

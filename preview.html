@@ -17,12 +17,16 @@
     d.textContent = "JS ERROR: " + msg + "\n" + (src || "").split("/").pop() + ":" + line + ":" + col;
     (document.body || document.documentElement).appendChild(d);
   };
+  var examIn43 = new Date(Date.now() + 43 * 864e5);
   localStorage.setItem("qudratState", JSON.stringify({
     v: 1, disclaimer: true, track: "sci", sound: false,
     user: location.hash === "#login" ? null : { name: "سارة", guest: false },
     xp: 527, streak: { count: 12, last: null },
     lessons: { "arithmetic.fractions": { stars: 3, plays: 1 } },
-    qstats: {}
+    qstats: { a1: { r: 6, w: 2 }, a2: { r: 4, w: 1 } },
+    examAsked: location.hash !== "#exam",
+    exam: ["#exam", "#noexam"].includes(location.hash) ? null
+      : examIn43.getFullYear() + "-" + String(examIn43.getMonth() + 1).padStart(2, "0") + "-" + String(examIn43.getDate()).padStart(2, "0")
   }));
 </script>
 </head>
