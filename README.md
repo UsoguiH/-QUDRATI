@@ -10,14 +10,14 @@
 
 <br>
 
-# 🎮 [اضغط هنا للعب الآن](https://qudrati-lime.vercel.app/) 🎮
+# 🎮 [اضغط هنا للعب الآن](https://qudrati.xyz/) 🎮
 
 ### العب مجاناً من المتصفح — بدون تحميل وبدون تسجيل
 
-[![العب الآن](https://img.shields.io/badge/%E2%96%B6%EF%B8%8F%20%D8%A7%D9%84%D8%B9%D8%A8%20%D8%A7%D9%84%D8%A2%D9%86-qudrati--lime.vercel.app-58cc02.svg?style=for-the-badge&logoColor=white)](https://qudrati-lime.vercel.app/)
+[![العب الآن](https://img.shields.io/badge/%E2%96%B6%EF%B8%8F%20%D8%A7%D9%84%D8%B9%D8%A8%20%D8%A7%D9%84%D8%A2%D9%86-qudrati.xyz-58cc02.svg?style=for-the-badge&logoColor=white)](https://qudrati.xyz/)
 
 ```
-🔗  https://qudrati-lime.vercel.app
+🔗  https://qudrati.xyz
 ```
 
 <br>
@@ -53,7 +53,7 @@
 
 اللعبة تعمل مباشرة من المتصفح — على الجوال أو الحاسب — بدون تحميل ولا تثبيت ولا إنشاء حساب:
 
-### 1️⃣ افتح الرابط: [qudrati-lime.vercel.app](https://qudrati-lime.vercel.app/) ← هذا كل ما تحتاجه!
+### 1️⃣ افتح الرابط: [qudrati.xyz](https://qudrati.xyz/) ← هذا كل ما تحتاجه!
 
 2. **اختر مسارك** — علمي 🔬 أو أدبي 📖 (يمكن تغييره لاحقاً من الإعدادات).
 3. **ابدأ من أول درس** في مسار الدروس المتعرّج، وافتح الدروس التالية بالتتابع.
@@ -145,7 +145,7 @@ node tools/validate.js
 
 A fully Arabic, RTL, dependency-free web game for practicing the quantitative section of the Saudi General Aptitude Test (GAT / Qiyas) — Duolingo style.
 
-### ▶️ How to play — just open this link: **[qudrati-lime.vercel.app](https://qudrati-lime.vercel.app/)**
+### ▶️ How to play — just open this link: **[qudrati.xyz](https://qudrati.xyz/)**
 
 Works in any browser on phone or desktop — no download, no install, no sign-up. Pick your track (scientific/humanities), start the first lesson, and your progress saves automatically on your device. Prefer a native app? Install [`Qudrati.apk`](Qudrati.apk).
 
