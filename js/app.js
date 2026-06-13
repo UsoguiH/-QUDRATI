@@ -166,6 +166,46 @@ function dailyQuestionCard() {
   </button>`;
 }
 
+/* Original قدراتي star mascot that sits beside the path (Duolingo-style
+   side character) and opens سؤال اليوم. Idle bob + blink + wave. */
+function dailyMascot() {
+  dailyQReset();
+  const done = S.dailyQ.done;
+  return `<div class="dqm ${done ? "dqm-sleep" : ""}" onclick="A.openDailyQ()" role="button" aria-label="سؤال اليوم">
+    ${done ? `<span class="dqm-zzz">Z</span><span class="dqm-zzz dqm-zzz2">Z</span>`
+      : `<span class="dqm-bubble">سؤال اليوم<i class="dqm-tail"></i></span>`}
+    <svg class="dqm-svg" viewBox="0 0 120 124" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse class="dqm-shadow" cx="60" cy="116" rx="30" ry="6" fill="#000" opacity=".08"/>
+      <!-- feet -->
+      <ellipse cx="48" cy="106" rx="9" ry="7" fill="#E6A000"/>
+      <ellipse cx="72" cy="106" rx="9" ry="7" fill="#E6A000"/>
+      <!-- left arm -->
+      <rect x="6" y="60" width="10" height="26" rx="5" fill="#E6A000" transform="rotate(28 11 66)"/>
+      <!-- waving right arm -->
+      <g class="dqm-arm"><rect x="100" y="54" width="10" height="26" rx="5" fill="#E6A000" transform="rotate(-30 105 62)"/></g>
+      <!-- star body: dark lip + gold face -->
+      <path d="M60 14 L71 43 L102 44 L77 63 L86 93 L60 76 L34 93 L43 63 L18 44 L49 43 Z" fill="#E6A000" transform="translate(0 4)"/>
+      <path d="M60 12 L71 42 L102 43 L77 62 L86 92 L60 75 L34 92 L43 62 L18 43 L49 42 Z" fill="#FFC800" stroke="#E6A000" stroke-width="2" stroke-linejoin="round"/>
+      <!-- shine -->
+      <path d="M60 18 L67 38 L52 40 Z" fill="#FFE700" opacity=".8"/>
+      <!-- cheeks -->
+      <circle cx="44" cy="60" r="5" fill="#FF9D6E" opacity=".55"/>
+      <circle cx="76" cy="60" r="5" fill="#FF9D6E" opacity=".55"/>
+      <!-- eyes -->
+      <g class="dqm-eyes">
+        <ellipse cx="50" cy="52" rx="6.5" ry="8" fill="#fff"/>
+        <ellipse cx="70" cy="52" rx="6.5" ry="8" fill="#fff"/>
+        <circle cx="51.5" cy="53" r="3.4" fill="#4B4B4B"/>
+        <circle cx="71.5" cy="53" r="3.4" fill="#4B4B4B"/>
+        <circle cx="53" cy="51.5" r="1.1" fill="#fff"/>
+        <circle cx="73" cy="51.5" r="1.1" fill="#fff"/>
+      </g>
+      <!-- smile -->
+      <path d="M52 64 Q60 72 68 64" stroke="#4B4B4B" stroke-width="2.6" stroke-linecap="round" fill="none"/>
+    </svg>
+  </div>`;
+}
+
 A.openDailyQ = function () {
   dailyQReset();
   if (S.dailyQ.done) { toast("🌙 عُد غداً لسؤال جديد"); return; }
@@ -375,7 +415,7 @@ function renderPath() {
     html += `<div class="unit-banner u-${d.color === "yellow" ? "gold" : d.color}">
       <div class="u-txt"><div class="u-kicker">القسم ${toAr(1)}، الوحدة ${toAr(di + 1)}</div><h2>${d.title}</h2></div>
       <div class="u-side"><span class="u-divider"></span>${ico("guide", 24)}</div>
-    </div><div class="path">`;
+    </div><div class="path ${di === 0 ? "path-first" : ""}">` + (di === 0 ? dailyMascot() : "");
     d.lessons.forEach((l, li) => {
       const key = d.key + "." + l.key, p = lessonProg(key);
       const done = p.stars > 0, open = gi <= firstOpenIdx, current = gi === firstOpenIdx;
@@ -401,7 +441,7 @@ function renderPath() {
     });
     html += `</div>`;
   });
-  $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${dailyQuestionCard()}${html}<div style="height:20px"></div></div>` + floatingQuest() + bottomnav("path");
+  $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${html}<div style="height:20px"></div></div>` + floatingQuest() + bottomnav("path");
 }
 
 

@@ -1746,3 +1746,48 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .dq-fb.good .dq-msg { color: var(--green-dk); } .dq-fb.bad .dq-msg { color: var(--red-dk2); }
 .dq-soltoggle { background: none; border: 0; font-weight: 700; font-size: 14px; color: var(--blue-dk); text-decoration: underline; padding: 4px 0 8px; cursor: pointer; }
 .dq-sol { background: rgba(0,0,0,.04); border-radius: 12px; padding: 10px 14px; font-size: 15px; line-height: 1.8; white-space: pre-line; margin: 0 0 12px; text-align: right; }
+
+/* ============================================================
+   سؤال اليوم mascot — original star character beside the path
+   ============================================================ */
+.path-first { position: relative; }
+.dqm {
+  position: absolute; top: 132px; left: 8px; width: 100px; z-index: 4;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  animation: fadeUp .5s .3s ease backwards;
+}
+.dqm:active { transform: scale(.94); }
+.dqm-svg { width: 100px; height: auto; display: block; animation: dqmBob 3.1s ease-in-out infinite; transform-origin: 50% 90%; }
+@keyframes dqmBob { 0%,100% { transform: translateY(0) scale(1,1); } 50% { transform: translateY(-8px) scale(1.02,.98); } }
+/* the shadow stays put while the body bobs */
+.dqm-shadow { transform-box: fill-box; transform-origin: center; animation: dqmShadow 3.1s ease-in-out infinite; }
+@keyframes dqmShadow { 0%,100% { transform: scaleX(1); opacity: .08; } 50% { transform: scaleX(.82); opacity: .05; } }
+/* blink */
+.dqm-eyes { transform-box: fill-box; transform-origin: center; animation: dqmBlink 4.2s ease-in-out infinite; }
+@keyframes dqmBlink { 0%,93%,100% { transform: scaleY(1); } 96% { transform: scaleY(.12); } }
+/* wave */
+.dqm-arm { transform-box: fill-box; transform-origin: 50% 90%; animation: dqmWave 2.6s ease-in-out infinite; }
+@keyframes dqmWave { 0%,60%,100% { transform: rotate(0deg); } 70% { transform: rotate(-26deg); } 80% { transform: rotate(-6deg); } 90% { transform: rotate(-22deg); } }
+/* speech bubble */
+.dqm-bubble {
+  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  background: #fff; border: 2px solid var(--gold); color: var(--gold-dk);
+  font-family: var(--font); font-weight: 800; font-size: 12.5px; white-space: nowrap;
+  padding: 5px 11px 4px; border-radius: 12px; box-shadow: 0 3px 0 rgba(255,200,0,.25);
+  animation: dqmBubble 2.4s ease-in-out infinite; z-index: 1;
+}
+.dqm-tail { position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%);
+  width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 7px solid var(--gold); }
+.dqm-tail::after { content: ''; position: absolute; bottom: 2px; left: -5px;
+  width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid #fff; }
+@keyframes dqmBubble { 0%,100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-4px); } }
+/* sleeping (answered today) */
+.dqm-sleep .dqm-svg { filter: saturate(.6) brightness(1.02); }
+.dqm-sleep .dqm-eyes { animation: none; transform: scaleY(.12); }
+.dqm-sleep .dqm-arm { animation: none; }
+.dqm-zzz {
+  position: absolute; top: -2px; right: 6px; color: var(--blue); font-weight: 800; font-size: 15px;
+  animation: dqmZzz 2.4s ease-in-out infinite; opacity: 0;
+}
+.dqm-zzz2 { right: 18px; font-size: 12px; animation-delay: 1.2s; }
+@keyframes dqmZzz { 0% { opacity: 0; transform: translateY(0) scale(.6); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-18px) scale(1.1); } }
