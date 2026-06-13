@@ -1421,10 +1421,30 @@ A.login = function () {
 A.loginGuest = function () { S.user = { name: "ضيف", guest: true }; save(); afterLogin(); };
 A.logout = function () { S.user = null; save(); renderLogin(); };
 
+/* Disclaimer as a bottom sheet (slides up after login) — non-dismissible
+   since accepting it is required. */
+function showDisclaimerSheet(onAccept) {
+  const veil = document.createElement("div");
+  veil.className = "disc-veil";
+  veil.innerHTML = `<div class="disc-sheet">
+    <div class="ms-grip"></div>
+    <div class="ds-icon">${DISCLAIMER_ICON}</div>
+    <h2 class="ds-title">إخلاء مسؤولية</h2>
+    <div class="ds-body">${DISCLAIMER_HTML}</div>
+    <button class="btn ds-btn" id="discOk">فهمت، لنبدأ!</button>
+  </div>`;
+  document.body.appendChild(veil);
+  requestAnimationFrame(() => veil.classList.add("show"));
+  veil.querySelector("#discOk").onclick = () => {
+    veil.classList.remove("show");
+    setTimeout(() => { veil.remove(); onAccept(); }, 320);
+  };
+}
+
 function afterLogin() {
   if (!S.disclaimer) {
     $app.innerHTML = "";
-    showModal(DISCLAIMER_ICON, "إخلاء مسؤولية", DISCLAIMER_HTML, "فهمت، لنبدأ!", () => { S.disclaimer = true; save(); S.examAsked || S.exam ? render() : renderExamSetup(true); });
+    showDisclaimerSheet(() => { S.disclaimer = true; save(); S.examAsked || S.exam ? render() : renderExamSetup(true); });
   } else if (!S.examAsked && !S.exam) {
     renderExamSetup(true);
   } else {
