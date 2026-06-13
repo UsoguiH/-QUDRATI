@@ -24,8 +24,8 @@
     v: 1, disclaimer: true, track: "sci", sound: false,
     user: location.hash === "#login" ? null : { name: "سارة", guest: false },
     xp: 527, streak: { count: 12, last: null },
-    lessons: { "arithmetic.fractions": { stars: 3, plays: 1 } },
-    qstats: { "ar-frac-01": { r: 6, w: 2 }, "ar-frac-02": { r: 4, w: 1 }, "ar-frac-03": { r: 2, w: 3 }, "ge-ang-01": { r: 7, w: 1 } },
+    lessons: { "numbers.fractions": { stars: 3, plays: 1 } },
+    qstats: { "oo-01": { r: 6, w: 2 }, "oo-02": { r: 4, w: 1 }, "cn-01": { r: 2, w: 3 }, "ge-ang-01": { r: 7, w: 1 } },
     examAsked: location.hash !== "#exam",
     exam: ["#exam", "#noexam"].includes(location.hash) ? null
       : examIn43.getFullYear() + "-" + String(examIn43.getMonth() + 1).padStart(2, "0") + "-" + String(examIn43.getDate()).padStart(2, "0")
@@ -34,10 +34,10 @@
 </head>
 <body>
   <div id="app" class="app"></div>
-  <script src="js/data/arithmetic.js"></script>
-  <script src="js/data/algebra.js"></script>
+  <script src="js/data/skills.js"></script>
+  <script src="js/data/numbers.js"></script>
+  <script src="js/data/ratios.js"></script>
   <script src="js/data/geometry.js"></script>
-  <script src="js/data/statistics.js"></script>
   <script src="js/app.js"></script>
   <script>
     (function () {
@@ -60,28 +60,28 @@
         }
       }
       else if (h === "lesson") {
-        const d = window.QBANK.arithmetic;
-        A.startLesson("arithmetic", d.lessons[0].key);
+        const d = window.QBANK.numbers;
+        A.startLesson("numbers", d.lessons[0].key);
       } else if (h === "pop") {
         const node = document.querySelector(".node:not(.node-locked):not(.node-done)");
         if (node) node.click();
       } else if (h === "fab") {
-        const d = window.QBANK.arithmetic;
-        A.startLesson("arithmetic", d.lessons[0].key);
+        const d = window.QBANK.numbers;
+        A.startLesson("numbers", d.lessons[0].key);
         A.toggleHints();
       } else if (h === "fb") {
-        const d = window.QBANK.arithmetic;
-        A.startLesson("arithmetic", d.lessons[0].key);
+        const d = window.QBANK.numbers;
+        A.startLesson("numbers", d.lessons[0].key);
         A.pick(0); A.check();
       } else if (h === "done") {
-        const d = window.QBANK.arithmetic;
-        A.startLesson("arithmetic", d.lessons[0].key);
+        const d = window.QBANK.numbers;
+        A.startLesson("numbers", d.lessons[0].key);
         for (let i = 0; i < 200 && document.querySelector(".choices .choice"); i++) {
           A.pick(A.debugCurrent().answer); A.check(); A.next();
         }
       } else if (h === "fail") {
-        const d = window.QBANK.arithmetic;
-        A.startLesson("arithmetic", d.lessons[0].key);
+        const d = window.QBANK.numbers;
+        A.startLesson("numbers", d.lessons[0].key);
         for (let i = 0; i < 3; i++) {
           const q = A.debugCurrent();
           A.pick((q.answer + 1) % (q.format === "comparison" ? 4 : q.choices.length));

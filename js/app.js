@@ -11,7 +11,7 @@ const AR_DIGITS = "٠١٢٣٤٥٦٧٨٩";
 const toAr = n => String(n).replace(/[0-9]/g, d => AR_DIGITS[d]);
 const CMP_CHOICES = ["القيمة الأولى أكبر", "القيمة الثانية أكبر", "القيمتان متساويتان", "المعطيات غير كافية"];
 const LETTERS = ["أ", "ب", "جـ", "د"];
-const DOMAIN_ORDER = ["arithmetic", "algebra", "geometry", "statistics"];
+const DOMAIN_ORDER = ["skills", "numbers", "ratios", "geometry"];
 /* Exact unit color sets from the Figma file: face, dark lip, dome shine, pale (white-button lip) */
 const UNIT_COLORS = {
   green:  { c: "#58CC02", s: "#58A700", h: "#71DC1A", pale: "#CBE6B5" },
@@ -28,7 +28,7 @@ const DAILY_GOAL = 10;       // questions to answer for today's quest chest
    min each, free navigation + flagging inside a section, sealed once
    ended. Official topic mix ≈ 40% arithmetic / 24% algebra /
    23% geometry / 13% statistics; lit track gets a lighter quant load. */
-const MOCK_SECTION_PLAN = { sci: [10, 6, 5, 3], lit: [6, 4, 3, 2] }; // per-section counts in DOMAIN_ORDER
+const MOCK_SECTION_PLAN = { sci: [6, 8, 4, 6], lit: [4, 5, 3, 3] }; // per-section counts in DOMAIN_ORDER [skills,numbers,ratios,geometry]
 const MOCK_SECTIONS = 2;
 const MOCK_SECS = 25 * 60;   // per section, like the real thing
 const todayKey = () => { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
