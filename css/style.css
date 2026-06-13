@@ -1636,3 +1636,20 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 /* green "أحسنت" check in lesson feedback */
 .fb-ok { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
 .fb-ok svg { width: 18px; height: 18px; color: #fff; }
+
+/* disclaimer modal icon — playful entrance + gentle float */
+.modal .m-owl .disc-icon {
+  display: block; margin: 0 auto;
+  transform-origin: 50% 60%;
+  animation: discPop .6s cubic-bezier(.3,1.7,.45,1) backwards, discFloat 3s ease-in-out 1s infinite;
+  filter: drop-shadow(0 4px 0 rgba(0,0,0,.08));
+}
+@keyframes discPop {
+  0%   { transform: scale(0) rotate(-18deg); }
+  60%  { transform: scale(1.12) rotate(6deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+@keyframes discFloat {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%      { transform: translateY(-6px) rotate(2deg); }
+}
