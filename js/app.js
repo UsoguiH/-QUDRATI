@@ -1423,7 +1423,7 @@ A.logout = function () { S.user = null; save(); renderLogin(); };
 
 function afterLogin() {
   if (!S.disclaimer) {
-    $app.innerHTML = `<div class="hero"><h1>أهلاً ${esc(S.user.name)}! 👋</h1><p>تدرّب على القسم الكمي بأسلوب ممتع — درساً بعد درس</p></div>`;
+    $app.innerHTML = "";
     showModal(DISCLAIMER_ICON, "إخلاء مسؤولية", DISCLAIMER_HTML, "فهمت، لنبدأ!", () => { S.disclaimer = true; save(); S.examAsked || S.exam ? render() : renderExamSetup(true); });
   } else if (!S.examAsked && !S.exam) {
     renderExamSetup(true);
