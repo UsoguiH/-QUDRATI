@@ -38,7 +38,10 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null };
+const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null };
+const LEAGUE_NAMES = ["عبدالله", "محمد", "نورة", "سارة", "فهد", "ريم", "خالد", "لمى", "تركي", "جواهر", "عمر", "هند", "سلمان", "رنا", "بدر", "ليان", "ناصر", "شهد", "يزيد", "دانة", "مازن", "أصيل", "وليد", "غادة"];
+const LEAGUE_EPOCH = new Date(2026, 0, 4); // a Sunday
+const LEAGUE_PROMOTE = 5;    // top 5 promote
 const DAILYQ_REWARD = 8;     // gems for the daily question (correct), 2 for a try
 let S;
 try { S = Object.assign({}, DEFAULT_STATE, JSON.parse(localStorage.getItem("qudratState") || "{}")); }
@@ -222,7 +225,7 @@ A.closeDailyQ = function () {
 
 /* ---------------- screens / router ---------------- */
 let view = "path";
-function render() { ({ path: renderPath, mock: renderMockHome, stats: renderStats, settings: renderSettings })[view](); }
+function render() { ({ path: renderPath, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings })[view](); }
 function go(v) { view = v; render(); window.scrollTo(0, 0); }
 
 const ICO_FILE = { "nav-exam": "nav-exam-64.png" }; // raster icons (user-provided art)
@@ -241,7 +244,7 @@ A.chestTap = function () {
   toast(`باقي ${toAr(DAILY_GOAL - S.daily.n)} أسئلة لفتح صندوق اليوم 🎁`);
 };
 function bottomnav(active) {
-  const items = [["path", "nav-home"], ["mock", "nav-exam"], ["stats", "nav-stats"], ["settings", "nav-more"]];
+  const items = [["path", "nav-home"], ["league", "nav-league"], ["mock", "nav-exam"], ["stats", "nav-stats"], ["settings", "nav-more"]];
   return `<nav class="bottomnav">` + items.map(([k, i]) =>
     `<button class="navbtn ${active === k ? "active" : ""}" onclick="A.go('${k}')" aria-label="${k}">${ico(i, 30)}</button>`).join("") + `</nav>`;
 }
@@ -1194,6 +1197,69 @@ A.mockDetail = function (i) {
     <div class="fb-solution" id="mdSol" style="display:none">${esc(r.q.solution)}</div>
   </div>`;
 };
+
+/* ============================================================
+   الدوري الأسبوعي (ghost weekly league — no backend)
+   Rivals are generated once per week and climb daily so the race
+   feels live; the user's weekly XP = total XP earned since week start.
+   ============================================================ */
+function leagueWeek() { const d = new Date(); d.setHours(0, 0, 0, 0); return Math.floor((d - LEAGUE_EPOCH) / (7 * 864e5)); }
+function leagueDayIndex() { const d = new Date(); d.setHours(0, 0, 0, 0); return Math.floor((d - LEAGUE_EPOCH) / 864e5) % 7; }
+function leagueMsLeft() { const end = LEAGUE_EPOCH.getTime() + (leagueWeek() + 1) * 7 * 864e5; return Math.max(0, end - Date.now()); }
+function leagueReset() {
+  const w = leagueWeek();
+  if (S.league && S.league.week === w) return;
+  let seed = (w * 2654435761 + 12345) >>> 0;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) >>> 0; return seed / 4294967296; };
+  const pool = LEAGUE_NAMES.slice();
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  const ghosts = pool.slice(0, 14).map(n => ({ n, base: Math.floor(15 + rnd() * 90), rate: Math.floor(12 + rnd() * 65) }));
+  S.league = { week: w, base: S.xp, ghosts };
+  save();
+}
+function leagueEntries() {
+  leagueReset();
+  const day = leagueDayIndex();
+  const list = S.league.ghosts.map(g => ({ name: g.n, xp: g.base + g.rate * day, you: false }));
+  list.push({ name: (S.user && S.user.name) || "أنت", xp: Math.max(0, S.xp - S.league.base), you: true });
+  list.sort((a, b) => b.xp - a.xp || (a.you ? 1 : -1));
+  return list;
+}
+function leagueTimeLeft() {
+  const ms = leagueMsLeft(), h = Math.floor(ms / 36e5), d = Math.floor(h / 24);
+  return d >= 1 ? dayPhrase(d) : toAr(h) + " ساعة";
+}
+const AVATAR_COLORS = ["#58CC02", "#1CB0F6", "#CE82FF", "#FF9600", "#FF4B4B", "#2BB0A6", "#A560E8"];
+function avatarFor(name, you) {
+  const c = you ? "#58CC02" : AVATAR_COLORS[(name.charCodeAt(0) + name.length) % AVATAR_COLORS.length];
+  return `<span class="lb-av" style="background:${c}">${esc((name.trim()[0]) || "؟")}</span>`;
+}
+const MEDAL = i => `<span class="lb-medal m${i}">${toAr(i)}</span>`;
+
+function renderLeague() {
+  const entries = leagueEntries();
+  const myRank = entries.findIndex(e => e.you) + 1;
+  const rows = entries.map((e, i) => {
+    const rank = i + 1;
+    const rankCell = rank <= 3 ? MEDAL(rank) : `<span class="lb-rank">${toAr(rank)}</span>`;
+    return `<div class="lb-row ${e.you ? "me" : ""} ${rank === LEAGUE_PROMOTE ? "promo-edge" : ""}">
+      ${rankCell}${avatarFor(e.name, e.you)}
+      <span class="lb-name">${esc(e.name)}${e.you ? " <b>(أنت)</b>" : ""}</span>
+      <span class="lb-xp">${toAr(e.xp)} <i>XP</i></span>
+    </div>`;
+  }).join("");
+  $app.innerHTML = statbar() + `<div class="screen"><div class="page lb-page">
+    <div class="lb-hero">
+      <span class="lb-badge">${ico("nav-league", 96)}<span class="lb-badge-glow"></span></span>
+      <h1 class="lb-title">الدوري الذهبي</h1>
+      <div class="lb-sub">أكمل الدروس واكسب XP لتتصدّر</div>
+      <div class="lb-timer">${ico("timer", 18)} ينتهي خلال ${leagueTimeLeft()}</div>
+    </div>
+    <div class="lb-promo-note">أفضل ${toAr(LEAGUE_PROMOTE)} يتأهلون للأسبوع القادم ⬆</div>
+    <div class="lb-list">${rows}</div>
+    <div class="lb-foot">ترتيبك الحالي: <b>${toAr(myRank)}</b> — ${myRank <= LEAGUE_PROMOTE ? "أنت في منطقة التأهّل! 🔥" : "اكسب XP لتدخل منطقة التأهّل"}</div>
+  </div></div>` + bottomnav("league");
+}
 
 /* ---------------- STATS ---------------- */
 function renderStats() {

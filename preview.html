@@ -19,7 +19,10 @@
   };
   var examIn43 = new Date(Date.now() + 43 * 864e5);
   var tdy = new Date(), todayK = tdy.getFullYear() + "-" + (tdy.getMonth() + 1) + "-" + tdy.getDate();
+  var lwk = Math.floor((new Date(new Date().setHours(0, 0, 0, 0)) - new Date(2026, 0, 4)) / (7 * 864e5));
+  var lghosts = ["عبدالله", "نورة", "فهد", "ريم", "خالد", "لمى", "تركي", "جواهر", "عمر", "هند", "سلمان", "رنا", "بدر", "ليان"].map(function (n, i) { return { n: n, base: 30 + i * 9, rate: 18 + (i * 7) % 40 }; });
   localStorage.setItem("qudratState", JSON.stringify({
+    league: { week: lwk, base: 527 - 240, ghosts: lghosts },
     daily: { day: todayK, n: location.hash === "#chest" || location.hash === "#chestready" ? 10 : location.hash === "#claimed" ? 10 : 6, claimed: location.hash === "#claimed" },
     v: 1, disclaimer: true, track: "sci", sound: false,
     user: location.hash === "#login" ? null : { name: "سارة", guest: false },
@@ -42,7 +45,7 @@
   <script>
     (function () {
       const h = location.hash.replace("#", "") || "path";
-      if (["stats", "settings", "mock"].includes(h)) A.go(h);
+      if (["stats", "settings", "mock", "league"].includes(h)) A.go(h);
       else if (h === "chest") A.openChest();
       else if (h === "mocktest") A.startMock();
       else if (h === "mockdone") {

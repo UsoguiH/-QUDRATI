@@ -1747,3 +1747,60 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .dq-soltoggle { background: none; border: 0; font-weight: 700; font-size: 14px; color: var(--blue-dk); text-decoration: underline; padding: 4px 0 8px; cursor: pointer; }
 .dq-sol { background: rgba(0,0,0,.04); border-radius: 12px; padding: 10px 14px; font-size: 15px; line-height: 1.8; white-space: pre-line; margin: 0 0 12px; text-align: right; }
 
+
+/* ============================================================
+   الدوري الأسبوعي (weekly league) — Duolingo-style leaderboard
+   ============================================================ */
+.lb-page { padding-top: 8px; }
+.lb-hero { text-align: center; padding: 8px 0 6px; }
+.lb-badge { position: relative; display: inline-block; animation: lbBadgeIn .55s cubic-bezier(.3,1.6,.5,1) backwards; }
+.lb-badge .ic { filter: drop-shadow(0 5px 0 rgba(205,121,0,.35)); animation: lbBadgeBob 3.2s ease-in-out infinite; }
+@keyframes lbBadgeIn { 0% { transform: scale(0) rotate(-12deg); } 100% { transform: scale(1) rotate(0); } }
+@keyframes lbBadgeBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.lb-badge-glow {
+  position: absolute; top: 50%; left: 50%; width: 150px; height: 150px; margin: -75px 0 0 -75px;
+  border-radius: 50%; pointer-events: none; z-index: -1;
+  background: radial-gradient(closest-side, rgba(255,200,0,.4), transparent 70%);
+  animation: lbGlow 3.2s ease-in-out infinite;
+}
+@keyframes lbGlow { 0%,100% { opacity: .5; transform: scale(.9); } 50% { opacity: .9; transform: scale(1.05); } }
+.lb-title { font-size: 26px; color: var(--gold-dk); margin: 6px 0 2px; }
+.lb-sub { color: var(--gray); font-weight: 600; font-size: 14px; margin-bottom: 10px; }
+.lb-timer {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--blue-light); color: var(--blue-dk); border: 1.5px solid var(--blue-border);
+  font-weight: 800; font-size: 13px; padding: 6px 14px 5px; border-radius: 64px;
+}
+.lb-timer .ic { width: 18px; height: 18px; }
+.lb-promo-note { text-align: center; font-size: 12.5px; font-weight: 700; color: var(--green-dk); margin: 14px 0 8px; }
+.lb-list { display: flex; flex-direction: column; }
+.lb-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 9px 10px; border-radius: 14px;
+  animation: fadeUp .35s cubic-bezier(.3,1.2,.5,1) backwards;
+}
+.lb-list .lb-row:nth-child(1) { animation-delay: .03s; } .lb-list .lb-row:nth-child(2) { animation-delay: .06s; }
+.lb-list .lb-row:nth-child(3) { animation-delay: .09s; } .lb-list .lb-row:nth-child(4) { animation-delay: .12s; }
+.lb-list .lb-row:nth-child(5) { animation-delay: .15s; } .lb-list .lb-row:nth-child(6) { animation-delay: .18s; }
+.lb-row.me { background: #FFF8DC; box-shadow: inset 0 0 0 2px var(--gold); }
+.lb-row.promo-edge { border-bottom: 2px dashed var(--green); border-radius: 14px 14px 0 0; padding-bottom: 13px; margin-bottom: 2px; }
+.lb-rank { width: 30px; text-align: center; font-weight: 800; font-size: 16px; color: var(--gray); flex-shrink: 0; }
+.lb-medal {
+  width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 14px; color: #fff;
+}
+.lb-medal.m1 { background: linear-gradient(160deg,#FFD94A,#E6A000); box-shadow: 0 2px 0 #C78A00; }
+.lb-medal.m2 { background: linear-gradient(160deg,#D8DEE6,#9FB0C0); box-shadow: 0 2px 0 #8597A8; }
+.lb-medal.m3 { background: linear-gradient(160deg,#E8A86B,#B5793F); box-shadow: 0 2px 0 #9A6230; }
+.lb-av {
+  width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 800; font-size: 18px;
+}
+.lb-name { flex: 1; font-weight: 700; font-size: 16px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-name b { color: var(--gold-dk); font-size: 13px; }
+.lb-xp { font-weight: 800; font-size: 15px; color: var(--gray); white-space: nowrap; }
+.lb-xp i { font-style: normal; font-size: 12px; color: var(--gray-icon); }
+.lb-foot { text-align: center; font-size: 14px; font-weight: 600; color: var(--gray); margin: 16px 0 4px; }
+.lb-foot b { color: var(--gold-dk); }
