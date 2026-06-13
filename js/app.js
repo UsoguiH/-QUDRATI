@@ -38,7 +38,8 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [] };
+const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null };
+const DAILYQ_REWARD = 8;     // gems for the daily question (correct), 2 for a try
 let S;
 try { S = Object.assign({}, DEFAULT_STATE, JSON.parse(localStorage.getItem("qudratState") || "{}")); }
 catch (e) { S = Object.assign({}, DEFAULT_STATE); }
@@ -126,6 +127,98 @@ function dayPhrase(n) {
   return toAr(n) + " يوماً";
 }
 const fmtExamDate = d => { const x = new Date(d + "T00:00:00"); return toAr(x.getDate()) + " / " + toAr(x.getMonth() + 1) + " / " + toAr(x.getFullYear()); };
+
+/* ---------------- سؤال اليوم (Question of the Day) ----------------
+   One date-seeded mcq question everyone gets each day; changes daily;
+   a reason to open the app + gives gems a purpose. */
+function dailyQReset() {
+  const t = todayKey();
+  if (!S.dailyQ || S.dailyQ.day !== t) S.dailyQ = { day: t, done: false, correct: false };
+}
+let DQ_PICK = null, DQ_SEL = null;
+function pickDailyQuestion() {
+  const pool = [];
+  domains().forEach(d => d.lessons.forEach(l => trackFilter(l.questions).forEach(q => {
+    if (q.format === "mcq" && q.stem) pool.push(q);
+  })));
+  if (!pool.length) return null;
+  const t = todayKey();
+  let h = 5381; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) >>> 0;
+  return pool[h % pool.length];
+}
+
+function dailyQuestionCard() {
+  dailyQReset();
+  if (S.dailyQ.done) {
+    return `<div class="dq-card dq-claimed">
+      <div class="dq-row">
+        <span class="dq-badge ${S.dailyQ.correct ? "ok" : "miss"}">${S.dailyQ.correct ? CHECK_BADGE : "↻"}</span>
+        <div class="dq-txt"><b>أجبت سؤال اليوم</b><span>${S.dailyQ.correct ? "إجابة صحيحة! عُد غداً لسؤال جديد" : "عُد غداً لسؤال جديد 🌙"}</span></div>
+      </div></div>`;
+  }
+  return `<button class="dq-card dq-open" onclick="A.openDailyQ()">
+    <span class="dq-glow"></span>
+    <div class="dq-row">
+      <span class="dq-icon">${ico("star-gold", 30)}</span>
+      <div class="dq-txt"><b>سؤال اليوم</b><span>جاوب واكسب ${toAr(DAILYQ_REWARD)} جواهر ${ico("gem", 13)}</span></div>
+      <span class="dq-go">ابدأ</span>
+    </div>
+  </button>`;
+}
+
+A.openDailyQ = function () {
+  dailyQReset();
+  if (S.dailyQ.done) { toast("🌙 عُد غداً لسؤال جديد"); return; }
+  DQ_PICK = pickDailyQuestion(); DQ_SEL = null;
+  if (!DQ_PICK) return;
+  const q = DQ_PICK;
+  const veil = document.createElement("div");
+  veil.className = "dq-veil";
+  veil.innerHTML = `<div class="dq-sheet">
+    <div class="ms-grip"></div>
+    <div class="dq-head"><span class="dq-hstar">${ico("star-gold", 26)}</span><h3>سؤال اليوم</h3></div>
+    <div class="dq-stem">${q.stem}</div>
+    ${q.figure ? `<div class="q-figure">${q.figure}</div>` : ""}
+    <div class="dq-choices">${q.choices.map((c, i) =>
+      `<button class="choice" data-ci="${i}" style="--d:${0.05 + i * 0.06}s" onclick="A.pickDailyQ(${i})"><span class="ch-letter">${LETTERS[i]}</span><span>${c}</span></button>`).join("")}</div>
+    <button class="btn dq-check" id="dqCheck" disabled onclick="A.checkDailyQ()">تحقق</button>
+    <div class="dq-fb" id="dqFb"></div>
+  </div>`;
+  document.body.appendChild(veil);
+  requestAnimationFrame(() => veil.classList.add("show"));
+};
+A.pickDailyQ = function (i) {
+  DQ_SEL = i;
+  document.querySelectorAll(".dq-choices .choice").forEach((b, j) => b.classList.toggle("sel", j === i));
+  const c = document.getElementById("dqCheck"); if (c) c.disabled = false;
+};
+A.checkDailyQ = function () {
+  if (DQ_SEL === null || !DQ_PICK) return;
+  const q = DQ_PICK, correct = DQ_SEL === q.answer;
+  document.querySelectorAll(".dq-choices .choice").forEach((b, j) => {
+    b.disabled = true;
+    if (j === q.answer) b.classList.add("correct");
+    else if (j === DQ_SEL) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  const reward = correct ? DAILYQ_REWARD : 2;
+  S.dailyQ.done = true; S.dailyQ.correct = correct; S.xp += reward;
+  const qs = S.qstats[q.id] = S.qstats[q.id] || { r: 0, w: 0 }; correct ? qs.r++ : qs.w++;
+  save();
+  correct ? sndWin() : sndBad();
+  const chk = document.getElementById("dqCheck"); if (chk) chk.style.display = "none";
+  const fb = document.getElementById("dqFb");
+  fb.className = "dq-fb show " + (correct ? "good" : "bad");
+  fb.innerHTML = `<div class="dq-reward"><b>+${toAr(reward)}</b>${ico("gem", 26)}</div>
+    <div class="dq-msg">${correct ? "إجابة صحيحة! 🎉" : "إجابة غير صحيحة — الصحيحة: " + LETTERS[q.answer]}</div>
+    <button class="dq-soltoggle" onclick="A.toggleEl('dqSol')">اعرض الحل</button>
+    <div class="fb-solution dq-sol" id="dqSol" style="display:none">${esc(q.solution)}</div>
+    <button class="btn dq-cont" onclick="A.closeDailyQ()">متابعة</button>`;
+};
+A.closeDailyQ = function () {
+  const v = document.querySelector(".dq-veil");
+  if (v) { v.classList.remove("show"); setTimeout(() => { v.remove(); if (view === "path") render(); }, 320); }
+};
 
 /* ---------------- screens / router ---------------- */
 let view = "path";
@@ -308,7 +401,7 @@ function renderPath() {
     });
     html += `</div>`;
   });
-  $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${html}<div style="height:20px"></div></div>` + floatingQuest() + bottomnav("path");
+  $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${dailyQuestionCard()}${html}<div style="height:20px"></div></div>` + floatingQuest() + bottomnav("path");
 }
 
 
