@@ -20,7 +20,7 @@ const UNIT_COLORS = {
   yellow: { c: "#FFC800", s: "#E6A000", h: "#FFE700", pale: "#EFE2BC" }
 };
 const LEVEL_HEARTS = 3;      // hearts per level — lose them all and you retry the level
-const Q_SECS = 90;           // seconds allowed per question
+const Q_SECS = 60;           // seconds per question — matches the real GAT pace
 const FREEZE_COST = 10;      // blue gems to freeze the timer for the current question
 const FIFTY_COST = 15;       // blue gems to remove two wrong choices (50/50)
 const DAILY_GOAL = 10;       // questions to answer for today's quest chest
@@ -148,7 +148,7 @@ A.chestTap = function () {
   toast(`باقي ${toAr(DAILY_GOAL - S.daily.n)} أسئلة لفتح صندوق اليوم 🎁`);
 };
 function bottomnav(active) {
-  const items = [["path", "nav-home"], ["mock", "nav-exam"], ["stats", "nav-chest"], ["settings", "nav-more"]];
+  const items = [["path", "nav-home"], ["mock", "nav-exam"], ["stats", "nav-stats"], ["settings", "nav-more"]];
   return `<nav class="bottomnav">` + items.map(([k, i]) =>
     `<button class="navbtn ${active === k ? "active" : ""}" onclick="A.go('${k}')" aria-label="${k}">${ico(i, 30)}</button>`).join("") + `</nav>`;
 }
@@ -277,7 +277,6 @@ function renderPath() {
   if (firstOpenIdx === -1) firstOpenIdx = flat.length;
   let gi = 0, html = "";
   const offsets = [0, -55, -80, -55, 0, 55, 80, 55]; // winding path x-offsets
-  const LEVEL_ICONS = ["star", "dumbbell", "headphones", "video", "mic", "book"];
   ds.forEach((d, di) => {
     const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
     html += `<div class="unit-banner u-${d.color === "yellow" ? "gold" : d.color}">
@@ -289,7 +288,10 @@ function renderPath() {
       const done = p.stars > 0, open = gi <= firstOpenIdx, current = gi === firstOpenIdx;
       const cls = done ? "node-done" : open ? "" : "node-locked";
       const x = offsets[gi % offsets.length];
-      const iconName = done ? "star-done" : (current ? "star" : LEVEL_ICONS[li % LEVEL_ICONS.length] + (open ? "" : "-locked"));
+      // current/done keep the Duolingo star; other nodes show the lesson's own math emoji
+      const nodeIcon = done ? ico("star-done", 40)
+        : current ? ico("star", 40)
+        : `<span class="node-emoji ${open ? "" : "locked"}">${l.icon || "📘"}</span>`;
       const ring = current ? `<svg class="node-ring" viewBox="0 0 89 84" fill="none">
           <ellipse cx="44.5" cy="42" rx="41.5" ry="39" stroke="#E5E5E5" stroke-width="6"/>
           <path d="M 44.5 3 A 41.5 39 0 0 1 81.5 25" stroke="${u.c}" stroke-width="6" stroke-linecap="round"/>
@@ -301,7 +303,7 @@ function renderPath() {
         <button class="node ${cls}" style="--node-c:${nc[0]};--node-s:${nc[1]};--node-h:${nc[2]};--d:${(gi % 10) * 0.06}s"
           ${open ? `onclick="A.nodeTap(event,'${d.key}','${l.key}',${li})"` : "disabled"}>
           ${current ? `<span class="node-tip" style="color:${u.c}">ابدأ</span>` : ""}
-          ${ico(iconName, 40)}
+          ${nodeIcon}
         </button>
       </div></div>`;
       gi++;
@@ -663,7 +665,7 @@ A.check = function () {
     SES.done++;
     SES.xp += SES.retried[q.id] ? 5 : 10;
     fb.className = "feedback good show";
-    fb.innerHTML = `<div class="fb-head">${ico("check", 30)} أحسنت!</div>
+    fb.innerHTML = `<div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> أحسنت!</div>
       <button class="fb-solution-toggle" onclick="A.toggleSol()">لماذا؟ اعرض الحل</button>
       <div class="fb-solution" id="sol" style="display:none">${esc(q.solution)}</div>
       <button class="btn" onclick="A.next()">متابعة</button>`;
@@ -786,7 +788,7 @@ function lessonComplete() {
   setTimeout(() => {
     const xpEl = document.getElementById("cv-xp"), accEl = document.getElementById("cv-acc"), tEl = document.getElementById("cv-time");
     if (xpEl) countUp(xpEl, xpWon); if (accEl) countUp(accEl, acc, "٪"); if (tEl) countUpTime(tEl, tTot);
-  }, 1700);
+  }, 700);
   SES = null;
 }
 
@@ -1403,9 +1405,7 @@ A.logout = function () { S.user = null; save(); renderLogin(); };
 function afterLogin() {
   if (!S.disclaimer) {
     $app.innerHTML = `<div class="hero">${starHero(140)}<h1>أهلاً ${esc(S.user.name)}! 👋</h1><p>تدرّب على القسم الكمي بأسلوب ممتع — درساً بعد درس</p></div>`;
-    showModal("📜", "إخلاء مسؤولية", DISCLAIMER_HTML, "فهمت، لنبدأ!", () => { S.disclaimer = true; save(); S.examAsked || S.exam ? render() : renderExamSetup(true); });
-  } else if (!S.examAsked && !S.exam) {
-    renderExamSetup(true);
+    showModal("📜", "إخلاء مسؤولية", DISCLAIMER_HTML, "فهمت، لنبدأ!", () => { S.disclaimer = true; save(); render(); });
   } else {
     render();
   }

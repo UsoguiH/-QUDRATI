@@ -1158,7 +1158,7 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .win-sub {
   color: var(--gray); font-weight: 600; line-height: 1.8;
   margin: -12px 0 14px; z-index: 2;
-  animation: fadeUp .45s 1.35s ease backwards;
+  animation: fadeUp .45s .55s ease backwards;
 }
 /* blue total-time card on the win screen */
 .rc-time .qt-svg { width: 22px; height: 22px; }
@@ -1195,9 +1195,9 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
     springIn .5s cubic-bezier(.3,1.6,.5,1) backwards,
     cardFloat 3.4s ease-in-out infinite;
 }
-.result-cards .rcard:nth-child(1) { animation-delay: 1.55s, 2.4s; }
-.result-cards .rcard:nth-child(2) { animation-delay: 1.7s, 2.9s; }
-.result-cards .rcard:nth-child(3) { animation-delay: 1.85s, 3.4s; }
+.result-cards .rcard:nth-child(1) { animation-delay: .7s, 2.4s; }
+.result-cards .rcard:nth-child(2) { animation-delay: .82s, 2.9s; }
+.result-cards .rcard:nth-child(3) { animation-delay: .94s, 3.4s; }
 .result-cards .rcard::after { /* glossy sweep */
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.55) 50%, transparent 65%);
@@ -1629,3 +1629,10 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .ms-body .ex-step:nth-child(4) { animation-delay: .23s; }
 .ms-body .ex-step:nth-child(5) { animation-delay: .29s; }
 .ms-close { background: var(--green); box-shadow: 0 4px 0 var(--green-lip); }
+
+/* lesson-node math emoji (replaces the old language-app icons) */
+.node-emoji { font-size: 30px; line-height: 1; display: inline-block; filter: drop-shadow(0 1px 0 rgba(0,0,0,.12)); }
+.node-emoji.locked { filter: grayscale(1); opacity: .5; }
+/* green "أحسنت" check in lesson feedback */
+.fb-ok { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.fb-ok svg { width: 18px; height: 18px; color: #fff; }
