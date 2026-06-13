@@ -352,14 +352,29 @@ A.startLesson = function (domKey, lesKey) {
   const key = domKey + "." + lesKey;
   const qs = pickLessonQuestions(l, key);
   if (!qs.length) { showModal("⭐", "لا توجد أسئلة", "لا توجد أسئلة متاحة لهذا الدرس في مسارك الحالي.", "حسناً"); return; }
-  SES = { mode: "lesson", domKey, lesKey, key, title: l.title, queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null, locked: false, xp: 0, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0, frozen: false, fiftyUsed: false };
+  SES = { mode: "lesson", domKey, lesKey, key, title: l.title, method: l.method || "", queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null, locked: false, xp: 0, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0, frozen: false, fiftyUsed: false };
   renderSession();
 };
 
-function questionBody(q, selIdx, lockHandlers, pickFn) {
+/* Renders solution/method text (\n lines) as styled steps; lines with 💡 or
+   warning words become a highlighted callout. Shared by the solution box
+   and the method sheet. */
+const BULB_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z"/></svg>`;
+function formatExplain(text) {
+  return String(text).split("\n").map(line => {
+    const t = line.trim();
+    if (!t) return "";
+    const warn = /^💡|^الخطأ|^انتبه|^ملاحظة|^تنبيه|الخطأ الشائع/.test(t);
+    const body = esc(t.replace(/^💡\s*/, ""));
+    if (warn) return `<div class="ex-tip">${BULB_SVG}<span>${body}</span></div>`;
+    return `<div class="ex-step">${body}</div>`;
+  }).join("");
+}
+
+function questionBody(q, selIdx, lockHandlers, pickFn, method) {
   const isCmp = q.format === "comparison";
   const choices = isCmp ? CMP_CHOICES : q.choices;
-  let h = `<div class="q-kicker">${isCmp ? "قارن بين القيمتين ثم اختر:" : "اختر الإجابة الصحيحة:"}</div>`;
+  let h = `<div class="q-top"><div class="q-kicker">${isCmp ? "قارن بين القيمتين ثم اختر:" : "اختر الإجابة الصحيحة:"}</div>${method ? `<button class="method-btn" onclick="A.showMethod()">${BULB_SVG} كيف أحلّها؟</button>` : ""}</div>`;
   if (q.stem) h += `<div class="q-stem">${q.stem}</div>`;
   if (q.figure) h += `<div class="q-figure">${q.figure}</div>`;
   if (isCmp) h += `<div class="cmp-wrap">
@@ -411,7 +426,7 @@ function renderSession() {
         <span class="sess-hearts" id="sesHearts">${ico("heart", 22)} ${toAr(SES.hearts)}</span>
       </div>
       ${timerBar()}
-      <div class="q-area">${questionBody(q, SES.sel, false)}</div>
+      <div class="q-area">${questionBody(q, SES.sel, false, null, SES.method)}</div>
       <div class="action-bar has-fab"><button class="btn" id="checkBtn" onclick="A.check()" ${SES.sel === null ? "disabled" : ""}>تحقق</button>${hintFab()}</div>
       <div class="feedback" id="fb"></div>
     </div>`;
@@ -566,7 +581,7 @@ function timeUp() {
   fb.innerHTML = `<div class="fb-head"><span class="fb-x">⏰</span> انتهى الوقت!</div>
     <div class="fb-correct">الإجابة الصحيحة: ${correctTxt}</div>
     <button class="fb-solution-toggle" onclick="A.toggleSol()">اعرض الحل</button>
-    <div class="fb-solution" id="sol" style="display:none">${esc(q.solution)}</div>
+    <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
     <button class="btn btn-red" onclick="A.next()">متابعة</button>`;
   save();
 }
@@ -650,7 +665,7 @@ A.check = function () {
     fb.className = "feedback good show";
     fb.innerHTML = `<div class="fb-head">${ico("check", 30)} أحسنت!</div>
       <button class="fb-solution-toggle" onclick="A.toggleSol()">لماذا؟ اعرض الحل</button>
-      <div class="fb-solution" id="sol" style="display:none">${esc(q.solution)}</div>
+      <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
       <button class="btn" onclick="A.next()">متابعة</button>`;
   } else {
     sndBad();
@@ -661,13 +676,44 @@ A.check = function () {
     fb.innerHTML = `<div class="fb-head"><span class="fb-x">✕</span> إجابة غير صحيحة</div>
       <div class="fb-correct">الإجابة الصحيحة: ${correctTxt}</div>
       <button class="fb-solution-toggle" onclick="A.toggleSol()">اعرض الحل</button>
-      <div class="fb-solution" id="sol" style="display:none">${esc(q.solution)}</div>
+      <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
       <button class="btn btn-red" onclick="A.next()">متابعة</button>`;
   }
   save();
 };
 
-A.toggleSol = function () { const s = document.getElementById("sol"); s.style.display = s.style.display === "none" ? "block" : "none"; };
+A.toggleSol = function () {
+  const s = document.getElementById("sol");
+  const open = s.style.display === "none";
+  s.style.display = open ? "block" : "none";
+  const btn = s.previousElementSibling;
+  if (btn && btn.classList.contains("fb-solution-toggle")) btn.classList.toggle("open", open);
+};
+
+/* Method sheet (كيف أحلّها؟): teacher explains the approach for this
+   question TYPE — no answer. Slides up from the bottom, Duolingo-style. */
+A.showMethod = function () {
+  if (!SES || !SES.method) return;
+  const old = document.querySelector(".method-veil"); if (old) old.remove();
+  const veil = document.createElement("div");
+  veil.className = "method-veil";
+  veil.innerHTML = `<div class="method-sheet">
+    <div class="ms-grip"></div>
+    <div class="ms-head"><span class="ms-bulb">${BULB_SVG}</span><h3>طريقة الحل</h3></div>
+    <div class="ms-sub">هذي الطريقة العامة لهذا النوع — جرّب تطبّقها بنفسك 👇</div>
+    <div class="ms-body">${formatExplain(SES.method)}</div>
+    <button class="btn ms-close" onclick="A.closeMethod()">فهمت، بحاول</button>
+  </div>`;
+  veil.onclick = e => { if (e.target === veil) A.closeMethod(); };
+  document.body.appendChild(veil);
+  requestAnimationFrame(() => veil.classList.add("show"));
+};
+A.closeMethod = function () {
+  const v = document.querySelector(".method-veil");
+  if (!v) return;
+  v.classList.remove("show");
+  setTimeout(() => v.remove(), 280);
+};
 
 A.debugCurrent = function () { return SES && SES.queue[SES.idx]; }; // dev harness (preview.html) only
 A.debugMock = function () { return MOCK && MOCK.sections[MOCK.si].items[MOCK.qi].q; }; // dev harness only
@@ -1058,7 +1104,7 @@ A.mockDetail = function (i) {
       : `<div class="ri-row" style="color:var(--red)">✕ إجابتك: ${r.picked === null ? "لم تُجب" : ch[r.picked]}</div>
          <div class="ri-row" style="color:var(--green-dk)">✓ الصحيحة: ${ch[r.q.answer]}</div>`}
     <button class="fb-solution-toggle" onclick="A.toggleEl('mdSol')">اعرض الحل</button>
-    <div class="fb-solution" id="mdSol" style="display:none">${esc(r.q.solution)}</div>
+    <div class="fb-solution" id="mdSol" style="display:none">${formatExplain(r.q.solution)}</div>
   </div>`;
 };
 

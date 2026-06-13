@@ -73,6 +73,11 @@
         const d = window.QBANK.numbers;
         A.startLesson("numbers", d.lessons[0].key);
         A.pick(0); A.check();
+        A.toggleSol();
+      } else if (h === "method") {
+        const d = window.QBANK.skills;
+        A.startLesson("skills", d.lessons[0].key);
+        A.showMethod();
       } else if (h === "done") {
         const d = window.QBANK.numbers;
         A.startLesson("numbers", d.lessons[0].key);
