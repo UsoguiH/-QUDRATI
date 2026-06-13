@@ -581,7 +581,7 @@ function timeUp() {
   fb.innerHTML = `<div class="fb-head"><span class="fb-x">⏰</span> انتهى الوقت!</div>
     <div class="fb-correct">الإجابة الصحيحة: ${correctTxt}</div>
     <button class="fb-solution-toggle" onclick="A.toggleSol()">اعرض الحل</button>
-    <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
+    <div class="fb-solution" id="sol" style="display:none">${esc(q.solution)}</div>
     <button class="btn btn-red" onclick="A.next()">متابعة</button>`;
   save();
 }
@@ -665,7 +665,7 @@ A.check = function () {
     fb.className = "feedback good show";
     fb.innerHTML = `<div class="fb-head">${ico("check", 30)} أحسنت!</div>
       <button class="fb-solution-toggle" onclick="A.toggleSol()">لماذا؟ اعرض الحل</button>
-      <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
+      <div class="fb-solution" id="sol" style="display:none">${esc(q.solution)}</div>
       <button class="btn" onclick="A.next()">متابعة</button>`;
   } else {
     sndBad();
@@ -676,19 +676,13 @@ A.check = function () {
     fb.innerHTML = `<div class="fb-head"><span class="fb-x">✕</span> إجابة غير صحيحة</div>
       <div class="fb-correct">الإجابة الصحيحة: ${correctTxt}</div>
       <button class="fb-solution-toggle" onclick="A.toggleSol()">اعرض الحل</button>
-      <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
+      <div class="fb-solution" id="sol" style="display:none">${esc(q.solution)}</div>
       <button class="btn btn-red" onclick="A.next()">متابعة</button>`;
   }
   save();
 };
 
-A.toggleSol = function () {
-  const s = document.getElementById("sol");
-  const open = s.style.display === "none";
-  s.style.display = open ? "block" : "none";
-  const btn = s.previousElementSibling;
-  if (btn && btn.classList.contains("fb-solution-toggle")) btn.classList.toggle("open", open);
-};
+A.toggleSol = function () { const s = document.getElementById("sol"); s.style.display = s.style.display === "none" ? "block" : "none"; };
 
 /* Method sheet (كيف أحلّها؟): teacher explains the approach for this
    question TYPE — no answer. Slides up from the bottom, Duolingo-style. */
@@ -1104,7 +1098,7 @@ A.mockDetail = function (i) {
       : `<div class="ri-row" style="color:var(--red)">✕ إجابتك: ${r.picked === null ? "لم تُجب" : ch[r.picked]}</div>
          <div class="ri-row" style="color:var(--green-dk)">✓ الصحيحة: ${ch[r.q.answer]}</div>`}
     <button class="fb-solution-toggle" onclick="A.toggleEl('mdSol')">اعرض الحل</button>
-    <div class="fb-solution" id="mdSol" style="display:none">${formatExplain(r.q.solution)}</div>
+    <div class="fb-solution" id="mdSol" style="display:none">${esc(r.q.solution)}</div>
   </div>`;
 };
 

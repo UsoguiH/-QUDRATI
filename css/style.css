@@ -480,26 +480,14 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 }
 .fb-correct { font-weight: 600; margin: 6px 0 2px; font-size: 16px; }
 .feedback.bad .fb-correct { color: var(--red-dk2); }
-.fb-solution-toggle {
-  display: flex; align-items: center; gap: 6px;
-  background: none; border: 0; font-family: var(--font);
-  font-weight: 800; font-size: 15px; padding: 8px 0 6px;
-  cursor: pointer; -webkit-tap-highlight-color: transparent;
-}
-.fb-solution-toggle::after {
-  content: '⌄'; font-size: 18px; line-height: 1; transition: transform .25s ease; margin-bottom: 3px;
-}
-.fb-solution-toggle.open::after { transform: rotate(180deg); }
-.feedback.good .fb-solution-toggle { color: var(--green-dk); }
-.feedback.bad .fb-solution-toggle { color: var(--red-dk2); }
+.fb-solution-toggle { background:none; border:0; font-weight:700; font-size:15px; padding:6px 0; text-decoration: underline; }
+.feedback.good .fb-solution-toggle { color:var(--green-dk); } .feedback.bad .fb-solution-toggle { color:var(--red-dk2); }
 .fb-solution {
-  background: #fff; border-radius: 14px; padding: 12px 14px;
-  max-height: 34vh; overflow-y: auto; margin-bottom: 8px;
-  animation: solOpen .3s cubic-bezier(.3,1.2,.5,1);
+  background: rgba(255,255,255,.75); border-radius: 12px; padding: 10px 14px;
+  font-size: 15px; line-height: 1.8; max-height: 30vh; overflow-y: auto; margin-bottom: 8px; white-space: pre-line;
 }
-@keyframes solOpen { from { opacity: 0; transform: translateY(-6px); } }
 
-/* formatted explanation steps (solution box + method sheet) */
+/* formatted explanation steps (method sheet only) */
 .ex-step {
   position: relative; padding: 7px 14px 7px 4px; margin: 2px 0;
   font-size: 15px; line-height: 1.7; font-weight: 600; color: var(--ink);
@@ -1596,16 +1584,16 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .q-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin: 10px 0 16px; }
 .q-top .q-kicker { margin: 0; flex: 1; }
 .method-btn {
-  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
-  background: var(--blue-light); color: var(--blue-dk);
-  border: 2px solid var(--blue-border); border-radius: 64px;
-  font-family: var(--font); font-weight: 800; font-size: 13px;
-  padding: 7px 13px 6px; cursor: pointer; margin-top: 4px;
-  box-shadow: 0 3px 0 rgba(99,201,249,.4); -webkit-tap-highlight-color: transparent;
-  animation: fadeUp .35s .18s ease backwards;
+  display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
+  background: var(--blue); color: #fff; border: 0; border-radius: 13px;
+  font-family: var(--font); font-weight: 700; font-size: 14px;
+  padding: 9px 15px 11px; cursor: pointer; margin-top: 2px;
+  box-shadow: 0 4px 0 var(--blue-dk);
+  transition: transform .08s, box-shadow .08s; -webkit-tap-highlight-color: transparent;
+  animation: fadeUp .35s .18s ease backwards; user-select: none;
 }
-.method-btn svg { width: 16px; height: 16px; }
-.method-btn:active { transform: translateY(2px); box-shadow: none; }
+.method-btn svg { width: 17px; height: 17px; }
+.method-btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--blue-dk); }
 
 .method-veil {
   position: fixed; inset: 0; z-index: 120;
