@@ -288,10 +288,8 @@ function renderPath() {
       const done = p.stars > 0, open = gi <= firstOpenIdx, current = gi === firstOpenIdx;
       const cls = done ? "node-done" : open ? "" : "node-locked";
       const x = offsets[gi % offsets.length];
-      // current/done keep the Duolingo star; other nodes show the lesson's own math emoji
-      const nodeIcon = done ? ico("star-done", 40)
-        : current ? ico("star", 40)
-        : `<span class="node-emoji ${open ? "" : "locked"}">${l.icon || "📘"}</span>`;
+      // every node is a star: gold star-done when completed, the white star otherwise
+      const nodeIcon = done ? ico("star-done", 40) : ico("star", 40);
       const ring = current ? `<svg class="node-ring" viewBox="0 0 89 84" fill="none">
           <ellipse cx="44.5" cy="42" rx="41.5" ry="39" stroke="#E5E5E5" stroke-width="6"/>
           <path d="M 44.5 3 A 41.5 39 0 0 1 81.5 25" stroke="${u.c}" stroke-width="6" stroke-linecap="round"/>
@@ -1405,7 +1403,9 @@ A.logout = function () { S.user = null; save(); renderLogin(); };
 function afterLogin() {
   if (!S.disclaimer) {
     $app.innerHTML = `<div class="hero">${starHero(140)}<h1>أهلاً ${esc(S.user.name)}! 👋</h1><p>تدرّب على القسم الكمي بأسلوب ممتع — درساً بعد درس</p></div>`;
-    showModal("📜", "إخلاء مسؤولية", DISCLAIMER_HTML, "فهمت، لنبدأ!", () => { S.disclaimer = true; save(); render(); });
+    showModal("📜", "إخلاء مسؤولية", DISCLAIMER_HTML, "فهمت، لنبدأ!", () => { S.disclaimer = true; save(); S.examAsked || S.exam ? render() : renderExamSetup(true); });
+  } else if (!S.examAsked && !S.exam) {
+    renderExamSetup(true);
   } else {
     render();
   }
