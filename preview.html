@@ -29,6 +29,7 @@
     xp: 527, streak: { count: 12, last: null },
     lessons: { "numbers.fractions": { stars: 3, plays: 1 } },
     qstats: { "oo-01": { r: 6, w: 2 }, "oo-02": { r: 4, w: 1 }, "cn-01": { r: 2, w: 3 }, "ge-ang-01": { r: 7, w: 1 } },
+    mistakes: { "oo-01": 1000, "oo-02": 2000, "cn-01": 3000, "ge-ang-01": 4000 },
     examAsked: location.hash !== "#exam",
     exam: ["#exam", "#noexam"].includes(location.hash) ? null
       : examIn43.getFullYear() + "-" + String(examIn43.getMonth() + 1).padStart(2, "0") + "-" + String(examIn43.getDate()).padStart(2, "0")
@@ -45,7 +46,8 @@
   <script>
     (function () {
       const h = location.hash.replace("#", "") || "path";
-      if (["stats", "settings", "mock", "league"].includes(h)) A.go(h);
+      if (["stats", "settings", "mock", "league", "review"].includes(h)) A.go(h);
+      else if (h === "reviewdo") A.startReview();
       else if (h === "chest") A.openChest();
       else if (h === "mocktest") A.startMock();
       else if (h === "mockdone") {

@@ -38,7 +38,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null };
+const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {} };
 const LEAGUE_NAMES = ["عبدالله", "محمد", "نورة", "سارة", "فهد", "ريم", "خالد", "لمى", "تركي", "جواهر", "عمر", "هند", "سلمان", "رنا", "بدر", "ليان", "ناصر", "شهد", "يزيد", "دانة", "مازن", "أصيل", "وليد", "غادة"];
 const LEAGUE_EPOCH = new Date(2026, 0, 4); // a Sunday
 const LEAGUE_PROMOTE = 5;    // top 5 promote
@@ -92,6 +92,33 @@ function allLessons() {
 }
 function trackFilter(qs) { return S.track === "lit" ? qs.filter(q => q.track !== "sci") : qs; }
 function lessonProg(key) { return S.lessons[key] || { stars: 0, plays: 0 }; }
+
+/* ---------------- mistakes (مراجعة الأخطاء) ----------------
+   Every wrong answer (lesson, timeout, mock, daily question) records the
+   question id; answering it correctly anywhere clears it. The review
+   screen lists what's left and can re-quiz only those. */
+let QINDEX = null;
+function questionById(id) {
+  if (!QINDEX) {
+    QINDEX = {};
+    domains().forEach(d => d.lessons.forEach(l => l.questions.forEach(q => {
+      QINDEX[q.id] = { q, domKey: d.key, lesKey: l.key, lesTitle: l.title, domTitle: d.title, color: d.color };
+    })));
+  }
+  return QINDEX[id];
+}
+function noteAnswer(q, correct) {
+  S.mistakes = S.mistakes || {};
+  if (correct) { if (q.id in S.mistakes) delete S.mistakes[q.id]; }
+  else S.mistakes[q.id] = Date.now();
+}
+/* mistakes that still exist in the bank and match the current track, newest first */
+function mistakeList() {
+  const m = S.mistakes || {};
+  return Object.keys(m).map(id => ({ id, t: m[id], rec: questionById(id) }))
+    .filter(x => x.rec && trackFilter([x.rec.q]).length)
+    .sort((a, b) => b.t - a.t);
+}
 
 /* ---------------- exam countdown + readiness ---------------- */
 function examDaysLeft() {
@@ -207,6 +234,7 @@ A.checkDailyQ = function () {
   const reward = correct ? DAILYQ_REWARD : 2;
   S.dailyQ.done = true; S.dailyQ.correct = correct; S.xp += reward;
   const qs = S.qstats[q.id] = S.qstats[q.id] || { r: 0, w: 0 }; correct ? qs.r++ : qs.w++;
+  noteAnswer(q, correct);
   save();
   correct ? sndWin() : sndBad();
   const chk = document.getElementById("dqCheck"); if (chk) chk.style.display = "none";
@@ -225,7 +253,7 @@ A.closeDailyQ = function () {
 
 /* ---------------- screens / router ---------------- */
 let view = "path";
-function render() { ({ path: renderPath, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings })[view](); }
+function render() { ({ path: renderPath, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings, review: renderReview })[view](); }
 function go(v) { view = v; render(); window.scrollTo(0, 0); }
 
 const ICO_FILE = { "nav-exam": "nav-exam-64.png" }; // raster icons (user-provided art)
@@ -519,7 +547,9 @@ function renderSession() {
       <div class="session-top">
         <button class="x-btn" onclick="A.quitSession()">${X_SVG}</button>
         <div class="progress"><i style="width:${pct}%"></i></div>
-        <span class="sess-hearts" id="sesHearts">${ico("heart", 22)} ${toAr(SES.hearts)}</span>
+        ${SES.mode === "review"
+          ? `<span class="sess-hearts sess-review">${ico("target", 22)} ${toAr(SES.done)}/${toAr(SES.total)}</span>`
+          : `<span class="sess-hearts" id="sesHearts">${ico("heart", 22)} ${toAr(SES.hearts)}</span>`}
       </div>
       ${timerBar()}
       <div class="q-area">${questionBody(q, SES.sel, false, null, SES.method)}</div>
@@ -660,6 +690,7 @@ function timeUp() {
   const q = SES.queue[SES.idx];
   const qs = S.qstats[q.id] = S.qstats[q.id] || { r: 0, w: 0 };
   qs.w++;
+  noteAnswer(q, false);
   if (!(q.id in SES.firstTry)) SES.firstTry[q.id] = false;
   SES.retried[q.id] = true;
   SES.queue.push(q);
@@ -741,6 +772,7 @@ A.check = function () {
   const correct = SES.sel === q.answer;
   const qs = S.qstats[q.id] = S.qstats[q.id] || { r: 0, w: 0 };
   correct ? qs.r++ : qs.w++;
+  noteAnswer(q, correct);
   if (!(q.id in SES.firstTry)) SES.firstTry[q.id] = correct;
   dailyTick();
 
@@ -809,9 +841,12 @@ A.debugCurrent = function () { return SES && SES.queue[SES.idx]; }; // dev harne
 A.debugMock = function () { return MOCK && MOCK.sections[MOCK.si].items[MOCK.qi].q; }; // dev harness only
 
 A.next = function () {
-  if (SES.hearts <= 0) { sessionFailed(); return; }
+  if (SES.mode !== "review" && SES.hearts <= 0) { sessionFailed(); return; }
   SES.idx++; SES.sel = null; SES.locked = false; SES.frozen = false; SES.fiftyUsed = false;
-  if (SES.done >= SES.total || SES.idx >= SES.queue.length) { lessonComplete(); return; }
+  if (SES.done >= SES.total || SES.idx >= SES.queue.length) {
+    SES.mode === "review" ? reviewComplete() : lessonComplete();
+    return;
+  }
   renderSession();
 };
 
@@ -1076,7 +1111,9 @@ function endMockSection(timedOut) {
   const sec = MOCK.sections[MOCK.si];
   sec.items.forEach((it, i) => {
     const qs = S.qstats[it.q.id] = S.qstats[it.q.id] || { r: 0, w: 0 };
-    sec.answers[i] === it.q.answer ? qs.r++ : qs.w++;
+    const ok = sec.answers[i] === it.q.answer;
+    ok ? qs.r++ : qs.w++;
+    noteAnswer(it.q, ok);
   });
   save();
   if (MOCK.si < MOCK.sections.length - 1) {
@@ -1261,6 +1298,79 @@ function renderLeague() {
   </div></div>` + bottomnav("league");
 }
 
+/* ============================================================
+   مراجعة الأخطاء (review your mistakes) — lists every question you
+   got wrong and still hasn't re-mastered, and can re-quiz only those.
+   Getting one right (anywhere) clears it from the list.
+   ============================================================ */
+A.startReview = function () {
+  const list = mistakeList();
+  if (!list.length) { toast("✨ لا توجد أخطاء للمراجعة"); return; }
+  const qs = list.slice(0, 12).map(x => x.rec.q);
+  SES = { mode: "review", domKey: null, lesKey: null, key: null, title: "مراجعة الأخطاء", method: "",
+    queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null,
+    locked: false, xp: 0, hearts: 999, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0, frozen: false, fiftyUsed: false };
+  renderSession();
+};
+
+function reviewComplete() {
+  stopQTimer();
+  const solved = SES.done, xpWon = SES.xp;
+  S.xp += xpWon; bumpStreak(); save(); sndWin();
+  const remaining = mistakeList().length;
+  $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
+    ${flameHero(160)}
+    <h1 class="win-title">أحسنت!</h1>
+    <p class="win-sub">${remaining ? `صحّحت ${toAr(solved)} ${solved === 1 ? "خطأً" : "أخطاء"} — باقٍ ${toAr(remaining)} للمراجعة` : "راجعت كل أخطائك — قائمتك نظيفة! 🎉"}</p>
+    <div class="result-cards">
+      <div class="rcard rc-gold"><div class="rc-t">الخبرة</div><div class="rc-v">${ico("lightning", 20)} <span id="cv-xp">٠</span></div></div>
+      <div class="rcard rc-green"><div class="rc-t">صُحّحت</div><div class="rc-v">${ico("target", 22)} ${toAr(solved)}</div></div>
+    </div>
+    <div class="action-bar win-action" style="position:relative;right:auto;transform:none;max-width:340px;padding:0;background:none">
+      ${remaining ? `<button class="btn" onclick="A.startReview()">واصل المراجعة</button>
+      <button class="btn btn-ghost" onclick="A.go('review')">رجوع</button>`
+        : `<button class="btn" onclick="A.go('path')">متابعة</button>`}
+    </div>
+  </div></div>`;
+  setTimeout(() => { const x = document.getElementById("cv-xp"); if (x) countUp(x, xpWon); }, 700);
+  SES = null;
+}
+
+function renderReview() {
+  const list = mistakeList();
+  if (!list.length) {
+    $app.innerHTML = statbar() + `<div class="screen"><div class="page">
+      <div class="rv-top"><button class="rv-back" onclick="A.go('stats')" aria-label="رجوع">→</button><h1>مراجعة الأخطاء</h1></div>
+      <div class="rv-empty">
+        ${starHero(120)}
+        <h2>لا أخطاء للمراجعة</h2>
+        <p>كل أسئلتك صحيحة حتى الآن — واصل التدريب وستظهر هنا أي أسئلة تخطئ فيها لتراجعها.</p>
+        <button class="btn" onclick="A.go('path')">ابدأ درساً</button>
+      </div>
+    </div></div>` + bottomnav("review");
+    return;
+  }
+  const items = list.map((x, i) => {
+    const q = x.rec.q, isCmp = q.format === "comparison";
+    const ch = isCmp ? CMP_CHOICES : q.choices;
+    const u = UNIT_COLORS[x.rec.color] || UNIT_COLORS.purple;
+    return `<div class="review-item" style="--d:${(0.05 + i * 0.04).toFixed(2)}s">
+      <div class="ri-tag" style="color:${u.s}">${esc(x.rec.domTitle)} · ${esc(x.rec.lesTitle)}</div>
+      <div class="ri-q">${q.stem || "قارن بين القيمتين"}</div>
+      ${isCmp && q.value1 ? `<div class="ri-row" style="color:var(--gray)">القيمة الأولى: ${q.value1} — القيمة الثانية: ${q.value2}</div>` : ""}
+      <div class="ri-row" style="color:var(--green-dk)">✓ الإجابة الصحيحة: ${ch[q.answer]}</div>
+      <button class="fb-solution-toggle" onclick="A.toggleEl('rvSol${i}')">اعرض الحل</button>
+      <div class="fb-solution" id="rvSol${i}" style="display:none">${esc(q.solution)}</div>
+    </div>`;
+  }).join("");
+  $app.innerHTML = statbar() + `<div class="screen"><div class="page">
+    <div class="rv-top"><button class="rv-back" onclick="A.go('stats')" aria-label="رجوع">→</button><h1>مراجعة الأخطاء</h1></div>
+    <div class="sub">${toAr(list.length)} ${list.length === 1 ? "سؤال" : "أسئلة"} بحاجة لمراجعة — تدرّب عليها حتى تتقنها</div>
+    <button class="btn rv-practice" onclick="A.startReview()">${ico("target", 22)} تدرّب على أخطائك${list.length > 12 ? ` (${toAr(12)})` : ""}</button>
+    <div class="rv-list">${items}</div>
+  </div></div>` + bottomnav("review");
+}
+
 /* ---------------- STATS ---------------- */
 function renderStats() {
   const flat = allLessons();
@@ -1284,6 +1394,11 @@ function renderStats() {
       <div class="tile">${ico("nav-chest", 26)}<div><div class="t-v">${toAr(doneN)}/${toAr(flat.length)}</div><div class="t-l">دروس مكتملة</div></div></div>
       <div class="tile">${ico("target", 26)}<div><div class="t-v">${(r + w) ? toAr(acc) + "٪" : "—"}</div><div class="t-l">الدقة الكلية</div></div></div>
     </div>
+    ${(() => { const mc = mistakeList().length; return `<button class="card mistakes-card ${mc ? "" : "clean"}" onclick="A.go('review')">
+      <span class="mc-ico">${mc ? "✕" : CHECK_BADGE}</span>
+      <div class="mc-txt"><b>مراجعة الأخطاء</b><span>${mc ? toAr(mc) + " " + (mc === 1 ? "سؤال بحاجة لمراجعة" : "أسئلة بحاجة لمراجعة") : "لا أخطاء — أحسنت!"}</span></div>
+      <span class="mc-go">${mc ? "راجع ←" : "✓"}</span>
+    </button>`; })()}
     <div class="card"><h3>الدقة حسب المجال</h3>${domBars}</div>
   </div></div>` + bottomnav("stats");
 }
