@@ -263,7 +263,7 @@ A.checkDailyQ = function () {
   const qs = S.qstats[q.id] = S.qstats[q.id] || { r: 0, w: 0 }; correct ? qs.r++ : qs.w++;
   noteAnswer(q, correct);
   save();
-  correct ? sndWin() : sndBad();
+  correct ? playCorrect() : sndBad();
   const chk = document.getElementById("dqCheck"); if (chk) chk.style.display = "none";
   const fb = document.getElementById("dqFb");
   fb.className = "dq-fb show " + (correct ? "good" : "bad");
