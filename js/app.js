@@ -83,6 +83,33 @@ const sndFreeze = () => beep([[1568, .07], [2093, .1], [1318, .18]]); // icy shi
 const sndFifty = () => beep([[880, .06], [587, .14]]);                 // two-snip
 const sndChest = () => beep([[392, .09], [523, .09], [659, .09], [784, .1], [1047, .14], [1568, .3]]); // treasure fanfare
 
+/* Correct-answer voice clip (real recorded chime). Preloaded once at boot
+   and pooled (3 elements) so back-to-back correct answers can overlap
+   without re-fetching — the 32KB file is fetched a single time and cached.
+   Falls back to the synth chime if the file/codec is ever unavailable. */
+const CORRECT_SRC = "assets/sounds/correct.mp3";
+let correctPool = null, correctIdx = 0;
+function initCorrectVoice() {
+  if (correctPool) return;
+  correctPool = [];
+  try {
+    for (let i = 0; i < 3; i++) {
+      const a = new Audio(CORRECT_SRC);
+      a.preload = "auto"; a.volume = 0.75;
+      correctPool.push(a);
+    }
+  } catch (e) { /* Audio unavailable — playCorrect will fall back to beep */ }
+}
+function playCorrect() {
+  if (!S.sound) return;
+  if (!correctPool) initCorrectVoice();
+  const a = correctPool[correctIdx];
+  correctIdx = (correctIdx + 1) % (correctPool.length || 1);
+  if (!a) { sndGood(); return; }            // no audio element → synth fallback
+  try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => {}); }
+  catch (e) { sndGood(); }
+}
+
 /* ---------------- data access ---------------- */
 function domains() { return DOMAIN_ORDER.map(k => (window.QBANK || {})[k]).filter(Boolean); }
 function allLessons() {
@@ -787,7 +814,7 @@ A.check = function () {
   const correctTxt = LETTERS[q.answer] + " — " + (isCmp ? CMP_CHOICES[q.answer] : q.choices[q.answer]);
   const fb = document.getElementById("fb");
   if (correct) {
-    sndGood();
+    playCorrect();
     SES.done++;
     SES.xp += SES.retried[q.id] ? 5 : 10;
     fb.className = "feedback good show";
@@ -1716,6 +1743,7 @@ function afterLogin() {
 
 /* ---------------- boot ---------------- */
 function boot() {
+  initCorrectVoice(); // preload the correct-answer clip so the first play is instant
   if (!S.user) renderLogin();
   else afterLogin();
 }
