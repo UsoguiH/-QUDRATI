@@ -1787,7 +1787,7 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .lb-page { padding-top: 8px; }
 .lb-hero { text-align: center; padding: 8px 0 6px; }
 .lb-badge { position: relative; display: inline-block; animation: lbBadgeIn .55s cubic-bezier(.3,1.6,.5,1) backwards; }
-.lb-badge .ic { filter: drop-shadow(0 5px 0 rgba(205,121,0,.35)); animation: lbBadgeBob 3.2s ease-in-out infinite; }
+.lb-badge .rank-badge { display: block; filter: drop-shadow(0 5px 7px rgba(75,75,75,.22)); animation: lbBadgeBob 3.2s ease-in-out infinite; }
 @keyframes lbBadgeIn { 0% { transform: scale(0) rotate(-12deg); } 100% { transform: scale(1) rotate(0); } }
 @keyframes lbBadgeBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 .lb-badge-glow {
@@ -1797,7 +1797,26 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
   animation: lbGlow 3.2s ease-in-out infinite;
 }
 @keyframes lbGlow { 0%,100% { opacity: .5; transform: scale(.9); } 50% { opacity: .9; transform: scale(1.05); } }
+/* per-tier glow tint behind the hero badge */
+.lb-badge-bronze   .lb-badge-glow { background: radial-gradient(closest-side, rgba(196,127,65,.42), transparent 70%); }
+.lb-badge-silver   .lb-badge-glow { background: radial-gradient(closest-side, rgba(159,176,192,.45), transparent 70%); }
+.lb-badge-gold     .lb-badge-glow { background: radial-gradient(closest-side, rgba(255,200,0,.42), transparent 70%); }
+.lb-badge-diamond  .lb-badge-glow { background: radial-gradient(closest-side, rgba(120,200,245,.48), transparent 70%); }
+.lb-badge-champion .lb-badge-glow { background: radial-gradient(closest-side, rgba(168,120,232,.46), transparent 70%); }
 .lb-title { font-size: 26px; color: var(--gold-dk); margin: 6px 0 2px; }
+
+/* tier progression ladder */
+.lb-ladder { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; margin: 14px 2px 6px; }
+.lb-tier { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: transform .2s; }
+.lb-tier .rank-badge { height: 38px; width: auto; }
+.lb-tier span { font-size: 11px; font-weight: 700; color: var(--gray); }
+.lb-tier.locked { filter: grayscale(1); opacity: .42; }
+.lb-tier.done { opacity: .9; }
+.lb-tier.cur { transform: scale(1.18) translateY(-2px); }
+.lb-tier.cur .rank-badge { filter: drop-shadow(0 3px 5px rgba(75,75,75,.28)); }
+.lb-tier.cur span { color: var(--ink); font-weight: 800; }
+.lb-nextline { text-align: center; font-size: 13px; font-weight: 700; color: var(--gray); margin: 6px 0 2px; }
+.lb-nextline b { color: var(--gold-dk); }
 .lb-sub { color: var(--gray); font-weight: 600; font-size: 14px; margin-bottom: 10px; }
 .lb-timer {
   display: inline-flex; align-items: center; gap: 6px;

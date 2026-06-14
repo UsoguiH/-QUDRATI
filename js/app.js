@@ -42,6 +42,16 @@ const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound
 const LEAGUE_NAMES = ["عبدالله", "محمد", "نورة", "سارة", "فهد", "ريم", "خالد", "لمى", "تركي", "جواهر", "عمر", "هند", "سلمان", "رنا", "بدر", "ليان", "ناصر", "شهد", "يزيد", "دانة", "مازن", "أصيل", "وليد", "غادة"];
 const LEAGUE_EPOCH = new Date(2026, 0, 4); // a Sunday
 const LEAGUE_PROMOTE = 5;    // top 5 promote
+/* league tiers (badge art sliced from ranks.png) — current tier is by total XP */
+const LEAGUE_TIERS = [
+  { key: "bronze", name: "البرونزي", min: 0 },
+  { key: "silver", name: "الفضي", min: 200 },
+  { key: "gold", name: "الذهبي", min: 500 },
+  { key: "diamond", name: "الألماسي", min: 1200 },
+  { key: "champion", name: "الأبطال", min: 2500 }
+];
+function tierIndex() { let n = 0; for (let i = 0; i < LEAGUE_TIERS.length; i++) if (S.xp >= LEAGUE_TIERS[i].min) n = i; return n; }
+const rankImg = (key, size) => `<img class="rank-badge" src="assets/icons/ranks/rank-${key}.png" height="${size}" alt="">`;
 const DAILYQ_REWARD = 8;     // gems for the daily question (correct), 2 for a try
 let S;
 try { S = Object.assign({}, DEFAULT_STATE, JSON.parse(localStorage.getItem("qudratState") || "{}")); }
@@ -1300,16 +1310,26 @@ function renderLeague() {
       <span class="lb-xp">${toAr(e.xp)} <i>XP</i></span>
     </div>`;
   }).join("");
+  const ti = tierIndex(), tier = LEAGUE_TIERS[ti], next = LEAGUE_TIERS[ti + 1];
+  const ladder = LEAGUE_TIERS.map((t, i) =>
+    `<div class="lb-tier ${i === ti ? "cur" : i < ti ? "done" : "locked"}">
+      ${rankImg(t.key, 40)}<span>${t.name}</span>
+    </div>`).join("");
+  const nextLine = next
+    ? `اكسب <b>${toAr(next.min - S.xp)}</b> خبرة للترقّي إلى الدوري ${next.name}`
+    : `وصلت إلى أعلى دوري — حافظ على صدارتك! 👑`;
   $app.innerHTML = statbar() + `<div class="screen"><div class="page lb-page">
     <div class="lb-hero">
-      <span class="lb-badge">${ico("nav-league", 96)}<span class="lb-badge-glow"></span></span>
-      <h1 class="lb-title">الدوري الذهبي</h1>
-      <div class="lb-sub">أكمل الدروس واكسب XP لتتصدّر</div>
+      <span class="lb-badge lb-badge-${tier.key}">${rankImg(tier.key, 104)}<span class="lb-badge-glow"></span></span>
+      <h1 class="lb-title">الدوري ${tier.name}</h1>
+      <div class="lb-sub">أكمل الدروس واكسب الخبرة لتتصدّر وترتقي</div>
       <div class="lb-timer">${ico("timer", 18)} ينتهي خلال ${leagueTimeLeft()}</div>
     </div>
+    <div class="lb-ladder">${ladder}</div>
+    <div class="lb-nextline">${nextLine}</div>
     <div class="lb-promo-note">أفضل ${toAr(LEAGUE_PROMOTE)} يتأهلون للأسبوع القادم ⬆</div>
     <div class="lb-list">${rows}</div>
-    <div class="lb-foot">ترتيبك الحالي: <b>${toAr(myRank)}</b> — ${myRank <= LEAGUE_PROMOTE ? "أنت في منطقة التأهّل! 🔥" : "اكسب XP لتدخل منطقة التأهّل"}</div>
+    <div class="lb-foot">ترتيبك الحالي: <b>${toAr(myRank)}</b> — ${myRank <= LEAGUE_PROMOTE ? "أنت في منطقة التأهّل! 🔥" : "اكسب خبرة لتدخل منطقة التأهّل"}</div>
   </div></div>` + bottomnav("league");
 }
 
