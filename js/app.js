@@ -921,18 +921,6 @@ function lessonComplete() {
   SES = null;
 }
 
-/* SVG star (exact path from the design's Level Icon) used in animated heroes */
-const STAR_PATH = "M18.2665 6.04527C19.33 3.69332 22.67 3.69333 23.7335 6.04527L25.9554 10.959C26.4018 11.9462 27.3458 12.616 28.425 12.7114L33.7515 13.1819C36.4147 13.4171 37.4631 16.7555 35.4126 18.4711L31.6082 21.6541C30.7372 22.3828 30.3524 23.5408 30.6139 24.6459L31.7621 29.4978C32.3649 32.045 29.6444 34.0885 27.3659 32.8L22.4767 30.0351C21.5604 29.5169 20.4396 29.5169 19.5233 30.0351L14.6341 32.8C12.3556 34.0885 9.63514 32.045 10.2379 29.4978L11.3861 24.6459C11.6476 23.5408 11.2628 22.3828 10.3918 21.6541L6.58741 18.4711C4.53685 16.7555 5.58529 13.4171 8.2485 13.1819L13.575 12.7114C14.6542 12.616 15.5982 11.9462 16.0446 10.959L18.2665 6.04527Z";
-function starHero(size) {
-  return `<div class="win-hero" style="--wh:${size}px">
-    <span class="wh-glow"></span>
-    <span class="wh-ring"></span>
-    <svg class="wh-star" viewBox="3 2 36 33"><path d="${STAR_PATH}" fill="#FFC800" stroke="#E6A000" stroke-width="1.5"/></svg>
-    <span class="wh-spark s1">✦</span><span class="wh-spark s2">✦</span>
-    <span class="wh-spark s3">✦</span><span class="wh-spark s4">✦</span>
-  </div>`;
-}
-
 /* Win-screen hero: the streak flame (exact paths from the Figma streak icon,
    assets/icons/streak.svg) drops in over rotating sunrays, then burns:
    body flickers, inner flame dances, embers rise, shards burst on impact */
@@ -1342,7 +1330,7 @@ function renderReview() {
     $app.innerHTML = statbar() + `<div class="screen"><div class="page">
       <div class="rv-top"><button class="rv-back" onclick="A.go('stats')" aria-label="رجوع">→</button><h1>مراجعة الأخطاء</h1></div>
       <div class="rv-empty">
-        ${starHero(120)}
+        <div class="rv-checkhero"><span class="rvc-glow"></span><span class="rvc-disc">${CHECK_BADGE}</span></div>
         <h2>لا أخطاء للمراجعة</h2>
         <p>كل أسئلتك صحيحة حتى الآن — واصل التدريب وستظهر هنا أي أسئلة تخطئ فيها لتراجعها.</p>
         <button class="btn" onclick="A.go('path')">ابدأ درساً</button>

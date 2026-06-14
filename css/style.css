@@ -726,6 +726,11 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .rv-practice { margin: 14px 0 18px; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .rv-list { margin-top: 4px; }
 .rv-empty { text-align: center; padding: 18px 8px 8px; }
+.rv-checkhero { position: relative; width: 120px; height: 120px; margin: 8px auto 4px; display: flex; align-items: center; justify-content: center; }
+.rv-checkhero .rvc-glow { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle, rgba(88,204,2,.22), transparent 68%); }
+.rv-checkhero .rvc-disc { position: relative; width: 84px; height: 84px; border-radius: 50%; background: var(--green); box-shadow: 0 6px 0 var(--green-dk); display: flex; align-items: center; justify-content: center; color: #fff; animation: rvcPop .45s ease backwards; }
+.rv-checkhero .rvc-disc svg { width: 44px; height: 44px; }
+@keyframes rvcPop { 0% { transform: scale(0); } 70% { transform: scale(1.12); } 100% { transform: scale(1); } }
 .rv-empty h2 { margin: 18px 0 6px; }
 .rv-empty p { color: var(--gray); font-weight: 600; line-height: 1.7; margin: 0 0 22px; }
 .rv-empty .btn { max-width: 280px; margin: 0 auto; }
