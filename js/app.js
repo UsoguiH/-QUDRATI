@@ -1386,7 +1386,6 @@ function showRankUp(tierIdx) {
   const sparks = Array.from({ length: 12 }, (_, i) =>
     `<span class="ru-spark" style="--a:${i * 30}deg;animation-delay:${(1.0 + (i % 4) * 0.06).toFixed(2)}s"></span>`).join("");
   veil.innerHTML = `
-    <div class="ru-rays"></div>
     <div class="ru-confetti-wrap">${confetti}</div>
     <div class="ru-stage">
       <div class="ru-flash"></div>
