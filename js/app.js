@@ -38,24 +38,49 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {} };
+const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {} };
 const LEAGUE_NAMES = ["عبدالله", "محمد", "نورة", "سارة", "فهد", "ريم", "خالد", "لمى", "تركي", "جواهر", "عمر", "هند", "سلمان", "رنا", "بدر", "ليان", "ناصر", "شهد", "يزيد", "دانة", "مازن", "أصيل", "وليد", "غادة"];
-const LEAGUE_EPOCH = new Date(2026, 0, 4); // a Sunday
-const LEAGUE_PROMOTE = 5;    // top 5 promote
-/* league tiers (badge art sliced from ranks.png) — current tier is by total XP */
+/* Permanent rank tiers (badge art in assets/icons/ranks/). A user's tier is
+   the highest threshold their LIFETIME total XP (S.totalXp) has crossed —
+   it never drops, even when spending gems (S.xp) on hints. */
 const LEAGUE_TIERS = [
   { key: "bronze", name: "البرونزي", min: 0 },
-  { key: "silver", name: "الفضي", min: 200 },
-  { key: "gold", name: "الذهبي", min: 500 },
-  { key: "diamond", name: "الألماسي", min: 1200 },
-  { key: "champion", name: "الأبطال", min: 2500 }
+  { key: "silver", name: "الفضي", min: 400 },
+  { key: "gold", name: "الذهبي", min: 1200 },
+  { key: "diamond", name: "الألماسي", min: 3000 },
+  { key: "champion", name: "الأبطال", min: 7000 }
 ];
-function tierIndex() { let n = 0; for (let i = 0; i < LEAGUE_TIERS.length; i++) if (S.xp >= LEAGUE_TIERS[i].min) n = i; return n; }
+function tierIndexFor(xp) { let n = 0; for (let i = 0; i < LEAGUE_TIERS.length; i++) if (xp >= LEAGUE_TIERS[i].min) n = i; return n; }
+function tierIndex() { return tierIndexFor(S.totalXp || 0); }
 const rankImg = (key, size) => `<img class="rank-badge" src="assets/icons/ranks/rank-${key}.png" height="${size}" alt="">`;
+
+/* Single funnel for earning XP: grows spendable gems (S.xp) AND the permanent
+   lifetime total (S.totalXp). If the lifetime total crosses into a new tier,
+   queue the rank-up celebration to play at the next safe moment. */
+let pendingRankUp = null;
+function earnXp(n) {
+  if (!n) return;
+  const before = tierIndex();
+  S.xp += n;
+  S.totalXp = (S.totalXp || 0) + n;
+  const after = tierIndex();
+  if (after > before) pendingRankUp = { from: before, to: after };
+}
+/* show the celebration if one is queued (and we're not mid-session) */
+function flushRankUp() {
+  if (!pendingRankUp || document.querySelector(".rankup-veil")) return;
+  const ru = pendingRankUp; pendingRankUp = null;
+  S.tierSeen = ru.to; save();
+  showRankUp(ru.to);
+}
 const DAILYQ_REWARD = 8;     // gems for the daily question (correct), 2 for a try
 let S;
 try { S = Object.assign({}, DEFAULT_STATE, JSON.parse(localStorage.getItem("qudratState") || "{}")); }
 catch (e) { S = Object.assign({}, DEFAULT_STATE); }
+/* migrate pre-rank-system saves: seed lifetime XP from current gems, and mark
+   the current tier as already-seen so we don't fire a celebration on load */
+if (S.totalXp == null) S.totalXp = Math.max(0, S.xp || 0);
+if (S.tierSeen == null) S.tierSeen = tierIndex();
 const save = () => localStorage.setItem("qudratState", JSON.stringify(S));
 
 function bumpStreak() {
@@ -92,6 +117,7 @@ const sndTick = () => beep([[1080, .05]]);
 const sndFreeze = () => beep([[1568, .07], [2093, .1], [1318, .18]]); // icy shimmer
 const sndFifty = () => beep([[880, .06], [587, .14]]);                 // two-snip
 const sndChest = () => beep([[392, .09], [523, .09], [659, .09], [784, .1], [1047, .14], [1568, .3]]); // treasure fanfare
+const sndRankUp = () => beep([[523, .1], [659, .1], [784, .12], [1047, .12], [1319, .16], [1047, .1], [1568, .42]]); // rank-up fanfare
 
 /* Correct-answer voice clip (real recorded chime). Preloaded once at boot
    and pooled (3 elements) so back-to-back correct answers can overlap
@@ -269,7 +295,7 @@ A.checkDailyQ = function () {
     else b.classList.add("dim");
   });
   const reward = correct ? DAILYQ_REWARD : 2;
-  S.dailyQ.done = true; S.dailyQ.correct = correct; S.xp += reward;
+  S.dailyQ.done = true; S.dailyQ.correct = correct; earnXp(reward);
   const qs = S.qstats[q.id] = S.qstats[q.id] || { r: 0, w: 0 }; correct ? qs.r++ : qs.w++;
   noteAnswer(q, correct);
   save();
@@ -290,7 +316,10 @@ A.closeDailyQ = function () {
 
 /* ---------------- screens / router ---------------- */
 let view = "path";
-function render() { ({ path: renderPath, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings, review: renderReview })[view](); }
+function render() {
+  ({ path: renderPath, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings, review: renderReview })[view]();
+  flushRankUp(); // if a tier was just crossed, play the celebration over the fresh screen
+}
 function go(v) { view = v; render(); window.scrollTo(0, 0); }
 
 const ICO_FILE = { "nav-exam": "nav-exam-64.png" }; // raster icons (user-provided art)
@@ -420,7 +449,7 @@ A.openChest = function () {
   setTimeout(() => veil.classList.add("rewarded"), 2150);
 };
 A.claimChest = function (gems) {
-  S.xp += gems; S.daily.claimed = true; save();
+  earnXp(gems); S.daily.claimed = true; save();
   const v = document.querySelector(".chest-veil");
   if (v) { v.classList.add("out"); setTimeout(() => { v.remove(); render(); }, 380); }
   else render();
@@ -875,6 +904,8 @@ A.closeMethod = function () {
 };
 
 A.debugCurrent = function () { return SES && SES.queue[SES.idx]; }; // dev harness (preview.html) only
+A.debugRankUp = function (i) { showRankUp(i); };                    // dev harness only
+A.debugEarn = function (n) { earnXp(n); save(); render(); };        // dev harness only
 A.debugMock = function () { return MOCK && MOCK.sections[MOCK.si].items[MOCK.qi].q; }; // dev harness only
 
 A.next = function () {
@@ -934,7 +965,7 @@ function lessonComplete() {
   if (perfect) SES.xp += 20;
   const p = S.lessons[SES.key] = S.lessons[SES.key] || { stars: 0, plays: 0 };
   p.plays++; p.stars = Math.max(p.stars, stars);
-  S.xp += SES.xp;
+  earnXp(SES.xp);
   bumpStreak(); save(); sndWin();
   const xpWon = SES.xp, tTot = SES.tSpent;
   const dayWord = S.streak.count === 1 ? "يوم واحد" : S.streak.count === 2 ? "يومان" : S.streak.count <= 10 ? toAr(S.streak.count) + " أيام" : toAr(S.streak.count) + " يوماً";
@@ -1261,35 +1292,25 @@ A.mockDetail = function (i) {
 };
 
 /* ============================================================
-   الدوري الأسبوعي (ghost weekly league — no backend)
-   Rivals are generated once per week and climb daily so the race
-   feels live; the user's weekly XP = total XP earned since week start.
+   نظام المستويات (permanent rank system — no backend)
+   A user's tier is the highest XP threshold their LIFETIME total
+   (S.totalXp) has crossed; it never drops. The leaderboard shows a
+   stable cohort of rivals within your tier ranked by total XP, with
+   you placed by your own total. Crossing a threshold fires the
+   full-screen rank-up celebration (showRankUp).
    ============================================================ */
-function leagueWeek() { const d = new Date(); d.setHours(0, 0, 0, 0); return Math.floor((d - LEAGUE_EPOCH) / (7 * 864e5)); }
-function leagueDayIndex() { const d = new Date(); d.setHours(0, 0, 0, 0); return Math.floor((d - LEAGUE_EPOCH) / 864e5) % 7; }
-function leagueMsLeft() { const end = LEAGUE_EPOCH.getTime() + (leagueWeek() + 1) * 7 * 864e5; return Math.max(0, end - Date.now()); }
-function leagueReset() {
-  const w = leagueWeek();
-  if (S.league && S.league.week === w) return;
-  let seed = (w * 2654435761 + 12345) >>> 0;
+function leagueStandings() {
+  const ti = tierIndex();
+  const tier = LEAGUE_TIERS[ti], next = LEAGUE_TIERS[ti + 1];
+  const lo = tier.min, hi = next ? next.min : tier.min + 6000;
+  let seed = (ti * 2654435761 + 999983) >>> 0; // stable cohort per tier
   const rnd = () => { seed = (seed * 1103515245 + 12345) >>> 0; return seed / 4294967296; };
   const pool = LEAGUE_NAMES.slice();
   for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-  const ghosts = pool.slice(0, 14).map(n => ({ n, base: Math.floor(15 + rnd() * 90), rate: Math.floor(12 + rnd() * 65) }));
-  S.league = { week: w, base: S.xp, ghosts };
-  save();
-}
-function leagueEntries() {
-  leagueReset();
-  const day = leagueDayIndex();
-  const list = S.league.ghosts.map(g => ({ name: g.n, xp: g.base + g.rate * day, you: false }));
-  list.push({ name: (S.user && S.user.name) || "أنت", xp: Math.max(0, S.xp - S.league.base), you: true });
+  const list = pool.slice(0, 13).map(n => ({ name: n, xp: Math.round(lo + rnd() * (hi - lo) * 0.96), you: false }));
+  list.push({ name: (S.user && S.user.name) || "أنت", xp: S.totalXp || 0, you: true });
   list.sort((a, b) => b.xp - a.xp || (a.you ? 1 : -1));
   return list;
-}
-function leagueTimeLeft() {
-  const ms = leagueMsLeft(), h = Math.floor(ms / 36e5), d = Math.floor(h / 24);
-  return d >= 1 ? dayPhrase(d) : toAr(h) + " ساعة";
 }
 const AVATAR_COLORS = ["#58CC02", "#1CB0F6", "#CE82FF", "#FF9600", "#FF4B4B", "#2BB0A6", "#A560E8"];
 function avatarFor(name, you) {
@@ -1297,41 +1318,102 @@ function avatarFor(name, you) {
   return `<span class="lb-av" style="background:${c}">${esc((name.trim()[0]) || "؟")}</span>`;
 }
 const MEDAL = i => `<span class="lb-medal m${i}">${toAr(i)}</span>`;
+/* padlock for the locked tiers — colors stay visible behind a soft scrim */
+const LOCK_SVG = `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7.5 10.5V8a4.5 4.5 0 0 1 9 0v2.5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><rect x="4.7" y="10" width="14.6" height="11" rx="3.4" fill="#fff"/><circle cx="12" cy="14.7" r="1.7" fill="#4B4B4B"/><rect x="11" y="15.4" width="2" height="3.4" rx="1" fill="#4B4B4B"/></svg>`;
 
 function renderLeague() {
-  const entries = leagueEntries();
+  const ti = tierIndex(), tier = LEAGUE_TIERS[ti], next = LEAGUE_TIERS[ti + 1];
+  const entries = leagueStandings();
   const myRank = entries.findIndex(e => e.you) + 1;
   const rows = entries.map((e, i) => {
     const rank = i + 1;
     const rankCell = rank <= 3 ? MEDAL(rank) : `<span class="lb-rank">${toAr(rank)}</span>`;
-    return `<div class="lb-row ${e.you ? "me" : ""} ${rank === LEAGUE_PROMOTE ? "promo-edge" : ""}">
+    return `<div class="lb-row ${e.you ? "me" : ""}">
       ${rankCell}${avatarFor(e.name, e.you)}
       <span class="lb-name">${esc(e.name)}${e.you ? " <b>(أنت)</b>" : ""}</span>
       <span class="lb-xp">${toAr(e.xp)} <i>XP</i></span>
     </div>`;
   }).join("");
-  const ti = tierIndex(), tier = LEAGUE_TIERS[ti], next = LEAGUE_TIERS[ti + 1];
-  const ladder = LEAGUE_TIERS.map((t, i) =>
-    `<div class="lb-tier ${i === ti ? "cur" : i < ti ? "done" : "locked"}">
-      ${rankImg(t.key, 40)}<span>${t.name}</span>
-    </div>`).join("");
-  const nextLine = next
-    ? `اكسب <b>${toAr(next.min - S.xp)}</b> خبرة للترقّي إلى الدوري ${next.name}`
-    : `وصلت إلى أعلى دوري — حافظ على صدارتك! 👑`;
+  const ladder = LEAGUE_TIERS.map((t, i) => {
+    const cls = i < ti ? "done" : i === ti ? "cur" : "locked";
+    return `<div class="lb-tier ${cls} lb-tier-${t.key}">
+      <div class="lb-tier-badge">${rankImg(t.key, 46)}${i > ti ? `<span class="lb-lock">${LOCK_SVG}</span>` : ""}${i === ti ? `<span class="lb-tier-glow"></span>` : ""}</div>
+      <span>${t.name}</span>
+    </div>`;
+  }).join("");
+  let prog;
+  if (next) {
+    const span = next.min - tier.min, into = Math.max(0, (S.totalXp || 0) - tier.min);
+    const pct = Math.max(4, Math.min(100, Math.round(into / span * 100)));
+    prog = `<div class="lb-prog">
+      <div class="lb-prog-head"><span>${toAr(S.totalXp || 0)} / ${toAr(next.min)} خبرة</span><span class="lb-prog-next">${rankImg(next.key, 20)} المستوى ${next.name}</span></div>
+      <div class="duo-bar"><i style="width:${pct}%;--bar-c:var(--gold);--bar-shine:var(--gold-shine);animation-delay:.3s"></i></div>
+      <div class="lb-prog-sub">اكسب <b>${toAr(next.min - (S.totalXp || 0))}</b> خبرة للوصول إلى المستوى ${next.name}</div>
+    </div>`;
+  } else {
+    prog = `<div class="lb-prog lb-prog-max">👑 وصلت إلى أعلى مستوى — أنت من الأبطال!</div>`;
+  }
   $app.innerHTML = statbar() + `<div class="screen"><div class="page lb-page">
-    <div class="lb-hero">
-      <span class="lb-badge lb-badge-${tier.key}">${rankImg(tier.key, 104)}<span class="lb-badge-glow"></span></span>
-      <h1 class="lb-title">الدوري ${tier.name}</h1>
-      <div class="lb-sub">أكمل الدروس واكسب الخبرة لتتصدّر وترتقي</div>
-      <div class="lb-timer">${ico("timer", 18)} ينتهي خلال ${leagueTimeLeft()}</div>
-    </div>
     <div class="lb-ladder">${ladder}</div>
-    <div class="lb-nextline">${nextLine}</div>
-    <div class="lb-promo-note">أفضل ${toAr(LEAGUE_PROMOTE)} يتأهلون للأسبوع القادم ⬆</div>
+    <div class="lb-hero">
+      <h1 class="lb-title lb-title-${tier.key}">المستوى ${tier.name}</h1>
+      <div class="lb-sub">مستواك دائم — تكسبه بالخبرة ولا ينخفض أبداً</div>
+    </div>
+    ${prog}
+    <div class="lb-listhead">${ico("guide", 18)} المتصدّرون في مستواك</div>
     <div class="lb-list">${rows}</div>
-    <div class="lb-foot">ترتيبك الحالي: <b>${toAr(myRank)}</b> — ${myRank <= LEAGUE_PROMOTE ? "أنت في منطقة التأهّل! 🔥" : "اكسب خبرة لتدخل منطقة التأهّل"}</div>
+    <div class="lb-foot">ترتيبك: <b>${toAr(myRank)}</b> من ${toAr(entries.length)} — ${myRank === 1 ? "أنت المتصدّر! 🏆" : "اكسب الخبرة لتتصدّر"}</div>
   </div></div>` + bottomnav("league");
 }
+
+/* ============================================================
+   RANK-UP CELEBRATION — full-screen Duolingo-style takeover.
+   Built on the chest-ceremony engine: dark veil → sunrays spin in →
+   the new tier badge drops, squashes on landing, then bursts open with
+   a white flash, a sweeping shine, flying confetti + sparkle ring, the
+   tier name slams in, congrats line, Continue.
+   ============================================================ */
+function showRankUp(tierIdx) {
+  const tier = LEAGUE_TIERS[tierIdx];
+  if (!tier) return;
+  const veil = document.createElement("div");
+  veil.className = `rankup-veil ru-${tier.key}`;
+  const confetti = Array.from({ length: 26 }, (_, i) => {
+    const cols = ["#FFC800", "#1CB0F6", "#58CC02", "#FF4B4B", "#CE82FF", "#FF9600"];
+    const dx = (Math.random() * 2 - 1) * 200, dur = (1.1 + Math.random() * 0.9).toFixed(2);
+    return `<i class="ru-confetti" style="--dx:${dx.toFixed(0)}px;--rot:${((Math.random() * 2 - 1) * 540).toFixed(0)}deg;left:${(50 + (Math.random() * 2 - 1) * 12).toFixed(0)}%;background:${cols[i % cols.length]};animation-delay:${(0.95 + Math.random() * 0.5).toFixed(2)}s;animation-duration:${dur}s;width:${(7 + Math.random() * 7).toFixed(0)}px;height:${(10 + Math.random() * 9).toFixed(0)}px"></i>`;
+  }).join("");
+  const sparks = Array.from({ length: 12 }, (_, i) =>
+    `<span class="ru-spark" style="--a:${i * 30}deg;animation-delay:${(1.0 + (i % 4) * 0.06).toFixed(2)}s"></span>`).join("");
+  veil.innerHTML = `
+    <div class="ru-rays"></div>
+    <div class="ru-confetti-wrap">${confetti}</div>
+    <div class="ru-stage">
+      <div class="ru-flash"></div>
+      <div class="ru-badgewrap">
+        <span class="ru-glow"></span>
+        <span class="ru-ring"></span>
+        ${sparks}
+        <img class="rank-badge ru-badge" src="assets/icons/ranks/rank-${tier.key}.png" alt="">
+        <span class="ru-shine"></span>
+      </div>
+    </div>
+    <div class="ru-kicker">ترقّيت إلى مستوى جديد!</div>
+    <h1 class="ru-title">المستوى ${tier.name}</h1>
+    <p class="ru-sub">واصل التدريب — كل سؤال يقرّبك من القمة 💪</p>
+    <button class="btn ru-btn" onclick="A.closeRankUp()">رائع، أكمل!</button>`;
+  document.body.appendChild(veil);
+  requestAnimationFrame(() => veil.classList.add("show"));
+  setTimeout(() => veil.classList.add("drop"), 240);   // badge drops in
+  setTimeout(() => { veil.classList.add("pop"); sndRankUp(); }, 1000); // flash + badge bursts
+  setTimeout(() => veil.classList.add("told"), 1350);  // text + confetti
+}
+A.closeRankUp = function () {
+  const v = document.querySelector(".rankup-veil");
+  if (!v) return;
+  v.classList.add("out");
+  setTimeout(() => { v.remove(); render(); }, 360);
+};
 
 /* ============================================================
    مراجعة الأخطاء (review your mistakes) — lists every question you
@@ -1351,7 +1433,7 @@ A.startReview = function () {
 function reviewComplete() {
   stopQTimer();
   const solved = SES.done, xpWon = SES.xp;
-  S.xp += xpWon; bumpStreak(); save(); sndWin();
+  earnXp(xpWon); bumpStreak(); save(); sndWin();
   const remaining = mistakeList().length;
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
     ${flameHero(160)}

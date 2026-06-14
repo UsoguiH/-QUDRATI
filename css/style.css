@@ -1805,18 +1805,40 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .lb-badge-champion .lb-badge-glow { background: radial-gradient(closest-side, rgba(168,120,232,.46), transparent 70%); }
 .lb-title { font-size: 26px; color: var(--gold-dk); margin: 6px 0 2px; }
 
-/* tier progression ladder */
-.lb-ladder { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; margin: 14px 2px 6px; }
-.lb-tier { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; transition: transform .2s; }
-.lb-tier .rank-badge { height: 38px; width: auto; }
+/* tier progression ladder (doubles as the screen header) */
+.lb-ladder { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; margin: 6px 2px 14px; }
+.lb-tier { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: transform .2s; }
+.lb-tier-badge { position: relative; display: inline-flex; }
+.lb-tier-badge .rank-badge { height: 42px; width: auto; display: block; }
 .lb-tier span { font-size: 11px; font-weight: 700; color: var(--gray); }
-.lb-tier.locked { filter: grayscale(1); opacity: .42; }
-.lb-tier.done { opacity: .9; }
-.lb-tier.cur { transform: scale(1.18) translateY(-2px); }
-.lb-tier.cur .rank-badge { filter: drop-shadow(0 3px 5px rgba(75,75,75,.28)); }
+/* locked tiers: keep the real colours, just dim slightly + soft scrim + padlock */
+.lb-tier.locked .rank-badge { opacity: .9; }
+.lb-tier.locked .lb-tier-badge::after { content: ''; position: absolute; inset: -2px; border-radius: 30% 30% 42% 42%/30% 30% 55% 55%; background: rgba(60,55,75,.34); }
+.lb-lock { position: absolute; top: 50%; left: 50%; width: 22px; height: 22px; transform: translate(-50%,-48%); z-index: 2; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.45)); }
+.lb-lock svg { width: 100%; height: 100%; display: block; }
+.lb-tier.done .rank-badge { filter: drop-shadow(0 2px 3px rgba(75,75,75,.18)); }
+/* current tier: enlarged, lifted, glowing */
+.lb-tier.cur { transform: scale(1.32) translateY(-3px); }
+.lb-tier.cur .lb-tier-badge .rank-badge { height: 46px; filter: drop-shadow(0 4px 6px rgba(75,75,75,.3)); }
 .lb-tier.cur span { color: var(--ink); font-weight: 800; }
-.lb-nextline { text-align: center; font-size: 13px; font-weight: 700; color: var(--gray); margin: 6px 0 2px; }
-.lb-nextline b { color: var(--gold-dk); }
+.lb-tier-glow { position: absolute; inset: -40% ; border-radius: 50%; z-index: -1;
+  background: radial-gradient(closest-side, rgba(255,200,0,.55), transparent 72%); animation: lbGlow 2.6s ease-in-out infinite; }
+.lb-tier-silver  .lb-tier-glow { background: radial-gradient(closest-side, rgba(159,176,192,.6), transparent 72%); }
+.lb-tier-diamond .lb-tier-glow { background: radial-gradient(closest-side, rgba(120,200,245,.6), transparent 72%); }
+.lb-tier-champion .lb-tier-glow { background: radial-gradient(closest-side, rgba(168,120,232,.6), transparent 72%); }
+.lb-tier-bronze  .lb-tier-glow { background: radial-gradient(closest-side, rgba(196,127,65,.55), transparent 72%); }
+
+/* progress to next tier */
+.lb-title-silver { color: #8597A8; } .lb-title-diamond { color: #3FA7E0; } .lb-title-champion { color: #9069CD; } .lb-title-bronze { color: #B5793F; }
+.lb-prog { margin: 4px 2px 16px; }
+.lb-prog-head { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 800; color: var(--gray); margin-bottom: 6px; }
+.lb-prog-next { display: inline-flex; align-items: center; gap: 5px; color: var(--ink); }
+.lb-prog-next .rank-badge { height: 20px; width: auto; }
+.lb-prog-sub { text-align: center; font-size: 13px; font-weight: 700; color: var(--gray); margin-top: 8px; }
+.lb-prog-sub b { color: var(--gold-dk); }
+.lb-prog-max { text-align: center; font-size: 15px; font-weight: 800; color: var(--gold-dk); background: var(--gold-light, #FFF8DC); border-radius: 14px; padding: 14px; }
+.lb-listhead { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 15px; color: var(--ink); margin: 4px 2px 8px; }
+.lb-listhead .ic { width: 18px; height: 18px; }
 .lb-sub { color: var(--gray); font-weight: 600; font-size: 14px; margin-bottom: 10px; }
 .lb-timer {
   display: inline-flex; align-items: center; gap: 6px;
@@ -1856,3 +1878,109 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .lb-xp i { font-style: normal; font-size: 12px; color: var(--gray-icon); }
 .lb-foot { text-align: center; font-size: 14px; font-weight: 600; color: var(--gray); margin: 16px 0 4px; }
 .lb-foot b { color: var(--gold-dk); }
+
+/* ============================================================
+   RANK-UP CELEBRATION (full-screen) — chest-ceremony class flow:
+   .show (veil in) → .drop (badge falls) → .pop (flash/burst) → .told (text)
+   ============================================================ */
+.rankup-veil {
+  position: fixed; inset: 0; z-index: 400; overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px;
+  background: radial-gradient(circle at 50% 38%, #2b2150 0%, #171228 62%, #0e0b1a 100%);
+  opacity: 0; transition: opacity .32s ease;
+}
+.rankup-veil.show { opacity: 1; }
+.rankup-veil.out { opacity: 0; }
+.ru-gold     { background: radial-gradient(circle at 50% 38%, #4a3a08 0%, #1c1606 60%, #0e0b04 100%); }
+.ru-silver   { background: radial-gradient(circle at 50% 38%, #2f3947 0%, #161c24 62%, #0d1016 100%); }
+.ru-bronze   { background: radial-gradient(circle at 50% 38%, #432e1a 0%, #1d140b 62%, #0f0a06 100%); }
+.ru-diamond  { background: radial-gradient(circle at 50% 38%, #1d4763 0%, #0e2533 62%, #08151c 100%); }
+.ru-champion { background: radial-gradient(circle at 50% 38%, #3a2358 0%, #1c1230 62%, #0e0820 100%); }
+
+/* spinning sunrays behind the badge */
+.ru-rays {
+  position: absolute; top: 36%; left: 50%; width: 160vw; height: 160vw; max-width: 820px; max-height: 820px;
+  transform: translate(-50%, -50%); opacity: 0; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, rgba(255,255,255,.085) 0deg 6deg, transparent 6deg 13deg);
+}
+.rankup-veil.show .ru-rays { opacity: 1; animation: ruRays 16s linear infinite; transition: opacity .8s ease .2s; }
+@keyframes ruRays { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+/* badge stage */
+.ru-stage { position: relative; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+.ru-flash { position: absolute; width: 200px; height: 200px; border-radius: 50%; opacity: 0;
+  background: radial-gradient(circle, #fff 0%, rgba(255,255,255,.6) 35%, transparent 68%); }
+.rankup-veil.pop .ru-flash { animation: ruFlash .62s ease-out forwards; }
+@keyframes ruFlash { 0% { opacity: 0; transform: scale(.2); } 28% { opacity: .95; } 100% { opacity: 0; transform: scale(2.6); } }
+
+.ru-badgewrap { position: relative; display: flex; align-items: center; justify-content: center; }
+.ru-glow { position: absolute; width: 230px; height: 230px; border-radius: 50%; z-index: -1;
+  background: radial-gradient(closest-side, rgba(255,210,70,.55), transparent 70%); animation: ruGlow 2.4s ease-in-out infinite; }
+.ru-silver .ru-glow   { background: radial-gradient(closest-side, rgba(190,205,220,.5), transparent 70%); }
+.ru-diamond .ru-glow  { background: radial-gradient(closest-side, rgba(130,205,250,.55), transparent 70%); }
+.ru-champion .ru-glow { background: radial-gradient(closest-side, rgba(185,140,245,.55), transparent 70%); }
+.ru-bronze .ru-glow   { background: radial-gradient(closest-side, rgba(210,150,90,.5), transparent 70%); }
+@keyframes ruGlow { 0%,100% { opacity: .55; transform: scale(.92); } 50% { opacity: 1; transform: scale(1.08); } }
+
+.ru-ring { position: absolute; width: 150px; height: 150px; border-radius: 50%; border: 5px solid rgba(255,255,255,.85); opacity: 0; }
+.rankup-veil.pop .ru-ring { animation: ruRing .8s ease-out forwards; }
+@keyframes ruRing { 0% { opacity: .9; transform: scale(.35); } 100% { opacity: 0; transform: scale(2.3); } }
+
+.ru-spark { position: absolute; top: 50%; left: 50%; width: 6px; height: 20px; border-radius: 3px; background: #FFE36B; opacity: 0; box-shadow: 0 0 8px rgba(255,220,80,.9); }
+.ru-silver .ru-spark   { background: #DCE6F0; box-shadow: 0 0 8px rgba(220,230,240,.9); }
+.ru-diamond .ru-spark  { background: #BFEAFF; box-shadow: 0 0 8px rgba(160,220,255,.9); }
+.ru-champion .ru-spark { background: #E6CCFF; box-shadow: 0 0 8px rgba(200,160,255,.9); }
+.rankup-veil.pop .ru-spark { animation: ruSpark .72s ease-out forwards; }
+@keyframes ruSpark {
+  0% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--a)) translateY(-10px) scaleY(.4); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--a)) translateY(-104px) scaleY(1); }
+}
+
+.ru-badge { height: 150px; width: auto; opacity: 0; filter: drop-shadow(0 10px 16px rgba(0,0,0,.45)); will-change: transform; }
+.rankup-veil.drop .ru-badge { animation: ruDrop .82s cubic-bezier(.3,1.3,.45,1) forwards; }
+@keyframes ruDrop {
+  0% { opacity: 0; transform: translateY(-560px) scale(.45) rotate(-14deg); }
+  55% { opacity: 1; }
+  74% { transform: translateY(16px) scale(1.08, .9) rotate(3deg); }
+  88% { transform: translateY(-6px) scale(.97, 1.03) rotate(-1deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+}
+.rankup-veil.pop .ru-badge { animation: ruPop 1.7s cubic-bezier(.2,1,.4,1) forwards; }
+@keyframes ruPop { 0% { opacity: 1; transform: scale(1); } 16% { opacity: 1; transform: scale(1.24); } 38% { transform: scale(.97); } 60% { transform: scale(1.06); } 100% { opacity: 1; transform: scale(1.03); } }
+
+/* sweeping shine across the badge on burst */
+.ru-shine { position: absolute; top: 0; bottom: 0; left: -60%; width: 45%;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,.75), transparent);
+  transform: skewX(-18deg); opacity: 0; pointer-events: none; }
+.rankup-veil.pop .ru-shine { animation: ruShine 1s ease-out .15s forwards; }
+@keyframes ruShine { 0% { left: -60%; opacity: 0; } 20% { opacity: .9; } 100% { left: 130%; opacity: 0; } }
+
+/* confetti rain */
+.ru-confetti-wrap { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.ru-confetti { position: absolute; top: -8%; opacity: 0; border-radius: 2px; }
+.rankup-veil.told .ru-confetti { animation-name: ruConfetti; animation-timing-function: cubic-bezier(.4,.1,.7,1); animation-fill-mode: forwards; }
+@keyframes ruConfetti {
+  0% { opacity: 0; transform: translateY(-12vh) translateX(0) rotate(0); }
+  10% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(112vh) translateX(var(--dx)) rotate(var(--rot)); }
+}
+
+/* text + button */
+.ru-kicker, .ru-title, .ru-sub, .ru-btn { opacity: 0; }
+.ru-kicker { color: rgba(255,255,255,.78); font-weight: 800; font-size: 15px; letter-spacing: .4px; margin-top: 6px; }
+.ru-title { color: #fff; font-size: 34px; font-weight: 800; margin: 4px 0 6px; text-shadow: 0 3px 0 rgba(0,0,0,.25); }
+.ru-gold .ru-title { color: #FFD94A; } .ru-silver .ru-title { color: #DCE6F0; }
+.ru-bronze .ru-title { color: #E8A86B; } .ru-diamond .ru-title { color: #9FE0FF; } .ru-champion .ru-title { color: #D7B6FF; }
+.ru-sub { color: rgba(255,255,255,.72); font-weight: 600; font-size: 15px; line-height: 1.6; max-width: 300px; text-align: center; margin-bottom: 26px; }
+.ru-btn { max-width: 320px; width: 100%; }
+.rankup-veil.told .ru-kicker { animation: ruRise .5s ease .02s forwards; }
+.rankup-veil.told .ru-title { animation: ruSlam .6s cubic-bezier(.2,1.7,.4,1) .12s forwards; }
+.rankup-veil.told .ru-sub { animation: ruRise .5s ease .28s forwards; }
+.rankup-veil.told .ru-btn { animation: ruRise .5s ease .42s forwards; }
+@keyframes ruRise { 0% { opacity: 0; transform: translateY(16px); } 100% { opacity: 1; transform: translateY(0); } }
+@keyframes ruSlam { 0% { opacity: 0; transform: scale(.4); } 70% { opacity: 1; } 100% { opacity: 1; transform: scale(1); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .rankup-veil * { animation-duration: .01ms !important; }
+}

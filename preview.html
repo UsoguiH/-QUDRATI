@@ -26,7 +26,8 @@
     daily: { day: todayK, n: location.hash === "#chest" || location.hash === "#chestready" ? 10 : location.hash === "#claimed" ? 10 : 6, claimed: location.hash === "#claimed" },
     v: 1, disclaimer: true, track: "sci", sound: false,
     user: location.hash === "#login" ? null : { name: "سارة", guest: false },
-    xp: 527, streak: { count: 12, last: null },
+    xp: 527, totalXp: location.hash.indexOf("#earncross") === 0 ? 1190 : 850, tierSeen: 1,
+    streak: { count: 12, last: null },
     lessons: { "numbers.fractions": { stars: 3, plays: 1 } },
     qstats: { "oo-01": { r: 6, w: 2 }, "oo-02": { r: 4, w: 1 }, "cn-01": { r: 2, w: 3 }, "ge-ang-01": { r: 7, w: 1 } },
     mistakes: location.hash === "#reviewempty" ? {} : { "oo-01": 1000, "oo-02": 2000, "cn-01": 3000, "ge-ang-01": 4000 },
@@ -49,6 +50,24 @@
       if (["stats", "settings", "mock", "league", "review"].includes(h)) A.go(h);
       else if (h === "reviewempty") A.go("review");
       else if (h === "reviewdo") A.startReview();
+      else if (h === "frz") { // freeze all anims so any app screen captures at any budget
+        const st = document.createElement("style"); st.textContent = "*{animation:none!important;transition:none!important}";
+        document.head.appendChild(st); A.go("league");
+      }
+      else if (h === "rankup") { A.go("league"); A.debugRankUp(2); }
+      else if (h === "earncross") { A.go("league"); A.debugEarn(50); }
+      else if (h.indexOf("rankcap") === 0 || h === "earncrosscap") { // screenshot helper: freeze ALL anims + pin celebration end-state
+        const st = document.createElement("style");
+        st.textContent = "*{animation:none!important;transition:none!important}"
+          + ".rankup-veil{opacity:1!important}.ru-badge{opacity:1!important;transform:scale(1.03)!important}"
+          + ".ru-kicker,.ru-title,.ru-sub,.ru-btn{opacity:1!important;transform:none!important}"
+          + ".ru-confetti{opacity:1!important}.ru-flash,.ru-ring,.ru-spark,.ru-shine{opacity:0!important}"
+          + ".ru-rays{display:none!important}"; // heavy conic-gradient breaks headless raster; not needed to verify the trigger
+        document.head.appendChild(st);
+        A.go("league");
+        if (h === "earncrosscap") A.debugEarn(50);            // REAL crossing path → flushRankUp → showRankUp
+        else A.debugRankUp(parseInt(h.replace("rankcap", "")) || 2);
+      }
       else if (h === "chest") A.openChest();
       else if (h === "mocktest") A.startMock();
       else if (h === "mockdone") {
