@@ -59,6 +59,7 @@ const rankImg = (key, size) => `<img class="rank-badge" src="assets/icons/ranks/
    lifetime total (S.totalXp). If the lifetime total crosses into a new tier,
    queue the rank-up celebration to play at the next safe moment. */
 let pendingRankUp = null;
+let pendingStreak = 0;   // streak count to celebrate after a win screen (0 = none)
 /* Rank XP (S.totalXp) — lifetime, never decremented; drives tier + leaderboard.
    Separate from gems so spending never touches rank. */
 function gainXP(n) {
@@ -89,11 +90,12 @@ const save = () => localStorage.setItem("qudratState", JSON.stringify(S));
 
 function bumpStreak() {
   const t = todayKey();
-  if (S.streak.last === t) return;
+  if (S.streak.last === t) return false;   // already counted today
   const y = new Date(Date.now() - 864e5);
   const yk = y.getFullYear() + "-" + (y.getMonth() + 1) + "-" + y.getDate();
   S.streak.count = (S.streak.last === yk) ? S.streak.count + 1 : 1;
   S.streak.last = t;
+  return true;                              // advanced to a new day → celebrate
 }
 
 /* ---------------- sounds (WebAudio synth) ---------------- */
@@ -903,7 +905,8 @@ function lessonComplete() {
   p.plays++; p.stars = Math.max(p.stars, stars);
   const rankGain = SES.xp * (SES.xpBoost ? 2 : 1);   // 2× boost doubles RANK XP only (gems unaffected)
   gainXP(rankGain); gainGems(SES.gems);
-  bumpStreak(); save(); sndWin();
+  const streakUp = bumpStreak(); save(); sndWin();
+  pendingStreak = streakUp ? S.streak.count : 0;   // show the fire-streak celebration after this win screen
   const xpWon = rankGain, gemsWon = SES.gems, boosted = SES.xpBoost, tTot = SES.tSpent;
   const dayWord = S.streak.count === 1 ? "يوم واحد" : S.streak.count === 2 ? "يومان" : S.streak.count <= 10 ? toAr(S.streak.count) + " أيام" : toAr(S.streak.count) + " يوماً";
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
@@ -917,7 +920,7 @@ function lessonComplete() {
       <div class="rcard rc-green"><div class="rc-t">الدقة</div><div class="rc-v">${ico("target", 22)} <span id="cv-acc">٠</span></div></div>
     </div>
     <div class="action-bar win-action" style="position:relative;right:auto;transform:none;max-width:340px;padding:0;background:none">
-      <button class="btn" onclick="A.go('path')">متابعة</button>
+      <button class="btn" onclick="A.winContinue()">متابعة</button>
     </div>
   </div></div>`;
   setTimeout(() => {
@@ -1360,6 +1363,119 @@ A.closeRankUp = function () {
   v.classList.add("out");
   setTimeout(() => { v.remove(); render(); }, 360);
 };
+
+/* ============================================================
+   FIRE-STREAK CELEBRATION — Duolingo's real shipped Rive flame + rolling
+   odometer + Lottie day-check pops (assets in assets/streak/). Plays once
+   when the daily streak advances (first lesson of a new day), then the user
+   taps متابعة. Runtimes are lazy-loaded only when this first plays.
+   Asset contracts per duolingo-fire-streak/HANDOFF.md.
+   ============================================================ */
+const STREAK_WK = ["ح", "ن", "ث", "ر", "خ", "ج", "س"];   // Sun..Sat (getDay index)
+let streakLibsP = null, streakInst = { flame: null, num: null, checks: [], onDone: null };
+
+function loadStreakLibs() {
+  if (streakLibsP) return streakLibsP;
+  streakLibsP = new Promise((resolve, reject) => {
+    let need = 2;
+    const done = () => { if (--need === 0) { try { rive.RuntimeLoader.setWasmUrl("assets/streak/rive.wasm"); } catch (e) {} resolve(); } };
+    const add = src => { const s = document.createElement("script"); s.src = src; s.onload = done; s.onerror = () => reject(new Error("load " + src)); document.head.appendChild(s); };
+    add("assets/streak/rive.js"); add("assets/streak/lottie.min.js");
+  });
+  return streakLibsP;
+}
+function setOdo(g, prefix, value) {            // drive the odometer digits (pos1 = rightmost)
+  const s = String(Math.max(0, value)), d = s.length;
+  for (let p = 1; p <= 4; p++) { const i = g(prefix + "_pos" + p + "_num"); if (i) i.value = p <= d ? +s[d - p] : 0; }
+  const da = g(prefix + "_digitamount_num"); if (da) da.value = d;
+}
+function streakDayLabel(c) {
+  const word = c === 1 ? "يوم واحد" : c === 2 ? "يومان" : c <= 10 ? toAr(c) + " أيام" : toAr(c) + " يوماً";
+  return word + " من الحماس";
+}
+A.winContinue = function () {
+  if (pendingStreak > 0) { const c = pendingStreak; pendingStreak = 0; showStreakCelebration(c, () => A.go("path")); }
+  else A.go("path");
+};
+function showStreakCelebration(count, onDone) {
+  const todayIdx = new Date().getDay();
+  const days = STREAK_WK.map((lbl, d) => {
+    const checked = d <= todayIdx && (todayIdx - d) < count;     // today + prior streak days within this week
+    return `<div class="day"><span class="lbl">${lbl}</span><div class="dot ${checked ? "live" : ""}">${checked ? `<div class="check" data-check></div>` : ""}</div></div>`;
+  }).join("");
+  const veil = document.createElement("div");
+  veil.className = "streak-veil";
+  veil.innerHTML = `<div class="streak-scene">
+    <div class="sk-flame"><canvas id="skFlame" width="400" height="400"></canvas></div>
+    <div class="sk-num"><canvas id="skNum" width="300" height="260"></canvas></div>
+    <div class="sk-sub" id="skSub">${streakDayLabel(count)}</div>
+    <div class="sk-cal" id="skCal"><div class="sk-days">${days}</div></div>
+    <button class="btn sk-btn" onclick="A.closeStreak()">متابعة</button>
+  </div>`;
+  document.body.appendChild(veil);
+  requestAnimationFrame(() => veil.classList.add("show"));
+  const sub = veil.querySelector("#skSub"), cal = veil.querySelector("#skCal");
+  streakInst = { flame: null, num: null, checks: [], flameIns: null, numIns: null, onDone, ran: false };
+  sndWin && sndWin();
+
+  function tryRun() {
+    if (streakInst.ran || !streakInst.flameIns || !streakInst.numIns) return;
+    streakInst.ran = true;
+    const fireI = (ins, n) => { const i = ins.find(x => x.name === n); if (i) i.fire(); };
+    fireI(streakInst.flameIns, "play_trig");                          // flame ignites
+    const g = n => streakInst.numIns.find(i => i.name === n);
+    setOdo(g, "old", Math.max(0, count - 1)); setOdo(g, "new", count);
+    fireI(streakInst.numIns, "play_trig");                            // number rolls up to the streak
+    setTimeout(() => {
+      sub.classList.add("show"); cal.classList.add("show");
+      streakInst.checks.forEach((a, i) => setTimeout(() => a.goToAndPlay(0, true), 280 + i * 150));
+    }, 1300);
+  }
+
+  loadStreakLibs().then(() => {
+    streakInst.flame = new rive.Rive({
+      src: "assets/streak/big.riv", canvas: veil.querySelector("#skFlame"),
+      artboard: "IDLE", stateMachines: "State Machine", autoplay: true,
+      onLoad: () => {
+        streakInst.flame.resizeDrawingSurfaceToCanvas();
+        const ins = streakInst.flame.stateMachineInputs("State Machine"), g = n => ins.find(i => i.name === n);
+        g("darkmode_bool").value = false; g("streakselect_num").value = 0;   // light UI
+        streakInst.flameIns = ins; tryRun();
+      }
+    });
+    streakInst.num = new rive.Rive({
+      src: "assets/streak/flame.riv", canvas: veil.querySelector("#skNum"),
+      artboard: "Main", stateMachines: "odometer_state_machine", autoplay: true,
+      onLoad: () => {
+        streakInst.num.resizeDrawingSurfaceToCanvas();
+        const ins = streakInst.num.stateMachineInputs("odometer_state_machine"), g = n => ins.find(i => i.name === n);
+        g("dark_bool").value = false; g("perfect_bool").value = false; g("blue_bool").value = false;   // light UI
+        setOdo(g, "new", count); setOdo(g, "old", Math.max(0, count - 1));
+        streakInst.numIns = ins; tryRun();
+      }
+    });
+    fetch("assets/streak/daycheck.json").then(r => r.json()).then(data => {
+      streakInst.checks = [...veil.querySelectorAll("[data-check]")].map(el => lottie.loadAnimation({
+        container: el, renderer: "svg", loop: false, autoplay: false,
+        animationData: JSON.parse(JSON.stringify(data)), rendererSettings: { preserveAspectRatio: "xMidYMid meet" }
+      }));
+    }).catch(() => {});
+  }).catch(() => { /* runtime failed to load — leave the static text/days visible */
+    sub.classList.add("show"); cal.classList.add("show");
+  });
+}
+A.closeStreak = function () {
+  const v = document.querySelector(".streak-veil"), done = streakInst.onDone;
+  try {
+    streakInst.flame && streakInst.flame.cleanup();
+    streakInst.num && streakInst.num.cleanup();
+    streakInst.checks.forEach(a => a.destroy());
+  } catch (e) {}
+  streakInst = { flame: null, num: null, checks: [], onDone: null };
+  if (v) { v.classList.add("out"); setTimeout(() => { v.remove(); done ? done() : render(); }, 320); }
+  else { done ? done() : render(); }
+};
+A.debugStreak = function (c) { showStreakCelebration(c || S.streak.count || 7, () => A.go("path")); };   // dev harness only
 
 /* ============================================================
    مراجعة الأخطاء (review your mistakes) — lists every question you

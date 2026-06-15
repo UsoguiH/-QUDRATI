@@ -2034,3 +2034,25 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 @media (prefers-reduced-motion: reduce) {
   .rankup-veil * { animation-duration: .01ms !important; }
 }
+
+/* ===== Fire-streak celebration (Duolingo Rive flame + odometer + Lottie checks) ===== */
+.streak-veil { position: fixed; inset: 0; z-index: 120; background: #fff; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity .3s ease; }
+.streak-veil.show { opacity: 1; }
+.streak-veil.out { opacity: 0; }
+.streak-scene { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 360px; padding: 0 24px; }
+.sk-flame { width: 310px; height: 310px; }
+.sk-flame canvas { width: 100%; height: 100%; display: block; }
+.sk-num { width: 168px; height: 132px; margin-top: -30px; }
+.sk-num canvas { width: 100%; height: 100%; display: block; }
+.sk-sub { color: #ff9600; font-weight: 800; font-size: 23px; margin-top: -4px; letter-spacing: .2px; opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s cubic-bezier(.2,.7,.3,1); }
+.sk-sub.show { opacity: 1; transform: none; }
+.sk-cal { margin-top: 20px; width: 100%; opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s cubic-bezier(.2,.7,.3,1); }
+.sk-cal.show { opacity: 1; transform: none; }
+.sk-days { display: flex; justify-content: space-between; direction: rtl; }
+.sk-days .day { display: flex; flex-direction: column; align-items: center; gap: 9px; width: 40px; }
+.sk-days .lbl { color: #ff9600; font-weight: 800; font-size: 15px; }
+.sk-days .dot { width: 32px; height: 32px; border-radius: 50%; background: #E5E5E5; position: relative; }
+.sk-days .dot.live { background: transparent; }
+.sk-days .check { position: absolute; left: 50%; top: 50%; width: 56px; height: 74px; transform: translate(-50%,-58%); pointer-events: none; }
+.sk-days .check svg { width: 100% !important; height: 100% !important; }
+.sk-btn { margin-top: 36px; width: 100%; }

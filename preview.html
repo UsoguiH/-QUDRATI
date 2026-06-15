@@ -47,7 +47,8 @@
   <script>
     (function () {
       const h = location.hash.replace("#", "") || "path";
-      if (["stats", "settings", "mock", "league", "review"].includes(h)) A.go(h);
+      if (h.indexOf("streak") === 0) { A.go("path"); A.debugStreak(parseInt(h.replace("streak", "")) || 7); }
+      else if (["stats", "settings", "mock", "league", "review"].includes(h)) A.go(h);
       else if (h === "reviewempty") A.go("review");
       else if (h === "reviewdo") A.startReview();
       else if (h === "frz") { // freeze all anims so any app screen captures at any budget

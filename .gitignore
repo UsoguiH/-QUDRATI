@@ -20,6 +20,10 @@ docs/
 tools/methods/in/
 tools/methods/out/
 
+# Streak animation dev kit (source/handoff) — the shipped runtime lives in assets/streak/
+duolingo-fire-streak/
+duolingo-fire-streak.zip
+
 # OS
 Thumbs.db
 .DS_Store
