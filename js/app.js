@@ -1351,7 +1351,7 @@ function renderLeague() {
   const ladder = LEAGUE_TIERS.map((t, i) => {
     const cls = i < ti ? "done" : i === ti ? "cur" : "locked";
     return `<div class="lb-tier ${cls} lb-tier-${t.key}">
-      <div class="lb-tier-badge">${rankImg(t.key, 46)}${i > ti ? `<span class="lb-lock">${LOCK_SVG}</span>` : ""}${i === ti ? `<span class="lb-tier-glow"></span>` : ""}</div>
+      <div class="lb-tier-badge">${rankImg(t.key, 58)}${i > ti ? `<span class="lb-lock">${LOCK_SVG}</span>` : ""}${i === ti ? `<span class="lb-tier-glow"></span>` : ""}</div>
       <span>${t.name}</span>
     </div>`;
   }).join("");

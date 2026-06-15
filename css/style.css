@@ -1809,17 +1809,17 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .lb-ladder { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; margin: 6px 2px 14px; }
 .lb-tier { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: transform .2s; }
 .lb-tier-badge { position: relative; display: inline-flex; }
-.lb-tier-badge .rank-badge { height: 42px; width: auto; display: block; }
-.lb-tier span { font-size: 11px; font-weight: 700; color: var(--gray); }
+.lb-tier-badge .rank-badge { height: 58px; width: auto; display: block; }
+.lb-tier span { font-size: 12px; font-weight: 700; color: var(--gray); }
 /* locked tiers: keep the real colours, just dim slightly + soft scrim + padlock */
 .lb-tier.locked .rank-badge { opacity: .9; }
 .lb-tier.locked .lb-tier-badge::after { content: ''; position: absolute; inset: -2px; border-radius: 30% 30% 42% 42%/30% 30% 55% 55%; background: rgba(60,55,75,.34); }
-.lb-lock { position: absolute; top: 50%; left: 50%; width: 22px; height: 22px; transform: translate(-50%,-48%); z-index: 2; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.45)); }
+.lb-lock { position: absolute; top: 50%; left: 50%; width: 28px; height: 28px; transform: translate(-50%,-48%); z-index: 2; filter: drop-shadow(0 1px 1.5px rgba(0,0,0,.45)); }
 .lb-lock svg { width: 100%; height: 100%; display: block; }
 .lb-tier.done .rank-badge { filter: drop-shadow(0 2px 3px rgba(75,75,75,.18)); }
 /* current tier: enlarged, lifted, glowing */
 .lb-tier.cur { transform: scale(1.32) translateY(-3px); }
-.lb-tier.cur .lb-tier-badge .rank-badge { height: 46px; filter: drop-shadow(0 4px 6px rgba(75,75,75,.3)); }
+.lb-tier.cur .lb-tier-badge .rank-badge { height: 62px; filter: drop-shadow(0 4px 6px rgba(75,75,75,.3)); }
 .lb-tier.cur span { color: var(--ink); font-weight: 800; }
 .lb-tier-glow { position: absolute; inset: -40% ; border-radius: 50%; z-index: -1;
   background: radial-gradient(closest-side, rgba(255,200,0,.55), transparent 72%); animation: lbGlow 2.6s ease-in-out infinite; }
