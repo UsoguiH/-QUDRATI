@@ -21,8 +21,9 @@ const UNIT_COLORS = {
 };
 const LEVEL_HEARTS = 3;      // hearts per level — lose them all and you retry the level
 const Q_SECS = 60;           // seconds per question — matches the real GAT pace
-const FREEZE_COST = 10;      // blue gems to freeze the timer for the current question
-const FIFTY_COST = 15;       // blue gems to remove two wrong choices (50/50)
+const REVIVE_COST = 50;      // gems to refill hearts and continue after failing a lesson
+const BOOST_COST = 50;       // gems to double a lesson's rank XP (gems unaffected)
+const CHEST_GEMS = 50;       // gems from the daily-quest chest
 const DAILY_GOAL = 10;       // questions to answer for today's quest chest
 /* Real computerized GAT format (researched 2026): quant sections of 25
    min each, free navigation + flagging inside a section, sealed once
@@ -58,14 +59,17 @@ const rankImg = (key, size) => `<img class="rank-badge" src="assets/icons/ranks/
    lifetime total (S.totalXp). If the lifetime total crosses into a new tier,
    queue the rank-up celebration to play at the next safe moment. */
 let pendingRankUp = null;
-function earnXp(n) {
+/* Rank XP (S.totalXp) — lifetime, never decremented; drives tier + leaderboard.
+   Separate from gems so spending never touches rank. */
+function gainXP(n) {
   if (!n) return;
   const before = tierIndex();
-  S.xp += n;
   S.totalXp = (S.totalXp || 0) + n;
   const after = tierIndex();
   if (after > before) pendingRankUp = { from: before, to: after };
 }
+/* Gems (S.xp) — the spendable wallet (revive, 2× boost). Goes up and down. */
+function gainGems(n) { if (n) S.xp += n; }
 /* show the celebration if one is queued (and we're not mid-session) */
 function flushRankUp() {
   if (!pendingRankUp || document.querySelector(".rankup-veil")) return;
@@ -73,7 +77,7 @@ function flushRankUp() {
   S.tierSeen = ru.to; save();
   showRankUp(ru.to);
 }
-const DAILYQ_REWARD = 8;     // gems for the daily question (correct), 2 for a try
+const DAILYQ_REWARD = 15;    // gems for the daily question (correct), 5 for a wrong attempt
 let S;
 try { S = Object.assign({}, DEFAULT_STATE, JSON.parse(localStorage.getItem("qudratState") || "{}")); }
 catch (e) { S = Object.assign({}, DEFAULT_STATE); }
@@ -294,8 +298,9 @@ A.checkDailyQ = function () {
     else if (j === DQ_SEL) b.classList.add("wrong");
     else b.classList.add("dim");
   });
-  const reward = correct ? DAILYQ_REWARD : 2;
-  S.dailyQ.done = true; S.dailyQ.correct = correct; earnXp(reward);
+  const reward = correct ? DAILYQ_REWARD : 5;       // gems: +15 correct / +5 wrong attempt
+  S.dailyQ.done = true; S.dailyQ.correct = correct;
+  gainGems(reward); gainXP(correct ? 8 : 2);        // wallet + rank XP
   const qs = S.qstats[q.id] = S.qstats[q.id] || { r: 0, w: 0 }; correct ? qs.r++ : qs.w++;
   noteAnswer(q, correct);
   save();
@@ -417,7 +422,7 @@ function floatingQuest() {
 A.openChest = function () {
   dailyReset();
   if (S.daily.n < DAILY_GOAL || S.daily.claimed) return;
-  const gems = 12 + Math.floor(Math.random() * 7); // 12–18
+  const gems = CHEST_GEMS; // flat 50
   const veil = document.createElement("div");
   veil.className = "chest-veil";
   veil.innerHTML = `<div class="chest-scene">
@@ -449,7 +454,7 @@ A.openChest = function () {
   setTimeout(() => veil.classList.add("rewarded"), 2150);
 };
 A.claimChest = function (gems) {
-  earnXp(gems); S.daily.claimed = true; save();
+  gainGems(gems); S.daily.claimed = true; save();
   const v = document.querySelector(".chest-veil");
   if (v) { v.classList.add("out"); setTimeout(() => { v.remove(); render(); }, 380); }
   else render();
@@ -524,25 +529,37 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   const r = btn.getBoundingClientRect();
   const veil = document.createElement("div");
   veil.className = "lesson-pop-veil";
+  const canBoost = S.xp >= BOOST_COST;
   veil.innerHTML = `<div class="lesson-pop" style="--pop-c:${u.c};top:${Math.min(r.bottom + 14, window.innerHeight - 190)}px">
     <h3>${l.title}</h3>
     <div class="lp-sub">الدرس ${toAr(li + 1)} من ${toAr(d.lessons.length)}</div>
+    <button class="lp-boost ${canBoost ? "" : "cant"}" id="lpBoost">⚡ ضاعف الخبرة ×٢ · ${ico("gem", 15)} ${toAr(BOOST_COST)}</button>
     <button class="btn btn-white" style="color:${u.c};box-shadow:0 5px 0 ${u.pale}">ابدأ</button>
   </div>`;
   veil.onclick = e => { if (e.target === veil) veil.remove(); };
-  veil.querySelector(".btn").onclick = () => { veil.remove(); A.startLesson(domKey, lesKey); };
+  let boost = false;
+  const bb = veil.querySelector("#lpBoost");
+  if (bb) bb.onclick = () => {
+    if (S.xp < BOOST_COST) { toast("جواهرك لا تكفي للمضاعفة"); return; }
+    boost = !boost; bb.classList.toggle("on", boost);
+  };
+  veil.querySelector(".btn-white").onclick = () => { veil.remove(); A.startLesson(domKey, lesKey, boost); };
   document.body.appendChild(veil);
   const pop = veil.querySelector(".lesson-pop");
   const pr = pop.getBoundingClientRect();
   pop.style.setProperty("--arrow-x", Math.max(24, Math.min(pr.width - 24, pr.right - (r.left + r.width / 2))) + "px");
 };
 
-A.startLesson = function (domKey, lesKey) {
+A.startLesson = function (domKey, lesKey, boost) {
   const d = window.QBANK[domKey], l = d.lessons.find(x => x.key === lesKey);
   const key = domKey + "." + lesKey;
   const qs = pickLessonQuestions(l, key);
   if (!qs.length) { showModal("⭐", "لا توجد أسئلة", "لا توجد أسئلة متاحة لهذا الدرس في مسارك الحالي.", "حسناً"); return; }
-  SES = { mode: "lesson", domKey, lesKey, key, title: l.title, method: l.method || "", queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null, locked: false, xp: 0, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0, frozen: false, fiftyUsed: false };
+  const prev = S.lessons[key];
+  const replay = !!(prev && prev.stars > 0);            // already cleared → farm mode (+2/+2)
+  let xpBoost = false;
+  if (boost && S.xp >= BOOST_COST) { S.xp -= BOOST_COST; xpBoost = true; save(); }  // pay for 2× rank XP up front
+  SES = { mode: "lesson", domKey, lesKey, key, title: l.title, method: l.method || "", queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null, locked: false, xp: 0, gems: 0, replay, xpBoost, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
   renderSession();
 };
 
@@ -619,7 +636,7 @@ function renderSession() {
       </div>
       ${timerBar()}
       <div class="q-area">${questionBody(q, SES.sel, false, null, q.method || SES.method)}</div>
-      <div class="action-bar has-fab"><button class="btn" id="checkBtn" onclick="A.check()" ${SES.sel === null ? "disabled" : ""}>تحقق</button>${hintFab()}</div>
+      <div class="action-bar"><button class="btn" id="checkBtn" onclick="A.check()" ${SES.sel === null ? "disabled" : ""}>تحقق</button></div>
       <div class="feedback" id="fb"></div>
     </div>`;
   startQTimer();
@@ -632,7 +649,7 @@ function startQTimer() {
   // kick the fill so it starts gliding down over the first second
   requestAnimationFrame(() => requestAnimationFrame(() => {
     const f = document.getElementById("qtFill");
-    if (f && SES && !SES.frozen) f.style.width = ((Q_SECS - 1) / Q_SECS * 100) + "%";
+    if (f && SES) f.style.width = ((Q_SECS - 1) / Q_SECS * 100) + "%";
   }));
   SES.timer = setInterval(() => {
     SES.left--;
@@ -661,74 +678,8 @@ function timerBar() {
   </div>`;
 }
 
-/* ---------------- in-level hints (paid with blue gems = S.xp) ---------------- */
-const SNOWFLAKE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-  <path d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"/>
-  <path d="M12 6l-2.4-2.4M12 6l2.4-2.4M12 18l-2.4 2.4M12 18l2.4 2.4M6 12l-2.4-2.4M6 12l-2.4 2.4M18 12l2.4-2.4M18 12l2.4 2.4"/></svg>`;
-const SCISSORS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M8.6 8.6L21 21M8.6 15.4L21 3M12 12l3 3"/></svg>`;
-
 const CHECK_BADGE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.2 4.2L19 6.8"/></svg>`;
-const PLUS_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`;
 
-/* Floating "+" in the action bar; tapping it gooey-blooms the two
-   power-up bubbles out of it (SVG #goo filter does the liquid merge) */
-function hintFab() {
-  const freezeOk = !SES.frozen && S.xp >= FREEZE_COST;
-  const fiftyOk = !SES.fiftyUsed && S.xp >= FIFTY_COST;
-  return `<div class="hint-fab" id="hintFab">
-    <svg class="goo-defs" width="0" height="0" aria-hidden="true"><defs><filter id="goo">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b"/>
-      <feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -11" result="g"/>
-      <feComposite in="SourceGraphic" in2="g" operator="atop"/>
-    </filter></defs></svg>
-    <div class="fab-goo">
-      <button class="fab-bubble fab-fifty fifty-btn ${SES.fiftyUsed ? "used" : ""}" onclick="A.useFifty()" ${fiftyOk ? "" : "disabled"}>${SES.fiftyUsed ? CHECK_BADGE : SCISSORS}</button>
-      <button class="fab-bubble fab-freeze freeze-btn ${SES.frozen ? "used" : ""}" onclick="A.useFreeze()" ${freezeOk ? "" : "disabled"}>${SES.frozen ? CHECK_BADGE : SNOWFLAKE}</button>
-      <button class="fab-main" onclick="A.toggleHints()" aria-label="المساعدات" title="المساعدات">${PLUS_SVG}</button>
-    </div>
-    <span class="fab-chip chip-freeze">${SES.frozen ? "تم التجميد" : `تجميد الوقت ${ico("gem", 14)} ${toAr(FREEZE_COST)}`}</span>
-    <span class="fab-chip chip-fifty">${SES.fiftyUsed ? "تم الحذف" : `حذف إجابتين ${ico("gem", 14)} ${toAr(FIFTY_COST)}`}</span>
-    <span class="fab-chip chip-bal hint-bal" title="رصيدك من الجواهر">${ico("gem", 16)} ${toAr(S.xp)}</span>
-  </div>`;
-}
-A.toggleHints = function () {
-  const f = document.getElementById("hintFab");
-  if (!f) return;
-  if (f.classList.toggle("open"))
-    setTimeout(() => document.addEventListener("click", closeFabOutside), 0);
-};
-function closeFabOutside(e) {
-  const f = document.getElementById("hintFab");
-  if (f && f.classList.contains("open") && f.contains(e.target)) return;
-  if (f) f.classList.remove("open");
-  document.removeEventListener("click", closeFabOutside);
-}
-/* Update hints in place (no DOM nuke) so the press/use animation actually plays */
-function setHintBalance() {
-  const b = document.querySelector(".hint-bal");
-  if (b) b.innerHTML = `${ico("gem", 16)} ${toAr(S.xp)}`;
-}
-function syncHintAffordability() {
-  const fr = document.querySelector(".freeze-btn"), fi = document.querySelector(".fifty-btn");
-  if (fr && !fr.classList.contains("used")) fr.disabled = SES.frozen || S.xp < FREEZE_COST;
-  if (fi && !fi.classList.contains("used")) fi.disabled = SES.fiftyUsed || S.xp < FIFTY_COST;
-}
-function markHintUsed(which) {
-  const btn = document.querySelector(which === "freeze" ? ".freeze-btn" : ".fifty-btn");
-  if (btn) {
-    btn.disabled = true;
-    btn.classList.add("used", "just-used");
-    btn.innerHTML = CHECK_BADGE;
-    setTimeout(() => btn.classList.remove("just-used"), 650);
-  }
-  const chip = document.querySelector(which === "freeze" ? ".chip-freeze" : ".chip-fifty");
-  if (chip) chip.textContent = which === "freeze" ? "تم التجميد" : "تم الحذف";
-  setHintBalance();
-  syncHintAffordability();
-  // let the checkmark breathe, then tuck the menu back into the +
-  setTimeout(() => { const f = document.getElementById("hintFab"); if (f) f.classList.remove("open"); }, 1100);
-}
 let toastT = null;
 function toast(msg, kind) {
   let t = document.getElementById("toast");
@@ -788,47 +739,6 @@ A.pick = function (i) {
   document.getElementById("checkBtn").disabled = false;
 };
 
-/* Freeze the countdown for the current question (Duolingo-style ice on the ring) */
-A.useFreeze = function () {
-  if (!SES || SES.locked || SES.frozen || S.xp < FREEZE_COST) return;
-  S.xp -= FREEZE_COST; SES.frozen = true; save();
-  if (SES.timer) { clearInterval(SES.timer); SES.timer = null; } // stop the drain
-  const w = document.getElementById("qtWrap");
-  if (w) {
-    w.classList.remove("low", "crit");
-    w.classList.add("frozen");
-    const tr = w.querySelector(".qt-track");
-    if (tr && !tr.querySelector(".qt-ice")) tr.insertAdjacentHTML("beforeend", `<span class="qt-ice"></span>`);
-    const n = document.getElementById("qtNum");
-    if (n) { n.innerHTML = SNOWFLAKE; n.classList.add("qt-num-frozen"); }
-  }
-  sndFreeze();
-  toast(`${SNOWFLAKE} تم تجميد الوقت`, "ice");
-  markHintUsed("freeze");
-};
-
-/* 50/50 — remove two wrong choices for the current question */
-A.useFifty = function () {
-  if (!SES || SES.locked || SES.fiftyUsed || S.xp < FIFTY_COST) return;
-  const q = SES.queue[SES.idx];
-  const n = (q.format === "comparison" ? CMP_CHOICES : q.choices).length;
-  const wrong = [];
-  for (let i = 0; i < n; i++) if (i !== q.answer) wrong.push(i);
-  if (wrong.length < 2) return;
-  const hide = shuffle(wrong).slice(0, 2);
-  S.xp -= FIFTY_COST; SES.fiftyUsed = true; save();
-  document.querySelectorAll(".choice").forEach(b => {
-    if (hide.indexOf(+b.dataset.ci) === -1) return;
-    b.classList.add("eliminated");
-    b.classList.remove("sel");
-    b.disabled = true;
-    if (SES.sel === +b.dataset.ci) { SES.sel = null; const c = document.getElementById("checkBtn"); if (c) c.disabled = true; }
-  });
-  sndFifty();
-  toast(`${SCISSORS} حُذفت إجابتان خاطئتان`, "snip");
-  markHintUsed("fifty");
-};
-
 A.check = function () {
   if (SES.sel === null || SES.locked) return;
   SES.locked = true;
@@ -855,7 +765,10 @@ A.check = function () {
   if (correct) {
     playCorrect();
     SES.done++;
-    SES.xp += SES.retried[q.id] ? 5 : 10;
+    // rank XP / gems. Replaying a finished lesson pays a flat +2/+2 (farmable,
+    // unlimited); a fresh clear pays full first-try (10/5) or retry (5/2).
+    if (SES.replay) { SES.xp += 2; SES.gems += 2; }
+    else { SES.xp += SES.retried[q.id] ? 5 : 10; SES.gems += SES.retried[q.id] ? 2 : 5; }
     fb.className = "feedback good show";
     fb.innerHTML = `<div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> أحسنت!</div>
       <button class="fb-solution-toggle" onclick="A.toggleSol()">لماذا؟ اعرض الحل</button>
@@ -910,12 +823,12 @@ A.closeMethod = function () {
 
 A.debugCurrent = function () { return SES && SES.queue[SES.idx]; }; // dev harness (preview.html) only
 A.debugRankUp = function (i) { showRankUp(i); };                    // dev harness only
-A.debugEarn = function (n) { earnXp(n); save(); render(); };        // dev harness only
+A.debugEarn = function (n) { gainXP(n); gainGems(n); save(); render(); };        // dev harness only
 A.debugMock = function () { return MOCK && MOCK.sections[MOCK.si].items[MOCK.qi].q; }; // dev harness only
 
 A.next = function () {
   if (SES.mode !== "review" && SES.hearts <= 0) { sessionFailed(); return; }
-  SES.idx++; SES.sel = null; SES.locked = false; SES.frozen = false; SES.fiftyUsed = false;
+  SES.idx++; SES.sel = null; SES.locked = false;
   if (SES.done >= SES.total || SES.idx >= SES.queue.length) {
     SES.mode === "review" ? reviewComplete() : lessonComplete();
     return;
@@ -944,22 +857,33 @@ function sessionFailed() {
   const { domKey, lesKey, done, total, tSpent, tAnswered } = SES;
   const avgSecs = tAnswered ? Math.round(tSpent / tAnswered) : 0;
   sndLose();
+  const canRevive = S.xp >= REVIVE_COST;
   $app.innerHTML = `<div class="screen screen-full"><div class="complete fail-scene" id="failComp">
     ${brokenHeartHero()}
     <h1 class="fail-title">نفدت القلوب!</h1>
-    <p class="fail-sub">وصلت إلى ${toAr(done)} من ${toAr(total)} — كنت قريباً!<br>أعد المستوى من البداية وحاول مجدداً</p>
+    <p class="fail-sub">وصلت إلى ${toAr(done)} من ${toAr(total)} — كنت قريباً!<br>${canRevive ? "استعد قلوبك بالجواهر وأكمل من حيث توقفت" : "أعد المستوى وحاول مجدداً"}</p>
     <div class="result-cards fail-cards">
       <div class="rcard rc-green fail-time"><div class="rc-t">متوسط الوقت</div><div class="rc-v">${TIMER_SVG} <span id="cv-avg">${toAr(0)}:${toAr("00")}</span></div></div>
       <div class="rcard rc-blue"><div class="rc-t">التقدم</div><div class="rc-v">${ico("target", 22)} ${toAr(done)}/${toAr(total)}</div></div>
     </div>
     <div class="fail-actions">
-      <button class="btn" onclick="A.retryLevel('${domKey}','${lesKey}')">إعادة المستوى</button>
-      <button class="btn btn-ghost" onclick="A.go('path')">العودة للمسار</button>
+      ${canRevive ? `<button class="btn btn-revive" onclick="A.reviveLesson()">${ico("gem", 20)} استعد قلوبك وأكمل · ${toAr(REVIVE_COST)}</button>` : ""}
+      <button class="btn ${canRevive ? "btn-ghost" : ""}" onclick="A.retryLevel('${domKey}','${lesKey}')">إعادة المستوى</button>
+      <button class="btn btn-ghost" onclick="A.quitFailed()">العودة للمسار</button>
     </div>
   </div></div>`;
   setTimeout(() => { const el = document.getElementById("cv-avg"); if (el) countUpTime(el, avgSecs); }, 2300);
-  SES = null;
+  // NOTE: SES is kept alive so A.reviveLesson() can resume; the retry/quit buttons clear it.
 }
+/* Spend gems to refill all hearts and resume from where you failed. */
+A.reviveLesson = function () {
+  if (!SES || S.xp < REVIVE_COST) return;
+  S.xp -= REVIVE_COST;
+  SES.hearts = LEVEL_HEARTS; SES.sel = null; SES.locked = false;
+  save(); sndGood && sndGood();
+  renderSession();
+};
+A.quitFailed = function () { SES = null; A.go("path"); };
 
 function lessonComplete() {
   stopQTimer();
@@ -967,17 +891,19 @@ function lessonComplete() {
   const acc = ft.length ? Math.round(ft.filter(Boolean).length / ft.length * 100) : 0;
   const stars = acc === 100 ? 3 : acc >= 75 ? 2 : 1;
   const perfect = acc === 100;
-  if (perfect) SES.xp += 20;
+  if (perfect && !SES.replay) { SES.xp += 20; SES.gems += 25; }   // perfect bonus only on a fresh clear
   const p = S.lessons[SES.key] = S.lessons[SES.key] || { stars: 0, plays: 0 };
   p.plays++; p.stars = Math.max(p.stars, stars);
-  earnXp(SES.xp);
+  const rankGain = SES.xp * (SES.xpBoost ? 2 : 1);   // 2× boost doubles RANK XP only (gems unaffected)
+  gainXP(rankGain); gainGems(SES.gems);
   bumpStreak(); save(); sndWin();
-  const xpWon = SES.xp, tTot = SES.tSpent;
+  const xpWon = rankGain, gemsWon = SES.gems, boosted = SES.xpBoost, tTot = SES.tSpent;
   const dayWord = S.streak.count === 1 ? "يوم واحد" : S.streak.count === 2 ? "يومان" : S.streak.count <= 10 ? toAr(S.streak.count) + " أيام" : toAr(S.streak.count) + " يوماً";
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
     ${flameHero(160)}
     <h1 class="win-title">أكملت الدرس!</h1>
     <p class="win-sub">${perfect ? "درس مثالي بلا أي خطأ!" : "أحسنت، واصل التقدم!"} سلسلتك مشتعلة منذ ${dayWord}</p>
+    <div class="win-gems">${ico("gem", 20)} +${toAr(gemsWon)} جوهرة${boosted ? ` · ⚡ الخبرة ×٢` : ""}</div>
     <div class="result-cards">
       <div class="rcard rc-gold"><div class="rc-t">الخبرة</div><div class="rc-v">${ico("lightning", 20)} <span id="cv-xp">٠</span></div></div>
       <div class="rcard rc-blue rc-time"><div class="rc-t">الوقت</div><div class="rc-v">${TIMER_SVG} <span id="cv-time">${toAr(0)}:${toAr("00")}</span></div></div>
@@ -1439,14 +1365,14 @@ A.startReview = function () {
   const qs = list.slice(0, 12).map(x => x.rec.q);
   SES = { mode: "review", domKey: null, lesKey: null, key: null, title: "مراجعة الأخطاء", method: "",
     queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null,
-    locked: false, xp: 0, hearts: 999, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0, frozen: false, fiftyUsed: false };
+    locked: false, xp: 0, gems: 0, replay: false, xpBoost: false, hearts: 999, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
   renderSession();
 };
 
 function reviewComplete() {
   stopQTimer();
   const solved = SES.done, xpWon = SES.xp;
-  earnXp(xpWon); bumpStreak(); save(); sndWin();
+  gainXP(xpWon); bumpStreak(); save(); sndWin();   // mock rewards rank XP (assessment, not a gem farm)
   const remaining = mistakeList().length;
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
     ${flameHero(160)}
@@ -1520,10 +1446,15 @@ function renderStats() {
     <h1>إحصائياتي</h1><div class="sub">تابع تقدمك نحو درجة أعلى</div>
     <div class="tiles">
       <div class="tile">${ico("streak", 26)}<div><div class="t-v">${toAr(S.streak.count)}</div><div class="t-l">أيام متتالية</div></div></div>
-      <div class="tile">${ico("gem", 26)}<div><div class="t-v">${toAr(S.xp)}</div><div class="t-l">نقاط الخبرة</div></div></div>
+      <div class="tile">${ico("gem", 26)}<div><div class="t-v">${toAr(S.xp)}</div><div class="t-l">جواهر</div></div></div>
       <div class="tile">${ico("nav-chest", 26)}<div><div class="t-v">${toAr(doneN)}/${toAr(flat.length)}</div><div class="t-l">دروس مكتملة</div></div></div>
       <div class="tile">${ico("target", 26)}<div><div class="t-v">${(r + w) ? toAr(acc) + "٪" : "—"}</div><div class="t-l">الدقة الكلية</div></div></div>
     </div>
+    ${(() => { const ti = tierIndex(), t = LEAGUE_TIERS[ti]; return `<button class="card rank-card lb-tier-${t.key}" onclick="A.go('league')">
+      <span class="rank-card-badge">${rankImg(t.key, 48)}</span>
+      <div class="rank-card-info"><b>المستوى ${t.name}</b><span>${ico("lightning", 15)} ${toAr(S.totalXp || 0)} نقطة خبرة</span></div>
+      <span class="mc-go">عرض ←</span>
+    </button>`; })()}
     ${(() => { const mc = mistakeList().length; return `<button class="card mistakes-card ${mc ? "" : "clean"}" onclick="A.go('review')">
       <span class="mc-ico">${mc ? "✕" : CHECK_BADGE}</span>
       <div class="mc-txt"><b>مراجعة الأخطاء</b><span>${mc ? toAr(mc) + " " + (mc === 1 ? "سؤال بحاجة لمراجعة" : "أسئلة بحاجة لمراجعة") : "لا أخطاء — أحسنت!"}</span></div>

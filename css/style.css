@@ -672,6 +672,17 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .lesson-pop h3 { color: #fff; font-size: 21px; font-weight: 700; margin: 2px 0 2px; }
 .lesson-pop .lp-sub { color: #fff; font-size: 18px; font-weight: 400; margin-bottom: 14px; }
 .lesson-pop .btn { margin-bottom: 0; }
+/* 2× XP boost toggle inside the lesson-start popup */
+.lp-boost {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; margin-bottom: 10px; padding: 9px 10px;
+  border: 2px solid rgba(255,255,255,.55); border-radius: 12px;
+  background: rgba(255,255,255,.14); color: #fff;
+  font-size: 14px; font-weight: 700; cursor: pointer; transition: .15s;
+}
+.lp-boost .ic { vertical-align: middle; }
+.lp-boost.on { background: #fff; color: var(--pop-c, var(--purple)); border-color: #fff; box-shadow: 0 3px 0 rgba(0,0,0,.12); }
+.lp-boost.cant { opacity: .5; }
 
 /* ============================================================
    Generic pages (exam home, stats, settings) — Figma profile
@@ -746,6 +757,15 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .mistakes-card .mc-txt span { font-size: 13.5px; color: var(--gray); font-weight: 600; }
 .mistakes-card .mc-go { font-size: 14px; font-weight: 800; color: var(--red-dk2); white-space: nowrap; }
 .mistakes-card.clean .mc-go { color: var(--green-dk); }
+/* permanent-rank summary card on the Stats screen */
+.rank-card { display: flex; align-items: center; gap: 13px; width: 100%; text-align: right; cursor: pointer; border: 2px solid var(--line); margin-bottom: 14px; }
+.rank-card:active { transform: translateY(2px); }
+.rank-card .rank-card-badge { flex-shrink: 0; display: inline-flex; }
+.rank-card .rank-card-badge .rank-badge { height: 48px; width: auto; display: block; }
+.rank-card .rank-card-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.rank-card .rank-card-info b { font-size: 16px; }
+.rank-card .rank-card-info span { font-size: 13.5px; color: var(--gray); font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+.rank-card .mc-go { font-size: 14px; font-weight: 800; color: var(--gray); white-space: nowrap; }
 
 .sess-review { color: var(--green-dk) !important; }
 
@@ -1193,6 +1213,19 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
   margin: -12px 0 14px; z-index: 2;
   animation: fadeUp .45s .55s ease backwards;
 }
+/* gems-earned chip on the win screen */
+.win-gems {
+  display: inline-flex; align-items: center; gap: 6px; z-index: 2;
+  margin: -4px 0 16px; padding: 6px 14px; border-radius: 999px;
+  background: var(--gold-bg, #FFF4CC); color: var(--gold-dk);
+  font-weight: 800; font-size: 15px;
+  animation: fadeUp .45s .7s ease backwards;
+}
+.win-gems .ic { vertical-align: middle; }
+/* gold "revive" button on the fail screen */
+.btn-revive { background: var(--gold); box-shadow: 0 5px 0 var(--gold-dk); color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.btn-revive:active { box-shadow: 0 0 0 var(--gold-dk); }
+.btn-revive .ic { vertical-align: middle; }
 /* blue total-time card on the win screen */
 .rc-time .qt-svg { width: 22px; height: 22px; }
 .rc-time .rc-v { font-variant-numeric: tabular-nums; }
