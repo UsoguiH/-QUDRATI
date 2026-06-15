@@ -1322,7 +1322,16 @@ function avatarFor(name, you) {
   const c = you ? "#58CC02" : AVATAR_COLORS[(name.charCodeAt(0) + name.length) % AVATAR_COLORS.length];
   return `<span class="lb-av" style="background:${c}">${esc((name.trim()[0]) || "؟")}</span>`;
 }
-const MEDAL = i => `<span class="lb-medal m${i}">${toAr(i)}</span>`;
+/* Podium medals for the top-3 leaderboard ranks (ribbon + gold/silver/bronze
+   disc). The rank numeral is an inline <text> so it inherits the page's Baloo
+   font and renders Arabic-Indic digits ١٢٣ (an <img>-loaded SVG can't reach the
+   web font). Mirror copies live in assets/icons/ranks/medal-{1,2,3}.svg. */
+const MEDAL_SVGS = [
+  `<svg viewBox="0 0 41 42" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.31177 18.4663H31.876V38.4086C31.876 39.844 30.4566 40.8481 29.1031 40.3701L20.0939 37.1888L11.0847 40.3701C9.73119 40.8481 8.31177 39.844 8.31177 38.4086V18.4663Z" fill="#FFC800"/><circle cx="20.0943" cy="20.0941" r="14.4004" transform="rotate(35.6401 20.0943 20.0941)" fill="#FFD900"/><path d="M11.7032 31.7972C18.1667 36.4314 27.1631 34.9486 31.7973 28.4851L8.39111 11.7031C3.75689 18.1666 5.23977 27.163 11.7032 31.7972Z" fill="#FEEA66"/><text x="20.0943" y="20.6" text-anchor="middle" dominant-baseline="central" font-size="18" fill="#FF9600">١</text><circle cx="20.0943" cy="20.0941" r="12.9004" transform="rotate(35.6401 20.0943 20.0941)" stroke="#FFC800" stroke-width="3"/></svg>`,
+  `<svg viewBox="0 0 41 42" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.31201 18.4663H31.8763V38.4086C31.8763 39.844 30.4569 40.8481 29.1033 40.3701L20.0941 37.1888L11.085 40.3701C9.73144 40.8481 8.31201 39.844 8.31201 38.4086V18.4663Z" fill="#AAC1D4"/><circle cx="20.0943" cy="20.0941" r="14.4004" transform="rotate(35.6401 20.0943 20.0941)" fill="#C2D1DD"/><path d="M11.7032 31.7972C18.1667 36.4314 27.1631 34.9486 31.7973 28.4851L8.39111 11.7031C3.75689 18.1666 5.23977 27.163 11.7032 31.7972Z" fill="#D6E4EF"/><text x="20.0943" y="20.6" text-anchor="middle" dominant-baseline="central" font-size="18" fill="#849FB5">٢</text><circle cx="20.0946" cy="20.0941" r="12.9004" transform="rotate(35.6401 20.0946 20.0941)" stroke="#AAC1D4" stroke-width="3"/></svg>`,
+  `<svg viewBox="0 0 41 42" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.31152 19.4663H31.8758V38.4086C31.8758 39.844 30.4564 40.8481 29.1029 40.3701L20.0937 37.1888L11.0845 40.3701C9.73095 40.8481 8.31152 39.844 8.31152 38.4086V19.4663Z" fill="#D7975D"/><circle cx="20.0941" cy="20.0941" r="14.4004" transform="rotate(35.6401 20.0941 20.0941)" fill="#E5AE7C"/><path d="M11.703 31.7972C18.1664 36.4314 27.1628 34.9486 31.7971 28.4851L8.39087 11.7031C3.75665 18.1666 5.23953 27.163 11.703 31.7972Z" fill="#F7BE8B"/><text x="20.0941" y="20.6" text-anchor="middle" dominant-baseline="central" font-size="18" fill="#CD7900">٣</text><circle cx="20.0941" cy="20.0941" r="12.9004" transform="rotate(35.6401 20.0941 20.0941)" stroke="#D7975D" stroke-width="3"/></svg>`
+];
+const MEDAL = i => `<span class="lb-medal">${MEDAL_SVGS[i - 1]}</span>`;
 /* padlock for the locked tiers — colors stay visible behind a soft scrim */
 const LOCK_SVG = `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7.5 10.5V8a4.5 4.5 0 0 1 9 0v2.5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><rect x="4.7" y="10" width="14.6" height="11" rx="3.4" fill="#fff"/><circle cx="12" cy="14.7" r="1.7" fill="#4B4B4B"/><rect x="11" y="15.4" width="2" height="3.4" rx="1" fill="#4B4B4B"/></svg>`;
 
