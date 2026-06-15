@@ -1489,8 +1489,10 @@ A.closeStreak = function () {
     streakInst.checks.forEach(a => a.destroy());
   } catch (e) {}
   streakInst = { flame: null, num: null, checks: [], onDone: null };
-  if (v) { v.classList.add("out"); setTimeout(() => { v.remove(); done ? done() : render(); }, 320); }
-  else { done ? done() : render(); }
+  // Render the destination (the path) UNDERNEATH the overlay first, then fade the
+  // overlay out — so it reveals the path, never the lesson-complete screen behind it.
+  (done || render)();
+  if (v) { v.classList.add("out"); setTimeout(() => v.remove(), 320); }
 };
 A.debugStreak = function (c) { showStreakCelebration(c || S.streak.count || 7, () => A.go("path")); };   // dev harness only
 
