@@ -669,48 +669,49 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
   transform: translateX(50%) rotate(45deg); border-radius: 4px;
 }
 @keyframes popIn { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; transform: none;} }
-.lesson-pop h3 { color: #fff; font-size: 21px; font-weight: 700; margin: 2px 0 2px; padding-left: 46px; }
-.lesson-pop .lp-sub { color: #fff; font-size: 18px; font-weight: 400; margin-bottom: 14px; padding-left: 46px; }
+.lesson-pop h3 { color: #fff; font-size: 21px; font-weight: 700; margin: 2px 0 2px; padding-left: 68px; }
+.lesson-pop .lp-sub { color: #fff; font-size: 18px; font-weight: 400; margin-bottom: 14px; padding-left: 68px; }
 .lesson-pop .btn { margin-bottom: 0; }
-/* 2× XP boost — small circular Duolingo-style button, top-left of the popup */
+/* 2× XP boost — small circular Duolingo-style button, top-left of the popup.
+   Starts YELLOW; tapping flips it to GREEN (activated) with a glow + pulse. */
 .lp-boost {
-  position: absolute; top: 14px; left: 14px; z-index: 3;
+  position: absolute; top: 13px; left: 13px; z-index: 3;
   display: flex; flex-direction: column; align-items: center; gap: 3px;
   background: none; border: none; padding: 0; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 .lpb-circle {
-  position: relative; width: 36px; height: 36px; border-radius: 50%;
+  position: relative; width: 38px; height: 38px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  background: #fff;
-  box-shadow: 0 3px 0 rgba(0,0,0,.14);
-  transition: transform .14s, box-shadow .14s, background .14s;
+  background: linear-gradient(160deg, #FFD94A, #FFC300);   /* yellow (default) */
+  box-shadow: 0 3px 0 var(--gold-dk);
+  transition: transform .14s, box-shadow .18s, background .2s;
 }
-.lpb-bolt { display: block; transition: filter .14s; }
+.lpb-bolt { display: block; filter: brightness(0) invert(1); }   /* white bolt on the colored disc */
 .lpb-x2 {
   position: absolute; bottom: -4px; left: -4px;
-  background: var(--gold); color: #fff;
+  background: #fff; color: var(--gold-dk);
   font-size: 9px; font-weight: 800; line-height: 1;
-  padding: 1.5px 3.5px; border-radius: 7px; box-shadow: 0 1px 2px rgba(0,0,0,.22);
+  padding: 1.5px 4px; border-radius: 7px; box-shadow: 0 1px 2px rgba(0,0,0,.22);
 }
+.lpb-label { font-size: 10px; font-weight: 800; color: #fff; white-space: nowrap; }
 .lpb-cost {
   display: inline-flex; align-items: center; gap: 2px;
-  font-size: 10.5px; font-weight: 800; color: #fff;
+  font-size: 10px; font-weight: 800; color: #fff; opacity: .95;
 }
 .lpb-cost .ic { vertical-align: middle; }
-.lp-boost:active .lpb-circle { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.14); }
+.lp-boost:active .lpb-circle { transform: translateY(2px); box-shadow: 0 1px 0 var(--gold-dk); }
 .lp-boost.cant { opacity: .45; }
-/* activated — Duolingo style: gold fill, white bolt, bounce + steady glow + pulsing ring */
+/* activated — flips GREEN with white ring, glow, bounce + a repeating pulse ring */
 .lp-boost.on .lpb-circle {
-  background: linear-gradient(160deg, #FFD94A, #FFC300);
-  box-shadow: 0 0 0 3px rgba(255,255,255,.6), 0 0 14px 2px rgba(255,210,40,.85), 0 3px 0 var(--gold-dk);
+  background: linear-gradient(160deg, #7BE04A, #58CC02);
+  box-shadow: 0 0 0 3px rgba(255,255,255,.7), 0 0 14px 2px rgba(88,204,2,.7), 0 3px 0 var(--green-dk);
   animation: boostPop .5s cubic-bezier(.34,1.56,.5,1);
 }
-.lp-boost.on .lpb-bolt { filter: brightness(0) invert(1); }   /* gold bolt -> white */
-.lp-boost.on .lpb-x2 { background: #fff; color: var(--gold-dk); }
+.lp-boost.on .lpb-x2 { color: var(--green-dk); }
 .lp-boost.on .lpb-circle::after {
   content: ''; position: absolute; inset: -2px; border-radius: 50%;
-  border: 2px solid rgba(255,200,0,.9); pointer-events: none;
+  border: 2px solid rgba(120,224,74,.95); pointer-events: none;
   animation: boostRing 1.2s ease-out infinite;
 }
 @keyframes boostPop { 0% { transform: scale(1); } 40% { transform: scale(1.25) rotate(-8deg); } 70% { transform: scale(.93); } 100% { transform: scale(1) rotate(0); } }

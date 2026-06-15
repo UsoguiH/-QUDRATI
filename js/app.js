@@ -533,6 +533,7 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   veil.innerHTML = `<div class="lesson-pop" style="--pop-c:${u.c};top:${Math.min(r.bottom + 14, window.innerHeight - 190)}px">
     <button class="lp-boost ${canBoost ? "" : "cant"}" id="lpBoost" title="ضاعف الخبرة ×٢" aria-label="ضاعف الخبرة ×٢">
       <span class="lpb-circle"><img class="ic lpb-bolt" src="assets/icons/lightning.svg" width="15" height="15" alt=""><span class="lpb-x2">×٢</span></span>
+      <span class="lpb-label">ضاعف الخبرة</span>
       <span class="lpb-cost">${ico("gem", 11)} ${toAr(BOOST_COST)}</span>
     </button>
     <h3>${l.title}</h3>
