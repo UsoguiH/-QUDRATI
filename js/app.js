@@ -564,6 +564,7 @@ A.startLesson = function (domKey, lesKey, boost) {
   const key = domKey + "." + lesKey;
   const qs = pickLessonQuestions(l, key);
   if (!qs.length) { showModal("⭐", "لا توجد أسئلة", "لا توجد أسئلة متاحة لهذا الدرس في مسارك الحالي.", "حسناً"); return; }
+  warmStreak();                                          // preload the fire-streak assets during the lesson
   const prev = S.lessons[key];
   const replay = !!(prev && prev.stars > 0);            // already cleared → farm mode (+2/+2)
   let xpBoost = false;
@@ -1383,6 +1384,22 @@ function loadStreakLibs() {
     add("assets/streak/rive.js"); add("assets/streak/lottie.min.js");
   });
   return streakLibsP;
+}
+/* Pre-warm the streak runtimes + assets in the background (called when a lesson
+   starts) so the celebration appears instantly at lesson end instead of waiting
+   ~2s for the Rive WASM to fetch + compile. Idempotent and non-blocking. */
+let streakWarmed = false;
+function warmStreak() {
+  if (streakWarmed) return;
+  streakWarmed = true;
+  loadStreakLibs().then(() => {
+    try {
+      if (rive.RuntimeLoader.awaitInstance) rive.RuntimeLoader.awaitInstance();        // compile WASM ahead of time
+      else if (rive.RuntimeLoader.getInstance) rive.RuntimeLoader.getInstance(() => {});
+    } catch (e) {}
+  }).catch(() => { streakWarmed = false; });
+  ["assets/streak/rive.wasm", "assets/streak/big.riv", "assets/streak/flame.riv", "assets/streak/daycheck.json"]
+    .forEach(u => { try { fetch(u).catch(() => {}); } catch (e) {} });   // warm the HTTP cache (wasm is the big one)
 }
 function setOdo(g, prefix, value) {            // drive the odometer digits (pos1 = rightmost)
   const s = String(Math.max(0, value)), d = s.length;
