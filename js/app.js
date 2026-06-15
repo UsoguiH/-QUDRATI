@@ -520,8 +520,6 @@ function pickLessonQuestions(lesson, key) {
 
 A.go = go;
 
-const BOLT_SVG = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>`;
-
 /* Lesson-start popup (Figma "Select Lesson" purple sheet) */
 A.nodeTap = function (ev, domKey, lesKey, li) {
   const d = window.QBANK[domKey], l = d.lessons.find(x => x.key === lesKey);
@@ -534,8 +532,8 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   const canBoost = S.xp >= BOOST_COST;
   veil.innerHTML = `<div class="lesson-pop" style="--pop-c:${u.c};top:${Math.min(r.bottom + 14, window.innerHeight - 190)}px">
     <button class="lp-boost ${canBoost ? "" : "cant"}" id="lpBoost" title="ضاعف الخبرة ×٢" aria-label="ضاعف الخبرة ×٢">
-      <span class="lpb-circle">${BOLT_SVG}<span class="lpb-x2">×٢</span></span>
-      <span class="lpb-cost">${ico("gem", 12)} ${toAr(BOOST_COST)}</span>
+      <span class="lpb-circle"><img class="ic lpb-bolt" src="assets/icons/lightning.svg" width="15" height="15" alt=""><span class="lpb-x2">×٢</span></span>
+      <span class="lpb-cost">${ico("gem", 11)} ${toAr(BOOST_COST)}</span>
     </button>
     <h3>${l.title}</h3>
     <div class="lp-sub">الدرس ${toAr(li + 1)} من ${toAr(d.lessons.length)}</div>
@@ -549,7 +547,7 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
     boost = !boost;
     bb.classList.toggle("on", boost);
     const cost = bb.querySelector(".lpb-cost");
-    if (cost) cost.innerHTML = boost ? `مفعّل ✓` : `${ico("gem", 12)} ${toAr(BOOST_COST)}`;
+    if (cost) cost.innerHTML = boost ? `مفعّل ✓` : `${ico("gem", 11)} ${toAr(BOOST_COST)}`;
     if (boost) sndGood();
   };
   veil.querySelector(".btn-white").onclick = () => { veil.remove(); A.startLesson(domKey, lesKey, boost); };

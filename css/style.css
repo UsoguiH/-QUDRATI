@@ -669,45 +669,52 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
   transform: translateX(50%) rotate(45deg); border-radius: 4px;
 }
 @keyframes popIn { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; transform: none;} }
-.lesson-pop h3 { color: #fff; font-size: 21px; font-weight: 700; margin: 2px 0 2px; padding-left: 60px; }
-.lesson-pop .lp-sub { color: #fff; font-size: 18px; font-weight: 400; margin-bottom: 14px; padding-left: 60px; }
+.lesson-pop h3 { color: #fff; font-size: 21px; font-weight: 700; margin: 2px 0 2px; padding-left: 46px; }
+.lesson-pop .lp-sub { color: #fff; font-size: 18px; font-weight: 400; margin-bottom: 14px; padding-left: 46px; }
 .lesson-pop .btn { margin-bottom: 0; }
-/* 2× XP boost — circular Duolingo-style button, top-left of the popup */
+/* 2× XP boost — small circular Duolingo-style button, top-left of the popup */
 .lp-boost {
   position: absolute; top: 14px; left: 14px; z-index: 3;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
   background: none; border: none; padding: 0; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 .lpb-circle {
-  position: relative; width: 48px; height: 48px; border-radius: 50%;
+  position: relative; width: 36px; height: 36px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(160deg, #FFD94A, #FFC800); color: #fff;
-  box-shadow: 0 4px 0 var(--gold-dk), 0 5px 8px rgba(230,160,0,.35);
-  transition: transform .14s, box-shadow .14s, background .14s, filter .14s;
+  background: #fff;
+  box-shadow: 0 3px 0 rgba(0,0,0,.14);
+  transition: transform .14s, box-shadow .14s, background .14s;
 }
-.lpb-circle svg { width: 26px; height: 26px; filter: drop-shadow(0 1px 1px rgba(180,120,0,.45)); }
+.lpb-bolt { display: block; transition: filter .14s; }
 .lpb-x2 {
-  position: absolute; bottom: -3px; left: -3px;
-  background: #fff; color: var(--gold-dk);
-  font-size: 10px; font-weight: 800; line-height: 1;
-  padding: 2px 4px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,.18);
+  position: absolute; bottom: -4px; left: -4px;
+  background: var(--gold); color: #fff;
+  font-size: 9px; font-weight: 800; line-height: 1;
+  padding: 1.5px 3.5px; border-radius: 7px; box-shadow: 0 1px 2px rgba(0,0,0,.22);
 }
 .lpb-cost {
-  display: inline-flex; align-items: center; gap: 3px;
-  font-size: 11.5px; font-weight: 800; color: #fff;
+  display: inline-flex; align-items: center; gap: 2px;
+  font-size: 10.5px; font-weight: 800; color: #fff;
 }
 .lpb-cost .ic { vertical-align: middle; }
-.lp-boost:active .lpb-circle { transform: translateY(3px); box-shadow: 0 1px 0 var(--gold-dk), 0 2px 5px rgba(230,160,0,.3); }
-/* activated state — brighter, glowing ring, satisfying pop */
-.lp-boost.on .lpb-circle {
-  background: linear-gradient(160deg, #FFE773, #FFCE1A);
-  box-shadow: 0 0 0 4px rgba(255,255,255,.55), 0 0 16px 2px rgba(255,210,40,.9), 0 4px 0 var(--gold-dk);
-  animation: boostPop .42s cubic-bezier(.3,1.5,.5,1);
-}
-.lp-boost.on .lpb-cost { color: #fff; }
+.lp-boost:active .lpb-circle { transform: translateY(2px); box-shadow: 0 1px 0 rgba(0,0,0,.14); }
 .lp-boost.cant { opacity: .45; }
-@keyframes boostPop { 0% { transform: scale(1); } 45% { transform: scale(1.2) rotate(-6deg); } 100% { transform: scale(1) rotate(0); } }
+/* activated — Duolingo style: gold fill, white bolt, bounce + steady glow + pulsing ring */
+.lp-boost.on .lpb-circle {
+  background: linear-gradient(160deg, #FFD94A, #FFC300);
+  box-shadow: 0 0 0 3px rgba(255,255,255,.6), 0 0 14px 2px rgba(255,210,40,.85), 0 3px 0 var(--gold-dk);
+  animation: boostPop .5s cubic-bezier(.34,1.56,.5,1);
+}
+.lp-boost.on .lpb-bolt { filter: brightness(0) invert(1); }   /* gold bolt -> white */
+.lp-boost.on .lpb-x2 { background: #fff; color: var(--gold-dk); }
+.lp-boost.on .lpb-circle::after {
+  content: ''; position: absolute; inset: -2px; border-radius: 50%;
+  border: 2px solid rgba(255,200,0,.9); pointer-events: none;
+  animation: boostRing 1.2s ease-out infinite;
+}
+@keyframes boostPop { 0% { transform: scale(1); } 40% { transform: scale(1.25) rotate(-8deg); } 70% { transform: scale(.93); } 100% { transform: scale(1) rotate(0); } }
+@keyframes boostRing { 0% { transform: scale(1); opacity: .85; } 100% { transform: scale(1.75); opacity: 0; } }
 
 /* ============================================================
    Generic pages (exam home, stats, settings) — Figma profile
