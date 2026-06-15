@@ -618,7 +618,7 @@ function renderSession() {
           : `<span class="sess-hearts" id="sesHearts">${ico("heart", 22)} ${toAr(SES.hearts)}</span>`}
       </div>
       ${timerBar()}
-      <div class="q-area">${questionBody(q, SES.sel, false, null, SES.method)}</div>
+      <div class="q-area">${questionBody(q, SES.sel, false, null, q.method || SES.method)}</div>
       <div class="action-bar has-fab"><button class="btn" id="checkBtn" onclick="A.check()" ${SES.sel === null ? "disabled" : ""}>تحقق</button>${hintFab()}</div>
       <div class="feedback" id="fb"></div>
     </div>`;
@@ -878,18 +878,23 @@ A.check = function () {
 
 A.toggleSol = function () { const s = document.getElementById("sol"); s.style.display = s.style.display === "none" ? "block" : "none"; };
 
-/* Method sheet (كيف أحلّها؟): teacher explains the approach for this
-   question TYPE — no answer. Slides up from the bottom, Duolingo-style. */
+/* Method sheet (كيف أحلّها؟): teacher walks through how to approach THIS
+   specific question — its own numbers, its own steps — but stops short of the
+   final answer so the student still solves it. Falls back to the lesson-level
+   method only if a question has no per-question hint. Slides up Duolingo-style. */
 A.showMethod = function () {
-  if (!SES || !SES.method) return;
+  if (!SES) return;
+  const cur = SES.queue && SES.queue[SES.idx];
+  const method = (cur && cur.method) || SES.method;
+  if (!method) return;
   const old = document.querySelector(".method-veil"); if (old) old.remove();
   const veil = document.createElement("div");
   veil.className = "method-veil";
   veil.innerHTML = `<div class="method-sheet">
     <div class="ms-grip"></div>
-    <div class="ms-head"><span class="ms-bulb">${BULB_SVG}</span><h3>طريقة الحل</h3></div>
-    <div class="ms-sub">هذي الطريقة العامة لهذا النوع — جرّب تطبّقها بنفسك 👇</div>
-    <div class="ms-body">${formatExplain(SES.method)}</div>
+    <div class="ms-head"><span class="ms-bulb">${BULB_SVG}</span><h3>كيف أحلّها؟</h3></div>
+    <div class="ms-sub">خطوات حلّ هذا السؤال بالذات — طبّقها بنفسك ووصل للإجابة 👇</div>
+    <div class="ms-body">${formatExplain(method)}</div>
     <button class="btn ms-close" onclick="A.closeMethod()">فهمت، بحاول</button>
   </div>`;
   veil.onclick = e => { if (e.target === veil) A.closeMethod(); };

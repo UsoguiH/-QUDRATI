@@ -16,6 +16,10 @@ design-ref/
 # Internal strategy docs (market research — not for the public repo)
 docs/
 
+# Answer-key audit pipeline: keep the scripts + report, ignore regenerable intermediates
+tools/methods/in/
+tools/methods/out/
+
 # OS
 Thumbs.db
 .DS_Store
