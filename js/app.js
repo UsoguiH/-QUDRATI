@@ -39,7 +39,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {} };
+const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {}, practice: null };
 const LEAGUE_NAMES = ["عبدالله", "محمد", "نورة", "سارة", "فهد", "ريم", "خالد", "لمى", "تركي", "جواهر", "عمر", "هند", "سلمان", "رنا", "بدر", "ليان", "ناصر", "شهد", "يزيد", "دانة", "مازن", "أصيل", "وليد", "غادة"];
 /* Permanent rank tiers (badge art in assets/icons/ranks/). A user's tier is
    the highest threshold their LIFETIME total XP (S.totalXp) has crossed —
@@ -328,9 +328,11 @@ function renderSidebar() {
   if (!el) return;
   const NAV = [
     { k: "path",     icon: "nav-home",   label: "الدروس",          short: "الدروس" },
+    { k: "practice", icon: "dumbbell",   label: "تدريب حر",        short: "تدريب" },
     { k: "league",   icon: "nav-league", label: "المجلس",          short: "المجلس" },
     { k: "mock",     icon: "nav-exam",   label: "اختبار تجريبي",   short: "تجريبي" },
     { k: "stats",    icon: "nav-stats",  label: "إحصائياتي",       short: "إحصائيات" },
+    { k: "guide",    icon: "book",       label: "المرجع",          short: "المرجع" },
     { k: "review",   icon: "target",     label: "مراجعة الأخطاء",  short: "الأخطاء" },
     { k: "settings", icon: "nav-more",   label: "الإعدادات",       short: "إعدادات" },
   ];
@@ -409,7 +411,7 @@ function renderAside() {
 }
 
 function render() {
-  ({ path: renderPath, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings, review: renderReview })[view]();
+  ({ path: renderPath, practice: renderPractice, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings, review: renderReview, guide: renderGuide })[view]();
   flushRankUp();
   renderSidebar();
   renderAside();
@@ -431,10 +433,11 @@ A.chestTap = function () {
   if (S.daily.n >= DAILY_GOAL) { A.openChest(); return; }
   toast(`باقي ${toAr(DAILY_GOAL - S.daily.n)} أسئلة لفتح صندوق اليوم 🎁`);
 };
+const NAV_LABEL = { path: "الدروس", practice: "تدريب حر", mock: "اختبار تجريبي", league: "المجلس", stats: "إحصائياتي", review: "مراجعة الأخطاء", guide: "المرجع", settings: "الإعدادات" };
 function bottomnav(active) {
-  const items = [["path", "nav-home"], ["league", "nav-league"], ["mock", "nav-exam"], ["stats", "nav-stats"], ["settings", "nav-more"]];
+  const items = [["path", "nav-home"], ["practice", "dumbbell"], ["mock", "nav-exam"], ["league", "nav-league"], ["stats", "nav-stats"], ["settings", "nav-more"]];
   return `<nav class="bottomnav">` + items.map(([k, i]) =>
-    `<button class="navbtn ${active === k ? "active" : ""}" onclick="A.go('${k}')" aria-label="${k}">${ico(i, 30)}</button>`).join("") + `</nav>`;
+    `<button class="navbtn ${active === k ? "active" : ""}" onclick="A.go('${k}')" aria-label="${NAV_LABEL[k]}"${active === k ? ' aria-current="page"' : ""}>${ico(i, 30)}</button>`).join("") + `</nav>`;
 }
 
 /* ---------------- exam countdown card (top of path) ---------------- */
@@ -565,7 +568,7 @@ function renderPath() {
     const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
     html += `<div class="unit-banner u-${d.color === "yellow" ? "gold" : d.color}">
       <div class="u-txt"><div class="u-kicker">القسم ${toAr(1)}، الوحدة ${toAr(di + 1)}</div><h2>${d.title}</h2></div>
-      <div class="u-side"><span class="u-divider"></span>${ico("guide", 24)}</div>
+      <button class="u-side" onclick="A.guide('${d.key}')" title="قوانين ${d.title}" aria-label="قوانين ${d.title}"><span class="u-divider"></span>${ico("guide", 24)}</button>
     </div><div class="path">`;
     d.lessons.forEach((l, li) => {
       const key = d.key + "." + l.key, p = lessonProg(key);
@@ -632,6 +635,7 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
     <h3>${l.title}</h3>
     <div class="lp-sub">الدرس ${toAr(li + 1)} من ${toAr(d.lessons.length)}</div>
     <button class="btn btn-white" style="color:${u.c};box-shadow:0 5px 0 ${u.pale}">ابدأ</button>
+    ${guideFor(domKey, lesKey) ? `<button class="lp-rules" onclick="A.guide('${domKey}');A.guideLesson('${lesKey}')">${BULB_SVG} اقرأ قواعد الدرس أولاً</button>` : ""}
   </div>`;
   veil.onclick = e => { if (e.target === veil) veil.remove(); };
   let boost = false;
@@ -658,7 +662,7 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   const nr = btn.getBoundingClientRect();
   const pcr = (path || btn.parentElement).getBoundingClientRect();
   const dx = (nr.left + nr.width / 2) - (pcr.left + pcr.width / 2);
-  pop.style.top = Math.max(8, Math.min(nr.bottom + 14, window.innerHeight - 210)) + "px";
+  pop.style.top = Math.max(8, Math.min(nr.bottom + 14, window.innerHeight - 250)) + "px";
   pop.style.setProperty("--arrow-x",
     "clamp(20px, calc(50% - " + dx.toFixed(1) + "px), calc(100% - 20px))");
 };
@@ -744,9 +748,9 @@ function renderSession() {
       <div class="session-top">
         <button class="x-btn" onclick="A.quitSession()">${X_SVG}</button>
         <div class="progress"><i style="width:${pct}%"></i></div>
-        ${SES.mode === "review"
-          ? `<span class="sess-hearts sess-review">${ico("target", 22)} ${toAr(SES.done)}/${toAr(SES.total)}</span>`
-          : `<span class="sess-hearts" id="sesHearts">${ico("heart", 22)} ${toAr(SES.hearts)}</span>`}
+        ${SES.mode === "lesson"
+          ? `<span class="sess-hearts" id="sesHearts">${ico("heart", 22)} ${toAr(SES.hearts)}</span>`
+          : `<span class="sess-hearts sess-review">${ico(SES.mode === "practice" ? "dumbbell" : "target", 22)} ${toAr(SES.done)}/${toAr(SES.total)}</span>`}
       </div>
       ${timerBar()}
       <div class="q-area">${questionBody(q, SES.sel, false, null, q.method || SES.method)}</div>
@@ -759,6 +763,7 @@ function renderSession() {
 /* 90-second countdown — horizontal capsule whose colored fill drains away */
 function startQTimer() {
   clearInterval(SES.timer);
+  if (SES.timed === false) return;     // untimed practice
   SES.left = Q_SECS;
   // kick the fill so it starts gliding down over the first second
   requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -785,6 +790,7 @@ function stopQTimer() {
 const CLOCK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.8"/></svg>`;
 function timerBar() {
+  if (SES && SES.timed === false) return "";
   return `<div class="qtimer" id="qtWrap" title="الوقت المتبقي">
     <span class="qt-ico">${CLOCK_SVG}</span>
     <div class="qt-track"><i class="qt-fill" id="qtFill"></i></div>
@@ -805,6 +811,7 @@ function toast(msg, kind) {
 }
 
 function loseHeart() {
+  if (SES.mode !== "lesson") return;   // practice and review are no-fail
   SES.hearts = Math.max(0, SES.hearts - 1);
   const el = document.getElementById("sesHearts");
   if (el) {
@@ -881,7 +888,8 @@ A.check = function () {
     SES.done++;
     // rank XP / gems. Replaying a finished lesson pays a flat +2/+2 (farmable,
     // unlimited); a fresh clear pays full first-try (10/5) or retry (5/2).
-    if (SES.replay) { SES.xp += 2; SES.gems += 2; }
+    if (SES.mode === "practice") { SES.xp += SES.retried[q.id] ? 1 : PRACTICE_XP; SES.gems += SES.retried[q.id] ? 0 : PRACTICE_GEMS; }
+    else if (SES.replay) { SES.xp += 2; SES.gems += 2; }
     else { SES.xp += SES.retried[q.id] ? 5 : 10; SES.gems += SES.retried[q.id] ? 2 : 5; }
     fb.className = "feedback good show";
     fb.innerHTML = `<div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> أحسنت!</div>
@@ -923,6 +931,7 @@ A.showMethod = function () {
     <div class="ms-sub">خطوات حلّ هذا السؤال بالذات — طبّقها بنفسك ووصل للإجابة 👇</div>
     <div class="ms-body">${formatExplain(method)}</div>
     <button class="btn ms-close" onclick="A.closeMethod()">فهمت، بحاول</button>
+    ${SES && SES.domKey && guideFor(SES.domKey, SES.lesKey) ? `<button class="ms-rules" onclick="A.guideFromSession()">اعرض كل قواعد الدرس ←</button>` : ""}
   </div>`;
   veil.onclick = e => { if (e.target === veil) A.closeMethod(); };
   document.body.appendChild(veil);
@@ -941,17 +950,19 @@ A.debugEarn = function (n) { gainXP(n); gainGems(n); save(); render(); };       
 A.debugMock = function () { return MOCK && MOCK.sections[MOCK.si].items[MOCK.qi].q; }; // dev harness only
 
 A.next = function () {
-  if (SES.mode !== "review" && SES.hearts <= 0) { sessionFailed(); return; }
+  if (SES.mode === "lesson" && SES.hearts <= 0) { sessionFailed(); return; }
   SES.idx++; SES.sel = null; SES.locked = false;
   if (SES.done >= SES.total || SES.idx >= SES.queue.length) {
-    SES.mode === "review" ? reviewComplete() : lessonComplete();
+    ({ review: reviewComplete, practice: practiceComplete, lesson: lessonComplete })[SES.mode]();
     return;
   }
   renderSession();
 };
 
 A.quitSession = function () {
-  if (confirm("هل تريد إنهاء الجلسة؟ سيضيع تقدمك في هذا الدرس.")) { stopQTimer(); SES = null; go("path"); }
+  const back = (SES && SES.back) || "path";
+  const warn = SES && SES.mode === "lesson" ? "هل تريد إنهاء الدرس؟ سيضيع تقدمك فيه." : "هل تريد إنهاء الجلسة؟";
+  if (confirm(warn)) { stopQTimer(); SES = null; go(back); }
 };
 
 A.retryLevel = function (domKey, lesKey) { A.startLesson(domKey, lesKey); };
@@ -2056,6 +2067,284 @@ function afterLogin() {
     render();
   }
 }
+
+/* ============================================================
+   تدريب حر (free practice) — opens the whole question bank.
+   The path serves only 8 questions per lesson, so most of the
+   bank is unreachable from it; this screen drills any unit,
+   lesson or difficulty on demand, with no hearts and no losing.
+   ============================================================ */
+const PRACTICE_COUNTS = [10, 15, 20];
+const PRACTICE_XP = 3;      // rank XP per first-try correct answer
+const PRACTICE_GEMS = 1;    // gems per first-try correct answer
+
+function allQuestions() {
+  const out = [];
+  domains().forEach(d => d.lessons.forEach(l =>
+    trackFilter(l.questions).forEach(q => out.push({ q, d, l, key: d.key + "." + l.key }))));
+  return out;
+}
+function qStat(id) { return S.qstats[id] || { r: 0, w: 0 }; }
+function seenCount() { return allQuestions().filter(x => { const s = qStat(x.q.id); return s.r + s.w > 0; }).length; }
+
+function practiceCfg() {
+  S.practice = Object.assign({ unit: "all", lesson: "all", diff: 0, count: 10, timed: true }, S.practice || {});
+  return S.practice;
+}
+/* weakest first: most net-wrong, then most-recently missed */
+function weakPool() {
+  const m = S.mistakes || {};
+  return allQuestions().filter(x => qStat(x.q.id).w > 0).sort((a, b) => {
+    const sa = qStat(a.q.id), sb = qStat(b.q.id);
+    return (sb.w - sb.r) - (sa.w - sa.r) || (m[b.q.id] || 0) - (m[a.q.id] || 0);
+  });
+}
+function freshPool() { return allQuestions().filter(x => { const s = qStat(x.q.id); return s.r + s.w === 0; }); }
+
+function customPool() {
+  const c = practiceCfg();
+  return allQuestions().filter(x =>
+    (c.unit === "all" || x.d.key === c.unit) &&
+    (c.lesson === "all" || x.l.key === c.lesson) &&
+    (!c.diff || x.q.difficulty === c.diff));
+}
+
+const chip = (on, label, onclick) =>
+  `<button class="pchip${on ? " on" : ""}" onclick="${onclick}">${label}</button>`;
+
+function renderPractice() {
+  const c = practiceCfg();
+  const total = allQuestions().length, seen = seenCount();
+  const pct = total ? Math.round(seen / total * 100) : 0;
+  const weakN = weakPool().length, freshN = freshPool().length, customN = customPool().length;
+  const unitList = domains();
+  const curUnit = c.unit === "all" ? null : unitList.find(d => d.key === c.unit);
+  const lessons = curUnit ? curUnit.lessons : [];
+  if (c.lesson !== "all" && !lessons.some(l => l.key === c.lesson)) c.lesson = "all";
+
+  $app.innerHTML = statbar() + `<div class="screen"><div class="page">
+    <h1>تدريب حر</h1>
+    <div class="sub">تمرّن على ما تشاء — بلا قلوب، وبلا خسارة</div>
+
+    <div class="card pk-card">
+      <div class="pk-bar"><div class="duo-bar"><i style="width:${pct}%;--bar-c:var(--green);--bar-shine:#89E219"></i></div></div>
+      <div class="pk-legend"><b>${toAr(seen)}</b> من <b>${toAr(total)}</b> سؤالاً جرّبتها · ${toAr(pct)}٪ من البنك</div>
+    </div>
+
+    <button class="card pmode pm-red" onclick="A.startPractice('weak')" ${weakN ? "" : "disabled"}>
+      <span class="pm-ico">${ico("target", 28)}</span>
+      <span class="pm-txt"><b>نقاط ضعفي</b><span>${weakN ? `${toAr(Math.min(weakN, c.count))} من الأسئلة التي تخطئ فيها أكثر` : "لا أخطاء بعد — تدرّب أولاً"}</span></span>
+      <span class="pm-go">←</span>
+    </button>
+
+    <button class="card pmode pm-blue" onclick="A.startPractice('fresh')" ${freshN ? "" : "disabled"}>
+      <span class="pm-ico">${ico("star", 28)}</span>
+      <span class="pm-txt"><b>أسئلة جديدة عليك</b><span>${freshN ? `${toAr(freshN)} سؤالاً لم تجرّبه من قبل` : "جرّبت كل الأسئلة — أحسنت!"}</span></span>
+      <span class="pm-go">←</span>
+    </button>
+
+    <div class="card pcustom">
+      <h3>${ico("dumbbell", 22)} تدريب مخصص</h3>
+
+      <div class="pf"><div class="pf-l">الوحدة</div><div class="pf-chips">
+        ${chip(c.unit === "all", "الكل", "A.pset('unit','all')")}
+        ${unitList.map(d => chip(c.unit === d.key, d.title, `A.pset('unit','${d.key}')`)).join("")}
+      </div></div>
+
+      ${curUnit ? `<div class="pf"><div class="pf-l">الدرس</div>
+        <select class="pselect" onchange="A.pset('lesson', this.value)">
+          <option value="all"${c.lesson === "all" ? " selected" : ""}>كل دروس الوحدة</option>
+          ${lessons.map(l => `<option value="${l.key}"${c.lesson === l.key ? " selected" : ""}>${l.title}</option>`).join("")}
+        </select></div>` : ""}
+
+      <div class="pf"><div class="pf-l">الصعوبة</div><div class="pf-chips">
+        ${chip(c.diff === 0, "الكل", "A.pset('diff',0)")}
+        ${chip(c.diff === 1, "سهل", "A.pset('diff',1)")}
+        ${chip(c.diff === 2, "متوسط", "A.pset('diff',2)")}
+        ${chip(c.diff === 3, "صعب", "A.pset('diff',3)")}
+      </div></div>
+
+      <div class="pf"><div class="pf-l">عدد الأسئلة</div><div class="pf-chips">
+        ${PRACTICE_COUNTS.map(n => chip(c.count === n, toAr(n), `A.pset('count',${n})`)).join("")}
+      </div></div>
+
+      <div class="row pf-row">
+        <div><div class="r-label">المؤقّت</div><div class="r-sub">${toAr(Q_SECS)} ثانية لكل سؤال — أطفئه للتدريب بلا ضغط</div></div>
+        <button class="toggle ${c.timed ? "on" : ""}" role="switch" aria-checked="${c.timed}" aria-label="المؤقّت" onclick="A.pset('timed',${!c.timed})"></button>
+      </div>
+
+      <div class="pf-count">${customN ? `${toAr(customN)} سؤالاً متاحاً بهذا الاختيار` : "لا توجد أسئلة بهذا الاختيار"}</div>
+      <button class="btn" onclick="A.startPractice('custom')" ${customN ? "" : "disabled"}>ابدأ التدريب</button>
+    </div>
+  </div></div>` + bottomnav("practice");
+}
+
+A.pset = function (k, v) {
+  const c = practiceCfg();
+  c[k] = v;
+  if (k === "unit") c.lesson = "all";
+  save();
+  renderPractice();
+};
+
+A.startPractice = function (kind) {
+  const c = practiceCfg();
+  let pool, title;
+  if (kind === "weak") { pool = weakPool(); title = "نقاط ضعفي"; }
+  else if (kind === "fresh") { pool = shuffle(freshPool()); title = "أسئلة جديدة"; }
+  else {
+    pool = shuffle(customPool());
+    const u = c.unit === "all" ? null : domains().find(d => d.key === c.unit);
+    const l = u && c.lesson !== "all" ? u.lessons.find(x => x.key === c.lesson) : null;
+    title = l ? l.title : u ? u.title : "تدريب عام";
+  }
+  const qs = pool.slice(0, c.count).map(x => x.q);
+  if (!qs.length) { toast("لا توجد أسئلة مطابقة — غيّر الاختيار"); return; }
+  if (kind !== "weak") qs.sort((a, b) => a.difficulty - b.difficulty);
+  SES = {
+    mode: "practice", kind, back: "practice", domKey: null, lesKey: null, key: null,
+    title, method: "", timed: c.timed !== false,
+    queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {},
+    sel: null, locked: false, xp: 0, gems: 0, replay: false, xpBoost: false,
+    hearts: 999, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0,
+  };
+  renderSession();
+};
+
+function practiceComplete() {
+  stopQTimer();
+  const ft = Object.values(SES.firstTry);
+  const acc = ft.length ? Math.round(ft.filter(Boolean).length / ft.length * 100) : 0;
+  const kind = SES.kind, title = SES.title, tTot = SES.tSpent, solved = SES.done;
+  const xpWon = SES.xp, gemsWon = SES.gems;
+  gainXP(xpWon); gainGems(gemsWon);
+  bumpStreak(); save(); sndWin();
+  const msg = acc === 100 ? "كل الإجابات صحيحة — إتقان تام!"
+    : acc >= 75 ? "أداء قوي — واصل على هذا المستوى"
+      : "كل خطأ اليوم درجة تكسبها غداً";
+  $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
+    ${flameHero(115)}
+    <h1 class="win-title">انتهى التدريب!</h1>
+    <p class="ws-msg">${msg}</p>
+    <p class="win-sub">${esc(title)} · ${toAr(solved)} ${solved === 1 ? "سؤال" : "أسئلة"}</p>
+    <div class="win-gems">${ico("gem", 20)} +${toAr(gemsWon)} جوهرة</div>
+    <div class="result-cards">
+      <div class="rcard rc-gold"><div class="rc-t">الخبرة</div><div class="rc-v">${ico("lightning", 20)} <span id="cv-xp">٠</span></div></div>
+      <div class="rcard rc-blue rc-time"><div class="rc-t">الوقت</div><div class="rc-v">${TIMER_SVG} <span id="cv-time">${toAr(0)}:${toAr("00")}</span></div></div>
+      <div class="rcard rc-green"><div class="rc-t">الدقة</div><div class="rc-v">${ico("target", 22)} <span id="cv-acc">٠</span></div></div>
+    </div>
+    <div class="action-bar win-action">
+      <button class="btn" onclick="A.startPractice('${kind}')">جولة أخرى</button>
+      <button class="btn btn-ghost" onclick="A.go('practice')">رجوع</button>
+    </div>
+  </div></div>`;
+  setTimeout(() => {
+    const xpEl = document.getElementById("cv-xp"), accEl = document.getElementById("cv-acc"), tEl = document.getElementById("cv-time");
+    if (xpEl) countUp(xpEl, xpWon); if (accEl) countUp(accEl, acc, "٪"); if (tEl) countUpTime(tEl, tTot);
+  }, 700);
+  SES = null;
+}
+
+/* ============================================================
+   المرجع — the rules behind the questions. Every lesson in the
+   path has a matching card in js/data/guide.js: its laws, one
+   worked example, and the mistake that costs marks. Reachable
+   from the sidebar, from a unit banner, and from inside a
+   lesson (the "كيف أحلّها؟" sheet links here).
+   ============================================================ */
+let GUIDE_UNIT = null;          // which unit is open (null = unit picker)
+let GUIDE_LESSON = null;        // which lesson card is expanded
+
+function guideFor(domKey, lesKey) { return (window.QGUIDE || {})[domKey + "." + lesKey] || null; }
+
+function guideCard(d, l, open) {
+  const g = guideFor(d.key, l.key);
+  const key = d.key + "." + l.key;
+  const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
+  const p = lessonProg(key);
+  if (!g) return "";
+  return `<div class="gcard${open ? " open" : ""}">
+    <button class="gc-head" onclick="A.guideLesson('${l.key}')" aria-expanded="${open}">
+      <span class="gc-ico" style="background:${u.c}">${l.icon || "★"}</span>
+      <span class="gc-t"><b>${l.title}</b><span>${toAr(g.rules.length)} قواعد · مثال محلول</span></span>
+      ${p.stars ? `<span class="gc-stars">${"★".repeat(p.stars)}</span>` : ""}
+      <span class="gc-chev">${open ? "▲" : "▼"}</span>
+    </button>
+    ${open ? `<div class="gc-body">
+      <div class="g-rules">${g.rules.map(r =>
+        `<div class="g-rule"><b style="color:${u.s}">${r.h}</b><span>${r.t}</span></div>`).join("")}</div>
+      <div class="g-ex">
+        <div class="g-ex-h">مثال محلول</div>
+        <div class="g-ex-q">${g.ex.q}</div>
+        <ol class="g-ex-s">${g.ex.s.map(x => `<li>${x}</li>`).join("")}</ol>
+      </div>
+      <div class="ex-tip g-tip">${BULB_SVG}<span>${g.tip}</span></div>
+      <button class="btn g-practice" onclick="A.guidePractice('${d.key}','${l.key}')">تدرّب على هذا الدرس</button>
+    </div>` : ""}
+  </div>`;
+}
+
+function renderGuide() {
+  const ds = domains();
+  const unit = GUIDE_UNIT ? ds.find(d => d.key === GUIDE_UNIT) : null;
+
+  if (!unit) {
+    const cards = ds.map((d, i) => {
+      const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
+      const n = d.lessons.filter(l => guideFor(d.key, l.key)).length;
+      const laws = d.lessons.reduce((a, l) => a + ((guideFor(d.key, l.key) || { rules: [] }).rules.length), 0);
+      return `<button class="card gunit" onclick="A.guide('${d.key}')" style="--gu-c:${u.c};--gu-s:${u.s}">
+        <span class="gu-badge">${ico("guide", 26)}</span>
+        <span class="gu-txt"><b>${d.title}</b><span>${toAr(n)} دروس · ${toAr(laws)} قاعدة</span></span>
+        <span class="gu-go">←</span>
+      </button>`;
+    }).join("");
+    $app.innerHTML = statbar() + `<div class="screen"><div class="page">
+      <h1>المرجع</h1>
+      <div class="sub">كل قوانين الكمي في مكان واحد — راجعها قبل الدرس أو قبل الاختبار</div>
+      ${cards}
+      <div class="g-note">${BULB_SVG}<span>القواعد هنا مرتبطة بدروس المسار: افتح الوحدة ثم الدرس لترى قوانينه ومثالاً محلولاً والخطأ الشائع فيه.</span></div>
+    </div></div>` + bottomnav("guide");
+    return;
+  }
+
+  const u = UNIT_COLORS[unit.color] || UNIT_COLORS.purple;
+  const list = unit.lessons.map(l => guideCard(unit, l, GUIDE_LESSON === l.key)).join("");
+  $app.innerHTML = statbar() + `<div class="screen"><div class="page">
+    <div class="rv-top"><button class="rv-back" onclick="A.guide(null)" aria-label="رجوع">→</button><h1>${unit.title}</h1></div>
+    <div class="sub" style="color:${u.s}">${toAr(unit.lessons.length)} دروس — اضغط أي درس لعرض قوانينه</div>
+    ${list}
+  </div></div>` + bottomnav("guide");
+}
+
+A.guide = function (domKey) {
+  GUIDE_UNIT = domKey || null;
+  GUIDE_LESSON = null;
+  if (view !== "guide") { go("guide"); return; }
+  renderGuide();
+  window.scrollTo(0, 0);
+};
+A.guideLesson = function (lesKey) {
+  GUIDE_LESSON = GUIDE_LESSON === lesKey ? null : lesKey;
+  renderGuide();
+};
+/* jump straight from a rule sheet into drilling that exact lesson */
+A.guidePractice = function (domKey, lesKey) {
+  const c = practiceCfg();
+  c.unit = domKey; c.lesson = lesKey; c.diff = 0;
+  save();
+  A.startPractice("custom");
+};
+/* open the rules for the lesson you are sitting in, from the method sheet */
+A.guideFromSession = function () {
+  if (!SES || !SES.domKey) { A.guide(null); return; }
+  const dom = SES.domKey, les = SES.lesKey;
+  A.closeMethod();
+  if (!confirm("فتح قواعد الدرس سينهي الجلسة الحالية. هل تريد المتابعة؟")) return;
+  stopQTimer(); SES = null;
+  GUIDE_UNIT = dom; GUIDE_LESSON = les;
+  go("guide");
+};
 
 /* ---------------- keyboard (web) ----------------
    A lesson is answerable without a mouse: 1-4 picks a choice,

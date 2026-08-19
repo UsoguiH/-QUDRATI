@@ -2540,3 +2540,165 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
     box-shadow: 0 0 0 1px var(--line), 0 20px 80px rgba(0,0,0,.14);
   }
 }
+
+/* ============================================================
+   تدريب حر — free-practice screen
+   ============================================================ */
+.pk-card { padding: 14px 16px 12px; }
+.pk-bar { margin-bottom: 8px; }
+.pk-legend { font-size: 13.5px; font-weight: 600; color: var(--gray); text-align: center; }
+.pk-legend b { color: var(--ink); font-weight: 800; }
+
+.pmode {
+  display: flex; align-items: center; gap: 13px;
+  width: 100%; text-align: right; cursor: pointer;
+  border: 2px solid var(--line);
+  transition: transform .08s, box-shadow .08s;
+}
+.pmode:active { transform: translateY(2px); }
+.pmode:disabled { cursor: default; opacity: .55; }
+.pmode:disabled:active { transform: none; }
+.pmode .pm-ico {
+  width: 46px; height: 46px; flex-shrink: 0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.pmode .pm-ico img { width: 26px; height: 26px; }
+.pmode .pm-txt { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pmode .pm-txt b { font-size: 16.5px; }
+.pmode .pm-txt span { font-size: 13.5px; color: var(--gray); font-weight: 600; }
+.pmode .pm-go { font-size: 20px; font-weight: 800; flex-shrink: 0; }
+.pm-red .pm-ico { background: var(--red-bg); }
+.pm-red .pm-go { color: var(--red-dk2); }
+.pm-blue .pm-ico { background: var(--blue-light); }
+.pm-blue .pm-go { color: var(--blue-dk); }
+
+.pcustom h3 { display: flex; align-items: center; gap: 9px; margin-bottom: 14px; }
+.pcustom h3 img { width: 22px; height: 22px; }
+.pf { margin-bottom: 14px; }
+.pf-l { font-size: 13.5px; font-weight: 700; color: var(--gray); margin-bottom: 7px; }
+.pf-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.pchip {
+  border: 2px solid var(--line); background: #fff; color: var(--gray);
+  border-radius: 12px; padding: 7px 13px 5px;
+  font-size: 14px; font-weight: 700; line-height: 1.35;
+  box-shadow: 0 2px 0 var(--line);
+  transition: transform .08s, box-shadow .08s;
+}
+.pchip:active { transform: translateY(2px); box-shadow: none; }
+.pchip.on {
+  background: var(--blue-light); color: var(--blue-dk);
+  border-color: var(--blue-border); box-shadow: 0 2px 0 var(--blue-border);
+}
+.pselect {
+  width: 100%; font-family: var(--font); font-size: 15px; font-weight: 700;
+  color: var(--ink); background: #fff;
+  border: 2px solid var(--line); border-radius: 12px;
+  padding: 10px 12px; cursor: pointer;
+  box-shadow: 0 2px 0 var(--line);
+}
+.pselect:focus-visible { outline: 3px solid var(--blue-border); outline-offset: 2px; }
+.pf-row { border-top: 2px solid var(--line); padding-top: 12px; margin-bottom: 6px; }
+.pf-count { font-size: 13px; font-weight: 600; color: var(--gray); text-align: center; margin: 10px 0 12px; }
+
+/* the six-slot bottom bar needs a touch less air per item on small phones */
+@media (max-width: 380px) {
+  .bottomnav .navbtn { padding-inline: 4px; }
+}
+
+/* ============================================================
+   المرجع — rules, worked example and pitfall for every lesson
+   ============================================================ */
+/* the banner glyph is now the door to that unit's rules */
+.unit-banner button.u-side {
+  border: 0; background: none; padding: 0 0 0 2px; color: inherit;
+  border-radius: 10px; cursor: pointer;
+}
+.unit-banner button.u-side:active { transform: scale(.92); }
+.unit-banner button.u-side:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+.gunit {
+  display: flex; align-items: center; gap: 13px;
+  width: 100%; text-align: right; cursor: pointer;
+  border: 2px solid var(--line);
+}
+.gunit:active { transform: translateY(2px); }
+.gunit .gu-badge {
+  width: 46px; height: 46px; flex-shrink: 0; border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--gu-c); box-shadow: 0 3px 0 var(--gu-s);
+}
+.gunit .gu-badge img { width: 26px; height: 26px; filter: brightness(0) invert(1); }
+.gunit .gu-txt { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.gunit .gu-txt b { font-size: 16.5px; }
+.gunit .gu-txt span { font-size: 13.5px; color: var(--gray); font-weight: 600; }
+.gunit .gu-go { font-size: 20px; font-weight: 800; color: var(--gu-s); flex-shrink: 0; }
+
+.g-note {
+  display: flex; gap: 9px; align-items: flex-start;
+  color: var(--gray); font-size: 13.5px; font-weight: 600; line-height: 1.7;
+  padding: 4px 2px; margin-top: 4px;
+}
+.g-note svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--gold-dk); margin-top: 2px; }
+
+.gcard {
+  background: #fff; border: 2px solid var(--line); border-radius: 16px;
+  margin-bottom: 10px; overflow: hidden;
+  animation: fadeUp .4s .05s ease backwards;
+}
+.gcard.open { border-color: var(--blue-border); box-shadow: 0 3px 0 var(--blue-border); }
+.gc-head {
+  display: flex; align-items: center; gap: 11px;
+  width: 100%; text-align: right; border: 0; background: none;
+  padding: 13px 14px; cursor: pointer;
+}
+.gc-ico {
+  width: 38px; height: 38px; flex-shrink: 0; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 19px; line-height: 1;
+}
+.gc-t { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.gc-t b { font-size: 15.5px; }
+.gc-t span { font-size: 12.5px; color: var(--gray); font-weight: 600; }
+.gc-stars { color: var(--gold); font-size: 13px; letter-spacing: 1px; flex-shrink: 0; }
+.gc-chev { color: var(--gray-icon); font-size: 11px; flex-shrink: 0; }
+.gc-body { padding: 0 14px 14px; animation: fadeIn .22s ease; }
+
+.g-rules { display: flex; flex-direction: column; gap: 9px; }
+.g-rule {
+  background: #F7F7F7; border-radius: 12px; padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.g-rule b { font-size: 14.5px; }
+.g-rule span { font-size: 14.5px; line-height: 1.75; font-weight: 600; color: var(--ink); }
+
+.g-ex {
+  margin-top: 12px; border: 2px solid var(--blue-border);
+  background: var(--blue-light); border-radius: 13px; padding: 11px 13px;
+}
+.g-ex-h { font-size: 12.5px; font-weight: 800; color: var(--blue-dk); text-transform: uppercase; letter-spacing: .4px; }
+.g-ex-q { font-size: 15.5px; font-weight: 700; margin: 5px 0 8px; }
+.g-ex-s { margin: 0; padding-inline-start: 20px; display: flex; flex-direction: column; gap: 5px; list-style-type: arabic-indic; }
+.g-ex-s li { font-size: 14.5px; font-weight: 600; line-height: 1.7; }
+.g-tip { margin-top: 12px; }
+.g-practice { margin-top: 14px; }
+
+/* entry points into the rules */
+.lp-rules {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; margin-top: 9px; padding: 6px 4px;
+  border: 0; background: none; color: #fff;
+  font-family: var(--font); font-size: 14px; font-weight: 700;
+  opacity: .92; text-decoration: underline; text-underline-offset: 3px;
+}
+.lp-rules svg { width: 17px; height: 17px; }
+.lp-rules:active { opacity: .6; }
+.ms-rules {
+  display: block; width: 100%; margin-top: 10px; padding: 4px;
+  border: 0; background: none; color: var(--blue-dk);
+  font-family: var(--font); font-size: 14.5px; font-weight: 700;
+}
+.ms-rules:active { opacity: .6; }
+
+@media (min-width: 768px) {
+  .g-rule span, .g-ex-s li { font-size: 15px; }
+}

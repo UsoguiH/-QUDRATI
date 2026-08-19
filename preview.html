@@ -47,12 +47,20 @@
   <script src="js/data/numbers.js"></script>
   <script src="js/data/ratios.js"></script>
   <script src="js/data/geometry.js"></script>
+  <script src="js/data/guide.js"></script>
   <script src="js/app.js"></script>
   <script>
     (function () {
       const h = location.hash.replace("#", "") || "path";
       if (h.indexOf("streak") === 0) { A.go("path"); A.debugStreak(parseInt(h.replace("streak", "")) || 7); }
-      else if (["stats", "settings", "mock", "league", "review"].includes(h)) A.go(h);
+      else if (["stats", "settings", "mock", "league", "review", "practice", "guide", "achievements"].includes(h)) A.go(h);
+      else if (h === "practicedo") { A.go("practice"); A.startPractice("custom"); }
+      else if (h === "practicedone") {
+        A.go("practice"); A.startPractice("custom");
+        for (let i = 0; i < 200 && document.querySelector(".choices .choice"); i++) {
+          A.pick(A.debugCurrent().answer); A.check(); A.next();
+        }
+      }
       else if (h === "reviewempty") A.go("review");
       else if (h === "reviewdo") A.startReview();
       else if (h === "frz") { // freeze all anims so any app screen captures at any budget
