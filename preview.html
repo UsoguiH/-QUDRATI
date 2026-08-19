@@ -24,6 +24,11 @@
   localStorage.setItem("qudratState", JSON.stringify({
     league: { week: lwk, base: 527 - 240, ghosts: lghosts },
     daily: { day: todayK, n: location.hash === "#chest" || location.hash === "#chestready" ? 10 : location.hash === "#claimed" ? 10 : 6, claimed: location.hash === "#claimed" },
+    activity: (function(){var o={},d=new Date();for(var i=0;i<70;i++){var x=new Date(d-i*864e5);if(i%3!==1)o[x.getFullYear()+"-"+(x.getMonth()+1)+"-"+x.getDate()]=1+((i*7)%24);}return o;})(),
+    tsecs: 9840, tans: 410,
+    mocks: [{d:"2026-6-2",score:34,total:48,est:81},{d:"2026-6-16",score:30,total:48,est:76},{d:"2026-7-1",score:38,total:48,est:87},{d:"2026-7-20",score:36,total:48,est:84},{d:"2026-8-9",score:41,total:48,est:91}],
+    badges: location.hash === "#achnew" ? {} : null,
+    chests: 9, guideSeen: { "skills.orderops":1, "skills.counting":1 },
     v: 1, disclaimer: true, track: "sci", sound: false,
     user: location.hash === "#login" ? null : { name: "سارة", guest: false },
     xp: 527, totalXp: location.hash.indexOf("#earncross") === 0 ? 1190 : 850, tierSeen: 1,

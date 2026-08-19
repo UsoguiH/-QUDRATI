@@ -39,7 +39,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {}, practice: null };
+const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {}, practice: null, badges: null, chests: 0, guideSeen: {}, activity: {}, tsecs: 0, tans: 0 };
 const LEAGUE_NAMES = ["عبدالله", "محمد", "نورة", "سارة", "فهد", "ريم", "خالد", "لمى", "تركي", "جواهر", "عمر", "هند", "سلمان", "رنا", "بدر", "ليان", "ناصر", "شهد", "يزيد", "دانة", "مازن", "أصيل", "وليد", "غادة"];
 /* Permanent rank tiers (badge art in assets/icons/ranks/). A user's tier is
    the highest threshold their LIFETIME total XP (S.totalXp) has crossed —
@@ -333,6 +333,7 @@ function renderSidebar() {
     { k: "mock",     icon: "nav-exam",   label: "اختبار تجريبي",   short: "تجريبي" },
     { k: "stats",    icon: "nav-stats",  label: "إحصائياتي",       short: "إحصائيات" },
     { k: "guide",    icon: "book",       label: "المرجع",          short: "المرجع" },
+    { k: "achievements", icon: "nav-trophy", label: "الإنجازات",   short: "إنجازات" },
     { k: "review",   icon: "target",     label: "مراجعة الأخطاء",  short: "الأخطاء" },
     { k: "settings", icon: "nav-more",   label: "الإعدادات",       short: "إعدادات" },
   ];
@@ -411,7 +412,7 @@ function renderAside() {
 }
 
 function render() {
-  ({ path: renderPath, practice: renderPractice, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings, review: renderReview, guide: renderGuide })[view]();
+  ({ path: renderPath, practice: renderPractice, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings, review: renderReview, guide: renderGuide, achievements: renderAchievements })[view]();
   flushRankUp();
   renderSidebar();
   renderAside();
@@ -433,7 +434,7 @@ A.chestTap = function () {
   if (S.daily.n >= DAILY_GOAL) { A.openChest(); return; }
   toast(`باقي ${toAr(DAILY_GOAL - S.daily.n)} أسئلة لفتح صندوق اليوم 🎁`);
 };
-const NAV_LABEL = { path: "الدروس", practice: "تدريب حر", mock: "اختبار تجريبي", league: "المجلس", stats: "إحصائياتي", review: "مراجعة الأخطاء", guide: "المرجع", settings: "الإعدادات" };
+const NAV_LABEL = { path: "الدروس", practice: "تدريب حر", mock: "اختبار تجريبي", league: "المجلس", stats: "إحصائياتي", review: "مراجعة الأخطاء", guide: "المرجع", achievements: "الإنجازات", settings: "الإعدادات" };
 function bottomnav(active) {
   const items = [["path", "nav-home"], ["practice", "dumbbell"], ["mock", "nav-exam"], ["league", "nav-league"], ["stats", "nav-stats"], ["settings", "nav-more"]];
   return `<nav class="bottomnav">` + items.map(([k, i]) =>
@@ -546,7 +547,8 @@ A.openChest = function () {
   setTimeout(() => veil.classList.add("rewarded"), 2150);
 };
 A.claimChest = function (gems) {
-  gainGems(gems); S.daily.claimed = true; save();
+  gainGems(gems); S.daily.claimed = true; S.chests = (S.chests || 0) + 1; save();
+  checkAchievements();
   const v = document.querySelector(".chest-veil");
   if (v) { v.classList.add("out"); setTimeout(() => { v.remove(); render(); }, 380); }
   else render();
@@ -832,6 +834,7 @@ function timeUp() {
   if (!(q.id in SES.firstTry)) SES.firstTry[q.id] = false;
   SES.retried[q.id] = true;
   SES.queue.push(q);
+  logActivity(Q_SECS);
   loseHeart();
   document.querySelectorAll(".choice").forEach((b, j) => {
     b.disabled = true;
@@ -872,6 +875,7 @@ A.check = function () {
   noteAnswer(q, correct);
   if (!(q.id in SES.firstTry)) SES.firstTry[q.id] = correct;
   dailyTick();
+  logActivity(Q_SECS - SES.left);
 
   document.querySelectorAll(".choice").forEach((b, j) => {
     b.disabled = true;
@@ -1068,6 +1072,7 @@ function lessonComplete() {
     if (xpEl) countUp(xpEl, xpWon); if (accEl) countUp(accEl, acc, "٪"); if (tEl) countUpTime(tEl, tTot);
   }, 700);
   SES = null;
+  checkAchievements();
 }
 
 /* Win-screen hero: the streak flame (exact paths from the Figma streak icon,
@@ -1288,6 +1293,8 @@ function finishMock(timedOut) {
       else if (a === null) unanswered++;
     });
   });
+  const answeredN = total - unanswered;
+  for (let i = 0; i < answeredN; i++) logActivity(Math.round(secsUsed / answeredN));
   const est = Math.round(35 + 65 * score / total);
   /* researched national bands: 81+ = top 5%, 85 ≈ top 2.5%, 90 = elite, 65 = mean */
   const band = est >= 90 ? "ضمن النخبة — أعلى ٠.٥٪ من الطلاب 🏆"
@@ -1300,6 +1307,7 @@ function finishMock(timedOut) {
   const mins = Math.round(secsUsed / 60);
   S.mocks = (S.mocks || []).concat([{ d: todayKey(), score, total, est }]).slice(-10);
   bumpStreak(); save();
+  checkAchievements();
   score / total >= 0.5 ? sndWin() : sndLose();
 
   const domRows = DOMAIN_ORDER.map((k, i) => {
@@ -1671,6 +1679,7 @@ function reviewComplete() {
   </div></div>`;
   setTimeout(() => { const x = document.getElementById("cv-xp"); if (x) countUp(x, xpWon); }, 700);
   SES = null;
+  checkAchievements();
 }
 
 function renderReview() {
@@ -1708,13 +1717,71 @@ function renderReview() {
   </div></div>` + bottomnav("review");
 }
 
-/* ---------------- STATS ---------------- */
+/* ---------------- STATS ----------------
+   Everything the player needs to answer "am I ready, and what do I
+   fix next": how often they show up, which lessons are actually
+   weak, and whether the mock scores are trending up. */
+
+/* every answered question, anywhere in the app, lands here */
+function logActivity(secs) {
+  const t = todayKey();
+  S.activity = S.activity || {};
+  S.activity[t] = (S.activity[t] || 0) + 1;
+  S.tsecs = (S.tsecs || 0) + (secs || 0);
+  S.tans = (S.tans || 0) + 1;
+  const keys = Object.keys(S.activity);
+  if (keys.length > 140) {                       // keep roughly the last five months
+    const cut = keys.map(k => [k, new Date(k).getTime()]).sort((a, b) => a[1] - b[1]).slice(0, keys.length - 140);
+    cut.forEach(([k]) => delete S.activity[k]);
+  }
+}
+
+const ACT_WEEKS = 13;
+const ACT_DAYS = ["ح", "ن", "ث", "ر", "خ", "ج", "س"];
+function activityGrid() {
+  const act = S.activity || {};
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const end = new Date(today); end.setDate(end.getDate() + (6 - today.getDay()));   // Saturday of this week
+  const start = new Date(end); start.setDate(start.getDate() - (ACT_WEEKS * 7 - 1));
+  let cells = "", total = 0, active = 0;
+  for (let i = 0; i < ACT_WEEKS * 7; i++) {
+    const d = new Date(start); d.setDate(d.getDate() + i);
+    const k = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+    const future = d > today;
+    const n = act[k] || 0;
+    if (!future) { total += n; if (n) active++; }
+    const lv = future ? "f" : n === 0 ? 0 : n < 5 ? 1 : n < 10 ? 2 : n < 20 ? 3 : 4;
+    const title = future ? "" : `${toAr(d.getDate())}/${toAr(d.getMonth() + 1)} — ${toAr(n)} ${n === 1 ? "سؤال" : "أسئلة"}`;
+    cells += `<i class="acell l${lv}"${title ? ` title="${title}"` : ""}></i>`;
+  }
+  return { cells, total, active };
+}
+
+/* lessons you are measurably worst at, with enough attempts to mean something */
+function weakLessons(limit) {
+  const out = [];
+  domains().forEach(d => d.lessons.forEach(l => {
+    let r = 0, w = 0;
+    trackFilter(l.questions).forEach(q => { const s = S.qstats[q.id]; if (s) { r += s.r; w += s.w; } });
+    if (r + w >= 4) out.push({ d, l, r, w, acc: r / (r + w) });
+  }));
+  return out.sort((a, b) => a.acc - b.acc).slice(0, limit || 5);
+}
+
+function statTile(icon, value, label) {
+  return `<div class="tile">${ico(icon, 26)}<div><div class="t-v">${value}</div><div class="t-l">${label}</div></div></div>`;
+}
+
 function renderStats() {
   const flat = allLessons();
   const doneN = flat.filter(x => lessonProg(x.key).stars > 0).length;
   let r = 0, w = 0;
   Object.values(S.qstats).forEach(s => { r += s.r; w += s.w; });
   const acc = (r + w) ? Math.round(r / (r + w) * 100) : 0;
+  const avg = S.tans ? Math.round(S.tsecs / S.tans) : null;
+  const grid = activityGrid();
+  const days = examDaysLeft(), ready = readiness();
+
   const domBars = domains().map((d, i) => {
     let dr = 0, dw = 0;
     d.lessons.forEach(l => l.questions.forEach(q => { const s = S.qstats[q.id]; if (s) { dr += s.r; dw += s.w; } }));
@@ -1723,25 +1790,90 @@ function renderStats() {
     return `<div class="dom-stat"><div class="ds-head"><span>${d.title}</span><span>${(dr + dw) ? toAr(p) + "٪" : "—"}</span></div>
       <div class="duo-bar"><i style="width:${p}%;--bar-c:${u.c};--bar-shine:${u.h};animation-delay:${(0.25 + i * 0.13).toFixed(2)}s"></i></div></div>`;
   }).join("");
+
+  const weak = weakLessons(5);
+  const weakCard = weak.length ? `<div class="card"><h3>أضعف مواضيعك</h3>
+    <div class="r-sub" style="margin:-4px 0 12px">ابدأ من هنا — أكبر مكسب لأقل وقت</div>
+    ${weak.map(x => {
+      const u = UNIT_COLORS[x.d.color] || UNIT_COLORS.green;
+      const p = Math.round(x.acc * 100);
+      return `<div class="wk-row">
+        <div class="wk-txt"><b>${x.l.title}</b><span>${x.d.title} · ${toAr(x.r)}/${toAr(x.r + x.w)} صحيحة</span></div>
+        <div class="wk-bar"><div class="duo-bar"><i style="width:${p}%;--bar-c:${p < 50 ? "var(--red)" : p < 75 ? "var(--orange)" : u.c};--bar-shine:rgba(255,255,255,.5)"></i></div><b>${toAr(p)}٪</b></div>
+        <button class="wk-go" onclick="A.guidePractice('${x.d.key}','${x.l.key}')" aria-label="تدرّب على ${x.l.title}">تدرّب</button>
+      </div>`;
+    }).join("")}
+  </div>` : `<div class="card"><h3>أضعف مواضيعك</h3>
+    <div class="r-sub">جاوب على ٤ أسئلة على الأقل في درس حتى نستطيع ترتيب نقاط ضعفك.</div></div>`;
+
+  const mocks = (S.mocks || []).slice(-8);
+  const best = mocks.reduce((m, x) => Math.max(m, x.est || 0), 0);
+  const mockCard = mocks.length ? `<div class="card"><h3>اختباراتك التجريبية</h3>
+    <div class="r-sub" style="margin:-4px 0 14px">أفضل تقدير لك: <b style="color:var(--green-dk)">${toAr(best)}</b> — التقدير تقريبي للتدريب فقط</div>
+    <div class="mk-chart">${mocks.map((x, i) => {
+      // the estimate band is 35-100, so scale from 40 up or every bar looks the same
+      const h = Math.max(10, Math.min(100, Math.round(((x.est || 0) - 40) / 60 * 100)));
+      return `<div class="mk-col" title="${toAr(x.score)}/${toAr(x.total)}">
+        <b>${toAr(x.est)}</b>
+        <i style="height:${h}%;animation-delay:${(0.2 + i * 0.08).toFixed(2)}s"></i>
+        <span>${toAr(x.d.split("-")[2])}/${toAr(x.d.split("-")[1])}</span>
+      </div>`;
+    }).join("")}</div>
+  </div>` : "";
+
+  const readyCard = days !== null && days >= 0 ? `<div class="card rd-card">
+    <h3>جاهزيتك للاختبار</h3>
+    <div class="rd-row">
+      <div class="rd-ring" style="--p:${ready}"><span>${toAr(ready)}٪</span></div>
+      <div class="rd-txt"><b>${days === 0 ? "الاختبار اليوم — بالتوفيق!" : "باقي " + dayPhrase(days)}</b>
+        <span>${ready >= 80 ? "جاهزيتك ممتازة — حافظ على المستوى" : ready >= 50 ? "على الطريق الصحيح — واصل الدروس اليومية" : "ابدأ اليوم: درس واحد يومياً يرفع جاهزيتك بسرعة"}</span></div>
+    </div>
+  </div>` : "";
+
   $app.innerHTML = statbar() + `<div class="screen"><div class="page">
     <h1>إحصائياتي</h1><div class="sub">تابع تقدمك نحو درجة أعلى</div>
     <div class="tiles">
-      <div class="tile">${ico("streak", 26)}<div><div class="t-v">${toAr(S.streak.count)}</div><div class="t-l">أيام متتالية</div></div></div>
-      <div class="tile">${ico("gem", 26)}<div><div class="t-v">${toAr(S.xp)}</div><div class="t-l">جواهر</div></div></div>
-      <div class="tile">${ico("nav-chest", 26)}<div><div class="t-v">${toAr(doneN)}/${toAr(flat.length)}</div><div class="t-l">دروس مكتملة</div></div></div>
-      <div class="tile">${ico("target", 26)}<div><div class="t-v">${(r + w) ? toAr(acc) + "٪" : "—"}</div><div class="t-l">الدقة الكلية</div></div></div>
+      ${statTile("streak", toAr(S.streak.count), "أيام متتالية")}
+      ${statTile("gem", toAr(S.xp), "جواهر")}
+      ${statTile("nav-chest", toAr(doneN) + "/" + toAr(flat.length), "دروس مكتملة")}
+      ${statTile("target", (r + w) ? toAr(acc) + "٪" : "—", "الدقة الكلية")}
+      ${statTile("lightning", toAr(r + w), "أسئلة أجبتها")}
+      ${statTile("timer", avg === null ? "—" : toAr(avg) + " ث", "متوسط زمن السؤال")}
     </div>
+
+    ${readyCard}
+
+    <div class="card act-card"><h3>نشاطك</h3>
+      <div class="r-sub" style="margin:-4px 0 12px">${grid.total ? `${toAr(grid.total)} سؤالاً في ${dayPhrase(grid.active)} خلال ١٣ أسبوعاً` : "لم تتدرّب بعد — اليوم بداية جيدة"}</div>
+      <div class="act-wrap">
+        <div class="act-days">${ACT_DAYS.map(d => `<span>${d}</span>`).join("")}</div>
+        <div class="act-grid">${grid.cells}</div>
+      </div>
+      <div class="act-legend"><span>أقل</span><i class="acell l0"></i><i class="acell l1"></i><i class="acell l2"></i><i class="acell l3"></i><i class="acell l4"></i><span>أكثر</span></div>
+    </div>
+
     ${(() => { const ti = tierIndex(), t = LEAGUE_TIERS[ti]; return `<button class="card rank-card lb-tier-${t.key}" onclick="A.go('league')">
       <span class="rank-card-badge">${rankImg(t.key, 48)}</span>
       <div class="rank-card-info"><b>المستوى ${t.name}</b><span>${ico("lightning", 15)} ${toAr(S.totalXp || 0)} نقطة خبرة</span></div>
       <span class="mc-go">عرض ←</span>
     </button>`; })()}
+
     ${(() => { const mc = mistakeList().length; return `<button class="card mistakes-card ${mc ? "" : "clean"}" onclick="A.go('review')">
       <span class="mc-ico">${mc ? "✕" : CHECK_BADGE}</span>
       <div class="mc-txt"><b>مراجعة الأخطاء</b><span>${mc ? toAr(mc) + " " + (mc === 1 ? "سؤال بحاجة لمراجعة" : "أسئلة بحاجة لمراجعة") : "لا أخطاء — أحسنت!"}</span></div>
       <span class="mc-go">${mc ? "راجع ←" : "✓"}</span>
     </button>`; })()}
+
+    ${(() => { S.badges = S.badges || {}; const hv = ACHV.filter(a => S.badges[a.id]).length;
+      return `<button class="card mistakes-card ach-card" onclick="A.go('achievements')">
+      <span class="mc-ico">🏅</span>
+      <div class="mc-txt"><b>الإنجازات</b><span>${toAr(hv)} من ${toAr(ACHV.length)} إنجازاً</span></div>
+      <span class="mc-go">عرض ←</span>
+    </button>`; })()}
+
+    ${weakCard}
     <div class="card"><h3>الدقة حسب المجال</h3>${domBars}</div>
+    ${mockCard}
   </div></div>` + bottomnav("stats");
 }
 
@@ -2243,6 +2375,7 @@ function practiceComplete() {
     if (xpEl) countUp(xpEl, xpWon); if (accEl) countUp(accEl, acc, "٪"); if (tEl) countUpTime(tEl, tTot);
   }, 700);
   SES = null;
+  checkAchievements();
 }
 
 /* ============================================================
@@ -2326,6 +2459,11 @@ A.guide = function (domKey) {
 };
 A.guideLesson = function (lesKey) {
   GUIDE_LESSON = GUIDE_LESSON === lesKey ? null : lesKey;
+  if (GUIDE_LESSON && GUIDE_UNIT) {
+    S.guideSeen = S.guideSeen || {};
+    S.guideSeen[GUIDE_UNIT + "." + GUIDE_LESSON] = 1;
+    save(); checkAchievements();
+  }
   renderGuide();
 };
 /* jump straight from a rule sheet into drilling that exact lesson */
@@ -2345,6 +2483,118 @@ A.guideFromSession = function () {
   GUIDE_UNIT = dom; GUIDE_LESSON = les;
   go("guide");
 };
+
+/* ============================================================
+   الإنجازات — long-horizon goals. The streak rewards showing up
+   today; these reward the months of work a GAT student actually
+   signs up for. Every badge is derived from state already
+   tracked, so old progress counts retroactively.
+   ============================================================ */
+function starsCount(n) { return allLessons().filter(x => lessonProg(x.key).stars >= n).length; }
+function answerTotals() {
+  let r = 0, w = 0;
+  Object.values(S.qstats || {}).forEach(s => { r += s.r; w += s.w; });
+  return { r, w, t: r + w };
+}
+function bestMock() { return (S.mocks || []).reduce((m, x) => Math.max(m, x.total ? Math.round(x.score / x.total * 100) : 0), 0); }
+
+/* v = where you are, n = where the badge unlocks */
+const ACHV = [
+  { id: "first", e: "🌱", c: "green", t: "الخطوة الأولى", d: "أكمل أول درس", calc: () => ({ v: starsCount(1), n: 1 }) },
+  { id: "les5", e: "📗", c: "green", t: "متعلّم", d: "أكمل ٥ دروس", calc: () => ({ v: starsCount(1), n: 5 }) },
+  { id: "les15", e: "📚", c: "blue", t: "مثابر", d: "أكمل ١٥ درساً", calc: () => ({ v: starsCount(1), n: 15 }) },
+  { id: "lesAll", e: "🗺️", c: "purple", t: "فاتح المسار", d: "أكمل كل الدروس", calc: () => ({ v: starsCount(1), n: allLessons().length }) },
+
+  { id: "star10", e: "⭐", c: "gold", t: "نجوم ذهبية", d: "احصل على ٣ نجوم في ١٠ دروس", calc: () => ({ v: starsCount(3), n: 10 }) },
+  { id: "starAll", e: "👑", c: "gold", t: "الإتقان التام", d: "٣ نجوم في كل الدروس", calc: () => ({ v: starsCount(3), n: allLessons().length }) },
+
+  { id: "str3", e: "🔥", c: "orange", t: "ثلاثة على التوالي", d: "سلسلة ٣ أيام", calc: () => ({ v: S.streak.count, n: 3 }) },
+  { id: "str7", e: "🔥", c: "orange", t: "أسبوع كامل", d: "سلسلة ٧ أيام", calc: () => ({ v: S.streak.count, n: 7 }) },
+  { id: "str30", e: "🏔️", c: "red", t: "شهر بلا انقطاع", d: "سلسلة ٣٠ يوماً", calc: () => ({ v: S.streak.count, n: 30 }) },
+
+  { id: "ans100", e: "✍️", c: "blue", t: "مئة إجابة", d: "أجب على ١٠٠ سؤال", calc: () => ({ v: answerTotals().t, n: 100 }) },
+  { id: "ans500", e: "🧠", c: "purple", t: "خمسمئة إجابة", d: "أجب على ٥٠٠ سؤال", calc: () => ({ v: answerTotals().t, n: 500 }) },
+  { id: "ans1500", e: "🎯", c: "red", t: "ألف وخمسمئة", d: "أجب على ١٥٠٠ سؤال", calc: () => ({ v: answerTotals().t, n: 1500 }) },
+
+  { id: "seen200", e: "🔎", c: "blue", t: "مستكشف", d: "جرّب ٢٠٠ سؤال مختلف", calc: () => ({ v: seenCount(), n: 200 }) },
+  { id: "seenAll", e: "🧭", c: "purple", t: "بنك الأسئلة كاملاً", d: "جرّب كل أسئلة البنك", calc: () => ({ v: seenCount(), n: allQuestions().length }) },
+
+  { id: "acc90", e: "🎖️", c: "gold", t: "دقة عالية", d: "دقة ٩٠٪ فأكثر بعد ١٠٠ سؤال", calc: () => { const a = answerTotals(); return { v: a.t >= 100 && a.r / a.t >= 0.9 ? 1 : 0, n: 1 }; } },
+  { id: "clean", e: "🧹", c: "green", t: "قائمة نظيفة", d: "صفّر قائمة أخطائك بعد ٥٠ سؤالاً", calc: () => ({ v: answerTotals().t >= 50 && mistakeList().length === 0 ? 1 : 0, n: 1 }) },
+
+  { id: "mock1", e: "📝", c: "blue", t: "أول تجريبي", d: "أكمل اختباراً تجريبياً", calc: () => ({ v: (S.mocks || []).length, n: 1 }) },
+  { id: "mock5", e: "🗂️", c: "purple", t: "خمسة تجريبية", d: "أكمل ٥ اختبارات تجريبية", calc: () => ({ v: (S.mocks || []).length, n: 5 }) },
+  { id: "mock90", e: "🏆", c: "gold", t: "قريب من الكمال", d: "احصل على ٩٠٪ في تجريبي", calc: () => ({ v: bestMock(), n: 90 }) },
+
+  { id: "chest7", e: "🎁", c: "gold", t: "أسبوع من الصناديق", d: "افتح ٧ صناديق يومية", calc: () => ({ v: S.chests || 0, n: 7 }) },
+  { id: "rules10", e: "📖", c: "blue", t: "قارئ القوانين", d: "افتح قواعد ١٠ دروس من المرجع", calc: () => ({ v: Object.keys(S.guideSeen || {}).length, n: 10 }) },
+  { id: "xp5000", e: "⚡", c: "orange", t: "خمسة آلاف خبرة", d: "اجمع ٥٠٠٠ نقطة خبرة", calc: () => ({ v: S.totalXp || 0, n: 5000 }) },
+];
+
+const ACHV_C = { green: ["#58CC02", "#D6FFB8"], blue: ["#1CB0F6", "#DDF4FF"], purple: ["#CE82FF", "#EDD1FF"], gold: ["#FFC800", "#FFF3C4"], orange: ["#FF9600", "#FFE8CC"], red: ["#FF4B4B", "#FFDFE0"] };
+
+/* Grants anything newly earned. silent=true seeds retroactively on boot so
+   an existing player is not buried under twenty popups at once. */
+function checkAchievements(silent) {
+  S.badges = S.badges || {};
+  const got = [];
+  ACHV.forEach(a => {
+    if (S.badges[a.id]) return;
+    const p = a.calc();
+    if (p.v >= p.n) { S.badges[a.id] = Date.now(); got.push(a); }
+  });
+  if (got.length) { save(); if (!silent) queueBadges(got); }
+  return got;
+}
+
+let badgeQ = [];
+function queueBadges(list) {
+  badgeQ = badgeQ.concat(list);
+  if (badgeQ.length === list.length) showNextBadge();
+}
+function showNextBadge() {
+  const a = badgeQ.shift();
+  if (!a) return;
+  const [c, soft] = ACHV_C[a.c] || ACHV_C.green;
+  const el = document.createElement("div");
+  el.className = "badge-pop";
+  el.setAttribute("role", "status");
+  el.innerHTML = `<span class="bp-ring" style="background:${soft};border-color:${c}">${a.e}</span>
+    <span class="bp-txt"><b>إنجاز جديد!</b><span>${a.t}</span></span>`;
+  document.body.appendChild(el);
+  sndChest();
+  requestAnimationFrame(() => el.classList.add("show"));
+  setTimeout(() => {
+    el.classList.remove("show");
+    setTimeout(() => { el.remove(); showNextBadge(); }, 320);
+  }, 2400);
+}
+
+function renderAchievements() {
+  S.badges = S.badges || {};
+  const have = ACHV.filter(a => S.badges[a.id]).length;
+  const pct = Math.round(have / ACHV.length * 100);
+  const cards = ACHV.map((a, i) => {
+    const on = !!S.badges[a.id];
+    const p = a.calc();
+    const prog = Math.min(100, Math.round(p.v / p.n * 100));
+    const [c, soft] = ACHV_C[a.c] || ACHV_C.green;
+    return `<div class="ach${on ? " on" : ""}" style="--ac:${c};--as:${soft};--d:${(0.04 * i).toFixed(2)}s">
+      <span class="ach-ring">${on ? a.e : "🔒"}</span>
+      <b class="ach-t">${a.t}</b>
+      <span class="ach-d">${a.d}</span>
+      ${on ? `<span class="ach-done">تم ✓</span>`
+        : `<div class="duo-bar ach-bar"><i style="width:${prog}%;--bar-c:var(--ac);--bar-shine:var(--as)"></i></div>
+           <span class="ach-p">${toAr(Math.min(p.v, p.n))}/${toAr(p.n)}</span>`}
+    </div>`;
+  }).join("");
+  $app.innerHTML = statbar() + `<div class="screen"><div class="page">
+    <div class="rv-top"><button class="rv-back" onclick="A.go('stats')" aria-label="رجوع">→</button><h1>الإنجازات</h1></div>
+    <div class="sub">${toAr(have)} من ${toAr(ACHV.length)} إنجازاً — ${toAr(pct)}٪</div>
+    <div class="duo-bar" style="margin-bottom:18px"><i style="width:${pct}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft)"></i></div>
+    <div class="ach-grid">${cards}</div>
+  </div></div>` + bottomnav("achievements");
+}
 
 /* ---------------- keyboard (web) ----------------
    A lesson is answerable without a mouse: 1-4 picks a choice,
@@ -2384,6 +2634,7 @@ document.addEventListener("keydown", e => {
 
 /* ---------------- boot ---------------- */
 function boot() {
+  if (!S.badges) checkAchievements(true);   // grant what this player already earned, quietly
   initCorrectVoice(); // preload the correct-answer clip so the first play is instant
   if (!S.user) renderLogin();
   else afterLogin();
