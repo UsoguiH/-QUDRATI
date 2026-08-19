@@ -687,7 +687,8 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
       <span class="lpb-cost">${ico("gem", 11)} ${toAr(BOOST_COST)}</span>
     </button>
     <h3>${l.title}</h3>
-    <div class="lp-sub">الدرس ${toAr(li + 1)} من ${toAr(d.lessons.length)} · ${toAr(LEVEL_HEARTS)} قلوب</div>
+    <div class="lp-sub">الدرس ${toAr(li + 1)} من ${toAr(d.lessons.length)}</div>
+    <div class="lp-meta">${ico("heart", 15)} ${toAr(LEVEL_HEARTS)} قلوب لهذا الدرس</div>
     ${canBoost ? `<div class="lp-hint">اضغط ⚡ لمضاعفة خبرة هذا الدرس</div>` : ""}
     <button class="btn btn-white" style="color:${u.c};box-shadow:0 5px 0 ${u.pale}">ابدأ</button>
   </div>`;
@@ -1043,6 +1044,13 @@ function countUpTime(el, to) {
   })(t0);
 }
 
+/* the encouragement has to match how far they actually got */
+function failNote(done, total) {
+  const p = total ? done / total : 0;
+  if (p >= 0.75) return "كنت على وشك إنهائه!";
+  if (p >= 0.4) return "قطعت نصف الطريق";
+  return "خذها من البداية بهدوء";
+}
 function sessionFailed() {
   stopQTimer();
   const { domKey, lesKey, done, total, tSpent, tAnswered } = SES;
@@ -1052,13 +1060,13 @@ function sessionFailed() {
   $app.innerHTML = `<div class="screen screen-full"><div class="complete fail-scene" id="failComp">
     ${brokenHeartHero()}
     <h1 class="fail-title">نفدت القلوب!</h1>
-    <p class="fail-sub">وصلت إلى ${toAr(done)} من ${toAr(total)} — كنت قريباً!<br>${canRevive ? "استعد قلوبك بالجواهر وأكمل من حيث توقفت" : "أعد المستوى وحاول مجدداً"}</p>
+    <p class="fail-sub">وصلت إلى ${toAr(done)} من ${toAr(total)} — ${failNote(done, total)}<br>${canRevive ? "استعد قلوبك بالجواهر وأكمل من حيث توقفت" : "أعد المستوى وحاول مجدداً"}</p>
     <div class="result-cards fail-cards">
       <div class="rcard rc-green fail-time"><div class="rc-t">متوسط الوقت</div><div class="rc-v">${TIMER_SVG} <span id="cv-avg">${toAr(0)}:${toAr("00")}</span></div></div>
       <div class="rcard rc-blue"><div class="rc-t">التقدم</div><div class="rc-v">${ico("target", 22)} ${toAr(done)}/${toAr(total)}</div></div>
     </div>
     <div class="fail-actions">
-      ${canRevive ? `<button class="btn btn-revive" onclick="A.reviveLesson()">${ico("gem", 20)} استعد قلوبك وأكمل · ${toAr(REVIVE_COST)}</button>` : ""}
+      ${canRevive ? `<button class="btn btn-revive" onclick="A.reviveLesson()">${ico("gem", 20)} استعد قلوبك — ${toAr(REVIVE_COST)} جوهرة</button>` : ""}
       <button class="btn ${canRevive ? "btn-ghost" : ""}" onclick="A.retryLevel('${domKey}','${lesKey}')">إعادة المستوى</button>
       <button class="btn btn-ghost" onclick="A.quitFailed()">العودة للمسار</button>
     </div>
@@ -1391,7 +1399,7 @@ function finishMock(timedOut) {
     <h1 class="win-title">${timedOut ? "انتهى الوقت!" : "انتهت المحاكاة!"}</h1>
     <p class="win-sub">${unanswered ? `${qCount(unanswered)} بلا إجابة — ` : ""}السرعة والدقة معاً هما سر قدرات</p>
     <div class="result-cards">
-      <div class="rcard rc-gold"><div class="rc-t">نتيجتك</div><div class="rc-v">${ico("star-gold", 20)} <span id="mv-score">٠</span>/${toAr(total)}</div></div>
+      <div class="rcard rc-gold"><div class="rc-t">نتيجتك</div><div class="rc-v">${ico("star-gold", 20)} <span dir="ltr" class="frac"><span id="mv-score">٠</span>/${toAr(total)}</span></div></div>
       <div class="rcard rc-blue"><div class="rc-t">تقديرك التقريبي</div><div class="rc-v">${ico("target", 20)} ~<span id="mv-est">٠</span></div></div>
       <div class="rcard rc-green"><div class="rc-t">الوقت</div><div class="rc-v">${TIMER_SVG} ${toAr(mins)} د</div></div>
     </div>
