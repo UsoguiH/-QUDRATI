@@ -1,0 +1,27 @@
+{
+  "name": "قدراتي — تدرب على القسم الكمي",
+  "short_name": "قدراتي",
+  "description": "لعبة مجانية للتدريب على القسم الكمي في اختبار القدرات العامة: أسئلة أصلية بأسلوب الاختبار، دروس قصيرة، مرجع للقوانين، واختبارات تجريبية.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "id": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#FFFFFF",
+  "theme_color": "#58CC02",
+  "categories": ["education"],
+  "icons": [
+    { "src": "assets/icons/app/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/app/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/app/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/icons/app/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "تدريب حر", "short_name": "تدريب", "url": "./#practice", "icons": [{ "src": "assets/icons/app/icon-192.png", "sizes": "192x192" }] },
+    { "name": "اختبار تجريبي", "short_name": "تجريبي", "url": "./#mock", "icons": [{ "src": "assets/icons/app/icon-192.png", "sizes": "192x192" }] },
+    { "name": "المرجع", "short_name": "المرجع", "url": "./#guide", "icons": [{ "src": "assets/icons/app/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

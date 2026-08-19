@@ -39,7 +39,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {}, practice: null, badges: null, chests: 0, guideSeen: {}, activity: {}, tsecs: 0, tans: 0 };
+const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {}, practice: null, badges: null, chests: 0, guideSeen: {}, activity: {}, tsecs: 0, tans: 0, theme: "auto" };
 const LEAGUE_NAMES = ["عبدالله", "محمد", "نورة", "سارة", "فهد", "ريم", "خالد", "لمى", "تركي", "جواهر", "عمر", "هند", "سلمان", "رنا", "بدر", "ليان", "ناصر", "شهد", "يزيد", "دانة", "مازن", "أصيل", "وليد", "غادة"];
 /* Permanent rank tiers (badge art in assets/icons/ranks/). A user's tier is
    the highest threshold their LIFETIME total XP (S.totalXp) has crossed —
@@ -219,6 +219,13 @@ function dailyTick() {
     setTimeout(() => toast(`🎁 اكتمل تمرين اليوم! صندوقك بانتظارك في الرئيسية`, "quest"), 1200);
 }
 
+/* Arabic counted nouns: 1 singular, 2 dual, 3-10 plural, 11+ singular accusative */
+function arPlural(n, one, two, few, many) {
+  if (n === 1) return one;
+  if (n === 2) return two;
+  if (n <= 10) return toAr(n) + " " + few;
+  return toAr(n) + " " + many;
+}
 function dayPhrase(n) {
   if (n === 1) return "يوم واحد";
   if (n === 2) return "يومان";
@@ -417,7 +424,26 @@ function render() {
   renderSidebar();
   renderAside();
 }
-function go(v) { view = v; render(); window.scrollTo(0, 0); }
+const VIEWS = ["path", "practice", "guide", "achievements", "league", "mock", "stats", "review", "settings"];
+let hashLock = false;
+function go(v) {
+  view = v; render(); window.scrollTo(0, 0);
+  if (VIEWS.indexOf(v) > -1) {
+    hashLock = true;
+    location.hash = v === "path" ? "" : "#" + v;
+    setTimeout(() => { hashLock = false; }, 0);
+  }
+}
+function viewFromHash() {
+  const v = (location.hash || "").replace("#", "");
+  return VIEWS.indexOf(v) > -1 ? v : "path";
+}
+window.addEventListener("hashchange", () => {
+  if (hashLock) return;
+  if (SES || MOCK) return;                       // never yank someone out of a live session
+  const v = viewFromHash();
+  if (v !== view) { view = v; render(); window.scrollTo(0, 0); }
+});
 
 const ICO_FILE = { "nav-exam": "nav-exam-64.png" }; // raster icons (user-provided art)
 const ico = (name, size) => `<img class="ic" src="assets/icons/${ICO_FILE[name] || name + ".svg"}" width="${size}" height="${size}" alt="">`;
@@ -584,7 +610,7 @@ function renderPath() {
           <path d="M 44.5 3 A 41.5 39 0 0 1 81.5 25" stroke="${u.c}" stroke-width="6" stroke-linecap="round"/>
         </svg>` : "";
       // exact Figma "Level" colors per state: gold done / unit-color open / gray locked
-      const nc = done ? ["#FFC800", "#E6A000", "#FFE700"] : open ? [u.c, u.s, u.h] : ["#E5E5E5", "#B7B7B7", "transparent"];
+      const nc = done ? ["#FFC800", "#E6A000", "#FFE700"] : open ? [u.c, u.s, u.h] : ["var(--line)", "var(--gray-shadow)", "transparent"];
       html += `<div class="path-row"><div class="node-col${current ? " bob" : ""}" style="right:${x}px">
         ${ring}
         <button class="node ${cls}" style="--node-c:${nc[0]};--node-s:${nc[1]};--node-h:${nc[2]};--d:${(gi % 10) * 0.06}s"
@@ -708,7 +734,7 @@ function questionBody(q, selIdx, lockHandlers, pickFn, method) {
       <div class="cmp-box"><div class="cmp-t">القيمة الأولى</div><div class="cmp-v">${q.value1}</div></div>
       <div class="cmp-box"><div class="cmp-t">القيمة الثانية</div><div class="cmp-v">${q.value2}</div></div></div>`;
   h += `<div class="choices">` + choices.map((c, i) =>
-    `<button class="choice ${selIdx === i ? "sel" : ""}" data-ci="${i}" style="--d:${0.05 + i * 0.07}s" ${lockHandlers ? "" : `onclick="${pickFn || "A.pick"}(${i})"`}>
+    `<button class="choice ${selIdx === i ? "sel" : ""}" data-ci="${i}" aria-pressed="${selIdx === i}" style="--d:${0.05 + i * 0.07}s" ${lockHandlers ? "" : `onclick="${pickFn || "A.pick"}(${i})"`}>
        <span class="ch-letter">${LETTERS[i]}</span><span>${c}</span><span class="ch-key" aria-hidden="true">${i + 1}</span></button>`).join("") + `</div>`;
   return h;
 }
@@ -749,7 +775,7 @@ function renderSession() {
     <div class="screen screen-full">
       <div class="session-top">
         <button class="x-btn" onclick="A.quitSession()">${X_SVG}</button>
-        <div class="progress"><i style="width:${pct}%"></i></div>
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="تقدمك في الجلسة"><i style="width:${pct}%"></i></div>
         ${SES.mode === "lesson"
           ? `<span class="sess-hearts" id="sesHearts">${ico("heart", 22)} ${toAr(SES.hearts)}</span>`
           : `<span class="sess-hearts sess-review">${ico(SES.mode === "practice" ? "dumbbell" : "target", 22)} ${toAr(SES.done)}/${toAr(SES.total)}</span>`}
@@ -757,7 +783,7 @@ function renderSession() {
       ${timerBar()}
       <div class="q-area">${questionBody(q, SES.sel, false, null, q.method || SES.method)}</div>
       <div class="action-bar"><button class="btn" id="checkBtn" onclick="A.check()" ${SES.sel === null ? "disabled" : ""}>تحقق</button></div>
-      <div class="feedback" id="fb"></div>
+      <div class="feedback" id="fb" role="alert" aria-live="assertive"></div>
     </div>`;
   startQTimer();
 }
@@ -796,7 +822,7 @@ function timerBar() {
   return `<div class="qtimer" id="qtWrap" title="الوقت المتبقي">
     <span class="qt-ico">${CLOCK_SVG}</span>
     <div class="qt-track"><i class="qt-fill" id="qtFill"></i></div>
-    <b class="qt-num" id="qtNum">${toAr(Q_SECS)}</b>
+    <b class="qt-num" id="qtNum" aria-label="الوقت المتبقي">${toAr(Q_SECS)}</b>
   </div>`;
 }
 
@@ -805,7 +831,7 @@ const CHECK_BADGE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" 
 let toastT = null;
 function toast(msg, kind) {
   let t = document.getElementById("toast");
-  if (!t) { t = document.createElement("div"); t.id = "toast"; document.body.appendChild(t); }
+  if (!t) { t = document.createElement("div"); t.id = "toast"; t.setAttribute("role", "status"); t.setAttribute("aria-live", "polite"); document.body.appendChild(t); }
   t.className = "toast " + (kind || "") + " show";
   t.innerHTML = msg;
   clearTimeout(toastT);
@@ -1891,6 +1917,14 @@ function renderSettings() {
         <button class="btn btn-ghost" style="width:auto;padding:8px 18px 6px" onclick="A.logout()">تبديل</button>
       </div>
     </div>
+    <div class="card"><h3>المظهر</h3>
+      <div class="seg">
+        <button class="${(S.theme || "auto") === "auto" ? "on" : ""}" onclick="A.setTheme('auto')">تلقائي</button>
+        <button class="${S.theme === "light" ? "on" : ""}" onclick="A.setTheme('light')">فاتح ☀️</button>
+        <button class="${S.theme === "dark" ? "on" : ""}" onclick="A.setTheme('dark')">داكن 🌙</button>
+      </div>
+      <div class="r-sub" style="margin-top:8px">«تلقائي» يتبع إعداد جهازك.</div>
+    </div>
     <div class="card"><h3>المسار</h3>
       <div class="seg">
         <button class="${S.track === "sci" ? "on" : ""}" onclick="A.setTrack('sci')">علمي 🔬</button>
@@ -1906,9 +1940,17 @@ function renderSettings() {
       <div class="row"><div><div class="r-label">الأصوات</div><div class="r-sub">مؤثرات صوتية عند الإجابة</div></div>
         <button class="toggle ${S.sound ? "on" : ""}" onclick="A.toggleSound()"></button></div>
     </div>
+    ${isInstalled() ? "" : `<div class="card">
+      <div class="row"><div><div class="r-label">ثبّت التطبيق</div><div class="r-sub">أيقونة على شاشتك، ويعمل بدون إنترنت</div></div>
+        <button class="btn btn-blue" style="width:auto;padding:8px 18px 6px" onclick="A.installApp()">تثبيت</button></div>
+    </div>`}
     <div class="card">
       <div class="row"><div class="r-label">حول التطبيق</div><button class="btn btn-ghost" style="width:auto;padding:8px 18px 6px" onclick="A.showAbout()">عرض</button></div>
       <div class="row"><div class="r-label">منصة قياس الرسمية</div><a class="btn btn-blue" style="width:auto;padding:8px 18px 6px;text-decoration:none;text-align:center" href="https://etec.gov.sa" target="_blank" rel="noopener">زيارة ↗</a></div>
+    </div>
+    <div class="card">
+      <div class="row"><div><div class="r-label">نسخة احتياطية</div><div class="r-sub">احفظ تقدمك أو انقله لجهاز آخر</div></div>
+        <button class="btn btn-ghost" style="width:auto;padding:8px 18px 6px" onclick="A.backupSheet()">فتح</button></div>
     </div>
     <div class="card">
       <div class="row"><div><div class="r-label">إعادة تعيين التقدم</div><div class="r-sub">حذف كل النقاط والإنجازات</div></div>
@@ -1916,6 +1958,23 @@ function renderSettings() {
     </div>
   </div></div>` + bottomnav("settings");
 }
+/* The theme attribute is always written explicitly — including for "auto" —
+   so the stylesheet only ever needs one [data-theme="dark"] branch. */
+function prefersDark() { return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches; }
+function applyTheme() {
+  const pref = S.theme || "auto";
+  const dark = pref === "dark" || (pref === "auto" && prefersDark());
+  document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  const m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute("content", dark ? "#12161F" : "#58CC02");
+}
+if (window.matchMedia) {
+  const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  const onChange = () => { if ((S.theme || "auto") === "auto") applyTheme(); };
+  mq.addEventListener ? mq.addEventListener("change", onChange) : mq.addListener(onChange);
+}
+A.setTheme = function (t) { S.theme = t; save(); applyTheme(); render(); };
+
 A.setTrack = function (t) { S.track = t; save(); render(); };
 A.toggleSound = function () { S.sound = !S.sound; save(); render(); };
 A.resetAll = function () {
@@ -2196,6 +2255,7 @@ function afterLogin() {
   } else if (!S.examAsked && !S.exam) {
     renderExamSetup(true);
   } else {
+    view = viewFromHash();
     render();
   }
 }
@@ -2399,7 +2459,7 @@ function guideCard(d, l, open) {
   return `<div class="gcard${open ? " open" : ""}">
     <button class="gc-head" onclick="A.guideLesson('${l.key}')" aria-expanded="${open}">
       <span class="gc-ico" style="background:${u.c}">${l.icon || "★"}</span>
-      <span class="gc-t"><b>${l.title}</b><span>${toAr(g.rules.length)} قواعد · مثال محلول</span></span>
+      <span class="gc-t"><b>${l.title}</b><span>${arPlural(g.rules.length, "قاعدة واحدة", "قاعدتان", "قواعد", "قاعدة")} · مثال محلول</span></span>
       ${p.stars ? `<span class="gc-stars">${"★".repeat(p.stars)}</span>` : ""}
       <span class="gc-chev">${open ? "▲" : "▼"}</span>
     </button>
@@ -2428,7 +2488,7 @@ function renderGuide() {
       const laws = d.lessons.reduce((a, l) => a + ((guideFor(d.key, l.key) || { rules: [] }).rules.length), 0);
       return `<button class="card gunit" onclick="A.guide('${d.key}')" style="--gu-c:${u.c};--gu-s:${u.s}">
         <span class="gu-badge">${ico("guide", 26)}</span>
-        <span class="gu-txt"><b>${d.title}</b><span>${toAr(n)} دروس · ${toAr(laws)} قاعدة</span></span>
+        <span class="gu-txt"><b>${d.title}</b><span>${arPlural(n, "درس واحد", "درسان", "دروس", "درساً")} · ${arPlural(laws, "قاعدة واحدة", "قاعدتان", "قواعد", "قاعدة")}</span></span>
         <span class="gu-go">←</span>
       </button>`;
     }).join("");
@@ -2445,7 +2505,7 @@ function renderGuide() {
   const list = unit.lessons.map(l => guideCard(unit, l, GUIDE_LESSON === l.key)).join("");
   $app.innerHTML = statbar() + `<div class="screen"><div class="page">
     <div class="rv-top"><button class="rv-back" onclick="A.guide(null)" aria-label="رجوع">→</button><h1>${unit.title}</h1></div>
-    <div class="sub" style="color:${u.s}">${toAr(unit.lessons.length)} دروس — اضغط أي درس لعرض قوانينه</div>
+    <div class="sub" style="color:${u.s}">${arPlural(unit.lessons.length, "درس واحد", "درسان", "دروس", "درساً")} — اضغط أي درس لعرض قوانينه</div>
     ${list}
   </div></div>` + bottomnav("guide");
 }
@@ -2596,6 +2656,124 @@ function renderAchievements() {
   </div></div>` + bottomnav("achievements");
 }
 
+/* ============================================================
+   نسخة احتياطية — progress lives only in this browser's
+   localStorage, so clearing site data, switching phones or
+   reinstalling wipes months of work. Export produces a code (and
+   a file) the player can keep; import restores it anywhere.
+   ============================================================ */
+const BACKUP_TAG = "QDR1.";
+
+function exportCode() {
+  return BACKUP_TAG + btoa(unescape(encodeURIComponent(JSON.stringify(S))));
+}
+function parseCode(txt) {
+  const raw = String(txt || "").trim().replace(/\s+/g, "");
+  if (raw.indexOf(BACKUP_TAG) !== 0) return null;
+  try {
+    const o = JSON.parse(decodeURIComponent(escape(atob(raw.slice(BACKUP_TAG.length)))));
+    if (!o || typeof o !== "object" || !("lessons" in o) || !("qstats" in o)) return null;
+    return o;
+  } catch { return null; }
+}
+function backupStamp() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+
+A.backupSheet = function () {
+  const old = document.querySelector(".bk-veil"); if (old) old.remove();
+  const code = exportCode();
+  const flat = allLessons();
+  const doneN = flat.filter(x => lessonProg(x.key).stars > 0).length;
+  const veil = document.createElement("div");
+  veil.className = "bk-veil";
+  veil.innerHTML = `<div class="bk-sheet" role="dialog" aria-modal="true" aria-label="نسخة احتياطية">
+    <div class="ms-grip"></div>
+    <h3>نسخة احتياطية من تقدمك</h3>
+    <div class="bk-sub">تقدمك محفوظ في هذا المتصفح فقط. احتفظ برمز النسخة حتى لا تفقده عند تغيير الجهاز أو مسح بيانات المتصفح.</div>
+
+    <div class="bk-box">
+      <div class="bk-h">رمز النسخة الحالية</div>
+      <div class="bk-meta">${arPlural(doneN, "درس واحد", "درسان", "دروس", "درساً")} · ${toAr(S.totalXp || 0)} خبرة · سلسلة ${toAr(S.streak.count)}</div>
+      <textarea class="bk-code" id="bkOut" readonly rows="3" aria-label="رمز النسخة">${code}</textarea>
+      <div class="bk-row">
+        <button class="btn btn-blue" onclick="A.copyBackup()">نسخ الرمز</button>
+        <button class="btn btn-ghost" onclick="A.downloadBackup()">تنزيل ملف</button>
+      </div>
+    </div>
+
+    <div class="bk-box">
+      <div class="bk-h">استعادة نسخة</div>
+      <div class="bk-meta">الصق رمزاً حفظته سابقاً — سيحل محل تقدمك الحالي.</div>
+      <textarea class="bk-code" id="bkIn" rows="3" placeholder="QDR1.…" aria-label="الصق رمز النسخة"></textarea>
+      <button class="btn" onclick="A.restoreBackup()">استعادة</button>
+    </div>
+
+    <button class="btn btn-ghost bk-close" onclick="A.closeBackup()">إغلاق</button>
+  </div>`;
+  veil.onclick = e => { if (e.target === veil) A.closeBackup(); };
+  document.body.appendChild(veil);
+  requestAnimationFrame(() => veil.classList.add("show"));
+};
+A.closeBackup = function () {
+  const v = document.querySelector(".bk-veil");
+  if (!v) return;
+  v.classList.remove("show");
+  setTimeout(() => v.remove(), 280);
+};
+A.copyBackup = function () {
+  const el = document.getElementById("bkOut");
+  if (!el) return;
+  el.select(); el.setSelectionRange(0, el.value.length);
+  const done = () => toast("تم نسخ الرمز — احفظه في مكان آمن ✓");
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(el.value).then(done, () => { document.execCommand("copy"); done(); });
+  } else { document.execCommand("copy"); done(); }
+};
+A.downloadBackup = function () {
+  const blob = new Blob([exportCode()], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "qudrati-backup-" + backupStamp() + ".txt";
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  toast("تم تنزيل ملف النسخة ✓");
+};
+A.restoreBackup = function () {
+  const el = document.getElementById("bkIn");
+  const o = parseCode(el && el.value);
+  if (!o) { toast("الرمز غير صالح — تأكد من نسخه كاملاً", "bad"); return; }
+  const les = Object.keys(o.lessons || {}).length;
+  if (!confirm(`سيحل هذا محل تقدمك الحالي.\nالنسخة تحتوي على ${toAr(les)} درساً و${toAr(o.totalXp || 0)} نقطة خبرة.\nهل تريد المتابعة؟`)) return;
+  localStorage.setItem("qudratState", JSON.stringify(o));
+  location.reload();
+};
+
+/* ---------------- install & connectivity ----------------
+   The app is a full offline PWA. Chrome hands us the install prompt once
+   its own criteria are met; we stash it so Settings can offer a real
+   "install" button instead of hoping the user finds the browser menu. */
+let installPrompt = null;
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  installPrompt = e;
+  if (view === "settings") render();
+});
+window.addEventListener("appinstalled", () => { installPrompt = null; toast("تم تثبيت قدراتي على جهازك ✓"); });
+function isInstalled() {
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+A.installApp = async function () {
+  if (!installPrompt) { toast("من قائمة المتصفح اختر «إضافة إلى الشاشة الرئيسية»"); return; }
+  installPrompt.prompt();
+  await installPrompt.userChoice;
+  installPrompt = null;
+  render();
+};
+window.addEventListener("offline", () => toast("لا يوجد اتصال — التطبيق يعمل بدون إنترنت ✓"));
+window.addEventListener("online", () => toast("عاد الاتصال بالإنترنت"));
+
 /* ---------------- keyboard (web) ----------------
    A lesson is answerable without a mouse: 1-4 picks a choice,
    Enter checks it and then advances, Esc leaves the session. */
@@ -2603,10 +2781,16 @@ function keyboardBlocked() {
   const t = document.activeElement;
   if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return true;
   return !!document.querySelector(
-    ".modal-veil, .chest-veil, .rankup-veil, .streak-veil, .dq-veil, .lesson-pop-veil, .method-veil.show");
+    ".modal-veil, .chest-veil, .rankup-veil, .streak-veil, .dq-veil, .lesson-pop-veil, .bk-veil, .method-veil.show");
 }
 
 document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    if (document.querySelector(".bk-veil")) { A.closeBackup(); return; }
+    if (document.querySelector(".method-veil.show")) { A.closeMethod(); return; }
+    if (document.querySelector(".lesson-pop-veil")) { document.querySelector(".lesson-pop-veil").remove(); return; }
+    if (document.querySelector(".dq-veil")) { A.closeDailyQ(); return; }
+  }
   // only while a question is actually on screen (not the win/fail cards)
   if (!SES || !document.querySelector(".q-area")) return;
   if (e.ctrlKey || e.metaKey || e.altKey || e.key.length === 0 || keyboardBlocked()) return;
@@ -2634,6 +2818,7 @@ document.addEventListener("keydown", e => {
 
 /* ---------------- boot ---------------- */
 function boot() {
+  applyTheme();
   if (!S.badges) checkAchievements(true);   // grant what this player already earned, quietly
   initCorrectVoice(); // preload the correct-answer clip so the first play is instant
   if (!S.user) renderLogin();
