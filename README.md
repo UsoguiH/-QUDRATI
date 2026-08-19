@@ -41,12 +41,19 @@
 
 ## ✨ الميزات
 
-- 🗺️ **مسار دروس متعرّج** بأسلوب Duolingo: 4 وحدات (الحساب، الجبر، الهندسة، التحليل والإحصاء) × 18 درساً، تُفتح بالتتابع.
-- 📚 **216 سؤالاً أصلياً** بصيغة الاختبار الرسمي: اختيار من متعدد + أسئلة **المقارنات** بخياراتها الثابتة الأربعة، مع حل تفصيلي لكل سؤال، وأشكال SVG للهندسة وجداول/رسوم للإحصاء.
-- 🎮 **نظام اللعبة**: ٣ قلوب ❤️ لكل مستوى (خسارتها تعيد المستوى من البداية)، مؤقت ⏰ ٩٠ ثانية لكل سؤال، نقاط خبرة ⚡، سلسلة أيام 🔥، نجوم لكل درس، وإعادة الأسئلة الخاطئة في نهاية الجلسة.
+- 🗺️ **مسار دروس متعرّج** بأسلوب Duolingo: ٤ وحدات (مهارات وقوانين القدرات، أساسيات الأعداد، النسب والنسبة المئوية، الهندسة) و٣٠ درساً تُفتح بالتتابع — أو تجاوز أي وحدة باختبار قصير إن كنت تتقنها.
+- 📚 **٧٢٠ سؤالاً أصلياً** بصيغة الاختبار الرسمي: اختيار من متعدد + أسئلة **المقارنات** بخياراتها الثابتة الأربعة، مع حل تفصيلي وخطوات «كيف أحلّها؟» لكل سؤال، وأشكال SVG للهندسة وجداول/رسوم للإحصاء.
+- 📖 **المرجع**: ١٤٠ قاعدة وقانوناً مرتبطة بدروس المسار، مع مثال محلول والخطأ الشائع في كل درس.
+- 🏋️ **تدريب حر**: تمرّن على نقاط ضعفك، أو على الأسئلة التي لم تجرّبها، أو اختر الوحدة والدرس والصعوبة وعدد الأسئلة — بلا قلوب وبمؤقت اختياري.
+- 📝 **اختبار تجريبي**: قسمان × ٢٥ دقيقة بصيغة الاختبار الحاسوبي، مع تنقّل حر وتعليم الأسئلة ومراجعة كل إجابة بعد النتيجة.
+- 🎮 **نظام اللعبة**: ٣ قلوب ❤️ لكل مستوى (خسارتها تعيد المستوى من البداية)، مؤقت ⏰ ٦٠ ثانية لكل سؤال، نقاط خبرة ⚡، سلسلة أيام 🔥، نجوم لكل درس، وإعادة الأسئلة الخاطئة في نهاية الجلسة.
+- 🏅 **٢٢ إنجازاً** و**مجلس** أسبوعي وخمس رتب، و**إحصائيات** تُظهر نشاطك خلال ١٣ أسبوعاً وأضعف مواضيعك وجاهزيتك لموعد اختبارك.
 - 🎓 **مساران**: علمي / أدبي (الأدبي يستبعد الأسئلة الموسومة `sci`).
 - 💾 **حفظ تلقائي**: التقدم كاملاً في `localStorage` — لا حسابات ولا إنترنت.
-- 📱 **متجاوب**: يعمل على الجوال والحاسب (بعرض تطبيق جوال 430px)، ومتوفر كتطبيق أندرويد عبر Capacitor.
+- 📱 **متجاوب**: تصميم كامل للجوال والحاسب، ومتوفر كتطبيق أندرويد عبر Capacitor.
+- 📶 **يعمل بدون إنترنت**: ثبّته من المتصفح (PWA) فيعمل كتطبيق كامل بلا اتصال — بكل الأسئلة والمرجع.
+- 🌙 **وضع ليلي** يتبع إعداد جهازك أو تختاره يدوياً.
+- 💾 **نسخة احتياطية**: صدّر تقدمك كرمز أو ملف واستعده على أي جهاز.
 - ⚖️ **إخلاء مسؤولية** عند أول تشغيل وفي «حول التطبيق»، مع رابط لموقع هيئة تقويم التعليم والتدريب الرسمي.
 
 ## 🕹️ كيف تلعب؟
@@ -57,7 +64,7 @@
 
 2. **اختر مسارك** — علمي 🔬 أو أدبي 📖 (يمكن تغييره لاحقاً من الإعدادات).
 3. **ابدأ من أول درس** في مسار الدروس المتعرّج، وافتح الدروس التالية بالتتابع.
-4. **حافظ على قلوبك** ❤️ — لديك ٣ قلوب لكل مستوى و⏰ ٩٠ ثانية لكل سؤال.
+4. **حافظ على قلوبك** ❤️ — لديك ٣ قلوب لكل مستوى و⏰ ٦٠ ثانية لكل سؤال.
 5. **تقدّمك يُحفظ تلقائياً** في جهازك — أغلق الصفحة وارجع متى شئت من نفس المتصفح.
 
 > 💡 **نصيحة للجوال:** افتح الرابط ثم من قائمة المتصفح اختر «إضافة إلى الشاشة الرئيسية» لتحصل على أيقونة تفتح اللعبة كأنها تطبيق.
@@ -75,7 +82,7 @@
 2. افتح `index.html` مباشرة في المتصفح.
 
 **للمعاينة أثناء التطوير:** افتح `preview.html#<screen>` حيث `<screen>` إحدى:
-`path` | `lesson` | `pop` | `fb` | `done` | `exam` | `stats` | `settings`
+`path` | `lesson` | `pop` | `fb` | `done` | `fail` | `stats` | `settings` | `practice` | `guide` | `achievements` | `league` | `mock` | `review` | `skiptest`
 (يتجاوز شاشة الإخلاء ويملأ حالة تجريبية).
 
 ## 🗂 بنية المشروع
@@ -85,9 +92,13 @@ index.html          ← هيكل التطبيق
 preview.html        ← معاينة تطوير (تجاوز الإخلاء + حالة تجريبية)
 css/style.css       ← نظام التصميم: قيم مطابقة لملف Figma «DuoLingo Design System» + خط Baloo Bhaijaan 2
 js/app.js           ← منطق اللعبة كاملاً (الحالة في localStorage)
-js/data/*.js        ← بنك الأسئلة (ملف لكل مجال: arithmetic, algebra, geometry, statistics)
+js/data/*.js        ← بنك الأسئلة (ملف لكل وحدة: skills, numbers, ratios, geometry)
+js/data/guide.js    ← المرجع: قوانين كل درس ومثاله المحلول
+sw.js               ← عامل الخدمة (العمل بدون إنترنت)
+manifest.webmanifest ← بيانات التثبيت كتطبيق
 assets/icons/*.svg  ← أيقونات مُصدَّرة من ملف Figma نفسه
 tools/validate.js   ← مدقق بنية بنك الأسئلة
+tools/make-icons.js ← توليد أيقونات التطبيق (بلا مكتبات)
 Qudrati.apk         ← تطبيق أندرويد جاهز (Capacitor)
 ```
 
@@ -151,14 +162,18 @@ Works in any browser on phone or desktop — no download, no install, no sign-up
 
 **Highlights**
 
-- Winding lesson path: 4 units (Arithmetic, Algebra, Geometry, Statistics) × 18 lessons, unlocked sequentially.
-- **216 original questions** in the official exam format: multiple choice + the signature **quantitative comparison** format, each with a step-by-step solution; SVG figures for geometry, tables/charts for statistics.
-- Game systems: 3 hearts per level, 90-second timer, XP, daily streak, stars per lesson, wrong-answer retry queue.
+- Winding lesson path: 4 units, 30 lessons, unlocked sequentially — or skip a unit you already know with a short test.
+- **720 original questions** in the official exam format: multiple choice + the signature **quantitative comparison** format, each with a step-by-step solution and a "how do I solve this?" walkthrough; SVG figures for geometry, tables/charts for statistics.
+- A **reference** of 140 rules tied to the lessons, each with a worked example and the mistake that costs marks.
+- **Free practice** over the whole bank: weakest questions, unseen questions, or any unit/lesson/difficulty, timer optional.
+- **Mock exam**: 2 sections × 25 min in the real computerised format, with free navigation, flagging and full answer review.
+- Game systems: 3 hearts per level, 60-second timer, XP, daily streak, stars, wrong-answer retry queue, 22 achievements, weekly league.
+- Installable **PWA**: works fully offline, dark mode, and progress export/import.
 - Two tracks: scientific / humanities.
 - Progress saved in `localStorage` — no accounts, no server. Pure HTML/CSS/JS.
 - Android build available as [`Qudrati.apk`](Qudrati.apk) (Capacitor wrapper).
 
-**Run it:** clone and open `index.html` in any browser. Dev preview: `preview.html#path|lesson|pop|fb|done|exam|stats|settings`.
+**Run it:** clone and open `index.html` in any browser (a local server is needed for the service worker). Dev preview: `preview.html#path|lesson|pop|fb|done|stats|settings|practice|guide|achievements|mock|skiptest`.
 
 **Add questions:** append to `questions` in `js/data/<domain>.js` (schema in the Arabic section above), then run `node tools/validate.js`.
 

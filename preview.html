@@ -59,6 +59,18 @@
       const h = location.hash.replace("#", "") || "path";
       if (h.indexOf("streak") === 0) { A.go("path"); A.debugStreak(parseInt(h.replace("streak", "")) || 7); }
       else if (["stats", "settings", "mock", "league", "review", "practice", "guide", "achievements"].includes(h)) A.go(h);
+      else if (h === "skiptest") { window.confirm = function () { return true; }; A.skipTest("skills"); }
+      else if (h === "skipdone") {
+        window.confirm = function () { return true; }; A.skipTest("ratios");
+        for (let i = 0; i < 40 && document.querySelector(".choices .choice"); i++) { A.pick(A.debugCurrent().answer); A.check(); A.next(); }
+      }
+      else if (h === "skipfail") {
+        window.confirm = function () { return true; }; A.skipTest("ratios");
+        for (let i = 0; i < 40 && document.querySelector(".choices .choice"); i++) {
+          const q = A.debugCurrent();
+          A.pick((q.answer + 1) % (q.format === "comparison" ? 4 : q.choices.length)); A.check(); A.next();
+        }
+      }
       else if (h === "practicedo") { A.go("practice"); A.startPractice("custom"); }
       else if (h === "practicedone") {
         A.go("practice"); A.startPractice("custom");

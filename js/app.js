@@ -597,7 +597,10 @@ function renderPath() {
     html += `<div class="unit-banner u-${d.color === "yellow" ? "gold" : d.color}">
       <div class="u-txt"><div class="u-kicker">القسم ${toAr(1)}، الوحدة ${toAr(di + 1)}</div><h2>${d.title}</h2></div>
       <button class="u-side" onclick="A.guide('${d.key}')" title="قوانين ${d.title}" aria-label="قوانين ${d.title}"><span class="u-divider"></span>${ico("guide", 24)}</button>
-    </div><div class="path">`;
+    </div>
+    ${unitLocked(d) ? `<div class="unit-skip"><button class="uskip" onclick="A.skipTest('${d.key}')">
+      ${ico("lightning", 17)} تعرفها؟ تجاوز الوحدة باختبار قصير</button></div>` : ""}
+    <div class="path">`;
     d.lessons.forEach((l, li) => {
       const key = d.key + "." + l.key, p = lessonProg(key);
       const done = p.stars > 0, open = gi <= firstOpenIdx, current = gi === firstOpenIdx;
@@ -776,7 +779,7 @@ function renderSession() {
       <div class="session-top">
         <button class="x-btn" onclick="A.quitSession()">${X_SVG}</button>
         <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="تقدمك في الجلسة"><i style="width:${pct}%"></i></div>
-        ${SES.mode === "lesson"
+        ${SES.mode === "lesson" || SES.mode === "skip"
           ? `<span class="sess-hearts" id="sesHearts">${ico("heart", 22)} ${toAr(SES.hearts)}</span>`
           : `<span class="sess-hearts sess-review">${ico(SES.mode === "practice" ? "dumbbell" : "target", 22)} ${toAr(SES.done)}/${toAr(SES.total)}</span>`}
       </div>
@@ -839,7 +842,7 @@ function toast(msg, kind) {
 }
 
 function loseHeart() {
-  if (SES.mode !== "lesson") return;   // practice and review are no-fail
+  if (SES.mode === "practice" || SES.mode === "review") return;   // no-fail modes
   SES.hearts = Math.max(0, SES.hearts - 1);
   const el = document.getElementById("sesHearts");
   if (el) {
@@ -859,7 +862,7 @@ function timeUp() {
   noteAnswer(q, false);
   if (!(q.id in SES.firstTry)) SES.firstTry[q.id] = false;
   SES.retried[q.id] = true;
-  SES.queue.push(q);
+  if (SES.mode !== "skip") SES.queue.push(q);
   logActivity(Q_SECS);
   loseHeart();
   document.querySelectorAll(".choice").forEach((b, j) => {
@@ -918,7 +921,8 @@ A.check = function () {
     SES.done++;
     // rank XP / gems. Replaying a finished lesson pays a flat +2/+2 (farmable,
     // unlimited); a fresh clear pays full first-try (10/5) or retry (5/2).
-    if (SES.mode === "practice") { SES.xp += SES.retried[q.id] ? 1 : PRACTICE_XP; SES.gems += SES.retried[q.id] ? 0 : PRACTICE_GEMS; }
+    if (SES.mode === "skip") { /* the whole reward is paid on passing */ }
+    else if (SES.mode === "practice") { SES.xp += SES.retried[q.id] ? 1 : PRACTICE_XP; SES.gems += SES.retried[q.id] ? 0 : PRACTICE_GEMS; }
     else if (SES.replay) { SES.xp += 2; SES.gems += 2; }
     else { SES.xp += SES.retried[q.id] ? 5 : 10; SES.gems += SES.retried[q.id] ? 2 : 5; }
     fb.className = "feedback good show";
@@ -929,7 +933,7 @@ A.check = function () {
   } else {
     sndBad();
     SES.retried[q.id] = true;
-    SES.queue.push(q); // Duolingo behavior: wrong question comes back at the end
+    if (SES.mode !== "skip") SES.queue.push(q); // Duolingo behavior: wrong question comes back at the end
     loseHeart();
     fb.className = "feedback bad show";
     fb.innerHTML = `<div class="fb-head"><span class="fb-x">✕</span> إجابة غير صحيحة</div>
@@ -980,10 +984,13 @@ A.debugEarn = function (n) { gainXP(n); gainGems(n); save(); render(); };       
 A.debugMock = function () { return MOCK && MOCK.sections[MOCK.si].items[MOCK.qi].q; }; // dev harness only
 
 A.next = function () {
-  if (SES.mode === "lesson" && SES.hearts <= 0) { sessionFailed(); return; }
+  if (SES.hearts <= 0) {
+    if (SES.mode === "lesson") { sessionFailed(); return; }
+    if (SES.mode === "skip") { skipFailed(); return; }
+  }
   SES.idx++; SES.sel = null; SES.locked = false;
   if (SES.done >= SES.total || SES.idx >= SES.queue.length) {
-    ({ review: reviewComplete, practice: practiceComplete, lesson: lessonComplete })[SES.mode]();
+    ({ review: reviewComplete, practice: practiceComplete, lesson: lessonComplete, skip: skipComplete })[SES.mode]();
     return;
   }
   renderSession();
@@ -1315,8 +1322,8 @@ function finishMock(timedOut) {
     sec.items.forEach((it, i) => {
       total++; perDom[it.dom].n++;
       const a = sec.answers[i];
-      if (a === it.q.answer) { score++; perDom[it.dom].r++; }
-      else if (a === null) unanswered++;
+      if (a === it.q.answer) { score++; perDom[it.dom].r++; noteAnswer(it.q, true); }
+      else { if (a === null) unanswered++; else noteAnswer(it.q, false); }
     });
   });
   const answeredN = total - unanswered;
@@ -2749,6 +2756,108 @@ A.restoreBackup = function () {
   localStorage.setItem("qudratState", JSON.stringify(o));
   location.reload();
 };
+
+/* ============================================================
+   اختبار تجاوز الوحدة — the path unlocks strictly in order, so a
+   student who already knows arithmetic had to grind 240 questions
+   before reaching geometry. This is Duolingo's "jump here": eight
+   questions spread across the unit, two mistakes allowed. Pass and
+   every lesson in the unit opens at one star.
+   ============================================================ */
+const SKIP_LEN = 8;          // questions in a unit test
+const SKIP_HEARTS = 2;       // wrong answers allowed before it fails
+const SKIP_XP = 50;          // far less than actually playing the unit
+const SKIP_GEMS = 25;
+
+function unitLocked(d) { return d.lessons.some(l => lessonProg(d.key + "." + l.key).stars === 0); }
+
+/* one question per lesson where possible, weighted to the harder half */
+function skipQuestions(d) {
+  const per = d.lessons.map(l => {
+    const qs = trackFilter(l.questions).filter(q => q.difficulty >= 2);
+    const pool = qs.length ? qs : trackFilter(l.questions);
+    return pool.length ? shuffle(pool)[0] : null;
+  }).filter(Boolean);
+  const picked = shuffle(per).slice(0, SKIP_LEN);
+  while (picked.length < SKIP_LEN) {                       // small units: top up from the whole unit
+    const all = shuffle(d.lessons.reduce((a, l) => a.concat(trackFilter(l.questions)), []));
+    const extra = all.find(q => picked.indexOf(q) === -1);
+    if (!extra) break;
+    picked.push(extra);
+  }
+  return picked.sort((a, b) => a.difficulty - b.difficulty);
+}
+
+A.skipTest = function (domKey) {
+  const d = window.QBANK[domKey];
+  if (!d) return;
+  const qs = skipQuestions(d);
+  if (qs.length < 4) { toast("لا توجد أسئلة كافية لاختبار التجاوز"); return; }
+  if (!confirm(`اختبار تجاوز «${d.title}»\n\n${toAr(qs.length)} أسئلة، ومسموح بخطأين فقط.\nإذا نجحت تُفتح كل دروس الوحدة.\nوإذا لم تنجح لا تخسر شيئاً.\n\nهل تبدأ؟`)) return;
+  SES = {
+    mode: "skip", domKey, lesKey: null, key: null, back: "path",
+    title: d.title, method: "", timed: true,
+    queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {},
+    sel: null, locked: false, xp: 0, gems: 0, replay: false, xpBoost: false,
+    hearts: SKIP_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0,
+  };
+  renderSession();
+};
+
+function skipComplete() {
+  stopQTimer();
+  const d = window.QBANK[SES.domKey];
+  const ft = Object.values(SES.firstTry);
+  const acc = ft.length ? Math.round(ft.filter(Boolean).length / ft.length * 100) : 0;
+  const tTot = SES.tSpent, unit = d.title;
+  let opened = 0;
+  d.lessons.forEach(l => {
+    const k = d.key + "." + l.key;
+    const p = S.lessons[k] = S.lessons[k] || { stars: 0, plays: 0 };
+    if (p.stars === 0) { p.stars = 1; p.plays = Math.max(p.plays, 1); opened++; }
+  });
+  gainXP(SKIP_XP); gainGems(SKIP_GEMS);
+  bumpStreak(); save(); sndWin();
+  $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
+    ${flameHero(130)}
+    <h1 class="win-title">تجاوزت الوحدة!</h1>
+    <p class="ws-msg">${esc(unit)}</p>
+    <p class="win-sub">${arPlural(opened, "درس واحد فُتح", "درسان فُتحا", "دروس فُتحت", "درساً فُتح")} — تقدر تعيدها متى شئت لجمع النجوم</p>
+    <div class="win-gems">${ico("gem", 20)} +${toAr(SKIP_GEMS)} جوهرة</div>
+    <div class="result-cards">
+      <div class="rcard rc-gold"><div class="rc-t">الخبرة</div><div class="rc-v">${ico("lightning", 20)} <span id="cv-xp">٠</span></div></div>
+      <div class="rcard rc-blue rc-time"><div class="rc-t">الوقت</div><div class="rc-v">${TIMER_SVG} <span id="cv-time">${toAr(0)}:${toAr("00")}</span></div></div>
+      <div class="rcard rc-green"><div class="rc-t">الدقة</div><div class="rc-v">${ico("target", 22)} <span id="cv-acc">٠</span></div></div>
+    </div>
+    <div class="action-bar win-action">
+      <button class="btn" onclick="A.go('path')">متابعة</button>
+    </div>
+  </div></div>`;
+  setTimeout(() => {
+    const x = document.getElementById("cv-xp"), a = document.getElementById("cv-acc"), t = document.getElementById("cv-time");
+    if (x) countUp(x, SKIP_XP); if (a) countUp(a, acc, "٪"); if (t) countUpTime(t, tTot);
+  }, 700);
+  SES = null;
+  checkAchievements();
+}
+
+function skipFailed() {
+  stopQTimer();
+  const d = window.QBANK[SES.domKey];
+  const done = SES.done, total = SES.total, dom = SES.domKey;
+  sndLose();
+  $app.innerHTML = `<div class="screen screen-full"><div class="complete fail-scene">
+    ${brokenHeartHero()}
+    <h1 class="fail-title">لم تتجاوز هذه المرة</h1>
+    <p class="fail-sub">أصبت ${toAr(done)} من ${toAr(total)} — الوحدة «${esc(d.title)}» تستحق المرور عليها درساً درساً.<br>لم تخسر أي شيء.</p>
+    <div class="fail-actions">
+      <button class="btn" onclick="A.guide('${dom}')">اقرأ قوانين الوحدة</button>
+      <button class="btn btn-ghost" onclick="A.skipTest('${dom}')">حاول مرة أخرى</button>
+      <button class="btn btn-ghost" onclick="A.go('path')">ابدأ من أول درس</button>
+    </div>
+  </div></div>`;
+  SES = null;
+}
 
 /* ---------------- install & connectivity ----------------
    The app is a full offline PWA. Chrome hands us the install prompt once

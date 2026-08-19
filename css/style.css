@@ -2975,3 +2975,21 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
    in dark that reads as a bright block, so it inverts to a subtle lift */
 :root[data-theme="dark"] .fb-solution { background: rgba(255,255,255,.07); color: var(--ink); }
 :root[data-theme="dark"] .ri-q, :root[data-theme="dark"] .review-item { color: var(--ink); }
+
+/* ============================================================
+   اختبار تجاوز الوحدة — the "you already know this?" pill
+   ============================================================ */
+.unit-skip { display: flex; justify-content: center; margin: -2px 16px 10px; }
+.uskip {
+  display: inline-flex; align-items: center; gap: 7px;
+  border: 2px solid var(--line); background: var(--surface); color: var(--gray);
+  border-radius: 999px; padding: 7px 15px 5px;
+  font-family: var(--font); font-size: 13.5px; font-weight: 700;
+  box-shadow: 0 2px 0 var(--line);
+  transition: transform .08s, box-shadow .08s, color .12s;
+}
+.uskip img { width: 17px; height: 17px; }
+.uskip:active { transform: translateY(2px); box-shadow: none; }
+@media (hover: hover) and (pointer: fine) {
+  .uskip:hover { color: var(--ink); border-color: var(--gray-shadow); box-shadow: 0 2px 0 var(--gray-shadow); }
+}
