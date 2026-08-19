@@ -1235,9 +1235,8 @@ function startMockSection() {
   MOCK.timer = setInterval(() => {
     const sec = MOCK.sections[MOCK.si];
     sec.left--;
-    const n = document.getElementById("mkNum"), f = document.getElementById("mkFill"), w = document.getElementById("mkWrap");
+    const n = document.getElementById("mkNum"), w = document.getElementById("mkWrap");
     if (n) n.textContent = fmtTime(sec.left);
-    if (f) f.style.width = (sec.left / MOCK_SECS * 100) + "%";
     if (w) { w.classList.toggle("low", sec.left <= 120 && sec.left > 30); w.classList.toggle("crit", sec.left <= 30); }
     if (sec.left <= 0) { toast("⏰ انتهى وقت القسم"); endMockSection(true); }
   }, 1000);
@@ -1257,17 +1256,16 @@ function renderMockQ() {
     <div class="screen screen-full">
       <div class="session-top">
         <button class="x-btn" onclick="A.quitMock()">${X_SVG}</button>
-        <div class="qtimer mock-timer" id="mkWrap">
-          <span class="qt-ico">${CLOCK_SVG}</span>
-          <div class="qt-track"><i class="qt-fill" id="mkFill" style="width:${sec.left / MOCK_SECS * 100}%"></i></div>
-          <b class="qt-num" id="mkNum">${fmtTime(sec.left)}</b>
+        <div class="mock-timer" id="mkWrap" aria-label="الوقت المتبقي في القسم">
+          <span class="mk-clock">${CLOCK_SVG}</span>
+          <b id="mkNum">${fmtTime(sec.left)}</b>
         </div>
         <span class="mock-count">القسم ${toAr(MOCK.si + 1)}/${toAr(MOCK.sections.length)}</span>
       </div>
       ${qnavStrip(sec)}
       <div class="q-area">${questionBody(q, sec.answers[MOCK.qi], false, "A.mockSelect")}</div>
       <div class="action-bar mock-bar">
-        <button class="mk-flag ${sec.flags[MOCK.qi] ? "on" : ""}" onclick="A.mockFlag()" aria-label="علّم السؤال للمراجعة">⚑</button>
+        <button class="mk-flag ${sec.flags[MOCK.qi] ? "on" : ""}" onclick="A.mockFlag()" aria-label="علّم السؤال للمراجعة">⚑<span>${sec.flags[MOCK.qi] ? "معلّم" : "علّم"}</span></button>
         <button class="btn btn-ghost mk-side" onclick="A.mockGo(${MOCK.qi - 1})" ${MOCK.qi === 0 ? "disabled" : ""}>السابق</button>
         ${MOCK.qi === sec.items.length - 1
           ? `<button class="btn" onclick="A.mockEndSection()">إنهاء القسم</button>`

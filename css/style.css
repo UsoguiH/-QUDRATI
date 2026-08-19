@@ -250,9 +250,8 @@ svg.ic { display: block; }
 /* ============================================================
    Question timer — the SAME Duolingo progress bar we use up top
    (16px track, r64, inset shine line) but draining for time:
-   blue → orange (≤15s) → red panic (≤5s), and ices over when
-   frozen. (.qt-svg / .qt-hand below still style the TIMER_SVG on
-   the win/fail result cards — keep them.)
+   blue → orange (≤15s) → red panic (≤5s). (.qt-svg / .qt-hand below
+   still style the TIMER_SVG on the win/fail result cards — keep them.)
    ============================================================ */
 .qt-svg .qt-face { fill: var(--blue-light); transition: fill .3s; }
 .qt-hand {
@@ -274,59 +273,8 @@ svg.ic { display: block; }
 }
 .qtimer.low  { --qt-c: var(--orange); }
 .qtimer.crit { --qt-c: var(--red); animation: numPop 1s ease infinite; }
-.qt-ico { display: flex; width: 24px; height: 24px; flex-shrink: 0; color: var(--blue); }
-.qt-ico svg { width: 100%; height: 100%; }
-.qtimer:not(.frozen):not(.paused) .qt-ico { animation: tick 2.2s ease-in-out infinite; transform-origin: 50% 52%; }
-@keyframes tick { 0%, 100% { transform: rotate(-9deg); } 50% { transform: rotate(9deg); } }
-/* the bar itself — identical to .progress / .progress > i */
-.qt-track {
-  flex: 1; position: relative; height: 16px;
-  background: var(--line); border-radius: 64px; overflow: hidden;
-  transition: box-shadow .3s;
-}
-.qt-fill {
-  display: block; height: 100%; width: 100%; min-width: 0;
-  background: var(--blue); border-radius: 64px;
-  transition: width 1s linear, background .4s;
-  position: relative;
-}
-.qt-fill::after { /* same inset shine line as the top progress bar */
-  content: ''; position: absolute; top: 4px; right: 8px; left: 8px; height: 5px;
-  border-radius: 6px; background: rgba(255,255,255,.5);
-}
-.qt-num {
-  flex-shrink: 0; min-width: 30px; text-align: center;
-  font-weight: 800; font-size: 18px; color: var(--blue); font-variant-numeric: tabular-nums;
-}
-/* low time: orange */
-.qtimer.low .qt-ico, .qtimer.low .qt-num { color: var(--orange); }
-.qtimer.low .qt-fill { background: var(--orange); }
-.qtimer.low .qt-num { animation: numPop 1s ease infinite; }
-/* critical: red panic */
-.qtimer.crit .qt-ico, .qtimer.crit .qt-num { color: var(--red); }
-.qtimer.crit .qt-fill { background: var(--red); }
-.qtimer.crit .qt-num { animation: numPop .5s ease infinite; }
-.qtimer.crit .qt-track { animation: critBar 1s ease infinite; }
-.qtimer.paused { opacity: .6; }
+.qtimer.paused { opacity: .55; }
 @keyframes numPop { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.28); } }
-@keyframes critBar { 50% { box-shadow: 0 0 12px 2px rgba(255,75,75,.6); } }
-
-/* frozen (freeze hint): the bar glazes to ice, the number → spinning snowflake */
-.qtimer.frozen .qt-ico { color: #1CB0F6; }
-.qtimer.frozen .qt-track { background: #D6F1FF; box-shadow: inset 0 0 0 2px rgba(140,217,255,.55); }
-.qtimer.frozen .qt-fill { background: #8AD9FF !important; transition: none; }
-.qtimer.frozen .qt-fill::after { background: rgba(255,255,255,.75); }
-.qtimer.frozen .qt-num { color: #1CB0F6; }
-.qt-num.qt-num-frozen { display: flex; align-items: center; justify-content: center; }
-.qt-num.qt-num-frozen svg { width: 20px; height: 20px; animation: flakeSpin 9s linear infinite; }
-.qt-ice {
-  position: absolute; inset: 0; pointer-events: none; border-radius: 64px;
-  background: linear-gradient(115deg, rgba(255,255,255,.8), rgba(170,224,255,.3) 55%, rgba(255,255,255,.6));
-  transform-origin: right center;
-  animation: iceForm .45s cubic-bezier(.3,1.5,.5,1) backwards;
-}
-@keyframes iceForm { 0% { opacity: 0; transform: scaleX(.1); } 100% { opacity: 1; transform: none; } }
-@keyframes flakeSpin { to { transform: rotate(360deg); } }
 
 /* ============================================================
    In-level hint power-ups — a floating "+" beside the check
@@ -1700,8 +1648,19 @@ button.dom-stat:active { transform: scale(.99); }
 .mh-rule + .mh-rule { border-top: 1.5px solid #F1F1F1; }
 .mh-x { color: var(--red); font-weight: 800; width: 20px; text-align: center; }
 .mock-first-note { font-size: 14.5px; font-weight: 600; color: var(--gray); line-height: 1.9; }
-.mock-timer { flex: 1; }
-.mock-timer .qt-num { min-width: 52px; }
+/* 25 minutes does not need a second-by-second bar - the number is the
+   information. A pill also survives the compact per-question ring above. */
+.mock-timer {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  background: var(--blue-light); color: var(--blue-dk);
+  border-radius: 999px; padding: 7px 14px 5px;
+  font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums;
+  transition: background .3s, color .3s;
+}
+.mock-timer .mk-clock { display: flex; width: 19px; height: 19px; }
+.mock-timer .mk-clock svg { width: 100%; height: 100%; }
+.mock-timer.low  { background: #FFEFD6; color: var(--orange); }
+.mock-timer.crit { background: var(--red-bg); color: var(--red-dk2); animation: numPop 1s ease infinite; }
 .mock-count { font-weight: 800; font-size: 15px; color: var(--gray); white-space: nowrap; }
 .mock-result .result-cards { width: 100%; }
 .mock-result .rcard .rc-t { font-size: 12px; }
@@ -1727,11 +1686,14 @@ button.dom-stat:active { transform: scale(.99); }
 .mock-bar { display: flex; gap: 9px; align-items: stretch; }
 .mock-bar .btn { flex: 1; }
 .mk-flag {
-  width: 52px; flex-shrink: 0; border-radius: 13px;
+  min-width: 56px; flex-shrink: 0; border-radius: 13px; padding: 5px 9px 4px;
   border: 2px solid var(--line); background: #fff;
-  font-size: 21px; color: var(--gray-icon); cursor: pointer;
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  font-family: var(--font); font-size: 17px; line-height: 1;
+  color: var(--gray-icon); cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
+.mk-flag span { font-size: 11.5px; font-weight: 800; }
 .mk-flag.on { color: var(--gold-dk); border-color: var(--gold); background: #FFF6D8; }
 .mk-side { flex: 0 0 auto !important; width: auto; padding: 13px 18px 9px; }
 .mock-band {
