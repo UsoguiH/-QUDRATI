@@ -323,9 +323,96 @@ A.closeDailyQ = function () {
 
 /* ---------------- screens / router ---------------- */
 let view = "path";
+function renderSidebar() {
+  const el = document.getElementById("sidebar");
+  if (!el) return;
+  const NAV = [
+    { k: "path",     icon: "nav-home",   label: "الدروس",          short: "الدروس" },
+    { k: "league",   icon: "nav-league", label: "المجلس",          short: "المجلس" },
+    { k: "mock",     icon: "nav-exam",   label: "اختبار تجريبي",   short: "تجريبي" },
+    { k: "stats",    icon: "nav-stats",  label: "إحصائياتي",       short: "إحصائيات" },
+    { k: "review",   icon: "target",     label: "مراجعة الأخطاء",  short: "الأخطاء" },
+    { k: "settings", icon: "nav-more",   label: "الإعدادات",       short: "إعدادات" },
+  ];
+  el.innerHTML = `
+    <div class="sb-logo">
+      <svg width="34" height="34" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#58CC02"/><text x="50" y="68" font-size="54" text-anchor="middle">⭐</text></svg>
+      <span>قدراتي</span>
+    </div>
+    <div class="sb-nav">
+      ${NAV.map(n => `<button class="sb-item${view === n.k ? " active" : ""}" onclick="A.go('${n.k}')"
+        title="${n.label}"${view === n.k ? ' aria-current="page"' : ""}>
+        ${ico(n.icon, 26)}<span class="sb-label">${n.label}</span><span class="sb-short">${n.short}</span>
+      </button>`).join("")}
+    </div>
+    <div class="sb-foot">
+      <div class="sf-stat">${ico("streak", 22)}<b>${toAr(S.streak.count)}</b></div>
+      <div class="sf-stat">${ico("gem", 20)}<b>${toAr(S.xp)}</b></div>
+    </div>`;
+}
+
+/* Context column for wide screens (>= 1320px). Read-only summary of state
+   the player otherwise has to leave the path to see. */
+function renderAside() {
+  const el = document.getElementById("aside");
+  if (!el) return;
+  const ti = tierIndex(), tier = LEAGUE_TIERS[ti], next = LEAGUE_TIERS[ti + 1];
+  const flat = allLessons();
+  const doneN = flat.filter(x => lessonProg(x.key).stars > 0).length;
+  let r = 0, w = 0;
+  Object.values(S.qstats).forEach(q => { r += q.r; w += q.w; });
+  const acc = (r + w) ? Math.round(r / (r + w) * 100) : null;
+
+  dailyReset();
+  const goal = Math.min(S.daily.n, DAILY_GOAL);
+  const questPct = Math.round(goal / DAILY_GOAL * 100);
+  const questReady = S.daily.n >= DAILY_GOAL && !S.daily.claimed;
+  const questSub = S.daily.claimed ? "استلمت صندوق اليوم — عُد غداً"
+    : S.daily.n >= DAILY_GOAL ? "صندوقك جاهز — افتحه الآن!"
+      : `باقي ${toAr(DAILY_GOAL - S.daily.n)} من الأسئلة`;
+
+  const nextLine = next
+    ? `اكسب ${toAr(next.min - (S.totalXp || 0))} خبرة للمستوى ${next.name}`
+    : "أعلى مستوى — أنت من الأبطال!";
+
+  el.innerHTML = `
+    <div class="as-card">
+      <h4>مستواك</h4>
+      <button class="as-rank" onclick="A.go('league')">
+        ${rankImg(tier.key, 46)}
+        <span><b>المستوى ${tier.name}</b><span>${nextLine}</span></span>
+        <span class="as-go">←</span>
+      </button>
+    </div>
+
+    <div class="as-card">
+      <h4>لمحة سريعة</h4>
+      <div class="as-grid">
+        <div class="as-stat">${ico("streak", 24)}<div><div class="as-v">${toAr(S.streak.count)}</div><div class="as-l">أيام متتالية</div></div></div>
+        <div class="as-stat">${ico("gem", 24)}<div><div class="as-v">${toAr(S.xp)}</div><div class="as-l">جواهر</div></div></div>
+        <div class="as-stat">${ico("nav-chest", 24)}<div><div class="as-v">${toAr(doneN)}/${toAr(flat.length)}</div><div class="as-l">دروس</div></div></div>
+        <div class="as-stat">${ico("target", 24)}<div><div class="as-v">${acc === null ? "—" : toAr(acc) + "٪"}</div><div class="as-l">الدقة</div></div></div>
+      </div>
+    </div>
+
+    <div class="as-card">
+      <h4>مهمة اليوم</h4>
+      <button class="as-quest${S.daily.claimed ? " quest-claimed" : ""}" onclick="A.chestTap()">
+        <div class="as-quest-row">
+          ${chestSVG("cf-chest" + (questReady ? " qc-bounce" : ""))}
+          <b>${toAr(goal)} / ${toAr(DAILY_GOAL)} أسئلة</b>
+        </div>
+        <div class="duo-bar"><i style="width:${questPct}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft)"></i></div>
+        <div class="as-quest-sub">${questSub}</div>
+      </button>
+    </div>`;
+}
+
 function render() {
   ({ path: renderPath, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings, review: renderReview })[view]();
-  flushRankUp(); // if a tier was just crossed, play the celebration over the fresh screen
+  flushRankUp();
+  renderSidebar();
+  renderAside();
 }
 function go(v) { view = v; render(); window.scrollTo(0, 0); }
 
@@ -493,19 +580,24 @@ function renderPath() {
         </svg>` : "";
       // exact Figma "Level" colors per state: gold done / unit-color open / gray locked
       const nc = done ? ["#FFC800", "#E6A000", "#FFE700"] : open ? [u.c, u.s, u.h] : ["#E5E5E5", "#B7B7B7", "transparent"];
-      html += `<div class="path-row"><div class="${current ? "bob" : ""}" style="position:relative;display:inline-block;right:${x}px">
+      html += `<div class="path-row"><div class="node-col${current ? " bob" : ""}" style="right:${x}px">
         ${ring}
         <button class="node ${cls}" style="--node-c:${nc[0]};--node-s:${nc[1]};--node-h:${nc[2]};--d:${(gi % 10) * 0.06}s"
           ${open ? `onclick="A.nodeTap(event,'${d.key}','${l.key}',${li})"` : "disabled"}>
           ${current ? `<span class="node-tip" style="color:${u.c}">ابدأ</span>` : ""}
           ${nodeIcon}
         </button>
+        <span class="node-label${done ? ' nl-done' : open ? '' : ' nl-locked'}">${l.title}</span>
       </div></div>`;
       gi++;
     });
     html += `</div>`;
   });
   $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${dailyQuestionCard()}${html}<div style="height:20px"></div></div>` + floatingQuest() + bottomnav("path");
+  requestAnimationFrame(() => {
+    const cur = document.querySelector('.path-row .bob');
+    if (cur) cur.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
 }
 
 
@@ -555,8 +647,20 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   veil.querySelector(".btn-white").onclick = () => { veil.remove(); A.startLesson(domKey, lesKey, boost); };
   document.body.appendChild(veil);
   const pop = veil.querySelector(".lesson-pop");
-  const pr = pop.getBoundingClientRect();
-  pop.style.setProperty("--arrow-x", Math.max(24, Math.min(pr.width - 24, pr.right - (r.left + r.width / 2))) + "px");
+  /* Anchor the bubble to the node WITHOUT measuring the bubble itself.
+     Its rect is not reliable right after insertion (it can read back
+     zero-width, which pinned the arrow to the popup edge), so the arrow is
+     expressed in CSS instead: 50% resolves against the popup's real width at
+     paint time, and clamp() keeps the arrow inside the rounded corners.
+     dx is the node's offset from the path column centre, and the popup is
+     centred on that same column, so -dx is exactly the shift the arrow needs. */
+  const path = btn.closest(".path");
+  const nr = btn.getBoundingClientRect();
+  const pcr = (path || btn.parentElement).getBoundingClientRect();
+  const dx = (nr.left + nr.width / 2) - (pcr.left + pcr.width / 2);
+  pop.style.top = Math.max(8, Math.min(nr.bottom + 14, window.innerHeight - 210)) + "px";
+  pop.style.setProperty("--arrow-x",
+    "clamp(20px, calc(50% - " + dx.toFixed(1) + "px), calc(100% - 20px))");
 };
 
 A.startLesson = function (domKey, lesKey, boost) {
@@ -599,7 +703,7 @@ function questionBody(q, selIdx, lockHandlers, pickFn, method) {
       <div class="cmp-box"><div class="cmp-t">القيمة الثانية</div><div class="cmp-v">${q.value2}</div></div></div>`;
   h += `<div class="choices">` + choices.map((c, i) =>
     `<button class="choice ${selIdx === i ? "sel" : ""}" data-ci="${i}" style="--d:${0.05 + i * 0.07}s" ${lockHandlers ? "" : `onclick="${pickFn || "A.pick"}(${i})"`}>
-       <span class="ch-letter">${LETTERS[i]}</span><span>${c}</span></button>`).join("") + `</div>`;
+       <span class="ch-letter">${LETTERS[i]}</span><span>${c}</span><span class="ch-key" aria-hidden="true">${i + 1}</span></button>`).join("") + `</div>`;
   return h;
 }
 
@@ -895,6 +999,26 @@ A.reviveLesson = function () {
 };
 A.quitFailed = function () { SES = null; A.go("path"); };
 
+const WSTAR_PATH = "M18.2665 6.04527C19.33 3.69332 22.67 3.69333 23.7335 6.04527L25.9554 10.959C26.4018 11.9462 27.3458 12.616 28.425 12.7114L33.7515 13.1819C36.4147 13.4171 37.4631 16.7555 35.4126 18.4711L31.6082 21.6541C30.7372 22.3828 30.3524 23.5408 30.6139 24.6459L31.7621 29.4978C32.3649 32.045 29.6444 34.0885 27.3659 32.8L22.4767 30.0351C21.5604 29.5169 20.4396 29.5169 19.5233 30.0351L14.6341 32.8C12.3556 34.0885 9.63514 32.045 10.2379 29.4978L11.3861 24.6459C11.6476 23.5408 11.2628 22.3828 10.3918 21.6541L6.58741 18.4711C4.53685 16.7555 5.58529 13.4171 8.2485 13.1819L13.575 12.7114C14.6542 12.616 15.5982 11.9462 16.0446 10.959L18.2665 6.04527Z";
+function winStarSvg(on, size, isCenter, idx) {
+  const w = Math.round(size * 42 / 40), h = size;
+  const cls = `ws-star ${isCenter ? '' : 'ws-side'} ${on ? 'ws-on' : 'ws-off'}`;
+  const delay = `animation-delay:${(0.22 + idx * 0.16).toFixed(2)}s`;
+  if (on) {
+    const gid = `wsg${idx}`;
+    return `<svg class="${cls}" viewBox="0 0 42 40" width="${w}" height="${h}" ${on ? `style="${delay}"` : ''}>
+      <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#FFE566"/><stop offset="55%" stop-color="#FFC800"/><stop offset="100%" stop-color="#FF9200"/>
+      </linearGradient></defs>
+      <path d="${WSTAR_PATH}" fill="url(#${gid})" stroke="#B87000" stroke-width="1.7" stroke-linejoin="round"/>
+      <path d="M17.5 11.5 Q21 8.2 24.5 11.5" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2" stroke-linecap="round"/>
+    </svg>`;
+  }
+  return `<svg class="${cls}" viewBox="0 0 42 40" width="${w}" height="${h}">
+    <path d="${WSTAR_PATH}" fill="#CECECE" stroke="#A8A8A8" stroke-width="1.7" stroke-linejoin="round"/>
+  </svg>`;
+}
+
 function lessonComplete() {
   stopQTimer();
   const ft = Object.values(SES.firstTry);
@@ -910,10 +1034,14 @@ function lessonComplete() {
   pendingStreak = streakUp ? S.streak.count : 0;   // show the fire-streak celebration after this win screen
   const xpWon = rankGain, gemsWon = SES.gems, boosted = SES.xpBoost, tTot = SES.tSpent;
   const dayWord = S.streak.count === 1 ? "يوم واحد" : S.streak.count === 2 ? "يومان" : S.streak.count <= 10 ? toAr(S.streak.count) + " أيام" : toAr(S.streak.count) + " يوماً";
+  const starIcos = [1, 2, 3].map(i => winStarSvg(i <= stars, i === 2 ? 68 : 54, i === 2, i - 1)).join('');
+  const starMsg = perfect ? "درس مثالي — ثلاث نجوم!" : stars === 2 ? "أحسنت! حصلت على نجمتين" : "واصل، ستصل إلى الثلاث!";
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
-    ${flameHero(160)}
+    ${flameHero(115)}
     <h1 class="win-title">أكملت الدرس!</h1>
-    <p class="win-sub">${perfect ? "درس مثالي بلا أي خطأ!" : "أحسنت، واصل التقدم!"} سلسلتك مشتعلة منذ ${dayWord}</p>
+    <div class="win-stars">${starIcos}</div>
+    <p class="ws-msg">${starMsg}</p>
+    <p class="win-sub">سلسلة ${dayWord}</p>
     <div class="win-gems">${ico("gem", 20)} +${toAr(gemsWon)} جوهرة${boosted ? ` · ⚡ الخبرة ×٢` : ""}</div>
     <div class="result-cards">
       <div class="rcard rc-gold"><div class="rc-t">الخبرة</div><div class="rc-v">${ico("lightning", 20)} <span id="cv-xp">٠</span></div></div>
@@ -1928,6 +2056,42 @@ function afterLogin() {
     render();
   }
 }
+
+/* ---------------- keyboard (web) ----------------
+   A lesson is answerable without a mouse: 1-4 picks a choice,
+   Enter checks it and then advances, Esc leaves the session. */
+function keyboardBlocked() {
+  const t = document.activeElement;
+  if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return true;
+  return !!document.querySelector(
+    ".modal-veil, .chest-veil, .rankup-veil, .streak-veil, .dq-veil, .lesson-pop-veil, .method-veil.show");
+}
+
+document.addEventListener("keydown", e => {
+  // only while a question is actually on screen (not the win/fail cards)
+  if (!SES || !document.querySelector(".q-area")) return;
+  if (e.ctrlKey || e.metaKey || e.altKey || e.key.length === 0 || keyboardBlocked()) return;
+  const fb = document.getElementById("fb");
+  const answered = !!(fb && fb.classList.contains("show"));
+
+  if (e.key === "Escape") { e.preventDefault(); A.quitSession(); return; }
+
+  if (e.key === "Enter" || e.key === " ") {
+    // a focused button handles its own activation - do not fight it
+    if (document.activeElement && document.activeElement.tagName === "BUTTON") return;
+    e.preventDefault();
+    if (answered) { const b = fb.querySelector(".btn"); if (b) b.click(); }
+    else if (SES.sel !== null && !SES.locked) A.check();
+    return;
+  }
+
+  if (answered || SES.locked || e.key.length !== 1) return;
+  const n = "١٢٣٤".indexOf(e.key) + 1 || parseInt(e.key, 10);
+  if (n >= 1 && n <= 4) {
+    const btn = document.querySelector(`.choice[data-ci="${n - 1}"]`);
+    if (btn && !btn.disabled && !btn.classList.contains("eliminated")) { e.preventDefault(); A.pick(n - 1); }
+  }
+});
 
 /* ---------------- boot ---------------- */
 function boot() {
