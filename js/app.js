@@ -219,6 +219,14 @@ function dailyTick() {
     setTimeout(() => toast(`🎁 اكتمل تمرين اليوم! صندوقك بانتظارك في الرئيسية`, "quest"), 1200);
 }
 
+/* Arabic counted nouns: 1 singular, 2 dual, 3-10 plural, 11+ singular accusative */
+function arPlural(n, one, two, few, many) {
+  if (n === 1) return one;
+  if (n === 2) return two;
+  if (n <= 10) return toAr(n) + " " + few;
+  return toAr(n) + " " + many;
+}
+const qCount = n => arPlural(n, "سؤال واحد", "سؤالان", "أسئلة", "سؤالاً");
 function dayPhrase(n) {
   if (n === 1) return "يوم واحد";
   if (n === 2) return "يومان";
@@ -259,7 +267,7 @@ function dailyQuestionCard() {
     <span class="dq-glow"></span>
     <div class="dq-row">
       <span class="dq-icon">${ico("star-gold", 30)}</span>
-      <div class="dq-txt"><b>سؤال اليوم</b><span>جاوب واكسب ${toAr(DAILYQ_REWARD)} جواهر ${ico("gem", 13)}</span></div>
+      <div class="dq-txt"><b>سؤال اليوم</b><span>جاوب واكسب ${arPlural(DAILYQ_REWARD, "جوهرة", "جوهرتين", "جواهر", "جوهرة")} ${ico("gem", 13)}</span></div>
       <span class="dq-go">ابدأ</span>
     </div>
   </button>`;
@@ -313,7 +321,7 @@ A.checkDailyQ = function () {
   fb.innerHTML = `<div class="dq-reward"><b>+${toAr(reward)}</b>${ico("gem", 26)}</div>
     <div class="dq-msg">${correct ? "إجابة صحيحة! 🎉" : "إجابة غير صحيحة — الصحيحة: " + LETTERS[q.answer]}</div>
     <button class="dq-soltoggle" onclick="A.toggleEl('dqSol')">اعرض الحل</button>
-    <div class="fb-solution dq-sol" id="dqSol" style="display:none">${esc(q.solution)}</div>
+    <div class="fb-solution dq-sol" id="dqSol" style="display:none">${formatExplain(q.solution)}</div>
     <button class="btn dq-cont" onclick="A.closeDailyQ()">متابعة</button>`;
 };
 A.closeDailyQ = function () {
@@ -420,16 +428,20 @@ const ICO_FILE = { "nav-exam": "nav-exam-64.png" }; // raster icons (user-provid
 const ico = (name, size) => `<img class="ic" src="assets/icons/${ICO_FILE[name] || name + ".svg"}" width="${size}" height="${size}" alt="">`;
 
 function statbar() {
+  const t = LEAGUE_TIERS[tierIndex()];
   return `<div class="statbar">
-    <div class="stat stat-streak">${ico("streak", 23)}${toAr(S.streak.count)}</div>
-    <div class="stat stat-xp">${ico("gem", 22)}${toAr(S.xp)}</div>
+    <div class="stat stat-streak" title="سلسلة الأيام">${ico("streak", 23)}${toAr(S.streak.count)}</div>
+    <button class="stat stat-rank" onclick="A.go('league')" title="المستوى ${t.name}" aria-label="مستواك: ${t.name}">
+      ${rankImg(t.key, 25)}<span>${t.name}</span>
+    </button>
+    <div class="stat stat-xp" title="جواهرك">${ico("gem", 22)}${toAr(S.xp)}</div>
   </div>`;
 }
 A.chestTap = function () {
   dailyReset();
   if (S.daily.claimed) { toast("🎁 عُد غداً لصندوق جديد"); return; }
   if (S.daily.n >= DAILY_GOAL) { A.openChest(); return; }
-  toast(`باقي ${toAr(DAILY_GOAL - S.daily.n)} أسئلة لفتح صندوق اليوم 🎁`);
+  toast(`باقي ${qCount(DAILY_GOAL - S.daily.n)} لفتح صندوق اليوم 🎁`);
 };
 function bottomnav(active) {
   const items = [["path", "nav-home"], ["league", "nav-league"], ["mock", "nav-exam"], ["stats", "nav-stats"], ["settings", "nav-more"]];
@@ -560,12 +572,13 @@ function renderPath() {
   let firstOpenIdx = flat.findIndex(x => lessonProg(x.key).stars === 0);
   if (firstOpenIdx === -1) firstOpenIdx = flat.length;
   let gi = 0, html = "";
-  const offsets = [0, -55, -80, -55, 0, 55, 80, 55]; // winding path x-offsets
+  const offsets = [0, -46, -66, -46, 0, 46, 66, 46]; // winding path x-offsets
   ds.forEach((d, di) => {
     const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
-    html += `<div class="unit-banner u-${d.color === "yellow" ? "gold" : d.color}">
+    const uDone = d.lessons.filter(l => lessonProg(d.key + "." + l.key).stars > 0).length;
+    html += `<div class="unit-banner u-${d.color === "yellow" ? "gold" : d.color}" data-unit="${d.key}">
       <div class="u-txt"><div class="u-kicker">القسم ${toAr(1)}، الوحدة ${toAr(di + 1)}</div><h2>${d.title}</h2></div>
-      <div class="u-side"><span class="u-divider"></span>${ico("guide", 24)}</div>
+      <div class="u-side"><span class="u-divider"></span><span class="u-prog"><b>${toAr(uDone)}/${toAr(d.lessons.length)}</b><span>دروس</span></span></div>
     </div><div class="path">`;
     d.lessons.forEach((l, li) => {
       const key = d.key + "." + l.key, p = lessonProg(key);
@@ -579,7 +592,7 @@ function renderPath() {
           <path d="M 44.5 3 A 41.5 39 0 0 1 81.5 25" stroke="${u.c}" stroke-width="6" stroke-linecap="round"/>
         </svg>` : "";
       // exact Figma "Level" colors per state: gold done / unit-color open / gray locked
-      const nc = done ? ["#FFC800", "#E6A000", "#FFE700"] : open ? [u.c, u.s, u.h] : ["#E5E5E5", "#B7B7B7", "transparent"];
+      const nc = done ? ["#FFC800", "#E6A000", "#FFE700"] : open ? [u.c, u.s, u.h] : ["#D2D2D2", "#ADADAD", "transparent"];
       html += `<div class="path-row"><div class="node-col${current ? " bob" : ""}" style="right:${x}px">
         ${ring}
         <button class="node ${cls}" style="--node-c:${nc[0]};--node-s:${nc[1]};--node-h:${nc[2]};--d:${(gi % 10) * 0.06}s"
@@ -595,14 +608,58 @@ function renderPath() {
   });
   $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${dailyQuestionCard()}${html}<div style="height:20px"></div></div>` + floatingQuest() + bottomnav("path");
   requestAnimationFrame(() => {
+    drawTrails();
     const cur = document.querySelector('.path-row .bob');
-    if (cur) cur.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!cur) return;
+    /* Only chase the node when it is genuinely out of reach. Centring it
+       unconditionally threw a new player past the countdown and the daily
+       question, so they landed halfway down a page they had never seen. */
+    const r = cur.getBoundingClientRect();
+    if (r.top > window.innerHeight * 0.72 || r.bottom < 80)
+      cur.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 }
 
 
 /* ---------------- LESSON SESSION ---------------- */
 let SES = null; // current session
+
+/* The winding path read as scattered dots because nothing joined them.
+   Node positions come from CSS offsets, so the trail is measured from the
+   rendered circles rather than recomputed - it stays correct at any width. */
+function drawTrails() {
+  const NS = "http://www.w3.org/2000/svg";
+  document.querySelectorAll(".path").forEach(path => {
+    const old = path.querySelector(".path-trail"); if (old) old.remove();
+    const nodes = [].slice.call(path.querySelectorAll(".node"));
+    if (nodes.length < 2) return;
+    const pr = path.getBoundingClientRect();
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("class", "path-trail");
+    svg.setAttribute("viewBox", "0 0 " + Math.round(pr.width) + " " + Math.round(pr.height));
+    svg.setAttribute("preserveAspectRatio", "none");
+    svg.setAttribute("aria-hidden", "true");
+    const mid = el => {
+      const r = el.getBoundingClientRect();
+      return [r.left - pr.left + r.width / 2, r.top - pr.top + r.height / 2];
+    };
+    for (let i = 0; i < nodes.length - 1; i++) {
+      const a = mid(nodes[i]), b = mid(nodes[i + 1]);
+      const line = document.createElementNS(NS, "line");
+      line.setAttribute("x1", a[0].toFixed(1)); line.setAttribute("y1", a[1].toFixed(1));
+      line.setAttribute("x2", b[0].toFixed(1)); line.setAttribute("y2", b[1].toFixed(1));
+      line.setAttribute("class", nodes[i + 1].classList.contains("node-locked") ? "tl tl-locked" : "tl tl-open");
+      svg.appendChild(line);
+    }
+    path.insertBefore(svg, path.firstChild);
+  });
+}
+let trailT = null;
+window.addEventListener("resize", () => {
+  if (view !== "path" || SES) return;
+  clearTimeout(trailT);
+  trailT = setTimeout(drawTrails, 160);
+});
 
 function pickLessonQuestions(lesson, key) {
   const qs = trackFilter(lesson.questions);
@@ -625,12 +682,13 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   veil.className = "lesson-pop-veil";
   const canBoost = S.xp >= BOOST_COST;
   veil.innerHTML = `<div class="lesson-pop" style="--pop-c:${u.c};top:${Math.min(r.bottom + 14, window.innerHeight - 190)}px">
-    <button class="lp-boost ${canBoost ? "" : "cant"}" id="lpBoost" title="ضاعف الخبرة ×٢" aria-label="ضاعف الخبرة ×٢">
-      <span class="lpb-circle"><img class="ic lpb-bolt" src="assets/icons/lightning.svg" width="18" height="18" alt=""><span class="lpb-x2">2XP</span></span>
+    <button class="lp-boost ${canBoost ? "" : "cant"}" id="lpBoost" title="ضاعف خبرة هذا الدرس" aria-label="ضاعف خبرة هذا الدرس">
+      <span class="lpb-circle"><img class="ic lpb-bolt" src="assets/icons/lightning.svg" width="18" height="18" alt=""><span class="lpb-x2">×٢</span></span>
       <span class="lpb-cost">${ico("gem", 11)} ${toAr(BOOST_COST)}</span>
     </button>
     <h3>${l.title}</h3>
-    <div class="lp-sub">الدرس ${toAr(li + 1)} من ${toAr(d.lessons.length)}</div>
+    <div class="lp-sub">الدرس ${toAr(li + 1)} من ${toAr(d.lessons.length)} · ${toAr(LEVEL_HEARTS)} قلوب</div>
+    ${canBoost ? `<div class="lp-hint">اضغط ⚡ لمضاعفة خبرة هذا الدرس</div>` : ""}
     <button class="btn btn-white" style="color:${u.c};box-shadow:0 5px 0 ${u.pale}">ابدأ</button>
   </div>`;
   veil.onclick = e => { if (e.target === veil) veil.remove(); };
@@ -685,7 +743,7 @@ function formatExplain(text) {
   return String(text).split("\n").map(line => {
     const t = line.trim();
     if (!t) return "";
-    const warn = /^💡|^الخطأ|^انتبه|^ملاحظة|^تنبيه|الخطأ الشائع/.test(t);
+    const warn = /^💡|^الخطأ|^خطأ شائع|^انتبه|^ملاحظة|^تنبيه|^احذر|^تذكّر|الخطأ الشائع/.test(t);
     const body = esc(t.replace(/^💡\s*/, ""));
     if (warn) return `<div class="ex-tip">${BULB_SVG}<span>${body}</span></div>`;
     return `<div class="ex-step">${body}</div>`;
@@ -703,7 +761,7 @@ function questionBody(q, selIdx, lockHandlers, pickFn, method) {
       <div class="cmp-box"><div class="cmp-t">القيمة الثانية</div><div class="cmp-v">${q.value2}</div></div></div>`;
   h += `<div class="choices">` + choices.map((c, i) =>
     `<button class="choice ${selIdx === i ? "sel" : ""}" data-ci="${i}" style="--d:${0.05 + i * 0.07}s" ${lockHandlers ? "" : `onclick="${pickFn || "A.pick"}(${i})"`}>
-       <span class="ch-letter">${LETTERS[i]}</span><span>${c}</span><span class="ch-key" aria-hidden="true">${i + 1}</span></button>`).join("") + `</div>`;
+       <span class="ch-letter">${LETTERS[i]}</span><span>${c}</span><span class="ch-key" aria-hidden="true">${toAr(i + 1)}</span></button>`).join("") + `</div>`;
   return h;
 }
 
@@ -743,12 +801,12 @@ function renderSession() {
     <div class="screen screen-full">
       <div class="session-top">
         <button class="x-btn" onclick="A.quitSession()">${X_SVG}</button>
-        <div class="progress"><i style="width:${pct}%"></i></div>
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="تقدمك في الدرس"><i style="width:${pct}%"></i></div>
+        ${timerBar()}
         ${SES.mode === "review"
           ? `<span class="sess-hearts sess-review">${ico("target", 22)} ${toAr(SES.done)}/${toAr(SES.total)}</span>`
           : `<span class="sess-hearts" id="sesHearts">${ico("heart", 22)} ${toAr(SES.hearts)}</span>`}
       </div>
-      ${timerBar()}
       <div class="q-area">${questionBody(q, SES.sel, false, null, q.method || SES.method)}</div>
       <div class="action-bar"><button class="btn" id="checkBtn" onclick="A.check()" ${SES.sel === null ? "disabled" : ""}>تحقق</button></div>
       <div class="feedback" id="fb"></div>
@@ -761,15 +819,13 @@ function startQTimer() {
   clearInterval(SES.timer);
   SES.left = Q_SECS;
   // kick the fill so it starts gliding down over the first second
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    const f = document.getElementById("qtFill");
-    if (f && SES) f.style.width = ((Q_SECS - 1) / Q_SECS * 100) + "%";
-  }));
+  const w0 = document.getElementById("qtWrap");
+  if (w0) { w0.style.setProperty("--p", 100); w0.classList.remove("low", "crit", "paused"); }
   SES.timer = setInterval(() => {
     SES.left--;
-    const f = document.getElementById("qtFill"), n = document.getElementById("qtNum"), w = document.getElementById("qtWrap");
+    const n = document.getElementById("qtNum"), w = document.getElementById("qtWrap");
     if (n) n.textContent = toAr(Math.max(0, SES.left));
-    if (f) f.style.width = (Math.max(0, SES.left - 1) / Q_SECS * 100) + "%";
+    if (w) w.style.setProperty("--p", Math.max(0, SES.left) / Q_SECS * 100);
     if (w) { w.classList.toggle("low", SES.left <= 15 && SES.left > 5); w.classList.toggle("crit", SES.left <= 5); }
     if (SES.left <= 5 && SES.left > 0) sndTick();
     if (SES.left <= 0) { clearInterval(SES.timer); timeUp(); }
@@ -785,11 +841,9 @@ function stopQTimer() {
 const CLOCK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.8"/></svg>`;
 function timerBar() {
-  return `<div class="qtimer" id="qtWrap" title="الوقت المتبقي">
-    <span class="qt-ico">${CLOCK_SVG}</span>
-    <div class="qt-track"><i class="qt-fill" id="qtFill"></i></div>
+  return `<span class="qtimer" id="qtWrap" style="--p:100" title="الوقت المتبقي" aria-label="الوقت المتبقي">
     <b class="qt-num" id="qtNum">${toAr(Q_SECS)}</b>
-  </div>`;
+  </span>`;
 }
 
 const CHECK_BADGE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.2 4.2L19 6.8"/></svg>`;
@@ -839,8 +893,9 @@ function timeUp() {
   fb.innerHTML = `<div class="fb-head"><span class="fb-x">⏰</span> انتهى الوقت!</div>
     <div class="fb-correct">الإجابة الصحيحة: ${correctTxt}</div>
     <button class="fb-solution-toggle" onclick="A.toggleSol()">اعرض الحل</button>
-    <div class="fb-solution" id="sol" style="display:none">${esc(q.solution)}</div>
+    <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
     <button class="btn btn-red" onclick="A.next()">متابعة</button>`;
+  clearFeedbackOverlap();
   save();
 }
 
@@ -886,8 +941,9 @@ A.check = function () {
     fb.className = "feedback good show";
     fb.innerHTML = `<div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> أحسنت!</div>
       <button class="fb-solution-toggle" onclick="A.toggleSol()">لماذا؟ اعرض الحل</button>
-      <div class="fb-solution" id="sol" style="display:none">${esc(q.solution)}</div>
+      <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
       <button class="btn" onclick="A.next()">متابعة</button>`;
+    clearFeedbackOverlap();
   } else {
     sndBad();
     SES.retried[q.id] = true;
@@ -897,13 +953,34 @@ A.check = function () {
     fb.innerHTML = `<div class="fb-head"><span class="fb-x">✕</span> إجابة غير صحيحة</div>
       <div class="fb-correct">الإجابة الصحيحة: ${correctTxt}</div>
       <button class="fb-solution-toggle" onclick="A.toggleSol()">اعرض الحل</button>
-      <div class="fb-solution" id="sol" style="display:none">${esc(q.solution)}</div>
+      <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
       <button class="btn btn-red" onclick="A.next()">متابعة</button>`;
+    clearFeedbackOverlap();
   }
   save();
 };
 
-A.toggleSol = function () { const s = document.getElementById("sol"); s.style.display = s.style.display === "none" ? "block" : "none"; };
+A.toggleSol = function () {
+  const s = document.getElementById("sol");
+  s.style.display = s.style.display === "none" ? "block" : "none";
+  clearFeedbackOverlap();
+};
+
+/* The feedback sheet is fixed to the bottom; without this it covers the very
+   choices it is explaining. */
+function clearFeedbackOverlap() {
+  const fb = document.getElementById("fb"), qa = document.querySelector(".q-area");
+  if (!fb || !qa || !fb.classList.contains("show")) return;
+  requestAnimationFrame(() => {
+    const h = fb.offsetHeight;
+    qa.style.paddingBottom = (h + 24) + "px";
+    const focus = document.querySelector(".choice.correct") || document.querySelector(".choice.wrong");
+    if (!focus) return;
+    const limit = window.innerHeight - h - 14;
+    const bottom = focus.getBoundingClientRect().bottom;
+    if (bottom > limit) window.scrollBy({ top: bottom - limit, behavior: "smooth" });
+  });
+}
 
 /* Method sheet (كيف أحلّها؟): teacher walks through how to approach THIS
    specific question — its own numbers, its own steps — but stops short of the
@@ -1227,7 +1304,7 @@ A.mockFlag = function () {
 A.mockEndSection = function () {
   const sec = MOCK.sections[MOCK.si];
   const un = sec.answers.filter(a => a === null).length;
-  if (un && !confirm(`لديك ${toAr(un)} أسئلة بلا إجابة — لا يمكن الرجوع للقسم بعد إنهائه. متابعة؟`)) return;
+  if (un && !confirm(`لديك ${qCount(un)} بلا إجابة — لا يمكن الرجوع للقسم بعد إنهائه. متابعة؟`)) return;
   endMockSection(false);
 };
 
@@ -1314,7 +1391,7 @@ function finishMock(timedOut) {
   $app.innerHTML = `<div class="screen"><div class="complete win-scene mock-result" style="min-height:auto;padding-top:26px">
     ${flameHero(160)}
     <h1 class="win-title">${timedOut ? "انتهى الوقت!" : "انتهت المحاكاة!"}</h1>
-    <p class="win-sub">${unanswered ? `${toAr(unanswered)} أسئلة بلا إجابة — ` : ""}السرعة والدقة معاً هما سر قدرات</p>
+    <p class="win-sub">${unanswered ? `${qCount(unanswered)} بلا إجابة — ` : ""}السرعة والدقة معاً هما سر قدرات</p>
     <div class="result-cards">
       <div class="rcard rc-gold"><div class="rc-t">نتيجتك</div><div class="rc-v">${ico("star-gold", 20)} <span id="mv-score">٠</span>/${toAr(total)}</div></div>
       <div class="rcard rc-blue"><div class="rc-t">تقديرك التقريبي</div><div class="rc-v">${ico("target", 20)} ~<span id="mv-est">٠</span></div></div>
@@ -1357,7 +1434,7 @@ A.mockDetail = function (i) {
       : `<div class="ri-row" style="color:var(--red)">✕ إجابتك: ${r.picked === null ? "لم تُجب" : ch[r.picked]}</div>
          <div class="ri-row" style="color:var(--green-dk)">✓ الصحيحة: ${ch[r.q.answer]}</div>`}
     <button class="fb-solution-toggle" onclick="A.toggleEl('mdSol')">اعرض الحل</button>
-    <div class="fb-solution" id="mdSol" style="display:none">${esc(r.q.solution)}</div>
+    <div class="fb-solution" id="mdSol" style="display:none">${formatExplain(r.q.solution)}</div>
   </div>`;
 };
 
@@ -1647,7 +1724,7 @@ function reviewComplete() {
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
     ${flameHero(160)}
     <h1 class="win-title">أحسنت!</h1>
-    <p class="win-sub">${remaining ? `صحّحت ${toAr(solved)} ${solved === 1 ? "خطأً" : "أخطاء"} — باقٍ ${toAr(remaining)} للمراجعة` : "راجعت كل أخطائك — قائمتك نظيفة! 🎉"}</p>
+    <p class="win-sub">${remaining ? `صحّحت ${arPlural(solved, "خطأً واحداً", "خطأين", "أخطاء", "خطأً")} — باقٍ ${toAr(remaining)} للمراجعة` : "راجعت كل أخطائك — قائمتك نظيفة! 🎉"}</p>
     <div class="result-cards">
       <div class="rcard rc-gold"><div class="rc-t">الخبرة</div><div class="rc-v">${ico("lightning", 20)} <span id="cv-xp">٠</span></div></div>
       <div class="rcard rc-green"><div class="rc-t">صُحّحت</div><div class="rc-v">${ico("target", 22)} ${toAr(solved)}</div></div>
@@ -1686,12 +1763,12 @@ function renderReview() {
       ${isCmp && q.value1 ? `<div class="ri-row" style="color:var(--gray)">القيمة الأولى: ${q.value1} — القيمة الثانية: ${q.value2}</div>` : ""}
       <div class="ri-row" style="color:var(--green-dk)">✓ الإجابة الصحيحة: ${ch[q.answer]}</div>
       <button class="fb-solution-toggle" onclick="A.toggleEl('rvSol${i}')">اعرض الحل</button>
-      <div class="fb-solution" id="rvSol${i}" style="display:none">${esc(q.solution)}</div>
+      <div class="fb-solution" id="rvSol${i}" style="display:none">${formatExplain(q.solution)}</div>
     </div>`;
   }).join("");
   $app.innerHTML = statbar() + `<div class="screen"><div class="page">
     <div class="rv-top"><button class="rv-back" onclick="A.go('stats')" aria-label="رجوع">→</button><h1>مراجعة الأخطاء</h1></div>
-    <div class="sub">${toAr(list.length)} ${list.length === 1 ? "سؤال" : "أسئلة"} بحاجة لمراجعة — تدرّب عليها حتى تتقنها</div>
+    <div class="sub">${qCount(list.length)} بحاجة لمراجعة — تدرّب عليها حتى تتقنها</div>
     <button class="btn rv-practice" onclick="A.startReview()">${ico("target", 22)} تدرّب على أخطائك${list.length > 12 ? ` (${toAr(12)})` : ""}</button>
     <div class="rv-list">${items}</div>
   </div></div>` + bottomnav("review");
@@ -1709,8 +1786,9 @@ function renderStats() {
     d.lessons.forEach(l => l.questions.forEach(q => { const s = S.qstats[q.id]; if (s) { dr += s.r; dw += s.w; } }));
     const p = (dr + dw) ? Math.round(dr / (dr + dw) * 100) : 0;
     const u = UNIT_COLORS[d.color] || UNIT_COLORS.green;
-    return `<div class="dom-stat"><div class="ds-head"><span>${d.title}</span><span>${(dr + dw) ? toAr(p) + "٪" : "—"}</span></div>
-      <div class="duo-bar"><i style="width:${p}%;--bar-c:${u.c};--bar-shine:${u.h};animation-delay:${(0.25 + i * 0.13).toFixed(2)}s"></i></div></div>`;
+    return `<button class="dom-stat" onclick="A.goUnit('${d.key}')" aria-label="اذهب إلى ${d.title}">
+      <div class="ds-head"><span>${d.title}</span><span>${(dr + dw) ? toAr(p) + "٪" : "—"}</span></div>
+      <div class="duo-bar"><i style="width:${p}%;--bar-c:${u.c};--bar-shine:${u.h};animation-delay:${(0.25 + i * 0.13).toFixed(2)}s"></i></div></button>`;
   }).join("");
   $app.innerHTML = statbar() + `<div class="screen"><div class="page">
     <h1>إحصائياتي</h1><div class="sub">تابع تقدمك نحو درجة أعلى</div>
@@ -1727,7 +1805,7 @@ function renderStats() {
     </button>`; })()}
     ${(() => { const mc = mistakeList().length; return `<button class="card mistakes-card ${mc ? "" : "clean"}" onclick="A.go('review')">
       <span class="mc-ico">${mc ? "✕" : CHECK_BADGE}</span>
-      <div class="mc-txt"><b>مراجعة الأخطاء</b><span>${mc ? toAr(mc) + " " + (mc === 1 ? "سؤال بحاجة لمراجعة" : "أسئلة بحاجة لمراجعة") : "لا أخطاء — أحسنت!"}</span></div>
+      <div class="mc-txt"><b>مراجعة الأخطاء</b><span>${mc ? qCount(mc) + " بحاجة لمراجعة" : "لا أخطاء — أحسنت!"}</span></div>
       <span class="mc-go">${mc ? "راجع ←" : "✓"}</span>
     </button>`; })()}
     <div class="card"><h3>الدقة حسب المجال</h3>${domBars}</div>
@@ -1773,6 +1851,15 @@ function renderSettings() {
     </div>
   </div></div>` + bottomnav("settings");
 }
+/* jump to a unit's stretch of the path from anywhere that names it */
+A.goUnit = function (domKey) {
+  go("path");
+  requestAnimationFrame(() => {
+    const el = document.querySelector('.unit-banner[data-unit="' + domKey + '"]');
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+};
+
 A.setTrack = function (t) { S.track = t; save(); render(); };
 A.toggleSound = function () { S.sound = !S.sound; save(); render(); };
 A.resetAll = function () {
@@ -1970,7 +2057,7 @@ function renderExamSetup(first) {
   $app.innerHTML = `<div class="screen screen-full exam-setup">
     <div class="es-hero">${examCalendarSVG()}</div>
     <h1 class="login-title">متى اختبارك؟</h1>
-    <p class="login-sub">سنحسب لك العد التنازلي ونتابع جاهزيتك يوماً بيوم حتى موعد الاختبار</p>
+    <p class="login-sub">سنحسب العد التنازلي ونتابع جاهزيتك حتى يوم الاختبار</p>
     <div class="login-form">
       <div class="date-trio" id="examTrio">
         <label class="dt-box"><span class="dt-cap">اليوم</span><select id="exDay" class="dt-sel">${days}</select></label>
@@ -2002,11 +2089,21 @@ A.saveExam = function () {
 A.skipExam = function () { S.examAsked = true; save(); go("path"); };
 
 /* ---------------- login (local profile, no server) ---------------- */
+function bankSize() {
+  let n = 0;
+  DOMAIN_ORDER.forEach(k => { const d = (window.QBANK || {})[k]; if (d) d.lessons.forEach(l => n += l.questions.length); });
+  return n;
+}
 function renderLogin() {
   $app.innerHTML = `<div class="screen screen-full login-screen">
     ${welcomeHero()}
     <h1 class="login-title">قدراتي</h1>
-    <p class="login-sub">تدرّب على القسم الكمي بأسلوب ممتع — درساً بعد درس</p>
+    <p class="login-sub">تدرّب على القسم الكمي — درساً بعد درس</p>
+    <div class="login-badges">
+      <span>${toAr(bankSize())} سؤال أصلي</span>
+      <span>مجاني بالكامل</span>
+      <span>بدون حساب</span>
+    </div>
     <div class="login-form">
       <input id="loginName" class="login-input" type="text" maxlength="20" placeholder="ما اسمك؟"
         autocomplete="off" onkeydown="if(event.key==='Enter')A.login()">
