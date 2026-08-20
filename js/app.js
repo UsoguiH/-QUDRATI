@@ -799,7 +799,7 @@ function renderSession() {
   const q = SES.queue[SES.idx];
   const pct = Math.round(SES.done / SES.total * 100);
   $app.innerHTML = `
-    <div class="screen screen-full">
+    <div class="screen screen-full screen-session">
       <div class="session-top">
         <button class="x-btn" onclick="A.quitSession()">${X_SVG}</button>
         <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="تقدمك في الدرس"><i style="width:${pct}%"></i></div>
@@ -843,6 +843,10 @@ const CLOCK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
   <circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.8"/></svg>`;
 function timerBar() {
   return `<span class="qtimer" id="qtWrap" style="--p:100" title="الوقت المتبقي" aria-label="الوقت المتبقي">
+    <svg class="qt-ring" viewBox="0 0 44 44" width="44" height="44" aria-hidden="true">
+      <circle class="qt-track" cx="22" cy="22" r="19"/>
+      <circle class="qt-arc" cx="22" cy="22" r="19" pathLength="100"/>
+    </svg>
     <b class="qt-num" id="qtNum">${toAr(Q_SECS)}</b>
   </span>`;
 }
@@ -1084,24 +1088,31 @@ A.reviveLesson = function () {
 };
 A.quitFailed = function () { SES = null; A.go("path"); };
 
-const WSTAR_PATH = "M18.2665 6.04527C19.33 3.69332 22.67 3.69333 23.7335 6.04527L25.9554 10.959C26.4018 11.9462 27.3458 12.616 28.425 12.7114L33.7515 13.1819C36.4147 13.4171 37.4631 16.7555 35.4126 18.4711L31.6082 21.6541C30.7372 22.3828 30.3524 23.5408 30.6139 24.6459L31.7621 29.4978C32.3649 32.045 29.6444 34.0885 27.3659 32.8L22.4767 30.0351C21.5604 29.5169 20.4396 29.5169 19.5233 30.0351L14.6341 32.8C12.3556 34.0885 9.63514 32.045 10.2379 29.4978L11.3861 24.6459C11.6476 23.5408 11.2628 22.3828 10.3918 21.6541L6.58741 18.4711C4.53685 16.7555 5.58529 13.4171 8.2485 13.1819L13.575 12.7114C14.6542 12.616 15.5982 11.9462 16.0446 10.959L18.2665 6.04527Z";
+/* A true five-point star: sharp points, then a same-shape stroke on top to
+   round every corner by half its width - the Duolingo star is chunky, not
+   a blob. Drawn at 44x44 with room for the 5px rim. */
+const WSTAR_PATH = "M22 3 27.23 14.8 40.07 16.13 30.46 24.75 33.17 37.37 22 30.9 10.83 37.37 13.54 24.75 3.93 16.13 16.77 14.8Z";
 function winStarSvg(on, size, isCenter, idx) {
-  const w = Math.round(size * 42 / 40), h = size;
-  const cls = `ws-star ${isCenter ? '' : 'ws-side'} ${on ? 'ws-on' : 'ws-off'}`;
-  const delay = `animation-delay:${(0.22 + idx * 0.16).toFixed(2)}s`;
-  if (on) {
-    const gid = `wsg${idx}`;
-    return `<svg class="${cls}" viewBox="0 0 42 40" width="${w}" height="${h}" ${on ? `style="${delay}"` : ''}>
-      <defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#FFE566"/><stop offset="55%" stop-color="#FFC800"/><stop offset="100%" stop-color="#FF9200"/>
-      </linearGradient></defs>
-      <path d="${WSTAR_PATH}" fill="url(#${gid})" stroke="#B87000" stroke-width="1.7" stroke-linejoin="round"/>
-      <path d="M17.5 11.5 Q21 8.2 24.5 11.5" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2" stroke-linecap="round"/>
-    </svg>`;
-  }
-  return `<svg class="${cls}" viewBox="0 0 42 40" width="${w}" height="${h}">
-    <path d="${WSTAR_PATH}" fill="#CECECE" stroke="#A8A8A8" stroke-width="1.7" stroke-linejoin="round"/>
-  </svg>`;
+  const delay = `--d:${(0.24 + idx * 0.18).toFixed(2)}s`;
+  const slot = `ws-slot ${isCenter ? '' : 'ws-side'} ${on ? 'on' : 'off'}`;
+  // the stroke is the face colour: it only rounds the ten corners, it must
+  // not read as an outline - the depth comes from the flat shadow in CSS
+  const face = on ? `url(#wsg${idx})` : "#D8D8D8";
+  const defs = on ? `<defs><linearGradient id="wsg${idx}" x1=".1" y1="0" x2=".5" y2="1">
+      <stop offset="0%" stop-color="#FFE066"/><stop offset="52%" stop-color="#FFC400"/><stop offset="100%" stop-color="#FFA600"/>
+    </linearGradient></defs>` : "";
+  const gloss = on ? `<ellipse cx="18.4" cy="14.6" rx="3.1" ry="1.9" fill="#fff" opacity=".5" transform="rotate(-34 18.4 14.6)"/>` : "";
+  return `<span class="${slot}" style="${delay}">
+    <svg class="ws-star" viewBox="0 0 44 44" width="${size}" height="${size}" aria-hidden="true">
+      ${defs}<path d="${WSTAR_PATH}" fill="${face}" stroke="${face}" stroke-width="4.4" stroke-linejoin="round" stroke-linecap="round"/>${gloss}
+    </svg>
+  </span>`;
+}
+/* the sparks that keep twinkling around the row after the stars land */
+function winSparks() {
+  const at = [[-13, -8], [104, -14], [-6, 78], [99, 70]];
+  return at.map(([x, y], i) =>
+    `<i class="ws-spark" style="left:${x}%;top:${y}%;--d:${(1.5 + i * 0.45).toFixed(2)}s;transform:scale(${i % 2 ? .8 : 1.15})"></i>`).join("");
 }
 
 function lessonComplete() {
@@ -1119,7 +1130,7 @@ function lessonComplete() {
   pendingStreak = streakUp ? S.streak.count : 0;   // show the fire-streak celebration after this win screen
   const xpWon = rankGain, gemsWon = SES.gems, boosted = SES.xpBoost, tTot = SES.tSpent;
   const dayWord = S.streak.count === 1 ? "يوم واحد" : S.streak.count === 2 ? "يومان" : S.streak.count <= 10 ? toAr(S.streak.count) + " أيام" : toAr(S.streak.count) + " يوماً";
-  const starIcos = [1, 2, 3].map(i => winStarSvg(i <= stars, i === 2 ? 68 : 54, i === 2, i - 1)).join('');
+  const starIcos = winSparks() + [1, 2, 3].map(i => winStarSvg(i <= stars, i === 2 ? 74 : 58, i === 2, i - 1)).join('');
   const starMsg = perfect ? "درس مثالي — ثلاث نجوم!" : stars === 2 ? "أحسنت! حصلت على نجمتين" : "واصل، ستصل إلى الثلاث!";
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
     ${flameHero(115)}
@@ -1261,7 +1272,7 @@ function renderMockQ() {
   const sec = MOCK.sections[MOCK.si];
   const { q } = sec.items[MOCK.qi];
   $app.innerHTML = `
-    <div class="screen screen-full">
+    <div class="screen screen-full screen-session">
       <div class="session-top">
         <button class="x-btn" onclick="A.quitMock()">${X_SVG}</button>
         <div class="mock-timer" id="mkWrap" aria-label="الوقت المتبقي في القسم">

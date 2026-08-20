@@ -88,10 +88,12 @@ svg.ic { display: block; }
    Context bar — Figma "Context Bar" 430x54, white, counters:
    icon + 16px/700 number (streak #FF9600, gem #1CB0F6, ♥ #FF4B4B)
    ============================================================ */
+/* Three counters sitting on the page, not a bar: no surface behind them,
+   and they scroll away with the content. The unit header is sticky, so it
+   is what pins to the top edge once they are gone. */
 .statbar {
-  position: sticky; top: 0; z-index: 30;
+  position: relative; z-index: 30;
   display: flex; justify-content: space-around; align-items: center;
-  background: var(--snow);
   height: 54px; padding: 0 16px;
 }
 .stat { display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: 16px; }
@@ -259,21 +261,40 @@ svg.ic { display: block; }
   animation: spinSlow 5s linear infinite;
 }
 .qtimer {
-  width: 42px; height: 42px; flex-shrink: 0; border-radius: 50%;
+  position: relative; width: 44px; height: 44px; flex-shrink: 0;
   display: grid; place-items: center;
-  background: conic-gradient(var(--qt-c, var(--blue)) calc(var(--p, 100) * 1%), var(--line) 0);
+  color: var(--blue);
   animation: fadeUp .4s ease backwards;
+  transition: color .3s ease;
 }
-.qtimer .qt-num {
-  width: 34px; height: 34px; border-radius: 50%;
-  background: var(--snow);
-  display: grid; place-items: center;
-  font-weight: 800; font-size: 15px; color: var(--qt-c, var(--blue));
+/* a tinted disc under the digits so the ring reads as light, not as a slab */
+.qtimer::before {
+  content: ''; position: absolute; inset: 5px; border-radius: 50%;
+  background: currentColor; opacity: .11;
+}
+.qt-ring {
+  position: absolute; inset: 0; overflow: visible;
+  /* the arc starts at twelve and drains leftward, with the reading direction */
+  transform: rotate(90deg) scaleX(-1);
+}
+.qt-ring circle { fill: none; stroke-width: 4; stroke-linecap: round; }
+.qt-track { stroke: var(--line); }
+.qt-arc {
+  stroke: currentColor;
+  /* pathLength=100 on the element makes the dash maths plain percentages */
+  stroke-dasharray: 100;
+  stroke-dashoffset: calc(100 - var(--p, 100));
+  transition: stroke-dashoffset 1s linear, stroke .3s ease;
+}
+.qt-num {
+  position: relative;
+  font-weight: 800; font-size: 15px; color: currentColor;
   font-variant-numeric: tabular-nums; line-height: 1;
 }
-.qtimer.low  { --qt-c: var(--orange); }
-.qtimer.crit { --qt-c: var(--red); animation: numPop 1s ease infinite; }
-.qtimer.paused { opacity: .55; }
+.qtimer.low  { color: var(--orange); }
+.qtimer.crit { color: var(--red); }
+.qtimer.crit .qt-num { animation: numPop 1s ease infinite; }
+.qtimer.paused { opacity: .5; }
 @keyframes numPop { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.28); } }
 
 /* ============================================================
@@ -507,27 +528,62 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .rc-gold  { background: var(--gold); }  .rc-gold .rc-v  { border-color: var(--gold);  color: var(--gold); }
 .rc-blue  { background: var(--blue); }  .rc-blue .rc-v  { border-color: var(--blue);  color: var(--blue); }
 .rc-green { background: var(--green); } .rc-green .rc-v { border-color: var(--green); color: var(--green); }
-.stars { font-size: 44px; letter-spacing: 6px; margin-bottom: 6px; }
-.stars .off { filter: grayscale(1); opacity: .35; }
 .win-stars {
-  display: flex; gap: 6px; align-items: flex-end; justify-content: center;
-  margin: 10px 0 2px;
+  position: relative; isolation: isolate;
+  display: flex; gap: 10px; align-items: flex-end; justify-content: center;
+  margin: 14px 0 2px;
 }
-.ws-star   { display: block; flex-shrink: 0; }
-.ws-side   { margin-bottom: 5px; }
-.ws-on {
-  animation: starPop .5s cubic-bezier(.22,1.5,.36,1) backwards;
-  filter:
-    drop-shadow(0 0 8px rgba(255,200,0,1))
-    drop-shadow(0 0 18px rgba(255,150,0,.65))
-    drop-shadow(0 3px 0 rgba(150,80,0,.35));
+/* one warm pool of light behind the row, instead of a blur on every star */
+.win-stars::before {
+  content: ''; position: absolute; z-index: -1;
+  left: 50%; top: 52%; width: 270px; height: 170px; transform: translate(-50%, -50%);
+  background: radial-gradient(closest-side, rgba(255,190,0,.34), rgba(255,190,0,0) 72%);
+  animation: glowPulse 2.8s 1.5s ease-in-out infinite;
+  pointer-events: none;
 }
-.ws-off { opacity: .25; }
+.ws-slot { position: relative; display: flex; flex-shrink: 0; }
+.ws-side { margin-bottom: 7px; }
+.ws-star { display: block; }
+
+/* earned: a flat gold drop, the way the buttons are built - no blur halo */
+.ws-slot.on .ws-star {
+  filter: drop-shadow(0 3px 0 #D98200) drop-shadow(0 7px 12px rgba(255,150,0,.38));
+  animation:
+    starPop .62s var(--d) cubic-bezier(.18,1.5,.36,1) backwards,
+    starBreathe 2.6s calc(var(--d) + 1.1s) ease-in-out infinite;
+}
+/* the flash ring it lands inside */
+.ws-slot.on::after {
+  content: ''; position: absolute; inset: -7px; border-radius: 50%;
+  border: 3px solid rgba(255,200,0,.9); opacity: 0;
+  animation: starRing .55s var(--d) cubic-bezier(.2,.75,.35,1) backwards;
+  pointer-events: none;
+}
+.ws-slot.off .ws-star {
+  filter: drop-shadow(0 2px 0 #BEBEBE);
+  animation: starPop .5s var(--d) cubic-bezier(.25,1.25,.5,1) backwards;
+}
+/* four sparks that keep twinkling around the row once the stars have landed */
+.ws-spark {
+  position: absolute; z-index: -1; width: 13px; height: 13px;
+  background: #FFD400; pointer-events: none;
+  clip-path: polygon(50% 0%, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0% 50%, 40% 40%);
+  animation: twinkle 2.2s var(--d) ease-in-out infinite;
+}
 @keyframes starPop {
-  0%   { transform: scale(0) rotate(-30deg); opacity: 0; }
-  60%  { transform: scale(1.28) rotate(10deg); opacity: 1; }
-  80%  { transform: scale(0.94) rotate(-3deg); }
+  0%   { transform: scale(0) rotate(-50deg); opacity: 0; }
+  55%  { transform: scale(1.34) rotate(12deg); opacity: 1; }
+  74%  { transform: scale(.9) rotate(-7deg); }
+  88%  { transform: scale(1.07) rotate(3deg); }
   100% { transform: scale(1) rotate(0); }
+}
+@keyframes starBreathe {
+  0%, 100% { transform: scale(1) rotate(0); }
+  50%      { transform: scale(1.06) rotate(-2.5deg); }
+}
+@keyframes starRing {
+  0%   { transform: scale(.4); opacity: .95; }
+  100% { transform: scale(1.75); opacity: 0; }
 }
 .ws-msg {
   font-size: 15px; font-weight: 800; color: var(--gold-dk);
@@ -1295,20 +1351,6 @@ button.dom-stat:active { transform: scale(.99); }
     titleShine 2.8s 1.6s linear infinite;
 }
 @keyframes titleShine { to { background-position: -70% 0; } }
-.stars span {
-  display: inline-block;
-  animation:
-    starRise .6s cubic-bezier(.3,1.7,.5,1) backwards,
-    starPulse 2.4s ease-in-out infinite;
-}
-.stars span:nth-child(1) { animation-delay: 1.05s, 2.4s; }
-.stars span:nth-child(2) { animation-delay: 1.21s, 2.7s; }
-.stars span:nth-child(3) { animation-delay: 1.37s, 3s; }
-.stars .off { animation: starRise .6s cubic-bezier(.3,1.7,.5,1) backwards; } /* unearned stars don't dance */
-@keyframes starPulse {
-  0%, 100% { transform: scale(1) rotate(0); }
-  50%      { transform: scale(1.18) rotate(7deg); }
-}
 .result-cards .rcard {
   position: relative; overflow: hidden;
   animation:
@@ -2190,6 +2232,19 @@ button.dom-stat:active { transform: scale(.99); }
 /* dynamic viewport height so mobile browser chrome cannot overflow */
 .app { min-height: 100dvh; }
 
+/* A lesson or exam question is a fixed frame exactly one screen tall. The
+   header and the action bar are pinned, so letting the PAGE scroll only
+   slid the question out from between them; the question body scrolls
+   instead. body:has() stops the off-screen feedback sheet, which is
+   position:fixed and parked below the fold, from adding a scrollbar. */
+.screen-session { height: 100dvh; max-height: 100dvh; overflow: hidden; }
+.screen-session .q-area {
+  min-height: 0; overflow-y: auto;
+  overscroll-behavior: contain; scrollbar-width: none;
+}
+.screen-session .q-area::-webkit-scrollbar { display: none; }
+body:has(.screen-session) { overflow: hidden; }
+
 /* ============================================================
    Pointer and keyboard affordances
    ============================================================ */
@@ -2578,7 +2633,7 @@ button.dom-stat:active { transform: scale(.99); }
 
 /* the unit header stays with you while you scroll its lessons */
 .unit-banner {
-  position: sticky; top: 54px; z-index: 26;
+  position: sticky; top: 0; z-index: 26;
   margin-top: 14px;
 }
 .unit-banner .u-prog {
@@ -2594,7 +2649,4 @@ button.dom-stat:active { transform: scale(.99); }
 @media (min-width: 768px) {
   .path-row { height: 134px; }
 }
-@media (min-width: 1100px) {
-  /* the statbar is hidden at this width, so the banner docks to the top */
-  .unit-banner { top: 0; }
-}
+
