@@ -39,6 +39,8 @@
 
 المشروع HTML/CSS/JS خالص — لا أطر عمل، لا اعتماديات، لا خادم. افتح الملف والعب.
 
+📍 **خارطة الطريق:** أين وصلنا وما المتبقّي — [ROADMAP.md](ROADMAP.md)
+
 ## ✨ الميزات
 
 - 🗺️ **مسار دروس متعرّج** بأسلوب Duolingo: 4 وحدات (الحساب، الجبر، الهندسة، التحليل والإحصاء) × 18 درساً، تُفتح بالتتابع.
@@ -165,6 +167,8 @@ Works in any browser on phone or desktop — no download, no install, no sign-up
 - Two tracks: scientific / humanities.
 - Progress saved in `localStorage` — no accounts, no server. Pure HTML/CSS/JS.
 - Android build available as [`Qudrati.apk`](Qudrati.apk) (Capacitor wrapper).
+
+**Roadmap:** where the project stands and what is left — [ROADMAP.md](ROADMAP.md).
 
 **Run it:** clone and open `index.html` in any browser. Dev preview: `preview.html#path|lesson|pop|fb|done|exam|stats|settings`.
 
