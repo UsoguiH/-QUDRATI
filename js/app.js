@@ -1091,30 +1091,6 @@ A.quitFailed = function () { SES = null; A.go("path"); };
 /* A true five-point star: sharp points, then a same-shape stroke on top to
    round every corner by half its width - the Duolingo star is chunky, not
    a blob. Drawn at 44x44 with room for the 5px rim. */
-const WSTAR_PATH = "M22 3 27.23 14.8 40.07 16.13 30.46 24.75 33.17 37.37 22 30.9 10.83 37.37 13.54 24.75 3.93 16.13 16.77 14.8Z";
-function winStarSvg(on, size, isCenter, idx) {
-  const delay = `--d:${(0.24 + idx * 0.18).toFixed(2)}s`;
-  const slot = `ws-slot ${isCenter ? '' : 'ws-side'} ${on ? 'on' : 'off'}`;
-  // the stroke is the face colour: it only rounds the ten corners, it must
-  // not read as an outline - the depth comes from the flat shadow in CSS
-  const face = on ? `url(#wsg${idx})` : "#D8D8D8";
-  const defs = on ? `<defs><linearGradient id="wsg${idx}" x1=".1" y1="0" x2=".5" y2="1">
-      <stop offset="0%" stop-color="#FFE066"/><stop offset="52%" stop-color="#FFC400"/><stop offset="100%" stop-color="#FFA600"/>
-    </linearGradient></defs>` : "";
-  const gloss = on ? `<ellipse cx="18.4" cy="14.6" rx="3.1" ry="1.9" fill="#fff" opacity=".5" transform="rotate(-34 18.4 14.6)"/>` : "";
-  return `<span class="${slot}" style="${delay}">
-    <svg class="ws-star" viewBox="0 0 44 44" width="${size}" height="${size}" aria-hidden="true">
-      ${defs}<path d="${WSTAR_PATH}" fill="${face}" stroke="${face}" stroke-width="4.4" stroke-linejoin="round" stroke-linecap="round"/>${gloss}
-    </svg>
-  </span>`;
-}
-/* the sparks that keep twinkling around the row after the stars land */
-function winSparks() {
-  const at = [[-13, -8], [104, -14], [-6, 78], [99, 70]];
-  return at.map(([x, y], i) =>
-    `<i class="ws-spark" style="left:${x}%;top:${y}%;--d:${(1.5 + i * 0.45).toFixed(2)}s;transform:scale(${i % 2 ? .8 : 1.15})"></i>`).join("");
-}
-
 function lessonComplete() {
   stopQTimer();
   const ft = Object.values(SES.firstTry);
@@ -1130,13 +1106,9 @@ function lessonComplete() {
   pendingStreak = streakUp ? S.streak.count : 0;   // show the fire-streak celebration after this win screen
   const xpWon = rankGain, gemsWon = SES.gems, boosted = SES.xpBoost, tTot = SES.tSpent;
   const dayWord = S.streak.count === 1 ? "يوم واحد" : S.streak.count === 2 ? "يومان" : S.streak.count <= 10 ? toAr(S.streak.count) + " أيام" : toAr(S.streak.count) + " يوماً";
-  const starIcos = winSparks() + [1, 2, 3].map(i => winStarSvg(i <= stars, i === 2 ? 74 : 58, i === 2, i - 1)).join('');
-  const starMsg = perfect ? "درس مثالي — ثلاث نجوم!" : stars === 2 ? "أحسنت! حصلت على نجمتين" : "واصل، ستصل إلى الثلاث!";
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
     ${flameHero(115)}
     <h1 class="win-title">أكملت الدرس!</h1>
-    <div class="win-stars">${starIcos}</div>
-    <p class="ws-msg">${starMsg}</p>
     <p class="win-sub">سلسلة ${dayWord}</p>
     <div class="win-gems">${ico("gem", 20)} +${toAr(gemsWon)} جوهرة${boosted ? ` · ⚡ الخبرة ×٢` : ""}</div>
     <div class="result-cards">

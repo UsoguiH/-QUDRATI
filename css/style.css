@@ -88,14 +88,16 @@ svg.ic { display: block; }
    Context bar — Figma "Context Bar" 430x54, white, counters:
    icon + 16px/700 number (streak #FF9600, gem #1CB0F6, ♥ #FF4B4B)
    ============================================================ */
-/* Three counters sitting on the page, not a bar: no surface behind them,
-   and they scroll away with the content. The unit header is sticky, so it
-   is what pins to the top edge once they are gone. */
+/* Three counters, not a bar: they stay pinned as you scroll but have no
+   surface of their own, so the path passes behind them. */
 .statbar {
-  position: relative; z-index: 30;
+  position: sticky; top: 0; z-index: 30;
   display: flex; justify-content: space-around; align-items: center;
   height: 54px; padding: 0 16px;
+  background: none;
+  pointer-events: none;          /* the gaps belong to the path underneath */
 }
+.statbar > * { pointer-events: auto; }
 .stat { display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: 16px; }
 .stat-streak { color: var(--orange); }
 .stat-xp     { color: var(--blue); }
@@ -528,68 +530,6 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .rc-gold  { background: var(--gold); }  .rc-gold .rc-v  { border-color: var(--gold);  color: var(--gold); }
 .rc-blue  { background: var(--blue); }  .rc-blue .rc-v  { border-color: var(--blue);  color: var(--blue); }
 .rc-green { background: var(--green); } .rc-green .rc-v { border-color: var(--green); color: var(--green); }
-.win-stars {
-  position: relative; isolation: isolate;
-  display: flex; gap: 10px; align-items: flex-end; justify-content: center;
-  margin: 14px 0 2px;
-}
-/* one warm pool of light behind the row, instead of a blur on every star */
-.win-stars::before {
-  content: ''; position: absolute; z-index: -1;
-  left: 50%; top: 52%; width: 270px; height: 170px; transform: translate(-50%, -50%);
-  background: radial-gradient(closest-side, rgba(255,190,0,.34), rgba(255,190,0,0) 72%);
-  animation: glowPulse 2.8s 1.5s ease-in-out infinite;
-  pointer-events: none;
-}
-.ws-slot { position: relative; display: flex; flex-shrink: 0; }
-.ws-side { margin-bottom: 7px; }
-.ws-star { display: block; }
-
-/* earned: a flat gold drop, the way the buttons are built - no blur halo */
-.ws-slot.on .ws-star {
-  filter: drop-shadow(0 3px 0 #D98200) drop-shadow(0 7px 12px rgba(255,150,0,.38));
-  animation:
-    starPop .62s var(--d) cubic-bezier(.18,1.5,.36,1) backwards,
-    starBreathe 2.6s calc(var(--d) + 1.1s) ease-in-out infinite;
-}
-/* the flash ring it lands inside */
-.ws-slot.on::after {
-  content: ''; position: absolute; inset: -7px; border-radius: 50%;
-  border: 3px solid rgba(255,200,0,.9); opacity: 0;
-  animation: starRing .55s var(--d) cubic-bezier(.2,.75,.35,1) backwards;
-  pointer-events: none;
-}
-.ws-slot.off .ws-star {
-  filter: drop-shadow(0 2px 0 #BEBEBE);
-  animation: starPop .5s var(--d) cubic-bezier(.25,1.25,.5,1) backwards;
-}
-/* four sparks that keep twinkling around the row once the stars have landed */
-.ws-spark {
-  position: absolute; z-index: -1; width: 13px; height: 13px;
-  background: #FFD400; pointer-events: none;
-  clip-path: polygon(50% 0%, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0% 50%, 40% 40%);
-  animation: twinkle 2.2s var(--d) ease-in-out infinite;
-}
-@keyframes starPop {
-  0%   { transform: scale(0) rotate(-50deg); opacity: 0; }
-  55%  { transform: scale(1.34) rotate(12deg); opacity: 1; }
-  74%  { transform: scale(.9) rotate(-7deg); }
-  88%  { transform: scale(1.07) rotate(3deg); }
-  100% { transform: scale(1) rotate(0); }
-}
-@keyframes starBreathe {
-  0%, 100% { transform: scale(1) rotate(0); }
-  50%      { transform: scale(1.06) rotate(-2.5deg); }
-}
-@keyframes starRing {
-  0%   { transform: scale(.4); opacity: .95; }
-  100% { transform: scale(1.75); opacity: 0; }
-}
-.ws-msg {
-  font-size: 15px; font-weight: 800; color: var(--gold-dk);
-  letter-spacing: .2px; margin: 6px 0 6px;
-}
-
 
 /* ============================================================
    Losing screen — Duolingo "out of hearts", clean & juicy:
@@ -2633,7 +2573,7 @@ body:has(.screen-session) { overflow: hidden; }
 
 /* the unit header stays with you while you scroll its lessons */
 .unit-banner {
-  position: sticky; top: 0; z-index: 26;
+  position: sticky; top: 54px; z-index: 26;
   margin-top: 14px;
 }
 .unit-banner .u-prog {
@@ -2645,6 +2585,11 @@ body:has(.screen-session) { overflow: hidden; }
 
 /* the question stem is a heading now, so the choices own the card look */
 .q-kicker { color: var(--gray); }
+
+@media (min-width: 1100px) {
+  /* the counters are hidden at this width, so the banner docks to the top */
+  .unit-banner { top: 0; }
+}
 
 @media (min-width: 768px) {
   .path-row { height: 134px; }
