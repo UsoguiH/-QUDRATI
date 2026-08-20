@@ -1677,25 +1677,30 @@ button.dom-stat:active { transform: scale(.99); }
   border: 2px solid var(--line); background: #fff; position: relative;
   font-family: var(--font); font-weight: 700; font-size: 13px; color: var(--gray);
   padding: 3px 0 0; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background .15s, border-color .15s, color .15s;
 }
-.qn-chip.done { background: var(--blue-light); border-color: var(--blue-border); color: var(--blue-dk); }
-.qn-chip.cur { border-color: var(--blue); box-shadow: 0 0 0 2.5px rgba(28,176,246,.28); }
-.qn-chip.flagged::after {
-  content: '⚑'; position: absolute; top: -10px; left: -3px;
-  color: var(--gold-dk); font-size: 13px;
-}
+/* answered — filled but deliberately neutral: a mock gives no per-question
+   feedback, so a colour that reads as "correct" would be a lie */
+.qn-chip.done { background: var(--divider); border-color: var(--gray-shadow); color: var(--ink); }
+/* flagged for review — the colour IS the flag, so no glyph is needed */
+.qn-chip.flagged { background: var(--gold); border-color: var(--gold-dk); color: #7A5A00; }
+/* where you are: an outline, so it never overwrites the state colour */
+.qn-chip.cur { outline: 2.5px solid var(--ink); outline-offset: 1px; }
 .mock-bar { display: flex; gap: 9px; align-items: stretch; }
 .mock-bar .btn { flex: 1; }
 .mk-flag {
-  min-width: 56px; flex-shrink: 0; border-radius: 13px; padding: 5px 9px 4px;
-  border: 2px solid var(--line); background: #fff;
+  min-width: 58px; flex-shrink: 0; border-radius: 13px; padding: 4px 10px 3px;
+  border: 2px solid var(--gold); background: #fff;
   display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
-  font-family: var(--font); font-size: 17px; line-height: 1;
-  color: var(--gray-icon); cursor: pointer;
+  font-family: var(--font); font-size: 16px; line-height: 1;
+  color: var(--gold-dk); cursor: pointer;
+  margin-bottom: 5px; box-shadow: 0 4px 0 var(--gold-soft);
+  transition: transform .08s, box-shadow .08s, background .15s, color .15s;
   -webkit-tap-highlight-color: transparent;
 }
 .mk-flag span { font-size: 11.5px; font-weight: 800; }
-.mk-flag.on { color: var(--gold-dk); border-color: var(--gold); background: #FFF6D8; }
+.mk-flag:active { transform: translateY(4px); box-shadow: none; }
+.mk-flag.on { background: var(--gold); border-color: var(--gold-dk); color: #fff; box-shadow: 0 4px 0 var(--gold-dk); }
 .mk-side { flex: 0 0 auto !important; width: auto; padding: 13px 18px 9px; }
 .mock-band {
   font-size: 17px; font-weight: 800; color: var(--gold-dk);
