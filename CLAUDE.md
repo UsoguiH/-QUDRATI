@@ -19,12 +19,14 @@ A Duolingo-style Arabic web game for practicing the Quantitative section of the 
 ```
 index.html              — app shell (single <div id="app">)
 preview.html            — dev harness: bypasses disclaimer, seeds state, jumps to any screen via #hash
+mobile.html             — device-frame preview of the app, auto-reloads when style.css or app.js changes
 css/style.css           — full design system (2059 lines, Figma-exact values)
 js/app.js               — ALL game logic (~1939 lines, single IIFE, no imports)
 js/data/skills.js       — Unit 1 questions: مهارات وقوانين القدرات  (3548 lines)
 js/data/numbers.js      — Unit 2 questions: أساسيات الأعداد         (2816 lines)
 js/data/ratios.js       — Unit 3 questions: النسب والاحتمالات       (1580 lines)
 js/data/geometry.js     — Unit 4 questions: الهندسة والإحصاء        (4012 lines)
+tools/serve.js          — zero-dep dev server; sends Last-Modified so mobile.html can auto-reload
 tools/validate.js       — Node.js validator for question-bank structure
 tools/figma-dump.js     — Figma API dump helper
 tools/figma-export.js   — icon export from Figma
@@ -100,6 +102,17 @@ node tools/validate.js
 Checks: unique IDs, valid format/difficulty/track/answer, solution length, figure tag, duplicate choices, difficulty ordering within lessons, comparison answer distribution.
 
 ## Development preview
+
+```bash
+node tools/serve.js          # http://localhost:8080
+```
+
+Then open **`/mobile.html`** for mobile work: it frames the app at a real device
+size, and because the iframe is the exact device width the CSS behaves as it does
+on the phone. It reloads itself whenever `style.css` or `app.js` changes. Hover
+effects still apply there (the host has a mouse) — use DevTools device mode when
+touch behaviour matters, or the LAN address the server prints to open it on a real
+phone.
 
 Open `preview.html#<screen>` to jump directly to any screen (bypasses disclaimer, seeds realistic state):
 
