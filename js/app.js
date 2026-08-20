@@ -682,14 +682,12 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   veil.className = "lesson-pop-veil";
   const canBoost = S.xp >= BOOST_COST;
   veil.innerHTML = `<div class="lesson-pop" style="--pop-c:${u.c};top:${Math.min(r.bottom + 14, window.innerHeight - 190)}px">
-    <button class="lp-boost ${canBoost ? "" : "cant"}" id="lpBoost" title="ضاعف خبرة هذا الدرس" aria-label="ضاعف خبرة هذا الدرس">
-      <span class="lpb-circle"><img class="ic lpb-bolt" src="assets/icons/lightning.svg" width="18" height="18" alt=""><span class="lpb-x2">×٢</span></span>
-      <span class="lpb-cost">${ico("gem", 11)} ${toAr(BOOST_COST)}</span>
-    </button>
     <h3>${l.title}</h3>
-    <div class="lp-sub">الدرس ${toAr(li + 1)} من ${toAr(d.lessons.length)}</div>
-    <div class="lp-meta">${ico("heart", 15)} ${toAr(LEVEL_HEARTS)} قلوب لهذا الدرس</div>
-    ${canBoost ? `<div class="lp-hint">اضغط ⚡ لمضاعفة خبرة هذا الدرس</div>` : ""}
+    <button class="lp-boost ${canBoost ? "" : "cant"}" id="lpBoost" aria-label="ضاعف خبرة هذا الدرس مقابل ${toAr(BOOST_COST)} جوهرة">
+      <span class="lpb-ico"><img src="assets/icons/lightning.svg" width="20" height="20" alt=""></span>
+      <span class="lpb-label">ضاعف الخبرة <span dir="ltr">×٢</span></span>
+      <span class="lpb-cost">${ico("gem", 13)} ${toAr(BOOST_COST)}</span>
+    </button>
     <button class="btn btn-white" style="color:${u.c};box-shadow:0 5px 0 ${u.pale}">ابدأ</button>
   </div>`;
   veil.onclick = e => { if (e.target === veil) veil.remove(); };
@@ -700,7 +698,7 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
     boost = !boost;
     bb.classList.toggle("on", boost);
     const cost = bb.querySelector(".lpb-cost");
-    if (cost) cost.innerHTML = boost ? `مفعّل ✓` : `${ico("gem", 11)} ${toAr(BOOST_COST)}`;
+    if (cost) cost.innerHTML = boost ? `مفعّل ✓` : `${ico("gem", 13)} ${toAr(BOOST_COST)}`;
     if (boost) sndGood();
   };
   veil.querySelector(".btn-white").onclick = () => { veil.remove(); A.startLesson(domKey, lesKey, boost); };
@@ -717,7 +715,7 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   const nr = btn.getBoundingClientRect();
   const pcr = (path || btn.parentElement).getBoundingClientRect();
   const dx = (nr.left + nr.width / 2) - (pcr.left + pcr.width / 2);
-  pop.style.top = Math.max(8, Math.min(nr.bottom + 14, window.innerHeight - 210)) + "px";
+  pop.style.top = Math.max(8, Math.min(nr.bottom + 14, window.innerHeight - 200)) + "px";
   pop.style.setProperty("--arrow-x",
     "clamp(20px, calc(50% - " + dx.toFixed(1) + "px), calc(100% - 20px))");
 };

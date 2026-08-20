@@ -144,7 +144,7 @@ svg.ic { display: block; }
    Current level: 89x84 progress ring (6px #E5E5E5 + colored arc)
    + floating white "START" tooltip (r11, 2px #E5E5E5, 17px/900)
    ============================================================ */
-.path { display: flex; flex-direction: column; align-items: center; padding: 14px 0 6px; position: relative; }
+.path { display: flex; flex-direction: column; align-items: center; padding: 38px 0 6px; position: relative; }
 .path-row { position: relative; height: 142px; width: 100%; display: flex; justify-content: center; }
 .node-col { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
 
@@ -686,44 +686,38 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
   transform: translateX(50%) rotate(45deg); border-radius: 5px;
 }
 @keyframes popIn { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; transform: none;} }
-.lesson-pop h3 { color: #fff; font-size: 21px; font-weight: 700; margin: 2px 0 2px; padding-left: 58px; }
-.lesson-pop .lp-sub { color: #fff; font-size: 18px; font-weight: 400; margin-bottom: 14px; padding-left: 58px; }
+.lesson-pop h3 { color: #fff; font-size: 21px; font-weight: 700; margin: 2px 2px 0; text-wrap: balance; }
 .lesson-pop .btn { margin-bottom: 0; }
-/* 2XP boost — small yellow circular button, top-left of the popup. Stays
-   yellow; activating just adds a white selection ring + one clean bounce. */
+/* Double-XP — one pill that states the offer and its price on its own
+   face, so the popup needs no explanatory line under it. */
 .lp-boost {
-  position: absolute; top: 13px; left: 13px; z-index: 3;
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  background: none; border: none; padding: 0; cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; margin: 13px 0 11px;
+  background: rgba(255, 255, 255, .16);
+  border: 2px solid rgba(255, 255, 255, .45);
+  border-radius: 13px; padding: 8px 11px 6px;
+  color: #fff; font-family: var(--font); font-size: 14.5px; font-weight: 800;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background .15s, border-color .15s, color .15s, transform .08s;
 }
-.lpb-circle {
-  position: relative; width: 44px; height: 44px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(160deg, #FFD94A, #FFC300);   /* yellow */
-  box-shadow: 0 4px 0 var(--gold-dk);
-  transition: transform .12s ease, box-shadow .15s ease;
-}
-.lpb-bolt { display: block; filter: brightness(0) invert(1); }   /* white bolt */
-.lpb-x2 {
-  position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
-  background: #fff; color: var(--gold-dk);
-  font-size: 10px; font-weight: 800; line-height: 1; letter-spacing: .2px;
-  padding: 2.5px 6px; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,.22);
-}
+.lpb-ico { display: flex; width: 22px; height: 22px; flex-shrink: 0; }
+.lpb-ico img { width: 100%; height: 100%; filter: brightness(0) invert(1); }
+.lpb-label { flex: 1; text-align: right; }
 .lpb-cost {
-  margin-top: 8px;
-  display: inline-flex; align-items: center; gap: 3px;
-  font-size: 11px; font-weight: 800; color: #fff; opacity: .95;
+  display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0;
+  background: rgba(255, 255, 255, .22); border-radius: 999px;
+  padding: 3px 9px 2px; font-size: 12.5px; font-weight: 800;
 }
 .lpb-cost .ic { vertical-align: middle; }
-.lp-boost:active .lpb-circle { transform: translateY(2px) scale(.95); box-shadow: 0 1px 0 var(--gold-dk); }
-.lp-boost.cant { opacity: .45; }
-/* activated — still yellow, gains a white selection ring + one clean bounce */
-.lp-boost.on .lpb-circle {
-  box-shadow: 0 0 0 3px #fff, 0 4px 0 var(--gold-dk);
-  animation: boostPop .32s ease;
+.lp-boost:active { transform: translateY(2px); }
+.lp-boost.cant { opacity: .5; }
+/* activated — the pill flips to solid white in the unit's own colour */
+.lp-boost.on {
+  background: #fff; border-color: #fff; color: var(--pop-c, var(--purple));
+  animation: boostPop .3s ease;
 }
+.lp-boost.on .lpb-ico img { filter: none; }
+.lp-boost.on .lpb-cost { background: rgba(0, 0, 0, .07); }
 @keyframes boostPop { 0% { transform: scale(1); } 45% { transform: scale(1.14); } 100% { transform: scale(1); } }
 
 /* ============================================================
@@ -1884,15 +1878,6 @@ button.dom-stat:active { transform: scale(.99); }
 .dq-head { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
 .dq-head h3 { font-size: 21px; color: var(--gold-dk); margin: 0; }
 .dq-hstar { animation: dqStarSpin 4s ease-in-out infinite; display: inline-block; }
-.lp-meta {
-  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-  margin-top: 5px; font-size: 13px; font-weight: 700; color: #fff; opacity: .92;
-}
-.lp-meta img { width: 15px; height: 15px; }
-.lp-hint {
-  margin-top: 7px; font-size: 12.5px; font-weight: 700;
-  color: #fff; opacity: .9; text-wrap: balance;
-}
 .stat-rank {
   border: 0; background: none; padding: 3px 8px; border-radius: 10px;
   font-family: var(--font); font-size: 14px; font-weight: 800; color: var(--gray);
