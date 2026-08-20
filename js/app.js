@@ -755,7 +755,9 @@ function questionBody(q, selIdx, lockHandlers, pickFn, method) {
   const isCmp = q.format === "comparison";
   const choices = isCmp ? CMP_CHOICES : q.choices;
   let h = `<div class="q-top"><div class="q-kicker">${isCmp ? "قارن بين القيمتين ثم اختر:" : "اختر الإجابة الصحيحة:"}</div>${method ? `<button class="method-btn" onclick="A.showMethod()">${BULB_SVG} كيف أحلّها؟</button>` : ""}</div>`;
-  if (q.stem) h += `<div class="q-stem">${q.stem}</div>`;
+  // 104 comparison questions carry a stem that just restates the kicker above it
+  const echoesKicker = isCmp && /^قارن\s+بين\s+القيمتين/.test(String(q.stem || "").trim());
+  if (q.stem && !echoesKicker) h += `<div class="q-stem">${q.stem}</div>`;
   if (q.figure) h += `<div class="q-figure">${q.figure}</div>`;
   if (isCmp) h += `<div class="cmp-wrap">
       <div class="cmp-box"><div class="cmp-t">القيمة الأولى</div><div class="cmp-v">${q.value1}</div></div>

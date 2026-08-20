@@ -413,7 +413,7 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
   background: #fff; border: 2px solid var(--line); border-radius: 13px;
   box-shadow: 0 2px 0 var(--line);
   padding: 12px 14px; font-size: 19px; font-weight: 500; color: var(--ink);
-  transition: all .1s;
+  transition: background .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease;
 }
 .choice .ch-letter {
   flex-shrink: 0; width: 30px; height: 30px; border-radius: 8px;
@@ -1046,7 +1046,7 @@ button.dom-stat:active { transform: scale(.99); }
   100%{ transform: scale(1); }
 }
 @keyframes selPop {
-  0% { transform: scale(.96); } 60% { transform: scale(1.03); } 100% { transform: scale(1); }
+  0% { transform: scale(.95); } 55% { transform: scale(1.045); } 100% { transform: scale(1); }
 }
 @keyframes flameDance {
   0%, 100% { transform: rotate(-4deg) scale(1); }
@@ -1131,7 +1131,7 @@ button.dom-stat:active { transform: scale(.99); }
 .q-kicker { animation: fadeUp .35s .05s ease backwards; }
 .q-stem, .q-figure, .cmp-wrap { animation: fadeUp .4s .12s ease backwards; }
 .choice { animation: fadeUp .38s ease backwards; animation-delay: var(--d, 0s); }
-.choice.sel { animation: selPop .22s ease; }
+.choice.sel { animation: selPop .25s cubic-bezier(.34, 1.56, .64, 1); }
 .choice.correct { animation: correctBounce .55s cubic-bezier(.3,1.5,.5,1); }
 .choice.wrong { animation: shake .45s ease; }
 .x-btn { transition: transform .15s; }
@@ -1681,11 +1681,11 @@ button.dom-stat:active { transform: scale(.99); }
 }
 /* answered — filled but deliberately neutral: a mock gives no per-question
    feedback, so a colour that reads as "correct" would be a lie */
-.qn-chip.done { background: var(--divider); border-color: var(--gray-shadow); color: var(--ink); }
+.qn-chip.done { background: var(--blue); border-color: var(--blue-dk); color: #fff; }
 /* flagged for review — the colour IS the flag, so no glyph is needed */
 .qn-chip.flagged { background: var(--gold); border-color: var(--gold-dk); color: #7A5A00; }
 /* where you are: an outline, so it never overwrites the state colour */
-.qn-chip.cur { outline: 2.5px solid var(--ink); outline-offset: 1px; }
+.qn-chip.cur { outline: 2.5px solid var(--blue-dk); outline-offset: 2px; }
 .mock-bar { display: flex; gap: 9px; align-items: stretch; }
 .mock-bar .btn { flex: 1; }
 .mk-flag {
