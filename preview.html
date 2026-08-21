@@ -91,30 +91,30 @@
       }
       else if (h === "lesson") {
         const d = window.QBANK.numbers;
-        A.startLesson("numbers", d.lessons[0].key);
+        A.startLesson("numbers", d.lessons[0].key); A.beginQuestions();
       } else if (h === "pop") {
         const node = document.querySelector(".node:not(.node-locked):not(.node-done)");
         if (node) node.click();
       } else if (h === "fab") {
         const d = window.QBANK.numbers;
-        A.startLesson("numbers", d.lessons[0].key);
+        A.startLesson("numbers", d.lessons[0].key); A.beginQuestions();
       } else if (h === "fb") {
         const d = window.QBANK.numbers;
-        A.startLesson("numbers", d.lessons[0].key);
+        A.startLesson("numbers", d.lessons[0].key); A.beginQuestions();
         A.pick(0); A.check();
       } else if (h === "method") {
         const d = window.QBANK.skills;
-        A.startLesson("skills", d.lessons[0].key);
+        A.startLesson("skills", d.lessons[0].key); A.beginQuestions();
         A.showMethod();
       } else if (h === "done") {
         const d = window.QBANK.numbers;
-        A.startLesson("numbers", d.lessons[0].key);
+        A.startLesson("numbers", d.lessons[0].key); A.beginQuestions();
         for (let i = 0; i < 200 && document.querySelector(".choices .choice"); i++) {
           A.pick(A.debugCurrent().answer); A.check(); A.next();
         }
       } else if (h === "fail") {
         const d = window.QBANK.numbers;
-        A.startLesson("numbers", d.lessons[0].key);
+        A.startLesson("numbers", d.lessons[0].key); A.beginQuestions();
         for (let i = 0; i < 3; i++) {
           const q = A.debugCurrent();
           A.pick((q.answer + 1) % (q.format === "comparison" ? 4 : q.choices.length));

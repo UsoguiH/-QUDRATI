@@ -497,9 +497,11 @@ A.chestTap = function () {
   toast(`باقي ${qCount(DAILY_GOAL - S.daily.n)} لفتح صندوق اليوم 🎁`);
 };
 function bottomnav(active) {
-  const items = [["path", "nav-home"], ["league", "nav-league"], ["mock", "nav-exam"], ["stats", "nav-stats"], ["settings", "nav-more"]];
-  return `<nav class="bottomnav">` + items.map(([k, i]) =>
-    `<button class="navbtn ${active === k ? "active" : ""}" onclick="A.go('${k}')" aria-label="${k}">${ico(i, 30)}</button>`).join("") + `</nav>`;
+  /* the labels were the state keys — "path", "league" — read aloud in Arabic */
+  const items = [["path", "nav-home", "الدروس"], ["league", "nav-league", "المجلس"],
+    ["mock", "nav-exam", "اختبار تجريبي"], ["stats", "nav-stats", "إحصائياتي"], ["settings", "nav-more", "الإعدادات"]];
+  return `<nav class="bottomnav">` + items.map(([k, i, label]) =>
+    `<button class="navbtn ${active === k ? "active" : ""}" onclick="A.go('${k}')" aria-label="${label}"${active === k ? ' aria-current="page"' : ""}>${ico(i, 30)}</button>`).join("") + `</nav>`;
 }
 
 /* ---------------- exam countdown card (top of path) ---------------- */
@@ -649,10 +651,13 @@ function renderPath() {
       html += `<div class="path-row"><div class="node-col${current ? " bob" : ""}" style="right:${x}px">
         ${ring}
         <button class="node ${cls}" style="--node-c:${nc[0]};--node-s:${nc[1]};--node-h:${nc[2]};--d:${(gi % 10) * 0.06}s"
+          aria-label="${l.title} — ${done ? "مكتمل، " + arPlural(p.stars, "نجمة واحدة", "نجمتان", "نجوم", "نجمة") : current ? "الدرس الحالي" : "مقفل"}"
           ${open ? `onclick="A.nodeTap(event,'${d.key}','${l.key}',${li})"` : "disabled"}>
           ${current ? `<span class="node-tip" style="color:${u.c}">ابدأ</span>` : ""}
           ${nodeIcon}
         </button>
+        ${done ? '<span class="node-stars" aria-hidden="true">' + [1, 2, 3].map(sn =>
+          '<i class="ns' + (sn <= p.stars ? ' on' : '') + '"></i>').join('') + '</span>' : ''}
         <span class="node-label${done ? ' nl-done' : open ? '' : ' nl-locked'}">${l.title}</span>
       </div></div>`;
       gi++;
@@ -784,8 +789,33 @@ A.startLesson = function (domKey, lesKey, boost) {
   let xpBoost = false;
   if (boost && S.xp >= BOOST_COST) { S.xp -= BOOST_COST; xpBoost = true; save(); }  // pay for 2× rank XP up front
   SES = { mode: "lesson", domKey, lesKey, key, title: l.title, method: l.method || "", queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null, locked: false, xp: 0, gems: 0, replay, xpBoost, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
+  /* Every lesson ships a written intro — the rule, the method, the common
+     mistake — and none of it had ever rendered, because each question also
+     carries its own method and "q.method || SES.method" always took the
+     question's. Teach first on a lesson you have not cleared. */
+  if (!replay && l.method) { renderLessonIntro(d, l); return; }
   renderSession();
 };
+
+function renderLessonIntro(d, l) {
+  const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
+  $app.innerHTML = `<div class="screen screen-full lesson-intro">
+    <button class="x-btn li-x" onclick="A.cancelIntro()" aria-label="رجوع للمسار">${X_SVG}</button>
+    <div class="li-head" style="background:${u.c};box-shadow:0 5px 0 ${u.s}">
+      <div class="li-kicker">قبل ما نبدأ</div>
+      <h1>${l.title}</h1>
+    </div>
+    <div class="li-body">${formatExplain(l.method)}</div>
+    <div class="action-bar">
+      <button class="btn" onclick="A.beginQuestions()">فهمت، ابدأ</button>
+    </div>
+  </div>`;
+  window.scrollTo(0, 0);
+}
+A.beginQuestions = function () { if (SES) renderSession(); };
+/* the intro must not be a room with no door - the daily-question sheet
+   was exactly that until this pass */
+A.cancelIntro = function () { if (SES && SES.xpBoost) gainGems(BOOST_COST); SES = null; save(); go("path"); };
 
 /* Renders solution/method text (\n lines) as styled steps; lines with 💡 or
    warning words become a highlighted callout. Shared by the solution box
@@ -854,16 +884,16 @@ function renderSession() {
   $app.innerHTML = `
     <div class="screen screen-full screen-session">
       <div class="session-top">
-        <button class="x-btn" onclick="A.quitSession()">${X_SVG}</button>
+        <button class="x-btn" onclick="A.quitSession()" aria-label="إنهاء الدرس">${X_SVG}</button>
         <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="تقدمك في الدرس"><i style="width:${pct}%"></i></div>
         ${timerBar()}
         ${SES.mode === "review"
           ? `<span class="sess-hearts sess-review">${ico("target", 22)} ${toAr(SES.done)}/${toAr(SES.total)}</span>`
-          : `<span class="sess-hearts" id="sesHearts">${ico("heart", 22)} ${toAr(SES.hearts)}</span>`}
+          : `<span class="sess-hearts" id="sesHearts" aria-label="القلوب المتبقية: ${toAr(SES.hearts)}">${ico("heart", 22)} ${toAr(SES.hearts)}</span>`}
       </div>
       <div class="q-area">${questionBody(q, SES.sel, false, null, q.method || SES.method)}</div>
       <div class="action-bar"><button class="btn" id="checkBtn" onclick="A.check()" ${SES.sel === null ? "disabled" : ""}>تحقق</button></div>
-      <div class="feedback" id="fb"></div>
+      <div class="feedback" id="fb" role="status" aria-live="assertive"></div>
     </div>`;
   startQTimer();
 }
@@ -919,7 +949,11 @@ const CHECK_BADGE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" 
 let toastT = null;
 function toast(msg, kind) {
   let t = document.getElementById("toast");
-  if (!t) { t = document.createElement("div"); t.id = "toast"; document.body.appendChild(t); }
+  if (!t) {
+    t = document.createElement("div"); t.id = "toast";
+    t.setAttribute("role", "status"); t.setAttribute("aria-live", "polite");
+    document.body.appendChild(t);
+  }
   t.className = "toast " + (kind || "") + " show";
   t.innerHTML = msg;
   clearTimeout(toastT);
@@ -973,7 +1007,7 @@ A.pick = function (i) {
   if (btn && btn.classList.contains("eliminated")) return; // can't pick a removed choice
   SES.sel = i;
   document.querySelectorAll(".choice").forEach((b, j) => b.classList.toggle("sel", j === i));
-  document.getElementById("checkBtn").disabled = false;
+  const cb = document.getElementById("checkBtn"); if (cb) cb.disabled = false;
 };
 
 A.check = function () {

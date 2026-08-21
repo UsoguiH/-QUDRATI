@@ -105,6 +105,26 @@ svg.ic { display: block; }
 .stat-xp     { color: var(--blue); }
 .stat-hearts { color: var(--red); }
 
+/* The lesson intro: the rule before the quiz, on a first attempt only. */
+.lesson-intro { padding: 0 0 96px; position: relative; }
+.li-x { position: absolute; top: 8px; left: 8px; z-index: 3; }
+.li-head {
+  margin: 14px 16px 18px; padding: 16px 18px 14px;
+  border-radius: 16px; color: #fff;
+}
+.li-kicker { font-size: 12.5px; font-weight: 800; opacity: .85; letter-spacing: .3px; }
+.li-head h1 { font-size: 23px; line-height: 1.25; margin-top: 2px; }
+.li-body { padding: 0 18px; }
+.li-body .ex-step { font-size: 16px; }
+
+/* stars under a cleared node — they were stored and never drawn */
+.node-stars { display: flex; gap: 4px; margin-top: 8px; }
+.node-stars .ns {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--line); display: block;
+}
+.node-stars .ns.on { background: var(--gold); box-shadow: 0 1px 0 var(--gold-dk); }
+
 /* ---------- Screens ---------- */
 .screen { flex: 1; display: flex; flex-direction: column; padding-bottom: calc(var(--nav-h) + 16px); animation: fadeIn .25s ease; }
 .screen-full { padding-bottom: 0; }
@@ -240,7 +260,10 @@ svg.ic { display: block; }
   display: flex; align-items: center; gap: 11px;
   height: 58px; padding: 0 14px; margin-top: 6px;
 }
-.x-btn { border: 0; background: none; padding: 4px; display: flex; }
+.x-btn {
+  border: 0; background: none; padding: 4px; display: flex;
+  min-width: 44px; min-height: 44px; align-items: center; justify-content: center;
+}
 /* Progress bar — Figma: track #E5E5E5 r64 h16, fill #FFC800 with
    #FBE56D shine line (5px, r6, inset 8px) */
 .progress { flex: 1; height: 16px; background: var(--line); border-radius: 64px; overflow: hidden; }
