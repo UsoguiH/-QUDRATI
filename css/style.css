@@ -877,6 +877,29 @@ button.dom-stat:active { transform: scale(.99); }
   display: flex; align-items: center; justify-content: center; padding: 24px;
   animation: fadeIn .2s;
 }
+.ask-veil {
+  position: fixed; inset: 0; z-index: 340;
+  display: flex; align-items: flex-end; justify-content: center;
+  background: rgba(0, 0, 0, 0); transition: background .24s ease;
+}
+.ask-veil.show { background: var(--scrim); }
+.ask-sheet {
+  width: 100%; max-width: 430px; background: #fff;
+  border-radius: 22px 22px 0 0;
+  padding: 22px 18px calc(18px + env(safe-area-inset-bottom));
+  transform: translateY(100%); transition: transform .3s cubic-bezier(.25, 1.1, .4, 1);
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, .18); text-align: center;
+}
+.ask-veil.show .ask-sheet { transform: translateY(0); }
+.ask-sheet h2 { font-size: 21px; margin-bottom: 6px; }
+.ask-sheet p { font-size: 15px; line-height: 1.75; color: var(--gray); font-weight: 600; margin-bottom: 16px; }
+.ask-go {
+  width: 100%; margin-top: 10px; padding: 12px; border: 0; background: none;
+  font-family: var(--font); font-size: 15px; font-weight: 800; color: var(--red);
+  cursor: pointer; border-radius: 13px;
+}
+.ask-go:active { background: var(--red-bg); }
+
 .modal {
   background: #fff; border-radius: 16px; max-width: 398px; width: 100%;
   padding: 24px 22px; max-height: 84vh; overflow-y: auto; text-align: center;

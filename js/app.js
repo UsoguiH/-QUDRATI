@@ -1194,11 +1194,11 @@ A.next = function () {
 };
 
 A.quitSession = function () {
-  if (confirm("هل تريد إنهاء الجلسة؟ سيضيع تقدمك في هذا الدرس.")) {
+  askConfirm("تبي توقف الدرس؟", "تقدمك في هذا الدرس ما راح ينحفظ.", "أكمل الدرس", "أوقف الدرس", () => {
     stopQTimer();
     if (SES && SES.xpBoost) { gainGems(BOOST_COST); save(); }   // the boost was never spent
     SES = null; go("path");
-  }
+  });
 };
 
 A.retryLevel = function (domKey, lesKey) { A.startLesson(domKey, lesKey); };
@@ -1487,7 +1487,11 @@ A.mockFlag = function () {
 A.mockEndSection = function () {
   const sec = MOCK.sections[MOCK.si];
   const un = sec.answers.filter(a => a === null).length;
-  if (un && !confirm(`لديك ${qCount(un)} بلا إجابة — لا يمكن الرجوع للقسم بعد إنهائه. متابعة؟`)) return;
+  if (un) {
+    askConfirm("إنهاء القسم؟", `لديك ${qCount(un)} بلا إجابة، وما تقدر ترجع للقسم بعد ما ينتهي.`,
+      "راجع أسئلتي", "أنهِ القسم", () => endMockSection(false));
+    return;
+  }
   endMockSection(false);
 };
 
@@ -1523,9 +1527,9 @@ function endMockSection(timedOut) {
 A.mockNextSection = function () { startMockSection(); };
 
 A.quitMock = function () {
-  if (confirm("هل تريد إنهاء المحاكاة؟ لن تُحسب نتيجتها.")) {
+  askConfirm("تبي توقف المحاكاة؟", "النتيجة ما راح تُحسب.", "أكمل المحاكاة", "أوقف المحاكاة", () => {
     clearInterval(MOCK.timer); MOCK = null; go("mock");
-  }
+  });
 };
 
 /* raw fraction -> standard score, piecewise through anchors that respect the
@@ -2077,7 +2081,8 @@ A.goUnit = function (domKey) {
 A.setTrack = function (t) { S.track = t; save(); render(); };
 A.toggleSound = function () { S.sound = !S.sound; save(); render(); };
 A.resetAll = function () {
-  if (confirm("هل أنت متأكد؟ سيُحذف كل تقدمك نهائياً.")) { localStorage.removeItem("qudratState"); location.reload(); }
+  askConfirm("تحذف كل تقدمك؟", "الدروس والجواهر والسلسلة كلها راح تروح، وما فيه رجعة.",
+    "خلّه مثل ما هو", "احذف كل شيء", () => { localStorage.removeItem("qudratState"); location.reload(); });
 };
 
 const DISCLAIMER_HTML = `تطبيق «قدراتي» أداة تدريب <b>مستقلة</b> وغير تابعة لهيئة تقويم التعليم والتدريب (قياس) وغير معتمدة منها.<br><br>
@@ -2104,6 +2109,28 @@ const DISCLAIMER_ICON = `<svg class="disc-icon" width="66" height="66" viewBox="
 </g>
 <defs><clipPath id="clip0_9001_129"><rect width="40" height="40" fill="white"/></clipPath></defs>
 </svg>`;
+
+/* Ask before something irreversible, in the app's own voice. The primary
+   button is always the safe one — a native confirm() binds Enter to OK, which
+   here was always the button that destroyed the lesson. */
+function askConfirm(title, body, stayText, goText, onGo) {
+  const old = document.querySelector(".ask-veil"); if (old) old.remove();
+  const veil = document.createElement("div");
+  veil.className = "ask-veil";
+  veil.innerHTML = `<div class="ask-sheet" role="dialog" aria-modal="true" aria-label="${title}">
+    <h2>${title}</h2>
+    <p>${body}</p>
+    <button class="btn" id="askStay">${stayText}</button>
+    <button class="ask-go" id="askGo">${goText}</button>
+  </div>`;
+  const close = () => { veil.classList.remove("show"); setTimeout(() => veil.remove(), 240); };
+  veil.onclick = e => { if (e.target === veil) close(); };
+  document.body.appendChild(veil);
+  requestAnimationFrame(() => veil.classList.add("show"));
+  veil.querySelector("#askStay").onclick = close;
+  veil.querySelector("#askGo").onclick = () => { close(); onGo(); };
+  veil.querySelector("#askStay").focus();
+}
 
 function showModal(emoji, title, bodyHtml, btnText, onclose) {
   const veil = document.createElement("div");
@@ -2299,7 +2326,7 @@ function renderExamSetup(first) {
         <label class="dt-box"><span class="dt-cap">السنة</span><select id="exYear" class="dt-sel">${years}</select></label>
       </div>
       <button class="btn" onclick="A.saveExam()">حفظ الموعد</button>
-      <button class="login-skip" onclick="A.skipExam()">${first ? "لم أحجز موعداً بعد — لاحقاً" : "رجوع"}</button>
+      <button class="login-skip" onclick="${first ? "A.skipExam()" : "A.backFromExam()"}">${first ? "لم أحجز موعداً بعد — لاحقاً" : "رجوع"}</button>
     </div>
   </div>`;
 }
@@ -2321,6 +2348,9 @@ A.saveExam = function () {
   S.examAsked = true; save(); sndGood(); go("path");
 };
 A.skipExam = function () { S.examAsked = true; save(); go("path"); };
+/* "رجوع" from Settings used to call skipExam, which lands on the path — the
+   one place the student was not coming back from */
+A.backFromExam = function () { go("settings"); };
 
 /* ---------------- login (local profile, no server) ---------------- */
 function bankSize() {
