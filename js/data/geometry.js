@@ -3000,7 +3000,7 @@ window.QBANK.geometry = {
           "answer": 0,
           "solution": "الزاويتان المتحالفتان داخلياً متكاملتان: ٣س + ٢س = ١٨٠، أي ٥س = ١٨٠، فـ س = ٣٦.",
           "method": "١) الزاويتان متحالفتان داخلياً، فمجموعهما ١٨٠°.\n٢) اكتب المعادلة: ٣س + ٢س = ١٨٠.\n٣) اجمع الحدود ثم اقسم على ٥ لإيجاد س.\n💡 لا تساوِ ٣س بـ ٢س؛ المتحالفتان تتكاملان لا تتطابقان.",
-          "figure": null
+          "figure": "<svg viewBox=\"0 0 150 110\" stroke=\"#4B4B4B\" stroke-width=\"2\" fill=\"none\"><line x1=\"8\" y1=\"38\" x2=\"142\" y2=\"38\"/><polygon points=\"142,38 134,34 134,42\" fill=\"#4B4B4B\" stroke=\"none\"/><line x1=\"8\" y1=\"84\" x2=\"142\" y2=\"84\"/><polygon points=\"142,84 134,80 134,88\" fill=\"#4B4B4B\" stroke=\"none\"/><line x1=\"58\" y1=\"14\" x2=\"103\" y2=\"106\"/><text x=\"80\" y=\"52\" font-size=\"11\" font-weight=\"700\" fill=\"#4B4B4B\" stroke=\"#fff\" stroke-width=\"3.5\" paint-order=\"stroke\">(٣س)°</text><text x=\"100\" y=\"78\" font-size=\"11\" font-weight=\"700\" fill=\"#4B4B4B\" stroke=\"#fff\" stroke-width=\"3.5\" paint-order=\"stroke\">(٢س)°</text></svg>"
         },
         {
           "id": "par-10",
@@ -3017,7 +3017,7 @@ window.QBANK.geometry = {
           "answer": 0,
           "solution": "الزاويتان المتبادلتان خارجياً متطابقتان: ٤س − ١٠ = ٣س + ٢٠، إذن س = ٣٠.",
           "method": "١) المتبادلتان خارجياً متطابقتان، فساوِ التعبيرين: ٤س − ١٠ = ٣س + ٢٠.\n٢) انقل المتغيّرات لطرف والأعداد للطرف الآخر.\n٣) احسب قيمة س.\n💡 لا تجعل مجموعهما ١٨٠؛ المتبادلتان متساويتان.",
-          "figure": null
+          "figure": "<svg viewBox=\"0 0 150 110\" stroke=\"#4B4B4B\" stroke-width=\"2\" fill=\"none\"><line x1=\"8\" y1=\"38\" x2=\"142\" y2=\"38\"/><polygon points=\"142,38 134,34 134,42\" fill=\"#4B4B4B\" stroke=\"none\"/><line x1=\"8\" y1=\"84\" x2=\"142\" y2=\"84\"/><polygon points=\"142,84 134,80 134,88\" fill=\"#4B4B4B\" stroke=\"none\"/><line x1=\"58\" y1=\"14\" x2=\"103\" y2=\"106\"/><text x=\"52\" y=\"26\" font-size=\"11\" font-weight=\"700\" fill=\"#4B4B4B\" stroke=\"#fff\" stroke-width=\"3.5\" paint-order=\"stroke\" text-anchor=\"middle\">(٤س − ١٠)°</text><text x=\"55\" y=\"103\" font-size=\"11\" font-weight=\"700\" fill=\"#4B4B4B\" stroke=\"#fff\" stroke-width=\"3.5\" paint-order=\"stroke\" text-anchor=\"middle\">(٣س + ٢٠)°</text></svg>"
         },
         {
           "id": "par-11",
@@ -3051,7 +3051,7 @@ window.QBANK.geometry = {
           "answer": 0,
           "solution": "الزاويتان المتناظرتان متطابقتان: ٥س − ٥ = ٣س + ٢٥، إذن ٢س = ٣٠، فـ س = ١٥. القياس = ٥(١٥) − ٥ = ٧٠°.",
           "method": "١) المتناظرتان متطابقتان: ساوِ التعبيرين (٥س − ٥) = (٣س + ٢٥).\n٢) حلّ المعادلة لإيجاد س.\n٣) عوّض قيمة س في أحد التعبيرين لتحصل على القياس المطلوب.\n💡 المطلوب القياس النهائي لا قيمة س فقط؛ أكمل بالتعويض.",
-          "figure": null
+          "figure": "<svg viewBox=\"0 0 150 110\" stroke=\"#4B4B4B\" stroke-width=\"2\" fill=\"none\"><line x1=\"8\" y1=\"38\" x2=\"142\" y2=\"38\"/><polygon points=\"142,38 134,34 134,42\" fill=\"#4B4B4B\" stroke=\"none\"/><line x1=\"8\" y1=\"84\" x2=\"142\" y2=\"84\"/><polygon points=\"142,84 134,80 134,88\" fill=\"#4B4B4B\" stroke=\"none\"/><line x1=\"58\" y1=\"14\" x2=\"103\" y2=\"106\"/><text x=\"80\" y=\"30\" font-size=\"11\" font-weight=\"700\" fill=\"#4B4B4B\" stroke=\"#fff\" stroke-width=\"3.5\" paint-order=\"stroke\">(٥س − ٥)°</text><text x=\"100\" y=\"76\" font-size=\"11\" font-weight=\"700\" fill=\"#4B4B4B\" stroke=\"#fff\" stroke-width=\"3.5\" paint-order=\"stroke\">(٣س + ٢٥)°</text></svg>"
         },
         {
           "id": "par-13",
@@ -3085,7 +3085,7 @@ window.QBANK.geometry = {
           "answer": 0,
           "solution": "الزاوية المتحالفة داخلياً لزاوية ١١٠° قياسها ١٨٠° − ١١٠° = ٧٠°، والزاوية المتبادلة داخلياً معها تساويها = ٧٠°. إذن س + ٤٠ = ٧٠، فـ س = ٣٠.",
           "method": "١) أوجد المتحالفة داخلياً لزاوية ١١٠° بطرحها من ١٨٠°.\n٢) الزاوية المتبادلة داخلياً مع هذه الناتجة تساويها.\n٣) ضع (س + ٤٠) = الناتج ثم احسب س.\n💡 طبّق العلاقتين بالترتيب: تكامل أولاً ثم تطابق.",
-          "figure": null
+          "figure": "<svg viewBox=\"0 0 150 110\" stroke=\"#4B4B4B\" stroke-width=\"2\" fill=\"none\"><line x1=\"8\" y1=\"38\" x2=\"142\" y2=\"38\"/><polygon points=\"142,38 134,34 134,42\" fill=\"#4B4B4B\" stroke=\"none\"/><line x1=\"8\" y1=\"84\" x2=\"142\" y2=\"84\"/><polygon points=\"142,84 134,80 134,88\" fill=\"#4B4B4B\" stroke=\"none\"/><line x1=\"58\" y1=\"14\" x2=\"103\" y2=\"106\"/><text x=\"80\" y=\"54\" font-size=\"11\" font-weight=\"700\" fill=\"#4B4B4B\" stroke=\"#fff\" stroke-width=\"3.5\" paint-order=\"stroke\">١١٠°</text><text x=\"86\" y=\"78\" font-size=\"11\" font-weight=\"700\" fill=\"#4B4B4B\" stroke=\"#fff\" stroke-width=\"3.5\" paint-order=\"stroke\" text-anchor=\"end\">(س + ٤٠)°</text></svg>"
         },
         {
           "id": "par-15",
@@ -3102,7 +3102,7 @@ window.QBANK.geometry = {
           "answer": 0,
           "solution": "الزاوية المقابلة بالرأس للزاوية ٥٠° تساوي ٥٠°، والزاوية المتناظرة معها بين المتوازيين تساويها أيضاً، فـ س = ٥٠°.",
           "method": "١) المقابلة بالرأس للزاوية ٥٠° تساويها = ٥٠°.\n٢) س متناظرة مع هذه الزاوية، والمتناظرتان متطابقتان.\n٣) استنتج قيمة س بسلسلة التساوي.\n💡 تتبّع التطابق خطوة بخطوة دون طرح من ١٨٠°.",
-          "figure": null
+          "figure": "<svg viewBox=\"0 0 150 110\" stroke=\"#4B4B4B\" stroke-width=\"2\" fill=\"none\"><line x1=\"8\" y1=\"38\" x2=\"142\" y2=\"38\"/><polygon points=\"142,38 134,34 134,42\" fill=\"#4B4B4B\" stroke=\"none\"/><line x1=\"8\" y1=\"84\" x2=\"142\" y2=\"84\"/><polygon points=\"142,84 134,80 134,88\" fill=\"#4B4B4B\" stroke=\"none\"/><line x1=\"58\" y1=\"14\" x2=\"103\" y2=\"106\"/><line x1=\"103\" y1=\"14\" x2=\"58\" y2=\"106\"/><text x=\"60\" y=\"27\" font-size=\"11\" font-weight=\"700\" fill=\"#4B4B4B\" stroke=\"#fff\" stroke-width=\"3.5\" paint-order=\"stroke\" text-anchor=\"middle\">٥٠°</text><text x=\"46\" y=\"101\" font-size=\"11\" font-weight=\"700\" fill=\"#4B4B4B\" stroke=\"#fff\" stroke-width=\"3.5\" paint-order=\"stroke\" text-anchor=\"middle\">س°</text></svg>"
         },
         {
           "id": "par-16",
@@ -3218,7 +3218,7 @@ window.QBANK.geometry = {
           "answer": 1,
           "solution": "بإمرار مستقيم مساعد موازٍ عبر نقطة الانكسار، تنقسم الزاوية ١٣٠° إلى جزأين متبادلين داخلياً مع الزاويتين. أحدهما ٧٥°، فالآخر = ١٣٠° − ٧٥° = ٥٥°. والقيمة الثانية ٦٠°. إذن القيمة الثانية أكبر.",
           "method": "١) مرّر مستقيماً مساعداً موازياً عبر نقطة الانكسار، فتنقسم الزاوية ١٣٠° إلى جزأين متبادلين داخلياً مع الزاويتين.\n٢) أحد الجزأين ٧٥°، فأوجد الآخر بطرح ٧٥° من ١٣٠°.\n٣) قارن الناتج مع القيمة الثانية ٦٠°.\n💡 الزاوية الأخرى = ما تبقّى من زاوية الانكسار.",
-          "figure": null
+          "figure": "<svg viewBox=\"0 0 150 110\" stroke=\"#4B4B4B\" stroke-width=\"2\" fill=\"none\"><line x1=\"8\" y1=\"24\" x2=\"142\" y2=\"24\"/><polygon points=\"142,24 134,20 134,28\" fill=\"#4B4B4B\" stroke=\"none\"/><line x1=\"8\" y1=\"96\" x2=\"142\" y2=\"96\"/><polygon points=\"142,96 134,92 134,100\" fill=\"#4B4B4B\" stroke=\"none\"/><line x1=\"116\" y1=\"24\" x2=\"42\" y2=\"60\"/><line x1=\"42\" y1=\"60\" x2=\"120\" y2=\"96\"/><circle cx=\"42\" cy=\"60\" r=\"2.5\" fill=\"#4B4B4B\" stroke=\"none\"/><text x=\"96\" y=\"40\" font-size=\"11\" font-weight=\"700\" fill=\"#4B4B4B\" stroke=\"#fff\" stroke-width=\"3.5\" paint-order=\"stroke\" text-anchor=\"end\">٧٥°</text><text x=\"56\" y=\"56\" font-size=\"11\" font-weight=\"700\" fill=\"#4B4B4B\" stroke=\"#fff\" stroke-width=\"3.5\" paint-order=\"stroke\">١٣٠°</text><text x=\"102\" y=\"84\" font-size=\"11\" font-weight=\"700\" fill=\"#4B4B4B\" stroke=\"#fff\" stroke-width=\"3.5\" paint-order=\"stroke\" text-anchor=\"end\">؟</text></svg>"
         },
         {
           "id": "par-24",
@@ -3888,10 +3888,10 @@ window.QBANK.geometry = {
           "track": "both",
           "stem": "النقطة (أ، ب) تقع في الربع الثاني، فأيُّ العبارات الآتية صحيحة؟",
           "choices": [
-            "أ < ٠ و ب > ٠",
+            "أ &lt; ٠ و ب > ٠",
             "أ > ٠ و ب > ٠",
-            "أ < ٠ و ب < ٠",
-            "أ > ٠ و ب < ٠"
+            "أ &lt; ٠ و ب &lt; ٠",
+            "أ > ٠ و ب &lt; ٠"
           ],
           "answer": 0,
           "solution": "في الربع الثاني تكون السين سالبة والصاد موجبة، أي أ < ٠ و ب > ٠. خطأ شائع: الخلط مع الربع الرابع.",
