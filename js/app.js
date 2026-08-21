@@ -2014,25 +2014,45 @@ const AR_MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "ما
 /* Duolingo-style calendar hero: orange header + rings, dot grid,
    one gold starred date with a soft pulsing halo (opacity-only —
    safe on every mobile browser) */
+/* The star from assets/icons/star.svg, so the marked day is drawn in
+   exactly the same language as a lesson node on the path. */
+const NODE_STAR = "M18.2665 6.04527C19.33 3.69332 22.67 3.69333 23.7335 6.04527L25.9554 10.959C26.4018 11.9462 27.3458 12.616 28.425 12.7114L33.7515 13.1819C36.4147 13.4171 37.4631 16.7555 35.4126 18.4711L31.6082 21.6541C30.7372 22.3828 30.3524 23.5408 30.6139 24.6459L31.7621 29.4978C32.3649 32.045 29.6444 34.0885 27.3659 32.8L22.4767 30.0351C21.5604 29.5169 20.4396 29.5169 19.5233 30.0351L14.6341 32.8C12.3556 34.0885 9.63514 32.045 10.2379 29.4978L11.3861 24.6459C11.6476 23.5408 11.2628 22.3828 10.3918 21.6541L6.58741 18.4711C4.53685 16.7555 5.58529 13.4171 8.2485 13.1819L13.575 12.7114C14.6542 12.616 15.5982 11.9462 16.0446 10.959L18.2665 6.04527Z";
+const SPARK_PATH = "M0-7Q1.2-1.2 7 0 1.2 1.2 0 7-1.2 1.2-7 0-1.2-1.2 0-7Z";
+
+/* Exam day = the last node on your path: an amber wall calendar whose
+   marked date is a green level node. The rings are drawn as whole circles
+   behind the page and clipped by it, which is what gives them a real loop
+   instead of two nubs stuck on the top edge. */
 function examCalendarSVG() {
-  const dots = [];
-  for (let r = 0; r < 3; r++) for (let c = 0; c < 5; c++) {
-    if (r === 1 && c === 2) continue; // the starred cell
-    dots.push(`<circle cx="${30 + c * 15}" cy="${62 + r * 16}" r="4" fill="#E5E5E5"/>`);
-  }
-  return `<svg class="es-cal" viewBox="0 0 120 116" fill="none" aria-hidden="true">
-    <rect x="6" y="18" width="108" height="94" rx="18" fill="#CD7900"/>
-    <rect x="6" y="14" width="108" height="94" rx="18" fill="#FFFFFF"/>
-    <path d="M6 32 Q6 14 24 14 H96 Q114 14 114 32 V46 H6 Z" fill="#FF9600"/>
-    <rect x="28" y="4" width="11" height="20" rx="5.5" fill="#CD7900"/>
-    <rect x="81" y="4" width="11" height="20" rx="5.5" fill="#CD7900"/>
-    <circle cx="33.5" cy="10" r="2.6" fill="#FFB020"/>
-    <circle cx="86.5" cy="10" r="2.6" fill="#FFB020"/>
-    <rect x="26" y="26" width="26" height="8" rx="4" fill="#FFFFFF" opacity=".55"/>
-    ${dots.join("")}
-    <circle class="es-halo" cx="60" cy="78" r="15" fill="none" stroke="#FFC800" stroke-width="3"/>
-    <circle cx="60" cy="78" r="11.5" fill="#FFC800"/>
-    <path d="M60 71.2l1.9 3.9 4.3.6-3.1 3 .7 4.3-3.8-2-3.8 2 .7-4.3-3.1-3 4.3-.6z" fill="#FFFFFF"/>
+  const COLS = [28, 46, 64, 82, 100], ROWS = [66, 87, 108];
+  let dots = "";
+  ROWS.forEach((y, r) => COLS.forEach((x, c) => {
+    if (r === 1 && c > 0 && c < 4) return;           // the marked day owns the middle row
+    dots += `<circle cx="${x}" cy="${y}" r="4" fill="#E5E5E5"/>`;
+  }));
+  // whole circles, drawn before the page so the page clips their lower half:
+  // that is what gives a real loop instead of two nubs on the top edge
+  const ring = x => `<circle cx="${x}" cy="26" r="10" fill="none" stroke="#ADADAD" stroke-width="5.5"/>`;
+  // the group places it; the class animates transform inside the path's own
+  // box, so the two never fight over the transform property
+  const spark = (x, y, s, d) =>
+    `<g transform="translate(${x} ${y}) scale(${s})"><path class="es-spark" d="${SPARK_PATH}" fill="#FFC800" style="animation-delay:${d}s"/></g>`;
+
+  return `<svg class="es-cal" viewBox="0 0 128 128" fill="none" aria-hidden="true">
+    ${spark(22, 14, .85, 0)}${spark(105, 12, .62, .8)}
+    ${ring(44)}${ring(84)}
+    <rect x="12" y="31" width="104" height="88" rx="17" fill="#E0A100"/>
+    <rect x="12" y="26" width="104" height="88" rx="17" fill="#FFFFFF"/>
+    <path d="M12 43Q12 26 29 26h70q17 0 17 17v11H12z" fill="#FFC800"/>
+    <rect x="12" y="54" width="104" height="2.5" fill="#E0A100" opacity=".3"/>
+    <rect x="54" y="36" width="20" height="6" rx="3" fill="#FFFFFF" opacity=".72"/>
+    ${dots}
+    <circle cx="64" cy="87" r="19" fill="#58CC02" opacity=".13"/>
+    <circle class="es-halo" cx="64" cy="87" r="22" fill="none" stroke="#58CC02" stroke-width="2.6"/>
+    <circle cx="64" cy="90" r="13.2" fill="#58A700"/>
+    <circle cx="64" cy="87" r="13.2" fill="#58CC02"/>
+    <ellipse cx="64" cy="84.4" rx="10.4" ry="8.4" fill="#71DC1A"/>
+    <g transform="translate(64 87) scale(.5) translate(-21 -19)"><path d="${NODE_STAR}" fill="#FFFFFF"/></g>
   </svg>`;
 }
 

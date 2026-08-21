@@ -1347,7 +1347,8 @@ button.dom-stat:active { transform: scale(.99); }
   padding: 36px 24px calc(36px + env(safe-area-inset-bottom));
 }
 .exam-setup .es-hero { animation: titleIn .5s .1s cubic-bezier(.3,1.5,.5,1) backwards; margin-bottom: 6px; }
-.es-cal { width: 128px; height: 124px; animation: calBob 3.2s ease-in-out 1s infinite; }
+.es-cal { width: 136px; height: 136px; animation: calBob 3.2s ease-in-out 1s infinite; }
+.es-spark { transform-box: fill-box; transform-origin: center; animation: twinkle 2.4s ease-in-out infinite; }
 @keyframes calBob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
 .es-halo { animation: haloPulse 1.8s ease-in-out infinite; }
 @keyframes haloPulse { 0%, 100% { opacity: 0; } 50% { opacity: .9; } }
