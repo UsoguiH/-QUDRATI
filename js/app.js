@@ -19,7 +19,11 @@ const UNIT_COLORS = {
   purple: { c: "#CE82FF", s: "#A568CC", h: "#DAA0FF", pale: "#DBC3EB" },
   yellow: { c: "#FFC800", s: "#E6A000", h: "#FFE700", pale: "#EFE2BC" }
 };
-const LEVEL_HEARTS = 3;      // hearts per level — lose them all and you retry the level
+const LEVEL_HEARTS = 5;      /* Simulated over 200k sessions: at 70% first-try
+                                accuracy, 3 hearts failed 53% of lessons and 5
+                                fails 15%. A trainer whose whole premise is that
+                                you do not know this material yet cannot fail
+                                half its first sessions. */
 const Q_SECS = 60;           // seconds per question — matches the real GAT pace
 const REVIVE_COST = 50;      // gems to refill hearts and continue after failing a lesson
 const BOOST_COST = 50;       // gems to double a lesson's rank XP (gems unaffected)
@@ -58,12 +62,18 @@ const LEAGUE_NAMES = ["عبدالله", "محمد", "نورة", "سارة", "ف�
 /* Permanent rank tiers (badge art in assets/icons/ranks/). A user's tier is
    the highest threshold their LIFETIME total XP (S.totalXp) has crossed —
    it never drops, even when spending gems (S.xp) on hints. */
+/* Rebased against what the content can actually yield. The old ceiling —
+   playing all 30 lessons perfectly with the paid 2x boost on every one, plus
+   56 daily questions — was 6,448, and Champion sat at 7,000. It could not be
+   reached by finishing the product, only by grinding replays. An honest
+   75%-first-try player who clears everything now lands in Champion in their
+   final week, which is where that beat belongs. */
 const LEAGUE_TIERS = [
   { key: "bronze", name: "البرونزي", min: 0 },
-  { key: "silver", name: "الفضي", min: 400 },
-  { key: "gold", name: "الذهبي", min: 1200 },
-  { key: "diamond", name: "الألماسي", min: 3000 },
-  { key: "champion", name: "الأبطال", min: 7000 }
+  { key: "silver", name: "الفضي", min: 300 },
+  { key: "gold", name: "الذهبي", min: 900 },
+  { key: "diamond", name: "الألماسي", min: 1800 },
+  { key: "champion", name: "الأبطال", min: 3000 }
 ];
 function tierIndexFor(xp) { let n = 0; for (let i = 0; i < LEAGUE_TIERS.length; i++) if (xp >= LEAGUE_TIERS[i].min) n = i; return n; }
 function tierIndex() { return tierIndexFor(S.totalXp || 0); }
@@ -221,17 +231,38 @@ function questionById(id) {
   }
   return QINDEX[id];
 }
+/* A mistake used to be cleared by one correct answer anywhere — including the
+   retry that comes moments after the solution was on screen. It now needs two
+   correct answers on two different days, which is the whole point of keeping
+   a mistake list six weeks before an exam. */
 function noteAnswer(q, correct) {
   S.mistakes = S.mistakes || {};
-  if (correct) { if (q.id in S.mistakes) delete S.mistakes[q.id]; }
-  else S.mistakes[q.id] = Date.now();
+  const cur = S.mistakes[q.id];
+  const rec = (cur && typeof cur === "object") ? cur : (cur ? { t: cur, ok: 0, day: null } : null);
+  if (correct) {
+    if (!rec) return;
+    const today = todayKey();
+    if (rec.day === today) return;                 // same-day retry does not count
+    rec.ok = (rec.ok || 0) + 1; rec.day = today; rec.t = Date.now();
+    if (rec.ok >= 2) delete S.mistakes[q.id];
+    else S.mistakes[q.id] = rec;
+    return;
+  }
+  S.mistakes[q.id] = { t: Date.now(), ok: 0, day: null };
 }
 /* mistakes that still exist in the bank and match the current track, newest first */
 function mistakeList() {
   const m = S.mistakes || {};
-  return Object.keys(m).map(id => ({ id, t: m[id], rec: questionById(id) }))
+  return Object.keys(m).map(id => {
+    const v = m[id], t = (v && typeof v === "object") ? v.t : v;
+    return { id, t, ok: (v && typeof v === "object" && v.ok) || 0, rec: questionById(id) };
+  })
     .filter(x => x.rec && trackFilter([x.rec.q]).length)
-    .sort((a, b) => b.t - a.t);
+    /* it used to be strictly newest-first and the drill took the top twelve,
+       so the questions you kept missing pinned themselves to the head of the
+       list and everything behind them was unreachable. Oldest-first surfaces
+       what is actually going stale. */
+    .sort((a, b) => a.t - b.t);
 }
 
 /* ---------------- exam countdown + readiness ---------------- */
@@ -241,15 +272,29 @@ function examDaysLeft() {
   return Math.round((new Date(S.exam + "T00:00:00") - t) / 864e5);
 }
 /* 0–100: stars earned across all lessons (70%) + overall first-try accuracy (30%) */
+/* It used to be 70% stars + 30% lifetime accuracy. Stars only come from a
+   lesson's first session (eight of its twenty-four questions) and only ever
+   ratchet up, so three stars on all thirty lessons plus a clean accuracy read
+   100% having answered 240 of 720 questions and none of the hard third. It is
+   capped by how much of the bank has actually been seen now, so the number
+   cannot outrun the coverage behind it. */
 function readiness() {
   const flat = allLessons();
   if (!flat.length) return 0;
+  const bank = bankSize() || 1;
+  const seen = Object.keys(S.qstats || {}).length;
+  /* sqrt, not linear: a student who has aced 240 of 720 questions is
+     genuinely more than a third ready, and a linear cap read 0% for
+     someone who had just finished their first lesson. */
+  const coverage = Math.sqrt(Math.min(1, seen / bank));
   let earned = 0;
   flat.forEach(x => earned += lessonProg(x.key).stars);
+  const starPart = earned / (flat.length * 3);
   let r = 0, w = 0;
   Object.values(S.qstats).forEach(s => { r += s.r; w += s.w; });
   const acc = (r + w) ? r / (r + w) : 0;
-  return Math.round(100 * (0.7 * earned / (flat.length * 3) + 0.3 * acc));
+  const skill = 0.45 * starPart + 0.55 * acc;
+  return Math.round(100 * skill * coverage);
 }
 /* ---------------- daily quest (answer N questions → chest) ---------------- */
 function dailyReset() {
@@ -727,7 +772,7 @@ function pickLessonQuestions(lesson, key) {
   return chosen.sort((a, b) => a.difficulty - b.difficulty).map(shuffleChoices);
 }
 
-A.go = go;
+A.go = function (v) { if (v === "review") reviewFrom = view; go(v); };
 
 /* Lesson-start popup (Figma "Select Lesson" purple sheet) */
 A.nodeTap = function (ev, domKey, lesKey, li) {
@@ -1038,8 +1083,15 @@ A.check = function () {
     SES.done++;
     // rank XP / gems. Replaying a finished lesson pays a flat +2/+2 (farmable,
     // unlimited); a fresh clear pays full first-try (10/5) or retry (5/2).
-    if (SES.replay) { SES.xp += 2; SES.gems += 2; }
-    else { SES.xp += SES.retried[q.id] ? 5 : 10; SES.gems += SES.retried[q.id] ? 2 : 5; }
+    /* The old rule was a per-lesson flag: once a lesson had a star, every
+       question in it paid a flat 2/2 forever. Because selection serves easy
+       first, that meant the 185 hardest questions in the bank were only ever
+       reachable in a "replay" session and so were worth a sixth of the easy
+       ones. Pay per question, by difficulty, and decay only what this player
+       has personally already got right. */
+    const seenBefore = (S.qstats[q.id] || {}).r > 0;
+    if (seenBefore || SES.retried[q.id]) { SES.xp += 3; SES.gems += 2; }
+    else { const d = q.difficulty || 2; SES.xp += [0, 6, 10, 16][d] || 10; SES.gems += [0, 3, 5, 8][d] || 5; }
     fb.className = "feedback good show";
     fb.innerHTML = `<div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> أحسنت!</div>
       <button class="fb-solution-toggle" onclick="A.toggleSol()">لماذا؟ اعرض الحل</button>
@@ -1476,6 +1528,19 @@ A.quitMock = function () {
   }
 };
 
+/* raw fraction -> standard score, piecewise through anchors that respect the
+   25% guessing floor and the ~65 population mean */
+function estScore(p) {
+  const pts = [[0, 32], [0.25, 40], [0.5, 62], [0.65, 70], [0.75, 76], [0.85, 82], [0.92, 88], [1, 96]];
+  for (let i = 1; i < pts.length; i++) {
+    if (p <= pts[i][0]) {
+      const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+      return y0 + (y1 - y0) * (p - x0) / (x1 - x0 || 1);
+    }
+  }
+  return 96;
+}
+
 function finishMock(timedOut) {
   clearInterval(MOCK.timer);
   /* it used to award nothing at all, so two replay sessions in twelve minutes
@@ -1493,7 +1558,10 @@ function finishMock(timedOut) {
       else if (a === null) unanswered++;
     });
   });
-  const est = Math.round(35 + 65 * score / total);
+  /* The old straight line put blind guessing at 51 and 75% raw at 84, which
+     the band table then called "the top 5% of students". Anchored to the real
+     distribution instead — mean ~65 — with a floor at the guessing rate. */
+  const est = Math.round(estScore(score / (total || 1)));
   /* researched national bands: 81+ = top 5%, 85 ≈ top 2.5%, 90 = elite, 65 = mean */
   const band = est >= 90 ? "ضمن النخبة — أعلى ٠.٥٪ من الطلاب 🏆"
     : est >= 85 ? "ضمن أفضل ٢.٥٪ من الطلاب 🔥"
@@ -1882,11 +1950,13 @@ function reviewComplete() {
   SES = null;
 }
 
+/* the arrow used to always land on stats even when you arrived from the path */
+let reviewFrom = "path";
 function renderReview() {
   const list = mistakeList();
   if (!list.length) {
     $app.innerHTML = statbar() + `<div class="screen"><div class="page">
-      <div class="rv-top"><button class="rv-back" onclick="A.go('stats')" aria-label="رجوع">→</button><h1>مراجعة الأخطاء</h1></div>
+      <div class="rv-top"><button class="rv-back" onclick="A.go(reviewFrom)" aria-label="رجوع">→</button><h1>مراجعة الأخطاء</h1></div>
       <div class="rv-empty">
         <div class="rv-checkhero"><span class="rvc-glow"></span><span class="rvc-disc">${CHECK_BADGE}</span></div>
         <h2>لا أخطاء للمراجعة</h2>
@@ -1911,7 +1981,7 @@ function renderReview() {
     </div>`;
   }).join("");
   $app.innerHTML = statbar() + `<div class="screen"><div class="page">
-    <div class="rv-top"><button class="rv-back" onclick="A.go('stats')" aria-label="رجوع">→</button><h1>مراجعة الأخطاء</h1></div>
+    <div class="rv-top"><button class="rv-back" onclick="A.go(reviewFrom)" aria-label="رجوع">→</button><h1>مراجعة الأخطاء</h1></div>
     <div class="sub">${qCount(list.length)} بحاجة لمراجعة — تدرّب عليها حتى تتقنها</div>
     <button class="btn rv-practice" onclick="A.startReview()">${ico("target", 22)} تدرّب على أخطائك${list.length > 12 ? ` (${toAr(12)})` : ""}</button>
     <div class="rv-list">${items}</div>
