@@ -102,6 +102,10 @@ svg.ic { display: block; }
 .statbar > * { pointer-events: auto; }
 .stat { display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: 16px; }
 .stat-streak { color: var(--orange); }
+/* Arabic-Indic zero is a dot on the baseline, so a broken streak read as a
+   flame next to a speck. Dim the flame so it says "not started" instead. */
+.stat-streak.zero { color: var(--gray-icon); }
+.stat-streak.zero img { filter: grayscale(1); opacity: .45; }
 .stat-xp     { color: var(--blue); }
 .stat-hearts { color: var(--red); }
 
@@ -1182,7 +1186,7 @@ button.dom-stat:active { transform: scale(.99); }
 .node:not(:disabled):hover { filter: brightness(1.05); }
 
 /* --- bottom nav --- */
-.navbtn img { transition: transform .12s; }
+.navbtn img { transition: transform .12s; height: 28px; width: auto; }
 .navbtn:active img { transform: scale(.8); }
 .navbtn.active img { animation: springIn .4s cubic-bezier(.3,1.8,.5,1); }
 
@@ -1954,6 +1958,11 @@ button.dom-stat:active { transform: scale(.99); }
   gap: 6px; cursor: pointer; transition: background .12s;
 }
 .stat-rank img { height: 25px; width: auto; }
+.rank-badge {
+  filter:
+    drop-shadow(0 0 1px rgba(88, 108, 128, .85))
+    drop-shadow(0 1px 1px rgba(88, 108, 128, .5));
+}
 .stat-rank:active { transform: scale(.94); }
 @media (hover: hover) and (pointer: fine) { .stat-rank:hover { background: var(--line); } }
 
@@ -2001,7 +2010,7 @@ button.dom-stat:active { transform: scale(.99); }
 
 /* tier progression ladder (doubles as the screen header) */
 .lb-ladder { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; margin: 6px 2px 14px; }
-.lb-tier { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: transform .2s; }
+.lb-tier { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; transition: transform .2s; }
 .lb-tier-badge { position: relative; display: inline-flex; }
 .lb-tier-badge .rank-badge { height: 58px; width: auto; display: block; }
 .lb-tier span { font-size: 12px; font-weight: 700; color: var(--gray); }
@@ -2012,8 +2021,12 @@ button.dom-stat:active { transform: scale(.99); }
 .lb-lock svg { width: 100%; height: 100%; display: block; }
 .lb-tier.done .rank-badge { filter: drop-shadow(0 2px 3px rgba(75,75,75,.18)); }
 /* current tier: enlarged, lifted, glowing */
-.lb-tier.cur { transform: scale(1.32) translateY(-3px); }
-.lb-tier.cur .lb-tier-badge .rank-badge { height: 62px; filter: drop-shadow(0 4px 6px rgba(75,75,75,.3)); }
+/* was transform: scale(1.32), which magnified the 12px label to 15.8px, put
+   its baseline 3.6px below the other four, and overlapped the neighbouring
+   tier by 7px. Grow the badge, not the box. */
+.lb-tier.cur { transform: translateY(-3px); }
+.lb-tier.cur .lb-tier-badge .rank-badge { height: 76px; filter: drop-shadow(0 4px 6px rgba(75,75,75,.3)); }
+.lb-tier.cur span { font-size: 13px; }
 .lb-tier.cur span { color: var(--ink); font-weight: 800; }
 .lb-tier-glow { position: absolute; inset: -40% ; border-radius: 50%; z-index: -1;
   background: radial-gradient(closest-side, rgba(255,200,0,.55), transparent 72%); animation: lbGlow 2.6s ease-in-out infinite; }
@@ -2271,6 +2284,14 @@ button.dom-stat:active { transform: scale(.99); }
   overscroll-behavior: contain; scrollbar-width: none;
 }
 .screen-session .q-area::-webkit-scrollbar { display: none; }
+/* a fade at the bottom edge so a clipped answer reads as "there is more"
+   rather than as a rendering fault. Only where it can actually clip. */
+@media (max-height: 700px), (max-width: 330px) {
+  .screen-session .q-area {
+    -webkit-mask-image: linear-gradient(to top, transparent 0, #000 26px);
+    mask-image: linear-gradient(to top, transparent 0, #000 26px);
+  }
+}
 body:has(.screen-session) { overflow: hidden; }
 
 /* ============================================================

@@ -528,7 +528,7 @@ const ico = (name, size) => `<img class="ic" src="assets/icons/${ICO_FILE[name] 
 function statbar() {
   const t = LEAGUE_TIERS[tierIndex()];
   return `<div class="statbar">
-    <div class="stat stat-streak" title="سلسلة الأيام">${ico("streak", 23)}${toAr(S.streak.count)}</div>
+    <div class="stat stat-streak${S.streak.count ? "" : " zero"}" title="سلسلة الأيام" aria-label="سلسلة الأيام: ${toAr(S.streak.count)}">${ico("streak", 23)}${toAr(S.streak.count)}</div>
     <button class="stat stat-rank" onclick="A.go('league')" title="المستوى ${t.name}" aria-label="مستواك: ${t.name}">
       ${rankImg(t.key, 25)}<span>${t.name}</span>
     </button>
