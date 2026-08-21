@@ -1,574 +1,1022 @@
-# قدراتي — Product Roadmap
+# قدراتي — Development Roadmap
 
-**Status date:** 21 August 2026 · **Live:** [qudrati.xyz](https://qudrati.xyz/) (Vercel, auto-deploys from `main`) · **Android:** `Qudrati.apk` (sideloaded)
+**Rewritten 21 August 2026.** Supersedes everything before it.
+**Live:** [qudrati.xyz](https://qudrati.xyz/) · Vercel, auto-deploys from `main` · **Android:** sideloaded APK
+**Target:** 10,000+ Saudi students preparing for اختبار القدرات العامة.
 
-> This is a working document for a **live product with real users**, not a wishlist.
-> Every number below was measured against the current `main` branch or the live site.
-> The commands that produce them are in [Appendix A](#appendix-a--how-to-recompute-every-number-here), so this file can be re-scored instead of re-argued.
-
----
-
-## 0. Start here
-
-If you only do three things this week:
-
-1. **Decide the licence** (§9.6). The 720-question bank is MIT — anyone may sell it. Every day this waits, more forks lock in those rights permanently. It costs an afternoon to change and nothing to decide.
-2. **Merge or delete `feat/complete-app`.** ~6 points of finished work — offline play, progress backup, dark mode, practice mode — has been sitting on a branch since the first build sprint.
-3. **Add error reporting.** Right now a JavaScript exception on a student's phone is invisible to us. Thirty lines fixes that.
-
-Then run Phase 0, which takes a week and makes everything after it measurable.
+> This roadmap is built from two research passes — one on what Duolingo actually *is* as an
+> engineering and product system, one on who the قدرات student actually *is* — and then from a
+> line-by-line reading of what we have. Sources are in [Appendix C](#appendix-c--sources).
+>
+> `feat/complete-app` is abandoned. Nothing here depends on it. Delete the branch.
 
 ---
 
-## 1. Where we are: **42%**
+## Contents
 
-That number needs a definition, because there are two honest readings and they are far apart.
+- [Part 0 — The one thing that changes everything](#part-0--the-one-thing-that-changes-everything)
+- [Part 1 — Research: what Duolingo actually is](#part-1--research-what-duolingo-actually-is)
+- [Part 2 — Research: the قدرات student](#part-2--research-the-قدرات-student)
+- [Part 3 — Where we actually are](#part-3--where-we-actually-are)
+- [Part 4 — Target architecture](#part-4--target-architecture)
+- [Part 5 — The build plan](#part-5--the-build-plan)
+- [Part 6 — Metrics](#part-6--metrics)
+- [Part 7 — Risks](#part-7--risks)
+- [Part 8 — Decisions needed from you](#part-8--decisions-needed-from-you)
 
-| Reading | Score | What it means |
+---
+
+# Part 0 — The one thing that changes everything
+
+Copying Duolingo's mechanics without understanding this will cost us the product.
+
+**Duolingo's user has no deadline. Ours has one, and then leaves.**
+
+Duolingo optimises for an infinite horizon. Their entire machine — a 400-day streak, ten league tiers
+that take at least ten weeks to climb, a rolling subscription — assumes you might still be learning
+Spanish in 2030. Their 28% monthly churn is a number they fight forever.
+
+Our student books a test date, studies hard for six to twelve weeks, sits the exam, and is *done*.
+For them, churning is success. A 400-day streak is not merely useless; it is faintly insulting.
+
+Everything downstream changes:
+
+| Duolingo | قدراتي |
+|---|---|
+| Streak = an infinite habit chain | Streak = commitment inside a **countdown to a fixed date** |
+| Leagues = random 30-person cohorts | Leagues = **people sitting the same exam window as you** |
+| Rolling monthly subscription | **"حتى يوم اختبارك"** pass, priced to the deadline |
+| LTV over years | LTV over **one exam cycle** — so referrals, siblings and retakes carry the model |
+| Smooth DAU | **Violent seasonality** around test windows; capacity and marketing must follow it |
+| Success = you come back tomorrow | Success = **you score higher**, and tell your friends why |
+
+The good news: a deadline is a *stronger* motivator than a streak. Duolingo has to manufacture
+urgency. We are handed it. The design job is to point every mechanic at the date the student already
+has circled — which is why the exam date is the second thing we ask, and why the marked day on that
+screen is drawn as the last node on the path.
+
+**The second thing that changes everything:** we have 720 questions. The market leader advertises
+100,000. That gap does not close by hand-authoring. It closes with a **content engine** (§4.4).
+
+---
+
+# Part 1 — Research: what Duolingo actually is
+
+## 1.1 The numbers, so we calibrate against reality
+
+- **~47.7M daily active users**, ~128M monthly, **DAU/MAU ≈ 37%** — more than one in three monthly users show up daily
+- **10.9M paid subscribers**; **8.9–9.2% MAU→paid conversion**, where 2% is industry average and 4% is considered elite
+- Monthly churn fell from 47% (2020) to **28%** in Western markets by late 2025
+- **1,200+ experiments per year**; hundreds of A/B tests live at any moment
+- Super Duolingo ≈ **$12.99/mo, or ~$5/mo billed annually**; new users get **14 days of Super free up front** — the reverse of the usual freemium funnel
+
+The 37% DAU/MAU is the number to internalise. It is not achieved by content quality. It is achieved
+by four interlocking retention mechanics.
+
+## 1.2 The retention machine
+
+**Streak.** Loss aversion, deliberately engineered. The flame is front and centre; the longer the
+chain, the more it costs to break. Critically they *moderate* the pressure with Streak Freeze — an
+insurance item bought with in-app currency — because a streak that breaks permanently makes people
+quit rather than restart. **Seven days is the threshold** at which a streak becomes worth protecting.
+
+**Leagues.** Ten tiers (Bronze → Diamond), **cohorts of 30**, weekly promote/demote. The cold-start
+trick is worth stealing outright: cohorts are assembled from users **who earned their first XP of the
+week at a similar time**, and at a similar level. That one rule makes every cohort feel competitive
+with no matchmaking service at all. Leagues drive a reported **+25% lesson completion**.
+
+**Quests.** Daily and friend quests. Friend Quests are the sharpest idea in the system: they create a
+reason to return that belongs to *the relationship*, not to the product. Someone who has stopped
+caring about Spanish will still open the app rather than let a friend down.
+
+**Notifications.** Where Duolingo is furthest ahead of everyone. Not "send at 7pm" — send-time is
+modelled as a **sleeping recovering bandit with Thompson sampling**, and message copy is chosen by a
+**bandit algorithm** over pre-written content sets that learns per user. Timing is a first-class
+pipeline component, not a config value. Infrastructure: API Gateway → Python services on ECS → SQS,
+reading users and devices from DynamoDB and S3. At the Super Bowl they pushed **4M notifications in
+under 6 seconds** (95% within 3.9 s).
+
+## 1.3 The learning engine
+
+**Half-Life Regression (HLR).** Published at ACL 2016 (Settles & Meeder) and open-sourced. Estimates
+the half-life of each item in a learner's memory from their recall history and schedules review at
+the point of near-forgetting. The most-cited paper in educational AI.
+
+**Birdbrain.** Launched 2020, now v2. After every exercise it updates **two** things at once: the
+difficulty of that exercise, and the learner's proficiency at the underlying skill. It is a logistic
+regression — P(correct) as a function of (ability − difficulty). Later versions absorbed the
+spaced-repetition decay model into the same network.
+
+**Session Generator.** The service that assembles your next lesson from those two models. Originally
+Python; the latency of scoring millions of probabilities in real time forced a Scala rewrite, taking
+lesson generation **from 750 ms to 14 ms**.
+
+**The lesson worth taking:** the adaptive core is *a logistic model with two parameters per
+observation*. It is not magic and it is not deep learning. We can build a defensible version in a
+fortnight (§4.5).
+
+## 1.4 The architecture
+
+- **100+ microservices on AWS**, migrated from a monolith to Docker
+- Backend mostly **Python**, hot paths in **Scala/JVM**
+- **DynamoDB** heavily, plus **RDS** (MySQL and Postgres) where relational shape matters
+- Course content is **compiled offline, serialised into files on S3**, then fetched and cached — content is *not* served from a live database
+- Elastic Beanstalk for rolling deploys and autoscaling; **Jaeger** for request tracing
+- Cut AWS compute cost **>60% in one quarter** by moving to spot capacity
+
+**The lesson worth taking:** *content is a build artefact, not a database table.* Their courses are
+compiled and shipped as static files on a CDN. That is exactly what we do today with
+`js/data/*.js` — accidentally, but correctly. Formalise it rather than moving content into Postgres
+when the backend arrives.
+
+## 1.5 The experimentation culture
+
+Every change — button colour, notification phrasing, notification timing — ships behind an
+experiment. Cross-functional teams own a metric and iterate. 1,200 experiments a year is roughly
+**one started every six working hours**.
+
+We cannot run 1,200 experiments at 10k users; the statistics do not support it. But we can build the
+*plumbing* — assignment, exposure logging, a metric pipeline — from the start, so that when the
+traffic arrives we are not retrofitting. Retrofitting experimentation is one of the most expensive
+things a product ever does.
+
+## 1.6 What transfers and what does not
+
+| Duolingo mechanic | Verdict for قدراتي |
+|---|---|
+| Streak + freeze | **Take**, reframed around the exam countdown |
+| Hearts | **Take** — already have it. It paces, and it monetises honestly |
+| Leagues, 30-person cohorts, weekly reset | **Take**, but cohort by **exam window**, not randomly |
+| First-XP-of-week cohort assignment | **Take verbatim.** Solves cold-start matchmaking for free |
+| Friend quests | **Take** — Saudi students study in groups; culturally strong here |
+| Bandit-optimised notification timing | **Take later** (M7). Rules first; the bandit when data exists |
+| Birdbrain-style ability/difficulty model | **Take** (M6). A logistic regression, not a moonshot |
+| HLR review scheduling | **Take** (M6), simplified |
+| Content compiled to static files on a CDN | **Take** — we already do it; formalise it |
+| 14 days of premium free up front | **Test.** Fits a deadline product well: give them Pro during the panic week |
+| Infinite streak as the hero metric | **Reject.** Countdown-to-exam is our hero metric |
+| Rolling monthly subscription as the default | **Reject.** An exam-dated pass is the right shape |
+| 100+ microservices | **Reject.** One Postgres and a handful of functions serves 10k users |
+
+---
+
+# Part 2 — Research: the قدرات student
+
+## 2.1 Who they are
+
+A 16–18-year-old Saudi student in their final years of secondary school. The GAT score is one of the
+three numbers deciding which university — and therefore which career — is open to them. The weighted
+admission formula at most universities is:
+
+> **النسبة الموزونة = (الثانوية × 0.3) + (القدرات × 0.3) + (التحصيلي × 0.4)**
+
+Two consequences we must design around:
+
+1. **They are minors.** PDPL has specific child-data rules (§2.7). Not a footnote — it shapes onboarding, consent, defaults and retention.
+2. **They already know their target.** Most can name the university and major they want. A student shown *"a 78 gets you into King Saud computer science; you are currently tracking 71"* is far more motivated than one shown an XP bar.
+
+## 2.2 The exam, precisely
+
+- **120 questions: 68 verbal (لفظي) + 52 quantitative (كمي)** on the scientific track. The literary track is weighted far more heavily toward verbal.
+- **~2 hours**, in **4–5 sections of 25 minutes**, alternating verbal and quantitative. In the computerised form each section opens with quantitative, then verbal.
+- **The computerised test is adaptive** — difficulty follows your answers.
+- Scoring is **standardised, not raw**: answers convert to a standard score that accounts for the difficulty of the form you sat. The population **mean is ~65**.
+- The computerised test runs **year-round**; the paper test has fixed windows (the second 2026 period ran roughly late January to early March, final sitting 21 June 2026).
+- Attempts are limited but the best score counts, so **retakes are normal** — a retaking student is a returning customer.
+
+**Verbal question types:** التناظر اللفظي · إكمال الجمل · الخطأ السياقي · المفردة الشاذة · استيعاب المقروء.
+
+## 2.3 How they study today
+
+**تجميعات** dominate. These are past exam questions reconstructed from memory by students leaving the
+hall, accumulated over years into enormous shared files. Students treat them as treasure, for
+entirely rational reasons:
+
+- Qiyas draws from a slowly-refreshed bank, so patterns — and sometimes near-verbatim items — repeat
+- They train the real *flavour*: the phrasing, the traps, the actual difficulty
+- After ~200 items the repeating shapes become visible
+- They are free
+
+**This is our sharpest strategic problem.** We will not reproduce real exam questions — it breaks our
+own rule, it is copyright infringement, and it puts us in ETEC's crosshairs. But "we have no تجميعات"
+reads to a student as "this app is not serious".
+
+**The answer is to beat تجميعات at their own job.** What a student actually gets from تجميعات is
+*pattern exposure*. Every recurring pattern in the exam can be expressed as a **parameterised
+template** that generates unlimited original items with the same shape, the same traps and the same
+difficulty — plus two things تجميعات can never give: a worked method, and an answer that is correct
+by construction rather than by crowd-guess. The tutors selling تجميعات admit the honest version
+themselves: *التجميعات ثبّتت سرعتهم، لكن الفهم هو الذي رفع درجتهم.*
+
+Position it explicitly: **"أنماط الاختبار — أصلية بالكامل، ومولّدة بلا حدود."**
+
+## 2.4 The competition
+
+| Platform | What they claim | Price signal |
 |---|---|---|
-| **"A free quantitative trainer"** — exactly what the README promises today | **~85%** | The thing we said we'd build is nearly built. |
-| **"A GAT prep product students rely on and pay for"** — what a deployed, retained, monetized product must be | **42%** | The thing we actually need. |
+| منصة اختبارات | **100,000+ questions**, AI study plan, "94% success rate" | from **199 SAR** |
+| دال | 10,000+ questions, تجميعات, daily drills, exam simulator | subscription |
+| نون أكاديمي | Live and recorded classes with named star teachers | subscription / per-course |
+| منصة قدرات (qdrat.sa) | 16 years of courses + تجميعات | course pricing |
+| المنصف · بازيد · أينشتاين · يزيد · المعاصر · هدفك · جهاد | Courses, PDFs, Telegram groups | varies |
 
-**42% is the number we plan against.** The gap between 85% and 42% is not sloppiness in what exists — the existing quantitative game is genuinely strong. The gap is that a real product needs a second exam section, an identity, an account, a business model, and a legal posture, and we have none of those.
+**Read this honestly.** We have 720 questions — **0.7% of the leader's advertised bank**. On the axis
+this market competes on, we are nowhere.
 
-### 1.1 The scorecard
+Now look at what none of them have:
 
-Weights reflect value to a deployed product, not effort spent.
+- **Nobody has the game loop.** They are question banks, video courses or PDFs behind a login. Not one is a *game* a student opens because they want to.
+- **Nobody has our method coverage.** All 720 of our items carry a step-by-step `solution` *and* a structured `method`. The big banks ship answer keys.
+- **Nobody is beautiful.** With 17-year-olds this is a real moat.
 
-#### A. Learner-facing product — 67 points, **57% complete**
+So the strategy is not "catch up on volume". It is **"the only قدرات app you enjoy opening, with
+enough volume that nobody can dismiss it"** — where "enough" is ~10,000 items, reached by engine
+rather than by hand.
 
-| Area | Weight | Done | Earned | Evidence |
-|---|---:|---:|---:|---|
-| Quantitative content (كمي) | 18 | 85% | 15.3 | 720 questions, 30 lessons, 100% method coverage, 107 figures |
-| **Verbal content (لفظي)** | 16 | **0%** | 0.0 | Nothing exists. This is 68 of the exam's 120 questions. |
-| Game loop & progression | 13 | 95% | 12.4 | Hearts, timer, gems, streak, stars, mistake queue, daily quest, chest, league, 5 rank tiers, power-ups, mock exam |
-| UI/UX & design system | 10 | 88% | 8.8 | Full RTL design system, 2,597 lines of CSS, 18 harness screens |
-| **Mascot & character system** | 8 | **3%** | 0.2 | One flame, one broken heart, one owl emoji. No character. |
-| Accessibility & performance | 2 | 60% | 1.2 | `lang`/`dir`/ARIA correct; FCP 2.6 s throttled; 2 tap targets under 44 px |
-| | **67** | | **37.9** | |
+## 2.5 What they need that nobody gives them
 
-#### B. Production & business readiness — 33 points, **13% complete**
+The recurring advice in the tutoring content students actually read: have a phased plan; analyse your
+mistakes instead of grinding volume; manage the clock, because most lost marks belong to students who
+*knew* the material but ran out of time; and manage exam-day nerves.
 
-| Area | Weight | Done | Earned | Evidence |
-|---|---:|---:|---:|---|
-| Accounts, sync, backup | 8 | 5% | 0.4 | `localStorage` only. Name is cosmetic. Clear the browser → progress gone forever. |
-| PWA / offline / native distribution | 6 | 25% | 1.5 | APK exists but is sideloaded; `manifest.webmanifest` and `sw.js` both **404** on production |
-| Analytics & experimentation | 5 | 0% | 0.0 | Zero telemetry. We cannot see a single thing users do. |
-| Monetization | 5 | 0% | 0.0 | No pricing, no payments, no plan |
-| Legal & compliance | 4 | 30% | 1.2 | ETEC disclaimer ✓. No privacy policy, no ToS, no PDPL posture. |
-| Growth: SEO / ASO / referral | 3 | 25% | 0.8 | OG + Twitter cards ✓. `robots.txt` and `sitemap.xml` both **404**. |
-| QA, CI, observability | 2 | 20% | 0.4 | `validate.js` covers the data only. No CI, no UI tests, no error tracking. |
-| | **33** | | **4.3** | |
+Almost none of that is a question-bank feature. It maps to product:
 
-**Total: 37.9 + 4.3 = 42.2 → 42%**
+1. **A day-by-day plan from today to your exam date** — التأسيس / التدريب المكثف / المحاكاة / المراجعة
+2. **Mistake analysis, not mistake storage** — group errors by *cause*, not by topic
+3. **Pace training** — most lost marks are time, not knowledge
+4. **A weighted-percentage calculator** tied to their target university and major — the single most motivating screen we could build
+5. **A predicted score with a confidence band**, from our ability model, calibrated to the ~65 mean
+6. **Exam-week mode** — review only, no new material, sleep reminders, a what-to-bring checklist
 
-### 1.2 The phases at a glance
+## 2.6 Seasonality
 
-| # | Phase | Weeks | Moves us to | Blocks |
-|---|---|---:|---:|---|
-| 0 | Foundation & truth | 1 | 44% | everything measurable |
-| 1 | Land the unmerged branch | 1 | 50% | offline, backup |
-| 2 | **Mascots & characters** | 4 | 58% | brand, store screenshots |
-| 3 | **The verbal section** | 10 | 74% | being a real prep product |
-| 4 | Accounts + PDPL | 4 | 83% | analytics identity, payments |
-| 5 | Analytics + adaptive | 3 | 91% | every pricing decision |
-| 6 | Monetization | 3 | 96% | revenue |
-| 7 | Stores, ASO, polish | 4 | 100% | distribution at scale |
+The paper test has windows; the computerised test is year-round but clusters before admission.
+Expect **3–5× traffic swings**, peaking in the weeks before each window and falling off a cliff after.
 
-Critical path ≈ **26 weeks**, with Phase 2 running alongside Phase 3.
+- Infrastructure must autoscale to near-zero in troughs — which alone argues against always-on servers
+- Marketing spend follows the registration calendar, not a monthly plan
+- The post-exam cliff is when we pitch **التحصيلي (SAAT)** — the *other* exam every Saudi student sits, worth 40% of the weighted percentage, and a pure content project on an engine that already exists
 
-### 1.3 Burn-up: how each phase moves the number
+## 2.7 Hard constraints
 
-```
-P0  Foundation & truth        +2   ▓▓                                    44%
-P1  Land the unmerged branch  +6   ▓▓▓▓▓▓                                50%
-P2  Mascots & characters      +8   ▓▓▓▓▓▓▓▓                              58%
-P3  The verbal section        +16  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓                      74%
-P4  Accounts + PDPL           +9   ▓▓▓▓▓▓▓▓▓                             83%
-P5  Analytics + adaptive      +8   ▓▓▓▓▓▓▓▓                              91%
-P6  Monetization              +5   ▓▓▓▓▓                                 96%
-P7  Stores, ASO, polish       +4   ▓▓▓▓                                 100%
-```
+**Devices.** Android holds roughly **three-quarters** of the Saudi market by revenue share; iOS is
+the fastest-growing and dominates the premium end. Practical reading: **build Android-first, never let
+iOS feel second-class** — the students most likely to pay skew iPhone. And a large share of the
+Android base is sub-1,500-SAR hardware, exactly the CPU profile where our 782 KB of render-blocking
+question data hurts (§3.1).
+
+**Payments.** **Mada** is the national debit network and the default for essentially everyone.
+**Apple Pay** sits at ~36% consumer adoption, **STC Pay** ~12%. A checkout without Mada does not work
+here. In-app purchases on iOS/Android must use Apple/Google billing for digital goods — budget the
+15–30% cut and price around it.
+
+**PDPL, and the fact that our users are minors.** The Personal Data Protection Law has been fully
+enforced since **14 September 2024**, and SDAIA's committees issued **48 enforcement decisions across
+2025–2026**. Children's data carries extra obligations: **verified guardian consent, private accounts
+by default, data minimisation, short retention, geolocation off by default, age-appropriate notices,
+strong deletion, and registration on SDAIA's National Data Governance Platform.**
+
+**Data residency is now solved.** The **AWS Riyadh region (`me-central-2`) reached general
+availability in January 2026** with three availability zones, explicitly positioned for PDPL/NCA
+localisation requirements. Google Cloud also has a Saudi region. There is no longer any excuse for
+putting Saudi student data outside the Kingdom.
 
 ---
 
-## 2. What is actually built (verified inventory)
+# Part 3 — Where we actually are
 
-Not from memory — this is what the code contains today.
+## 3.1 Frontend: assessment, not inventory
 
-### 2.1 Content
+| | |
+|---|---|
+| `js/app.js` | **2,209 lines**, one IIFE, no modules |
+| Rendering | **37 `innerHTML` assignments** of template strings |
+| Event handling | **49 `A.*` handlers**, bound via inline `onclick="A.foo('...')"` |
+| `css/style.css` | **2,598 lines**, one file |
+| Routing | a module-scope `let view` and a `render()` switch. No URLs |
+| State | one `S` object → `localStorage["qudratState"]`. **~20 KB for a heavy user** |
+| Content loading | 4 render-blocking `<script>` tags, **782 KB uncompressed** |
+| Tests | none. `tools/validate.js` covers the data only |
+| Performance | live, throttled mobile: **317 KB transferred, FCP 2.6 s**. Unthrottled: **1.03 s** |
+
+**What is genuinely good.** The zero-dependency, zero-build choice has been vindicated: JS churn has
+cost this project nothing, deploys are a `git push`, and a new contributor is productive in ten
+minutes. The design system is thorough. The session engine already does naive adaptive selection —
+`pickLessonQuestions` sorts by `r − w` per question, which is a crude ability model already in
+production.
+
+**What will break, specifically.**
+
+1. **`innerHTML` + inline handlers cannot survive server data.** Today every string in a template
+   comes from our own files, so it is safe. The moment a leaderboard shows another student's name, a
+   friend request shows a nickname, or a question report shows user text, `innerHTML` becomes an
+   injection surface. And `esc()` is:
+   ```js
+   function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+   ```
+   That escapes `&` and `<` only. It is **not attribute-safe** — no `"`, `'` or `>`. Every current use
+   sits in a text context, so there is no live bug. But this function plus `onclick="A.x('${name}')"`
+   is a stored-XSS hole waiting for the day names come from a database. **Fix before M4 ships
+   accounts, not after.**
+
+2. **`localStorage` will not hold the content plan.** ~5 MB cap, synchronous, string-only. With 2,220
+   questions plus reading passages plus cached figures we need **IndexedDB**.
+
+3. **No URLs means no sharing, no deep links, no analytics funnels and no back button.** Three of
+   those are growth features.
+
+4. **The 782 KB parse is the FCP problem.** Transfer is fine — Brotli takes it to ~139 KB. The 1.6 s
+   gap between throttled and unthrottled FCP is almost entirely CPU. On the cheap Android hardware
+   that is most of our market, the student watches a white screen while we parse a question bank they
+   will not touch for twenty minutes.
+
+5. **2,209 lines in one scope** is survivable for one person and fatal for two.
+
+## 3.2 Content
 
 | Unit | Lessons | Questions | With method | Figures | Comparison |
 |---|---:|---:|---:|---:|---:|
-| مهارات وقوانين القدرات (skills) | 9 | 216 | 216 | 27 | 81 |
-| أساسيات الأعداد (numbers) | 7 | 168 | 168 | 0 | 56 |
-| النسب والنسبة المئوية (ratios) | 4 | 96 | 96 | 0 | 33 |
-| الهندسة (geometry) | 10 | 240 | 240 | 80 | 75 |
-| **Total** | **30** | **720** | **720 (100%)** | **107** | **245 (34%)** |
+| مهارات وقوانين القدرات | 9 | 216 | 216 | 27 | 81 |
+| أساسيات الأعداد | 7 | 168 | 168 | 0 | 56 |
+| النسب والنسبة المئوية | 4 | 96 | 96 | 0 | 33 |
+| الهندسة | 10 | 240 | 240 | 80 | 75 |
+| **Total** | **30** | **720** | **720 (100%)** | **107** | **245** |
 
-Every question carries a step-by-step `solution` **and** a structured `method`. That is unusually complete for a bank this size and is the product's strongest asset.
+Verbal: **zero**. That is 68 of the exam's 120 questions — **we cover 43% of the test.**
 
-### 2.2 Systems shipped
+A lesson session serves 8 questions from a pool of 24, so a committed student exhausts a lesson in
+three sittings and the whole quantitative bank in roughly ten weeks — exactly the length of their prep
+window. **The bank is sized for precisely one user, once.**
 
-Hearts (3/level) · 60 s question timer · gems + spendable economy · lifetime rank XP · 5 rank tiers · daily streak with Rive flame · 1–3 stars per lesson · wrong-answer retry queue · daily quest → chest · daily question card · ghost league · full mock exam (2 × 25 min, free navigation, flagging, sealed sections) · freeze + 50/50 power-ups · two tracks (علمي / أدبي) · exam-date countdown with readiness % · mistakes review · keyboard play · ETEC disclaimer gate.
+## 3.3 Backend
 
-### 2.3 Measured performance
+None. No accounts, no sync, no analytics, no payments, no notifications, no admin. Progress lives in
+one browser and dies with the cache.
 
-`node tools/audit.js https://qudrati.xyz/` — throttled mobile profile (~1.6 Mbps, 150 ms RTT, 4× CPU):
+## 3.4 The honest score
+
+Scored against *a product 10,000 students rely on and pay for*:
+
+| Layer | Weight | Done | Earned | Notes |
+|---|---:|---:|---:|---|
+| Quantitative content | 10 | 70% | 7.00 | Excellent quality, ~7% of expected volume |
+| **Verbal content** | 12 | **0%** | 0.00 | The larger half of the exam |
+| **Content engine** (generation + ops) | 7 | **0%** | 0.00 | The only way volume closes |
+| Core game loop | 9 | 90% | 8.10 | Genuinely strong |
+| Adaptive engine & score prediction | 6 | 10% | 0.60 | `r − w` sorting is a start |
+| Exam-lifecycle product (plan, pace, weighted %) | 8 | 15% | 1.20 | Countdown + readiness exist |
+| UI/UX & design system | 6 | 85% | 5.10 | Best-in-category already |
+| Mascot & brand identity | 5 | 2% | 0.10 | No character; palette is Duolingo's |
+| Frontend architecture (modules, router, IDB, security) | 5 | 25% | 1.25 | Works; will not survive accounts |
+| **Backend**: auth, sync, entitlements | 10 | **0%** | 0.00 | |
+| Analytics & experimentation | 5 | 0% | 0.00 | |
+| Notifications & lifecycle messaging | 3 | 0% | 0.00 | |
+| Monetization & payments | 5 | 0% | 0.00 | |
+| Legal, PDPL, minors | 4 | 25% | 1.00 | ETEC disclaimer only |
+| Distribution: PWA, stores, ASO | 3 | 15% | 0.45 | Sideloaded APK |
+| QA, CI, observability | 2 | 15% | 0.30 | Data validator only |
+| | **100** | | **25.10** | |
+
+**Weighted total: 25%.**
+
+Lower than the old roadmap's 42% because that document scored a smaller ambition. Against "a free
+quantitative trainer" we are ~85% done. Against *this*, **25%**.
+
+Read the zeros, not the total: **five whole layers are at zero** — verbal, content engine, backend,
+analytics, monetization. Four of the five are not hard problems; they are simply unstarted.
+
+---
+
+# Part 4 — Target architecture
+
+## 4.1 Principles
+
+1. **Content is a build artefact.** Compiled, versioned, signed, on a CDN — never served from Postgres. What Duolingo does, and what we already accidentally do.
+2. **Offline-first.** The student on a school bus with two bars must be able to do a lesson. The server is for sync, social and payments — never for answering a question.
+3. **Zero build stays until it costs us.** Native ES modules give modularity with no toolchain. Revisit on a real constraint, not on fashion.
+4. **The server never sees more than it needs.** Minors, PDPL. Minimise by default.
+5. **One Postgres.** 10k DAU is small. 100 microservices is Duolingo's problem, not ours.
+
+## 4.2 Frontend target
 
 ```
-transfer        317 KB over the wire (Brotli)   11 requests
-FCP             2,592 – 2,752 ms   (two runs)
-DOMContentLoaded  ~1,950 ms        load  ~2,800 ms
-a11y            lang=ar dir=rtl ✓   0 unlabeled controls   0 missing alt
-tap targets     2 under 44×44 (login buttons, 340×43)
+index.html
+  └─ <script type="module" src="/js/main.js">
+js/
+  core/     state.js  store.js(IndexedDB)  sync.js  router.js  events.js  api.js
+  ui/       render.js(escape + delegation)  components/  screens/
+  domain/   session.js  mock.js  streak.js  league.js  ability.js  plan.js
+  content/  loader.js (per-unit, lazy, cached, version-checked)
 ```
 
-Same site, `--fast` (no throttling): **FCP 1,028 ms**. The 1.6 s difference between the two is almost entirely CPU, not network — which points at exactly one thing.
-
-Transfer is fine. The cost is **parse and execute**: four question-bank files totalling 782 KB of uncompressed JSON-in-JS are render-blocking `<script>` tags, so a low-end phone parses the entire bank before the first pixel. Splitting them behind the unit the student is actually on is the single biggest perf win available.
-
-### 2.4 Built but not shipped — branch `feat/complete-app`
-
-Four commits, 2,159 insertions, sitting unmerged on GitHub since the first build sprint:
-
-practice mode · `js/data/guide.js` (140 rules reference) · achievements · rebuilt stats screen · **PWA: `sw.js` + `manifest.webmanifest` + generated icon set** · progress backup/restore · dark mode · hash routing (real URLs) · unit skip test.
-
-This is finished, working code worth ~6 points. Leaving it on a branch is the cheapest waste in the project. **Phase 1 is entirely about landing it.**
-
----
-
-## 3. Six hard truths
-
-**1. We cover 43% of the exam and call ourselves a GAT trainer.**
-The GAT is 120 questions: **68 verbal, 52 quantitative** ([ETEC](https://beta.etec.gov.sa:2443/ar/MediaAssets/GAT%20General%20Aptitude%20Test.pdf), [Leverage Edu](https://leverageedu.com/learn/what-is-gat/)). We have built the smaller half. For the أدبي track the imbalance is worse — verbal is ~91 of their 120. A student cannot prepare for their exam with us; they can only warm up. This is the largest single gap in the product and it is why Phase 3 carries 16 of the remaining 58 points.
-
-**2. Progress dies with the browser cache.**
-Everything lives in one `localStorage` key. A student who builds a 60-day streak, clears their browser, and loses it will not come back — and will tell their friends. We have no way to even know it happened.
-
-**3. We are flying blind.**
-No analytics. We cannot answer: how many people play? Where do they quit? Which lesson has a broken question? Does the mock exam get finished? Every product decision after this point is a guess until telemetry exists.
-
-**4. The app has no face.**
-`CLAUDE.md` states plainly that the design system is a *"pixel-perfect implementation of the Duolingo design system (colors/radii extracted from Figma)."* That was a fine way to build fast. It is not a fine way to **launch and monetize**. Duolingo's palette, radii, button physics and mascot are protected trade dress, and the more successful we become the more that matters. Phase 2 is not decoration — it is the phase where the product stops being a Duolingo clone and becomes قدراتي.
-
-**5. PDPL is not optional.**
-Saudi Arabia's Personal Data Protection Law has been **fully enforced since 14 September 2024** ([SDAIA guidance summary](https://www.pwc.com/m1/en/services/consulting/technology/cyber-security/navigating-data-privacy-regulations/ksa-data-protection-law.html)). It applies to any service processing Saudi residents' data, requires a privacy notice, a lawful basis, data-residency care, breach notification within 72 hours, and — for many operators — SDAIA registration and a named DPO. Today we store nothing on a server, so we are incidentally clean. **The moment Phase 4 ships accounts, we are in scope.** Compliance must land *with* accounts, not after.
-
-**6. Our public documentation is wrong.**
-The README advertises *"216 original questions"* (we have 720), *"4 units × 18 lessons"* (we have 30 lessons), and a *"90-second timer"* (it is 60). `CLAUDE.md` repeats the 72-lesson figure and quotes stale line counts. For a live product these are not typos — they are the first thing a contributor, a journalist, or a partner reads. Fixing them is an hour of work and it is in Phase 0.
-
----
-
-## 4. The phases
-
-Each phase is sized in **weeks of focused work** for one developer with AI assistance, and ends on a stated, checkable condition.
-
----
-
-### Phase 0 — Foundation & truth · **1 week** · +2 → 44%
-
-Cheap, unglamorous, unblocks measurement.
-
-**Deliverables**
-- Correct README + `CLAUDE.md`: 720 questions, 30 lessons, 60 s timer, real line counts, current file map.
-- `robots.txt` + `sitemap.xml` + JSON-LD (`EducationalApplication`) — currently 404.
-- GitHub Actions CI: run `node tools/validate.js` on every push; block merge on failure.
-- Client error reporting (Sentry free tier or a 30-line `window.onerror` → endpoint). Zero-dependency constraint respected: a script tag, not a package.
-- Decide the fate of `feat/complete-app` — merge (Phase 1) or delete. No third option.
-- `ROADMAP.md` (this file) linked from the README.
-
-**Done when:** README numbers match `validate.js` output, CI is green on `main`, and a deliberately thrown error appears in the error dashboard.
-
----
-
-### Phase 1 — Land what is already built · **1 week** · +6 → 50%
-
-Merge `feat/complete-app` into `main`, screen by screen, re-verifying each against the current UI (the branch predates the whole UI/UX pass, so expect conflicts in `style.css` and `app.js`).
-
-**Deliverables**
-- **PWA**: `manifest.webmanifest`, `sw.js`, icon set → installable, works offline. This matters more in KSA than it sounds: offline play on a commute is a real use case, and "add to home screen" is our only distribution channel until Phase 7.
-- **Backup / restore**: export progress as a file, import it back. A stopgap for Truth #2 that costs days instead of the weeks Phase 4 costs.
-- Practice mode (free play, no hearts) · rules reference (`guide.js`, 140 rules) · achievements · rebuilt stats · dark mode · hash routing (`/#/path`, `/#/mock` — also fixes deep-linking and browser back) · unit skip test.
-- Cache-bust strategy that survives a service worker (today's `?v=6` will fight `sw.js` — the last SW rollout served stale files for hours; see the git history).
-
-**Done when:** Lighthouse reports the site installable, the app loads with the network off, an exported file restores on a second device, and no screen regressed against the 18-screen harness sweep.
-
----
-
-### Phase 2 — Mascots & characters · **4 weeks** · +8 → 58%
-
-> Flagged as a top priority. Treated as one.
-
-This phase does two jobs at once: it gives the app the emotional hook that makes Duolingo sticky, **and** it is the vehicle for moving off Duolingo's trade dress (Truth #4).
-
-#### 2.1 Why it moves the needle
-
-Duo works because the character is wired into the *loop*, not pasted onto a splash screen: it cheers a correct answer, mourns a wrong one, guards the streak, and shows up in the notification that pulls you back. Duolingo animate their cast with **Rive state machines** driven by live app inputs ([Rive case study](https://rive.app/blog/duolingo-s-ai-powered-video-call-brings-lily-to-life)) — 10 world characters, each with expression and mouth-shape sets.
-
-**We already ship that exact runtime.** `assets/streak/rive.js` + `rive.wasm` + two `.riv` files are in the repo and lazily warmed by `warmStreak()` for the streak flame. The mascot phase reuses a pipeline that is already integrated and already paid for in bytes. This is the cheapest big win left on the board.
-
-#### 2.2 The cast
-
-A one-week design sprint locks this. Recommendation to start from:
-
-**Lead — شاهين, a peregrine falcon.**
-- Instantly Saudi, and a bird like Duo without *being* Duo — the silhouette, palette and personality must diverge deliberately.
-- Anatomy built for expression: crest feathers (mood), heavy brow (concentration/doubt), beak, wings for gesture.
-- Semantically on-theme for قدرات: sharp sight, precision, speed.
-- Personality: **encouraging but exacting.** Proud of you, not impressed easily. Never cutesy — our users are 17-year-olds sitting the exam that decides their university, and a saccharine mascot reads as condescending. Warmth through competence.
-
-**Four unit companions**, each in that unit's existing colour token — so the cast is generated by the design system rather than bolted onto it:
-
-| Unit | Colour | Character | Hook |
-|---|---|---|---|
-| مهارات وقوانين | `#58CC02` green | فَنَك — a fennec fox | Enormous ears; hears the pattern before you do |
-| أساسيات الأعداد | `#1CB0F6` blue | قنفود — a hedgehog | Counts on his spines; tallies everything |
-| النسب والنسبة المئوية | `#CE82FF` purple | مِيزَة — a cat | Always balancing; lands the ratio every time |
-| الهندسة | `#FFC800` yellow | مَهاة — an oryx | Perfectly straight horns; the built-in ruler |
-
-Alternates for the lead if the sprint rejects the falcon: نَجم (a star — continuous with the existing star iconography and the favicon), or a صقر with a different name. **Do not ship a green owl.**
-
-#### 2.3 Integration points — the whole loop, not a splash screen
-
-Every one of these is an existing function in `js/app.js`, so the work is scoped, not speculative:
-
-| # | Where | Function / selector | Character beat |
-|---|---|---|---|
-| 1 | Welcome / login | `welcomeHero()` | شاهين introduces himself; first impression |
-| 2 | Lesson start popup | `.lesson-pop` | The unit's companion peeks in |
-| 3 | Correct answer | `.feedback.good` | Quick celebratory beat, ≤600 ms — never blocks the next tap |
-| 4 | Wrong answer | `.feedback.bad` | Sympathetic, not scolding; points at the method |
-| 5 | Losing a heart | `loseHeart()` | Wince. Third heart = real concern |
-| 6 | Lesson complete | `lessonComplete()` | Replaces or joins `flameHero()` |
-| 7 | Out of hearts | `sessionFailed()` | Currently a broken heart; give it a face |
-| 8 | Streak celebration | `showStreakCelebration()` | Already Rive — the natural first character to rig |
-| 9 | On the path | `renderPath()` | Idle companions standing beside nodes, blinking. Duolingo's highest-value ambient use |
-| 10 | Chest opening | `A.openChest()` | Reaction to the reward |
-| 11 | Rank-up | `showRankUp()` | Ceremony |
-| 12 | Empty mistakes list | `renderReview()` | Proud — "قائمتك نظيفة" already says it, give it a face |
-| 13 | Mock exam intro | `renderMockHome()` | Serious mode; the cast steps back — the exam is not a game |
-| 14 | Push notifications (P7) | — | The streak-rescue message that actually gets opened |
-
-#### 2.4 Technical spec
-
-- **Format:** Rive `.riv`, one file per character, state machine driven by named inputs (`mood`, `intensity`, `trigger`). Same loader as `loadStreakLibs()`.
-- **Budget:** ≤ 120 KB per character, lazy-loaded per screen, never on the critical path. The WASM (1.4 MB) is already warmed on lesson start — characters ride that warm-up for free.
-- **Fallback:** every character needs a static SVG for reduced-motion, load failure, and the APK's WebView. `prefers-reduced-motion` must fully bypass Rive.
-- **Expression set (v1):** idle-blink, happy, sad, worried, celebrate, think, wave. Seven states, not twenty — ship a small set well.
-- **Design tokens:** characters use only `:root` variables. No new hardcoded colours.
-
-#### 2.5 Brand divergence (rides along with this phase)
-
-- Shift the palette off Duolingo's exact hex values while keeping the contrast relationships (`#58CC02` → a distinct green anchored to the falcon).
-- Own the motion language: our own easing curves and button physics.
-- Own the wordmark and app icon; retire the placeholder emoji favicon.
-- Re-word `CLAUDE.md` §Tech stack once the design system is genuinely ours.
-
-#### 2.6 The one thing that may need outside help
-
-Everything else in this project has been buildable in-house. Character art is the exception: five rigged Rive characters with a coherent style is illustration work, and a mascot that looks amateur is worse than no mascot at all — it undercuts the trust a student places in an exam-prep tool. Budget for an illustrator for the lead character at minimum, then derive the companions from that style guide.
-
-The four weeks assume the design sprint runs in week 1 and rigging overlaps integration. If the art has to be commissioned, the calendar stretches but the engineering does not — every integration point can be built against an SVG placeholder and swapped to `.riv` when the art lands.
-
-**Done when:** شاهين appears at ≥ 8 of the 14 integration points, all four companions exist, `prefers-reduced-motion` degrades cleanly to SVG, FCP has not regressed, and a stranger shown the app next to Duolingo names them as different products.
-
----
-
-### Phase 3 — The verbal section (القسم اللفظي) · **10 weeks** · +16 → 74%
-
-The biggest phase in the roadmap, and the one that turns a warm-up into a prep product.
-
-#### 3.1 Scope
-
-Five official question types ([Qiyas](https://x.com/EtecQiyas/status/268664595030355968)):
-
-| Type | Target items | Notes |
-|---|---:|---|
-| التناظر اللفظي (analogy) | 400 | Relationship pairs; needs a curated relation taxonomy |
-| إكمال الجمل (sentence completion) | 400 | One and two blanks |
-| الخطأ السياقي (contextual error) | 300 | Four underlined words, one wrong in context |
-| المفردة الشاذة (odd one out) | 250 | Cheapest to author; good starting point |
-| استيعاب المقروء (reading comprehension) | 150 across ~35 passages | Most expensive; new UI (passage + question pane) |
-| **Total** | **~1,500** | vs. 720 quantitative today |
-
-#### 3.2 Why it is 10 weeks and not 3
-
-- **Volume.** Verbal needs roughly double the item count, because vocabulary breadth cannot be drilled with 24 items per lesson.
-- **Authoring is genuinely harder.** A quantitative item is verifiable — the arithmetic is right or wrong. A verbal item is a *judgement*: is this analogy relation unambiguous? Is exactly one distractor defensible? Arabic's morphological richness makes near-synonym distractors treacherous. Every item needs a second pair of eyes.
-- **Reading comprehension needs new UI.** A scrolling passage pinned beside a question, on a 390 px screen, in RTL, with the question navigator — that is a screen we have never built.
-- **The schema must extend.** `question.stem/choices/answer/solution/method` covers analogy, completion and odd-one-out. Contextual error needs word-level markup. Reading comprehension needs a `passage` entity that several questions share.
-
-#### 3.3 Work breakdown
-
-1. **Schema + validator** (1 wk) — extend `tools/validate.js`: no duplicate stems, distractor sanity, passage↔question integrity, per-type difficulty ordering.
-2. **UI: the four short types** (1 wk) — mostly reuse `questionBody()`.
-3. **UI: reading comprehension** (1.5 wk) — split-pane, passage scroll memory, "back to passage" affordance.
-4. **Authoring: 1,500 items** (5 wk) — batched by type, `validate.js` gate on every batch, a human review pass on 100% of items.
-5. **Integration** (1 wk) — verbal units on the path, track weighting (أدبي gets the heavier verbal load), verbal in the mistakes queue and daily question.
-6. **Full-length mock** (0.5 wk) — replace the 2 × 24 quantitative mock with a true **120-question, 5-section, mixed** simulation matching the real computerized format.
-
-**Done when:** 1,500 verbal items pass `validate.js`, all five types render correctly in RTL on a 280 px screen, and a full 120-question mock completes end to end with a per-section score breakdown.
-
----
-
-### Phase 4 — Accounts, sync & PDPL · **4 weeks** · +9 → 83%
-
-These ship **together**. Accounts without compliance is a legal liability; compliance without accounts is paperwork for nothing.
-
-**Deliverables**
-- Auth: phone/OTP (the Saudi default) or Apple/Google sign-in. Guest play must survive — "بدون تسجيل" is currently a headline feature and forcing signup at the door will cost more users than sync gains.
-- Sync: the `S` object to a server, last-write-wins with a conflict prompt, offline-first (the PWA already queues).
-- **Data residency:** host the user database **inside KSA** unless SDAIA-adequacy is established for the chosen region. Static-file hosting is a separate question from where personal data lives — our test requests were served from Vercel's `bom1` (Mumbai) PoP, but the PoP follows the requester, so verify the real edge latency from inside KSA before assuming the CDN side is fine, and do not inherit the static host's region for the database.
-- Arabic privacy policy + terms of service, in-app and linked from the store listings.
-- Lawful basis + consent record, data-subject request path (access / delete / export), 72-hour breach procedure, named DPO, SDAIA registration if required at our scale.
-- Account deletion that actually deletes.
-
-**Risk:** this is the phase that ends "zero server, zero dependencies." It is unavoidable — you cannot have retention or payments without identity — but it changes the project's operating cost from £0 to a monthly bill, and adds an on-call surface. Budget for that honestly before starting.
-
-**Done when:** progress survives a factory-reset phone, a deletion request removes every row within the stated window, and the privacy notice is reviewed by someone qualified in Saudi data law.
-
----
-
-### Phase 5 — Analytics & the adaptive engine · **3 weeks** · +8 → 91%
-
-**Analytics (2 wk)** — privacy-respecting, PDPL-clean, self-hosted or EU/KSA-hosted (Plausible/Umami class, not a US ad-tech SDK).
-Events that answer real questions: lesson start/complete/abandon · per-question first-try accuracy and time · heart-loss position · mock completion rate · streak survival curve · D1/D7/D30 retention · funnel from landing → first lesson → second session.
-Plus a **content-quality feed**: any question with first-try accuracy < 15% or > 95%, or an abnormal time-to-answer, gets flagged for review. With 2,220 items after Phase 3, this is the only way to find the broken ones.
-
-**Adaptive difficulty (1 wk)** — the real GAT is adaptive; ours is not. Use `S.qstats` (already recorded) to weight selection toward a student's weak areas, and toward items at the edge of their ability. Closes the last 15% of the quantitative content score.
-
-**Done when:** a dashboard shows D7 retention and a per-lesson drop-off curve, and lesson selection demonstrably favours weak topics on a seeded test account.
-
----
-
-### Phase 6 — Monetization · **3 weeks** · +5 → 96%
-
-Free tier must stay genuinely useful — the market is students, word of mouth is the growth engine, and a paywall at lesson 3 kills it.
-
-**Model to test:** free = full quantitative + verbal, hearts, one mock per week. **قدراتي بلس** = unlimited hearts, unlimited mocks, full explanations library, personalised weak-area plan, no ads, offline pack.
-**Pricing:** monthly, plus a "until my exam date" plan — we already ask for the exam date at onboarding (`renderExamSetup`), which is a genuinely better fit for this audience than a rolling subscription.
-**Payments:** Mada is mandatory for Saudi cards; add Apple Pay and STC Pay. Tabby/Tamara instalments are normal here and reduce friction on an annual plan.
-**In-app purchase rules:** Apple and Google will require their billing for digital goods in their apps — budget the 15–30% and design the pricing around it.
-
-**Done when:** a real card completes a purchase, entitlements sync across devices, and cancellation/refund paths are tested.
-
----
-
-### Phase 7 — Stores, ASO & final polish · **4 weeks** · +4 → 100%
-
-- **Google Play + App Store.** Today the APK is a raw file in a git repo; asking students to sideload is a trust and security problem, and it forfeits the largest discovery channel we have. Capacitor already wraps the static build.
-- **ASO in Arabic:** the search terms are قدرات, قياس, تحصيلي, كمي, لفظي. Screenshots featuring شاهين (now that he exists) do the conversion work.
-- **Performance:** split the question bank per unit and load on demand — kills the render-blocking 782 KB parse. Self-host the font (removes the Google Fonts round-trip and a third-party dependency). Target FCP < 1.8 s on the throttled profile.
-- **Accessibility:** fix the sub-44 px tap targets, run a screen-reader pass in Arabic, verify contrast across both themes.
-- **Referral loop:** invite a friend, both get gems. Cheap, and it is how this category grows.
-- **Push notifications:** streak rescue, exam countdown, "your weak topic is waiting". This is where شاهين earns his keep — a notification with a face gets opened. Needs accounts (P4) and a native shell, so it lands here.
-
-**Done when:** both stores are live, FCP < 1.8 s throttled, and an Arabic screen-reader pass completes a lesson start to finish.
-
----
-
-## 5. The full backlog — everything we still need to add
-
-The phases above are the shape of the work. This is the flat list, so nothing is only implied. Phase column shows where each item lands.
-
-### Content
-
-| Item | Phase | Note |
-|---|---|---|
-| التناظر اللفظي — 400 items | 3 | |
-| إكمال الجمل — 400 items | 3 | |
-| الخطأ السياقي — 300 items | 3 | Needs word-level markup in the schema |
-| المفردة الشاذة — 250 items | 3 | Cheapest to author — start here |
-| استيعاب المقروء — ~35 passages, 150 questions | 3 | Needs a new split-pane screen |
-| Full-length 120-question mixed mock | 3 | Replaces today's 2 × 24 quantitative-only mock |
-| Rules & formulas reference (`guide.js`, 140 rules) | 1 | Already written, unmerged |
-| **"Report this question"** button | 5 | With 2,220 items, user reports are how broken ones get found |
-| Adaptive item selection from `S.qstats` | 5 | The real exam is adaptive; ours is not |
-| Content-quality dashboard (accuracy outliers) | 5 | |
-| More quantitative items to outpace heavy users | ongoing | 720 items = ~72 days at 10/day |
-
-### Learner features
-
-| Item | Phase | Note |
-|---|---|---|
-| Practice mode (free play, no hearts) | 1 | Already written, unmerged |
-| Achievements | 1 | Already written, unmerged |
-| Rebuilt stats screen | 1 | Already written, unmerged |
-| Dark mode | 1 | Already written, unmerged |
-| Unit skip test (placement) | 1 | Already written, unmerged |
-| Real URLs / hash routing / browser back | 1 | Already written, unmerged |
-| Progress export & import | 1 | Stopgap until accounts exist |
-| Offline play (PWA) | 1 | Already written, unmerged |
-| Bookmark / save a question for later | 5 | |
-| Timed drill mode (exam-pace pressure without a full mock) | 5 | |
-| Personalised weak-area study plan | 5 | Feeds the paid tier |
-| Progress report a parent or teacher can read | 6 | Frequently the person paying |
-| Real leaderboards (people, not ghosts) | post-1.0 | Needs accounts |
-| Friends / study groups | post-1.0 | Needs accounts |
-| Referral: invite a friend, both get gems | 7 | How this category actually grows |
-| Push notifications (streak rescue, exam countdown) | 7 | Needs accounts + native shell |
-| Home-screen streak widget | post-1.0 | |
-
-### Brand & characters
-
-| Item | Phase |
+**The five changes that matter:**
+
+- **A render layer that escapes by default.** One `html` tagged template that escapes every
+  interpolation unless explicitly marked safe, plus **event delegation** instead of inline `onclick`.
+  This deletes the XSS class permanently and is a two-day job now, versus a rewrite later.
+- **IndexedDB** behind a repository interface. `localStorage` keeps a small session pointer only.
+- **A router** with real URLs: `/#/path`, `/#/lesson/geometry.circles`, `/#/mock/3`.
+- **Per-unit lazy content loading**, version-checked against a manifest. Kills the 782 KB parse.
+- **ES modules** — ~15 files instead of one 2,209-line scope. No bundler.
+
+## 4.3 Backend target
+
+**Stack: Supabase (Postgres + Auth + Storage + Edge Functions), hosted in the AWS Riyadh region.**
+
+Why, concretely: at 10k DAU with a read-heavy workload **Supabase runs ~$50–100/month against
+Firebase's ~$500–1,500** — Firebase bills per operation, which compounds badly for an app writing an
+event per answered question. Postgres gives **row-level security at the database layer**, real SQL
+for the analytics we will live in, and — decisively for PDPL — the option to **self-host inside the
+Kingdom** with no rewrite.
+
+### Schema sketch
+
+```sql
+-- identity ---------------------------------------------------------------
+users(id, phone_hash, auth_provider, created_at, deleted_at)
+profiles(user_id PK, display_name, track, exam_date, target_university,
+         target_major, birth_year, is_minor, locale, created_at)
+consents(user_id, kind, granted_at, revoked_at, guardian_verified_at, policy_version)
+devices(id, user_id, platform, push_token, last_seen_at, app_version)
+
+-- progress ---------------------------------------------------------------
+lesson_progress(user_id, lesson_key, stars, plays, best_accuracy, updated_at)
+attempts(id, user_id, question_id, session_id, correct, ms_taken,
+         chosen_index, first_try, created_at)          -- the gold. append-only
+sessions(id, user_id, kind, lesson_key, started_at, ended_at, hearts_left, xp, gems)
+mocks(id, user_id, form_version, started_at, ended_at, raw_score,
+      predicted_scaled, per_section jsonb)
+mistakes(user_id, question_id, cause_tag, added_at, cleared_at)
+
+-- economy & habit --------------------------------------------------------
+wallets(user_id, gems, updated_at)
+streaks(user_id, count, last_day, freezes_owned, longest)
+daily_quests(user_id, day, target, progress, claimed_at)
+
+-- social -----------------------------------------------------------------
+league_weeks(id, starts_on, ends_on)
+league_cohorts(id, week_id, tier, exam_window, seed)    -- cohort by exam window
+league_members(cohort_id, user_id, xp, final_rank, promoted)
+friendships(a_user_id, b_user_id, status, created_at)
+friend_quests(id, a_user_id, b_user_id, target, progress, expires_at)
+
+-- ability & scheduling ---------------------------------------------------
+skill_ability(user_id, skill_key, theta, sigma, updated_at)
+item_params(question_id, difficulty_b, discrimination_a, n_attempts, updated_at)
+review_queue(user_id, question_id, half_life_hours, due_at)
+
+-- commerce ---------------------------------------------------------------
+products(id, kind, sku, price_halalas, currency, duration_days, exam_dated)
+subscriptions(id, user_id, product_id, status, started_at, expires_at, source)
+payments(id, user_id, provider, provider_ref, amount_halalas, status, created_at)
+entitlements(user_id, feature, granted_until)
+
+-- content ops ------------------------------------------------------------
+content_versions(id, semver, manifest_url, published_at, checksum)
+question_reports(id, user_id, question_id, reason, note, status, resolved_at)
+
+-- platform ---------------------------------------------------------------
+events(id, user_id, name, props jsonb, session_id, client_ts, server_ts)
+experiments(key, description, variants jsonb, started_at, stopped_at)
+assignments(user_id, experiment_key, variant, assigned_at)
+notifications(id, user_id, template_key, scheduled_for, sent_at, opened_at, variant)
+```
+
+**RLS from the first migration.** Every table gets `user_id = auth.uid()` policies before it holds a
+single row. Retrofitting row-level security is how student data leaks.
+
+### API surface
+
+Mostly PostgREST straight out of Supabase, plus Edge Functions wherever logic must not be
+client-trusted:
+
+| Function | Why it cannot be client-side |
 |---|---|
-| Lead mascot: design, name, expression sheet | 2 |
-| Four unit companions | 2 |
-| Rive rigs + state machines for all five | 2 |
-| Static SVG fallbacks (`prefers-reduced-motion`, APK WebView) | 2 |
-| Character beats at the 14 loop integration points | 2 |
-| Palette divergence from Duolingo's exact tokens | 2 |
-| Own wordmark, app icon, favicon (retire the emoji placeholder) | 2 |
-| Own motion language (easing, button physics) | 2 |
-| Store screenshots and marketing art featuring the cast | 7 |
+| `POST /session/complete` | XP, gems and streak are league currency — never trust the client |
+| `POST /sync` | conflict resolution, monotonic clock, replay protection |
+| `GET /league/me` | cohort assignment and standings |
+| `POST /ability/update` | ability and difficulty updates feed everyone's item parameters |
+| `GET /predict/score` | the scoring model stays server-side |
+| `POST /payments/webhook` | entitlement grants |
+| `POST /notifications/schedule` | send-time selection |
+| `POST /report/question` | moderation queue |
 
-### Platform & business
+### Sync design
 
-| Item | Phase |
+State is **~20 KB for a heavy user** — small enough that we need nothing clever.
+
+- Client keeps an **append-only outbox** of attempts and session results in IndexedDB
+- On connectivity, flush the outbox; server replays idempotently by client-generated `attempt_id`
+- Server returns an authoritative snapshot of derived state (XP, gems, streak, league, entitlements)
+- Derived values are **always server-computed**; the client's copy is a cache it may display but never a source of truth
+- Conflicts: attempts are additive and cannot conflict; profile fields are last-write-wins, with a visible prompt only for `exam_date`
+
+### Infrastructure
+
+- **AWS `me-central-2` (Riyadh)**, three AZs, GA since January 2026 — data residency solved
+- Static app plus compiled content on a CDN; content immutable and versioned so the service worker can cache aggressively
+- Autoscale to near-zero in the seasonal trough
+- Error tracking, uptime checks, and a `p95` latency alert on `/session/complete` from day one
+
+## 4.4 The content engine
+
+**The most important thing in this document after Part 0.**
+
+We need ~10,000 items. Hand-authoring at even 20 minutes each is 3,300 hours. That is not a plan.
+
+**Parameterised templates.** A template is a small function plus a constraint set:
+
+```js
+{
+  id: "pct-increase-decrease",
+  skill: "ratios.updown",
+  difficulty: 2,
+  params: { base: [40, 400, 20], up: [10, 40, 5], down: [10, 40, 5] },
+  constraints: p => p.up !== p.down &&
+                    Number.isInteger(p.base * (1 + p.up/100) * (1 - p.down/100)),
+  stem:   p => `سعر سلعة ${ar(p.base)} ريالاً، ارتفع ${ar(p.up)}٪ ثم انخفض ${ar(p.down)}٪. ما السعر النهائي؟`,
+  answer: p => p.base * (1 + p.up/100) * (1 - p.down/100),
+  // distractors are the mistakes students actually make, not random numbers
+  distractors: p => [
+    p.base * (1 + (p.up - p.down)/100),   // netting the percentages
+    p.base * (1 + p.up/100),              // forgetting the decrease
+    p.base * (1 - p.down/100)             // forgetting the increase
+  ],
+  method: p => `١) اضرب في (١ + ${ar(p.up)}٪)…`
+}
+```
+
+One template with those ranges yields **hundreds of items**, each with:
+
+- an answer **correct by construction**, not by review
+- distractors that are the **named misconceptions**, which is what makes a question teach
+- a method generated alongside it
+- guaranteed originality — no copyright exposure, ever
+
+**Target: 120 quantitative templates → 6,000+ items. 60 verbal templates plus curated word banks →
+2,500 items.** The 720 hand-written items stay as the quality benchmark the generator is tuned against.
+
+**Verbal needs a hybrid.** التناظر and المفردة الشاذة template well off a curated relation taxonomy
+(part↔whole, tool↔user, cause↔effect, degree, genus↔species…) plus vetted word lists. إكمال الجمل and
+الخطأ السياقي are partly templatable. **استيعاب المقروء must be hand-written** — budget ~35 passages
+and accept that this is the slow part.
+
+**Tooling to build alongside it:**
+
+- `tools/generate.js` — expand templates to a candidate pool with a fixed seed, so output is reproducible
+- `tools/validate.js` v2 — unique stems, distractor sanity, exactly one correct answer, difficulty calibration, Arabic-digit enforcement, RTL/bidi hazard checks
+- `tools/compile.js` — emit versioned per-unit bundles plus a manifest with checksums
+- A **review queue** — every generated item machine-checked, a sample human-reviewed before publication
+- **Live calibration** — once telemetry exists, any item whose real first-try accuracy falls outside its predicted band is auto-flagged. With 10k items this is the only way quality survives
+
+## 4.5 The adaptive engine
+
+A tractable Birdbrain, in three layers.
+
+**Layer 1 — Ability & difficulty (Elo/IRT-lite).**
+`P(correct) = σ(θ_user,skill − b_item)`. After each attempt update both:
+`θ += K·(observed − expected)` and `b -= K'·(observed − expected)`.
+This is Birdbrain's core idea in roughly forty lines. Seed `b` from our existing `difficulty` 1–3
+field and let telemetry refine it.
+
+**Layer 2 — Review scheduling (HLR-lite).**
+Estimate a per-item half-life from the student's recall history; surface an item when predicted
+recall drops to ~0.6. Duolingo's HLR paper and reference implementation are both public.
+
+**Layer 3 — Session assembly.**
+Given a lesson, pick 8 items: ~60% at the edge of ability (P(correct) ≈ 0.75 — the productive
+struggle zone), ~25% due for review, ~15% from the mistake queue. Server-side and cached, so it costs
+one query.
+
+**On top: the score predictor.** Map `θ` across skills, weighted by the exam's real topic mix, to a
+predicted standard score against the **~65 population mean**. Show it with an honest confidence band
+that narrows as attempts accumulate. Then build the screen every student actually wants:
+
+> **"درجتك المتوقعة: ٧١ ± ٤ — تحتاج ٧٨ لتخصصك. أقرب مكسب: النسب المئوية (+٣ متوقعة)."**
+
+Nothing else in this market does that.
+
+## 4.6 Analytics: the event taxonomy
+
+Define it once, before any code emits an event. Names are permanent.
+
+```
+app_open, app_background, install, first_open
+onboarding_start, onboarding_track_set, onboarding_exam_date_set,
+  onboarding_target_set, onboarding_complete, onboarding_abandon(step)
+lesson_start(lesson,index), question_shown(qid,difficulty,theta_at_time),
+  question_answered(qid,correct,ms,first_try), hint_used(kind),
+  heart_lost(index), lesson_complete(stars,accuracy,ms), lesson_abandon(at_question)
+mock_start(form), mock_section_complete(i,answered,flagged), mock_complete(score,ms),
+  mock_abandon(section,question)
+streak_extended(n), streak_broken(n), streak_freeze_used
+league_joined(tier,cohort), league_week_end(rank,promoted)
+quest_claimed(kind), chest_opened(gems)
+paywall_shown(placement,variant), checkout_start(sku), purchase(sku,amount),
+  purchase_failed(reason)
+notification_sent(template,variant), notification_opened(template)
+report_question(qid,reason)
+error(kind,message)
+```
+
+Every event carries `user_id, session_id, app_version, content_version, experiment_assignments`.
+Self-hosted or KSA/EU-hosted (Plausible/Umami/PostHog class) — **not** a US ad-tech SDK, given minors
+and PDPL.
+
+## 4.7 Cost at 10k DAU
+
+| Line | Monthly |
 |---|---|
-| `robots.txt`, `sitemap.xml`, JSON-LD | 0 |
-| CI running `validate.js` on every push | 0 |
-| Client error reporting | 0 |
-| Accurate README / `CLAUDE.md` | 0 |
-| Licence split: engine MIT, content proprietary | 0 |
-| Auth (phone/OTP or Apple/Google), guest play preserved | 4 |
-| Cloud sync of the `S` object, offline-first | 4 |
-| KSA-region data hosting | 4 |
-| Arabic privacy policy + terms of service | 4 |
-| PDPL: consent record, DSR path, breach procedure, DPO, SDAIA registration | 4 |
-| Account deletion that actually deletes | 4 |
-| Privacy-respecting analytics (self- or EU/KSA-hosted) | 5 |
-| Retention & funnel dashboard | 5 |
-| Subscription tiers + entitlement sync | 6 |
-| Mada, Apple Pay, STC Pay; Tabby/Tamara instalments | 6 |
-| Apple / Google in-app billing for the store builds | 6 |
-| Google Play listing | 7 |
-| App Store listing | 7 |
-| Arabic ASO (قدرات · قياس · كمي · لفظي · تحصيلي) | 7 |
-| Per-unit question-bank code splitting | 7 |
-| Self-hosted font (drop the Google Fonts round-trip) | 7 |
-| Fix sub-44 px tap targets | 7 |
-| Arabic screen-reader pass | 7 |
+| Supabase (Postgres, auth, storage) at 10k DAU | ~$75 |
+| CDN / static hosting | ~$20 |
+| Push notifications (FCM/APNs) | ~$0 |
+| Error + uptime monitoring | ~$25 |
+| Analytics (self-hosted) | ~$20 |
+| SMS OTP (~2,000/mo) | ~$60 |
+| Buffer | ~$50 |
+| **Total** | **≈ $250/month** |
+
+At even a 3% conversion on 10,000 students at 99 SAR, revenue is ~30,000 SAR (~$8,000) per exam
+cycle. **Infrastructure is not the constraint. Content and distribution are.**
 
 ---
 
-### 5.1 Beyond 1.0 — the next horizon
+# Part 5 — The build plan
 
-These are deliberately outside the 100%. They are worth building, but only once there are enough real users for them to mean anything — a leaderboard with four people on it is worse than a ghost leaderboard.
-
-- **Real leaderboards.** Replace the ghost opponents in  with actual weekly cohorts.
-- **Friends and study groups.** Streak-keeping is far stickier when someone else can see it.
-- **التحصيلي (SAAT).** The other exam every Saudi student sits. The engine already handles units, lessons, banks and mocks — it is a content project, not an engineering one.
-- **Teacher / school accounts.** Assign lessons, watch a class. This is where institutional revenue lives.
-- **Home-screen streak widget** on both platforms.
-- **Voice explanations.** The method text already exists for all 720 items; narration makes it usable on a commute.
+Ten milestones, each independently shippable, each ending on a checkable condition.
+Effort is **weeks of focused work for one developer with AI assistance**.
 
 ---
 
-## 6. Sequencing
+## M0 — Clear the decks · 1 week · 25% → 28%
+
+Cheap work that unblocks measurement and closes the licence exposure.
+
+| # | Task | Done when |
+|---|---|---|
+| 0.1 | Delete `feat/complete-app` (local + origin), and the stale `UI/UX` and `responsive-web-layout` branches | `git branch -a` shows `main` only |
+| 0.2 | **Split the licence:** engine MIT, `js/data/**` proprietary | `LICENSE` + `js/data/LICENSE` in place, README states both |
+| 0.3 | Fix README + `CLAUDE.md` (720 questions, 30 lessons, 60 s timer, real line counts) | numbers match `validate.js` |
+| 0.4 | `robots.txt`, `sitemap.xml`, JSON-LD `EducationalApplication` | all three return 200 |
+| 0.5 | GitHub Actions: `validate.js` + a headless smoke test on every push | CI green, required for merge |
+| 0.6 | Client error reporting (`window.onerror` → endpoint, ~30 lines) | a thrown test error appears in the dashboard |
+| 0.7 | Freeze the analytics event taxonomy (§4.6) — **document only, no code** | reviewed and agreed |
+
+**On 0.2:** 720 original questions under MIT means a competitor may legally ship our bank as their
+paid app. This is the cheapest, highest-value hour in the roadmap, and every week of delay locks more
+forks into those rights permanently.
+
+---
+
+## M1 — Frontend foundation · 3 weeks · 28% → 33%
+
+Nothing user-visible. Everything after this depends on it.
+
+| # | Task | Detail |
+|---|---|---|
+| 1.1 | Split `app.js` into ES modules | `<script type="module">`, no bundler, ~15 files per §4.2 |
+| 1.2 | **Escaping render layer** | one `html` tagged template escaping every interpolation; explicit `raw()` opt-out |
+| 1.3 | **Event delegation** | delete all 49 inline `onclick=`; one document listener on `data-action` |
+| 1.4 | Router with real URLs | `/#/path`, `/#/lesson/:key`, `/#/mock`; back button and deep links work |
+| 1.5 | IndexedDB store behind a repository interface | one-time non-destructive migration from `localStorage` |
+| 1.6 | Per-unit lazy content loading + manifest | first paint no longer waits on the bank |
+| 1.7 | PWA: `manifest.webmanifest`, service worker, icon set | installable; a full lesson works offline |
+| 1.8 | Screenshot regression harness | the existing CDP scripts promoted to `tools/`, 18 screens, run in CI |
+
+**Done when:** FCP **< 1.5 s** throttled, zero inline handlers remain, a lesson completes with the
+network off, and CI fails on a visual regression.
+
+**Why 1.2 and 1.3 are not optional and not later:** `esc()` escapes `&` and `<` only, and every
+handler is `onclick="A.x('${...}')"`. Safe *today* because every string is ours. M4 introduces other
+people's names into those templates. Fixing it now is two days; fixing it after a breach is a
+different kind of week.
+
+---
+
+## M2 — The exam-lifecycle product · 3 weeks · 33% → 41%
+
+The first milestone a student *feels*, and the one nothing else in the market has.
+Part 0 turned into screens.
+
+| # | Feature | Detail |
+|---|---|---|
+| 2.1 | **Onboarding v2** | track → exam date → **target university & major** → 6-question placement → your plan. Every step an event |
+| 2.2 | **The plan** | day-by-day to the exam: تأسيس / تدريب مكثف / محاكاة / مراجعة. Recomputes when they fall behind — never shows a red overdue list |
+| 2.3 | **النسبة الموزونة calculator** | `(ثانوي × 0.3) + (قدرات × 0.3) + (تحصيلي × 0.4)` with real cut-offs for the top universities. Show the gap to their target |
+| 2.4 | **Predicted score + band** | §4.5; honest confidence interval that narrows with data |
+| 2.5 | **Pace trainer** | per-question pace vs. the pace needed to finish. Most lost marks are the clock |
+| 2.6 | **Mistake analysis by cause** | tag every error: مفهوم / حساب / تسرّع / وقت / قراءة السؤال. Group by cause, not topic. This is what tutors charge for |
+| 2.7 | **Streak, reframed** | headline is **الأيام المتبقية للاختبار**; the streak becomes أيام الالتزام beneath it. Freezes cost gems |
+| 2.8 | **Exam-week mode** | auto-activates 7 days out: review only, no new material, pace drills, sleep reminders, a what-to-bring checklist |
+
+**Done when:** a new student reaches a personalised plan in under 90 seconds, and the home screen
+answers *"am I going to get the score I need?"* above the fold.
+
+---
+
+## M3 — Content engine + verbal I · 6 weeks · 41% → 59%
+
+Runs **in parallel with M4** — different files, different skills.
+
+| # | Task | Output |
+|---|---|---|
+| 3.1 | Template runtime + `tools/generate.js` | seeded, reproducible expansion |
+| 3.2 | `validate.js` v2 | unique stems, distractor sanity, single correct answer, bidi and Arabic-digit checks, difficulty calibration |
+| 3.3 | `tools/compile.js` + versioned manifest | per-unit bundles, checksums, immutable URLs |
+| 3.4 | **120 quantitative templates** | → **6,000+ items**, distractors from named misconceptions |
+| 3.5 | Verbal schema + UI for the four short types | reuses `questionBody()` |
+| 3.6 | **المفردة الشاذة — 250 items** | cheapest type; ships first and proves the pipeline |
+| 3.7 | **التناظر اللفظي — 400 items** | curated relation taxonomy + vetted word bank |
+| 3.8 | **إكمال الجمل — 400 items** | one and two blanks |
+| 3.9 | Human review pass | 100% of hand-written, ≥10% sample of generated |
+
+**Done when:** the bank exceeds **7,000 items**, three verbal types are live on the path, and one
+person can add a template and publish 200 verified questions in an afternoon.
+
+---
+
+## M4 — Backend, accounts & PDPL · 5 weeks · runs parallel to M3 · → 71%
+
+Ships as one unit. Accounts without compliance is a liability; compliance without accounts is
+paperwork for nothing.
+
+| # | Task | Detail |
+|---|---|---|
+| 4.1 | Supabase project in **AWS `me-central-2` (Riyadh)** | data residency; three AZs |
+| 4.2 | Schema + **RLS on every table from the first migration** | §4.3 |
+| 4.3 | Auth: phone OTP, Apple, Google | **guest play must survive** — "بدون تسجيل" is our best conversion asset |
+| 4.4 | **Minors flow** | birth year at signup; under-18 → guardian consent, private by default, minimal collection, geolocation off, short retention |
+| 4.5 | Sync: outbox → idempotent replay → authoritative snapshot | §4.3 |
+| 4.6 | Server-authoritative XP, gems, streak | league integrity depends on it |
+| 4.7 | Arabic privacy policy + ToS; consent record; DSR path; 72-hour breach procedure; DPO; SDAIA registration | reviewed by Saudi counsel |
+| 4.8 | Account deletion that actually deletes | verified against the database |
+
+**Done when:** progress survives a factory reset, a deletion request removes every row inside the
+stated window, an under-18 signup cannot proceed without guardian consent, and counsel has signed off.
+
+**This ends "zero server, zero cost."** Budget ~$250/month and an on-call surface. Unavoidable — there
+is no retention, no social and no revenue without identity.
+
+---
+
+## M5 — Verbal II + the full-length mock · 4 weeks · 71% → 76%
+
+The two expensive verbal types, and the first time a student can sit a true full simulation.
+
+| # | Task | Detail |
+|---|---|---|
+| 5.1 | **الخطأ السياقي — 300 items** | needs word-level markup in the schema: four underlined words, one wrong in context |
+| 5.2 | **استيعاب المقروء — ~35 passages, 150 questions** | hand-written. The slow, unavoidable part |
+| 5.3 | Reading-comprehension screen | split pane, passage scroll memory, "back to the passage", RTL, works at 280 px |
+| 5.4 | **Full-length mock: 120 questions, 5 sections, mixed** | replaces today's 2 × 24 quantitative-only mock. Matches the real computerised format |
+| 5.5 | Per-section score breakdown + predicted scaled score | feeds M6's predictor |
+| 5.6 | Track weighting | أدبي gets the heavier verbal load, matching the real exam |
+
+**Done when:** all five verbal types render correctly in RTL on a 280 px screen, and a student can
+complete a 120-question mock end to end and see a per-section breakdown.
+
+---
+
+## M6 — Adaptive engine & analytics · 3 weeks · 76% → 86%
+
+| # | Task |
+|---|---|
+| 6.1 | Attempt event pipeline → `attempts` table (the asset every later feature reads) |
+| 6.2 | Ability/difficulty model (§4.5 layer 1); nightly recalibration of `item_params` |
+| 6.3 | Review scheduling (layer 2) |
+| 6.4 | Session assembly: 60% edge-of-ability / 25% review / 15% mistakes |
+| 6.5 | Score predictor calibrated to the ~65 mean; back-tested against our own mock results |
+| 6.6 | Dashboards: D1/D7/D30, funnel, per-lesson drop-off, mock completion |
+| 6.7 | **Content-quality feed** — any item outside its predicted accuracy band is auto-flagged |
+| 6.8 | Experiment plumbing: assignment, exposure logging, metric readout — **build it, run few** |
+
+**Done when:** lesson selection demonstrably favours weak skills on a seeded account, the predicted
+score back-tests within ±5 of actual mock results, and the drop-off curve is on a screen someone looks
+at weekly.
+
+---
+
+## M7 — Retention: mascot, social, notifications · 5 weeks · 86% → 94%
+
+| # | Feature | Detail |
+|---|---|---|
+| 7.1 | **Lead mascot + 4 unit companions** | Rive is already in the repo driving the streak flame — the runtime is paid for. ≤120 KB each, lazy, static SVG fallback for `prefers-reduced-motion` |
+| 7.2 | Character beats across the loop | correct, wrong, heart lost, lesson complete, out of hearts, streak, path idle, chest, rank-up, mock intro |
+| 7.3 | **Brand divergence** | off Duolingo's exact hex values; own wordmark, app icon and motion language. See R1 |
+| 7.4 | **Leagues, real** | 10 tiers, 30-person cohorts, weekly promote/demote. **Cohort by exam window**, seeded by first-XP-of-week — Duolingo's cold-start trick, free |
+| 7.5 | Friends + friend quests | Saudi students study in groups; the strongest social mechanic for this audience |
+| 7.6 | Push notifications | rules first: streak rescue, plan-behind, exam countdown, weak-topic nudge |
+| 7.7 | Anti-cheat | server-authoritative XP, rate limits, irregular-gain detection, quiet leaderboard removal |
+| 7.8 | Referral | invite a friend, both get gems. How this category actually grows |
+
+**Done when:** the mascot appears at ≥8 loop points, leagues run a full weekly cycle with real users
+and correct promotions, and a lapsed student receives a notification that gets opened.
+
+---
+
+## M8 — Monetization · 3 weeks · 94% → 99%
+
+| # | Task | Detail |
+|---|---|---|
+| 8.1 | **قدراتي بلس** | unlimited hearts, unlimited mocks, full explanations, personalised weak-area plan, offline pack, no ads |
+| 8.2 | **Exam-dated pass as the default SKU** | "حتى يوم اختبارك" — we already ask for the date. Monthly exists but is not the hero |
+| 8.3 | Payments | **Mada is mandatory**; Apple Pay (~36% adoption), STC Pay (~12%); Tabby/Tamara for the longer pass |
+| 8.4 | Apple/Google in-app billing for store builds | budget the 15–30% and price around it |
+| 8.5 | Entitlement sync + restore | cross-device, verified |
+| 8.6 | **Pro-first trial, A/B tested** | Duolingo gives 14 days of Super *up front* rather than upselling later — a strong fit for a panic-driven audience. Test it, do not assume it |
+| 8.7 | Free tier stays genuinely useful | word of mouth is the growth engine; a wall at lesson 3 kills it |
+
+**Done when:** a real Mada card completes a purchase, entitlements survive a reinstall, and
+cancellation and refund paths are tested end to end.
+
+---
+
+## M9 — Distribution & scale · 4 weeks · 99% → 100%
+
+| # | Task |
+|---|---|
+| 9.1 | **Google Play** listing (Capacitor already wraps the build) — Android is ~75% of the market |
+| 9.2 | **App Store** listing — the premium end, and disproportionately the paying end |
+| 9.3 | Arabic ASO: قدرات · قياس · كمي · لفظي · تحصيلي · تجميعات; screenshots featuring the mascot |
+| 9.4 | Self-host the font; drop the Google Fonts round-trip |
+| 9.5 | Accessibility: fix sub-44px tap targets, Arabic screen-reader pass, contrast audit in both themes |
+| 9.6 | Load test at 5× peak; verify autoscale-to-zero in the trough |
+| 9.7 | Status page, on-call runbook, backup/restore drill |
+| 9.8 | Post-exam retention: **التحصيلي (SAAT)** teaser — the other exam, 40% of the weighted percentage, a pure content project on an engine that already exists |
+
+**Done when:** both stores are live, a 5× load test passes, and a restore drill completes from cold
+backup.
+
+---
+
+## Timeline
 
 ```
-                  ┌─ P2  mascots ────────────────────────┐
-                  │                                      │
-P0 ──── P1 ───────┼─ P3  verbal ─────────────────────────┼──► P7
-                  │                                      │
-                  └─ P4  accounts+PDPL ─► P5 ─► P6 ──────┘
+week   1    4    7   10   13   16   19   22   25   28
+       |    |    |    |    |    |    |    |    |    |
+M0  ██                                                        clear the decks
+M1   ██████                                                   frontend foundation
+M2        ██████                                              exam-lifecycle product
+M3              ████████████                                  content engine + verbal I
+M4              ██████████                                    backend + PDPL      ∥ M3
+M5                          ████████                          verbal II + full mock
+M6                          ██████                            adaptive + analytics  ∥ M5
+M7                                  ██████████                retention + mascot
+M8                                            ██████          monetization
+M9                                                  ████████  distribution & scale
 ```
 
-- **P2 and P3 are independent** — mascot design and verbal authoring do not touch the same files. Run them in parallel if there are two workstreams.
-- **P4 gates P5 and P6.** No accounts → no cross-device analytics identity, no entitlements.
-- **P5 should gate P6.** Pricing without retention data is a guess.
-- **P7 is last** because store screenshots need the mascot, and the listing needs the price.
+**Critical path ≈ 29 weeks** (about seven months) with M3 ∥ M4 and M5 ∥ M6. Single developer, AI-assisted.
 
-**Critical path:** P0 → P1 → P3 → P4 → P5 → P6 → P7 ≈ **26 weeks**, with P2 running alongside P3.
+**Where a second person doubles output:** M3 is content, M4 is backend — different skills entirely.
+If there is ever budget for one hire, it is a **content author for verbal**, not an engineer. The
+engine work is what AI assistance accelerates most; Arabic verbal item-writing is what it accelerates
+least.
 
----
-
-## 7. Metrics that decide whether this worked
-
-| Metric | Today | Target |
-|---|---|---|
-| D1 retention | unknown | 40% |
-| D7 retention | unknown | 20% |
-| D30 retention | unknown | 10% |
-| Median session length | unknown | 8 min |
-| Lesson completion rate | unknown | 75% |
-| Mock exam completion rate | unknown | 50% |
-| Free → paid conversion | n/a | 3–5% |
-| FCP (throttled mobile) | 2.6 s | < 1.8 s |
-| Exam-section coverage | 43% | 100% |
-
-Seven of nine are "unknown" — which is the entire argument for Phase 5.
+**Time the launch to the exam calendar.** Shipping M8 two weeks after a registration window closes
+wastes the year's best conversion moment. Work backwards from the next window.
 
 ---
 
-## 8. Risk register
+# Part 6 — Metrics
 
-| Risk | Severity | Mitigation |
-|---|---|---|
-| **Trade-dress exposure** — the design system is an acknowledged Duolingo copy | **High** | Phase 2 divergence. Do this before any paid marketing or press, not after. |
-| **The question bank is MIT-licensed** — 720 original items, our single most valuable asset, are currently free for anyone to take, rebrand and sell | **High** | Decide before Phase 6. Split the licence: keep the engine MIT, move `js/data/**` to a proprietary or CC BY-NC-ND licence. Retroactive relicensing does not claw back existing copies — the longer this waits, the less it is worth doing. |
-| **Verbal authoring stalls** — 1,500 judgement-heavy Arabic items is the largest task here | **High** | Ship type by type; each type is independently releasable. Do not wait for all five. |
-| ETEC objection to a third-party trainer | Medium | Disclaimer already prominent. Never reproduce real items. Keep every question original and provable. |
-| PDPL non-compliance once accounts exist | Medium | Phase 4 ships them together. Legal review before launch, not after. |
-| Store rejection (education/exam category scrutiny) | Medium | Disclaimer in the listing; original content; no claim of ETEC affiliation. |
-| Single-developer bus factor | Medium | Docs stay current (Phase 0); no build step keeps onboarding near-zero. |
-| Rive assets bloat the critical path | Low | Hard per-character budget, lazy load, SVG fallback. |
-| Question bank exhaustion for heavy users | Low | Adaptive re-surfacing (P5) + steady content ops. |
+**North star: predicted-score improvement per student per week.** Not DAU. If we are not moving the
+number that decides their university, the streak is decoration.
 
----
+| Metric | Today | M6 target | M9 target | Duolingo, for scale |
+|---|---|---|---|---|
+| D1 retention | unknown | 35% | 45% | — |
+| D7 retention | unknown | 18% | 28% | — |
+| D30 retention | unknown | 8% | 15% | — |
+| DAU/MAU | unknown | 20% | 30% | **37%** |
+| Median session | unknown | 6 min | 9 min | — |
+| Lesson completion | unknown | 70% | 80% | — |
+| Mock completion | unknown | 45% | 60% | — |
+| Free → paid | n/a | — | **4–6%** | 8.9% (2% avg, 4% elite) |
+| Predicted-score gain, 4 weeks | unknown | +5 | +8 | — |
+| Exam coverage | **43%** | 100% | 100% | — |
+| Bank size | **720** | 7,000 | **10,000+** | competitor claims 100,000 |
+| FCP, throttled | 2.6 s | 1.5 s | **< 1.2 s** | — |
 
-## 9. Open decisions
-
-These need an answer from you, not from the code. None of them block Phase 0 or Phase 1.
-
-1. **Mascot species and name.** Falcon/شاهين is the recommendation. Locking this early unblocks all of Phase 2.
-2. **Does the free tier stay this generous?** Current pitch is "مجاني بالكامل · بدون تسجيل". Phase 6 changes that promise. Decide before we advertise it further.
-3. **Verbal in this app, or a second app?** One app covering the whole exam is the stronger product. A separate قدراتي لفظي is a faster launch. Recommendation: one app.
-4. **Backend host.** Data residency (Phase 4) constrains this. KSA-region hosting is the safe default.
-5. **`feat/complete-app`** — merge or delete. Phase 0 forces the choice.
-6. **The licence.** The whole repo is MIT, including all 720 questions. If قدراتي is ever going to charge money, the bank is the moat and MIT gives it away — a competitor can legally ship our content as their paid app tomorrow. The usual split is engine MIT / content proprietary. This decision gets more expensive every week it waits, because every fork made under MIT keeps those rights permanently. **This is the one open decision worth making this week.**
+Ten of twelve are "unknown" today. That is the argument for M6, and why the event taxonomy is frozen
+in M0 before any code emits an event.
 
 ---
 
-## Appendix A — How to recompute every number here
+# Part 7 — Risks
+
+| # | Risk | Severity | Mitigation |
+|---|---|---|---|
+| R1 | **Trade dress.** `CLAUDE.md` documents the design system as a *"pixel-perfect implementation of the Duolingo design system (colors/radii extracted from Figma)"*. Duolingo is a $15B public company and protects its brand | **Critical** | M7.3 divergence, before any paid marketing, press or store feature. The mascot is the vehicle — do not ship a green owl |
+| R2 | **MIT-licensed question bank.** Our most valuable asset is currently free for anyone to sell | **Critical** | M0.2, this week. Relicensing never claws back existing copies |
+| R3 | **Volume gap.** 720 vs a competitor's advertised 100,000 | **High** | M3 content engine — the entire reason it exists |
+| R4 | **Verbal authoring stalls.** ~1,050 judgement-heavy Arabic items plus 35 passages | **High** | Ship type by type; each is independently releasable. Do not wait for all five |
+| R5 | **PDPL, and our users are minors.** 48 SDAIA enforcement decisions in 2025–26 | **High** | M4 ships compliance with accounts. Riyadh region. Counsel review before launch |
+| R6 | **تجميعات expectation.** Students may read "no تجميعات" as "not serious" | **Medium** | Position the generated pattern bank as the honest, unlimited version — and say so in the marketing copy |
+| R7 | **ETEC objection** to a third-party trainer | **Medium** | Disclaimer stays prominent; every item provably original; never claim affiliation |
+| R8 | **Seasonality** — 3–5× swings, revenue concentrated in weeks | **Medium** | Autoscale to near-zero; exam-dated pricing; التحصيلي as the counter-cyclical product |
+| R9 | **Single-developer bus factor** | **Medium** | Docs current from M0; no build step keeps onboarding near-zero; CI from M0 |
+| R10 | **XSS once server data lands** | **Medium** | M1.2 / M1.3, *before* M4. Non-negotiable ordering |
+| R11 | **Store rejection** in the education/exam category | Low | Disclaimer in the listing, original content, no ETEC claim |
+| R12 | **Generated items feel mechanical** | Low | Vary surface forms per template; keep the 720 hand-written items as the calibration benchmark; human-review a sample |
+
+---
+
+# Part 8 — Decisions needed from you
+
+None of these block M0 or M1. All of them block something later.
+
+1. **The licence.** Engine MIT + content proprietary is the standard split. **Decide this week** (R2).
+2. **Mascot: species, name, personality.** Locking it early unblocks all of M7. My recommendation is a falcon — Saudi, a bird like Duo without *being* Duo, and built for expression.
+3. **Pricing.** What does the exam-dated pass cost? منصة اختبارات anchors from 199 SAR. I would test **99 SAR "حتى يوم اختبارك"** against **19 SAR/month**.
+4. **Free tier boundary.** Today's pitch is "مجاني بالكامل · بدون تسجيل". M8 changes that promise — decide before we advertise it harder.
+5. **التحصيلي: same app or a second app?** One app covering both is the stronger product and doubles LTV per student. Recommendation: same app, second track.
+6. **Does the APK stay in the repo** after Play Store launch? Recommendation: no — sideloading is a trust and security problem.
+7. **Budget for one content author.** M3 is the critical path and the least AI-accelerable work in the plan.
+
+---
+
+## Appendix A — Reproducing every number here
 
 ```bash
-# content inventory (lessons, questions, method coverage, figures, comparison)
-node tools/validate.js
+node tools/validate.js                             # content inventory
+node tools/audit.js                                # live perf + a11y, throttled mobile
+node tools/audit.js https://qudrati.xyz/ --fast    # same, unthrottled
 
-# production audit: transfer, FCP, a11y, tap targets — throttled mobile profile
-node tools/audit.js                              # live site
-node tools/audit.js https://qudrati.xyz/ --fast  # same, unthrottled
-node tools/serve.js                              # then, in a second shell:
-node tools/audit.js http://localhost:8080/index.html
-
-# what production is actually missing
 curl -so /dev/null -w "robots %{http_code}\n"   https://qudrati.xyz/robots.txt
 curl -so /dev/null -w "sitemap %{http_code}\n"  https://qudrati.xyz/sitemap.xml
 curl -so /dev/null -w "manifest %{http_code}\n" https://qudrati.xyz/manifest.webmanifest
-curl -so /dev/null -w "sw %{http_code}\n"       https://qudrati.xyz/sw.js
-
-# real compressed transfer size per file
-curl -s -H "Accept-Encoding: br" -o /dev/null -w "%{size_download}\n" \
-  https://qudrati.xyz/js/data/geometry.js
-
-# the unmerged branch
-git diff --stat main...feat/complete-app
 ```
 
----
+## Appendix B — Milestone summary
 
-## Appendix B — Sources
+| M | Name | Weeks | Δ | → | Blocks |
+|---|---|---:|---:|---:|---|
+| 0 | Clear the decks | 1 | +3 | 28% | measurement, licence exposure |
+| 1 | Frontend foundation | 3 | +5 | 33% | everything; XSS before accounts |
+| 2 | Exam-lifecycle product | 3 | +8 | 41% | the differentiator |
+| 3 | Content engine + verbal I | 6 | +18 | 59% | credibility, exam coverage |
+| 4 | Backend, accounts, PDPL | 5 ∥ | +12 | 71% | social, analytics, payments |
+| 5 | Verbal II + full mock | 4 | +5 | 76% | 100% exam coverage |
+| 6 | Adaptive + analytics | 3 ∥ | +10 | 86% | every product decision after it |
+| 7 | Retention, mascot, social | 5 | +8 | 94% | DAU/MAU, brand safety |
+| 8 | Monetization | 3 | +5 | 99% | revenue |
+| 9 | Distribution & scale | 4 | +1 | 100% | reach |
 
-- [ETEC — GAT General Aptitude Test (official PDF)](https://beta.etec.gov.sa:2443/ar/MediaAssets/GAT%20General%20Aptitude%20Test.pdf?csf=1&e=am0axw)
+`∥` = runs parallel to the milestone above it. **M9 moves the percentage least and matters most for
+reach** — the score measures product completeness, not distribution.
+
+## Appendix C — Sources
+
+**Duolingo — product & business**
+- [Deconstructor of Fun — how the $15B app uses gaming principles to supercharge DAU growth](https://www.deconstructoroffun.com/blog/2025/4/14/duolingo-how-the-15b-app-uses-gaming-principles-to-supercharge-dau-growth)
+- [Trophy — Duolingo gamification strategy: a full case study](https://trophy.so/blog/duolingo-gamification-case-study)
+- [Deconstructor of Fun — Leagues: how weekly leaderboards drive +25% lesson completion](https://duolingo.deconstructoroffun.com/mechanics/leagues)
+- [duoplanet — Duolingo leagues & leaderboards, everything you need to know](https://duoplanet.com/duolingo-leagues-the-essential-guide-everything-you-need-to-know/)
+- [Relaunch — Duolingo onboarding teardown: the A/B tests behind a 9% conversion rate](https://relaunch.ai/blog/duolingo-onboarding-teardown-7-b-tests-behind-their-9-conver.html)
+- [First Round Review — the tenets of A/B testing from Duolingo's growth lead](https://review.firstround.com/the-tenets-of-a-b-testing-from-duolingos-master-growth-hacker/)
+- [Quartr — keeping the streak alive: the story of Duolingo](https://quartr.com/insights/edge/keeping-the-streak-alive-the-story-of-duolingo)
+- [Duolingo blog — the new home screen design (the 2022 path)](https://blog.duolingo.com/new-duolingo-home-screen-design)
+
+**Duolingo — engineering**
+- [Duolingo blog — rewriting Duolingo's engine in Scala (750 ms → 14 ms)](https://blog.duolingo.com/rewriting-duolingos-engine-in-scala/)
+- [Settles & Meeder, ACL 2016 — a trainable spaced repetition model for language learning (HLR)](https://research.duolingo.com/papers/settles.acl16.pdf)
+- [duolingo/halflife-regression on GitHub](https://github.com/duolingo/halflife-regression)
+- [TechAhead — how Duolingo uses ML pipelines to personalise for 50M+ DAU](https://www.techaheadcorp.com/blog/how-duolingo-personalizes-learning/)
+- [InfoQ — how we created a high-scale notification system at Duolingo](https://www.infoq.com/presentations/duolingo-high-scale-notification/)
+- [InfoQ — QCon London: 4 million push notifications in 6 seconds](https://www.infoq.com/news/2024/04/qcon-london-duolingo-super-bowl/)
+- [LikeMinds — the bandit algorithm behind Duolingo's notifications](https://www.likeminds.community/blog/bandit-algorithm-of-duolingos-notifications)
+- [AWS — Duolingo reduces compute costs by over 60% in one quarter](https://d1.awsstatic.com/case-studies/partner-case-studies/Duolingo%20PDF.pdf)
+- [Duolingo blog — improving the experience with request tracing](https://blog.duolingo.com/improving-the-duolingo-experience-with-request-tracing/)
+- [Rive — Duolingo's AI video call brings Lily to life](https://rive.app/blog/duolingo-s-ai-powered-video-call-brings-lily-to-life)
+
+**The exam and the student**
+- [ETEC — GAT General Aptitude Test (official)](https://beta.etec.gov.sa:2443/ar/MediaAssets/GAT%20General%20Aptitude%20Test.pdf?csf=1&e=am0axw)
 - [Leverage Edu — GAT structure: 120 questions, 68 verbal / 52 quantitative](https://leverageedu.com/learn/what-is-gat/)
 - [Keystone Tutors — General Aptitude Test guide (2 hours, 25-minute sections)](https://www.keystonetutors.com/news/general-aptitude-test-guide)
 - [Qiyas (@EtecQiyas) — verbal question types](https://x.com/EtecQiyas/status/268664595030355968)
 - [مبهر — القسم اللفظي: خمسة أنواع من الأسئلة](https://blog.mubhir.sa/%D8%A7%D8%AE%D8%AA%D8%A8%D8%A7%D8%B1-%D9%82%D9%8A%D8%A7%D8%B3-%D9%84%D9%81%D8%B8%D9%8A/)
+- [تفوق — درجات القدرات: كيف يتم حسابها؟](https://tafawaq.sa/blog/%D8%AF%D8%B1%D8%AC%D8%A7%D8%AA-%D8%A7%D9%84%D9%82%D8%AF%D8%B1%D8%A7%D8%AA-%D9%83%D9%8A%D9%81-%D9%8A%D8%AA%D9%85-%D8%AD%D8%B3%D8%A7%D8%A8%D9%87%D8%A7%D8%9F/)
+- [روت — حساب النسبة الموزونة والمركبة](https://routesa.app/%D8%AD%D8%B3%D8%A7%D8%A8-%D9%86%D8%B3%D8%A8%D8%A9-%D8%A7%D9%84%D9%82%D8%AF%D8%B1%D8%A7%D8%AA/)
+- [مجرة أبدع — ما هي تجميعات القدرات؟ ولماذا يعتبرها الطلاب كنزاً](https://abdihqt.com/blog/what-are-tajmeeat)
+- [مجرة أبدع — تجميعات القدرات المحوسب 2026](https://abdihqt.com/blog/tajmeeat-qudrat-mohawsab-2026)
+- [مرتبة الشرف — أخطاء شائعة في اختبار القدرات](https://honorrank.sa/blogs/common-mistakes-in-qudrat-exam)
+- [العراب — خطة مذاكرة القدرات في 30 يوم](https://el3rab.com/%D8%AE%D8%B7%D8%A9-%D9%85%D8%B0%D8%A7%D9%83%D8%B1%D8%A9-%D8%A7%D9%84%D9%82%D8%AF%D8%B1%D8%A7%D8%AA-%D9%81%D9%8A-30-%D9%8A%D9%88%D9%85-%D9%84%D8%AA%D8%AD%D9%82%D9%8A%D9%82-%D8%A3%D8%B9%D9%84%D9%89/)
+
+**The market**
+- [منصة اختبارات — 100,000+ questions, from 199 SAR](https://ekhtibarat.com/)
+- [دال — 10,000+ قدرات questions](https://dalqdrat.com/)
+- [نون أكاديمي](https://www.noonacademy.com/ar-sa)
+- [منصة قدرات (qdrat.sa)](https://qdrat.sa/ar)
+- [بازيد — أفضل 8 منصات دورات قدرات سعودية](https://bazaidacademy.net/en/8-%D9%85%D9%86%D8%B5%D8%A7%D8%AA-%D9%82%D8%AF%D8%B1%D8%A7%D8%AA/)
+
+**Platform, payments, compliance**
+- [AWS — infrastructure region in the Kingdom of Saudi Arabia](https://press.aboutamazon.com/2024/3/aws-to-launch-an-infrastructure-region-in-the-kingdom-of-saudi-arabia)
+- [Vision2030.ai — Saudi cloud regions: AWS, Azure, Google, Oracle](https://vision2030.ai/sectors/technology/saudi-arabia-cloud-regions/)
 - [PwC Middle East — KSA Personal Data Protection Law](https://www.pwc.com/m1/en/services/consulting/technology/cyber-security/navigating-data-privacy-regulations/ksa-data-protection-law.html)
-- [Clyde & Co — countdown to PDPL compliance](https://www.clydeco.com/en/insights/2024/01/countdown-to-compliance-with-saudi-arabia-pdpl)
-- [Rive — how Duolingo animates its characters with state machines](https://rive.app/blog/duolingo-s-ai-powered-video-call-brings-lily-to-life)
-- [Elisa Wicki — how exactly Duolingo uses Rive for character animation](https://elisawicki.blog/p/how-exactly-is-duolingo-using-rive)
+- [Lexis Middle East — personal data processing rules for children and incapacitated individuals](https://www.lexismiddleeast.com/pn/SaudiArabia/Personal_Data_Processing_Rules_for_Children_and_Incapacitated_Individuals/en)
+- [SGC — SDAIA and the Saudi PDPL: what organisations must know in 2026](https://www.sgc.consulting/sdaia-saudi-personal-data-protection-law-pdpl-compliance-guide/)
+- [Giraffy — STC Pay vs Apple Pay vs Mada Pay in Saudi Arabia](https://giraffy.com/ksa/en/learn/banking-money/digital-wallets/stc-pay-vs-apple-pay-vs-mada-pay)
+- [Statcounter — mobile OS market share, Saudi Arabia](https://gs.statcounter.com/os-market-share/mobile/saudi-arabia)
+- [Tech Insider — Supabase vs Firebase 2026: the 3× cost gap, tested](https://tech-insider.org/supabase-vs-firebase-2026-2/)
+- [UpCloud — Supabase vs Firebase: which backend makes the most sense in 2026](https://upcloud.com/global/blog/supabase-vs-firebase-which-backend-makes-the-most-sense-in-2026/)
