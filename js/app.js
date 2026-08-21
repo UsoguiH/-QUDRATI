@@ -73,6 +73,10 @@ function gainXP(n) {
 function gainGems(n) { if (n) S.xp += n; }
 /* show the celebration if one is queued (and we're not mid-session) */
 function flushRankUp() {
+  /* derive from durable state: pendingRankUp dies with the page, and the
+     celebration is one of only five an account ever gets */
+  const cur = tierIndex();
+  if (cur > (S.tierSeen || 0) && !document.querySelector(".rankup-veil")) pendingRankUp = { from: S.tierSeen || 0, to: cur };
   if (!pendingRankUp || document.querySelector(".rankup-veil")) return;
   const ru = pendingRankUp; pendingRankUp = null;
   S.tierSeen = ru.to; save();
@@ -86,7 +90,34 @@ catch (e) { S = Object.assign({}, DEFAULT_STATE); }
    the current tier as already-seen so we don't fire a celebration on load */
 if (S.totalXp == null) S.totalXp = Math.max(0, S.xp || 0);
 if (S.tierSeen == null) S.tierSeen = tierIndex();
-const save = () => localStorage.setItem("qudratState", JSON.stringify(S));
+
+/* A shallow Object.assign leaves a nested null as null, and one null here
+   used to blank the whole app with no way back to Settings. Coerce the
+   containers before anything reads them. */
+(function repair() {
+  const shape = { streak: { count: 0, last: null }, lessons: {}, qstats: {}, mistakes: {}, mocks: [] };
+  for (const k in shape) {
+    const want = shape[k], got = S[k];
+    const ok = Array.isArray(want) ? Array.isArray(got) : (got && typeof got === "object");
+    if (!ok) S[k] = Array.isArray(want) ? [] : Object.assign({}, want);
+  }
+  /* a streak whose last day is neither today nor yesterday is already broken;
+     show 0 rather than a number that can never be extended */
+  const t = todayKey(), d = new Date(Date.now() - 864e5);
+  const y = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  if (S.streak.last !== t && S.streak.last !== y) S.streak.count = 0;
+})();
+
+let storageWarned = false;
+const save = () => {
+  try { localStorage.setItem("qudratState", JSON.stringify(S)); }
+  catch (e) {
+    /* quota, private browsing, or blocked site data. Losing the write is
+       survivable; throwing out of the caller is not - it used to strand the
+       player mid-lesson with a dead متابعة button. */
+    if (!storageWarned) { storageWarned = true; try { toast("تعذّر حفظ تقدمك على هذا المتصفح"); } catch (e2) {} }
+  }
+};
 
 function bumpStreak() {
   const t = todayKey();
@@ -283,7 +314,9 @@ A.openDailyQ = function () {
   veil.className = "dq-veil";
   veil.innerHTML = `<div class="dq-sheet">
     <div class="ms-grip"></div>
+    <button class="dq-x" onclick="A.closeDailyQ()" aria-label="إغلاق">${X_SVG}</button>
     <div class="dq-head"><span class="dq-hstar">${ico("star-gold", 26)}</span><h3>سؤال اليوم</h3></div>
+    <div class="dq-note">يبقى متاحاً حتى منتصف الليل</div>
     <div class="dq-stem">${q.stem}</div>
     ${q.figure ? `<div class="q-figure">${q.figure}</div>` : ""}
     <div class="dq-choices">${q.choices.map((c, i) =>
@@ -291,6 +324,7 @@ A.openDailyQ = function () {
     <button class="btn dq-check" id="dqCheck" disabled onclick="A.checkDailyQ()">تحقق</button>
     <div class="dq-fb" id="dqFb"></div>
   </div>`;
+  veil.onclick = e => { if (e.target === veil) A.closeDailyQ(); };
   document.body.appendChild(veil);
   requestAnimationFrame(() => veil.classList.add("show"));
 };
@@ -816,24 +850,34 @@ function renderSession() {
 }
 
 /* 90-second countdown — horizontal capsule whose colored fill drains away */
-function startQTimer() {
+/* The clock is a deadline, not a tick count. An interval stops firing when
+   the tab is backgrounded or a modal blocks the loop, so counting ticks let
+   a student pause the exam by locking their phone. */
+function startQTimer(resume) {
   clearInterval(SES.timer);
-  SES.left = Q_SECS;
-  // kick the fill so it starts gliding down over the first second
+  if (!resume) SES.left = Q_SECS;
+  SES.endsAt = Date.now() + SES.left * 1000;
   const w0 = document.getElementById("qtWrap");
-  if (w0) { w0.style.setProperty("--p", 100); w0.classList.remove("low", "crit", "paused"); }
-  SES.timer = setInterval(() => {
-    SES.left--;
-    const n = document.getElementById("qtNum"), w = document.getElementById("qtWrap");
-    if (n) n.textContent = toAr(Math.max(0, SES.left));
-    if (w) w.style.setProperty("--p", Math.max(0, SES.left) / Q_SECS * 100);
-    if (w) { w.classList.toggle("low", SES.left <= 15 && SES.left > 5); w.classList.toggle("crit", SES.left <= 5); }
-    if (SES.left <= 5 && SES.left > 0) sndTick();
-    if (SES.left <= 0) { clearInterval(SES.timer); timeUp(); }
-  }, 1000);
+  if (w0) { w0.style.setProperty("--p", SES.left / Q_SECS * 100); w0.classList.remove("low", "crit", "paused"); }
+  SES.timer = setInterval(qTick, 250);
+}
+function qTick() {
+  if (!SES || !SES.timer) return;
+  const left = Math.round((SES.endsAt - Date.now()) / 1000);
+  if (left === SES.left) return;                       // nothing to repaint
+  if (left < SES.left && left <= 5 && left > 0) sndTick();
+  SES.left = left;
+  const n = document.getElementById("qtNum"), w = document.getElementById("qtWrap");
+  if (n) n.textContent = toAr(Math.max(0, left));
+  if (w) w.style.setProperty("--p", Math.max(0, left) / Q_SECS * 100);
+  if (w) { w.classList.toggle("low", left <= 15 && left > 5); w.classList.toggle("crit", left <= 5); }
+  if (left <= 0) { clearInterval(SES.timer); SES.timer = null; timeUp(); }
 }
 function stopQTimer() {
-  if (SES && SES.timer) { clearInterval(SES.timer); SES.timer = null; }
+  if (SES && SES.timer) {
+    SES.left = Math.max(0, Math.round((SES.endsAt - Date.now()) / 1000));
+    clearInterval(SES.timer); SES.timer = null;
+  }
   const w = document.getElementById("qtWrap");
   if (w) w.classList.add("paused");
 }
@@ -955,11 +999,21 @@ A.check = function () {
     SES.queue.push(q); // Duolingo behavior: wrong question comes back at the end
     loseHeart();
     fb.className = "feedback bad show";
+    /* the heart counter lives in the opposite corner from where the eye is, so
+       the cost has to be stated here, and the last heart has to be a warning */
+    const hLeft = SES.hearts;
+    const heartLine = hLeft === 0
+      ? `<div class="fb-hearts out">${ico("heart", 15)} لم يتبقَّ لك قلوب</div>`
+      : hLeft === 1
+        ? `<div class="fb-hearts warn">${ico("heart", 15)} باقٍ لك قلب واحد — ركّز</div>`
+        : `<div class="fb-hearts">${ico("heart", 15)} باقٍ لك ${toAr(hLeft)} من القلوب</div>`;
+    /* the solution used to be collapsed, under a full-width متابعة. The default
+       path through a wrong answer taught the letter, not the maths. */
     fb.innerHTML = `<div class="fb-head"><span class="fb-x">✕</span> إجابة غير صحيحة</div>
+      ${heartLine}
       <div class="fb-correct">الإجابة الصحيحة: ${correctTxt}</div>
-      <button class="fb-solution-toggle" onclick="A.toggleSol()">اعرض الحل</button>
-      <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
-      <button class="btn btn-red" onclick="A.next()">متابعة</button>`;
+      <div class="fb-solution" id="sol">${formatExplain(q.solution)}</div>
+      <button class="btn btn-red" onclick="A.next()">${hLeft === 0 ? "شوف النتيجة" : "متابعة"}</button>`;
     clearFeedbackOverlap();
   }
   save();
@@ -993,6 +1047,7 @@ function clearFeedbackOverlap() {
    method only if a question has no per-question hint. Slides up Duolingo-style. */
 A.showMethod = function () {
   if (!SES) return;
+  stopQTimer();          // the sheet covers the clock; do not charge for reading
   const cur = SES.queue && SES.queue[SES.idx];
   const method = (cur && cur.method) || SES.method;
   if (!method) return;
@@ -1002,7 +1057,7 @@ A.showMethod = function () {
   veil.innerHTML = `<div class="method-sheet">
     <div class="ms-grip"></div>
     <div class="ms-head"><span class="ms-bulb">${BULB_SVG}</span><h3>كيف أحلّها؟</h3></div>
-    <div class="ms-sub">خطوات حلّ هذا السؤال بالذات — طبّقها بنفسك ووصل للإجابة 👇</div>
+    <div class="ms-sub">⏸ الوقت متوقف — خذ راحتك. خطوات حلّ هذا السؤال بالذات 👇</div>
     <div class="ms-body">${formatExplain(method)}</div>
     <button class="btn ms-close" onclick="A.closeMethod()">فهمت، بحاول</button>
   </div>`;
@@ -1015,6 +1070,7 @@ A.closeMethod = function () {
   if (!v) return;
   v.classList.remove("show");
   setTimeout(() => v.remove(), 280);
+  if (SES && !SES.locked && SES.left > 0) startQTimer(true);   // resume, never reset
 };
 
 A.debugCurrent = function () { return SES && SES.queue[SES.idx]; }; // dev harness (preview.html) only
@@ -1043,7 +1099,7 @@ function countUpTime(el, to) {
   (function f(t) {
     const p = Math.min(1, Math.max(0, (t - t0) / dur)), eased = 1 - Math.pow(1 - p, 3);
     const v = Math.round(to * eased);
-    el.textContent = toAr(Math.floor(v / 60)) + ":" + toAr(String(v % 60).padStart(2, "0"));
+    el.textContent = fmtTime(v);   // mm:ss, so it always reads as a clock
     if (p < 1) requestAnimationFrame(f);
   })(t0);
 }
@@ -1066,11 +1122,12 @@ function sessionFailed() {
     <h1 class="fail-title">نفدت القلوب!</h1>
     <p class="fail-sub">وصلت إلى ${toAr(done)} من ${toAr(total)} — ${failNote(done, total)}<br>${canRevive ? "استعد قلوبك بالجواهر وأكمل من حيث توقفت" : "أعد المستوى وحاول مجدداً"}</p>
     <div class="result-cards fail-cards">
-      <div class="rcard rc-green fail-time"><div class="rc-t">متوسط الوقت</div><div class="rc-v">${TIMER_SVG} <span id="cv-avg">${toAr(0)}:${toAr("00")}</span></div></div>
-      <div class="rcard rc-blue"><div class="rc-t">التقدم</div><div class="rc-v">${ico("target", 22)} ${toAr(done)}/${toAr(total)}</div></div>
+      <div class="rcard rc-blue fail-time"><div class="rc-t">متوسط الوقت</div><div class="rc-v">${TIMER_SVG} <span id="cv-avg">${fmtTime(0)}</span></div></div>
+      <div class="rcard rc-green"><div class="rc-t">التقدم</div><div class="rc-v">${ico("target", 22)} ${toAr(done)}/${toAr(total)}</div></div>
     </div>
     <div class="fail-actions">
-      ${canRevive ? `<button class="btn btn-revive" onclick="A.reviveLesson()">${ico("gem", 20)} استعد قلوبك — ${toAr(REVIVE_COST)} جوهرة</button>` : ""}
+      <button class="btn btn-revive" ${canRevive ? "" : "disabled"} onclick="A.reviveLesson()">${ico("gem", 20)} استعد قلوبك — ${toAr(REVIVE_COST)} جوهرة</button>
+      ${canRevive ? "" : `<div class="fail-wallet">معك ${toAr(S.xp || 0)} جوهرة — اكسب المزيد من الدروس وصندوق اليوم</div>`}
       <button class="btn ${canRevive ? "btn-ghost" : ""}" onclick="A.retryLevel('${domKey}','${lesKey}')">إعادة المستوى</button>
       <button class="btn btn-ghost" onclick="A.quitFailed()">العودة للمسار</button>
     </div>
@@ -1082,8 +1139,14 @@ function sessionFailed() {
 A.reviveLesson = function () {
   if (!SES || S.xp < REVIVE_COST) return;
   S.xp -= REVIVE_COST;
+  /* A.next hands over to sessionFailed *before* advancing, so idx still points
+     at the question that just ran the hearts out - and its correct answer is
+     on screen behind the fail sheet. It is already re-queued at the tail, so
+     step past it rather than handing it back as a free point. */
+  SES.idx++;
   SES.hearts = LEVEL_HEARTS; SES.sel = null; SES.locked = false;
   save(); sndGood && sndGood();
+  if (SES.idx >= SES.queue.length) { lessonComplete(); return; }
   renderSession();
 };
 A.quitFailed = function () { SES = null; A.go("path"); };
@@ -1113,7 +1176,7 @@ function lessonComplete() {
     <div class="win-gems">${ico("gem", 20)} +${toAr(gemsWon)} جوهرة${boosted ? ` · ⚡ الخبرة ×٢` : ""}</div>
     <div class="result-cards">
       <div class="rcard rc-gold"><div class="rc-t">الخبرة</div><div class="rc-v">${ico("lightning", 20)} <span id="cv-xp">٠</span></div></div>
-      <div class="rcard rc-blue rc-time"><div class="rc-t">الوقت</div><div class="rc-v">${TIMER_SVG} <span id="cv-time">${toAr(0)}:${toAr("00")}</span></div></div>
+      <div class="rcard rc-blue rc-time"><div class="rc-t">الوقت</div><div class="rc-v">${TIMER_SVG} <span id="cv-time">${fmtTime(0)}</span></div></div>
       <div class="rcard rc-green"><div class="rc-t">الدقة</div><div class="rc-v">${ico("target", 22)} <span id="cv-acc">٠</span></div></div>
     </div>
     <div class="action-bar win-action" style="position:relative;right:auto;transform:none;max-width:340px;padding:0;background:none">
@@ -1223,15 +1286,29 @@ function startMockSection() {
   MOCK.qi = 0;
   renderMockQ();
   clearInterval(MOCK.timer);
-  MOCK.timer = setInterval(() => {
-    const sec = MOCK.sections[MOCK.si];
-    sec.left--;
-    const n = document.getElementById("mkNum"), w = document.getElementById("mkWrap");
-    if (n) n.textContent = fmtTime(sec.left);
-    if (w) { w.classList.toggle("low", sec.left <= 120 && sec.left > 30); w.classList.toggle("crit", sec.left <= 30); }
-    if (sec.left <= 0) { toast("⏰ انتهى وقت القسم"); endMockSection(true); }
-  }, 1000);
+  /* a deadline, so backgrounding the tab cannot buy extra exam time */
+  MOCK.sections[MOCK.si].endsAt = Date.now() + MOCK.sections[MOCK.si].left * 1000;
+  MOCK.timer = setInterval(mockTick, 250);
 }
+
+function mockTick() {
+  if (!MOCK || !MOCK.timer) return;
+  const sec = MOCK.sections[MOCK.si];
+  const left = Math.max(0, Math.round((sec.endsAt - Date.now()) / 1000));
+  if (left === sec.left) return;
+  sec.left = left;
+  const n = document.getElementById("mkNum"), w = document.getElementById("mkWrap");
+  if (n) n.textContent = fmtTime(left);
+  if (w) { w.classList.toggle("low", left <= 120 && left > 30); w.classList.toggle("crit", left <= 30); }
+  if (left <= 0) { toast("⏰ انتهى وقت القسم"); endMockSection(true); }
+}
+
+/* a backgrounded tab stops firing intervals; recompute the moment we return */
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) return;
+  if (MOCK && MOCK.timer) mockTick();
+  if (SES && SES.timer) qTick();
+});
 
 /* numbered navigator: answered / flagged / current — jump anywhere inside the section */
 function qnavStrip(sec) {
@@ -1302,6 +1379,10 @@ function endMockSection(timedOut) {
   clearInterval(MOCK.timer);
   const sec = MOCK.sections[MOCK.si];
   sec.items.forEach((it, i) => {
+    /* null means the student never reached it. Scoring that as wrong used to
+       inject a whole timed-out section into the mistakes trainer and drag the
+       mastery stats down for questions nobody had read. */
+    if (sec.answers[i] === null) return;
     const qs = S.qstats[it.q.id] = S.qstats[it.q.id] || { r: 0, w: 0 };
     const ok = sec.answers[i] === it.q.answer;
     ok ? qs.r++ : qs.w++;

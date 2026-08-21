@@ -23,6 +23,7 @@
   --green-bg: #D6FFB8;     --red-bg: #FFDFE0;       --red-dk2: #EA2B2B;
   --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
   --nav-h: 80px;
+  --scrim: rgba(40, 40, 48, .55);   /* one dim for every overlay */
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -66,7 +67,8 @@ svg.ic { display: block; }
 }
 .btn:active { transform: translateY(5px); box-shadow: 0 0 0 var(--green-lip); }
 .btn:disabled {
-  background: var(--disabled); color: var(--gray);
+  /* #D9D9D9 on #777 measured 3.18:1 and read as "gone" rather than "not yet" */
+  background: #E5E5E5; color: var(--ink);
   box-shadow: none; cursor: default; transform: none;
 }
 .btn-blue   { background: var(--blue);   box-shadow: 0 5px 0 var(--blue-dk); }
@@ -183,6 +185,9 @@ svg.ic { display: block; }
   text-wrap: balance;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden; pointer-events: none; user-select: none;
+  /* the connector dots were being drawn straight through the wrapped second
+     line of the first lesson's title — the first thing a new player looks at */
+  position: relative; z-index: 2;
 }
 .node-label.nl-done   { color: var(--gold-dk); }
 .node-label.nl-locked { color: var(--gray); font-weight: 700; }
@@ -241,7 +246,8 @@ svg.ic { display: block; }
 .progress { flex: 1; height: 16px; background: var(--line); border-radius: 64px; overflow: hidden; }
 .progress > i {
   display: block; height: 100%; background: var(--gold); border-radius: 64px;
-  transition: width .4s cubic-bezier(.3,1.4,.5,1); position: relative; min-width: 0;
+  transition: width .4s cubic-bezier(.3,1.4,.5,1); position: relative;
+  min-width: 12px;   /* an empty track told question one it had made no progress */
 }
 .progress > i::after { content:''; position:absolute; top:4px; right:8px; left:8px; height:5px; border-radius:6px; background:var(--gold-soft); }
 .sess-hearts { display:flex; align-items:center; gap:6px; font-weight: 700; color: var(--red); font-size: 16px; white-space: nowrap; }
@@ -467,6 +473,9 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
   width: 100%; max-width: 430px; z-index: 50;
   padding: 18px 16px calc(24px + env(safe-area-inset-bottom));
   transition: transform .3s cubic-bezier(.3,1.2,.4,1);
+  /* same object as the method sheet: it slides from the same edge seconds later */
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, .18);
 }
 .feedback.show { transform: translateX(50%) translateY(0); }
 .feedback.good { background: var(--green-bg); }
@@ -480,6 +489,13 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 18px; font-weight: 800;
 }
+.fb-hearts {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin: 8px 0 2px; padding: 4px 10px 3px; border-radius: 999px;
+  background: rgba(255, 255, 255, .72);
+  font-size: 13.5px; font-weight: 800; color: var(--red-dk2);
+}
+.fb-hearts.warn, .fb-hearts.out { background: var(--red); color: #fff; }
 .fb-correct { font-weight: 600; margin: 6px 0 2px; font-size: 16px; }
 .feedback.bad .fb-correct { color: var(--red-dk2); }
 .fb-solution-toggle { background:none; border:0; font-weight:700; font-size:15px; padding:6px 0; text-decoration: underline; }
@@ -521,15 +537,22 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .complete h1.win-title { margin: 10px 0 4px; }
 .result-cards { display: flex; gap: 20px; justify-content: center; width: 100%; margin-bottom: 26px; }
 .rcard { width: 102px; border-radius: 17px; padding: 0; font-weight: 700; }
-.rcard .rc-t { font-size: 13px; font-weight: 800; text-transform: uppercase; color: #fff; padding: 3px 0 2px; }
+.rcard .rc-t {
+  font-size: 13px; font-weight: 800; text-transform: uppercase;
+  color: rgba(255, 255, 255, .98); padding: 3px 0 2px;
+}
 .rcard .rc-v {
   background: #fff; border-radius: 13px; height: 66px;
   display: flex; align-items: center; justify-content: center; gap: 5px;
-  border: 2px solid transparent; font-size: 19px;
+  border: 2px solid transparent;
+  /* ٠ is a dot on the baseline in this face, so "٠:٠٠" at 19px read as four
+     specks. Bigger, heavier, and spaced so the zeros have weight. */
+  font-size: 25px; font-weight: 800; letter-spacing: .5px;
+  font-variant-numeric: tabular-nums;
 }
-.rc-gold  { background: var(--gold); }  .rc-gold .rc-v  { border-color: var(--gold);  color: var(--gold); }
-.rc-blue  { background: var(--blue); }  .rc-blue .rc-v  { border-color: var(--blue);  color: var(--blue); }
-.rc-green { background: var(--green); } .rc-green .rc-v { border-color: var(--green); color: var(--green); }
+.rc-gold  { background: #B37D00; }  .rc-gold .rc-v  { border-color: var(--gold);  color: var(--gold-dk); }
+.rc-blue  { background: #0E7CB0; }  .rc-blue .rc-v  { border-color: var(--blue);  color: var(--blue-dk); }
+.rc-green { background: #3E8F01; } .rc-green .rc-v { border-color: var(--green); color: var(--green-dk); }
 
 /* ============================================================
    Losing screen — Duolingo "out of hearts", clean & juicy:
@@ -616,7 +639,7 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
   position: relative; overflow: hidden;
   animation:
     springIn .5s cubic-bezier(.3,1.6,.5,1) backwards,
-    cardFloat 3.4s ease-in-out infinite;
+    cardFloat 3.4s ease-in-out 2 forwards;
 }
 .complete .fail-cards .rcard:nth-child(1) { animation-delay: 2s, 2.8s; }
 .complete .fail-cards .rcard:nth-child(2) { animation-delay: 2.15s, 3.4s; }
@@ -629,7 +652,7 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.55) 50%, transparent 65%);
   transform: translateX(-130%);
-  animation: sweep 3.6s 3.1s ease-in-out infinite;
+  animation: sweep 3.6s 3.1s ease-in-out 1;
 }
 /* green avg-time card (Duolingo "BLAZING" timer card, green edition) */
 .fail-time .qt-svg { width: 22px; height: 22px; }
@@ -827,7 +850,7 @@ button.dom-stat:active { transform: scale(.99); }
 
 /* ---------- Modal (disclaimer / about) ---------- */
 .modal-veil {
-  position: fixed; inset: 0; background: rgba(75,75,75,.45); z-index: 100;
+  position: fixed; inset: 0; background: var(--scrim); z-index: 100;
   display: flex; align-items: center; justify-content: center; padding: 24px;
   animation: fadeIn .2s;
 }
@@ -1267,11 +1290,15 @@ button.dom-stat:active { transform: scale(.99); }
 .win-gems {
   display: inline-flex; align-items: center; gap: 6px; z-index: 2;
   margin: 0 0 14px; padding: 6px 14px; border-radius: 999px;
-  background: var(--gold-bg, #FFF4CC); color: var(--gold-dk);
+  background: var(--gold-bg, #FFF4CC); color: #8A6000;   /* was --gold-dk, 2.03:1 */
   font-weight: 800; font-size: 15px;
   animation: fadeUp .45s .7s ease backwards;
 }
 .win-gems .ic { vertical-align: middle; }
+.fail-wallet {
+  font-size: 13px; font-weight: 700; color: var(--gray);
+  margin: -4px 0 10px; text-align: center; line-height: 1.5;
+}
 /* gold "revive" button on the fail screen */
 .btn-revive { background: var(--gold); box-shadow: 0 5px 0 var(--gold-dk); color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .btn-revive:active { box-shadow: 0 0 0 var(--gold-dk); }
@@ -1281,10 +1308,13 @@ button.dom-stat:active { transform: scale(.99); }
 .rc-time .rc-v { font-variant-numeric: tabular-nums; }
 
 .win-title {
-  background: linear-gradient(100deg, var(--gold) 42%, #FFF3B0 50%, var(--gold) 58%);
+  background: linear-gradient(100deg, var(--gold-dk) 42%, #FFD84D 50%, var(--gold-dk) 58%);
   background-size: 220% 100%; background-position: 150% 0;
   -webkit-background-clip: text; background-clip: text;
   -webkit-text-fill-color: transparent;
+  /* the gradient fill cannot carry contrast on its own — an outline does */
+  paint-order: stroke fill;
+  filter: drop-shadow(0 1px 0 rgba(170, 112, 0, .55));
   animation:
     titleIn .55s .85s cubic-bezier(.3,1.5,.5,1) backwards,
     titleThrob 2.4s 2s ease-in-out infinite,
@@ -1295,7 +1325,7 @@ button.dom-stat:active { transform: scale(.99); }
   position: relative; overflow: hidden;
   animation:
     springIn .5s cubic-bezier(.3,1.6,.5,1) backwards,
-    cardFloat 3.4s ease-in-out infinite;
+    cardFloat 3.4s ease-in-out 2 forwards;
 }
 .result-cards .rcard:nth-child(1) { animation-delay: .7s, 2.4s; }
 .result-cards .rcard:nth-child(2) { animation-delay: .82s, 2.9s; }
@@ -1304,7 +1334,7 @@ button.dom-stat:active { transform: scale(.99); }
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.55) 50%, transparent 65%);
   transform: translateX(-130%);
-  animation: sweep 3.6s 3.2s ease-in-out infinite;
+  animation: sweep 3.6s 3.2s ease-in-out 1;
 }
 .win-action .btn {
   position: relative; overflow: hidden;
@@ -1484,7 +1514,7 @@ button.dom-stat:active { transform: scale(.99); }
 .chest-veil {
   position: fixed; inset: 0; z-index: 320;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(36, 22, 2, .62); backdrop-filter: blur(3px);
+  background: var(--scrim); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
   animation: veilIn .35s ease;
 }
 .chest-veil.out { animation: veilOut .35s ease forwards; }
@@ -1646,8 +1676,8 @@ button.dom-stat:active { transform: scale(.99); }
 
 /* --- mock exam: question navigator + action bar + result band --- */
 .qnav {
-  display: flex; flex-wrap: wrap; justify-content: center; gap: 5px;
-  flex-shrink: 0; padding: 8px 12px 6px;
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px;
+  justify-items: center; flex-shrink: 0; padding: 8px 12px 6px;
 }
 .qn-chip {
   min-width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
@@ -1678,7 +1708,11 @@ button.dom-stat:active { transform: scale(.99); }
 .mk-flag span { font-size: 11.5px; font-weight: 800; }
 .mk-flag:active { transform: translateY(4px); box-shadow: none; }
 .mk-flag.on { background: var(--gold); border-color: var(--gold-dk); color: #fff; box-shadow: 0 4px 0 var(--gold-dk); }
-.mk-side { flex: 0 0 auto !important; width: auto; padding: 13px 18px 9px; }
+.mk-side {
+  flex: 0 0 auto !important; width: auto; padding: 13px 18px 9px;
+  background: #fff; color: var(--blue); border: 2px solid var(--line);
+  box-shadow: 0 5px 0 var(--line);
+}
 .mock-band {
   font-size: 17px; font-weight: 800; color: var(--gold-dk);
   margin: 4px 0 2px; animation: fadeUp .5s .8s ease backwards;
@@ -1731,7 +1765,7 @@ button.dom-stat:active { transform: scale(.99); }
   background: rgba(0,0,0,0); display: flex; align-items: flex-end; justify-content: center;
   transition: background .28s ease;
 }
-.method-veil.show { background: rgba(20,12,0,.5); }
+.method-veil.show { background: var(--scrim); }
 .method-sheet {
   width: 100%; max-width: 430px; background: #fff;
   border-radius: 22px 22px 0 0; padding: 10px 18px calc(20px + env(safe-area-inset-bottom));
@@ -1851,12 +1885,19 @@ button.dom-stat:active { transform: scale(.99); }
 }
 .dq-veil.show { background: rgba(20,12,0,.5); }
 .dq-sheet {
+  position: relative;
   width: 100%; max-width: 430px; background: #fff;
   border-radius: 24px 24px 0 0; padding: 10px 18px calc(18px + env(safe-area-inset-bottom));
   transform: translateY(100%); transition: transform .34s cubic-bezier(.25,1.05,.4,1);
   max-height: 90vh; overflow-y: auto; box-shadow: 0 -10px 34px rgba(0,0,0,.2);
 }
 .dq-veil.show .dq-sheet { transform: translateY(0); }
+.dq-x {
+  position: absolute; top: 12px; left: 14px; z-index: 2;
+  width: 34px; height: 34px; border: 0; border-radius: 50%;
+  background: var(--line); display: grid; place-items: center; cursor: pointer;
+}
+.dq-note { font-size: 12.5px; font-weight: 700; color: var(--gray); margin: -6px 0 12px; }
 .dq-sheet .ms-grip { width: 44px; height: 5px; border-radius: 3px; background: var(--line); margin: 4px auto 12px; }
 .dq-head { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
 .dq-head h3 { font-size: 21px; color: var(--gold-dk); margin: 0; }
@@ -1992,7 +2033,7 @@ button.dom-stat:active { transform: scale(.99); }
   position: fixed; inset: 0; z-index: 400; overflow: hidden;
   display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px;
   /* the screen behind, blurred (frosted glass) + a dark tint so the white text stays readable */
-  background: rgba(14, 11, 22, .5);
+  background: var(--scrim);
   -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
   opacity: 0; transition: opacity .32s ease;
 }
