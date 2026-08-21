@@ -8,7 +8,8 @@
 > engineering and product system, one on who the قدرات student actually *is* — and then from a
 > line-by-line reading of what we have. Sources are in [Appendix C](#appendix-c--sources).
 >
-> `feat/complete-app` is abandoned. Nothing here depends on it. Delete the branch.
+> `feat/complete-app` is not part of this plan — nothing here depends on it. The branch stays
+> where it is; treat it as an archive to read, not a base to build on.
 
 ---
 
@@ -654,7 +655,7 @@ Cheap work that unblocks measurement and closes the licence exposure.
 
 | # | Task | Done when |
 |---|---|---|
-| 0.1 | Delete `feat/complete-app` (local + origin), and the stale `UI/UX` and `responsive-web-layout` branches | `git branch -a` shows `main` only |
+| 0.1 | Branch hygiene: leave `feat/complete-app`, `UI/UX` and `responsive-web-layout` in place as archives; document in the README what each one holds | a reader can tell which branches are live and which are history |
 | 0.2 | **Split the licence:** engine MIT, `js/data/**` proprietary | `LICENSE` + `js/data/LICENSE` in place, README states both |
 | 0.3 | Fix README + `CLAUDE.md` (720 questions, 30 lessons, 60 s timer, real line counts) | numbers match `validate.js` |
 | 0.4 | `robots.txt`, `sitemap.xml`, JSON-LD `EducationalApplication` | all three return 200 |
