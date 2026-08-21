@@ -47,6 +47,22 @@ for (const [dk, d] of Object.entries(QBANK)) {
         if (!/^<(svg|table|div)/.test(q.figure.trim())) { console.log(`ODD FIGURE ${tag}`); failed = true; }
       }
       if (typeof q.stem !== "string") { console.log(`BAD STEM ${tag}`); failed = true; }
+      /* Six questions shipped saying "في الشكل" with figure:null. A student
+         reaching one of those lost a heart to a question nobody could answer. */
+      if (!q.figure && /في الشكل|الشكل المجاور|الشكل التالي|كما في الشكل/.test(q.stem || "")) {
+        console.log(`NO FIGURE but the stem points at one: ${tag}`); failed = true;
+      }
+      /* stem/choices/value1/value2 are concatenated into innerHTML unescaped so
+         that <sub> and inline SVG work. A bare "<" there is an accident that
+         renders today only because a space follows it. */
+      const SAFE_TAG = new RegExp("^<\\/?(" + "sub|sup|b|i|br|span|svg|g|path|text|line|circle|rect|polygon|ellipse|polyline|defs|linearGradient|stop|table|thead|tbody|tr|td|th|div" + ")\\b");
+      for (const raw of [q.stem, q.value1, q.value2].concat(q.choices || [])) {
+        if (typeof raw !== "string") continue;
+        const re = /</g; let m;
+        while ((m = re.exec(raw))) if (!SAFE_TAG.test(raw.slice(m.index))) {
+          console.log(`BARE < in a raw field (write &lt;): ${tag}`); failed = true; break;
+        }
+      }
       const latin = ((q.stem || "") + (q.solution || "")).match(/[0-9]{2,}/g);
       if (latin) console.log(`WARN latin digits ${tag}: ${latin.join(",")}`);
     }
