@@ -35,6 +35,20 @@ const MOCK_SECS = 25 * 60;   // per section, like the real thing
 const todayKey = () => { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
 const fmtTime = s => toAr(String(Math.floor(Math.max(0, s) / 60)).padStart(2, "0")) + ":" + toAr(String(Math.max(0, s) % 60).padStart(2, "0"));
 
+/* The authored key is badly lopsided — across the 475 MCQs, أ is correct
+   40.4% of the time and د only 3.6%. Choices render in file order, so a
+   student who plays enough learns "lean أ, never pick د", which is a habit
+   that costs marks on the real exam where the key is balanced. Permuting per
+   serve removes the tell. Comparison questions keep their fixed option set —
+   that order is a convention of the format, not a key. */
+function shuffleChoices(q) {
+  if (!q || q.format !== "mcq" || !Array.isArray(q.choices)) return q;
+  const order = shuffle(q.choices.map((_, i) => i));
+  return Object.assign({}, q, {
+    choices: order.map(i => q.choices[i]),
+    answer: order.indexOf(q.answer),
+  });
+}
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
@@ -282,7 +296,11 @@ function pickDailyQuestion() {
   if (!pool.length) return null;
   const t = todayKey();
   let h = 5381; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) >>> 0;
-  return pool[h % pool.length];
+  /* djb2 over consecutive date strings lands on consecutive indices, so the
+     "daily" question walked one step through the bank and served the same
+     lesson eight or nine days running. Avalanche it. */
+  h ^= h >>> 15; h = Math.imul(h, 2246822507) >>> 0; h ^= h >>> 13;
+  return shuffleChoices(pool[h % pool.length]);
 }
 
 function dailyQuestionCard() {
@@ -345,6 +363,7 @@ A.checkDailyQ = function () {
   const reward = correct ? DAILYQ_REWARD : 5;       // gems: +15 correct / +5 wrong attempt
   S.dailyQ.done = true; S.dailyQ.correct = correct;
   gainGems(reward); gainXP(correct ? 8 : 2);        // wallet + rank XP
+  bumpStreak();   // answering the daily question is showing up, so it counts
   const qs = S.qstats[q.id] = S.qstats[q.id] || { r: 0, w: 0 }; correct ? qs.r++ : qs.w++;
   noteAnswer(q, correct);
   save();
@@ -700,7 +719,7 @@ function pickLessonQuestions(lesson, key) {
   const stat = q => { const s = S.qstats[q.id] || { r: 0, w: 0 }; return s.r - s.w; };
   // least-mastered first, then keep official easy→hard ordering
   const chosen = qs.slice().sort((a, b) => stat(a) - stat(b) || a.difficulty - b.difficulty).slice(0, 8);
-  return chosen.sort((a, b) => a.difficulty - b.difficulty);
+  return chosen.sort((a, b) => a.difficulty - b.difficulty).map(shuffleChoices);
 }
 
 A.go = go;
@@ -1089,7 +1108,11 @@ A.next = function () {
 };
 
 A.quitSession = function () {
-  if (confirm("هل تريد إنهاء الجلسة؟ سيضيع تقدمك في هذا الدرس.")) { stopQTimer(); SES = null; go("path"); }
+  if (confirm("هل تريد إنهاء الجلسة؟ سيضيع تقدمك في هذا الدرس.")) {
+    stopQTimer();
+    if (SES && SES.xpBoost) { gainGems(BOOST_COST); save(); }   // the boost was never spent
+    SES = null; go("path");
+  }
 };
 
 A.retryLevel = function (domKey, lesKey) { A.startLesson(domKey, lesKey); };
@@ -1113,6 +1136,12 @@ function failNote(done, total) {
 }
 function sessionFailed() {
   stopQTimer();
+  /* the work was real even though the lesson was not cleared: banking it is
+     what stops a first session ending in four minutes with nothing to show.
+     Stars still require a clear, so this cannot be farmed. */
+  gainXP(SES.xp); gainGems(SES.gems);
+  if (SES.xpBoost) { gainGems(BOOST_COST); SES.xpBoost = false; }   // refund the unused boost
+  bumpStreak(); save();
   const { domKey, lesKey, done, total, tSpent, tAnswered } = SES;
   const avgSecs = tAnswered ? Math.round(tSpent / tAnswered) : 0;
   sndLose();
@@ -1267,7 +1296,7 @@ A.startMock = function () {
   for (let s = 0; s < MOCK_SECTIONS; s++) {
     const items = [];
     DOMAIN_ORDER.forEach((k, i) => {
-      pools[k].slice(s * plan[i], (s + 1) * plan[i]).forEach(q => items.push({ q, dom: k }));
+      pools[k].slice(s * plan[i], (s + 1) * plan[i]).forEach(q => items.push({ q: shuffleChoices(q), dom: k }));
     });
     sections.push({
       items: shuffle(items),
@@ -1345,7 +1374,9 @@ function renderMockQ() {
 A.mockSelect = function (i) {
   if (!MOCK) return;
   const sec = MOCK.sections[MOCK.si];
-  if (sec.answers[MOCK.qi] === null) dailyTick(); // each question counts once for the daily quest
+  /* dailyTick used to fire here, so opening a mock, tapping ten answers and
+     quitting paid out the 50-gem chest in about fifteen seconds. The quest
+     counts sealed answers now - see endMockSection. */
   sec.answers[MOCK.qi] = i;
   document.querySelectorAll(".choice").forEach((b, j) => b.classList.toggle("sel", j === i));
   const chip = document.querySelectorAll(".qn-chip")[MOCK.qi];
@@ -1383,6 +1414,7 @@ function endMockSection(timedOut) {
        inject a whole timed-out section into the mistakes trainer and drag the
        mastery stats down for questions nobody had read. */
     if (sec.answers[i] === null) return;
+    dailyTick();                       // counts toward today's quest, once sealed
     const qs = S.qstats[it.q.id] = S.qstats[it.q.id] || { r: 0, w: 0 };
     const ok = sec.answers[i] === it.q.answer;
     ok ? qs.r++ : qs.w++;
@@ -1412,6 +1444,9 @@ A.quitMock = function () {
 
 function finishMock(timedOut) {
   clearInterval(MOCK.timer);
+  /* it used to award nothing at all, so two replay sessions in twelve minutes
+     out-earned the single most exam-relevant thing in the product. Scaling
+     with the score keeps it from being farmable by clicking through. */
   let total = 0, score = 0, unanswered = 0, secsUsed = 0;
   const perDom = {};
   DOMAIN_ORDER.forEach(k => perDom[k] = { r: 0, n: 0 });
@@ -1435,6 +1470,10 @@ function finishMock(timedOut) {
               : "تحت المتوسط حالياً — التمرين اليومي يرفعك بسرعة";
   const mins = Math.round(secsUsed / 60);
   S.mocks = (S.mocks || []).concat([{ d: todayKey(), score, total, est }]).slice(-10);
+  /* fifty minutes and forty-eight questions used to pay nothing at all, so
+     two twelve-minute replay sessions out-earned the most exam-relevant
+     thing in the app. Scaling with the score keeps it unfarmable. */
+  gainXP(score * 6); gainGems(20 + score);
   bumpStreak(); save();
   score / total >= 0.5 ? sndWin() : sndLose();
 
@@ -1779,7 +1818,7 @@ A.debugStreak = function (c) { showStreakCelebration(c || S.streak.count || 7, (
 A.startReview = function () {
   const list = mistakeList();
   if (!list.length) { toast("✨ لا توجد أخطاء للمراجعة"); return; }
-  const qs = list.slice(0, 12).map(x => x.rec.q);
+  const qs = list.slice(0, 12).map(x => shuffleChoices(x.rec.q));
   SES = { mode: "review", domKey: null, lesKey: null, key: null, title: "مراجعة الأخطاء", method: "",
     queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null,
     locked: false, xp: 0, gems: 0, replay: false, xpBoost: false, hearts: 999, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
@@ -1789,7 +1828,7 @@ A.startReview = function () {
 function reviewComplete() {
   stopQTimer();
   const solved = SES.done, xpWon = SES.xp;
-  gainXP(xpWon); bumpStreak(); save(); sndWin();   // mock rewards rank XP (assessment, not a gem farm)
+  gainXP(xpWon); gainGems(SES.gems); bumpStreak(); save(); sndWin();
   const remaining = mistakeList().length;
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
     ${flameHero(160)}
@@ -1831,7 +1870,8 @@ function renderReview() {
       <div class="ri-tag" style="color:${u.s}">${esc(x.rec.domTitle)} · ${esc(x.rec.lesTitle)}</div>
       <div class="ri-q">${q.stem || "قارن بين القيمتين"}</div>
       ${isCmp && q.value1 ? `<div class="ri-row" style="color:var(--gray)">القيمة الأولى: ${q.value1} — القيمة الثانية: ${q.value2}</div>` : ""}
-      <div class="ri-row" style="color:var(--green-dk)">✓ الإجابة الصحيحة: ${ch[q.answer]}</div>
+      <button class="fb-solution-toggle" onclick="A.toggleEl('rvAns${i}')">أظهر الإجابة</button>
+      <div class="ri-row" id="rvAns${i}" style="display:none;color:var(--green-dk)">✓ الإجابة الصحيحة: ${ch[q.answer]}</div>
       <button class="fb-solution-toggle" onclick="A.toggleEl('rvSol${i}')">اعرض الحل</button>
       <div class="fb-solution" id="rvSol${i}" style="display:none">${formatExplain(q.solution)}</div>
     </div>`;
