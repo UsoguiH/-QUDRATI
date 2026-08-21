@@ -66,6 +66,10 @@ for (const [dk, d] of Object.entries(QBANK)) {
       const latin = ((q.stem || "") + (q.solution || "")).match(/[0-9]{2,}/g);
       if (latin) console.log(`WARN latin digits ${tag}: ${latin.join(",")}`);
     }
+    /* a session serves 8 questions, and trackFilter drops track:"sci" for
+       literary students, so tagging must never starve a lesson on that side */
+    const litCount = l.questions.filter(q => q.track !== "sci").length;
+    if (litCount < 8) { console.log(`LIT TRACK STARVED ${dk}.${l.key}: only ${litCount} questions`); failed = true; }
     console.log(`${dk}.${l.key}: ${l.questions.length} q (E${diffs[1]}/M${diffs[2]}/H${diffs[3]}) mcq=${mcq} cmp=${cmp} ordered=${ordered ? "yes" : "NO"}`);
   }
   console.log(`== ${dk}: ${total} questions, ${figures} figures, cmp answers dist=[${cmpDist}]\n`);
