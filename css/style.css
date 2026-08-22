@@ -118,8 +118,33 @@ svg.ic { display: block; }
 }
 .li-kicker { font-size: 12.5px; font-weight: 800; opacity: .85; letter-spacing: .3px; }
 .li-head h1 { font-size: 23px; line-height: 1.25; margin-top: 2px; }
-.li-body { padding: 0 18px; }
-.li-body .ex-step { font-size: 16px; }
+.li-body { padding: 0 16px; }
+/* A wall of four justified paragraphs is not something a seventeen-year-old
+   reads at eleven at night. One card per step, a numbered disc to anchor the
+   eye, and a short lead line in the unit colour it can scan in a second. */
+.li-step {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: #fff; border: 2px solid var(--line); border-radius: 15px;
+  padding: 13px 14px 12px; margin-bottom: 10px;
+  box-shadow: 0 2px 0 var(--line);
+  animation: fadeUp .35s var(--d, 0s) ease backwards;
+}
+.li-num {
+  flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--li-c, var(--green)); color: #fff;
+  display: grid; place-items: center;
+  font-size: 15px; font-weight: 800; line-height: 1;
+  box-shadow: 0 2px 0 var(--li-s, var(--green-dk));
+}
+.li-txt { flex: 1; min-width: 0; }
+.li-lead {
+  display: block; font-size: 16.5px; font-weight: 800; color: var(--ink);
+  line-height: 1.45; margin-bottom: 2px;
+}
+.li-rest { display: block; font-size: 14.5px; font-weight: 600; color: var(--gray); line-height: 1.65; }
+/* a step with no natural lead clause would otherwise be one bold wall */
+.li-solo { display: block; font-size: 15.5px; font-weight: 700; color: var(--ink); line-height: 1.62; }
+.li-body .ex-tip { margin-top: 4px; }
 
 /* stars under a cleared node — they were stored and never drawn */
 .node-stars { display: flex; gap: 4px; margin-top: 8px; }
@@ -564,22 +589,15 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .complete h1.win-title { margin: 10px 0 4px; }
 .result-cards { display: flex; gap: 20px; justify-content: center; width: 100%; margin-bottom: 26px; }
 .rcard { width: 102px; border-radius: 17px; padding: 0; font-weight: 700; }
-.rcard .rc-t {
-  font-size: 13px; font-weight: 800; text-transform: uppercase;
-  color: rgba(255, 255, 255, .98); padding: 3px 0 2px;
-}
+.rcard .rc-t { font-size: 13px; font-weight: 800; text-transform: uppercase; color: #fff; padding: 3px 0 2px; }
 .rcard .rc-v {
   background: #fff; border-radius: 13px; height: 66px;
   display: flex; align-items: center; justify-content: center; gap: 5px;
-  border: 2px solid transparent;
-  /* ٠ is a dot on the baseline in this face, so "٠:٠٠" at 19px read as four
-     specks. Bigger, heavier, and spaced so the zeros have weight. */
-  font-size: 25px; font-weight: 800; letter-spacing: .5px;
-  font-variant-numeric: tabular-nums;
+  border: 2px solid transparent; font-size: 19px;
 }
-.rc-gold  { background: #B37D00; }  .rc-gold .rc-v  { border-color: var(--gold);  color: var(--gold-dk); }
-.rc-blue  { background: #0E7CB0; }  .rc-blue .rc-v  { border-color: var(--blue);  color: var(--blue-dk); }
-.rc-green { background: #3E8F01; } .rc-green .rc-v { border-color: var(--green); color: var(--green-dk); }
+.rc-gold  { background: var(--gold); }  .rc-gold .rc-v  { border-color: var(--gold);  color: var(--gold); }
+.rc-blue  { background: var(--blue); }  .rc-blue .rc-v  { border-color: var(--blue);  color: var(--blue); }
+.rc-green { background: var(--green); } .rc-green .rc-v { border-color: var(--green); color: var(--green); }
 
 /* ============================================================
    Losing screen — Duolingo "out of hearts", clean & juicy:
@@ -1958,11 +1976,6 @@ button.dom-stat:active { transform: scale(.99); }
   gap: 6px; cursor: pointer; transition: background .12s;
 }
 .stat-rank img { height: 25px; width: auto; }
-.rank-badge {
-  filter:
-    drop-shadow(0 0 1px rgba(88, 108, 128, .85))
-    drop-shadow(0 1px 1px rgba(88, 108, 128, .5));
-}
 .stat-rank:active { transform: scale(.94); }
 @media (hover: hover) and (pointer: fine) { .stat-rank:hover { background: var(--line); } }
 

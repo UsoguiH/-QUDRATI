@@ -870,6 +870,29 @@ A.startLesson = function (domKey, lesKey, boost) {
   renderSession();
 };
 
+/* Splits a lesson's method into numbered cards. The first clause of a step is
+   the thing to remember, so it leads; the rest explains it. The 💡 line keeps
+   the callout it already had. */
+function introSteps(text) {
+  let i = 0;
+  return String(text).split("\n").map(line => {
+    const t = line.trim();
+    if (!t) return "";
+    if (/^💡/.test(t)) return `<div class="ex-tip">${BULB_SVG}<span>${esc(t.replace(/^💡\s*/, ""))}</span></div>`;
+    i++;
+    const body = t.replace(/^[٠-٩0-9]+[\)\.\-–]\s*/, "");
+    const cut = body.search(/[:：]|، /);
+    const lead = cut > 0 ? body.slice(0, cut + (body[cut] === "،" ? 1 : 1)) : body;
+    const rest = cut > 0 ? body.slice(lead.length).trim() : "";
+    return `<div class="li-step" style="--d:${(i * 0.06).toFixed(2)}s">
+      <span class="li-num">${toAr(i)}</span>
+      <span class="li-txt">${rest
+        ? `<b class="li-lead">${esc(lead)}</b><span class="li-rest">${esc(rest)}</span>`
+        : `<span class="li-solo">${esc(lead)}</span>`}</span>
+    </div>`;
+  }).join("");
+}
+
 function renderLessonIntro(d, l) {
   const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
   $app.innerHTML = `<div class="screen screen-full lesson-intro">
@@ -878,7 +901,7 @@ function renderLessonIntro(d, l) {
       <div class="li-kicker">قبل ما نبدأ</div>
       <h1>${l.title}</h1>
     </div>
-    <div class="li-body">${formatExplain(l.method)}</div>
+    <div class="li-body" style="--li-c:${u.c};--li-s:${u.s}">${introSteps(l.method)}</div>
     <div class="action-bar">
       <button class="btn" onclick="A.beginQuestions()">فهمت، ابدأ</button>
     </div>
