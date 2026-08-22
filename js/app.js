@@ -582,7 +582,7 @@ function countdownCard() {
   const days = examDaysLeft();
   if (days === null) {
     return `<div class="exam-card exam-card-empty" onclick="A.examSetup()">
-      <div class="ec-row">${ico("timer", 28)}
+      <div class="ec-row"><span class="ec-clock">${TIMER_SVG}</span>
         <div class="ec-txt"><b>متى اختبار قدراتك؟</b><span>حدد الموعد لنحسب لك العد التنازلي والجاهزية</span></div>
         <span class="ec-go">+</span>
       </div>
@@ -593,7 +593,7 @@ function countdownCard() {
     : days === 0 ? `اختبارك <b class="ec-days">اليوم</b> — بالتوفيق! 💪`
       : `انتهى موعد اختبارك — حدّث الموعد`;
   return `<div class="exam-card" onclick="A.examSetup()">
-    <div class="ec-row">${ico("timer", 28)}<div class="ec-head">${head}</div><span class="ec-edit" aria-hidden="true">✎</span></div>
+    <div class="ec-row"><span class="ec-clock">${TIMER_SVG}</span><div class="ec-head">${head}</div><span class="ec-edit" aria-hidden="true">✎</span></div>
     <div class="ec-ready">
       <span class="ec-label">جاهزيتك</span>
       <div class="ec-bar duo-bar"><i style="width:${pct}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft);animation-delay:.35s"></i></div>
@@ -1088,7 +1088,7 @@ function timeUp() {
   sndBad();
   const fb = document.getElementById("fb");
   fb.className = "feedback bad show";
-  fb.innerHTML = `<div class="fb-head"><span class="fb-x">⏰</span> انتهى الوقت!</div>
+  fb.innerHTML = `<div class="fb-head"><span class="fb-x fb-clock">${TIMER_SVG}</span> انتهى الوقت!</div>
     <div class="fb-correct">الإجابة الصحيحة: ${correctTxt}</div>
     <button class="fb-solution-toggle" onclick="A.toggleSol()">اعرض الحل</button>
     <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
@@ -1812,8 +1812,11 @@ function showRankUp(tierIdx) {
     <div class="ru-stage">
       <div class="ru-flash"></div>
       <div class="ru-badgewrap">
+        <span class="ru-rays"></span>
         <span class="ru-glow"></span>
         <span class="ru-ring"></span>
+        <span class="ru-ring ru-ring2"></span>
+        <span class="ru-orbit"><i></i><i></i><i></i></span>
         ${sparks}
         <img class="rank-badge ru-badge" src="assets/icons/ranks/rank-${tier.key}.png" alt="">
         <span class="ru-shine"></span>

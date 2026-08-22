@@ -316,6 +316,12 @@ svg.ic { display: block; }
    still style the TIMER_SVG on the win/fail result cards — keep them.)
    ============================================================ */
 .qt-svg .qt-face { fill: var(--blue-light); transition: fill .3s; }
+/* the same ticking clock as the result card, on the exam countdown */
+.ec-clock { display: flex; color: var(--blue); flex-shrink: 0; }
+/* and on the timed-out sheet, in red */
+.fb-clock { color: var(--red); }
+.fb-clock .qt-svg { width: 22px; height: 22px; }
+.fb-clock .qt-face { fill: var(--red-bg); }
 .qt-hand {
   transform-box: fill-box; transform-origin: 4% 96%;
   animation: spinSlow 5s linear infinite;
@@ -2134,8 +2140,42 @@ button.dom-stat:active { transform: scale(.99); }
 .ru-bronze .ru-glow   { background: radial-gradient(closest-side, rgba(210,150,90,.5), transparent 70%); }
 @keyframes ruGlow { 0%,100% { opacity: .55; transform: scale(.92); } 50% { opacity: 1; transform: scale(1.08); } }
 
+/* The rotating sunburst is the thing that makes a promotion read as a
+   promotion — Duolingo and Clash Royale both hang the whole moment on it.
+   Rotation lives on the element and the fade on a transition, so the two
+   never fight over transform. */
+.ru-rays {
+  position: absolute; width: 460px; height: 460px; border-radius: 50%; z-index: -2;
+  background: repeating-conic-gradient(from 0deg,
+    rgba(255, 255, 255, .17) 0deg 6deg, transparent 6deg 20deg);
+  -webkit-mask-image: radial-gradient(closest-side, #000 26%, transparent 76%);
+  mask-image: radial-gradient(closest-side, #000 26%, transparent 76%);
+  opacity: 0; transition: opacity .7s ease .25s;
+  animation: spinSlow 22s linear infinite;
+  pointer-events: none;
+}
+.rankup-veil.pop .ru-rays { opacity: 1; }
+.ru-gold .ru-rays, .ru-champion .ru-rays { background: repeating-conic-gradient(from 0deg, rgba(255, 226, 140, .26) 0deg 6deg, transparent 6deg 20deg); }
+.ru-diamond .ru-rays { background: repeating-conic-gradient(from 0deg, rgba(180, 232, 255, .26) 0deg 6deg, transparent 6deg 20deg); }
+
+/* three sparks that keep circling once the badge has landed */
+.ru-orbit { position: absolute; width: 210px; height: 210px; animation: spinSlow 7s linear infinite; opacity: 0; transition: opacity .5s ease .4s; }
+.rankup-veil.pop .ru-orbit { opacity: 1; }
+.ru-orbit i {
+  position: absolute; width: 9px; height: 9px; border-radius: 50%;
+  background: #FFE36B; box-shadow: 0 0 10px rgba(255, 220, 90, .95);
+}
+.ru-orbit i:nth-child(1) { top: -4px; left: 50%; margin-left: -4.5px; }
+.ru-orbit i:nth-child(2) { bottom: 14%; left: 4%; width: 7px; height: 7px; }
+.ru-orbit i:nth-child(3) { bottom: 14%; right: 4%; width: 6px; height: 6px; }
+.ru-diamond .ru-orbit i { background: #BFEAFF; box-shadow: 0 0 10px rgba(160, 220, 255, .95); }
+.ru-champion .ru-orbit i { background: #E6CCFF; box-shadow: 0 0 10px rgba(200, 160, 255, .95); }
+.ru-silver .ru-orbit i { background: #E8F0F8; box-shadow: 0 0 10px rgba(220, 235, 250, .95); }
+
 .ru-ring { position: absolute; width: 150px; height: 150px; border-radius: 50%; border: 5px solid rgba(255,255,255,.85); opacity: 0; }
 .rankup-veil.pop .ru-ring { animation: ruRing .8s ease-out forwards; }
+.ru-ring2 { border-width: 3px; border-color: rgba(255,255,255,.5); }
+.rankup-veil.pop .ru-ring2 { animation: ruRing 1.15s ease-out .18s forwards; }
 @keyframes ruRing { 0% { opacity: .9; transform: scale(.35); } 100% { opacity: 0; transform: scale(2.3); } }
 
 .ru-spark { position: absolute; top: 50%; left: 50%; width: 6px; height: 20px; border-radius: 3px; background: #FFE36B; opacity: 0; box-shadow: 0 0 8px rgba(255,220,80,.9); }
@@ -2169,6 +2209,12 @@ button.dom-stat:active { transform: scale(.99); }
 @keyframes ruShine { 0% { left: -60%; opacity: 0; } 20% { opacity: .9; } 100% { left: 130%; opacity: 0; } }
 
 /* confetti rain */
+.rankup-veil.told .ru-badgewrap { animation: ruFloat 3.2s ease-in-out infinite; }
+@keyframes ruFloat {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50%      { transform: translateY(-9px) rotate(-1.5deg); }
+}
+
 .ru-confetti-wrap { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 .ru-confetti { position: absolute; top: -8%; opacity: 0; border-radius: 2px; }
 .rankup-veil.told .ru-confetti { animation-name: ruConfetti; animation-timing-function: cubic-bezier(.4,.1,.7,1); animation-fill-mode: forwards; }
@@ -2182,12 +2228,16 @@ button.dom-stat:active { transform: scale(.99); }
 .ru-kicker, .ru-title, .ru-sub, .ru-btn { opacity: 0; }
 .ru-kicker { color: rgba(255,255,255,.78); font-weight: 800; font-size: 15px; letter-spacing: .4px; margin-top: 6px; }
 .ru-title { color: #fff; font-size: 34px; font-weight: 800; margin: 4px 0 6px; text-shadow: 0 3px 0 rgba(0,0,0,.25); }
+.rankup-veil.told .ru-title { animation: ruSlam .6s cubic-bezier(.2,1.7,.4,1) .12s forwards, ruTitleGlow 2.8s ease-in-out 1s infinite; }
+@keyframes ruTitleGlow {
+  0%, 100% { text-shadow: 0 3px 0 rgba(0,0,0,.25), 0 0 12px rgba(255,255,255,.18); }
+  50%      { text-shadow: 0 3px 0 rgba(0,0,0,.25), 0 0 26px rgba(255,255,255,.5); }
+}
 .ru-gold .ru-title { color: #FFD94A; } .ru-silver .ru-title { color: #DCE6F0; }
 .ru-bronze .ru-title { color: #E8A86B; } .ru-diamond .ru-title { color: #9FE0FF; } .ru-champion .ru-title { color: #D7B6FF; }
 .ru-sub { color: rgba(255,255,255,.72); font-weight: 600; font-size: 15px; line-height: 1.6; max-width: 300px; text-align: center; margin-bottom: 26px; }
 .ru-btn { max-width: 320px; width: 100%; }
 .rankup-veil.told .ru-kicker { animation: ruRise .5s ease .02s forwards; }
-.rankup-veil.told .ru-title { animation: ruSlam .6s cubic-bezier(.2,1.7,.4,1) .12s forwards; }
 .rankup-veil.told .ru-sub { animation: ruRise .5s ease .28s forwards; }
 .rankup-veil.told .ru-btn { animation: ruRise .5s ease .42s forwards; }
 @keyframes ruRise { 0% { opacity: 0; transform: translateY(16px); } 100% { opacity: 1; transform: translateY(0); } }
