@@ -24,7 +24,7 @@
   localStorage.setItem("qudratState", JSON.stringify({
     league: { week: lwk, base: 527 - 240, ghosts: lghosts },
     daily: { day: todayK, n: location.hash === "#chest" || location.hash === "#chestready" ? 10 : location.hash === "#claimed" ? 10 : 6, claimed: location.hash === "#claimed" },
-    v: 1, disclaimer: true, track: "sci", sound: false,
+    v: 1, disclaimer: true, track: "sci", sound: true,
     user: location.hash === "#login" ? null : { name: "سارة", guest: false },
     xp: 527, totalXp: location.hash.indexOf("#earncross") === 0 ? 1190 : 850, tierSeen: 1,
     streak: { count: 12, last: null },

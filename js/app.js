@@ -155,10 +155,33 @@ function bumpStreak() {
 
 /* ---------------- sounds (WebAudio synth) ---------------- */
 let AC = null;
+/* Browsers start an AudioContext suspended unless it is constructed during a
+   user gesture, and this one is created lazily by whichever sound happens to
+   fire first — which can be sndTick() from the countdown interval, i.e. no
+   gesture at all. Nothing resumed it, so that one tick used to mute the rest
+   of the session. Backgrounding the tab suspends it too. */
+function audioCtx() {
+  if (!AC) {
+    const Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!Ctor) return null;
+    AC = new Ctor();
+  }
+  if (AC.state === "suspended" && AC.resume) { try { AC.resume(); } catch (e) {} }
+  return AC;
+}
+/* and take the first real tap as permission, so the context is already
+   running by the time anything wants to make a noise */
+["pointerdown", "keydown"].forEach(evt =>
+  document.addEventListener(evt, function unlock() {
+    ["pointerdown", "keydown"].forEach(e2 => document.removeEventListener(e2, unlock));
+    try { audioCtx(); } catch (e) {}
+  }, { once: false, passive: true }));
+
 function beep(seq) {
   if (!S.sound) return;
   try {
-    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    AC = audioCtx();
+    if (!AC) return;
     let t = AC.currentTime;
     seq.forEach(([f, dur]) => {
       const o = AC.createOscillator(), g = AC.createGain();
@@ -203,8 +226,13 @@ function playCorrect() {
   const a = correctPool[correctIdx];
   correctIdx = (correctIdx + 1) % (correctPool.length || 1);
   if (!a) { sndGood(); return; }            // no audio element → synth fallback
-  try { a.currentTime = 0; const p = a.play(); if (p && p.catch) p.catch(() => {}); }
-  catch (e) { sndGood(); }
+  try {
+    a.currentTime = 0;
+    const p = a.play();
+    /* a blocked or failed play used to be swallowed silently; fall back to the
+       synth so the correct answer still makes a sound */
+    if (p && p.catch) p.catch(() => sndGood());
+  } catch (e) { sndGood(); }
 }
 
 /* ---------------- data access ---------------- */
