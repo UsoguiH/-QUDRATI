@@ -297,11 +297,13 @@ svg.ic { display: block; }
    #FBE56D shine line (5px, r6, inset 8px) */
 .progress { flex: 1; height: 16px; background: var(--line); border-radius: 64px; overflow: hidden; }
 .progress > i {
-  display: block; height: 100%; background: var(--gold); border-radius: 64px;
+  display: block; height: 100%; background: var(--bar-fill, var(--gold)); border-radius: 64px;
   transition: width .4s cubic-bezier(.3,1.4,.5,1); position: relative;
   min-width: 12px;   /* an empty track told question one it had made no progress */
 }
-.progress > i::after { content:''; position:absolute; top:4px; right:8px; left:8px; height:5px; border-radius:6px; background:var(--gold-soft); }
+/* the Figma shine line. Its tint rides the tier with the fill, so the bar
+   still reads as one object once the streak turns it orange or blue. */
+.progress > i::after { content:''; position:absolute; top:4px; right:8px; left:8px; height:5px; border-radius:6px; background:var(--bar-shine, var(--gold-soft)); }
 .sess-hearts { display:flex; align-items:center; gap:6px; font-weight: 700; color: var(--red); font-size: 16px; white-space: nowrap; }
 .sess-hearts.hurt { animation: shake .4s ease; }
 .sess-hearts.dead { filter: grayscale(1); opacity: .6; }
@@ -515,7 +517,7 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .choice.wrong { border-color: var(--red); background: var(--red-bg); color: var(--red-dk2); box-shadow: 0 2px 0 var(--red); }
 .choice.wrong .ch-letter { border-color: var(--red); color: var(--red-dk2); background:#fff; }
 .choice:disabled { opacity: 1; }
-.choice.dim { opacity: .5; }
+.choice.dim { opacity: .4; }   /* reference value — measured, not taste */
 
 /* ============================================================
    Bottom action area + feedback sheet
@@ -526,8 +528,13 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
   background: var(--snow);
   padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
 }
+/* The sheet centres with margins, NOT with translateX. The reference slides
+   its banner with GSAP on a measured curve, and GSAP owns the whole transform
+   matrix — a translateX(50%) baked into the CSS would be wiped the moment the
+   timeline touches y. left:0 + right:0 + margin-inline:auto centres the same. */
 .feedback {
-  position: fixed; bottom: 0; right: 50%; transform: translateX(50%) translateY(100%);
+  position: fixed; bottom: 0; left: 0; right: 0; margin-inline: auto;
+  transform: translateY(100%);
   width: 100%; max-width: 430px; z-index: 50;
   padding: 18px 16px calc(24px + env(safe-area-inset-bottom));
   transition: transform .3s cubic-bezier(.3,1.2,.4,1);
@@ -535,7 +542,7 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
   border-radius: 22px 22px 0 0;
   box-shadow: 0 -8px 30px rgba(0, 0, 0, .18);
 }
-.feedback.show { transform: translateX(50%) translateY(0); }
+.feedback.show { transform: translateY(0); }
 .feedback.good { background: var(--green-bg); }
 .feedback.bad  { background: var(--red-bg); }
 .fb-head { display: flex; align-items: center; gap: 10px; font-size: 26px; font-weight: 700; }
@@ -1219,7 +1226,7 @@ button.dom-stat:active { transform: scale(.99); }
 .q-stem, .q-figure, .cmp-wrap { animation: fadeUp .4s .12s ease backwards; }
 .choice { animation: fadeUp .38s ease backwards; animation-delay: var(--d, 0s); }
 .choice.sel { animation: selPop .25s cubic-bezier(.34, 1.56, .64, 1); }
-.choice.correct { animation: correctBounce .55s cubic-bezier(.3,1.5,.5,1); }
+/* .choice.correct's bounce is now the ported GSAP jump — see answerFx() */
 .choice.wrong { animation: shake .45s ease; }
 .x-btn { transition: transform .15s; }
 .x-btn:active { transform: rotate(90deg) scale(.85); }
@@ -1987,7 +1994,23 @@ button.dom-stat:active { transform: scale(.99); }
 
 .dq-stem { font-size: 18px; font-weight: 700; color: var(--ink); line-height: 1.6; margin-bottom: 14px; }
 .dq-choices { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
-.dq-choices .choice { animation: fadeUp .35s var(--d) ease backwards; }
+/* the daily question gets the same card treatment as the session: a base the
+   jump lifts off, a 4px lip, and no CSS animation to fight GSAP over transform */
+.dq-sheet { --hair: #e5e5e5; --card-radius: 15px; }
+.dq-choices .slot { position: relative; min-height: 62px; display: flex; }
+.dq-choices .slot > .base {
+  display: block; position: absolute; inset: 0;
+  border-radius: var(--card-radius); background: var(--hair); z-index: 0;
+}
+.dq-choices .choice {
+  position: relative; z-index: 1; flex: 1;
+  border: 2px solid var(--line); border-bottom-width: 4px;
+  border-radius: var(--card-radius); box-shadow: none;
+  overflow: hidden; transform-origin: 50% 100%; will-change: transform;
+  animation: none;
+}
+.dq-choices .choice:active { transform: none; box-shadow: none; }
+.dq-sheet .storm { position: absolute; inset: 0; width: auto; max-width: none; transform: none; left: 0; }
 .dq-check { margin-bottom: 6px; }
 .dq-fb { display: none; }
 .dq-fb.show { display: block; animation: fadeUp .4s cubic-bezier(.3,1.2,.5,1); text-align: center; }
@@ -2104,147 +2127,89 @@ button.dom-stat:active { transform: scale(.99); }
 .lb-foot b { color: var(--gold-dk); }
 
 /* ============================================================
-   RANK-UP CELEBRATION (full-screen) — chest-ceremony class flow:
-   .show (veil in) → .drop (badge falls) → .pop (flash/burst) → .told (text)
+   RANK-UP CELEBRATION
+   ------------------------------------------------------------
+   The animation itself is a canvas simulation — see showRankUp in app.js.
+   What is left here is only what CSS is actually good at: the field the
+   scene sits on, the layout that reserves the shield's box, and the type.
+
+   .ru-stage is an EMPTY box. It exists so the DOM decides where the shield
+   goes at every viewport size, and the canvas reads that rect back. Layout
+   stays in one place instead of being duplicated as canvas arithmetic.
+
+   .told is added by the scene when the shield actually lands, so the copy
+   is released by the impact rather than by a timer hoping to agree with it.
    ============================================================ */
 .rankup-veil {
   position: fixed; inset: 0; z-index: 400; overflow: hidden;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px;
-  /* the screen behind, blurred (frosted glass) + a dark tint so the white text stays readable */
-  background: var(--scrim);
-  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
-  opacity: 0; transition: opacity .32s ease;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 24px calc(22px + env(safe-area-inset-bottom, 0px));
+  background: #14161F;
+  opacity: 0; transition: opacity .26s ease;
 }
 .rankup-veil.show { opacity: 1; }
-.rankup-veil.out { opacity: 0; }
-/* faint tier tint over the blur so each rank still feels distinct */
-.ru-gold     { background: radial-gradient(circle at 50% 40%, rgba(150,110,10,.4), rgba(12,10,20,.6) 72%); }
-.ru-silver   { background: radial-gradient(circle at 50% 40%, rgba(70,85,105,.42), rgba(12,14,20,.6) 72%); }
-.ru-bronze   { background: radial-gradient(circle at 50% 40%, rgba(120,75,40,.4), rgba(14,10,8,.6) 72%); }
-.ru-diamond  { background: radial-gradient(circle at 50% 40%, rgba(30,90,125,.42), rgba(8,16,22,.6) 72%); }
-.ru-champion { background: radial-gradient(circle at 50% 40%, rgba(80,50,120,.42), rgba(12,9,22,.6) 72%); }
+.rankup-veil.out  { opacity: 0; }
 
-/* badge stage */
-.ru-stage { position: relative; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
-.ru-flash { position: absolute; width: 200px; height: 200px; border-radius: 50%; opacity: 0;
-  background: radial-gradient(circle, #fff 0%, rgba(255,255,255,.6) 35%, transparent 68%); }
-.rankup-veil.pop .ru-flash { animation: ruFlash .62s ease-out forwards; }
-@keyframes ruFlash { 0% { opacity: 0; transform: scale(.2); } 28% { opacity: .95; } 100% { opacity: 0; transform: scale(2.6); } }
-
-.ru-badgewrap { position: relative; display: flex; align-items: center; justify-content: center; }
-.ru-glow { position: absolute; width: 230px; height: 230px; border-radius: 50%; z-index: -1;
-  background: radial-gradient(closest-side, rgba(255,210,70,.55), transparent 70%); animation: ruGlow 2.4s ease-in-out infinite; }
-.ru-silver .ru-glow   { background: radial-gradient(closest-side, rgba(190,205,220,.5), transparent 70%); }
-.ru-diamond .ru-glow  { background: radial-gradient(closest-side, rgba(130,205,250,.55), transparent 70%); }
-.ru-champion .ru-glow { background: radial-gradient(closest-side, rgba(185,140,245,.55), transparent 70%); }
-.ru-bronze .ru-glow   { background: radial-gradient(closest-side, rgba(210,150,90,.5), transparent 70%); }
-@keyframes ruGlow { 0%,100% { opacity: .55; transform: scale(.92); } 50% { opacity: 1; transform: scale(1.08); } }
-
-/* The rotating sunburst is the thing that makes a promotion read as a
-   promotion — Duolingo and Clash Royale both hang the whole moment on it.
-   Rotation lives on the element and the fade on a transition, so the two
-   never fight over transform. */
-.ru-rays {
-  position: absolute; width: 460px; height: 460px; border-radius: 50%; z-index: -2;
-  background: repeating-conic-gradient(from 0deg,
-    rgba(255, 255, 255, .17) 0deg 6deg, transparent 6deg 20deg);
-  -webkit-mask-image: radial-gradient(closest-side, #000 26%, transparent 76%);
-  mask-image: radial-gradient(closest-side, #000 26%, transparent 76%);
-  opacity: 0; transition: opacity .7s ease .25s;
-  animation: spinSlow 22s linear infinite;
-  pointer-events: none;
-}
-.rankup-veil.pop .ru-rays { opacity: 1; }
-.ru-gold .ru-rays, .ru-champion .ru-rays { background: repeating-conic-gradient(from 0deg, rgba(255, 226, 140, .26) 0deg 6deg, transparent 6deg 20deg); }
-.ru-diamond .ru-rays { background: repeating-conic-gradient(from 0deg, rgba(180, 232, 255, .26) 0deg 6deg, transparent 6deg 20deg); }
-
-/* three sparks that keep circling once the badge has landed */
-.ru-orbit { position: absolute; width: 210px; height: 210px; animation: spinSlow 7s linear infinite; opacity: 0; transition: opacity .5s ease .4s; }
-.rankup-veil.pop .ru-orbit { opacity: 1; }
-.ru-orbit i {
-  position: absolute; width: 9px; height: 9px; border-radius: 50%;
-  background: #FFE36B; box-shadow: 0 0 10px rgba(255, 220, 90, .95);
-}
-.ru-orbit i:nth-child(1) { top: -4px; left: 50%; margin-left: -4.5px; }
-.ru-orbit i:nth-child(2) { bottom: 14%; left: 4%; width: 7px; height: 7px; }
-.ru-orbit i:nth-child(3) { bottom: 14%; right: 4%; width: 6px; height: 6px; }
-.ru-diamond .ru-orbit i { background: #BFEAFF; box-shadow: 0 0 10px rgba(160, 220, 255, .95); }
-.ru-champion .ru-orbit i { background: #E6CCFF; box-shadow: 0 0 10px rgba(200, 160, 255, .95); }
-.ru-silver .ru-orbit i { background: #E8F0F8; box-shadow: 0 0 10px rgba(220, 235, 250, .95); }
-
-.ru-ring { position: absolute; width: 150px; height: 150px; border-radius: 50%; border: 5px solid rgba(255,255,255,.85); opacity: 0; }
-.rankup-veil.pop .ru-ring { animation: ruRing .8s ease-out forwards; }
-.ru-ring2 { border-width: 3px; border-color: rgba(255,255,255,.5); }
-.rankup-veil.pop .ru-ring2 { animation: ruRing 1.15s ease-out .18s forwards; }
-@keyframes ruRing { 0% { opacity: .9; transform: scale(.35); } 100% { opacity: 0; transform: scale(2.3); } }
-
-.ru-spark { position: absolute; top: 50%; left: 50%; width: 6px; height: 20px; border-radius: 3px; background: #FFE36B; opacity: 0; box-shadow: 0 0 8px rgba(255,220,80,.9); }
-.ru-silver .ru-spark   { background: #DCE6F0; box-shadow: 0 0 8px rgba(220,230,240,.9); }
-.ru-diamond .ru-spark  { background: #BFEAFF; box-shadow: 0 0 8px rgba(160,220,255,.9); }
-.ru-champion .ru-spark { background: #E6CCFF; box-shadow: 0 0 8px rgba(200,160,255,.9); }
-.rankup-veil.pop .ru-spark { animation: ruSpark .72s ease-out forwards; }
-@keyframes ruSpark {
-  0% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--a)) translateY(-10px) scaleY(.4); }
-  25% { opacity: 1; }
-  100% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--a)) translateY(-104px) scaleY(1); }
+/* One neutral overlay for every tier. The tinted fields read as brown and
+   orange behind the warmer badges; the shield itself is the only thing that
+   should be carrying colour here. */
+.rankup-veil {
+  background: radial-gradient(circle at 50% 37%, #2B303B 0%, #191D25 42%, #0C0F14 100%);
 }
 
-.ru-badge { height: 150px; width: auto; opacity: 0; filter: drop-shadow(0 10px 16px rgba(0,0,0,.45)); will-change: transform; }
-.rankup-veil.drop .ru-badge { animation: ruDrop .82s cubic-bezier(.3,1.3,.45,1) forwards; }
-@keyframes ruDrop {
-  0% { opacity: 0; transform: translateY(-560px) scale(.45) rotate(-14deg); }
-  55% { opacity: 1; }
-  74% { transform: translateY(16px) scale(1.08, .9) rotate(3deg); }
-  88% { transform: translateY(-6px) scale(.97, 1.03) rotate(-1deg); }
-  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+/* corners pulled down so the lit centre carries the eye */
+.rankup-veil::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
+  box-shadow: inset 0 0 170px 55px rgba(0,0,0,.5);
 }
-.rankup-veil.pop .ru-badge { animation: ruPop 1.7s cubic-bezier(.2,1,.4,1) forwards; }
-@keyframes ruPop { 0% { opacity: 1; transform: scale(1); } 16% { opacity: 1; transform: scale(1.24); } 38% { transform: scale(.97); } 60% { transform: scale(1.06); } 100% { opacity: 1; transform: scale(1.03); } }
+/* width/height are NOT redundant with inset:0 — a canvas is a replaced
+   element, so absolute positioning leaves it at its intrinsic 300x150 and
+   the offsets are simply over-constrained. */
+.ru-canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
 
-/* sweeping shine across the badge on burst */
-.ru-shine { position: absolute; top: 0; bottom: 0; left: -60%; width: 45%;
-  background: linear-gradient(105deg, transparent, rgba(255,255,255,.75), transparent);
-  transform: skewX(-18deg); opacity: 0; pointer-events: none; }
-.rankup-veil.pop .ru-shine { animation: ruShine 1s ease-out .15s forwards; }
-@keyframes ruShine { 0% { left: -60%; opacity: 0; } 20% { opacity: .9; } 100% { left: 130%; opacity: 0; } }
+.ru-main { flex: 1; width: 100%; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; position: relative; z-index: 3; }
+.ru-foot { width: 100%; max-width: 400px; flex-shrink: 0; opacity: 0;
+  position: relative; z-index: 3; }
 
-/* confetti rain */
-.rankup-veil.told .ru-badgewrap { animation: ruFloat 3.2s ease-in-out infinite; }
-@keyframes ruFloat {
-  0%, 100% { transform: translateY(0) rotate(0); }
-  50%      { transform: translateY(-9px) rotate(-1.5deg); }
+/* reserves the shield's box; the canvas draws into this rect */
+.ru-stage { width: 240px; height: 240px; margin-bottom: 30px; flex-shrink: 0; }
+
+.ru-kicker, .ru-title, .ru-sub { opacity: 0; }
+/* No letter-spacing and no uppercase: Arabic is cursive, so tracking pulls
+   joined letters apart and uppercase does nothing. */
+.ru-kicker { font-weight: 800; font-size: 15px; color: rgba(255,255,255,.8); }
+
+.ru-title {
+  color: #fff; font-size: 40px; font-weight: 800; line-height: 1.25;
+  margin: 8px 0 10px; text-shadow: 0 4px 0 rgba(0,0,0,.3);
+}
+.ru-sub {
+  color: rgba(255,255,255,.72); font-weight: 600; font-size: 15.5px;
+  line-height: 1.65; max-width: 300px; text-align: center;
+}
+.rankup-veil.told .ru-kicker { animation: ruRise .5s cubic-bezier(.2,.8,.3,1) .04s forwards; }
+.rankup-veil.told .ru-title  { animation: ruSlam .55s cubic-bezier(.2,1.6,.4,1) .12s forwards; }
+.rankup-veil.told .ru-sub    { animation: ruRise .5s cubic-bezier(.2,.8,.3,1) .26s forwards; }
+.rankup-veil.told .ru-foot   { animation: ruRise .5s cubic-bezier(.2,.8,.3,1) .38s forwards; }
+@keyframes ruRise { 0% { opacity: 0; transform: translateY(18px); } 100% { opacity: 1; transform: translateY(0); } }
+@keyframes ruSlam { 0% { opacity: 0; transform: scale(.5); } 60% { opacity: 1; } 100% { opacity: 1; transform: scale(1); } }
+
+/* short viewports: keep the shield and the CTA on the same screen */
+@media (max-height: 740px) {
+  .ru-stage { width: 180px; height: 180px; margin-bottom: 20px; }
+  .ru-title { font-size: 33px; }
 }
 
-.ru-confetti-wrap { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.ru-confetti { position: absolute; top: -8%; opacity: 0; border-radius: 2px; }
-.rankup-veil.told .ru-confetti { animation-name: ruConfetti; animation-timing-function: cubic-bezier(.4,.1,.7,1); animation-fill-mode: forwards; }
-@keyframes ruConfetti {
-  0% { opacity: 0; transform: translateY(-12vh) translateX(0) rotate(0); }
-  10% { opacity: 1; }
-  100% { opacity: 0; transform: translateY(112vh) translateX(var(--dx)) rotate(var(--rot)); }
-}
-
-/* text + button */
-.ru-kicker, .ru-title, .ru-sub, .ru-btn { opacity: 0; }
-.ru-kicker { color: rgba(255,255,255,.78); font-weight: 800; font-size: 15px; letter-spacing: .4px; margin-top: 6px; }
-.ru-title { color: #fff; font-size: 34px; font-weight: 800; margin: 4px 0 6px; text-shadow: 0 3px 0 rgba(0,0,0,.25); }
-.rankup-veil.told .ru-title { animation: ruSlam .6s cubic-bezier(.2,1.7,.4,1) .12s forwards, ruTitleGlow 2.8s ease-in-out 1s infinite; }
-@keyframes ruTitleGlow {
-  0%, 100% { text-shadow: 0 3px 0 rgba(0,0,0,.25), 0 0 12px rgba(255,255,255,.18); }
-  50%      { text-shadow: 0 3px 0 rgba(0,0,0,.25), 0 0 26px rgba(255,255,255,.5); }
-}
-.ru-gold .ru-title { color: #FFD94A; } .ru-silver .ru-title { color: #DCE6F0; }
-.ru-bronze .ru-title { color: #E8A86B; } .ru-diamond .ru-title { color: #9FE0FF; } .ru-champion .ru-title { color: #D7B6FF; }
-.ru-sub { color: rgba(255,255,255,.72); font-weight: 600; font-size: 15px; line-height: 1.6; max-width: 300px; text-align: center; margin-bottom: 26px; }
-.ru-btn { max-width: 320px; width: 100%; }
-.rankup-veil.told .ru-kicker { animation: ruRise .5s ease .02s forwards; }
-.rankup-veil.told .ru-sub { animation: ruRise .5s ease .28s forwards; }
-.rankup-veil.told .ru-btn { animation: ruRise .5s ease .42s forwards; }
-@keyframes ruRise { 0% { opacity: 0; transform: translateY(16px); } 100% { opacity: 1; transform: translateY(0); } }
-@keyframes ruSlam { 0% { opacity: 0; transform: scale(.4); } 70% { opacity: 1; } 100% { opacity: 1; transform: scale(1); } }
-
-@media (prefers-reduced-motion: reduce) {
-  .rankup-veil * { animation-duration: .01ms !important; }
+/* Driven by the saved setting on <html>, not by the raw OS query - see
+   motionApply() in app.js. Windows reports "reduce" far more often than
+   anyone intends, and it used to silently gut the celebration on desktop. */
+:root[data-motion="reduced"] .rankup-veil,
+:root[data-motion="reduced"] .rankup-veil * {
+  /* the scene skips the simulation and composes the rest pose in one frame;
+     the copy just needs to be there rather than sliding in */
+  animation-duration: .01ms !important; animation-iteration-count: 1 !important;
+  transition-duration: .01ms !important;
 }
 
 /* ===== Fire-streak celebration (Duolingo Rive flame + odometer + Lottie checks) ===== */
@@ -2268,6 +2233,239 @@ button.dom-stat:active { transform: scale(.99); }
 .sk-days .check { position: absolute; left: 50%; top: 50%; width: 56px; height: 74px; transform: translate(-50%,-58%); pointer-events: none; }
 .sk-days .check svg { width: 100% !important; height: 100% !important; }
 .sk-btn { margin-top: 36px; width: 100%; }
+
+/* ============================================================
+   CORRECT-ANSWER MOTION — the jump, and the two strikes.
+   Ported from NewAnswerAnimation.txt; the timeline lives in
+   answerFx() in app.js. The card must have transform-origin at
+   its own base or the hop reads as a slide.
+   ============================================================ */
+.choice { transform-origin: 50% 100%; will-change: transform; overflow: hidden; position: relative; }
+.choice .ch-txt { position: relative; z-index: 2; }
+.choice .ch-letter, .choice .ch-key { position: relative; z-index: 2; }
+
+.ch-shine {
+  position: absolute; top: -25%; bottom: -25%; width: 23%; left: 0; z-index: 1; opacity: 0;
+  pointer-events: none; transform: skewX(-25deg);
+  background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.55) 22%,
+    rgba(255,255,255,.92) 50%, rgba(255,255,255,.55) 78%, rgba(255,255,255,0));
+}
+.ch-spk {
+  position: absolute; width: 11px; height: 11px; background: #fff; opacity: 0; z-index: 3;
+  pointer-events: none; transform: scale(0);
+  clip-path: polygon(50% 0%,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0% 50%,39% 39%);
+}
+.ch-spk.k1 { top: 8px; left: 11px; }
+.ch-spk.k2 { top: 10px; right: 13px; }
+.ch-spk.k3 { bottom: 11px; right: 62px; }
+
+/* the liquid crest on the lip of the correct-answer sheet — the sheet's own
+   top edge becomes the wave, so the rounded corners come off while it is up */
+.feedback.has-crest { border-radius: 0; overflow: visible; }
+.fb-crest {
+  position: absolute; left: 0; right: 0; top: -88px;
+  width: 100%; height: 90px; display: block; pointer-events: none;
+}
+.fb-crest-fill { fill: var(--green-bg); }
+.fb-crest-line { stroke: #8ee000; }
+
+/* The storm is scoped to the CONTENT COLUMN, not the viewport.
+   The bolt SVG is viewBox="0 0 884 1920" with preserveAspectRatio="slice", so
+   it scales to COVER whatever box it lives in. Pinned to a 1440px window that
+   is a 2.17x scale — one bolt turns into a giant ribbon across the page and
+   the confetti scatters to the far edges of the screen, hundreds of px from
+   the question. The reference scopes all of it inside its 400px .phone; this
+   is the same box, using the column geometry the action bar and sheet use. */
+.storm {
+  position: fixed; top: 0; bottom: 0;
+  left: calc(50% + var(--col-off)); transform: translateX(-50%);
+  width: 100%; max-width: var(--col-max);
+  overflow: hidden; pointer-events: none; z-index: 70;
+}
+.storm svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.bolt { fill: none; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
+
+/* both live inside .storm now, so their percentages are of the column */
+.fx-spark {
+  position: absolute; width: 12px; height: 12px; opacity: 0; z-index: 71; pointer-events: none;
+  clip-path: polygon(50% 0%,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0% 50%,39% 39%);
+}
+.fx-bit { position: absolute; opacity: 0; z-index: 69; pointer-events: none; }
+
+/* streak tag, under the progress bar */
+.fx-tagwrap { position: relative; height: 0; }
+.fx-tag {
+  position: absolute; top: 2px; left: 0; right: 0; text-align: center;
+  font-size: 12.5px; font-weight: 700; opacity: 0; pointer-events: none;
+}
+/* the resting state. GSAP pops it on the strike, but the tag has to stay up
+   by itself across the next question - the run is still alive. */
+.fx-tag.on { opacity: 1; }
+
+/* The bar's second layer: a strike cross-fades the track over to the next
+   tier. It is a full copy of the fill — shine line and all — so the turnover
+   is one bar changing colour, not a flat block sliding over a detailed one.
+   Once the cross-fade lands, fxPaintBar() commits the tier to the warm layer
+   and parks this one again. */
+.progress { position: relative; }
+.progress > .prog-cool {
+  position: absolute; inset-block: 0; inset-inline-start: 0;
+  opacity: 0; background: var(--cool-fill, var(--gold)); pointer-events: none;
+}
+.progress > .prog-cool::after { background: var(--cool-shine, var(--gold-soft)); }
+
+/* --- the sheet, while the timeline owns it -------------------------------
+   The reference slides its banner inside the same timeline as the jump, so
+   the crest, the confetti and the slide all read off one clock. Here that
+   means the CSS transition and the content's own entrance animations have to
+   stand down for the duration — two clocks on one element is exactly the
+   drift the brief warns about. Everything below is scoped to .fx-anim, so the
+   CSS slide stays as the fallback for reduced motion and for a missing GSAP.
+   .up is brief trap 1: the parked sheet sits over the check button, so it
+   must not be tappable until it has actually arrived. */
+.feedback.fx-anim        { transition: none; pointer-events: none; }
+.feedback.fx-anim.up     { pointer-events: auto; }
+.feedback.fx-anim .fb-head,
+.feedback.fx-anim .fb-head img,
+.feedback.fx-anim .fb-ok,
+.feedback.fx-anim .fb-x,
+.feedback.fx-anim .btn   { animation: none; }
+.feedback.fx-anim .fb-x  { transform-origin: 50% 50%; }
+
+/* Same rule: the saved setting, never the media query. This selector is why
+   the bolts could never render on a Windows box with animations turned off. */
+:root[data-motion="reduced"] .ch-shine,
+:root[data-motion="reduced"] .ch-spk,
+:root[data-motion="reduced"] .bolt,
+:root[data-motion="reduced"] .fx-spark,
+:root[data-motion="reduced"] .fx-bit { display: none !important; }
+
+/* ============================================================
+   ANSWER SCREEN — the UI from NewAnswerAnimation.txt, 1:1.
+   Every colour, radius, size and transition below is lifted from
+   that file. Scoped to .screen-session so the daily-question card
+   and the mock exam keep the app's own look.
+
+   Two values are min- instead of fixed, and only these two: the
+   slot's 60px height and the banner's 212px. The reference has one
+   short line per option and one line of solution; our options are
+   Arabic maths and our solution runs to several lines, so a hard
+   height would clip real content. Everything else is verbatim.
+   ============================================================ */
+/* questionBody() emits .slot everywhere it is used. Outside a session the
+   grey base has no meaning, so it stays hidden and the slot is a plain
+   wrapper — the choice keeps the app's normal look. */
+.slot { position: relative; display: flex; }
+.slot > .base { display: none; }
+.slot > .choice { flex: 1; }
+.screen-session .slot > .base { display: block; }
+
+.screen-session {
+  --pick-face: #ddf4ff; --pick-edge: #84d8ff; --pick-ink: #1899d6;
+  --grn-face: #d0ffb5;  --grn-edge: #95ed63;  --grn-ink: #58a700;
+  --grn-go: #40ca12;    --grn-go-lo: #33a30c;
+  --banner-g: #d0fdb3;
+  --red-face: #ffdfe0;  --red-edge: #ff8f8f;  --red-ink: #ea2b2b;
+  --red-go: #ff4b4b;    --red-go-lo: #e02b2b;
+  --banner-r: #ffdfe0;
+  --hair: #e5e5e5;      --card-radius: 15px;
+}
+
+/* ---- the streak bar ----
+   The session used to restyle this into the reference's bar: 17px tall, r9,
+   and a flat inset-box-shadow highlight instead of the app's shine line. That
+   threw away the Figma bar the rest of the app uses. It is back to the app's
+   own bar — track #E5E5E5 r64 h16, fill with the #FBE56D shine line and the
+   sweep — and the only thing the session adds is the streak tier, which is
+   carried by --bar-fill / --bar-shine from fxPaintBar(). */
+
+/* ---- option cards ---- */
+.screen-session .choices { display: flex; flex-direction: column; gap: 10px; }
+.screen-session .slot { position: relative; min-height: 62px; display: flex; }
+.screen-session .slot > .base {
+  position: absolute; inset: 0; border-radius: var(--card-radius);
+  background: var(--hair); z-index: 0;
+}
+.screen-session .choice {
+  position: relative; z-index: 1; flex: 1;
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  background: #fff; border: 2px solid var(--hair); border-bottom-width: 4px;
+  border-radius: var(--card-radius); box-shadow: none;
+  /* the reference's 14.5/600 is its own type scale — the app's answer text
+     is 19/500 and stays that way. Structure is borrowed, type is not. */
+  font-size: 19px; font-weight: 500; color: var(--ink); text-align: right;
+  overflow: hidden; transform-origin: 50% 100%; will-change: transform;
+  transition: background-color .06s linear, border-color .06s linear, color .06s linear, opacity .18s;
+}
+.screen-session .choice:active { transform: none; box-shadow: none; }
+.screen-session .choice .ch-letter {
+  flex: none; width: 30px; height: 30px; border: 2px solid var(--hair);
+  border-radius: 8px; display: grid; place-items: center;
+  font-size: 15px; font-weight: 700; color: var(--gray-icon); background: transparent;
+}
+.screen-session .choice .ch-txt { position: relative; z-index: 2; line-height: 1.3; }
+.screen-session .choice.sel { background: var(--pick-face); border-color: var(--pick-edge); color: var(--pick-ink); }
+.screen-session .choice.sel .ch-letter { border-color: var(--pick-edge); color: var(--pick-ink); }
+.screen-session .choice.correct { background: var(--grn-face); border-color: var(--grn-edge); color: var(--grn-ink); }
+.screen-session .choice.correct .ch-letter { border-color: var(--grn-edge); color: var(--grn-ink); }
+.screen-session .choice.wrong { background: var(--red-face); border-color: var(--red-edge); color: var(--red-ink); }
+.screen-session .choice.wrong .ch-letter { border-color: var(--red-edge); color: var(--red-ink); }
+.screen-session .choice.dim { opacity: .4; }
+/* the app's own entry/state animations would fight GSAP over transform */
+.screen-session .choice, .screen-session .choice.sel, .screen-session .choice.correct,
+.screen-session .choice.wrong { animation: none; }
+
+/* ---- the check button ---- */
+.screen-session .action-bar .btn {
+  height: 58px; border-radius: 14px; margin-bottom: 0;
+  background: var(--hair); color: var(--gray-icon); box-shadow: none;
+  border: 0; border-bottom: 4px solid transparent;
+  font-size: 16px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+  transition: background-color .12s, color .12s;
+}
+.screen-session .action-bar .btn:not(:disabled) {
+  background: var(--grn-go); border-bottom-color: var(--grn-go-lo); color: #fff;
+}
+.screen-session .action-bar .btn:active { transform: none; }
+
+/* ---- the banner ---- */
+.screen-session .feedback {
+  min-height: 212px; border-radius: 0; overflow: visible;
+  background: var(--banner-g); box-shadow: none;
+  padding: 16px 20px 18px;
+}
+.screen-session .feedback.bad { background: var(--banner-r); }
+/* brief section 5: 200ms power3.out for the win, 160ms power4.out for the miss */
+.screen-session .feedback.good { transition-duration: .2s;  transition-timing-function: cubic-bezier(.215,.61,.355,1); }
+.screen-session .feedback.bad  { transition-duration: .16s; transition-timing-function: cubic-bezier(.165,.84,.44,1); }
+.screen-session .fb-head {
+  display: flex; align-items: center; gap: 10px;
+  flex-direction: row-reverse; justify-content: flex-end;
+  font-size: 26px; font-weight: 700; color: var(--grn-ink);
+}
+.screen-session .feedback.bad .fb-head { color: var(--red-ink); }
+.screen-session .fb-correct, .screen-session .fb-solution {
+  margin-top: 8px; font-size: 16px; font-weight: 600;
+  color: var(--grn-ink); text-align: right; line-height: 1.45;
+}
+.screen-session .feedback.bad .fb-correct,
+.screen-session .feedback.bad .fb-solution { color: var(--red-ink); }
+.screen-session .fb-solution-toggle { color: var(--grn-ink); }
+.screen-session .feedback .btn {
+  margin-top: 14px; width: 100%; height: 52px; border: 0; border-radius: 14px;
+  background: var(--grn-go); border-bottom: 4px solid var(--grn-go-lo);
+  color: #fff; font-size: 16px; font-weight: 700;
+  letter-spacing: .5px; text-transform: uppercase; box-shadow: none; margin-bottom: 0;
+}
+.screen-session .feedback.bad .btn,
+.screen-session .feedback .btn.btn-red {
+  background: var(--red-go); border-bottom-color: var(--red-go-lo);
+}
+.screen-session .feedback .btn:active { transform: none; }
+.screen-session .fb-crest-fill { fill: var(--banner-g); }
+.screen-session .feedback.bad .fb-crest-fill { fill: var(--banner-r); }
+.screen-session .fb-crest-line { stroke: #8ee000; }
+.screen-session .feedback.bad .fb-crest-line { stroke: #ffb3b3; }
 
 /* ============================================================
    WEB LAYOUT — responsive tiers
@@ -2303,16 +2501,21 @@ button.dom-stat:active { transform: scale(.99); }
 
 /* ---- overlays re-anchored to the content column ------------ */
 .bottomnav,
-.action-bar,
-.feedback {
+.action-bar {
   right: auto;
   left: calc(50% + var(--col-off));
   max-width: var(--col-max);
 }
 .bottomnav     { transform: translateX(-50%); }
 .action-bar    { transform: translateX(-50%); }
-.feedback      { transform: translateX(-50%) translateY(100%); }
-.feedback.show { transform: translateX(-50%) translateY(0); }
+/* left = 2*--col-off with right = 0 puts the centre at 50% + --col-off — the
+   same place the others land, but with the transform axis left free. */
+.feedback {
+  left: calc(2 * var(--col-off)); right: 0; margin-inline: auto;
+  max-width: var(--col-max);
+  transform: translateY(100%);
+}
+.feedback.show { transform: translateY(0); }
 .toast         { left: calc(50% + var(--col-off)); }
 
 /* the win/review result screens re-flow their action bar inline as a

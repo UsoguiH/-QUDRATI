@@ -57,7 +57,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {} };
+const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, motion: "full", xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {} };
 const LEAGUE_NAMES = ["عبدالله", "محمد", "نورة", "سارة", "فهد", "ريم", "خالد", "لمى", "تركي", "جواهر", "عمر", "هند", "سلمان", "رنا", "بدر", "ليان", "ناصر", "شهد", "يزيد", "دانة", "مازن", "أصيل", "وليد", "غادة"];
 /* Permanent rank tiers (badge art in assets/icons/ranks/). A user's tier is
    the highest threshold their LIFETIME total XP (S.totalXp) has crossed —
@@ -131,6 +131,30 @@ if (S.tierSeen == null) S.tierSeen = tierIndex();
   const y = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
   if (S.streak.last !== t && S.streak.last !== y) S.streak.count = 0;
 })();
+
+/* --------------------------------------------------------------------------
+   MOTION.
+   This used to read prefers-reduced-motion inline, in JS and in two CSS
+   media queries, and silently throw the animation away. Windows ships
+   "Show animations in Windows" OFF far more often than phones do (and this
+   machine has it off), so the jump, the bolts, the shine and the confetti
+   were all dead on desktop while working fine on mobile - which is exactly
+   trap 3 in INTEGRATION-BRIEF.md.
+
+   The OS preference is now REPORTED, not silently obeyed. The app is a game;
+   full motion is the default on every device, the choice is saved per user,
+   and Settings says so when the system asks for less. Anyone who genuinely
+   wants less motion has a switch that works on both platforms.
+   -------------------------------------------------------------------------- */
+function osPrefersReduce() {
+  try { return !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
+  catch (e) { return false; }              // a throw here must never wedge the UI
+}
+function motionReduced() { return S.motion === "reduced"; }
+function motionApply() {
+  try { document.documentElement.setAttribute("data-motion", S.motion || "full"); } catch (e) {}
+}
+motionApply();
 
 let storageWarned = false;
 const save = () => {
@@ -372,8 +396,13 @@ function pickDailyQuestion() {
   /* djb2 over consecutive date strings lands on consecutive indices, so the
      "daily" question walked one step through the bank and served the same
      lesson eight or nine days running. Avalanche it. */
-  h ^= h >>> 15; h = Math.imul(h, 2246822507) >>> 0; h ^= h >>> 13;
-  return shuffleChoices(pool[h % pool.length]);
+  /* Every step has to stay UNSIGNED. `h ^= h >>> 13` is a signed-int32 XOR, so
+     it went negative on roughly half of all dates, pool[negative] was
+     undefined, and the daily question silently refused to open on those days —
+     the button did nothing at all. */
+  h ^= h >>> 15; h = Math.imul(h, 2246822507) >>> 0; h = (h ^ (h >>> 13)) >>> 0;
+  const q = pool[h % pool.length];
+  return q ? shuffleChoices(q) : null;
 }
 
 function dailyQuestionCard() {
@@ -411,15 +440,26 @@ A.openDailyQ = function () {
     <div class="dq-stem">${q.stem}</div>
     ${q.figure ? `<div class="q-figure">${q.figure}</div>` : ""}
     <div class="dq-choices">${q.choices.map((c, i) =>
-      `<button class="choice" data-ci="${i}" style="--d:${0.05 + i * 0.06}s" onclick="A.pickDailyQ(${i})"><span class="ch-letter">${LETTERS[i]}</span><span>${c}</span></button>`).join("")}</div>
+      `<div class="slot"><span class="base" aria-hidden="true"></span>` +
+      `<button class="choice" data-ci="${i}" style="--d:${0.05 + i * 0.06}s" onclick="A.pickDailyQ(${i})">` +
+      `<span class="ch-shine" aria-hidden="true"></span>` +
+      `<i class="ch-spk k1" aria-hidden="true"></i><i class="ch-spk k2" aria-hidden="true"></i><i class="ch-spk k3" aria-hidden="true"></i>` +
+      `<span class="ch-letter">${LETTERS[i]}</span><span class="ch-txt">${c}</span></button></div>`).join("")}</div>
     <button class="btn dq-check" id="dqCheck" disabled onclick="A.checkDailyQ()">تحقق</button>
     <div class="dq-fb" id="dqFb"></div>
+    <div class="storm" id="storm" aria-hidden="true">
+      <svg viewBox="0 0 884 1920" preserveAspectRatio="xMidYMid slice">
+        <polyline class="bolt" id="fxBoltA"/>
+        <polyline class="bolt" id="fxBoltB"/>
+      </svg>
+    </div>
   </div>`;
   veil.onclick = e => { if (e.target === veil) A.closeDailyQ(); };
   document.body.appendChild(veil);
   requestAnimationFrame(() => veil.classList.add("show"));
 };
 A.pickDailyQ = function (i) {
+  fxClear();
   DQ_SEL = i;
   document.querySelectorAll(".dq-choices .choice").forEach((b, j) => b.classList.toggle("sel", j === i));
   const c = document.getElementById("dqCheck"); if (c) c.disabled = false;
@@ -440,7 +480,15 @@ A.checkDailyQ = function () {
   const qs = S.qstats[q.id] = S.qstats[q.id] || { r: 0, w: 0 }; correct ? qs.r++ : qs.w++;
   noteAnswer(q, correct);
   save();
-  correct ? playCorrect() : sndBad();
+  if (correct) {
+    playCorrect();
+    S.dqRun = (S.dqRun || 0) + 1;      // the daily question keeps its own run
+    answerFx(document.querySelector(`.dq-choices .choice[data-ci="${q.answer}"]`), S.dqRun);
+  } else {
+    sndBad();
+    S.dqRun = 0;
+    answerFxFail(document.querySelector(`.dq-choices .choice[data-ci="${DQ_SEL}"]`));
+  }
   const chk = document.getElementById("dqCheck"); if (chk) chk.style.display = "none";
   const fb = document.getElementById("dqFb");
   fb.className = "dq-fb show " + (correct ? "good" : "bad");
@@ -939,10 +987,454 @@ function questionBody(q, selIdx, lockHandlers, pickFn, method) {
   if (isCmp) h += `<div class="cmp-wrap">
       <div class="cmp-box"><div class="cmp-t">القيمة الأولى</div><div class="cmp-v">${q.value1}</div></div>
       <div class="cmp-box"><div class="cmp-t">القيمة الثانية</div><div class="cmp-v">${q.value2}</div></div></div>`;
+  /* .slot + .base is the reference's structure: the grey base stays put so the
+     card has something to hop off, which is what makes the jump read. */
   h += `<div class="choices">` + choices.map((c, i) =>
-    `<button class="choice ${selIdx === i ? "sel" : ""}" data-ci="${i}" style="--d:${0.05 + i * 0.07}s" ${lockHandlers ? "" : `onclick="${pickFn || "A.pick"}(${i})"`}>
-       <span class="ch-letter">${LETTERS[i]}</span><span>${c}</span><span class="ch-key" aria-hidden="true">${toAr(i + 1)}</span></button>`).join("") + `</div>`;
+    `<div class="slot"><span class="base" aria-hidden="true"></span>
+     <button class="choice ${selIdx === i ? "sel" : ""}" data-ci="${i}" style="--d:${0.05 + i * 0.07}s" ${lockHandlers ? "" : `onclick="${pickFn || "A.pick"}(${i})"`}>
+       <span class="ch-shine" aria-hidden="true"></span>
+       <i class="ch-spk k1" aria-hidden="true"></i><i class="ch-spk k2" aria-hidden="true"></i><i class="ch-spk k3" aria-hidden="true"></i>
+       <span class="ch-letter">${LETTERS[i]}</span><span class="ch-txt">${c}</span><span class="ch-key" aria-hidden="true">${toAr(i + 1)}</span></button></div>`).join("") + `</div>`;
   return h;
+}
+
+/* ============================================================
+   CORRECT-ANSWER MOTION — ported from NewAnswerAnimation.txt.
+
+   THE JUMP — traced off the match-pairs recording, 60fps,
+   transform-origin 50% 100%.  AMP scales it past the measured values.
+       f0  y −15  sx .947  sy 1.056   launch, tall + narrow
+       f6  y −24  sx 1     sy 1       apex
+       f10 y −24                      apex hold ends
+       f19 y  −6  sx .980  sy 1.070   falling, stretching
+       f20 y  +1  sx 1.024 sy .926    impact, wide + short
+       f26 y  −7  sx 1     sy 1       settles, still lifted off its base
+   It plays on EVERY correct answer.
+
+   THE STRIKE rides on top of the jump once the run is long enough, and
+   the two themes are NOT one effect recoloured — every number differs:
+
+              bolt colour  stroke   bar transition            A / B
+     GOLD     #fae36a      34 / 20  #ffc800 → #ff9600,        +150 / +467
+                                    EASED 350ms sine.inOut    hold 300/267
+     BLUE     #9efefd      62       #ff9600 → cyan gradient,  +200 / +500
+                                    HARD CUT in 50ms          hold 300/383
+
+   Both bolts hold a dead-flat colour every frame they are lit, so the
+   strikes are always hard cuts.
+
+   Thresholds: gold from 3 correct in a row, blue from 5.
+   ============================================================ */
+const FX_AMP = 1.6;                                   // 60% past measured
+const FXP = v => +(v * FX_AMP).toFixed(2);
+const FXA = v => +(1 + (v - 1) * FX_AMP).toFixed(4);
+const FX_JUMP = { launch: .033, rise: .067, hang: .067, fall: .133, impact: .033, settle: .100 };
+
+const FX_THEMES = {
+  gold: {
+    ink: '#f39100',
+    barFrom: '#ffc800', barTo: '#ff9600',
+    barDur: .35, barEase: 'sine.inOut',
+    bolt: '#fae36a', wA: 34, wB: 20,
+    pA: '388,-40 512,315 430,540 614,790 610,1015 452,1310 528,1700',
+    pB: '430,-40 546,300 452,560 640,806 634,1030 470,1330 556,1740',
+    a: .15, aHold: .30, b: .467, bHold: .267,
+    shard: '#fae36a'
+  },
+  blue: {
+    ink: '#03b9ed',
+    barFrom: '#ff9600', barTo: 'linear-gradient(90deg,#00fcfb,#0086ff)',
+    barDur: .05, barEase: 'none',
+    bolt: '#9efefd', wA: 62, wB: 62,
+    pA: '400,-40 522,330 372,545 652,960 315,1370 430,1760',
+    pB: '432,-40 348,352 533,494 224,726 218,900 646,1178 512,1600',
+    a: .20, aHold: .30, b: .50, bHold: .383,
+    shard: '#9efefd'
+  },
+  /* plain correct answer: the jump, the crest and the confetti — but no
+     strike, no streak tag, and the bar just advances in its own colour
+     instead of turning over to a new tier. */
+  none: {
+    ink: '#58a700',
+    barFrom: '#ff9600', barTo: '#ff9600',
+    barDur: .25, barEase: 'power2.out',
+    bolts: false,
+    shard: '#b8f36a'
+  }
+};
+/* gold from three in a row, blue from five */
+function fxThemeFor(run) { return run >= 5 ? FX_THEMES.blue : run >= 3 ? FX_THEMES.gold : FX_THEMES.none; }
+
+/* --------------------------------------------------------------------------
+   THE STREAK LADDER ON THE PROGRESS BAR.
+   Yellow is the resting state, three in a row turns it orange, five turns it
+   blue. The colours are the reference's own bar values — gold's barTo
+   (#ff9600) and blue's barTo (the cyan gradient) — and each tier carries the
+   matching tint for the shine line so the bar still reads as one object.
+
+   This is state, not animation. The strike cross-fades BETWEEN tiers, but the
+   tier itself is a property of the live run: it is repainted on every render,
+   so it survives moving to the next question and only falls back to yellow
+   when the run dies.
+   -------------------------------------------------------------------------- */
+const FX_BAR_TIERS = [
+  { min: 0, fill: "var(--gold)",                            shine: "var(--gold-soft)" },  // #FFC800 yellow
+  { min: 3, fill: "#ff9600",                                shine: "#ffc46b" },           // orange
+  { min: 5, fill: "linear-gradient(90deg,#00fcfb,#0086ff)", shine: "#9efefd" }            // blue
+];
+function fxBarTier(run) {
+  let t = FX_BAR_TIERS[0];
+  for (const x of FX_BAR_TIERS) if ((run || 0) >= x.min) t = x;
+  return t;
+}
+/* Paints bar + tag for a run, with no animation. renderSession() calls it, and
+   so does the strike once its cross-fade lands. */
+function fxPaintBar(run) {
+  const bar = document.querySelector(".screen-session .progress");
+  if (bar) {
+    const t = fxBarTier(run);
+    bar.style.setProperty("--bar-fill", t.fill);
+    bar.style.setProperty("--bar-shine", t.shine);
+  }
+  const tag = document.getElementById("fxTag");
+  if (tag) {
+    const on = (run || 0) >= 3;
+    tag.textContent = on ? toAr(run) + " على التوالي" : "";
+    tag.classList.toggle("on", on);
+    tag.style.color = fxThemeFor(run || 0).ink;
+  }
+}
+
+/* ---------- crest ---------- */
+const FX_W = 380, FX_BASE = 78;
+const fxWave = { a: FX_BASE, b: FX_BASE, c: FX_BASE, d: FX_BASE, e: FX_BASE };
+function fxDrawCrest() {
+  const fill = document.querySelector(".fb-crest-fill"), line = document.querySelector(".fb-crest-line");
+  if (!fill || !line) return;
+  const s = FX_W / 4;
+  const d = `M0,${fxWave.a}` +
+    `C${s * .5},${fxWave.a} ${s * .5},${fxWave.b} ${s},${fxWave.b}` +
+    `C${s * 1.5},${fxWave.b} ${s * 1.5},${fxWave.c} ${s * 2},${fxWave.c}` +
+    `C${s * 2.5},${fxWave.c} ${s * 2.5},${fxWave.d} ${s * 3},${fxWave.d}` +
+    `C${s * 3.5},${fxWave.d} ${s * 3.5},${fxWave.e} ${s * 4},${fxWave.e}`;
+  line.setAttribute("d", d);
+  fill.setAttribute("d", d + `L${FX_W},90 L0,90 Z`);
+}
+
+let fxTl = null, fxSparks = [];
+
+/* Feature flag, so this can be switched off without a revert:
+   localStorage.qudratiFx = "off". A.fxSlow(.35) is the dev slow-motion the
+   brief insists on — none of this is verifiable at full speed. */
+function fxOn() { try { return localStorage.getItem("qudratiFx") !== "off"; } catch (e) { return true; } }
+A.fxToggle = function () {
+  try { localStorage.setItem("qudratiFx", fxOn() ? "off" : "on"); } catch (e) {}
+  return fxOn() ? "answer motion ON" : "answer motion OFF";
+};
+A.fxSlow = function (k) { if (window.gsap) gsap.globalTimeline.timeScale(k || 1); return "timeScale " + (k || 1); };
+/* Fire the whole effect on demand, without having to build a streak first:
+   A.fxDemo()        plain correct answer  (jump + crest + confetti)
+   A.fxDemo("gold")  the 3-in-a-row strike
+   A.fxDemo("blue")  the 5-in-a-row strike
+   Runs on the currently highlighted answer card, or the first one. */
+A.fxDemo = function (variant) {
+  const card = document.querySelector(".choice.correct") ||
+               document.querySelector(".choice.sel") ||
+               document.querySelector(".screen-session .choice");
+  if (!card) return "open a lesson first";
+  if (!window.gsap) return "GSAP did not load — check assets/vendor/gsap.min.js";
+  card.classList.add("correct");
+  answerFx(card, variant === "blue" ? 5 : variant === "gold" ? 3 : 1);
+  return "playing " + (variant || "none");
+};
+
+/* The saved preference, never the raw OS query - see motionApply() above. */
+function fxReduced() { return motionReduced(); }
+
+function fxClear() {
+  if (fxTl) { fxTl.kill(); fxTl = null; }
+  fxSparks.forEach(s => s.remove()); fxSparks = [];
+  const st = document.getElementById("storm");
+  if (st && window.gsap) gsap.set(st.querySelectorAll(".bolt"), { opacity: 0, x: 0, y: 0 });
+  document.querySelectorAll(".fx-spark, .fx-bit").forEach(n => n.remove());
+  /* give the sheet back to CSS and clear the inline transform GSAP left on it
+     — otherwise a killed timeline strands it half way up the screen */
+  const fb0 = document.getElementById("fb");
+  if (fb0) {
+    fb0.classList.remove("fx-anim", "up");
+    if (window.gsap) gsap.set(fb0, { clearProps: "transform" });
+  }
+}
+
+/* ---------- the jump ---------- */
+function fxAddJump(tl, card, at) {
+  tl.to(card, {
+    keyframes: [
+      { y: FXP(-15), scaleX: FXA(.947), scaleY: FXA(1.056), duration: FX_JUMP.launch, ease: 'power2.out' },
+      { y: FXP(-24), scaleX: 1, scaleY: 1, duration: FX_JUMP.rise, ease: 'power2.out' },
+      { y: FXP(-24), duration: FX_JUMP.hang },
+      { y: FXP(-6), scaleX: FXA(.980), scaleY: FXA(1.070), duration: FX_JUMP.fall, ease: 'power2.in' },
+      { y: FXP(1), scaleX: FXA(1.024), scaleY: FXA(.926), duration: FX_JUMP.impact, ease: 'power2.in' },
+      { y: FXP(-7), scaleX: 1, scaleY: 1, duration: FX_JUMP.settle, ease: 'back.out(2.6)' }
+    ]
+  }, at);
+
+  const air = FX_JUMP.launch + FX_JUMP.rise + FX_JUMP.hang + FX_JUMP.fall;
+  const sh = card.querySelector(".ch-shine");
+  if (sh) {
+    tl.fromTo(sh, { left: '-32%', opacity: 0 },
+      { left: '112%', opacity: 1, duration: air, ease: 'none' }, at)
+      .to(sh, { opacity: 0, duration: .06 }, at + air - .06);
+  }
+  const spk = card.querySelectorAll(".ch-spk");
+  if (spk.length) {
+    tl.to(spk, {
+      keyframes: [
+        { opacity: 1, scale: 1, rotate: 12, duration: .10, ease: 'back.out(3)' },
+        { opacity: 1, scale: .9, rotate: -6, duration: .12 },
+        { opacity: 0, scale: .2, duration: .10, ease: 'power1.in' }
+      ], stagger: .045
+    }, at + .02);
+  }
+}
+
+/* ---------- particles ---------- */
+function fxSeedBits(host, TH) {
+  const made = [];
+  for (let i = 0; i < 28; i++) {
+    const el = document.createElement("i"); el.className = "fx-bit";
+    if (i % 3 === 0) {
+      const w = 9 + Math.random() * 12;
+      el.style.cssText += `width:${w}px;height:${w * .7}px;background:${TH.shard};
+        clip-path:polygon(0% 40%,45% 0%,100% 25%,72% 100%,20% 78%);`;
+    } else {
+      const w = 7 + Math.random() * 8;
+      const tone = ['#8ee000', '#58cc02', '#b8f36a'][i % 3];
+      el.style.cssText += `width:${w}px;height:${w}px;border-radius:2px;background:${tone};`;
+    }
+    el.style.left = (Math.random() * 100) + '%';
+    el.style.bottom = '200px';
+    host.appendChild(el); made.push(el);
+  }
+  return made;
+}
+function fxSeedSparks(host, n, box, TH) {
+  const made = [];
+  for (let i = 0; i < n; i++) {
+    const el = document.createElement("i"); el.className = "fx-spark";
+    const s = 7 + Math.random() * 9;
+    el.style.width = el.style.height = s + 'px';
+    el.style.background = TH.bolt;
+    el.style.left = (box.x + Math.random() * box.w) + '%';
+    el.style.top = (box.y + Math.random() * box.h) + '%';
+    host.appendChild(el); made.push(el);
+  }
+  return made;
+}
+
+/* --------------------------------------------------------------------------
+   THE SHEET SLIDE.
+   The reference's banner, driven off the same timeline as everything else.
+   Win  — starts at +133ms, 200ms, power3.out.
+   Miss — starts at +100ms, 160ms, power4.out, then one small recoil at +260ms.
+   The asymmetry is the point: the error sheet arrives harder and blunter than
+   the celebration. Only touches #fb, so the daily-question sheet (an inline
+   block, not a bottom banner) keeps its own presentation.
+   -------------------------------------------------------------------------- */
+function fxSheetIn(tl, bad, at) {
+  const fb = document.getElementById("fb");
+  if (!fb || !fb.classList.contains("show")) return;
+  fb.classList.add("fx-anim");            // CSS transition + entrance anims stand down
+  gsap.set(fb, { yPercent: 100 });
+  const t = at + (bad ? .10 : .133);
+  tl.call(() => fb.classList.add("up"), null, t)      // only tappable once it lands
+    .to(fb, bad
+      ? { yPercent: 0, duration: .16, ease: 'power4.out' }
+      : { yPercent: 0, duration: .20, ease: 'power3.out' }, t);
+  if (bad) {
+    tl.to(fb, { keyframes: [
+      { yPercent: 1.5, duration: .06 },
+      { yPercent: 0,   duration: .10, ease: 'power2.out' }
+    ] }, at + .26);
+  }
+}
+
+/* ---------- the strike ---------- */
+function fxAddStrike(tl, TH, at, run) {
+  const storm = document.getElementById("storm");
+  if (!storm) return;
+  /* particles belong to the column box too — appended to the page they would
+     spread across the whole window on desktop */
+  const host = storm;
+  const boltA = storm.querySelector("#fxBoltA"), boltB = storm.querySelector("#fxBoltB");
+  const warm = document.querySelector(".progress > i");
+  const cool = document.querySelector(".progress > .prog-cool");
+  const tag = document.getElementById("fxTag");
+
+  if (TH.bolts !== false) {
+    boltA.setAttribute("points", TH.pA); boltB.setAttribute("points", TH.pB);
+    boltA.setAttribute("stroke", TH.bolt); boltB.setAttribute("stroke", TH.bolt);
+    boltA.setAttribute("stroke-width", TH.wA); boltB.setAttribute("stroke-width", TH.wB);
+    /* the layer we are turning over TO is the tier this run has just earned,
+       not a bare colour - it needs the matching shine line too */
+    const bar = document.querySelector(".screen-session .progress");
+    const next = fxBarTier(run);
+    if (bar) {
+      bar.style.setProperty("--cool-fill", next.fill);
+      bar.style.setProperty("--cool-shine", next.shine);
+    }
+    if (tag) tag.style.color = TH.ink;
+  }
+
+  const bitEls = fxSeedBits(host, TH);
+
+  /* THE SHEET. Measured, not styled: 200ms power3.out starting 133ms after the
+     jump, so it is already on its way while the card is still in the air. The
+     CSS transition was .3s on a different curve and started on class-add,
+     which put it ~133ms early and 100ms too slow. */
+  fxSheetIn(tl, false, at);
+
+  /* the bar always advances; only a strike turns it over to a new tier.
+     per-theme: blue cuts in 50ms, gold eases over 350ms */
+  if (TH.bolts !== false && warm && cool) {
+    tl.to(warm, { opacity: 0, duration: TH.barDur, ease: TH.barEase }, at)
+      .to(cool, {
+        opacity: 1, duration: TH.barDur, ease: TH.barEase,
+        /* Commit: the new tier becomes the bar itself, and the cool layer goes
+           back to being spare. Without this the bar is only "turned over" for
+           as long as the timeline lives, and the next question repainted it
+           yellow again. */
+        onComplete: () => {
+          fxPaintBar(run);
+          gsap.set(warm, { opacity: 1 });
+          gsap.set(cool, { opacity: 0 });
+        }
+      }, at);
+    if (tag) tl.to(tag, { opacity: 1, y: 0, scale: 1, duration: .24, ease: 'back.out(2.4)' }, at + TH.barDur * .3);
+  }
+
+  /* the liquid crest on the lip of the feedback sheet */
+  Object.assign(fxWave, { a: FX_BASE, b: FX_BASE, c: FX_BASE, d: FX_BASE, e: FX_BASE });
+  fxDrawCrest();
+  tl.to(fxWave, {
+    keyframes: [
+      { a: 14, b: 56, c: 6, d: 44, e: 20, duration: .16, ease: 'power2.out' },
+      { a: 52, b: 20, c: 48, d: 12, e: 56, duration: .20, ease: 'sine.inOut' },
+      { a: 66, b: 58, c: 70, d: 60, e: 68, duration: .18, ease: 'sine.inOut' },
+      { a: FX_BASE, b: FX_BASE, c: FX_BASE, d: FX_BASE, e: FX_BASE, duration: .24, ease: 'power2.out' }
+    ], onUpdate: fxDrawCrest
+  }, at + .153);
+
+  bitEls.forEach(el => {
+    const w = at + .173 + Math.random() * .16;
+    tl.fromTo(el, { opacity: 1, y: 0, x: 0, rotate: 0, scale: .5 },
+      {
+        y: -(60 + Math.random() * 130), x: (Math.random() - .5) * 120,
+        rotate: (Math.random() - .5) * 420, scale: 1,
+        duration: .42 + Math.random() * .2, ease: 'power2.out'
+      }, w)
+      .to(el, { y: '+=170', opacity: 0, rotate: '+=140', duration: .55, ease: 'power1.in' }, w + .4);
+  });
+
+  if (TH.bolts === false) return;
+
+  fxSparks = [...fxSeedSparks(host, 8, { x: 28, y: 8, w: 44, h: 16 }, TH),
+              ...fxSeedSparks(host, 6, { x: 12, y: 26, w: 60, h: 22 }, TH)];
+
+  [[boltA, TH.a, TH.aHold, -14, -10], [boltB, TH.b, TH.bHold, 12, -12]].forEach(([el, t0, hold, dx, dy]) => {
+    tl.set(el, { opacity: 1 }, at + t0)
+      .to(el, { x: dx, y: dy, duration: hold, ease: 'none' }, at + t0)
+      .to(el, { opacity: 0, duration: .05, ease: 'power2.in' }, at + t0 + hold);
+  });
+
+  const twinkle = (arr, w) => arr.forEach((s, i) => {
+    tl.fromTo(s, { opacity: 0, scale: 0, rotate: 0 },
+      { opacity: 1, scale: 1, rotate: 22, duration: .12, ease: 'back.out(3)' }, w + i * .03)
+      .to(s, { opacity: 0, scale: .2, duration: .16, ease: 'power1.in' }, w + i * .03 + .22);
+  });
+  twinkle(fxSparks.slice(0, 8), at + TH.a + .02);
+  twinkle(fxSparks.slice(8), at + TH.b + .02);
+}
+
+/* The reference's press feedback: the card sinks into its base while held.
+   GSAP owns the transform, so this has to go through GSAP too. */
+function fxBindPress() {
+  if (!window.gsap) return;
+  document.querySelectorAll(".screen-session .choice").forEach(c => {
+    gsap.set(c, { y: 0, scaleX: 1, scaleY: 1 });
+    const dn = () => { if (!SES.locked) gsap.to(c, { y: 4, scaleY: .96, duration: .06, overwrite: "auto" }); };
+    const up = () => { if (!SES.locked) gsap.to(c, { y: 0, scaleY: 1, duration: .09, ease: "power2.out", overwrite: "auto" }); };
+    c.addEventListener("pointerdown", dn);
+    c.addEventListener("pointerup", up);
+    c.addEventListener("pointercancel", up);
+    c.addEventListener("pointerleave", up);
+  });
+}
+
+/* --------------------------------------------------------------------------
+   THE MISS. Deliberately NOT the win sequence in red. The card sinks INTO its
+   base instead of hopping off it — the exact inverse of the win: +y, squashed,
+   no lift, no shine, no sparks — then shakes the impact off. No confetti, no
+   bolts, no streak tag, and the progress bar does not advance. It lives in its
+   own function so celebration bits cannot leak into a failure.
+   -------------------------------------------------------------------------- */
+function fxAddFail(tl, card, at) {
+  tl.to(card, {
+    keyframes: [
+      { y: FXP(5), scaleX: FXA(1.02), scaleY: FXA(.95), duration: .07, ease: 'power2.in' },
+      { y: FXP(2), scaleX: 1, scaleY: 1, duration: .10, ease: 'power2.out' },
+      { y: FXP(2), duration: .10 }
+    ]
+  }, at)
+    .to(card, {
+      keyframes: [
+        { x: -9, duration: .05 }, { x: 9, duration: .07 }, { x: -6, duration: .06 },
+        { x: 4, duration: .06 }, { x: 0, duration: .06 }
+      ]
+    }, at + .02);
+
+  /* quicker and blunter than the win's 200ms power3.out, plus the recoil */
+  fxSheetIn(tl, true, at);
+
+  /* and the cross snaps in */
+  const x = document.querySelector("#fb .fb-x");
+  if (x) {
+    tl.fromTo(x, { scale: 0, rotate: -45 },
+      { scale: 1, rotate: 0, duration: .28, ease: 'back.out(3.2)' }, at + .18);
+  }
+}
+
+function answerFxFail(card) {
+  if (!fxOn() || !window.gsap || !card) return;
+  fxClear();
+  if (fxReduced()) return;              // the miss is already stated in colour
+  fxTl = gsap.timeline();
+  fxAddFail(fxTl, card, 0);
+}
+
+/* Plays on every correct answer. `run` is the consecutive-correct count, and
+   it alone decides whether a strike rides along. Falls back to doing nothing
+   if GSAP is unavailable — the answer still resolves, it just does not hop. */
+function answerFx(card, run) {
+  if (!fxOn() || !window.gsap || !card) return;
+  fxClear();
+  /* Reduced motion gets a REDUCED VARIANT, not silence (brief trap 3): the
+     card still acknowledges the answer and still settles lifted off its base,
+     but there is no travel, no bolts and no confetti. */
+  if (fxReduced()) {
+    fxTl = gsap.timeline();
+    fxTl.fromTo(card, { scale: .97 }, { scale: 1, y: FXP(-7), duration: .18, ease: 'power2.out' });
+    return;
+  }
+  const TH = fxThemeFor(run);
+  const tag = document.getElementById("fxTag");
+  if (tag && TH.bolts !== false) {
+    tag.textContent = toAr(run) + " على التوالي";
+    gsap.set(tag, { opacity: 0, y: 6, scale: .8 });
+  }
+  fxTl = gsap.timeline();
+  fxAddJump(fxTl, card, 0);
+  fxAddStrike(fxTl, TH, 0, run);         // STRIKE = 0: fires with the jump
 }
 
 const X_SVG = `<svg class="ic" width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 3L17 17M17 3L3 17" stroke="#AFAFAF" stroke-width="3" stroke-linecap="round"/></svg>`;
@@ -981,16 +1473,25 @@ function renderSession() {
     <div class="screen screen-full screen-session">
       <div class="session-top">
         <button class="x-btn" onclick="A.quitSession()" aria-label="إنهاء الدرس">${X_SVG}</button>
-        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="تقدمك في الدرس"><i style="width:${pct}%"></i></div>
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="تقدمك في الدرس"><i style="width:${pct}%"></i><i class="prog-cool" style="width:${pct}%"></i></div>
         ${timerBar()}
         ${SES.mode === "review"
           ? `<span class="sess-hearts sess-review">${ico("target", 22)} ${toAr(SES.done)}/${toAr(SES.total)}</span>`
           : `<span class="sess-hearts" id="sesHearts" aria-label="القلوب المتبقية: ${toAr(SES.hearts)}">${ico("heart", 22)} ${toAr(SES.hearts)}</span>`}
       </div>
+      <div class="fx-tagwrap"><div class="fx-tag" id="fxTag" aria-hidden="true"></div></div>
       <div class="q-area">${questionBody(q, SES.sel, false, null, q.method || SES.method)}</div>
       <div class="action-bar"><button class="btn" id="checkBtn" onclick="A.check()" ${SES.sel === null ? "disabled" : ""}>تحقق</button></div>
       <div class="feedback" id="fb" role="status" aria-live="assertive"></div>
+      <div class="storm" id="storm" aria-hidden="true">
+        <svg viewBox="0 0 884 1920" preserveAspectRatio="xMidYMid slice">
+          <polyline class="bolt" id="fxBoltA"/>
+          <polyline class="bolt" id="fxBoltB"/>
+        </svg>
+      </div>
     </div>`;
+  fxBindPress();
+  fxPaintBar(SES.run);       // carries the streak tier + tag into this question
   startQTimer();
 }
 
@@ -1130,7 +1631,8 @@ A.check = function () {
   const correctTxt = LETTERS[q.answer] + " — " + (isCmp ? CMP_CHOICES[q.answer] : q.choices[q.answer]);
   const fb = document.getElementById("fb");
   if (correct) {
-    playCorrect();
+    playCorrect();                       // the recorded chime, unchanged
+    SES.run = (SES.run || 0) + 1;        // consecutive correct: 3 lights gold, 5 lights blue
     SES.done++;
     // rank XP / gems. Replaying a finished lesson pays a flat +2/+2 (farmable,
     // unlimited); a fresh clear pays full first-try (10/5) or retry (5/2).
@@ -1143,14 +1645,22 @@ A.check = function () {
     const seenBefore = (S.qstats[q.id] || {}).r > 0;
     if (seenBefore || SES.retried[q.id]) { SES.xp += 3; SES.gems += 2; }
     else { const d = q.difficulty || 2; SES.xp += [0, 6, 10, 16][d] || 10; SES.gems += [0, 3, 5, 8][d] || 5; }
-    fb.className = "feedback good show";
-    fb.innerHTML = `<div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> أحسنت!</div>
+    fb.className = "feedback good show has-crest";
+    fb.innerHTML = `<svg class="fb-crest" viewBox="0 0 380 90" preserveAspectRatio="none" aria-hidden="true">
+        <path class="fb-crest-fill"></path>
+        <path class="fb-crest-line" fill="none" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"></path>
+      </svg><div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> أحسنت!</div>
       <button class="fb-solution-toggle" onclick="A.toggleSol()">لماذا؟ اعرض الحل</button>
       <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
       <button class="btn" onclick="A.next()">متابعة</button>`;
+    /* after the sheet exists, never before: the timeline slides the sheet and
+       animates the crest inside it, so both have to be in the DOM when it is
+       built. Same synchronous block, so nothing paints in between. */
+    answerFx(document.querySelector(`.choice[data-ci="${q.answer}"]`), SES.run);
     clearFeedbackOverlap();
   } else {
     sndBad();
+    SES.run = 0;                         // one miss and the run is gone
     SES.retried[q.id] = true;
     SES.queue.push(q); // Duolingo behavior: wrong question comes back at the end
     loseHeart();
@@ -1170,6 +1680,8 @@ A.check = function () {
       <div class="fb-correct">الإجابة الصحيحة: ${correctTxt}</div>
       <div class="fb-solution" id="sol">${formatExplain(q.solution)}</div>
       <button class="btn btn-red" onclick="A.next()">${hLeft === 0 ? "شوف النتيجة" : "متابعة"}</button>`;
+    /* after the sheet exists: the miss timeline slides it and snaps the cross */
+    answerFxFail(document.querySelector(`.choice[data-ci="${SES.sel}"]`));
     clearFeedbackOverlap();
   }
   save();
@@ -1230,7 +1742,17 @@ A.closeMethod = function () {
 };
 
 A.debugCurrent = function () { return SES && SES.queue[SES.idx]; }; // dev harness (preview.html) only
+A.debugRun = function () { return SES ? (SES.run || 0) : 0; };                    // dev harness only
 A.debugRankUp = function (i) { showRankUp(i); };                    // dev harness only
+A.debugDaily = function () { return DQ_PICK; };                     // dev harness only
+A.debugPool = function () {                                         // dev harness only
+  const pool = [];
+  domains().forEach(d => d.lessons.forEach(l => trackFilter(l.questions).forEach(q => {
+    if (q.format === "mcq" && q.stem) pool.push(q);
+  })));
+  return { domains: domains().length, lessons: domains().reduce((a,d)=>a+d.lessons.length,0),
+           pool: pool.length, track: S.track, dailyQ: JSON.stringify(S.dailyQ), pick: !!pickDailyQuestion() };
+};
 A.debugEarn = function (n) { gainXP(n); gainGems(n); save(); render(); };        // dev harness only
 A.debugMock = function () { return MOCK && MOCK.sections[MOCK.si].items[MOCK.qi].q; }; // dev harness only
 
@@ -1789,52 +2311,348 @@ function renderLeague() {
 }
 
 /* ============================================================
-   RANK-UP CELEBRATION — full-screen Duolingo-style takeover.
-   Built on the chest-ceremony engine: dark veil → sunrays spin in →
-   the new tier badge drops, squashes on landing, then bursts open with
-   a white flash, a sweeping shine, flying confetti + sparkle ring, the
-   tier name slams in, congrats line, Continue.
+   RANK-UP CELEBRATION — simulated, on a canvas.
+
+   This screen used to be CSS @keyframes on a pile of divs. That is why it
+   read as dated: a keyframe is a curve someone typed, every element runs on
+   one shared clock, and alpha-blended divs stacked over each other go grey
+   instead of getting brighter. None of it responds to anything.
+
+   It is a simulation now, on the same principles the streak screen gets from
+   its Rive runtime:
+
+     · The shield ARRIVES BALLISTICALLY — real gravity, so it accelerates
+       into frame and carries weight, instead of easing along a bezier.
+     · IMPACT IS DETECTED, NOT SCHEDULED. The burst fires on the frame the
+       shield touches down, and its strength comes from the actual landing
+       speed. Nothing is timed to a magic millisecond, so it stays in sync
+       at any refresh rate.
+     · SQUASH COMES OUT OF THE VELOCITY, then springs back — the badge
+       deforms because it is moving fast, which is the whole basis of
+       character animation. It bounces once, small, and settles.
+     · CONFETTI IS A PARTICLE SYSTEM: per-piece mass, air drag, gravity,
+       three-axis tumble drawn with foreshortening so pieces turn edge-on
+       and flash, plus a flutter force so they sway on the way down.
+     · LIGHT IS ADDITIVE. Rays, bloom, flash and sparks composite with
+       'lighter', so overlapping light adds the way light does. That single
+       change is most of the difference between "glow" and "grey box".
+     · Sparks are drawn as velocity streaks — real motion blur.
+
+   Everything is delta-timed, so 60Hz and 120Hz look identical. The text and
+   the button stay in the DOM: crisp, selectable, focusable.
    ============================================================ */
+
+/* Neutral light for every tier — the overlay and its glow carry no hue, so
+   nothing on this screen reads brown or orange but the badge art itself. */
+const RU_PAL = {
+  bronze:   { lite: [255, 255, 255], ray: [255, 255, 255], spark: [255, 255, 255] },
+  silver:   { lite: [255, 255, 255], ray: [255, 255, 255], spark: [255, 255, 255] },
+  gold:     { lite: [255, 255, 255], ray: [255, 255, 255], spark: [255, 255, 255] },
+  diamond:  { lite: [255, 255, 255], ray: [255, 255, 255], spark: [255, 255, 255] },
+  champion: { lite: [255, 255, 255], ray: [255, 255, 255], spark: [255, 255, 255] }
+};
+const RU_CONFETTI = ["#FFC800", "#1CB0F6", "#58CC02", "#FF4B4B", "#CE82FF", "#FF9600", "#FFFFFF"];
+
+function ruScene(canvas, img, pal, reduced) {
+  const ctx = canvas.getContext("2d");
+  const S = {
+    dpr: 1, w: 0, h: 0, cx: 0, cy: 0, bw: 0, bh: 0,
+    t: 0, raf: 0, last: 0, dead: false,
+    y: 0, vy: 0, scale: 0, sq: 0, sqv: 0, rot: 0, rotv: 0,
+    landed: false, bounces: 0, energy: 0, shake: 0, flash: 0,
+    burst: 0, rayA: 0, rayRot: 0, idle: 0,
+    conf: [], sparks: [], rings: [],
+    onBurst: null
+  };
+
+  const G = 3750;          // px/s^2 — tuned so the drop reads ~0.4s at phone height
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  /* Sized from the canvas's own box rather than the window. In the app the two
+     are the same — the canvas is inset:0 inside a fixed, full-screen veil — but
+     measuring the element keeps the scene correct anywhere it is mounted, and
+     lets the exact same code run inside a framed preview. */
+  S.measure = stageRect => {
+    const dpr = S.dpr = Math.min(2, window.devicePixelRatio || 1);
+    const box = canvas.getBoundingClientRect();
+    const w = S.w = box.width, h = S.h = box.height;
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    S.cx = stageRect.left - box.left + stageRect.width / 2;
+    S.cy = stageRect.top - box.top + stageRect.height / 2;
+    S.bh = Math.min(stageRect.height, h * 0.26);
+    S.bw = img.naturalWidth ? S.bh * (img.naturalWidth / img.naturalHeight) : S.bh * 0.92;
+  };
+
+  /* --- the burst: everything that happens because the shield landed ----- */
+  function burst(power) {
+    S.burst = 1; S.flash = 1;
+    S.shake = Math.min(26, power * 0.011);
+    S.rings.push({ r: S.bh * .40, r0: S.bh * .40, rmax: S.bh * 1.75, v: 2000, wd: 9, a: 1 });
+    S.rings.push({ r: S.bh * .26, r0: S.bh * .26, rmax: S.bh * 1.35, v: 1400, wd: 5, a: .7 });
+
+    for (let i = 0; i < 30; i++) {                       // light streaks
+      const a = (i / 30) * Math.PI * 2 + rand(-.08, .08), sp = rand(900, 1850);
+      S.sparks.push({ x: S.cx, y: S.cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 0, max: rand(.26, .42) });
+    }
+    for (let i = 0; i < 96; i++) {                       // confetti
+      const a = (i / 96) * Math.PI * 2 + rand(-.12, .12), sp = rand(430, 1180);
+      S.conf.push({
+        x: S.cx + Math.cos(a) * S.bh * 0.6, y: S.cy + Math.sin(a) * S.bh * 0.6,
+        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - rand(60, 320),
+        w: rand(7, 14), h: rand(10, 19), col: RU_CONFETTI[i % RU_CONFETTI.length],
+        spin: rand(0, 6.28), spinV: rand(-13, 13),       // tumble about its own axis
+        rot: rand(0, 6.28), rotV: rand(-7, 7),
+        drag: rand(.78, .93), flut: rand(50, 190), life: 0, max: rand(2.4, 4.2)
+      });
+    }
+    if (S.onBurst) S.onBurst();
+  }
+
+  function step(dt) {
+    S.t += dt;
+
+    if (!S.landed) {
+      S.vy += G * dt;
+      S.y += S.vy * dt;
+      const p = Math.min(1, Math.max(0, 1 - (-S.y) / (S.h * 0.52)));
+      S.scale = 0.26 + (1.14 - 0.26) * (p * p * (3 - 2 * p));     // approaches the camera
+      S.rot = -0.34 * (1 - p);
+      if (S.y >= 0) {                                             // TOUCHDOWN
+        S.y = 0; S.landed = true; S.bounces = 1;
+        S.energy = S.vy;
+        S.sq = Math.min(.30, S.vy * 0.00013);                     // squash from real speed
+        S.vy = -S.vy * 0.30;
+        S.rotv = 2.2;
+        burst(S.energy);
+      }
+    } else {
+      // one small hop, then rest
+      if (S.bounces < 4) {
+        S.vy += G * 0.55 * dt;
+        S.y += S.vy * dt;
+        if (S.y >= 0) {
+          S.y = 0; S.bounces++;
+          S.sq = Math.min(.16, Math.abs(S.vy) * 0.00010);
+          S.vy = -Math.abs(S.vy) * 0.26;
+          if (Math.abs(S.vy) < 90) { S.vy = 0; S.bounces = 9; }
+        }
+      } else {
+        S.idle += dt;                                             // settled: breathe
+        S.y = Math.sin(S.idle * 1.5) * 5;
+      }
+      // squash springs back to zero and rings a couple of times
+      const k = 520, c = 26;
+      S.sqv += (-S.sq * k - S.sqv * c) * dt;
+      S.sq += S.sqv * dt;
+      S.scale += (1 - S.scale) * Math.min(1, dt * 16);
+      S.rotv += (-S.rot * 150 - S.rotv * 15) * dt;
+      S.rot += S.rotv * dt;
+    }
+
+    S.burst += (0 - S.burst) * Math.min(1, dt * 1.6);
+    S.rayA += ((S.landed ? 1 : 0) - S.rayA) * Math.min(1, dt * 5);
+    S.rayRot += dt * 0.09;
+    S.flash = Math.max(0, S.flash - dt * 5.2);
+    S.shake = Math.max(0, S.shake - dt * 62);
+
+    for (let i = S.rings.length - 1; i >= 0; i--) {
+      const r = S.rings[i];
+      r.r += r.v * dt; r.v *= Math.pow(.12, dt);
+      const k = (r.r - r.r0) / (r.rmax - r.r0);
+      r.a = Math.max(0, 1 - k) ** 1.6;
+      r.wd *= Math.pow(.2, dt);
+      if (k >= 1) S.rings.splice(i, 1);
+    }
+    for (let i = S.sparks.length - 1; i >= 0; i--) {
+      const s = S.sparks[i];
+      s.life += dt;
+      const d = Math.pow(.03, dt); s.vx *= d; s.vy *= d;
+      s.x += s.vx * dt; s.y += s.vy * dt;
+      if (s.life >= s.max) S.sparks.splice(i, 1);
+    }
+    for (let i = S.conf.length - 1; i >= 0; i--) {
+      const p = S.conf[i];
+      p.life += dt;
+      const d = Math.pow(p.drag, dt);
+      p.vx *= d; p.vy *= d;
+      p.vy += 1450 * dt;                                          // gravity
+      p.spin += p.spinV * dt;
+      p.vx += Math.sin(p.spin) * p.flut * dt;                     // flutter as it tumbles
+      p.rot += p.rotV * dt;
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      if (p.life >= p.max || p.y > S.h + 60) S.conf.splice(i, 1);
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, S.w, S.h);
+    const shx = S.shake ? (Math.random() - .5) * S.shake : 0;
+    const shy = S.shake ? (Math.random() - .5) * S.shake : 0;
+    ctx.save();
+    ctx.translate(shx, shy);
+
+    const L = pal.lite, R = pal.ray, K = pal.spark;
+    ctx.globalCompositeOperation = "lighter";
+
+    // sunburst — one path of wedges, one radial gradient, added not stacked
+    if (S.rayA > .01) {
+      // a halo hugging the shield that flares on impact, not a wallpaper.
+      // constant angular width, so the wedges taper inward like light does.
+      const r0 = S.bh * .34, r1 = S.bh * (1.05 + S.burst * .55), n = 22, hw = .030;
+      const al = S.rayA * (.17 + S.burst * .25);
+      const g = ctx.createRadialGradient(S.cx, S.cy, r0, S.cx, S.cy, r1);
+      g.addColorStop(0, `rgba(${R[0]},${R[1]},${R[2]},0)`);
+      g.addColorStop(.34, `rgba(${R[0]},${R[1]},${R[2]},${al})`);
+      g.addColorStop(1, `rgba(${R[0]},${R[1]},${R[2]},0)`);
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        const a = S.rayRot + (i / n) * Math.PI * 2;
+        ctx.moveTo(S.cx + Math.cos(a - hw) * r0, S.cy + Math.sin(a - hw) * r0);
+        ctx.lineTo(S.cx + Math.cos(a - hw) * r1, S.cy + Math.sin(a - hw) * r1);
+        ctx.lineTo(S.cx + Math.cos(a + hw) * r1, S.cy + Math.sin(a + hw) * r1);
+        ctx.lineTo(S.cx + Math.cos(a + hw) * r0, S.cy + Math.sin(a + hw) * r0);
+        ctx.closePath();
+      }
+      ctx.fillStyle = g; ctx.fill();
+    }
+
+    // bloom behind the shield, brighter for a moment right after impact
+    const br = S.bh * (1.05 + S.burst * .5), ba = (.34 + S.burst * .5) * S.rayA;
+    if (ba > .01) {
+      const g = ctx.createRadialGradient(S.cx, S.cy, 0, S.cx, S.cy, br);
+      g.addColorStop(0, `rgba(${L[0]},${L[1]},${L[2]},${ba})`);
+      g.addColorStop(.5, `rgba(${L[0]},${L[1]},${L[2]},${ba * .28})`);
+      g.addColorStop(1, `rgba(${L[0]},${L[1]},${L[2]},0)`);
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(S.cx, S.cy, br, 0, 6.2832); ctx.fill();
+    }
+
+    // shockwaves
+    for (const r of S.rings) {
+      ctx.beginPath(); ctx.arc(S.cx, S.cy, r.r, 0, 6.2832);
+      ctx.strokeStyle = `rgba(255,255,255,${Math.max(0, r.a) * .75})`;
+      ctx.lineWidth = Math.max(.5, r.wd); ctx.stroke();
+    }
+
+    // white flash
+    if (S.flash > .01) {
+      const fr = S.bh * (1 + (1 - S.flash) * 2.6);
+      const g = ctx.createRadialGradient(S.cx, S.cy, 0, S.cx, S.cy, fr);
+      g.addColorStop(0, `rgba(255,255,255,${S.flash * .8})`);
+      g.addColorStop(.45, `rgba(${L[0]},${L[1]},${L[2]},${S.flash * .35})`);
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(S.cx, S.cy, fr, 0, 6.2832); ctx.fill();
+    }
+
+    // spark streaks — drawn along the velocity vector, which IS motion blur
+    ctx.lineCap = "round";
+    for (const s of S.sparks) {
+      const k = 1 - s.life / s.max;
+      ctx.beginPath();
+      ctx.moveTo(s.x - s.vx * .022, s.y - s.vy * .022);
+      ctx.lineTo(s.x, s.y);
+      ctx.strokeStyle = `rgba(${K[0]},${K[1]},${K[2]},${k * .9})`;
+      ctx.lineWidth = 1 + k * 4.5; ctx.stroke();
+    }
+
+    ctx.globalCompositeOperation = "source-over";
+
+    // the shield
+    if (img.complete && img.naturalWidth) {
+      const sx = (1 + S.sq) * S.scale, sy = (1 - S.sq * .85) * S.scale;
+      ctx.save();
+      ctx.translate(S.cx, S.cy + S.y + S.bh * .5 * (1 - sy));   // squash from the feet
+      ctx.rotate(S.rot); ctx.scale(sx, sy);
+      ctx.shadowColor = "rgba(0,0,0,.42)"; ctx.shadowBlur = 30; ctx.shadowOffsetY = 18;
+      ctx.drawImage(img, -S.bw / 2, -S.bh / 2, S.bw, S.bh);
+      ctx.restore();
+    }
+
+    // confetti — foreshortened as it tumbles, so pieces turn edge-on and flash
+    for (const p of S.conf) {
+      const face = Math.cos(p.spin), fade = Math.min(1, (p.max - p.life) / .6);
+      const w = p.w * Math.abs(face);
+      if (w < .35) continue;
+      ctx.save();
+      ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      ctx.globalAlpha = fade * (face < 0 ? .62 : 1);            // back face reads darker
+      ctx.fillStyle = p.col;
+      ctx.fillRect(-w / 2, -p.h / 2, w, p.h);
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  S.redraw = draw;
+  S.frame = now => {
+    if (S.dead) return;
+    const dt = Math.min(.05, (now - S.last) / 1000 || 0);
+    S.last = now;
+    step(dt); draw();
+    S.raf = requestAnimationFrame(S.frame);
+  };
+  S.start = () => {
+    S.y = -S.h * .52; S.vy = 300; S.last = performance.now();
+    if (reduced) {                                   // no simulation: compose the rest pose
+      S.y = 0; S.vy = 0; S.scale = 1; S.landed = true; S.bounces = 9;
+      S.rayA = 1; S.burst = 0; S.flash = 0; S.still = true;
+      if (S.onBurst) S.onBurst();
+      draw();
+      return;
+    }
+    S.raf = requestAnimationFrame(S.frame);
+  };
+  S.stop = () => { S.dead = true; cancelAnimationFrame(S.raf); };
+  return S;
+}
+
 function showRankUp(tierIdx) {
   const tier = LEAGUE_TIERS[tierIdx];
   if (!tier) return;
+  const reduced = motionReduced();
   const veil = document.createElement("div");
   veil.className = `rankup-veil ru-${tier.key}`;
-  const confetti = Array.from({ length: 26 }, (_, i) => {
-    const cols = ["#FFC800", "#1CB0F6", "#58CC02", "#FF4B4B", "#CE82FF", "#FF9600"];
-    const dx = (Math.random() * 2 - 1) * 200, dur = (1.1 + Math.random() * 0.9).toFixed(2);
-    return `<i class="ru-confetti" style="--dx:${dx.toFixed(0)}px;--rot:${((Math.random() * 2 - 1) * 540).toFixed(0)}deg;left:${(50 + (Math.random() * 2 - 1) * 12).toFixed(0)}%;background:${cols[i % cols.length]};animation-delay:${(0.95 + Math.random() * 0.5).toFixed(2)}s;animation-duration:${dur}s;width:${(7 + Math.random() * 7).toFixed(0)}px;height:${(10 + Math.random() * 9).toFixed(0)}px"></i>`;
-  }).join("");
-  const sparks = Array.from({ length: 12 }, (_, i) =>
-    `<span class="ru-spark" style="--a:${i * 30}deg;animation-delay:${(1.0 + (i % 4) * 0.06).toFixed(2)}s"></span>`).join("");
   veil.innerHTML = `
-    <div class="ru-confetti-wrap">${confetti}</div>
-    <div class="ru-stage">
-      <div class="ru-flash"></div>
-      <div class="ru-badgewrap">
-        <span class="ru-rays"></span>
-        <span class="ru-glow"></span>
-        <span class="ru-ring"></span>
-        <span class="ru-ring ru-ring2"></span>
-        <span class="ru-orbit"><i></i><i></i><i></i></span>
-        ${sparks}
-        <img class="rank-badge ru-badge" src="assets/icons/ranks/rank-${tier.key}.png" alt="">
-        <span class="ru-shine"></span>
-      </div>
+    <canvas class="ru-canvas" aria-hidden="true"></canvas>
+    <div class="ru-main">
+      <div class="ru-stage" aria-hidden="true"></div>
+      <div class="ru-kicker">ترقّيت إلى مستوى جديد</div>
+      <h1 class="ru-title">المستوى ${tier.name}</h1>
+      <p class="ru-sub">واصل التدريب — كل سؤال يقرّبك من القمة 💪</p>
     </div>
-    <div class="ru-kicker">ترقّيت إلى مستوى جديد!</div>
-    <h1 class="ru-title">المستوى ${tier.name}</h1>
-    <p class="ru-sub">واصل التدريب — كل سؤال يقرّبك من القمة 💪</p>
-    <button class="btn ru-btn" onclick="A.closeRankUp()">رائع، أكمل!</button>`;
+    <div class="ru-foot"><button class="btn" onclick="A.closeRankUp()">رائع، أكمل!</button></div>`;
   document.body.appendChild(veil);
   requestAnimationFrame(() => veil.classList.add("show"));
-  setTimeout(() => veil.classList.add("drop"), 240);   // badge drops in
-  setTimeout(() => { veil.classList.add("pop"); sndRankUp(); }, 1000); // flash + badge bursts
-  setTimeout(() => veil.classList.add("told"), 1350);  // text + confetti
+
+  const img = new Image();
+  img.src = `assets/icons/ranks/rank-${tier.key}.png`;
+  const scene = ruScene(veil.querySelector(".ru-canvas"), img, RU_PAL[tier.key] || RU_PAL.gold, reduced);
+  veil._ruScene = scene;
+
+  /* the copy is revealed by the landing, not by a timer that hopes to agree
+     with one — the same event that fires the burst releases the text */
+  scene.onBurst = () => { sndRankUp(); veil.classList.add("told"); };
+
+  const fit = () => {
+    scene.measure(veil.querySelector(".ru-stage").getBoundingClientRect());
+    if (scene.still) scene.redraw();      // reduced motion draws once — repaint it
+  };
+  scene.onResize = fit;
+  window.addEventListener("resize", fit);
+  veil._ruFit = fit;
+
+  const go = () => { fit(); scene.start(); };
+  if (img.complete && img.naturalWidth) go();
+  else { img.onload = go; img.onerror = go; }
 }
 A.closeRankUp = function () {
   const v = document.querySelector(".rankup-veil");
   if (!v) return;
+  if (v._ruScene) v._ruScene.stop();
+  if (v._ruFit) window.removeEventListener("resize", v._ruFit);
   v.classList.add("out");
   setTimeout(() => { v.remove(); render(); }, 360);
 };
@@ -2112,6 +2930,14 @@ function renderSettings() {
     <div class="card">
       <div class="row"><div><div class="r-label">الأصوات</div><div class="r-sub">مؤثرات صوتية عند الإجابة</div></div>
         <button class="toggle ${S.sound ? "on" : ""}" onclick="A.toggleSound()"></button></div>
+      <div class="row"><div><div class="r-label">الحركة الكاملة</div><div class="r-sub">${
+        motionReduced()
+          ? "مخفّفة — بدون قفزة ولا برق"
+          : (osPrefersReduce()
+              ? "نظامك يقلّل الحركة — لكنّها مفعّلة هنا"
+              : "قفزة الإجابة الصحيحة والبرق")
+      }</div></div>
+        <button class="toggle ${motionReduced() ? "" : "on"}" onclick="A.toggleMotion()"></button></div>
     </div>
     <div class="card">
       <div class="row"><div class="r-label">حول التطبيق</div><button class="btn btn-ghost" style="width:auto;padding:8px 18px 6px" onclick="A.showAbout()">عرض</button></div>
@@ -2134,6 +2960,10 @@ A.goUnit = function (domKey) {
 
 A.setTrack = function (t) { S.track = t; save(); render(); };
 A.toggleSound = function () { S.sound = !S.sound; save(); render(); };
+A.toggleMotion = function () {
+  S.motion = motionReduced() ? "full" : "reduced";
+  motionApply(); save(); render();
+};
 A.resetAll = function () {
   askConfirm("تحذف كل تقدمك؟", "الدروس والجواهر والسلسلة كلها راح تروح، وما فيه رجعة.",
     "خلّه مثل ما هو", "احذف كل شيء", () => { localStorage.removeItem("qudratState"); location.reload(); });

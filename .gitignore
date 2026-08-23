@@ -27,3 +27,6 @@ duolingo-fire-streak.zip
 # OS
 Thumbs.db
 .DS_Store
+
+# Screen recordings used while matching animations (huge, local only)
+*.mp4
