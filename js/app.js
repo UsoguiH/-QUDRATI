@@ -2364,6 +2364,12 @@ function ruScene(canvas, img, pal, reduced) {
     landed: false, bounces: 0, energy: 0, shake: 0, flash: 0,
     burst: 0, rayA: 0, rayRot: 0, idle: 0,
     conf: [], sparks: [], rings: [],
+    /* the shine pass and the company it keeps:
+       shine   -1 = waiting, 0..1 = a band crossing the badge
+       twk     twinkling stars that keep the badge alive once it has settled
+       glints  big 4-point flares, fired by the impact and by each shine pass
+       fall    speed lines, only while the badge is still coming down */
+    shine: -1, shineWait: 0, twk: [], twkT: 0, glints: [], fall: [], fallT: 0,
     onBurst: null
   };
 
@@ -2384,6 +2390,12 @@ function ruScene(canvas, img, pal, reduced) {
     S.cy = stageRect.top - box.top + stageRect.height / 2;
     S.bh = Math.min(stageRect.height, h * 0.26);
     S.bw = img.naturalWidth ? S.bh * (img.naturalWidth / img.naturalHeight) : S.bh * 0.92;
+    /* The badge is composited through its own buffer so the shine band can be
+       clipped to the artwork's alpha with source-atop. Done on the main canvas
+       it would smear across the bloom and the rays behind it too. */
+    if (!S.buf) S.buf = document.createElement("canvas");
+    S.buf.width = Math.max(1, Math.round(S.bw * dpr));
+    S.buf.height = Math.max(1, Math.round(S.bh * dpr));
   };
 
   /* --- the burst: everything that happens because the shield landed ----- */
@@ -2392,6 +2404,18 @@ function ruScene(canvas, img, pal, reduced) {
     S.shake = Math.min(26, power * 0.011);
     S.rings.push({ r: S.bh * .40, r0: S.bh * .40, rmax: S.bh * 1.75, v: 2000, wd: 9, a: 1 });
     S.rings.push({ r: S.bh * .26, r0: S.bh * .26, rmax: S.bh * 1.35, v: 1400, wd: 5, a: .7 });
+    S.rings.push({ r: S.bh * .55, r0: S.bh * .55, rmax: S.bh * 2.45, v: 2600, wd: 3, a: .5 });
+
+    /* the lens flare on the hit, then three thrown clear of it */
+    S.glints.push({ x: S.cx, y: S.cy, r: S.bh * 1.05, life: 0, max: .52, rot: .0 });
+    for (let i = 0; i < 3; i++) {
+      const a = rand(0, 6.2832), rr = S.bh * rand(.7, 1.25);
+      S.glints.push({
+        x: S.cx + Math.cos(a) * rr, y: S.cy + Math.sin(a) * rr * .8,
+        r: S.bh * rand(.16, .28), life: -rand(.05, .20), max: .52, rot: rand(0, 1.57)
+      });
+    }
+    S.shine = -1; S.shineWait = .34;        // first pass lands just after the dust
 
     for (let i = 0; i < 30; i++) {                       // light streaks
       const a = (i / 30) * Math.PI * 2 + rand(-.08, .08), sp = rand(900, 1850);
@@ -2452,6 +2476,58 @@ function ruScene(canvas, img, pal, reduced) {
       S.rot += S.rotv * dt;
     }
 
+    /* --- speed lines, only on the way down ----------------------------- */
+    if (!S.landed) {
+      S.fallT -= dt;
+      if (S.fallT <= 0) {
+        S.fallT = .016;
+        S.fall.push({
+          x: S.cx + rand(-S.bw * 1.15, S.bw * 1.15),
+          y: S.cy + S.y - rand(0, S.h * .10),
+          len: rand(38, 150), w: rand(.8, 2.6), life: 0, max: rand(.16, .34)
+        });
+      }
+    }
+    for (let i = S.fall.length - 1; i >= 0; i--) {
+      const f = S.fall[i]; f.life += dt;
+      if (f.life >= f.max) S.fall.splice(i, 1);
+    }
+
+    /* --- the shine pass, and the twinkles that keep it alive ------------- */
+    if (S.landed) {
+      if (S.shine >= 0) {
+        const was = S.shine;
+        S.shine += dt / .62;                         // one crossing, 620ms
+        if (was < .5 && S.shine >= .5) {             // a small catch on the leading edge
+          S.glints.push({
+            x: S.cx + S.bw * .20, y: S.cy - S.bh * .26,
+            r: S.bh * .20, life: 0, max: .40, rot: .5
+          });
+        }
+        if (S.shine > 1) { S.shine = -1; S.shineWait = 2.1; }
+      } else if ((S.shineWait -= dt) <= 0) {
+        S.shine = 0;
+      }
+
+      S.twkT -= dt;
+      if (S.twkT <= 0) {
+        S.twkT = rand(.09, .25);
+        const a = rand(0, 6.2832), rr = S.bh * rand(.52, 1.22);
+        S.twk.push({
+          x: S.cx + Math.cos(a) * rr, y: S.cy + Math.sin(a) * rr * .82,
+          r: rand(3.5, 11), life: 0, max: rand(.5, 1.0), rot: rand(0, 1.57)
+        });
+      }
+    }
+    for (let i = S.twk.length - 1; i >= 0; i--) {
+      const w = S.twk[i]; w.life += dt;
+      if (w.life >= w.max) S.twk.splice(i, 1);
+    }
+    for (let i = S.glints.length - 1; i >= 0; i--) {
+      const g = S.glints[i]; g.life += dt;
+      if (g.life >= g.max) S.glints.splice(i, 1);
+    }
+
     S.burst += (0 - S.burst) * Math.min(1, dt * 1.6);
     S.rayA += ((S.landed ? 1 : 0) - S.rayA) * Math.min(1, dt * 5);
     S.rayRot += dt * 0.09;
@@ -2485,6 +2561,24 @@ function ruScene(canvas, img, pal, reduced) {
       p.x += p.vx * dt; p.y += p.vy * dt;
       if (p.life >= p.max || p.y > S.h + 60) S.conf.splice(i, 1);
     }
+  }
+
+  /* A concave four-point star. Two crossed quadratics per arm give the pinch
+     at the waist that makes it read as light rather than as a plus sign. */
+  function sparkle(c, x, y, r, a, rot) {
+    if (a <= .004 || r <= .2) return;
+    c.save(); c.translate(x, y); c.rotate(rot || 0);
+    const t = r * .15;
+    c.beginPath();
+    c.moveTo(0, -r);
+    c.quadraticCurveTo(t, -t, r, 0);
+    c.quadraticCurveTo(t, t, 0, r);
+    c.quadraticCurveTo(-t, t, -r, 0);
+    c.quadraticCurveTo(-t, -t, 0, -r);
+    c.closePath();
+    c.fillStyle = `rgba(255,255,255,${a})`;
+    c.fill();
+    c.restore();
   }
 
   function draw() {
@@ -2548,6 +2642,15 @@ function ruScene(canvas, img, pal, reduced) {
       ctx.beginPath(); ctx.arc(S.cx, S.cy, fr, 0, 6.2832); ctx.fill();
     }
 
+    // speed lines: the badge is falling past them, so they sell the drop
+    for (const f of S.fall) {
+      const k = 1 - f.life / f.max;
+      ctx.beginPath();
+      ctx.moveTo(f.x, f.y); ctx.lineTo(f.x, f.y - f.len);
+      ctx.strokeStyle = `rgba(255,255,255,${k * .30})`;
+      ctx.lineWidth = f.w; ctx.stroke();
+    }
+
     // spark streaks — drawn along the velocity vector, which IS motion blur
     ctx.lineCap = "round";
     for (const s of S.sparks) {
@@ -2561,16 +2664,50 @@ function ruScene(canvas, img, pal, reduced) {
 
     ctx.globalCompositeOperation = "source-over";
 
-    // the shield
-    if (img.complete && img.naturalWidth) {
+    // the shield, composited through its own buffer so the shine can clip to it
+    if (img.complete && img.naturalWidth && S.buf) {
+      const b = S.buf, bc = b.getContext("2d");
+      bc.setTransform(1, 0, 0, 1, 0, 0);
+      bc.clearRect(0, 0, b.width, b.height);
+      bc.drawImage(img, 0, 0, b.width, b.height);
+      if (S.shine >= 0) {
+        /* a diagonal band travelling across the artwork. source-atop keeps it
+           inside the badge's own alpha, so it lights the metal and not the
+           empty corners of its box. */
+        const p = S.shine, span = b.width * 2.1;
+        const x0 = -b.width * .55 + p * span;
+        const g = bc.createLinearGradient(x0, 0, x0 + b.width * .42, b.height);
+        g.addColorStop(0, "rgba(255,255,255,0)");
+        g.addColorStop(.42, "rgba(255,255,255,.10)");
+        g.addColorStop(.5, `rgba(255,255,255,${.72 * Math.sin(Math.PI * Math.min(1, p))})`);
+        g.addColorStop(.58, "rgba(255,255,255,.10)");
+        g.addColorStop(1, "rgba(255,255,255,0)");
+        bc.globalCompositeOperation = "source-atop";
+        bc.fillStyle = g; bc.fillRect(0, 0, b.width, b.height);
+        bc.globalCompositeOperation = "source-over";
+      }
       const sx = (1 + S.sq) * S.scale, sy = (1 - S.sq * .85) * S.scale;
       ctx.save();
       ctx.translate(S.cx, S.cy + S.y + S.bh * .5 * (1 - sy));   // squash from the feet
       ctx.rotate(S.rot); ctx.scale(sx, sy);
       ctx.shadowColor = "rgba(0,0,0,.42)"; ctx.shadowBlur = 30; ctx.shadowOffsetY = 18;
-      ctx.drawImage(img, -S.bw / 2, -S.bh / 2, S.bw, S.bh);
+      ctx.drawImage(b, -S.bw / 2, -S.bh / 2, S.bw, S.bh);
       ctx.restore();
     }
+
+    // twinkles and flares ride ON TOP of the badge, so they read as light on it
+    ctx.globalCompositeOperation = "lighter";
+    for (const w of S.twk) {
+      const k = Math.sin(Math.PI * (w.life / w.max));          // in and back out
+      sparkle(ctx, w.x, w.y, w.r * (.45 + k * .55), k * .85, w.rot);
+    }
+    for (const g of S.glints) {
+      if (g.life < 0) continue;                                // still on its delay
+      const k = 1 - g.life / g.max, e = k * k;
+      sparkle(ctx, g.x, g.y, g.r * (.5 + (1 - k) * .9), e * .9, g.rot);
+      sparkle(ctx, g.x, g.y, g.r * (.28 + (1 - k) * .5), e * .8, (g.rot || 0) + .785);
+    }
+    ctx.globalCompositeOperation = "source-over";
 
     // confetti — foreshortened as it tumbles, so pieces turn edge-on and flash
     for (const p of S.conf) {
@@ -2601,6 +2738,7 @@ function ruScene(canvas, img, pal, reduced) {
     if (reduced) {                                   // no simulation: compose the rest pose
       S.y = 0; S.vy = 0; S.scale = 1; S.landed = true; S.bounces = 9;
       S.rayA = 1; S.burst = 0; S.flash = 0; S.still = true;
+      S.shine = .5;                    // one frame, caught at the top of the pass
       if (S.onBurst) S.onBurst();
       draw();
       return;

@@ -2144,7 +2144,7 @@ button.dom-stat:active { transform: scale(.99); }
   position: fixed; inset: 0; z-index: 400; overflow: hidden;
   display: flex; flex-direction: column; align-items: center;
   padding: 0 24px calc(22px + env(safe-area-inset-bottom, 0px));
-  background: #14161F;
+  background: rgba(20, 22, 31, .8);        /* fallback where backdrop-filter is unsupported */
   opacity: 0; transition: opacity .26s ease;
 }
 .rankup-veil.show { opacity: 1; }
@@ -2152,15 +2152,33 @@ button.dom-stat:active { transform: scale(.99); }
 
 /* One neutral overlay for every tier. The tinted fields read as brown and
    orange behind the warmer badges; the shield itself is the only thing that
-   should be carrying colour here. */
+   should be carrying colour here.
+
+   Translucent, not a wall: the screen you just earned this on stays visible
+   underneath, blurred and pushed back so it reads as context rather than as
+   competition. The gradient is still darkest at the edges and lightest at the
+   centre, which is what keeps the white type legible over whatever happens to
+   be behind it - the app's own surfaces are near-white, so the floor here
+   cannot go much below .55 without the title losing its contrast. */
 .rankup-veil {
-  background: radial-gradient(circle at 50% 37%, #2B303B 0%, #191D25 42%, #0C0F14 100%);
+  background: radial-gradient(circle at 50% 37%,
+    rgba(43, 48, 59, .60) 0%, rgba(25, 29, 37, .78) 42%, rgba(10, 13, 18, .90) 100%);
+  -webkit-backdrop-filter: blur(11px) saturate(115%);
+          backdrop-filter: blur(11px) saturate(115%);
+}
+/* Only claim transparency where the blur is really available. Without it the
+   app behind stays sharp and fights the celebration, so those browsers keep
+   the solid field they had. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .rankup-veil {
+    background: radial-gradient(circle at 50% 37%, #2B303B 0%, #191D25 42%, #0C0F14 100%);
+  }
 }
 
 /* corners pulled down so the lit centre carries the eye */
 .rankup-veil::after {
   content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2;
-  box-shadow: inset 0 0 170px 55px rgba(0,0,0,.5);
+  box-shadow: inset 0 0 170px 55px rgba(0,0,0,.42);
 }
 /* width/height are NOT redundant with inset:0 — a canvas is a replaced
    element, so absolute positioning leaves it at its intrinsic 300x150 and
@@ -2182,11 +2200,31 @@ button.dom-stat:active { transform: scale(.99); }
 
 .ru-title {
   color: #fff; font-size: 40px; font-weight: 800; line-height: 1.25;
-  margin: 8px 0 10px; text-shadow: 0 4px 0 rgba(0,0,0,.3);
+  margin: 8px 0 10px;
+  /* the drop shadow alone was enough over a solid field; over a live one the
+     type needs its own halo to stay off whatever is behind it */
+  text-shadow: 0 4px 0 rgba(0,0,0,.3), 0 0 26px rgba(0,0,0,.55);
 }
 .ru-sub {
-  color: rgba(255,255,255,.72); font-weight: 600; font-size: 15.5px;
+  color: rgba(255,255,255,.82); font-weight: 600; font-size: 15.5px;
   line-height: 1.65; max-width: 300px; text-align: center;
+  text-shadow: 0 0 18px rgba(0,0,0,.5);
+}
+.ru-kicker { text-shadow: 0 0 16px rgba(0,0,0,.5); }
+
+/* a sheen crossing the CTA, so the button reads as lit rather than flat */
+.ru-foot .btn { position: relative; overflow: hidden; }
+.ru-foot .btn::after {
+  content: ""; position: absolute; top: -60%; bottom: -60%; width: 34%; left: -45%;
+  background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.42), rgba(255,255,255,0));
+  transform: skewX(-22deg); pointer-events: none;
+}
+.rankup-veil.told .ru-foot .btn::after { animation: ruSheen 2.6s 1.15s ease-in-out infinite; }
+@keyframes ruSheen {
+  0%   { left: -45%; opacity: 0; }
+  8%   { opacity: 1; }
+  26%  { left: 118%; opacity: 0; }
+  100% { left: 118%; opacity: 0; }
 }
 .rankup-veil.told .ru-kicker { animation: ruRise .5s cubic-bezier(.2,.8,.3,1) .04s forwards; }
 .rankup-veil.told .ru-title  { animation: ruSlam .55s cubic-bezier(.2,1.6,.4,1) .12s forwards; }
@@ -2301,11 +2339,8 @@ button.dom-stat:active { transform: scale(.99); }
    the tag hangs off the bottom edge, out of flow so nothing reflows. */
 .prog-wrap { position: relative; flex: 1; min-width: 0; }
 .fx-tag {
-  position: absolute; top: calc(100% + 1px); left: 0; right: 0; text-align: center;
+  position: absolute; top: calc(100% + 3px); left: 0; right: 0; text-align: center;
   font-size: 12.5px; font-weight: 700; opacity: 0; pointer-events: none;
-  /* line-height 1 strips the leading above the glyphs, so the gap you SEE is
-     the gap in the rule - normal leading was adding ~1.3px of dead space */
-  line-height: 1;
 }
 /* the resting state. GSAP pops it on the strike, but the tag has to stay up
    by itself across the next question - the run is still alive. */
