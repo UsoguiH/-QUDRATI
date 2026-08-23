@@ -2293,9 +2293,15 @@ button.dom-stat:active { transform: scale(.99); }
 .fx-bit { position: absolute; opacity: 0; z-index: 69; pointer-events: none; }
 
 /* streak tag, under the progress bar */
-.fx-tagwrap { position: relative; height: 0; }
+/* The bar and its streak tag share a parent, so the tag centres on the BAR.
+   It used to live in its own full-width wrapper outside .session-top, which
+   centred it on the page — and the bar is not in the middle of that row, the
+   ✕ button on one side and the timer + hearts on the other push it across.
+   .prog-wrap takes the flex slot the bar used to hold; the bar fills it, and
+   the tag hangs off the bottom edge, out of flow so nothing reflows. */
+.prog-wrap { position: relative; flex: 1; min-width: 0; }
 .fx-tag {
-  position: absolute; top: 2px; left: 0; right: 0; text-align: center;
+  position: absolute; top: calc(100% + 3px); left: 0; right: 0; text-align: center;
   font-size: 12.5px; font-weight: 700; opacity: 0; pointer-events: none;
 }
 /* the resting state. GSAP pops it on the strike, but the tag has to stay up
