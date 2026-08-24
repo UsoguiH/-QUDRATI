@@ -30,3 +30,7 @@ Thumbs.db
 
 # Screen recordings used while matching animations (huge, local only)
 *.mp4
+
+# Stakeholder pitch deck + its assets — private, never publish
+# (the repo is public and Vercel deploys the whole tree)
+deck/
