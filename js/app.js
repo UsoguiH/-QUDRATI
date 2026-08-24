@@ -57,7 +57,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, motion: "full", xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {} };
+const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, motion: "full", goal: 10, streakGoal: 7, placed: null, joined: null, onb: 0, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {} };
 const LEAGUE_NAMES = ["عبدالله", "محمد", "نورة", "سارة", "فهد", "ريم", "خالد", "لمى", "تركي", "جواهر", "عمر", "هند", "سلمان", "رنا", "بدر", "ليان", "ناصر", "شهد", "يزيد", "دانة", "مازن", "أصيل", "وليد", "غادة"];
 /* Permanent rank tiers (badge art in assets/icons/ranks/). A user's tier is
    the highest threshold their LIFETIME total XP (S.totalXp) has crossed —
@@ -514,7 +514,7 @@ function renderSidebar() {
     { k: "mock",     icon: "nav-exam",   label: "اختبار تجريبي",   short: "تجريبي" },
     { k: "stats",    icon: "nav-stats",  label: "إحصائياتي",       short: "إحصائيات" },
     { k: "review",   icon: "target",     label: "مراجعة الأخطاء",  short: "الأخطاء" },
-    { k: "settings", icon: "nav-more",   label: "الإعدادات",       short: "إعدادات" },
+    { k: "profile",  icon: "nav-more",   label: "ملفي الشخصي",     short: "ملفي" },
   ];
   el.innerHTML = `
     <div class="sb-logo">
@@ -591,7 +591,7 @@ function renderAside() {
 }
 
 function render() {
-  ({ path: renderPath, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings, review: renderReview })[view]();
+  ({ path: renderPath, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings, review: renderReview, profile: renderProfile })[view]();
   flushRankUp();
   renderSidebar();
   renderAside();
@@ -620,7 +620,7 @@ A.chestTap = function () {
 function bottomnav(active) {
   /* the labels were the state keys — "path", "league" — read aloud in Arabic */
   const items = [["path", "nav-home", "الدروس"], ["league", "nav-league", "المجلس"],
-    ["mock", "nav-exam", "اختبار تجريبي"], ["stats", "nav-stats", "إحصائياتي"], ["settings", "nav-more", "الإعدادات"]];
+    ["mock", "nav-exam", "اختبار تجريبي"], ["stats", "nav-stats", "إحصائياتي"], ["profile", "nav-more", "ملفي"]];
   return `<nav class="bottomnav">` + items.map(([k, i, label]) =>
     `<button class="navbtn ${active === k ? "active" : ""}" onclick="A.go('${k}')" aria-label="${label}"${active === k ? ' aria-current="page"' : ""}>${ico(i, 30)}</button>`).join("") + `</nav>`;
 }
@@ -762,7 +762,9 @@ function renderPath() {
       const cls = done ? "node-done" : open ? "" : "node-locked";
       const x = offsets[gi % offsets.length];
       // every node is a star: gold star-done when completed, the white star otherwise
-      const nodeIcon = done ? ico("star-done", 40) : ico("star", 40);
+      /* star-done.svg is #AA572A — brown. The reward for clearing a lesson
+         should be the gold star the win screen already shows. */
+      const nodeIcon = done ? ico("star-gold", 40) : ico("star", 40);
       const ring = current ? `<svg class="node-ring" viewBox="0 0 89 84" fill="none">
           <ellipse cx="44.5" cy="42" rx="41.5" ry="39" stroke="#E5E5E5" stroke-width="6"/>
           <path d="M 44.5 3 A 41.5 39 0 0 1 81.5 25" stroke="${u.c}" stroke-width="6" stroke-linecap="round"/>
@@ -1745,6 +1747,7 @@ A.closeMethod = function () {
 
 A.debugCurrent = function () { return SES && SES.queue[SES.idx]; }; // dev harness (preview.html) only
 A.debugRun = function () { return SES ? (SES.run || 0) : 0; };                    // dev harness only
+A.debugOnb = function () { return ONB; };                                        // dev harness only
 A.debugRankUp = function (i) { showRankUp(i); };                    // dev harness only
 A.debugDaily = function () { return DQ_PICK; };                     // dev harness only
 A.debugPool = function () {                                         // dev harness only
@@ -3411,8 +3414,7 @@ A.login = function () {
 A.loginGuest = function () { S.user = { name: "ضيف", guest: true }; save(); afterLogin(); };
 A.logout = function () { S.user = null; save(); renderLogin(); };
 
-/* Disclaimer as a bottom sheet (slides up after login) — non-dismissible
-   since accepting it is required. */
+/* Kept for the About modal's markup only — no longer gates the app. */
 function showDisclaimerSheet(onAccept) {
   const veil = document.createElement("div");
   veil.className = "disc-veil";
@@ -3431,16 +3433,11 @@ function showDisclaimerSheet(onAccept) {
   };
 }
 
-function afterLogin() {
-  if (!S.disclaimer) {
-    $app.innerHTML = "";
-    showDisclaimerSheet(() => { S.disclaimer = true; save(); S.examAsked || S.exam ? render() : renderExamSetup(true); });
-  } else if (!S.examAsked && !S.exam) {
-    renderExamSetup(true);
-  } else {
-    render();
-  }
-}
+/* The disclaimer used to be a non-dismissible sheet between login and the
+   first lesson — a wall in front of a student who had not yet seen anything
+   worth agreeing to. The notice itself still ships, in Settings → حول
+   التطبيق (A.showAbout), where it can be read rather than dismissed. */
+function afterLogin() { render(); }
 
 /* ---------------- keyboard (web) ----------------
    A lesson is answerable without a mouse: 1-4 picks a choice,
@@ -3478,11 +3475,493 @@ document.addEventListener("keydown", e => {
   }
 });
 
+
+/* ============================================================
+   ONBOARDING
+   ------------------------------------------------------------
+   Rebuilt 2026-08-24 against Duolingo's current order: pick your
+   course, commit to a daily goal, take a placement, commit to a
+   streak length, watch day one land — and only THEN sign up.
+   Signing up first asks someone to invest before they have
+   anything to lose. Signing up last asks them to protect
+   something they just built, which is a different question.
+
+   Our step 3 has no Duolingo equivalent: they have no deadline
+   to sell, and we have the student's actual exam date.
+   ============================================================ */
+const ONB_STEPS = 7;
+let ONB = { step: 0, pool: [], i: 0, right: 0, sel: null, locked: false };
+
+const GOAL_OPTS   = [[5, "\u0647\u0627\u062f\u0626", "\u0665 \u0623\u0633\u0626\u0644\u0629"], [10, "\u0645\u0646\u062a\u0638\u0645", "\u0661\u0660 \u0623\u0633\u0626\u0644\u0629"],
+                     [15, "\u062c\u0627\u062f", "\u0661\u0665 \u0633\u0624\u0627\u0644\u0627\u064b"], [20, "\u0645\u062a\u0641\u0631\u063a", "\u0662\u0660 \u0633\u0624\u0627\u0644\u0627\u064b"]];
+const STREAK_OPTS = [[7, "\u0623\u0633\u0628\u0648\u0639"], [14, "\u0623\u0633\u0628\u0648\u0639\u0627\u0646"], [30, "\u0634\u0647\u0631"]];
+
+function onbGo(n) { ONB.step = n; S.onb = n; save(); renderOnb(); }
+A.onbNext = function () { onbGo(ONB.step + 1); };
+A.onbBack = function () { if (ONB.step > 0) onbGo(ONB.step - 1); };
+
+A.onbTrack  = function (t) { S.track = t; save(); renderOnb(); };
+A.onbGoal   = function (g) { S.goal = g; save(); renderOnb(); };
+A.onbStreak = function (d) { S.streakGoal = d; save(); renderOnb(); };
+
+function onbShell(step, title, sub, body, cta, ctaOn, back) {
+  const pct = Math.round((step / ONB_STEPS) * 100);
+  return `<div class="screen screen-full onb">
+    <div class="onb-top">
+      ${back === false ? `<span class="onb-back-sp"></span>`
+        : `<button class="onb-back" onclick="A.onbBack()" aria-label="\u0631\u062c\u0648\u0639">\u2192</button>`}
+      <div class="onb-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div>
+    </div>
+    <div class="onb-body">
+      <h1 class="onb-h">${title}</h1>
+      ${sub ? `<p class="onb-s">${sub}</p>` : ""}
+      ${body}
+    </div>
+    <div class="onb-foot">
+      <button class="btn${ctaOn ? "" : " btn-off"}" ${ctaOn ? `onclick="${cta[1]}"` : "disabled"}>${cta[0]}</button>
+    </div>
+  </div>`;
+}
+
+function renderOnb() {
+  const st = ONB.step;
+
+  /* 0 — welcome */
+  if (st === 0) {
+    $app.innerHTML = `<div class="screen screen-full onb onb-hello">
+      ${welcomeHero()}
+      <h1 class="onb-logo">\u0642\u062f\u0631\u0627\u062a\u064a</h1>
+      <p class="onb-tag">\u062a\u062f\u0631\u0651\u0628 \u0639\u0644\u0649 \u0627\u0644\u0642\u062f\u0631\u0627\u062a\u2026 \u0648\u0623\u0646\u062a \u062a\u0644\u0639\u0628</p>
+      <div class="onb-badges">
+        <span>${toAr(bankSize())} \u0633\u0624\u0627\u0644 \u0623\u0635\u0644\u064a</span>
+        <span>\u0645\u062c\u0627\u0646\u064a \u0628\u0627\u0644\u0643\u0627\u0645\u0644</span>
+        <span>\u0628\u062f\u0648\u0646 \u062a\u062d\u0645\u064a\u0644</span>
+      </div>
+      <div class="onb-foot">
+        <button class="btn" onclick="A.onbNext()">\u0647\u064a\u0627 \u0646\u0628\u062f\u0623</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  /* 1 — track */
+  if (st === 1) {
+    const card = (k, emoji, name, note) => `
+      <button class="pick ${S.track === k ? "on" : ""}" onclick="A.onbTrack('${k}')">
+        <span class="pick-ic">${emoji}</span>
+        <span class="pick-tx"><b>${name}</b><span>${note}</span></span>
+        <span class="pick-tick">${CHECK_BADGE}</span>
+      </button>`;
+    $app.innerHTML = onbShell(1, "\u0623\u064a \u0645\u0633\u0627\u0631 \u062a\u062f\u0631\u0633\u061f",
+      "\u064a\u062d\u062f\u0651\u062f \u062a\u0648\u0632\u064a\u0639 \u0627\u0644\u0623\u0633\u0626\u0644\u0629 \u0648\u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631 \u0627\u0644\u062a\u062c\u0631\u064a\u0628\u064a.",
+      `<div class="pick-list">
+        ${card("sci", "\ud83d\udd2c", "\u0639\u0644\u0645\u064a", "\u062a\u0648\u0632\u064a\u0639 \u0643\u0645\u0651\u064a \u0623\u0643\u0628\u0631")}
+        ${card("lit", "\ud83d\udcd6", "\u0623\u062f\u0628\u064a / \u0646\u0638\u0631\u064a", "\u062a\u0648\u0632\u064a\u0639 \u0643\u0645\u0651\u064a \u0623\u062e\u0641\u0651")}
+      </div>`,
+      ["\u0627\u0644\u062a\u0627\u0644\u064a", "A.onbNext()"], true, false);
+    return;
+  }
+
+  /* 2 — daily goal */
+  if (st === 2) {
+    $app.innerHTML = onbShell(2, "\u0643\u0645 \u0633\u0624\u0627\u0644\u0627\u064b \u064a\u0648\u0645\u064a\u0627\u064b\u061f",
+      "\u0627\u0644\u0627\u0633\u062a\u0645\u0631\u0627\u0631 \u0623\u0647\u0645\u0651 \u0645\u0646 \u0627\u0644\u0643\u0645\u0651\u064a\u0629 \u2014 \u062a\u0642\u062f\u0631 \u062a\u063a\u064a\u0651\u0631\u0647 \u0644\u0627\u062d\u0642\u0627\u064b.",
+      `<div class="pick-list">` + GOAL_OPTS.map(([g, name, note]) => `
+        <button class="pick ${S.goal === g ? "on" : ""}" onclick="A.onbGoal(${g})">
+          <span class="pick-ic">${ico("target", 26)}</span>
+          <span class="pick-tx"><b>${name}</b><span>${note}</span></span>
+          <span class="pick-tick">${CHECK_BADGE}</span>
+        </button>`).join("") + `</div>`,
+      ["\u0627\u0644\u062a\u0627\u0644\u064a", "A.onbNext()"], true);
+    return;
+  }
+
+  /* 3 — exam date: the hook Duolingo does not have */
+  if (st === 3) {
+    const base = S.exam ? new Date(S.exam + "T00:00:00") : new Date(Date.now() + 45 * 864e5);
+    const yNow = new Date().getFullYear();
+    const opt = (v, label, sel) => `<option value="${v}" ${sel ? "selected" : ""}>${label}</option>`;
+    const days = Array.from({ length: 31 }, (_, i) => opt(i + 1, toAr(i + 1), base.getDate() === i + 1)).join("");
+    const months = AR_MONTHS.map((m, i) => opt(i + 1, m, base.getMonth() === i)).join("");
+    const years = [yNow, yNow + 1].map(y => opt(y, toAr(y), base.getFullYear() === y)).join("");
+    $app.innerHTML = onbShell(3, "\u0645\u062a\u0649 \u0627\u062e\u062a\u0628\u0627\u0631\u0643\u061f",
+      "\u0628\u0646\u062d\u0633\u0628 \u0627\u0644\u0639\u062f\u0651 \u0627\u0644\u062a\u0646\u0627\u0632\u0644\u064a \u0648\u0646\u062a\u0627\u0628\u0639 \u062c\u0627\u0647\u0632\u064a\u062a\u0643 \u0645\u0639\u0647.",
+      `<div class="onb-hero-ic">${examCalendarSVG()}</div>
+       <div class="date-trio" id="examTrio">
+        <label class="dt-box"><span class="dt-cap">\u0627\u0644\u064a\u0648\u0645</span><select id="exDay" class="dt-sel">${days}</select></label>
+        <label class="dt-box dt-month"><span class="dt-cap">\u0627\u0644\u0634\u0647\u0631</span><select id="exMonth" class="dt-sel">${months}</select></label>
+        <label class="dt-box"><span class="dt-cap">\u0627\u0644\u0633\u0646\u0629</span><select id="exYear" class="dt-sel">${years}</select></label>
+       </div>
+       <button class="onb-skip" onclick="A.onbNext()">\u0645\u0627 \u062d\u062c\u0632\u062a \u0645\u0648\u0639\u062f\u0627\u064b \u0628\u0639\u062f</button>`,
+      ["\u062d\u0641\u0638 \u0627\u0644\u0645\u0648\u0639\u062f", "A.onbSaveExam()"], true);
+    return;
+  }
+
+  /* 4 — placement pitch */
+  if (st === 4) {
+    $app.innerHTML = onbShell(4, "\u0648\u064a\u0646 \u0646\u0628\u062f\u0623 \u0645\u0639\u0643\u061f",
+      "\u0633\u0628\u0639\u0629 \u0623\u0633\u0626\u0644\u0629 \u0642\u0635\u064a\u0631\u0629 \u062a\u062d\u062f\u0651\u062f \u0645\u0646 \u0648\u064a\u0646 \u062a\u0628\u062f\u0623 \u0627\u0644\u0645\u0633\u0627\u0631 \u2014 \u0628\u062f\u0648\u0646 \u0642\u0644\u0648\u0628 \u0648\u0644\u0627 \u0648\u0642\u062a.",
+      `<div class="onb-hero-ic">${placementSVG()}</div>
+       <div class="onb-note">${ico("guide", 20)} \u0625\u0630\u0627 \u0623\u062e\u0637\u0623\u062a\u060c \u0645\u0627 \u0641\u064a\u0647 \u062e\u0633\u0627\u0631\u0629 \u2014 \u0628\u0646\u0628\u062f\u0623 \u0645\u0639\u0643 \u0645\u0646 \u0627\u0644\u0628\u062f\u0627\u064a\u0629 \u0648\u062e\u0644\u0627\u0635.</div>
+       <button class="onb-skip" onclick="A.onbSkipPlace()">\u0623\u0646\u0627 \u0645\u0628\u062a\u062f\u0626 \u2014 \u0627\u0628\u062f\u0623 \u0645\u0646 \u0627\u0644\u0623\u0648\u0644</button>`,
+      ["\u0627\u0628\u062f\u0623 \u0627\u0644\u062a\u062d\u062f\u064a\u062f", "A.onbStartPlace()"], true);
+    return;
+  }
+
+  /* 5 — placement result */
+  if (st === 5) { renderPlaceResult(); return; }
+
+  /* 6 — streak commitment */
+  if (st === 6) {
+    $app.innerHTML = onbShell(6, "\u0627\u0644\u062a\u0632\u0645 \u0628\u0633\u0644\u0633\u0644\u0629",
+      "\u0627\u0644\u0637\u0644\u0627\u0628 \u0627\u0644\u0644\u064a \u064a\u0644\u062a\u0632\u0645\u0648\u0646 \u0628\u0647\u062f\u0641 \u064a\u0643\u0645\u0651\u0644\u0648\u0646 \u0623\u0643\u062b\u0631. \u0627\u062e\u062a\u0631 \u0645\u062f\u0651\u062a\u0643.",
+      `<div class="onb-hero-ic onb-flame">${ico("streak", 76)}</div>
+       <div class="pick-row">` + STREAK_OPTS.map(([d, name]) => `
+        <button class="pickr ${S.streakGoal === d ? "on" : ""}" onclick="A.onbStreak(${d})">
+          <b>${toAr(d)}</b><span>${name}</span>
+        </button>`).join("") + `</div>`,
+      ["\u0623\u0644\u062a\u0632\u0645", "A.onbNext()"], true);
+    return;
+  }
+
+  /* 7 — day one has landed; now ask them to keep it */
+  if (st === 7) {
+    const guest = !S.user || S.user.guest;
+    $app.innerHTML = `<div class="screen screen-full onb onb-save">
+      <div class="onb-day1">
+        <div class="d1-flame">${ico("streak", 88)}</div>
+        <div class="d1-n">${toAr(1)}</div>
+        <div class="d1-l">\u0627\u0644\u064a\u0648\u0645 \u0627\u0644\u0623\u0648\u0644 \u0628\u062f\u0623</div>
+      </div>
+      <h1 class="onb-h">\u0627\u062d\u0641\u0638 \u062a\u0642\u062f\u0651\u0645\u0643</h1>
+      <p class="onb-s">${S.exam
+        ? "\u0639\u062f\u0651\u0643 \u0627\u0644\u062a\u0646\u0627\u0632\u0644\u064a \u0648\u0633\u0644\u0633\u0644\u062a\u0643 \u0648\u062f\u0631\u0648\u0633\u0643 \u2014 \u0627\u0631\u0628\u0637\u0647\u0627 \u0628\u0627\u0633\u0645\u0643 \u0639\u0634\u0627\u0646 \u0645\u0627 \u062a\u0631\u0648\u062d."
+        : "\u0633\u0644\u0633\u0644\u062a\u0643 \u0648\u062f\u0631\u0648\u0633\u0643 \u2014 \u0627\u0631\u0628\u0637\u0647\u0627 \u0628\u0627\u0633\u0645\u0643 \u0639\u0634\u0627\u0646 \u0645\u0627 \u062a\u0631\u0648\u062d."}</p>
+      <div class="login-form">
+        <input id="onbName" class="login-input" type="text" maxlength="20"
+          placeholder="\u0645\u0627 \u0627\u0633\u0645\u0643\u061f" autocomplete="off"
+          value="${guest ? "" : esc((S.user && S.user.name) || "")}"
+          onkeydown="if(event.key==='Enter')A.onbFinish()">
+        <button class="btn" onclick="A.onbFinish()">\u064a\u0644\u0651\u0627 \u0646\u0628\u062f\u0623</button>
+        <button class="login-skip" onclick="A.onbFinishGuest()">\u0623\u0643\u0645\u0644 \u0643\u0636\u064a\u0641</button>
+      </div>
+    </div>`;
+    setTimeout(() => { const i = document.getElementById("onbName"); if (i) i.focus(); }, 420);
+    return;
+  }
+}
+
+A.onbSaveExam = function () {
+  const d = +document.getElementById("exDay").value,
+        m = +document.getElementById("exMonth").value,
+        y = +document.getElementById("exYear").value;
+  const date = new Date(y, m - 1, d);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const trio = document.getElementById("examTrio");
+  if (date.getMonth() !== m - 1 || date < today) {
+    trio.classList.remove("err"); void trio.offsetWidth; trio.classList.add("err");
+    toast(date.getMonth() !== m - 1 ? "\u0647\u0630\u0627 \u0627\u0644\u062a\u0627\u0631\u064a\u062e \u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f \u0641\u064a \u0627\u0644\u062a\u0642\u0648\u064a\u0645!" : "\u0627\u062e\u062a\u0631 \u062a\u0627\u0631\u064a\u062e\u0627\u064b \u0642\u0627\u062f\u0645\u0627\u064b \ud83d\ude05");
+    return;
+  }
+  S.exam = y + "-" + String(m).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+  S.examAsked = true; save(); sndGood(); A.onbNext();
+};
+
+A.onbFinish = function () {
+  const inp = document.getElementById("onbName");
+  const name = (inp.value || "").trim();
+  if (!name) { inp.classList.remove("err"); void inp.offsetWidth; inp.classList.add("err"); inp.focus(); return; }
+  S.user = { name: name.slice(0, 20), guest: false };
+  onbDone();
+};
+A.onbFinishGuest = function () { S.user = { name: "\u0636\u064a\u0641", guest: true }; onbDone(); };
+
+function onbDone() {
+  S.onb = ONB_STEPS + 1;
+  S.joined = S.joined || todayKey();
+  bumpStreak();                       // day one is real: they just did the placement
+  save(); sndGood();
+  go("path");
+}
+
+/* ---------------- placement ----------------
+   Seven questions, easy \u2192 hard, spread across the four units. No hearts,
+   no timer, no explanations \u2014 it is a measurement, not a lesson. */
+const PLACE_N = 7;
+
+function placementPool() {
+  const ds = domains();
+  if (!ds.length) return [];
+  const byDiff = { 1: [], 2: [], 3: [] };
+  ds.forEach((d, di) => d.lessons.forEach(l => l.questions.forEach(q => {
+    if (byDiff[q.difficulty || 2]) byDiff[q.difficulty || 2].push({ q, di });
+  })));
+  const take = (arr, n) => {
+    const out = [], used = {};
+    for (let guard = 0; out.length < n && guard < 400; guard++) {
+      const p = arr[Math.floor(Math.random() * arr.length)];
+      if (!p || used[p.q.id]) continue;
+      used[p.q.id] = 1; out.push(p);
+    }
+    return out;
+  };
+  /* ascending, so a weak student meets the wall early and a strong one is
+     still being stretched at question seven */
+  return [...take(byDiff[1], 2), ...take(byDiff[2], 3), ...take(byDiff[3], 2)]
+    .map(p => ({ q: shuffleChoices(p.q), di: p.di }));
+}
+
+A.onbStartPlace = function () {
+  const pool = placementPool();
+  if (pool.length < PLACE_N) { A.onbSkipPlace(); return; }
+  ONB.pool = pool; ONB.i = 0; ONB.right = 0; ONB.sel = null; ONB.locked = false;
+  renderPlaceQ();
+};
+A.onbSkipPlace = function () {
+  S.placed = { skipped: true, unit: 0, right: 0, of: PLACE_N };
+  save(); onbGo(5);
+};
+
+function renderPlaceQ() {
+  const item = ONB.pool[ONB.i], q = item.q;
+  const pct = Math.round((ONB.i / PLACE_N) * 100);
+  $app.innerHTML = `<div class="screen screen-full screen-session place-run">
+    <div class="session-top">
+      <button class="x-btn" onclick="A.onbSkipPlace()" aria-label="\u062a\u062e\u0637\u0651\u064a">${X_SVG}</button>
+      <div class="prog-wrap">
+        <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i><i class="prog-cool" style="width:${pct}%"></i></div>
+      </div>
+      <span class="sess-hearts place-count">${toAr(ONB.i + 1)}/${toAr(PLACE_N)}</span>
+    </div>
+    <div class="q-area">${questionBody(q, ONB.sel, false, "A.placePick", null)}</div>
+    <div class="action-bar"><button class="btn" id="checkBtn" onclick="A.placeCheck()" ${ONB.sel === null ? "disabled" : ""}>${ONB.i + 1 === PLACE_N ? "\u0625\u0646\u0647\u0627\u0621" : "\u0627\u0644\u062a\u0627\u0644\u064a"}</button></div>
+  </div>`;
+  fxPaintBar(0);
+}
+
+A.placePick = function (i) {
+  if (ONB.locked) return;
+  ONB.sel = i;
+  document.querySelectorAll(".place-run .choice").forEach((b, j) => b.classList.toggle("sel", j === i));
+  const c = document.getElementById("checkBtn"); if (c) c.disabled = false;
+};
+
+A.placeCheck = function () {
+  if (ONB.sel === null || ONB.locked) return;
+  ONB.locked = true;
+  const item = ONB.pool[ONB.i];
+  if (ONB.sel === item.q.answer) { ONB.right++; playCorrect(); } else { sndBad(); }
+  ONB.i++; ONB.sel = null; ONB.locked = false;
+  if (ONB.i >= PLACE_N) { finishPlacement(); return; }
+  renderPlaceQ();
+};
+
+/* Score \u2192 how far up the path we open. Deliberately conservative: starting a
+   student too far ahead is worse than starting them one unit too early,
+   because the first thing they meet is then a wall instead of a win. */
+function finishPlacement() {
+  const r = ONB.right;
+  const unit = r >= 7 ? 3 : r >= 5 ? 2 : r >= 3 ? 1 : 0;
+  S.placed = { skipped: false, unit, right: r, of: PLACE_N };
+  if (unit > 0) {
+    const ds = domains();
+    for (let di = 0; di < unit && di < ds.length; di++) {
+      ds[di].lessons.forEach(l => {
+        const k = ds[di].key + "." + l.key;
+        if (!S.lessons[k] || !S.lessons[k].stars) S.lessons[k] = { stars: 1, plays: 0, placed: true };
+      });
+    }
+  }
+  save();
+  onbGo(5);
+}
+
+function renderPlaceResult() {
+  const p = S.placed || { unit: 0, right: 0, of: PLACE_N, skipped: true };
+  const ds = domains();
+  const startUnit = ds[Math.min(p.unit, ds.length - 1)];
+  const skipped = p.unit > 0 ? ds.slice(0, p.unit).reduce((n, d) => n + d.lessons.length, 0) : 0;
+  $app.innerHTML = onbShell(5, skipped ? "\u062a\u062e\u0637\u0651\u064a\u0646\u0627 " + arPlural(skipped, "\u062f\u0631\u0633\u0627\u064b \u0648\u0627\u062d\u062f\u0627\u064b", "\u062f\u0631\u0633\u064a\u0646", "\u062f\u0631\u0648\u0633", "\u062f\u0631\u0633\u0627\u064b") : "\u0628\u0646\u0628\u062f\u0623 \u0645\u0646 \u0627\u0644\u0623\u0648\u0644",
+    p.skipped ? "\u062a\u0642\u062f\u0631 \u062a\u0639\u064a\u062f \u0627\u0644\u062a\u062d\u062f\u064a\u062f \u0645\u062a\u0649 \u0645\u0627 \u062a\u0628\u0651\u064a \u0645\u0646 \u0645\u0644\u0641\u0643 \u0627\u0644\u0634\u062e\u0635\u064a."
+             : "\u0625\u062c\u0627\u0628\u0627\u062a\u0643 \u0627\u0644\u0635\u062d\u064a\u062d\u0629: " + toAr(p.right) + " \u0645\u0646 " + toAr(p.of) + ".",
+    `<div class="place-res">
+       <div class="pr-ring"><b>${toAr(p.right)}</b><span>\u0645\u0646 ${toAr(p.of)}</span></div>
+       <div class="pr-unit">
+         <span class="pr-kicker">\u0646\u0642\u0637\u0629 \u0627\u0644\u0628\u062f\u0627\u064a\u0629</span>
+         <b>${startUnit ? startUnit.title : ""}</b>
+       </div>
+     </div>`,
+    ["\u0627\u0644\u062a\u0627\u0644\u064a", "A.onbNext()"], true, false);
+}
+
+/* ---------------- placement art ---------------- */
+function placementSVG() {
+  return `<svg viewBox="0 0 120 120" fill="none" aria-hidden="true">
+    <circle cx="60" cy="60" r="52" fill="var(--blue-light)"/>
+    <path d="M32 78 L52 52 L70 68 L92 38" stroke="var(--blue)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="92" cy="38" r="9" fill="var(--green)" stroke="#fff" stroke-width="4"/>
+    <circle cx="32" cy="78" r="7" fill="var(--blue)" stroke="#fff" stroke-width="3.5"/>
+  </svg>`;
+}
+
+/* ============================================================
+   PROFILE
+   ------------------------------------------------------------
+   Not the settings list with a name on top. This is the screen a
+   student opens to see whether they are on track: who they are,
+   how long the streak is, what the week looked like, how far
+   each unit has come, and how many days are left. Settings stays
+   a separate screen for toggles, reachable from the bottom here.
+   ============================================================ */
+/* todayKey() emits an unpadded y-m-d; fmtExamDate expects the padded
+   ISO form, so joined dates get their own tiny formatter. */
+function fmtDayKey(k) {
+  const a = String(k || "").split("-");
+  if (a.length !== 3) return "";
+  return toAr(+a[2]) + " / " + toAr(+a[1]) + " / " + toAr(+a[0]);
+}
+const PROF_WK = ["\u062d", "\u0646", "\u062b", "\u0631", "\u062e", "\u062c", "\u0633"];
+
+function unitMastery() {
+  return domains().map(d => {
+    let done = 0;
+    d.lessons.forEach(l => { if (lessonProg(d.key + "." + l.key).stars > 0) done++; });
+    return { key: d.key, title: d.title, color: d.color, done, total: d.lessons.length,
+             pct: d.lessons.length ? Math.round(done / d.lessons.length * 100) : 0 };
+  });
+}
+
+function overallAccuracy() {
+  let r = 0, w = 0;
+  for (const k in S.qstats) { r += S.qstats[k].r || 0; w += S.qstats[k].w || 0; }
+  return (r + w) ? Math.round(r / (r + w) * 100) : null;
+}
+
+/* The last seven days, oldest first. A day counts as active when the streak
+   was alive on it \u2014 derived from streak.last and count, which is all we
+   store. Honest about what it can know: it never invents a filled day. */
+function streakWeek() {
+  const out = [];
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const lastK = S.streak.last;
+  const cnt = S.streak.count || 0;
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today.getTime() - i * 864e5);
+    const key = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+    let on = false;
+    if (cnt > 0 && lastK) {
+      const last = new Date(lastK.split("-")[0], +lastK.split("-")[1] - 1, +lastK.split("-")[2]);
+      last.setHours(0, 0, 0, 0);
+      const back = Math.round((last - d) / 864e5);
+      on = back >= 0 && back < cnt;
+    }
+    out.push({ dow: PROF_WK[d.getDay()], on, today: i === 0 });
+  }
+  return out;
+}
+
+function renderProfile() {
+  const t = LEAGUE_TIERS[tierIndex()];
+  const name = (S.user && S.user.name) || "\u0636\u064a\u0641";
+  const guest = !S.user || S.user.guest;
+  const initial = name.trim().charAt(0) || "\u0642";
+  const flat = allLessons();
+  let doneN = 0; flat.forEach(x => { if (lessonProg(x.key).stars > 0) doneN++; });
+  const acc = overallAccuracy();
+  const days = examDaysLeft();
+  const wk = streakWeek();
+  const mast = unitMastery();
+  const nextT = LEAGUE_TIERS[tierIndex() + 1];
+  const tierPct = nextT
+    ? Math.max(0, Math.min(100, Math.round((S.totalXp - t.min) / (nextT.min - t.min) * 100)))
+    : 100;
+
+  $app.innerHTML = statbar() + `<div class="screen"><div class="page pf">
+
+    <div class="pf-hero">
+      <div class="pf-av"><span>${esc(initial)}</span></div>
+      <div class="pf-id">
+        <h1>${esc(name)}</h1>
+        <p>${S.joined ? "\u0628\u062f\u0623 \u0645\u0639\u0646\u0627 " + fmtDayKey(S.joined) : "\u0639\u0636\u0648 \u062c\u062f\u064a\u062f"}</p>
+      </div>
+      ${guest ? `<button class="pf-claim" onclick="A.pfClaim()">${ico("guide", 17)} \u0627\u062d\u0641\u0638 \u062a\u0642\u062f\u0651\u0645\u0643</button>` : ""}
+    </div>
+
+    <button class="pf-rank" onclick="A.go('league')">
+      ${rankImg(t.key, 54)}
+      <span class="pf-rank-tx">
+        <b>\u0627\u0644\u0645\u0633\u062a\u0648\u0649 ${t.name}</b>
+        <span class="pf-rank-bar"><i style="width:${tierPct}%"></i></span>
+        <small>${nextT ? toAr(Math.max(0, nextT.min - S.totalXp)) + " \u0646\u0642\u0637\u0629 \u0644\u0644\u0645\u0633\u062a\u0648\u0649 " + nextT.name : "\u0623\u0639\u0644\u0649 \u0645\u0633\u062a\u0648\u0649 \u2014 \u0623\u062d\u0633\u0646\u062a"}</small>
+      </span>
+      <span class="pf-go">\u2190</span>
+    </button>
+
+    <div class="pf-grid">
+      <div class="pf-tile"><span class="pf-t-ic">${ico("streak", 26)}</span><b>${toAr(S.streak.count)}</b><span>\u064a\u0648\u0645 \u0645\u062a\u062a\u0627\u0644\u064d</span></div>
+      <div class="pf-tile"><span class="pf-t-ic">${ico("gem", 26)}</span><b>${toAr(S.xp)}</b><span>\u062c\u0648\u0647\u0631\u0629</span></div>
+      <div class="pf-tile"><span class="pf-t-ic">${ico("star-gold", 26)}</span><b>${toAr(doneN)}</b><span>\u062f\u0631\u0633\u0627\u064b \u0645\u0643\u062a\u0645\u0644\u0627\u064b</span></div>
+      <div class="pf-tile"><span class="pf-t-ic">${ico("target", 26)}</span><b>${acc === null ? "\u2014" : toAr(acc) + "\u066a"}</b><span>\u0627\u0644\u062f\u0642\u0629</span></div>
+    </div>
+
+    <div class="pf-card">
+      <div class="pf-head"><h3>\u0623\u0633\u0628\u0648\u0639\u0643</h3>
+        <span class="pf-goal">${ico("target", 15)} \u0647\u062f\u0641\u0643 ${toAr(S.goal)} \u064a\u0648\u0645\u064a\u0627\u064b</span></div>
+      <div class="pf-week">` + wk.map(d => `
+        <div class="pf-day${d.on ? " on" : ""}${d.today ? " now" : ""}">
+          <span class="pf-dot">${d.on ? CHECK_BADGE : ""}</span><span class="pf-dow">${d.dow}</span>
+        </div>`).join("") + `</div>
+    </div>
+
+    ${days !== null ? `<button class="pf-exam" onclick="A.examSetup()">
+      <span class="pf-ex-n">${toAr(days)}</span>
+      <span class="pf-ex-t"><b>\u064a\u0648\u0645\u0627\u064b \u0639\u0644\u0649 \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631</b><span>${fmtExamDate(S.exam)}</span></span>
+      <span class="pf-go">\u2190</span>
+    </button>` : `<button class="pf-exam pf-exam-empty" onclick="A.examSetup()">
+      <span class="pf-ex-t"><b>\u062d\u062f\u0651\u062f \u0645\u0648\u0639\u062f \u0627\u062e\u062a\u0628\u0627\u0631\u0643</b><span>\u0639\u0634\u0627\u0646 \u0646\u062a\u0627\u0628\u0639 \u062c\u0627\u0647\u0632\u064a\u062a\u0643</span></span>
+      <span class="pf-go">\u2190</span></button>`}
+
+    <div class="pf-card">
+      <div class="pf-head"><h3>\u0625\u062a\u0642\u0627\u0646\u0643 \u062d\u0633\u0628 \u0627\u0644\u0648\u062d\u062f\u0629</h3></div>
+      <div class="pf-mast">` + mast.map(m => `
+        <div class="pf-m">
+          <div class="pf-m-top"><span>${m.title}</span><b>${toAr(m.done)}/${toAr(m.total)}</b></div>
+          <div class="pf-m-bar pm-${m.color === "yellow" ? "gold" : m.color}"><i style="width:${m.pct}%"></i></div>
+        </div>`).join("") + `</div>
+    </div>
+
+    <div class="pf-card">
+      <div class="pf-head"><h3>\u0645\u0633\u0627\u0631\u0643</h3></div>
+      <div class="seg">
+        <button class="${S.track === "sci" ? "on" : ""}" onclick="A.setTrack('sci')">\u0639\u0644\u0645\u064a \ud83d\udd2c</button>
+        <button class="${S.track === "lit" ? "on" : ""}" onclick="A.setTrack('lit')">\u0623\u062f\u0628\u064a / \u0646\u0638\u0631\u064a \ud83d\udcd6</button>
+      </div>
+      ${S.placed ? `<button class="pf-line" onclick="A.pfReplace()">
+        <span>${ico("guide", 18)} \u0625\u0639\u0627\u062f\u0629 \u062a\u062d\u062f\u064a\u062f \u0627\u0644\u0645\u0633\u062a\u0648\u0649</span><span class="pf-go">\u2190</span></button>` : ""}
+      <button class="pf-line" onclick="A.go('review')"><span>${ico("target", 18)} \u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u0623\u062e\u0637\u0627\u0621</span><span class="pf-go">\u2190</span></button>
+      <button class="pf-line" onclick="A.go('settings')"><span>${ico("nav-more", 18)} \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a</span><span class="pf-go">\u2190</span></button>
+    </div>
+
+  </div></div>` + bottomnav("profile");
+}
+
+A.pfClaim = function () { ONB.step = 7; renderOnb(); };
+A.pfReplace = function () {
+  askConfirm("\u062a\u0639\u064a\u062f \u062a\u062d\u062f\u064a\u062f \u0645\u0633\u062a\u0648\u0627\u0643\u061f",
+    "\u0628\u0646\u0633\u0623\u0644\u0643 \u0633\u0628\u0639\u0629 \u0623\u0633\u0626\u0644\u0629 \u0645\u0646 \u062c\u062f\u064a\u062f. \u062f\u0631\u0648\u0633\u0643 \u0627\u0644\u0644\u064a \u0644\u0639\u0628\u062a\u0647\u0627 \u0645\u0627 \u0631\u0627\u062d \u062a\u0631\u0648\u062d.",
+    "\u062e\u0644\u0651\u0647 \u0645\u062b\u0644 \u0645\u0627 \u0647\u0648", "\u0623\u0639\u062f \u0627\u0644\u062a\u062d\u062f\u064a\u062f", () => {
+      ONB.step = 4; A.onbStartPlace();
+    });
+};
+
 /* ---------------- boot ---------------- */
 function boot() {
   initCorrectVoice(); // preload the correct-answer clip so the first play is instant
-  if (!S.user) renderLogin();
-  else afterLogin();
+  /* Onboarding owns the first run now, and it ends with the sign-up rather
+     than starting with it. Anyone who came through the old login already has
+     S.user, so they skip straight past it. */
+  if (S.onb > ONB_STEPS || (S.user && S.examAsked)) { S.joined = S.joined || todayKey(); render(); }
+  else { ONB.step = 0; renderOnb(); }
 }
 boot();
 })();
