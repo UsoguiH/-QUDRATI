@@ -1464,31 +1464,7 @@ button.dom-stat:active { transform: scale(.99); }
 .es-halo { animation: haloPulse 1.8s ease-in-out infinite; }
 @keyframes haloPulse { 0%, 100% { opacity: 0; } 50% { opacity: .9; } }
 
-/* --- day / month / year picker --- */
-.date-trio { display: flex; gap: 10px; margin-bottom: 14px; animation: fadeUp .4s .6s ease backwards; }
-.date-trio.err .dt-box { border-color: var(--red); background: var(--red-bg); }
-.date-trio.err { animation: shake .4s ease; }
-.dt-box {
-  flex: 1; display: flex; flex-direction: column; align-items: stretch;
-  background: #F7F7F7; border: 2px solid var(--line); border-radius: 13px;
-  padding: 8px 6px 4px; transition: border-color .15s, background .15s;
-  position: relative; cursor: pointer;
-}
-.dt-box::after {           /* the affordance the native select loses to appearance:none */
-  content: ''; position: absolute; left: 9px; bottom: 13px;
-  width: 7px; height: 7px; border-right: 2px solid var(--gray-icon);
-  border-bottom: 2px solid var(--gray-icon); transform: rotate(45deg);
-  pointer-events: none;
-}
-.dt-box:focus-within { border-color: var(--blue-border); background: #fff; }
 .dt-month { flex: 1.5; }
-.dt-cap { font-size: 11.5px; font-weight: 700; color: var(--gray-icon); letter-spacing: .3px; }
-.dt-sel {
-  -webkit-appearance: none; appearance: none;
-  border: 0; background: none; outline: none; width: 100%;
-  font-family: var(--font); font-size: 18px; font-weight: 700; color: var(--ink);
-  text-align: center; text-align-last: center; padding: 2px 0 4px;
-}
 
 /* --- countdown card on the path --- */
 .exam-card {
@@ -3389,11 +3365,6 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
   background: var(--green-bg); border-radius: 999px; padding: 6px 12px 4px;
 }
 
-/* ---- settings: the exam date, edited in place ---- */
-.set-trio { margin-bottom: 0; animation: none; }
-.set-exrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.set-exrow .set-hint { margin: 0; }
-.set-exrow .set-save { height: 46px; padding: 0 22px; }
 
 /* ---- settings, now a screen ---- */
 .set-page { display: flex; flex-direction: column; gap: 22px; }
@@ -3420,4 +3391,197 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
   .more-veil.show .more-card { transform: translateY(0) scale(1); opacity: 1; }
   .more-pick:first-of-type { border-top: 0; }
   .more-grip { display: none; }
+}
+
+
+/* ============================================================
+   EXAM DATE — calendar picker
+   ------------------------------------------------------------
+   Replaces the three dropdowns. Everything is scoped to
+   .exam-pick and every colour comes from the app's tokens; the
+   source component shipped its own copy of the Duolingo palette,
+   which would have been a second source of truth for the same
+   five greens.
+
+   Motion is gated on :root[data-motion], never on the raw
+   prefers-reduced-motion query — Windows reports "reduce" far
+   more often than anyone means it, and this project has been
+   bitten by that twice already.
+   ============================================================ */
+.exam-pick {
+  --polar: #F7F7F7;                 /* one surface tint the palette lacks */
+  --ease: cubic-bezier(.2,.8,.25,1);
+  display: flex; flex-direction: column; gap: 0;
+  width: 100%; max-width: var(--col-max, 430px); margin-inline: auto;
+}
+.exam-pick h1 { font-size: 27px; font-weight: 800; line-height: 1.4; margin: 0; }
+
+/* ---- countdown ---- */
+.ep-count {
+  margin: 16px 0 14px; padding: 14px 16px;
+  background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px;
+  border-radius: 16px; display: flex; align-items: center; gap: 14px; min-height: 98px;
+}
+.ep-badge {
+  flex: none; width: 66px; height: 66px; border-radius: 18px;
+  background: var(--green-bg); display: grid; place-items: center;
+  font-size: 28px; font-weight: 800; color: var(--green-dk); line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.ep-badge.flash { animation: epBadge .52s var(--ease) .58s forwards; }
+@keyframes epBadge {
+  0%{transform:scale(1.22,.84)} 28%{transform:scale(.93,1.06)}
+  52%{transform:scale(1.06,.97)} 76%{transform:scale(.98,1.01)} 100%{transform:scale(1,1)}
+}
+.ep-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ep-meta.flash { animation: epRise .4s var(--ease) .64s forwards; }
+@keyframes epRise { 0%{transform:translateY(7px)} 100%{transform:none} }
+.ep-unit { font-size: 18px; font-weight: 800; color: var(--green-dk); }
+.ep-when { font-size: 14px; font-weight: 600; color: var(--ink); }
+.ep-hijri { font-size: 13px; font-weight: 500; color: var(--gray-icon); }
+.ep-count.empty .ep-badge { background: var(--polar); color: var(--gray-icon); font-size: 30px; }
+.ep-count.empty .ep-unit { color: var(--gray); }
+
+/* ---- calendar ---- */
+.ep-cal {
+  position: relative; background: var(--snow);
+  border: 2px solid var(--line); border-bottom-width: 4px;
+  border-radius: 16px; padding: 14px 10px;
+}
+.ep-top { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 12px; }
+.ep-month { font-size: 19px; font-weight: 800; color: var(--ink); }
+.ep-nav { display: flex; gap: 8px; }
+.ep-nav button {
+  width: 40px; height: 40px; border: 2px solid var(--line); border-bottom-width: 4px;
+  background: var(--snow); border-radius: 14px; color: var(--blue);
+  font-size: 18px; font-weight: 900; cursor: pointer; display: grid; place-items: center;
+  transition: background-color .12s var(--ease), transform .08s var(--ease);
+}
+.ep-nav button:hover:not(:disabled) { background: var(--polar); }
+.ep-nav button:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; }
+.ep-nav button:disabled { color: var(--line); cursor: not-allowed; }
+
+.ep-dow { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; margin-bottom: 8px; }
+.ep-dow span {
+  text-align: center; font-size: 12px; font-weight: 700; color: var(--gray-icon); letter-spacing: .2px;
+}
+.ep-dow span.we { color: #D9C48A; }
+
+.ep-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; }
+.ep-grid.slide-r { animation: epSlideR .26s var(--ease); }
+.ep-grid.slide-l { animation: epSlideL .26s var(--ease); }
+@keyframes epSlideR { from{transform:translateX(-16px);opacity:0} to{transform:none;opacity:1} }
+@keyframes epSlideL { from{transform:translateX(16px);opacity:0} to{transform:none;opacity:1} }
+
+.ep-day {
+  position: relative; aspect-ratio: 1/1; border: 2px solid transparent; background: transparent;
+  border-radius: 14px; cursor: pointer; font-family: inherit; font-size: 16px; font-weight: 700;
+  color: var(--ink); display: grid; place-items: center;
+  transition: background-color .12s var(--ease), transform .08s var(--ease);
+}
+.ep-day.pad { visibility: hidden; }
+.ep-day:hover:not(:disabled):not(.selected) { background: var(--polar); }
+.ep-day:active:not(:disabled) { transform: scale(.92); }
+.ep-day:disabled { color: #DEDEDE; cursor: default; }
+
+/* the stretch of days between now and the exam — the plan, not just a range */
+.ep-day.run { background: var(--green-bg); border-radius: 6px; color: #4C8B18; }
+.ep-day.run.run-start { border-start-start-radius: 14px; border-end-start-radius: 14px; }
+.ep-day.run.run-end { border-start-end-radius: 14px; border-end-end-radius: 14px; }
+.ep-day.today {
+  background: var(--blue-light); border-color: var(--blue-border); color: var(--blue-dk);
+  border-radius: 14px; font-weight: 800;
+}
+.ep-day.selected {
+  background: var(--green); border-color: var(--green-dk); border-bottom-width: 4px;
+  color: #fff; font-weight: 800; border-radius: 14px;
+}
+
+/* the landing: crouch, launch, hang, fall, two decaying bounces */
+.ep-day.jump { animation: epJump 1s both; transform-origin: bottom center; z-index: 3; }
+@keyframes epJump {
+  0%  {transform:translateY(0) scale(1,1);          animation-timing-function:cubic-bezier(.34,.1,.64,1)}
+  8%  {transform:translateY(4px) scale(1.24,.74);   animation-timing-function:cubic-bezier(.05,.7,.1,1)}
+  12% {transform:translateY(-12px) scale(.82,1.32); animation-timing-function:cubic-bezier(.1,.6,.35,1)}
+  21% {transform:translateY(-34px) scale(.9,1.16);  animation-timing-function:cubic-bezier(.25,.55,.45,1)}
+  32% {transform:translateY(-48px) scale(.98,1.04); animation-timing-function:cubic-bezier(.3,.5,.5,1)}
+  38% {transform:translateY(-52px) scale(1,1);      animation-timing-function:cubic-bezier(.55,.05,.85,.3)}
+  47% {transform:translateY(-35px) scale(.94,1.1)}
+  54% {transform:translateY(-7px) scale(.86,1.22);  animation-timing-function:cubic-bezier(.4,0,.2,1)}
+  58% {transform:translateY(0) scale(1.3,.7);       animation-timing-function:cubic-bezier(.1,.7,.3,1)}
+  64% {transform:translateY(-16px) scale(.92,1.11); animation-timing-function:cubic-bezier(.5,.05,.8,.4)}
+  71% {transform:translateY(0) scale(1.16,.86);     animation-timing-function:cubic-bezier(.1,.8,.3,1)}
+  77% {transform:translateY(-5px) scale(.97,1.05);  animation-timing-function:cubic-bezier(.5,.05,.8,.4)}
+  82% {transform:translateY(0) scale(1.08,.93)}
+  89% {transform:translateY(-1.5px) scale(.99,1.01)}
+  95% {transform:translateY(0) scale(1.02,.98)}
+  100%{transform:translateY(0) scale(1,1)}
+}
+
+.ep-fx { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.ep-fx-back { z-index: 0; } .ep-fx-front { z-index: 5; }
+.ep-fx .shade {
+  position: absolute; border-radius: 50%;
+  background: rgba(30,50,20,.3); filter: blur(2.5px); animation: epShade 1s both;
+}
+@keyframes epShade {
+  0%{transform:scale(1,1);opacity:.22} 8%{transform:scale(1.3,1);opacity:.26}
+  38%{transform:scale(.26,.6);opacity:.03} 58%{transform:scale(1.45,1.1);opacity:.3}
+  64%{transform:scale(.75,.85);opacity:.12} 71%{transform:scale(1.2,1);opacity:.24}
+  82%{transform:scale(1.05,1);opacity:.18} 100%{transform:scale(1,1);opacity:0}
+}
+.ep-fx .spark {
+  position: absolute; border-radius: 50%; opacity: 0;
+  animation: epSpark .5s cubic-bezier(.2,.7,.4,1) .58s both;
+}
+@keyframes epSpark {
+  0%{transform:translate(0,0) scale(.3);opacity:1} 70%{opacity:1}
+  100%{transform:translate(var(--tx),var(--ty)) scale(.2);opacity:0}
+}
+.ep-cal.thud { animation: epThud .24s ease-out .56s; }
+@keyframes epThud { 0%,100%{transform:translateY(0)} 45%{transform:translateY(2px)} }
+
+.ep-day.run.anim { background-color: transparent; animation: epRunIn .3s var(--ease) forwards; }
+@keyframes epRunIn {
+  0%  {background-color:rgba(214,255,184,0);transform:scale(1)}
+  45% {background-color:var(--green-bg);transform:scale(1.18)}
+  100%{background-color:var(--green-bg);transform:scale(1)}
+}
+
+.ep-legend {
+  display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+  padding-top: 12px; margin-top: 10px;
+  font-size: 12px; font-weight: 600; color: var(--gray-icon);
+}
+.ep-legend i {
+  display: inline-block; width: 11px; height: 11px; border-radius: 4px;
+  margin-inline-end: 5px; vertical-align: -1px;
+}
+.ep-legend .l1 { background: var(--green); }
+.ep-legend .l2 { background: var(--green-bg); }
+.ep-legend .l3 { background: var(--blue-light); box-shadow: inset 0 0 0 2px var(--blue-border); }
+
+/* ---- footer ---- */
+.ep-foot { margin-top: 22px; padding: 20px 0 4px; border-top: 2px solid var(--line); }
+.ep-foot.done { border-top-color: transparent; background: var(--green-bg); border-radius: 16px; padding: 18px 16px 16px; }
+.ep-done { display: none; align-items: center; gap: 12px; margin-bottom: 16px; }
+.ep-foot.done .ep-done { display: flex; }
+.ep-done .tick {
+  flex: none; width: 44px; height: 44px; border-radius: 50%; background: #fff;
+  display: grid; place-items: center; color: var(--green-dk); font-weight: 900; font-size: 22px;
+}
+.ep-done .txt b { display: block; font-size: 19px; font-weight: 800; color: var(--green-dk); }
+.ep-done .txt span { font-size: 14px; font-weight: 600; color: #5F8B33; }
+.ep-foot.done .ep-ghost { display: none; }
+.ep-ghost {
+  display: block; width: 100%; margin-top: 12px; padding: 8px; background: none; border: 0;
+  cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 700; color: var(--gray-icon);
+}
+.ep-ghost:hover { color: var(--gray); }
+
+/* the project's motion switch, not the OS query */
+:root[data-motion="reduced"] .exam-pick *,
+:root[data-motion="reduced"] .exam-pick *::before,
+:root[data-motion="reduced"] .exam-pick *::after {
+  animation: none !important; transition: none !important;
 }

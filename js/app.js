@@ -3273,82 +3273,325 @@ const AR_MONTHS = ["يناير", "فبراير", "مارس", "أبريل", "ما
 const NODE_STAR = "M18.2665 6.04527C19.33 3.69332 22.67 3.69333 23.7335 6.04527L25.9554 10.959C26.4018 11.9462 27.3458 12.616 28.425 12.7114L33.7515 13.1819C36.4147 13.4171 37.4631 16.7555 35.4126 18.4711L31.6082 21.6541C30.7372 22.3828 30.3524 23.5408 30.6139 24.6459L31.7621 29.4978C32.3649 32.045 29.6444 34.0885 27.3659 32.8L22.4767 30.0351C21.5604 29.5169 20.4396 29.5169 19.5233 30.0351L14.6341 32.8C12.3556 34.0885 9.63514 32.045 10.2379 29.4978L11.3861 24.6459C11.6476 23.5408 11.2628 22.3828 10.3918 21.6541L6.58741 18.4711C4.53685 16.7555 5.58529 13.4171 8.2485 13.1819L13.575 12.7114C14.6542 12.616 15.5982 11.9462 16.0446 10.959L18.2665 6.04527Z";
 const SPARK_PATH = "M0-7Q1.2-1.2 7 0 1.2 1.2 0 7-1.2 1.2-7 0-1.2-1.2 0-7Z";
 
-/* Exam day = the last node on your path: an amber wall calendar whose
-   marked date is a green level node. The rings are drawn as whole circles
-   behind the page and clipped by it, which is what gives them a real loop
-   instead of two nubs stuck on the top edge. */
-function examCalendarSVG() {
-  const COLS = [28, 46, 64, 82, 100], ROWS = [66, 87, 108];
-  let dots = "";
-  ROWS.forEach((y, r) => COLS.forEach((x, c) => {
-    if (r === 1 && c > 0 && c < 4) return;           // the marked day owns the middle row
-    dots += `<circle cx="${x}" cy="${y}" r="4" fill="#E5E5E5"/>`;
-  }));
-  // whole circles, drawn before the page so the page clips their lower half:
-  // that is what gives a real loop instead of two nubs on the top edge
-  const ring = x => `<circle cx="${x}" cy="26" r="10" fill="none" stroke="#ADADAD" stroke-width="5.5"/>`;
-  // the group places it; the class animates transform inside the path's own
-  // box, so the two never fight over the transform property
-  const spark = (x, y, s, d) =>
-    `<g transform="translate(${x} ${y}) scale(${s})"><path class="es-spark" d="${SPARK_PATH}" fill="#FFC800" style="animation-delay:${d}s"/></g>`;
+/* ============================================================
+   EXAM DATE — calendar picker
+   ------------------------------------------------------------
+   Was three dropdowns. A date three months out took nine taps and
+   told the student nothing; the calendar shows the shape of the
+   time they have left, shades the run of study days between now
+   and the exam, and lands the chosen day with a bounce.
 
-  return `<svg class="es-cal" viewBox="0 0 128 128" fill="none" aria-hidden="true">
-    ${spark(22, 14, .85, 0)}${spark(105, 12, .62, .8)}
-    ${ring(44)}${ring(84)}
-    <rect x="12" y="31" width="104" height="88" rx="17" fill="#E0A100"/>
-    <rect x="12" y="26" width="104" height="88" rx="17" fill="#FFFFFF"/>
-    <path d="M12 43Q12 26 29 26h70q17 0 17 17v11H12z" fill="#FFC800"/>
-    <rect x="12" y="54" width="104" height="2.5" fill="#E0A100" opacity=".3"/>
-    <rect x="54" y="36" width="20" height="6" rx="3" fill="#FFFFFF" opacity=".72"/>
-    ${dots}
-    <circle cx="64" cy="87" r="19" fill="#58CC02" opacity=".13"/>
-    <circle class="es-halo" cx="64" cy="87" r="22" fill="none" stroke="#58CC02" stroke-width="2.6"/>
-    <circle cx="64" cy="90" r="13.2" fill="#58A700"/>
-    <circle cx="64" cy="87" r="13.2" fill="#58CC02"/>
-    <ellipse cx="64" cy="84.4" rx="10.4" ry="8.4" fill="#71DC1A"/>
-    <g transform="translate(64 87) scale(.5) translate(-21 -19)"><path d="${NODE_STAR}" fill="#FFFFFF"/></g>
-  </svg>`;
+   Adapted from exam-date-picker.html. Dropped on the way in: its
+   private copy of the Duolingo palette (the app already owns
+   those tokens), the replay/slow dev controls, and the
+   reduced-motion banner — motion here follows S.motion like
+   everything else.
+   ============================================================ */
+const EP_DAYNAMES = ["\u0627\u0644\u0623\u062d\u062f", "\u0627\u0644\u0625\u062b\u0646\u064a\u0646", "\u0627\u0644\u062b\u0644\u0627\u062b\u0627\u0621", "\u0627\u0644\u0623\u0631\u0628\u0639\u0627\u0621", "\u0627\u0644\u062e\u0645\u064a\u0633", "\u0627\u0644\u062c\u0645\u0639\u0629", "\u0627\u0644\u0633\u0628\u062a"];
+const EP_DOW = ["\u0623\u062d\u062f", "\u0625\u062b\u0646\u064a\u0646", "\u062b\u0644\u0627\u062b\u0627\u0621", "\u0623\u0631\u0628\u0639\u0627\u0621", "\u062e\u0645\u064a\u0633", "\u062c\u0645\u0639\u0629", "\u0633\u0628\u062a"];
+const EP_SPARKS = [[-34,-16],[-22,-32],[-6,-38],[10,-36],[24,-28],[36,-12]];
+const EP_SPARK_C = ["#58CC02","#FFC800","#1CB0F6","#58CC02","#FFC800","#84D8FF"];
+
+/* the epJump keyframes again, for when the CSS animation does not start */
+const EP_JUMP = [
+  [0,0,1,1,"cubic-bezier(.34,.1,.64,1)"], [.08,3,1.22,.76,"cubic-bezier(.05,.7,.1,1)"],
+  [.12,-12,.82,1.32,"cubic-bezier(.1,.6,.35,1)"], [.21,-34,.9,1.16,"cubic-bezier(.25,.55,.45,1)"],
+  [.32,-48,.98,1.04,"cubic-bezier(.3,.5,.5,1)"], [.38,-52,1,1,"cubic-bezier(.55,.05,.85,.3)"],
+  [.47,-35,.94,1.1,"linear"], [.54,-7,.86,1.22,"cubic-bezier(.4,0,.2,1)"],
+  [.58,0,1.3,.7,"cubic-bezier(.1,.7,.3,1)"], [.64,-16,.92,1.11,"cubic-bezier(.5,.05,.8,.4)"],
+  [.71,0,1.16,.86,"cubic-bezier(.1,.8,.3,1)"], [.77,-5,.97,1.05,"cubic-bezier(.5,.05,.8,.4)"],
+  [.82,0,1.08,.93,"linear"], [.89,-1.5,.99,1.01,"linear"], [.95,0,1.02,.98,"linear"], [1,0,1,1,"linear"]
+];
+
+let EP = { sel: null, view: null, first: false, shown: 0, raf: 0, timer: 0 };
+
+const epDay0  = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const epKey   = d => d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
+const epAdd   = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const epDiff  = (a, b) => Math.round((epDay0(b) - epDay0(a)) / 864e5);
+function epHijri(date) {
+  try { return new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura",
+    { day: "numeric", month: "long", year: "numeric" }).format(date); }
+  catch (e) { return ""; }
 }
 
 function renderExamSetup(first) {
-  const base = S.exam ? new Date(S.exam + "T00:00:00") : new Date(Date.now() + 45 * 864e5);
-  const yNow = new Date().getFullYear();
-  const opt = (v, label, sel) => `<option value="${v}" ${sel ? "selected" : ""}>${label}</option>`;
-  const days = Array.from({ length: 31 }, (_, i) => opt(i + 1, toAr(i + 1), base.getDate() === i + 1)).join("");
-  const months = AR_MONTHS.map((m, i) => opt(i + 1, m, base.getMonth() === i)).join("");
-  const years = [yNow, yNow + 1].map(y => opt(y, toAr(y), base.getFullYear() === y)).join("");
-  $app.innerHTML = `<div class="screen screen-full exam-setup">
-    <div class="es-hero">${examCalendarSVG()}</div>
-    <h1 class="login-title">متى اختبارك؟</h1>
-    <p class="login-sub">سنحسب العد التنازلي ونتابع جاهزيتك حتى يوم الاختبار</p>
-    <div class="login-form">
-      <div class="date-trio" id="examTrio">
-        <label class="dt-box"><span class="dt-cap">اليوم</span><select id="exDay" class="dt-sel">${days}</select></label>
-        <label class="dt-box dt-month"><span class="dt-cap">الشهر</span><select id="exMonth" class="dt-sel">${months}</select></label>
-        <label class="dt-box"><span class="dt-cap">السنة</span><select id="exYear" class="dt-sel">${years}</select></label>
+  const today = epDay0(new Date());
+  EP.first = !!first;
+  EP.sel = S.exam ? epDay0(new Date(S.exam + "T00:00:00")) : null;
+  if (EP.sel && EP.sel < today) EP.sel = null;
+  EP.view = new Date((EP.sel || today).getFullYear(), (EP.sel || today).getMonth(), 1);
+  EP.shown = 0;
+
+  $app.innerHTML = `<div class="screen screen-full"><div class="exam-pick">
+    <h1>\u0645\u062a\u0649 \u0627\u062e\u062a\u0628\u0627\u0631\u0643\u061f</h1>
+
+    <section class="ep-count empty" id="epCount" aria-live="polite">
+      <div class="ep-badge" id="epBadge">\u061f</div>
+      <div class="ep-meta">
+        <div class="ep-unit" id="epUnit">\u0627\u062e\u062a\u0631 \u064a\u0648\u0645 \u0627\u062e\u062a\u0628\u0627\u0631\u0643</div>
+        <div class="ep-when" id="epWhen">\u0627\u0636\u063a\u0637 \u0639\u0644\u0649 \u0623\u064a \u064a\u0648\u0645 \u0641\u064a \u0627\u0644\u062a\u0642\u0648\u064a\u0645</div>
+        <div class="ep-hijri" id="epHijri"></div>
       </div>
-      <button class="btn" onclick="A.saveExam()">حفظ الموعد</button>
-      <button class="login-skip" onclick="${first ? "A.skipExam()" : "A.backFromExam()"}">${first ? "لم أحجز موعداً بعد — لاحقاً" : "رجوع"}</button>
+    </section>
+
+    <section class="ep-cal">
+      <div class="ep-fx ep-fx-back" id="epFxBack" aria-hidden="true"></div>
+      <div class="ep-top">
+        <div class="ep-month" id="epMonth"></div>
+        <div class="ep-nav">
+          <button id="epPrev" type="button" aria-label="\u0627\u0644\u0634\u0647\u0631 \u0627\u0644\u0633\u0627\u0628\u0642"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true"><path d="M9 5 16 12 9 19" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button id="epNext" type="button" aria-label="\u0627\u0644\u0634\u0647\u0631 \u0627\u0644\u062a\u0627\u0644\u064a"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true"><path d="M15 5 8 12 15 19" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+      <div class="ep-dow" aria-hidden="true">` +
+        EP_DOW.map((d, i) => `<span class="${i >= 5 ? "we" : ""}">${d}</span>`).join("") + `</div>
+      <div class="ep-grid" id="epGrid" role="grid" aria-label="\u0627\u062e\u062a\u0631 \u062a\u0627\u0631\u064a\u062e \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631"></div>
+      <div class="ep-fx ep-fx-front" id="epFxFront" aria-hidden="true"></div>
+      <div class="ep-legend">
+        <span><i class="l1"></i>\u064a\u0648\u0645 \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631</span>
+        <span><i class="l2"></i>\u0623\u064a\u0627\u0645 \u0627\u0644\u0645\u0630\u0627\u0643\u0631\u0629</span>
+        <span><i class="l3"></i>\u0627\u0644\u064a\u0648\u0645</span>
+      </div>
+    </section>
+
+    <div class="ep-foot" id="epFoot">
+      <div class="ep-done">
+        <div class="tick">\u2713</div>
+        <div class="txt"><b>\u062a\u0645 \u062d\u0641\u0638 \u0627\u0644\u0645\u0648\u0639\u062f!</b><span id="epDoneSub"></span></div>
+      </div>
+      <button class="btn" id="epSave" type="button" onclick="A.saveExam()" disabled>\u062d\u0641\u0638 \u0627\u0644\u0645\u0648\u0639\u062f</button>
+      <button class="ep-ghost" type="button" onclick="${first ? "A.skipExam()" : "A.backFromExam()"}">${
+        first ? "\u0644\u0645 \u0623\u062d\u062c\u0632 \u0645\u0648\u0639\u062f\u0627\u064b \u0628\u0639\u062f \u2014 \u0644\u0627\u062d\u0642\u0627\u064b" : "\u0631\u062c\u0648\u0639"}</button>
     </div>
-  </div>`;
+  </div></div>`;
+
+  epMonth(0, false);
+  epCount();
+  epBindSwipe();
 }
-A.examSetup = function () { renderExamSetup(false); };
-A.saveExam = function () {
-  const d = +document.getElementById("exDay").value,
-    m = +document.getElementById("exMonth").value,
-    y = +document.getElementById("exYear").value;
-  const date = new Date(y, m - 1, d);
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const trio = document.getElementById("examTrio");
-  // reject impossible dates (e.g. 31 February) and past dates
-  if (date.getMonth() !== m - 1 || date < today) {
-    trio.classList.remove("err"); void trio.offsetWidth; trio.classList.add("err");
-    toast(date.getMonth() !== m - 1 ? "هذا التاريخ غير موجود في التقويم!" : "اختر تاريخاً قادماً 😅");
+
+function epSetBadge(txt) {
+  const b = document.getElementById("epBadge"); if (!b) return;
+  b.textContent = txt;
+  const len = String(txt).length;
+  b.style.fontSize = len >= 3 ? "22px" : len === 2 ? "27px" : "30px";
+}
+
+/* rolls up to the target, starting on the frame the tile lands */
+function epCountTo(target) {
+  cancelAnimationFrame(EP.raf); clearTimeout(EP.timer);
+  const from = EP.shown || 0;
+  EP.shown = target;
+  if (motionReduced() || from === target) { epSetBadge(toAr(target)); return; }
+  epSetBadge(toAr(from));
+  const dur = Math.min(320 + Math.abs(target - from) * 14, 900);
+  EP.timer = setTimeout(() => {
+    const t0 = performance.now();
+    const step = now => {
+      const p = Math.min((now - t0) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      epSetBadge(toAr(Math.round(from + (target - from) * eased)));
+      if (p < 1) EP.raf = requestAnimationFrame(step);
+    };
+    EP.raf = requestAnimationFrame(step);
+  }, 580);                                   // 580ms is the impact frame
+}
+
+function epCount() {
+  const today = epDay0(new Date());
+  const card = document.getElementById("epCount"), foot = document.getElementById("epFoot");
+  const save = document.getElementById("epSave");
+  if (!card) return;
+  foot.classList.remove("done");
+  if (!EP.sel) {
+    card.classList.add("empty");
+    cancelAnimationFrame(EP.raf); clearTimeout(EP.timer); EP.shown = 0;
+    epSetBadge("\u061f");
+    document.getElementById("epUnit").textContent = "\u0627\u062e\u062a\u0631 \u064a\u0648\u0645 \u0627\u062e\u062a\u0628\u0627\u0631\u0643";
+    document.getElementById("epWhen").textContent = "\u0627\u0636\u063a\u0637 \u0639\u0644\u0649 \u0623\u064a \u064a\u0648\u0645 \u0641\u064a \u0627\u0644\u062a\u0642\u0648\u064a\u0645";
+    document.getElementById("epHijri").textContent = "";
+    save.disabled = true;
     return;
   }
-  S.exam = y + "-" + String(m).padStart(2, "0") + "-" + String(d).padStart(2, "0");
-  S.examAsked = true; save(); sndGood(); go("path");
+  const n = epDiff(today, EP.sel);
+  card.classList.remove("empty");
+  save.disabled = false;
+  const unit = document.getElementById("epUnit");
+  if (n === 0) { epSetBadge("\ud83c\udfaf"); unit.textContent = "\u0627\u062e\u062a\u0628\u0627\u0631\u0643 \u0627\u0644\u064a\u0648\u0645 \u2014 \u0628\u0627\u0644\u062a\u0648\u0641\u064a\u0642"; }
+  else if (n === 1) { epCountTo(1); unit.textContent = "\u063a\u062f\u0627\u064b \u0627\u062e\u062a\u0628\u0627\u0631\u0643"; }
+  else {
+    epCountTo(n);
+    unit.textContent = n === 2 ? "\u064a\u0648\u0645\u0627\u0646 \u062d\u062a\u0649 \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631"
+      : n <= 10 ? "\u0623\u064a\u0627\u0645 \u062d\u062a\u0649 \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631" : "\u064a\u0648\u0645\u0627\u064b \u062d\u062a\u0649 \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631";
+  }
+  document.getElementById("epWhen").textContent =
+    EP_DAYNAMES[EP.sel.getDay()] + " " + toAr(EP.sel.getDate()) + " " +
+    AR_MONTHS[EP.sel.getMonth()] + " " + toAr(EP.sel.getFullYear());
+  document.getElementById("epHijri").textContent = epHijri(EP.sel);
+  const badge = document.getElementById("epBadge"), meta = card.querySelector(".ep-meta");
+  badge.classList.remove("flash"); meta.classList.remove("flash");
+  void badge.offsetWidth;
+  badge.classList.add("flash"); meta.classList.add("flash");
+}
+
+function epJumpWAAPI(b) {
+  if (!b.animate) return;
+  b.style.transformOrigin = "bottom center";
+  b.animate(EP_JUMP.map(([o, y, sx, sy, e]) =>
+    ({ offset: o, transform: "translateY(" + y + "px) scale(" + sx + "," + sy + ")", easing: e })),
+    { duration: 1000, fill: "both" });
+}
+
+function epLand(b) {
+  const cal = document.querySelector(".ep-cal");
+  const back = document.getElementById("epFxBack"), front = document.getElementById("epFxFront");
+  back.innerHTML = ""; front.innerHTML = "";
+  const cr = cal.getBoundingClientRect(), br = b.getBoundingClientRect();
+  if (!br.width) { b.classList.add("jump"); requestAnimationFrame(() => epJumpWAAPI(b)); return; }
+  const x = br.left - cr.left, y = br.top - cr.top, w = br.width, h = br.height;
+  const cx = x + w / 2, groundY = y + h;
+
+  const shade = document.createElement("span");
+  shade.className = "shade";
+  shade.style.width = (w * .72) + "px"; shade.style.height = "7px";
+  shade.style.left = (cx - w * .36) + "px"; shade.style.top = (groundY + 3) + "px";
+  back.appendChild(shade);
+
+  EP_SPARKS.forEach((p, i) => {
+    const sp = document.createElement("span"), size = i % 2 ? 5 : 7;
+    sp.className = "spark";
+    sp.style.width = sp.style.height = size + "px";
+    sp.style.left = (cx - size / 2) + "px"; sp.style.top = (groundY - 9) + "px";
+    sp.style.background = EP_SPARK_C[i];
+    sp.style.setProperty("--tx", p[0] + "px");
+    sp.style.setProperty("--ty", p[1] + "px");
+    sp.style.animationDelay = (580 + i * 14) + "ms";
+    front.appendChild(sp);
+  });
+
+  b.classList.add("jump");
+  cal.classList.remove("thud"); void cal.offsetWidth; cal.classList.add("thud");
+  /* if the CSS animation never started, drive it directly */
+  requestAnimationFrame(() => {
+    const live = b.getAnimations ? b.getAnimations() : [];
+    if (!live.some(an => an.animationName === "epJump" || an.playState === "running")) epJumpWAAPI(b);
+  });
+  b.addEventListener("animationend", e => {
+    if (e.animationName !== "epJump") return;
+    back.innerHTML = ""; front.innerHTML = "";
+  });
+}
+
+function epMonth(dir, animate) {
+  const today = epDay0(new Date());
+  const maxDate = new Date(today.getFullYear() + 2, today.getMonth(), today.getDate());
+  const grid = document.getElementById("epGrid");
+  if (!grid) return;
+  const y = EP.view.getFullYear(), m = EP.view.getMonth();
+  document.getElementById("epMonth").textContent = AR_MONTHS[m] + " " + toAr(y);
+  grid.classList.remove("slide-r", "slide-l");
+  if (dir) { void grid.offsetWidth; grid.classList.add(dir > 0 ? "slide-r" : "slide-l"); }
+  grid.innerHTML = "";
+  let jumpBtn = null;
+
+  const firstDay = new Date(y, m, 1).getDay();
+  const total = new Date(y, m + 1, 0).getDate();
+  for (let i = 0; i < firstDay; i++) {
+    const s = document.createElement("div"); s.className = "ep-day pad"; grid.appendChild(s);
+  }
+  for (let d = 1; d <= total; d++) {
+    const date = new Date(y, m, d);
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "ep-day"; b.textContent = toAr(d);
+    b.setAttribute("aria-label", EP_DAYNAMES[date.getDay()] + " " + toAr(d) + " " + AR_MONTHS[m] + " " + toAr(y));
+    if (date < today || date > maxDate) b.disabled = true;
+    if (epKey(date) === epKey(today)) b.classList.add("today");
+    if (EP.sel) {
+      const back = epDiff(date, EP.sel);
+      if (date > today && date < EP.sel) {
+        b.classList.add("run");
+        if (date.getDay() === 0 || d === 1) b.classList.add("run-start");
+        if (date.getDay() === 6 || d === total || epKey(epAdd(date, 1)) === epKey(EP.sel)) b.classList.add("run-end");
+        if (animate && !motionReduced()) {
+          b.classList.add("anim");
+          b.style.animationDelay = (580 + Math.min(back * 15, 540)) + "ms";
+        }
+      }
+      if (epKey(date) === epKey(EP.sel)) {
+        b.classList.remove("today");
+        b.classList.add("selected");
+        b.setAttribute("aria-current", "date");
+        if (animate && !motionReduced()) jumpBtn = b;
+      }
+    }
+    b.addEventListener("click", () => { EP.sel = date; epMonth(0, true); epCount(); });
+    grid.appendChild(b);
+  }
+  if (jumpBtn) requestAnimationFrame(() => epLand(jumpBtn));
+  document.getElementById("epPrev").disabled = (y === today.getFullYear() && m === today.getMonth());
+  document.getElementById("epNext").disabled = (y === maxDate.getFullYear() && m === maxDate.getMonth());
+  document.getElementById("epPrev").onclick = () => A.epShift(-1);
+  document.getElementById("epNext").onclick = () => A.epShift(1);
+}
+
+A.epShift = function (step) {
+  EP.view = new Date(EP.view.getFullYear(), EP.view.getMonth() + step, 1);
+  epMonth(step, false);
 };
+
+function epBindSwipe() {
+  const grid = document.getElementById("epGrid");
+  if (!grid) return;
+  let x0 = null;
+  grid.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, { passive: true });
+  grid.addEventListener("touchend", e => {
+    if (x0 === null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 55) {
+      const prev = document.getElementById("epPrev"), next = document.getElementById("epNext");
+      if (dx > 0 && next && !next.disabled) A.epShift(1);
+      if (dx < 0 && prev && !prev.disabled) A.epShift(-1);
+    }
+    x0 = null;
+  });
+}
+
+A.examSetup = function () { renderExamSetup(false); };
+A.saveExam = function () {
+  if (!EP.sel) return;
+  const d = EP.sel;
+  S.exam = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  S.examAsked = true; save(); sndGood();
+
+  /* confirm in place rather than snapping away: the count-up and the landing
+     have just finished selling the date, and cutting the screen at that exact
+     moment throws the payoff away */
+  const n = epDiff(epDay0(new Date()), d);
+  const foot = document.getElementById("epFoot"), sub = document.getElementById("epDoneSub");
+  const btn = document.getElementById("epSave");
+  if (foot && sub && btn) {
+    /* "\u0661 \u0623\u0633\u0627\u0628\u064a\u0639" is not Arabic. One and two take their own forms, and
+       under a week the weeks figure is a rounding artefact anyway \u2014 say the
+       days. arPlural() already encodes the 1 / 2 / 3-10 / 11+ rule. */
+    const weeks = Math.round(n / 7);
+    sub.textContent =
+      n <= 0 ? "\u0628\u0627\u0644\u062a\u0648\u0641\u064a\u0642 \u0627\u0644\u064a\u0648\u0645"
+      : n === 1 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u064a\u0648\u0645 \u0648\u0627\u062d\u062f"
+      : n === 2 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u064a\u0648\u0645\u064a\u0646"
+      : n < 7 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0640 " + toAr(n) + " \u0623\u064a\u0627\u0645"
+      : weeks === 1 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0623\u0633\u0628\u0648\u0639 \u0648\u0627\u062d\u062f"
+      : weeks === 2 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0623\u0633\u0628\u0648\u0639\u064a\u0646"
+      : "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0640 " + toAr(weeks) + " " +
+        arPlural(weeks, "\u0623\u0633\u0628\u0648\u0639", "\u0623\u0633\u0628\u0648\u0639\u064a\u0646", "\u0623\u0633\u0627\u0628\u064a\u0639", "\u0623\u0633\u0628\u0648\u0639\u0627\u064b");
+    foot.classList.add("done");
+    btn.textContent = "\u0645\u062a\u0627\u0628\u0639\u0629";
+    btn.onclick = () => { EP.first ? go("path") : A.backFromExam(); };
+    return;
+  }
+  EP.first ? go("path") : A.backFromExam();
+};
+
 A.skipExam = function () { S.examAsked = true; save(); go("path"); };
 /* "رجوع" from Settings used to call skipExam, which lands on the path — the
    one place the student was not coming back from */
@@ -3642,12 +3885,6 @@ A.gotoSettings = function (focus) { SET_FOCUS = focus || null; go("settings"); }
 function renderSettings() {
   const guest = !S.user || S.user.guest;
   const days = examDaysLeft();
-  const base = S.exam ? new Date(S.exam + "T00:00:00") : new Date(Date.now() + 45 * 864e5);
-  const yNow = new Date().getFullYear();
-  const o = (v, label, sel) => `<option value="${v}" ${sel ? "selected" : ""}>${label}</option>`;
-  const dayOpts = Array.from({ length: 31 }, (_, i) => o(i + 1, toAr(i + 1), base.getDate() === i + 1)).join("");
-  const monOpts = AR_MONTHS.map((m, i) => o(i + 1, m, base.getMonth() === i)).join("");
-  const yrOpts  = [yNow, yNow + 1].map(y => o(y, toAr(y), base.getFullYear() === y)).join("");
 
   $app.innerHTML = statbar() + `<div class="screen"><div class="page set-page">
     <h1>\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a</h1>
@@ -3682,15 +3919,12 @@ function renderSettings() {
 
     <div class="set-grp" data-g="exam">
       <div class="set-lab">\u0645\u0648\u0639\u062f \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631</div>
-      <div class="date-trio set-trio" id="setTrio">
-        <label class="dt-box"><span class="dt-cap">\u0627\u0644\u064a\u0648\u0645</span><select id="sxDay" class="dt-sel">${dayOpts}</select></label>
-        <label class="dt-box dt-month"><span class="dt-cap">\u0627\u0644\u0634\u0647\u0631</span><select id="sxMonth" class="dt-sel">${monOpts}</select></label>
-        <label class="dt-box"><span class="dt-cap">\u0627\u0644\u0633\u0646\u0629</span><select id="sxYear" class="dt-sel">${yrOpts}</select></label>
-      </div>
-      <div class="set-exrow">
-        <span class="set-hint">${days !== null ? "\u0628\u0627\u0642\u064d " + toAr(days) + " \u064a\u0648\u0645\u0627\u064b" : "\u063a\u064a\u0631 \u0645\u062d\u062f\u0651\u062f \u0628\u0639\u062f"}</span>
-        <button class="btn set-save" onclick="A.setSaveExam()">\u062d\u0641\u0638</button>
-      </div>
+      <button class="set-row" onclick="A.examSetup()">
+        <span class="set-row-ic">${ico("timer", 20)}</span>
+        <span class="set-row-tx"><b>${days !== null ? "\u0628\u0627\u0642\u064d " + toAr(days) + " \u064a\u0648\u0645\u0627\u064b" : "\u063a\u064a\u0631 \u0645\u062d\u062f\u0651\u062f \u0628\u0639\u062f"}</b>
+          <span>${S.exam ? fmtExamDate(S.exam) : "\u0627\u062e\u062a\u0631 \u064a\u0648\u0645 \u0627\u062e\u062a\u0628\u0627\u0631\u0643 \u0645\u0646 \u0627\u0644\u062a\u0642\u0648\u064a\u0645"}</span></span>
+        <span class="pf-go">\u2190</span>
+      </button>
     </div>
 
     <div class="set-grp">
@@ -3758,25 +3992,6 @@ A.setMotion = function (btn) {
   btn.classList.toggle("on", !motionReduced());
   render();                               // the hint line under it has to follow
 };
-A.setSaveExam = function () {
-  const d = +document.getElementById("sxDay").value,
-        m = +document.getElementById("sxMonth").value,
-        y = +document.getElementById("sxYear").value;
-  const date = new Date(y, m - 1, d), today = new Date(); today.setHours(0, 0, 0, 0);
-  const trio = document.getElementById("setTrio");
-  if (date.getMonth() !== m - 1 || date < today) {
-    trio.classList.remove("err"); void trio.offsetWidth; trio.classList.add("err");
-    toast(date.getMonth() !== m - 1
-      ? "\u0647\u0630\u0627 \u0627\u0644\u062a\u0627\u0631\u064a\u062e \u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f \u0641\u064a \u0627\u0644\u062a\u0642\u0648\u064a\u0645!"
-      : "\u0627\u062e\u062a\u0631 \u062a\u0627\u0631\u064a\u062e\u0627\u064b \u0642\u0627\u062f\u0645\u0627\u064b");
-    return;
-  }
-  S.exam = y + "-" + String(m).padStart(2, "0") + "-" + String(d).padStart(2, "0");
-  S.examAsked = true; save(); sndGood();
-  toast("\u062a\u0645 \u062d\u0641\u0638 \u0645\u0648\u0639\u062f \u0627\u062e\u062a\u0628\u0627\u0631\u0643 \u2713");
-  SET_FOCUS = "exam"; render();
-};
-
 A.setSaveName = function () {
   const inp = document.getElementById("setName");
   const name = (inp.value || "").trim();
