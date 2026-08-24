@@ -272,7 +272,7 @@ svg.ic { display: block; }
   position: fixed; bottom: 0; right: 50%; transform: translateX(50%);
   width: 100%; max-width: 430px; height: var(--nav-h);
   background: var(--snow); border-top: 1px solid var(--line);
-  display: flex; justify-content: space-around; align-items: center; z-index: 40;
+  display: flex; justify-content: space-around; align-items: center; z-index: 336;
   padding-bottom: env(safe-area-inset-bottom);
 }
 .navbtn {
@@ -3299,7 +3299,7 @@ body:has(.screen-session) { overflow: hidden; }
 .more-veil {
   position: fixed; inset: 0; z-index: 330;
   display: flex; align-items: flex-end; justify-content: center;
-  padding: 0 0 calc(var(--nav-h, 80px) + 10px);
+  padding: 0;
   background: rgba(20, 22, 31, 0);
   -webkit-backdrop-filter: blur(0px); backdrop-filter: blur(0px);
   opacity: 0;
@@ -3307,42 +3307,53 @@ body:has(.screen-session) { overflow: hidden; }
               backdrop-filter .26s ease, -webkit-backdrop-filter .26s ease;
 }
 .more-veil.show {
-  opacity: 1; background: var(--scrim);
-  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  opacity: 1; background: rgba(40, 40, 48, .42);
+  -webkit-backdrop-filter: blur(2.5px) saturate(.72);
+          backdrop-filter: blur(2.5px) saturate(.72);
 }
+/* One surface with the tab bar, not a card floating above it: the sheet runs
+   to the bottom edge and reserves the bar's height, so the bar reads as the
+   sheet's own last row rather than something behind it. Only the top corners
+   curve, for the same reason. */
 .more-card {
-  width: 100%; max-width: 430px; margin-inline: 14px;
-  background: var(--snow); border-radius: 22px; padding: 10px 12px 12px;
-  box-shadow: 0 20px 48px rgba(0,0,0,.26), 0 4px 0 var(--divider);
-  display: flex; flex-direction: column; gap: 9px;
-  transform: translateY(26px) scale(.96); opacity: 0;
-  transition: transform .32s cubic-bezier(.3,1.5,.45,1), opacity .18s ease;
+  width: 100%; max-width: var(--col-max, 430px); margin: 0;
+  background: var(--snow);
+  border-radius: 22px 22px 0 0;
+  padding: 8px 0 calc(var(--nav-h, 80px) + env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 -10px 34px rgba(0,0,0,.16);
+  display: flex; flex-direction: column;
+  transform: translateY(100%); opacity: 1;
+  transition: transform .34s cubic-bezier(.32,1.28,.44,1);
 }
-.more-veil.show .more-card { transform: translateY(0) scale(1); opacity: 1; }
+.more-veil.show .more-card { transform: translateY(0); }
 .more-grip {
-  width: 44px; height: 5px; border-radius: 99px; background: var(--line);
-  margin: 2px auto 6px;
+  width: 42px; height: 5px; border-radius: 99px; background: var(--line);
+  margin: 2px auto 8px; flex: none;
 }
+/* flat rows divided by a hairline — no borders, no lips, no chevrons. This is
+   a list of destinations, and every extra edge on it competes with the app
+   showing through behind. */
 .more-pick {
-  display: flex; align-items: center; gap: 13px; width: 100%;
-  background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px;
-  border-radius: 17px; padding: 14px 15px; cursor: pointer; text-align: right;
-  font-family: inherit; transition: background-color .14s, border-color .14s, transform .06s;
+  display: flex; align-items: center; gap: 16px; width: 100%;
+  background: none; border: 0; border-top: 1px solid var(--line);
+  padding: 17px 22px; cursor: pointer; text-align: right;
+  font-family: inherit; transition: background-color .13s;
 }
-.more-pick:hover { background: var(--line); border-color: var(--gray-icon); }
-.more-pick:active { transform: translateY(2px); border-bottom-width: 2px; }
+.more-pick:hover { background: var(--line); }
+.more-pick:active { background: var(--divider); }
 .more-ic {
-  width: 48px; height: 48px; flex: none; border-radius: 15px;
+  width: 34px; height: 34px; flex: none; border-radius: 10px;
   display: grid; place-items: center;
 }
 .more-ic.mi-green { background: var(--green-bg); color: var(--green-dk); }
 .more-ic.mi-blue  { background: var(--blue-light); color: var(--blue-dk); }
-.more-tx { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.more-tx b { font-size: 17px; font-weight: 800; color: var(--ink); }
-.more-tx > span { font-size: 13px; font-weight: 600; color: var(--gray); }
+.more-tx { flex: 1; min-width: 0; }
+.more-tx b { font-size: 17px; font-weight: 700; color: var(--ink); }
+.more-tx > span { display: none; }
+.more-pick .pf-go { display: none; }
 
-/* the nav slot that opens it reads as pressed while the menu is up */
-body:has(.more-veil.show) .bottomnav .navbtn:last-child { transform: translateY(1px); }
+/* while the menu is up the bar belongs to it, so it loses its own divider */
+body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 
 /* ---- profile: the week's tally, and the weak-topic list ---- */
 .pf-wk-note {
@@ -3383,3 +3394,30 @@ body:has(.more-veil.show) .bottomnav .navbtn:last-child { transform: translateY(
 .set-exrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .set-exrow .set-hint { margin: 0; }
 .set-exrow .set-save { height: 46px; padding: 0 22px; }
+
+/* ---- settings, now a screen ---- */
+.set-page { display: flex; flex-direction: column; gap: 22px; }
+.set-page h1 { margin-bottom: 2px; }
+.set-page .sub { margin-bottom: 2px; }
+.set-page .set-grp { gap: 10px; }
+.set-page .set-lab { font-size: 13px; }
+@media (min-width: 768px) {
+  .set-page .set-seg { max-width: 420px; }
+  .set-page .set-name { max-width: 480px; }
+}
+
+/* The more-sheet is anchored to the bottom bar, which only exists on phones.
+   Above the breakpoint there is no bar to sit on, so it becomes an ordinary
+   centred card rather than a panel hugging an edge with nothing under it. */
+@media (min-width: 768px) {
+  .more-veil { align-items: center; padding: 24px; }
+  .more-card {
+    border-radius: 22px; padding-bottom: 8px;
+    max-width: 420px; transform: translateY(18px) scale(.97); opacity: 0;
+    box-shadow: 0 24px 60px rgba(0,0,0,.28);
+    transition: transform .3s cubic-bezier(.3,1.45,.45,1), opacity .18s ease;
+  }
+  .more-veil.show .more-card { transform: translateY(0) scale(1); opacity: 1; }
+  .more-pick:first-of-type { border-top: 0; }
+  .more-grip { display: none; }
+}
