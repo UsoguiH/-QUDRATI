@@ -3286,3 +3286,100 @@ body:has(.screen-session) { overflow: hidden; }
 :root[data-motion="reduced"] .set-veil,
 :root[data-motion="reduced"] .set-card { transition-duration: .01ms; }
 :root[data-motion="reduced"] .set-grp.flash { animation: none; }
+
+
+/* ============================================================
+   THE MORE MENU
+   ------------------------------------------------------------
+   Rises from the nav bar it was launched from, so the motion
+   points back at the button that opened it. Same blur treatment
+   as the settings sheet, at a lighter weight — this is a fork in
+   the road, not a place you stay.
+   ============================================================ */
+.more-veil {
+  position: fixed; inset: 0; z-index: 330;
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 0 0 calc(var(--nav-h, 80px) + 10px);
+  background: rgba(20, 22, 31, 0);
+  -webkit-backdrop-filter: blur(0px); backdrop-filter: blur(0px);
+  opacity: 0;
+  transition: opacity .2s ease, background-color .26s ease,
+              backdrop-filter .26s ease, -webkit-backdrop-filter .26s ease;
+}
+.more-veil.show {
+  opacity: 1; background: var(--scrim);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.more-card {
+  width: 100%; max-width: 430px; margin-inline: 14px;
+  background: var(--snow); border-radius: 22px; padding: 10px 12px 12px;
+  box-shadow: 0 20px 48px rgba(0,0,0,.26), 0 4px 0 var(--divider);
+  display: flex; flex-direction: column; gap: 9px;
+  transform: translateY(26px) scale(.96); opacity: 0;
+  transition: transform .32s cubic-bezier(.3,1.5,.45,1), opacity .18s ease;
+}
+.more-veil.show .more-card { transform: translateY(0) scale(1); opacity: 1; }
+.more-grip {
+  width: 44px; height: 5px; border-radius: 99px; background: var(--line);
+  margin: 2px auto 6px;
+}
+.more-pick {
+  display: flex; align-items: center; gap: 13px; width: 100%;
+  background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px;
+  border-radius: 17px; padding: 14px 15px; cursor: pointer; text-align: right;
+  font-family: inherit; transition: background-color .14s, border-color .14s, transform .06s;
+}
+.more-pick:hover { background: var(--line); border-color: var(--gray-icon); }
+.more-pick:active { transform: translateY(2px); border-bottom-width: 2px; }
+.more-ic {
+  width: 48px; height: 48px; flex: none; border-radius: 15px;
+  display: grid; place-items: center;
+}
+.more-ic.mi-green { background: var(--green-bg); color: var(--green-dk); }
+.more-ic.mi-blue  { background: var(--blue-light); color: var(--blue-dk); }
+.more-tx { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.more-tx b { font-size: 17px; font-weight: 800; color: var(--ink); }
+.more-tx > span { font-size: 13px; font-weight: 600; color: var(--gray); }
+
+/* the nav slot that opens it reads as pressed while the menu is up */
+body:has(.more-veil.show) .bottomnav .navbtn:last-child { transform: translateY(1px); }
+
+/* ---- profile: the week's tally, and the weak-topic list ---- */
+.pf-wk-note {
+  margin: 2px 0 0; font-size: 13px; font-weight: 700; color: var(--gray); text-align: center;
+}
+.pf-goal.pf-static { cursor: default; }
+.pf-goal.pf-static:hover { background: var(--line); color: var(--gray); }
+
+.pf-weak { display: flex; flex-direction: column; gap: 9px; }
+.pf-w {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px;
+  border-radius: 15px; padding: 11px 13px; cursor: pointer; text-align: right;
+  font-family: inherit; transition: background-color .14s, transform .06s;
+}
+.pf-w:hover { background: var(--line); }
+.pf-w:active { transform: translateY(2px); border-bottom-width: 2px; }
+.pf-w-acc {
+  flex: none; min-width: 52px; padding: 7px 8px 5px; border-radius: 11px;
+  font-size: 14.5px; font-weight: 800; text-align: center; color: var(--snow);
+  font-variant-numeric: tabular-nums; background: var(--gray-icon);
+}
+.pf-w-acc.pm-green  { background: var(--green); }
+.pf-w-acc.pm-gold   { background: var(--gold); color: var(--brown); }
+.pf-w-acc.pm-purple { background: var(--purple); }
+.pf-w-acc.pm-blue   { background: var(--blue); }
+.pf-w-tx {
+  flex: 1; min-width: 0; font-size: 14.5px; font-weight: 700; color: var(--ink);
+  line-height: 1.4;
+}
+.pf-w-go {
+  flex: none; font-size: 13px; font-weight: 800; color: var(--green-dk);
+  background: var(--green-bg); border-radius: 999px; padding: 6px 12px 4px;
+}
+
+/* ---- settings: the exam date, edited in place ---- */
+.set-trio { margin-bottom: 0; animation: none; }
+.set-exrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.set-exrow .set-hint { margin: 0; }
+.set-exrow .set-save { height: 46px; padding: 0 22px; }

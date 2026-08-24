@@ -57,7 +57,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {} };
+const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {} };
 const LEAGUE_NAMES = ["عبدالله", "محمد", "نورة", "سارة", "فهد", "ريم", "خالد", "لمى", "تركي", "جواهر", "عمر", "هند", "سلمان", "رنا", "بدر", "ليان", "ناصر", "شهد", "يزيد", "دانة", "مازن", "أصيل", "وليد", "غادة"];
 /* Permanent rank tiers (badge art in assets/icons/ranks/). A user's tier is
    the highest threshold their LIFETIME total XP (S.totalXp) has crossed —
@@ -119,7 +119,7 @@ if (S.tierSeen == null) S.tierSeen = tierIndex();
    used to blank the whole app with no way back to Settings. Coerce the
    containers before anything reads them. */
 (function repair() {
-  const shape = { streak: { count: 0, last: null }, lessons: {}, qstats: {}, mistakes: {}, mocks: [] };
+  const shape = { streak: { count: 0, last: null }, lessons: {}, qstats: {}, mistakes: {}, mocks: [], days: {} };
   for (const k in shape) {
     const want = shape[k], got = S[k];
     const ok = Array.isArray(want) ? Array.isArray(got) : (got && typeof got === "object");
@@ -355,6 +355,19 @@ function dailyReset() {
 }
 function dailyTick() {
   dailyReset();
+  /* The week strip used to be inferred from streak.count, so a day practised
+     on after the streak had already broken drew as empty: it showed what could
+     be deduced, not what happened. Record the day itself. Trimmed to nine
+     weeks; the strip only ever reads the last seven. */
+  const t = todayKey();
+  S.days = S.days || {};
+  S.days[t] = (S.days[t] || 0) + 1;
+  const keys = Object.keys(S.days);
+  if (keys.length > 63) {
+    keys.map(k => { const a = k.split("-"); return [k, new Date(+a[0], +a[1] - 1, +a[2]).getTime()]; })
+        .sort((a, b) => a[1] - b[1]).slice(0, keys.length - 63)
+        .forEach(pair => delete S.days[pair[0]]);
+  }
   if (S.daily.n >= DAILY_GOAL) return;
   S.daily.n++;
   if (S.daily.n === DAILY_GOAL)
@@ -624,9 +637,14 @@ A.chestTap = function () {
 function bottomnav(active) {
   /* the labels were the state keys — "path", "league" — read aloud in Arabic */
   const items = [["path", "nav-home", "الدروس"], ["league", "nav-league", "المجلس"],
-    ["mock", "nav-exam", "اختبار تجريبي"], ["stats", "nav-stats", "إحصائياتي"], ["profile", "nav-more", "ملفي"]];
-  return `<nav class="bottomnav">` + items.map(([k, i, label]) =>
-    `<button class="navbtn ${active === k ? "active" : ""}" onclick="A.go('${k}')" aria-label="${label}"${active === k ? ' aria-current="page"' : ""}>${ico(i, 30)}</button>`).join("") + `</nav>`;
+    ["mock", "nav-exam", "اختبار تجريبي"], ["stats", "nav-stats", "إحصائياتي"], ["more", "nav-more", "المزيد"]];
+  return `<nav class="bottomnav">` + items.map(([k, i, label]) => {
+    /* the last slot is a menu, not a destination, so it lights up for the
+       screens it can reach rather than for one of its own */
+    const act = k === "more" ? (active === "profile") : (active === k);
+    const call = k === "more" ? "A.openMore()" : `A.go('${k}')`;
+    return `<button class="navbtn ${act ? "active" : ""}" onclick="${call}" aria-label="${label}"${act ? ' aria-current="page"' : ""}>${ico(i, 30)}</button>`;
+  }).join("") + `</nav>`;
 }
 
 /* ---------------- exam countdown card (top of path) ---------------- */
@@ -3519,24 +3537,37 @@ function overallAccuracy() {
 }
 
 /* The last seven days, oldest first — so in RTL the week reads from the right
-   and today lands at the left, where the eye finishes. Derived from
-   streak.last and streak.count, which is all we store; it never invents a
-   filled day it cannot prove. */
+   and today lands at the left, where the eye finishes. Reads S.days — the days
+   actually practised — rather than deducing them from the streak, because a
+   day you practised on after the streak broke is still a day you practised. */
 function streakWeek() {
   const out = [], today = new Date(); today.setHours(0, 0, 0, 0);
-  const lastK = S.streak.last, cnt = S.streak.count || 0;
+  const days = S.days || {};
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today.getTime() - i * 864e5);
-    let on = false;
-    if (cnt > 0 && lastK) {
-      const a = lastK.split("-");
-      const last = new Date(+a[0], +a[1] - 1, +a[2]); last.setHours(0, 0, 0, 0);
-      const back = Math.round((last - d) / 864e5);
-      on = back >= 0 && back < cnt;
-    }
-    out.push({ dow: PROF_WK[d.getDay()], on, today: i === 0 });
+    const key = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+    out.push({ dow: PROF_WK[d.getDay()], n: days[key] || 0, on: !!days[key], today: i === 0 });
   }
   return out;
+}
+
+/* The three lessons the student is measurably worst at, each one tappable.
+   The profile was otherwise a wall of numbers with no next move on it: you
+   could read "\u0627\u0644\u062f\u0642\u0629 \u0666\u0667\u066a" and have nowhere to go with it. Hidden until
+   there is enough history to rank honestly. */
+function weakCard() {
+  const weak = weakLessons(3);
+  if (!weak.length) return "";
+  return `<div class="pf-card">
+    <div class="pf-head"><h3>\u0623\u0636\u0639\u0641 \u0645\u0648\u0627\u0636\u064a\u0639\u0643</h3>
+      <span class="pf-goal pf-static">\u0627\u0628\u062f\u0623 \u0645\u0646 \u0647\u0646\u0627</span></div>
+    <div class="pf-weak">` + weak.map(l => `
+      <button class="pf-w" onclick="A.startLesson('${l.dom}','${l.key}')">
+        <span class="pf-w-acc pm-${l.color === "yellow" ? "gold" : l.color}">${toAr(l.acc)}\u066a</span>
+        <span class="pf-w-tx">${l.title}</span>
+        <span class="pf-w-go">\u062a\u062f\u0631\u0651\u0628</span>
+      </button>`).join("") + `</div>
+  </div>`;
 }
 
 function renderProfile() {
@@ -3590,6 +3621,12 @@ function renderProfile() {
         <div class="pf-day${d.on ? " on" : ""}${d.today ? " now" : ""}">
           <span class="pf-dot">${d.on ? CHECK_BADGE : ""}</span><span class="pf-dow">${d.dow}</span>
         </div>`).join("") + `</div>
+      <p class="pf-wk-note">${(() => {
+        const act = streakWeek().filter(x => x.on).length;
+        return act
+          ? "\u062f\u0631\u0651\u0628\u062a " + arPlural(act, "\u064a\u0648\u0645\u0627\u064b \u0648\u0627\u062d\u062f\u0627\u064b", "\u064a\u0648\u0645\u064a\u0646", "\u0623\u064a\u0627\u0645", "\u064a\u0648\u0645\u0627\u064b") + " \u0647\u0630\u0627 \u0627\u0644\u0623\u0633\u0628\u0648\u0639"
+          : "\u0645\u0627 \u062f\u0631\u0651\u0628\u062a \u0647\u0630\u0627 \u0627\u0644\u0623\u0633\u0628\u0648\u0639 \u2014 \u0627\u0628\u062f\u0623 \u0627\u0644\u064a\u0648\u0645";
+      })()}</p>
     </div>
 
     ${days !== null ? `<button class="pf-exam" onclick="A.examSetup()">
@@ -3599,6 +3636,8 @@ function renderProfile() {
       : `<button class="pf-exam pf-exam-empty" onclick="A.examSetup()">
       <span class="pf-ex-t"><b>\u062d\u062f\u0651\u062f \u0645\u0648\u0639\u062f \u0627\u062e\u062a\u0628\u0627\u0631\u0643</b><span>\u0639\u0634\u0627\u0646 \u0646\u062a\u0627\u0628\u0639 \u062c\u0627\u0647\u0632\u064a\u062a\u0643</span></span>
       <span class="pf-go">\u2190</span></button>`}
+
+    ${weakCard()}
 
     <div class="pf-card">
       <div class="pf-head"><h3>\u0625\u062a\u0642\u0627\u0646\u0643 \u062d\u0633\u0628 \u0627\u0644\u0648\u062d\u062f\u0629</h3></div>
@@ -3636,6 +3675,15 @@ A.openSettings = function (focus) {
   if (old) old.remove();
   const guest = !S.user || S.user.guest;
   const days = examDaysLeft();
+  /* The date is edited in the sheet now. Sending someone to a whole other
+     screen to change one field loses their place, and it is the single most
+     likely thing on here to want to change. */
+  const base = S.exam ? new Date(S.exam + "T00:00:00") : new Date(Date.now() + 45 * 864e5);
+  const yNow = new Date().getFullYear();
+  const o = (v, label, sel) => `<option value="${v}" ${sel ? "selected" : ""}>${label}</option>`;
+  const dayOpts = Array.from({ length: 31 }, (_, i) => o(i + 1, toAr(i + 1), base.getDate() === i + 1)).join("");
+  const monOpts = AR_MONTHS.map((m, i) => o(i + 1, m, base.getMonth() === i)).join("");
+  const yrOpts  = [yNow, yNow + 1].map(y => o(y, toAr(y), base.getFullYear() === y)).join("");
   const veil = document.createElement("div");
   veil.className = "set-veil";
   veil.innerHTML = `<div class="set-card" role="dialog" aria-modal="true" aria-label="\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a">
@@ -3673,12 +3721,16 @@ A.openSettings = function (focus) {
       </div>
 
       <div class="set-grp" data-g="exam">
-        <button class="set-row" onclick="A.closeSettings(); A.examSetup();">
-          <span class="set-row-ic">${ico("timer", 20)}</span>
-          <span class="set-row-tx"><b>\u0645\u0648\u0639\u062f \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631</b>
-            <span>${days !== null ? "\u0628\u0627\u0642\u064d " + toAr(days) + " \u064a\u0648\u0645\u0627\u064b \u2014 " + fmtExamDate(S.exam) : "\u063a\u064a\u0631 \u0645\u062d\u062f\u0651\u062f"}</span></span>
-          <span class="pf-go">\u2190</span>
-        </button>
+        <div class="set-lab">\u0645\u0648\u0639\u062f \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631</div>
+        <div class="date-trio set-trio" id="setTrio">
+          <label class="dt-box"><span class="dt-cap">\u0627\u0644\u064a\u0648\u0645</span><select id="sxDay" class="dt-sel">${dayOpts}</select></label>
+          <label class="dt-box dt-month"><span class="dt-cap">\u0627\u0644\u0634\u0647\u0631</span><select id="sxMonth" class="dt-sel">${monOpts}</select></label>
+          <label class="dt-box"><span class="dt-cap">\u0627\u0644\u0633\u0646\u0629</span><select id="sxYear" class="dt-sel">${yrOpts}</select></label>
+        </div>
+        <div class="set-exrow">
+          <span class="set-hint">${days !== null ? "\u0628\u0627\u0642\u064d " + toAr(days) + " \u064a\u0648\u0645\u0627\u064b" : "\u063a\u064a\u0631 \u0645\u062d\u062f\u0651\u062f \u0628\u0639\u062f"}</span>
+          <button class="btn set-save" onclick="A.setSaveExam()">\u062d\u0641\u0638</button>
+        </div>
       </div>
 
       <div class="set-grp">
@@ -3755,6 +3807,25 @@ A.setMotion = function (btn) {
   btn.classList.toggle("on", !motionReduced());
   A.openSettings();                       // the hint line under it has to follow
 };
+A.setSaveExam = function () {
+  const d = +document.getElementById("sxDay").value,
+        m = +document.getElementById("sxMonth").value,
+        y = +document.getElementById("sxYear").value;
+  const date = new Date(y, m - 1, d), today = new Date(); today.setHours(0, 0, 0, 0);
+  const trio = document.getElementById("setTrio");
+  if (date.getMonth() !== m - 1 || date < today) {
+    trio.classList.remove("err"); void trio.offsetWidth; trio.classList.add("err");
+    toast(date.getMonth() !== m - 1
+      ? "\u0647\u0630\u0627 \u0627\u0644\u062a\u0627\u0631\u064a\u062e \u063a\u064a\u0631 \u0645\u0648\u062c\u0648\u062f \u0641\u064a \u0627\u0644\u062a\u0642\u0648\u064a\u0645!"
+      : "\u0627\u062e\u062a\u0631 \u062a\u0627\u0631\u064a\u062e\u0627\u064b \u0642\u0627\u062f\u0645\u0627\u064b");
+    return;
+  }
+  S.exam = y + "-" + String(m).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+  S.examAsked = true; save(); sndGood();
+  toast("\u062a\u0645 \u062d\u0641\u0638 \u0645\u0648\u0639\u062f \u0627\u062e\u062a\u0628\u0627\u0631\u0643 \u2713");
+  A.openSettings("exam");
+};
+
 A.setSaveName = function () {
   const inp = document.getElementById("setName");
   const name = (inp.value || "").trim();
@@ -3763,6 +3834,62 @@ A.setSaveName = function () {
   save(); sndGood(); toast("\u062a\u0645 \u062d\u0641\u0638 \u0627\u0633\u0645\u0643 \u2713");
   A.closeSettings();
 };
+
+
+/* ============================================================
+   THE MORE MENU
+   ------------------------------------------------------------
+   The last nav slot used to jump straight to the profile, which
+   left settings a level further in. It offers the choice instead:
+   two destinations, the app blurred behind them, the card rising
+   from the bar it was launched from.
+   ============================================================ */
+A.openMore = function () {
+  if (document.querySelector(".more-veil")) return;
+  const veil = document.createElement("div");
+  veil.className = "more-veil";
+  veil.innerHTML = '<div class="more-card" role="dialog" aria-modal="true" aria-label="\u0627\u0644\u0645\u0632\u064a\u062f">' +
+    '<div class="more-grip" aria-hidden="true"></div>' +
+    '<button class="more-pick" onclick="A.moreGo(\'profile\')">' +
+      '<span class="more-ic mi-green">' + ico("nav-stats", 26) + '</span>' +
+      '<span class="more-tx"><b>\u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0634\u062e\u0635\u064a</b>' +
+      '<span>\u062a\u0642\u062f\u0651\u0645\u0643\u060c \u0633\u0644\u0633\u0644\u062a\u0643\u060c \u0648\u0625\u062a\u0642\u0627\u0646\u0643</span></span>' +
+      '<span class="pf-go">\u2190</span></button>' +
+    '<button class="more-pick" onclick="A.moreGo(\'settings\')">' +
+      '<span class="more-ic mi-blue">' + GEAR_SVG + '</span>' +
+      '<span class="more-tx"><b>\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a</b>' +
+      '<span>\u0627\u0644\u0647\u062f\u0641\u060c \u0627\u0644\u0645\u0633\u0627\u0631\u060c \u0648\u0645\u0648\u0639\u062f \u0627\u062e\u062a\u0628\u0627\u0631\u0643</span></span>' +
+      '<span class="pf-go">\u2190</span></button>' +
+  '</div>';
+  veil.onclick = e => { if (e.target === veil) A.closeMore(); };
+  document.body.appendChild(veil);
+  requestAnimationFrame(() => veil.classList.add("show"));
+};
+A.closeMore = function (then) {
+  const v = document.querySelector(".more-veil");
+  if (!v) { if (then) then(); return; }
+  v.classList.remove("show");
+  setTimeout(() => { v.remove(); if (then) then(); }, 220);
+};
+A.moreGo = function (what) {
+  A.closeMore(() => {
+    if (what !== "settings") { go("profile"); return; }
+    view === "profile" ? A.openSettings() : go("settings");
+  });
+};
+
+/* Weakest lessons by the student's own accuracy. Four attempts is the floor:
+   below that a single slip reads as 0% and the list becomes noise, not advice. */
+function weakLessons(n) {
+  const out = [];
+  domains().forEach(d => d.lessons.forEach(l => {
+    let r = 0, w = 0;
+    l.questions.forEach(q => { const st = S.qstats[q.id]; if (st) { r += st.r || 0; w += st.w || 0; } });
+    if (r + w >= 4) out.push({ dom: d.key, key: l.key, title: l.title,
+                               color: d.color, acc: Math.round(r / (r + w) * 100) });
+  }));
+  return out.sort((a, b) => a.acc - b.acc).slice(0, n);
+}
 
 /* ---------------- boot ---------------- */
 function boot() {
