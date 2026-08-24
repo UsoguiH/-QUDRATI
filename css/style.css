@@ -3027,3 +3027,262 @@ body:has(.screen-session) { overflow: hidden; }
   .path-row { height: 134px; }
 }
 
+
+/* ============================================================
+   PROFILE + SETTINGS POP-UP
+   ------------------------------------------------------------
+   Same vocabulary as everything else: white card, 2px --line
+   border with a heavier bottom edge for the lip, generous radius.
+   Every colour is a token; the only literals are alpha overlays.
+   ============================================================ */
+.pf { display: flex; flex-direction: column; gap: 14px; }
+
+.pf-hero { display: flex; align-items: center; gap: 14px; padding: 4px 2px 2px; }
+.pf-av {
+  width: 68px; height: 68px; flex: none; border-radius: 22px;
+  display: grid; place-items: center;
+  background: var(--green); box-shadow: 0 4px 0 var(--green-lip);
+  color: var(--snow); font-size: 30px; font-weight: 800;
+}
+.pf-av span { transform: translateY(-2px); }
+.pf-id { flex: 1; min-width: 0; }
+.pf-id h1 {
+  font-size: 25px; font-weight: 800; color: var(--ink);
+  margin: 0 0 2px; line-height: 1.3; overflow-wrap: anywhere;
+}
+.pf-id p { font-size: 13.5px; font-weight: 600; color: var(--gray); margin: 0; }
+.pf-gear {
+  width: 44px; height: 44px; flex: none; border: 0; border-radius: 14px;
+  background: var(--line); color: var(--gray); cursor: pointer;
+  display: grid; place-items: center;
+  transition: background-color .14s, color .14s, transform .3s;
+}
+.pf-gear:hover { background: var(--divider); color: var(--ink); transform: rotate(35deg); }
+
+.pf-rank, .pf-exam, .pf-line, .pf-claim {
+  display: flex; align-items: center; gap: 13px; width: 100%;
+  background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px;
+  border-radius: 16px; padding: 14px 16px; cursor: pointer; text-align: right;
+  font-family: inherit; transition: background-color .14s, transform .06s;
+}
+.pf-rank:hover, .pf-exam:hover, .pf-line:hover { background: var(--line); }
+.pf-rank:active, .pf-exam:active, .pf-line:active, .pf-claim:active {
+  transform: translateY(2px); border-bottom-width: 2px;
+}
+.pf-claim { background: #FFF8E1; border-color: var(--gold); }
+.pf-claim:hover { background: #FFF3CC; }
+.pf-cl-ic {
+  width: 42px; height: 42px; flex: none; border-radius: 13px;
+  display: grid; place-items: center; background: var(--gold);
+}
+.pf-cl-tx { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.pf-cl-tx b { font-size: 15.5px; font-weight: 800; color: var(--brown); }
+.pf-cl-tx span { font-size: 12.5px; font-weight: 600; color: var(--gold-dk); }
+
+.pf-rank img { flex: none; }
+.pf-rank-tx { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pf-rank-tx b { font-size: 16.5px; font-weight: 800; color: var(--ink); }
+.pf-rank-tx small { font-size: 12.5px; font-weight: 600; color: var(--gray); }
+.pf-rank-bar { display: block; height: 9px; border-radius: 64px; background: var(--line); overflow: hidden; }
+.pf-rank-bar > i { display: block; height: 100%; border-radius: 64px; background: var(--gold); }
+.pf-go { flex: none; color: var(--gray-icon); font-size: 20px; line-height: 1; }
+
+.pf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.pf-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px;
+  border-radius: 16px; padding: 15px 8px 12px;
+}
+.pf-t-ic { height: 28px; display: grid; place-items: center; margin-bottom: 3px; }
+.pf-tile b {
+  font-size: 24px; font-weight: 800; color: var(--ink); line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.pf-tile > span:last-child { font-size: 12.5px; font-weight: 700; color: var(--gray); text-align: center; }
+
+.pf-card {
+  background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px;
+  border-radius: 18px; padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.pf-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.pf-head h3 { font-size: 16.5px; font-weight: 800; color: var(--ink); margin: 0; }
+.pf-goal {
+  display: inline-flex; align-items: center; gap: 6px; border: 0; cursor: pointer;
+  font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--gray);
+  background: var(--line); border-radius: 999px; padding: 6px 11px 5px;
+  transition: background-color .14s, color .14s;
+}
+.pf-goal:hover { background: var(--divider); color: var(--ink); }
+
+.pf-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.pf-day { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.pf-dot {
+  width: 100%; aspect-ratio: 1; max-width: 40px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--line); color: var(--snow); border: 2px solid transparent;
+}
+.pf-dot svg { width: 55%; height: 55%; }
+.pf-day.on .pf-dot { background: var(--orange); }
+.pf-day.now .pf-dot { border-color: var(--blue); }
+.pf-dow { font-size: 12px; font-weight: 700; color: var(--gray); }
+.pf-day.on .pf-dow { color: var(--ink); }
+
+.pf-exam .pf-ex-n {
+  width: 56px; height: 56px; flex: none; border-radius: 17px;
+  display: grid; place-items: center;
+  background: var(--blue-light); color: var(--blue-dk);
+  font-size: 23px; font-weight: 800; font-variant-numeric: tabular-nums;
+}
+.pf-ex-t { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pf-ex-t b { font-size: 16px; font-weight: 800; color: var(--ink); }
+.pf-ex-t span { font-size: 13px; font-weight: 600; color: var(--gray); }
+
+.pf-mast { display: flex; flex-direction: column; gap: 13px; }
+.pf-m-top {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 6px;
+}
+.pf-m-top b { font-size: 13px; color: var(--gray); font-variant-numeric: tabular-nums; }
+.pf-m-bar { height: 12px; border-radius: 64px; background: var(--line); overflow: hidden; }
+.pf-m-bar > i {
+  display: block; height: 100%; border-radius: 64px; background: var(--green);
+  transition: width .5s cubic-bezier(.3,1.3,.5,1);
+}
+/* pm- prefix, not u- : .u-gold and friends already exist for the unit banners
+   and carry their own background plus a box-shadow lip, which bled through the
+   empty part of the track. */
+.pf-m-bar.pm-green > i  { background: var(--green); }
+.pf-m-bar.pm-gold > i   { background: var(--gold); }
+.pf-m-bar.pm-purple > i { background: var(--purple); }
+.pf-m-bar.pm-blue > i   { background: var(--blue); }
+
+.pf-line { padding: 13px 16px; }
+.pf-line > span:first-child {
+  flex: 1; display: inline-flex; align-items: center; gap: 10px;
+  font-size: 15px; font-weight: 700; color: var(--ink);
+}
+
+/* ---------------- the settings pop-up ---------------- */
+.set-veil {
+  position: fixed; inset: 0; z-index: 340;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  background: rgba(20, 22, 31, 0);
+  -webkit-backdrop-filter: blur(0px); backdrop-filter: blur(0px);
+  opacity: 0;
+  transition: opacity .22s ease, background-color .28s ease,
+              backdrop-filter .28s ease, -webkit-backdrop-filter .28s ease;
+}
+/* the blur is animated in, not switched on — a hard cut to blurred reads as a
+   screenshot swap rather than a sheet arriving over the app */
+.set-veil.show {
+  opacity: 1; background: var(--scrim);
+  -webkit-backdrop-filter: blur(9px); backdrop-filter: blur(9px);
+}
+.set-card {
+  width: 100%; max-width: 460px; max-height: min(86dvh, 760px);
+  display: flex; flex-direction: column;
+  background: var(--snow); border-radius: 24px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.28), 0 4px 0 var(--divider);
+  transform: scale(.88) translateY(14px); opacity: 0;
+  transition: transform .34s cubic-bezier(.3,1.55,.45,1), opacity .2s ease;
+  overflow: hidden;
+}
+.set-veil.show .set-card { transform: scale(1) translateY(0); opacity: 1; }
+
+.set-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 18px 20px 14px; border-bottom: 2px solid var(--line); flex: none;
+}
+.set-top h2 { font-size: 21px; font-weight: 800; color: var(--ink); margin: 0; }
+.set-x {
+  width: 36px; height: 36px; flex: none; border: 0; border-radius: 12px;
+  background: none; color: var(--gray-icon); cursor: pointer;
+  display: grid; place-items: center; transition: background-color .14s, color .14s;
+}
+.set-x:hover { background: var(--line); color: var(--ink); }
+
+.set-body {
+  overflow-y: auto; padding: 16px 20px 22px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+.set-grp { display: flex; flex-direction: column; gap: 9px; border-radius: 14px; }
+.set-grp.flash { animation: setFlash 1.5s ease; }
+@keyframes setFlash {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(28,176,246,0); }
+  18%, 62% { box-shadow: 0 0 0 5px rgba(28,176,246,.20); }
+}
+.set-lab {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12.5px; font-weight: 800; color: var(--gray-icon);
+}
+.set-hint { font-size: 12.5px; font-weight: 600; color: var(--gray); margin: 0; line-height: 1.6; }
+
+.set-name { display: flex; gap: 9px; }
+.set-name .login-input { flex: 1; margin: 0; }
+.set-save { width: auto !important; flex: none; padding: 0 20px; height: 52px; }
+
+.set-seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.set-seg.set-seg2 { grid-template-columns: repeat(2, 1fr); }
+.set-seg button {
+  border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 14px;
+  background: var(--snow); cursor: pointer; padding: 12px 6px 10px;
+  font-family: inherit; font-size: 15px; font-weight: 800; color: var(--ink);
+  transition: border-color .14s, background-color .14s, color .14s, transform .06s;
+}
+.set-seg button:hover { background: var(--line); }
+.set-seg button:active { transform: translateY(2px); border-bottom-width: 2px; }
+.set-seg button.on {
+  border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk);
+}
+
+.set-row {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 15px;
+  background: var(--snow); cursor: pointer; padding: 12px 14px; text-align: right;
+  font-family: inherit; text-decoration: none;
+  transition: background-color .14s, transform .06s;
+}
+.set-row:hover { background: var(--line); }
+.set-row:active { transform: translateY(2px); border-bottom-width: 2px; }
+.set-row + .set-row { margin-top: 9px; }
+.set-row-ic {
+  width: 40px; height: 40px; flex: none; border-radius: 12px;
+  display: grid; place-items: center; background: var(--line);
+}
+.set-row-tx { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.set-row-tx b { font-size: 15px; font-weight: 800; color: var(--ink); }
+.set-row-tx span { font-size: 12.5px; font-weight: 600; color: var(--gray); }
+.set-red { border-color: var(--red-soft); }
+.set-red:hover { background: var(--red-bg); }
+.set-red .set-row-tx b { color: var(--red-dk2); }
+
+.set-tog {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 15px;
+  padding: 12px 14px;
+}
+.set-tog + .set-tog { margin-top: 9px; }
+.set-tog > span { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.set-tog b { font-size: 15px; font-weight: 800; color: var(--ink); }
+.set-tog > span > span { font-size: 12.5px; font-weight: 600; color: var(--gray); line-height: 1.5; }
+
+@media (max-width: 420px) {
+  .set-veil { padding: 0; align-items: flex-end; }
+  .set-card {
+    max-width: none; max-height: 92dvh;
+    border-radius: 24px 24px 0 0;
+    transform: translateY(100%) scale(1);
+  }
+  .set-veil.show .set-card { transform: translateY(0) scale(1); }
+  .set-body { padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+}
+@media (min-width: 768px) { .pf-grid { grid-template-columns: repeat(4, 1fr); } }
+
+/* The app gates motion on its own saved setting, never on the raw media query
+   — Windows reports "reduce" far more often than anyone intends, and gating
+   here would silently kill the pop on every desktop that has animations off. */
+:root[data-motion="reduced"] .set-veil,
+:root[data-motion="reduced"] .set-card { transition-duration: .01ms; }
+:root[data-motion="reduced"] .set-grp.flash { animation: none; }

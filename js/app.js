@@ -57,7 +57,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, motion: "full", xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {} };
+const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {} };
 const LEAGUE_NAMES = ["عبدالله", "محمد", "نورة", "سارة", "فهد", "ريم", "خالد", "لمى", "تركي", "جواهر", "عمر", "هند", "سلمان", "رنا", "بدر", "ليان", "ناصر", "شهد", "يزيد", "دانة", "مازن", "أصيل", "وليد", "غادة"];
 /* Permanent rank tiers (badge art in assets/icons/ranks/). A user's tier is
    the highest threshold their LIFETIME total XP (S.totalXp) has crossed —
@@ -514,7 +514,7 @@ function renderSidebar() {
     { k: "mock",     icon: "nav-exam",   label: "اختبار تجريبي",   short: "تجريبي" },
     { k: "stats",    icon: "nav-stats",  label: "إحصائياتي",       short: "إحصائيات" },
     { k: "review",   icon: "target",     label: "مراجعة الأخطاء",  short: "الأخطاء" },
-    { k: "settings", icon: "nav-more",   label: "الإعدادات",       short: "إعدادات" },
+    { k: "profile",  icon: "nav-more",   label: "ملفي الشخصي",     short: "ملفي" },
   ];
   el.innerHTML = `
     <div class="sb-logo">
@@ -591,7 +591,11 @@ function renderAside() {
 }
 
 function render() {
-  ({ path: renderPath, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings, review: renderReview })[view]();
+  /* settings is a pop-up now, not a sibling screen — the route still resolves
+     so preview.html#settings and any old link land on the profile with the
+     sheet already open. */
+  if (view === "settings") { renderProfile(); A.openSettings(); return; }
+  ({ path: renderPath, league: renderLeague, mock: renderMockHome, stats: renderStats, review: renderReview, profile: renderProfile })[view]();
   flushRankUp();
   renderSidebar();
   renderAside();
@@ -620,7 +624,7 @@ A.chestTap = function () {
 function bottomnav(active) {
   /* the labels were the state keys — "path", "league" — read aloud in Arabic */
   const items = [["path", "nav-home", "الدروس"], ["league", "nav-league", "المجلس"],
-    ["mock", "nav-exam", "اختبار تجريبي"], ["stats", "nav-stats", "إحصائياتي"], ["settings", "nav-more", "الإعدادات"]];
+    ["mock", "nav-exam", "اختبار تجريبي"], ["stats", "nav-stats", "إحصائياتي"], ["profile", "nav-more", "ملفي"]];
   return `<nav class="bottomnav">` + items.map(([k, i, label]) =>
     `<button class="navbtn ${active === k ? "active" : ""}" onclick="A.go('${k}')" aria-label="${label}"${active === k ? ' aria-current="page"' : ""}>${ico(i, 30)}</button>`).join("") + `</nav>`;
 }
@@ -762,7 +766,9 @@ function renderPath() {
       const cls = done ? "node-done" : open ? "" : "node-locked";
       const x = offsets[gi % offsets.length];
       // every node is a star: gold star-done when completed, the white star otherwise
-      const nodeIcon = done ? ico("star-done", 40) : ico("star", 40);
+      /* star-done.svg is #AA572A — brown. Clearing a lesson should pay the
+         same gold star the win screen already shows. */
+      const nodeIcon = done ? ico("star-gold", 40) : ico("star", 40);
       const ring = current ? `<svg class="node-ring" viewBox="0 0 89 84" fill="none">
           <ellipse cx="44.5" cy="42" rx="41.5" ry="39" stroke="#E5E5E5" stroke-width="6"/>
           <path d="M 44.5 3 A 41.5 39 0 0 1 81.5 25" stroke="${u.c}" stroke-width="6" stroke-linecap="round"/>
@@ -3411,8 +3417,7 @@ A.login = function () {
 A.loginGuest = function () { S.user = { name: "ضيف", guest: true }; save(); afterLogin(); };
 A.logout = function () { S.user = null; save(); renderLogin(); };
 
-/* Disclaimer as a bottom sheet (slides up after login) — non-dismissible
-   since accepting it is required. */
+/* No longer gates anything — kept because A.showAbout reuses DISCLAIMER_HTML. */
 function showDisclaimerSheet(onAccept) {
   const veil = document.createElement("div");
   veil.className = "disc-veil";
@@ -3431,15 +3436,14 @@ function showDisclaimerSheet(onAccept) {
   };
 }
 
+/* The disclaimer used to be a non-dismissible sheet between the login screen
+   and the first lesson — a wall in front of someone who had not yet seen
+   anything worth agreeing to. The notice still ships; it lives in Settings
+   → حول التطبيق, where it can be read instead of dismissed. */
 function afterLogin() {
-  if (!S.disclaimer) {
-    $app.innerHTML = "";
-    showDisclaimerSheet(() => { S.disclaimer = true; save(); S.examAsked || S.exam ? render() : renderExamSetup(true); });
-  } else if (!S.examAsked && !S.exam) {
-    renderExamSetup(true);
-  } else {
-    render();
-  }
+  S.joined = S.joined || todayKey();
+  if (!S.examAsked && !S.exam) { renderExamSetup(true); return; }
+  save(); render();
 }
 
 /* ---------------- keyboard (web) ----------------
@@ -3477,6 +3481,288 @@ document.addEventListener("keydown", e => {
     if (btn && !btn.disabled && !btn.classList.contains("eliminated")) { e.preventDefault(); A.pick(n - 1); }
   }
 });
+
+
+/* ============================================================
+   PROFILE
+   ------------------------------------------------------------
+   Not a settings list with a name on top. This is the screen a
+   student opens to answer one question: am I on track? Who they
+   are, how long the streak is, what this week looked like, how
+   far each unit has come, how many days are left.
+
+   Settings is a pop-up launched from here, not a sibling screen,
+   because settings is something you dip into and leave — the
+   profile is somewhere you stay.
+   ============================================================ */
+const PROF_WK = ["\u062d", "\u0646", "\u062b", "\u0631", "\u062e", "\u062c", "\u0633"];
+
+/* todayKey() emits an unpadded y-m-d, which fmtExamDate cannot parse. */
+function fmtDayKey(k) {
+  const a = String(k || "").split("-");
+  return a.length === 3 ? toAr(+a[2]) + " / " + toAr(+a[1]) + " / " + toAr(+a[0]) : "";
+}
+
+function unitMastery() {
+  return domains().map(d => {
+    let done = 0;
+    d.lessons.forEach(l => { if (lessonProg(d.key + "." + l.key).stars > 0) done++; });
+    return { title: d.title, color: d.color, done, total: d.lessons.length,
+             pct: d.lessons.length ? Math.round(done / d.lessons.length * 100) : 0 };
+  });
+}
+
+function overallAccuracy() {
+  let r = 0, w = 0;
+  for (const k in S.qstats) { r += S.qstats[k].r || 0; w += S.qstats[k].w || 0; }
+  return (r + w) ? Math.round(r / (r + w) * 100) : null;
+}
+
+/* The last seven days, oldest first — so in RTL the week reads from the right
+   and today lands at the left, where the eye finishes. Derived from
+   streak.last and streak.count, which is all we store; it never invents a
+   filled day it cannot prove. */
+function streakWeek() {
+  const out = [], today = new Date(); today.setHours(0, 0, 0, 0);
+  const lastK = S.streak.last, cnt = S.streak.count || 0;
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today.getTime() - i * 864e5);
+    let on = false;
+    if (cnt > 0 && lastK) {
+      const a = lastK.split("-");
+      const last = new Date(+a[0], +a[1] - 1, +a[2]); last.setHours(0, 0, 0, 0);
+      const back = Math.round((last - d) / 864e5);
+      on = back >= 0 && back < cnt;
+    }
+    out.push({ dow: PROF_WK[d.getDay()], on, today: i === 0 });
+  }
+  return out;
+}
+
+function renderProfile() {
+  const t = LEAGUE_TIERS[tierIndex()];
+  const name = (S.user && S.user.name) || "\u0636\u064a\u0641";
+  const guest = !S.user || S.user.guest;
+  const flat = allLessons();
+  let doneN = 0; flat.forEach(x => { if (lessonProg(x.key).stars > 0) doneN++; });
+  const acc = overallAccuracy(), days = examDaysLeft();
+  const nextT = LEAGUE_TIERS[tierIndex() + 1];
+  const tierPct = nextT
+    ? Math.max(0, Math.min(100, Math.round((S.totalXp - t.min) / (nextT.min - t.min) * 100))) : 100;
+
+  $app.innerHTML = statbar() + `<div class="screen"><div class="page pf">
+
+    <div class="pf-hero">
+      <div class="pf-av"><span>${esc(name.trim().charAt(0) || "\u0642")}</span></div>
+      <div class="pf-id">
+        <h1>${esc(name)}</h1>
+        <p>${S.joined ? "\u0628\u062f\u0623 \u0645\u0639\u0646\u0627 " + fmtDayKey(S.joined) : "\u0639\u0636\u0648 \u062c\u062f\u064a\u062f"}</p>
+      </div>
+      <button class="pf-gear" onclick="A.openSettings()" aria-label="\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a">${GEAR_SVG}</button>
+    </div>
+
+    ${guest ? `<button class="pf-claim" onclick="A.openSettings('name')">
+      <span class="pf-cl-ic">${ico("guide", 20)}</span>
+      <span class="pf-cl-tx"><b>\u0627\u062d\u0641\u0638 \u062a\u0642\u062f\u0651\u0645\u0643</b><span>\u0623\u0636\u0641 \u0627\u0633\u0645\u0643 \u0639\u0634\u0627\u0646 \u0645\u0627 \u062a\u0636\u064a\u0639 \u062f\u0631\u0648\u0633\u0643</span></span>
+      <span class="pf-go">\u2190</span></button>` : ""}
+
+    <button class="pf-rank" onclick="A.go('league')">
+      ${rankImg(t.key, 54)}
+      <span class="pf-rank-tx">
+        <b>\u0627\u0644\u0645\u0633\u062a\u0648\u0649 ${t.name}</b>
+        <span class="pf-rank-bar"><i style="width:${tierPct}%"></i></span>
+        <small>${nextT ? toAr(Math.max(0, nextT.min - S.totalXp)) + " \u0646\u0642\u0637\u0629 \u0644\u0644\u0645\u0633\u062a\u0648\u0649 " + nextT.name : "\u0623\u0639\u0644\u0649 \u0645\u0633\u062a\u0648\u0649 \u2014 \u0623\u062d\u0633\u0646\u062a"}</small>
+      </span>
+      <span class="pf-go">\u2190</span>
+    </button>
+
+    <div class="pf-grid">
+      <div class="pf-tile"><span class="pf-t-ic">${ico("streak", 26)}</span><b>${toAr(S.streak.count)}</b><span>\u064a\u0648\u0645 \u0645\u062a\u062a\u0627\u0644\u064d</span></div>
+      <div class="pf-tile"><span class="pf-t-ic">${ico("gem", 26)}</span><b>${toAr(S.xp)}</b><span>\u062c\u0648\u0647\u0631\u0629</span></div>
+      <div class="pf-tile"><span class="pf-t-ic">${ico("star-gold", 26)}</span><b>${toAr(doneN)}</b><span>\u062f\u0631\u0633\u0627\u064b \u0645\u0643\u062a\u0645\u0644\u0627\u064b</span></div>
+      <div class="pf-tile"><span class="pf-t-ic">${ico("target", 26)}</span><b>${acc === null ? "\u2014" : toAr(acc) + "\u066a"}</b><span>\u0627\u0644\u062f\u0642\u0629</span></div>
+    </div>
+
+    <div class="pf-card">
+      <div class="pf-head"><h3>\u0623\u0633\u0628\u0648\u0639\u0643</h3>
+        <button class="pf-goal" onclick="A.openSettings('goal')">${ico("target", 15)} \u0647\u062f\u0641\u0643 ${toAr(S.goal)} \u064a\u0648\u0645\u064a\u0627\u064b</button></div>
+      <div class="pf-week">` + streakWeek().map(d => `
+        <div class="pf-day${d.on ? " on" : ""}${d.today ? " now" : ""}">
+          <span class="pf-dot">${d.on ? CHECK_BADGE : ""}</span><span class="pf-dow">${d.dow}</span>
+        </div>`).join("") + `</div>
+    </div>
+
+    ${days !== null ? `<button class="pf-exam" onclick="A.examSetup()">
+      <span class="pf-ex-n">${toAr(days)}</span>
+      <span class="pf-ex-t"><b>\u064a\u0648\u0645\u0627\u064b \u0639\u0644\u0649 \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631</b><span>${fmtExamDate(S.exam)}</span></span>
+      <span class="pf-go">\u2190</span></button>`
+      : `<button class="pf-exam pf-exam-empty" onclick="A.examSetup()">
+      <span class="pf-ex-t"><b>\u062d\u062f\u0651\u062f \u0645\u0648\u0639\u062f \u0627\u062e\u062a\u0628\u0627\u0631\u0643</b><span>\u0639\u0634\u0627\u0646 \u0646\u062a\u0627\u0628\u0639 \u062c\u0627\u0647\u0632\u064a\u062a\u0643</span></span>
+      <span class="pf-go">\u2190</span></button>`}
+
+    <div class="pf-card">
+      <div class="pf-head"><h3>\u0625\u062a\u0642\u0627\u0646\u0643 \u062d\u0633\u0628 \u0627\u0644\u0648\u062d\u062f\u0629</h3></div>
+      <div class="pf-mast">` + unitMastery().map(m => `
+        <div>
+          <div class="pf-m-top"><span>${m.title}</span><b>${toAr(m.done)}/${toAr(m.total)}</b></div>
+          <div class="pf-m-bar pm-${m.color === "yellow" ? "gold" : m.color}"><i style="width:${m.pct}%"></i></div>
+        </div>`).join("") + `</div>
+    </div>
+
+    <button class="pf-line" onclick="A.go('review')"><span>${ico("target", 18)} \u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u0623\u062e\u0637\u0627\u0621</span><span class="pf-go">\u2190</span></button>
+    <button class="pf-line" onclick="A.openSettings()"><span>${GEAR_SVG} \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a</span><span class="pf-go">\u2190</span></button>
+
+  </div></div>` + bottomnav("profile");
+}
+
+const GEAR_SVG = `<svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+  <path d="M12 15.4a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8Z" stroke="currentColor" stroke-width="2"/>
+  <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.84 2.84l-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.11A1.7 1.7 0 0 0 8.9 19.3a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.84-2.84l.06-.06A1.7 1.7 0 0 0 4.52 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.11A1.7 1.7 0 0 0 4.7 8.9a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.84-2.84l.06.06A1.7 1.7 0 0 0 9 4.52a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.11A1.7 1.7 0 0 0 15 4.7a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.84 2.84l-.06.06A1.7 1.7 0 0 0 19.4 9v.03a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.11a1.7 1.7 0 0 0-1.49 1.03Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
+/* ============================================================
+   SETTINGS — a pop-up, the way Duolingo does it
+   ------------------------------------------------------------
+   Blur the app behind it, spring the card in, and put things a
+   student can actually use on it: the daily goal, the exam date,
+   the track, and their name — not just two toggles and a reset.
+   `focus` scrolls one group into view and flashes it, so the
+   profile can deep-link straight at the row it is talking about.
+   ============================================================ */
+const SET_GOALS = [5, 10, 15, 20];
+
+A.openSettings = function (focus) {
+  const old = document.querySelector(".set-veil");
+  if (old) old.remove();
+  const guest = !S.user || S.user.guest;
+  const days = examDaysLeft();
+  const veil = document.createElement("div");
+  veil.className = "set-veil";
+  veil.innerHTML = `<div class="set-card" role="dialog" aria-modal="true" aria-label="\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a">
+    <div class="set-top">
+      <h2>\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a</h2>
+      <button class="set-x" onclick="A.closeSettings()" aria-label="\u0625\u063a\u0644\u0627\u0642">${X_SVG}</button>
+    </div>
+    <div class="set-body">
+
+      <div class="set-grp" data-g="name">
+        <div class="set-lab">${ico("guide", 16)} \u0627\u0633\u0645\u0643</div>
+        <div class="set-name">
+          <input id="setName" class="login-input" type="text" maxlength="20"
+            placeholder="\u0645\u0627 \u0627\u0633\u0645\u0643\u061f" autocomplete="off"
+            value="${guest ? "" : esc((S.user && S.user.name) || "")}"
+            onkeydown="if(event.key==='Enter')A.setSaveName()">
+          <button class="btn set-save" onclick="A.setSaveName()">\u062d\u0641\u0638</button>
+        </div>
+        ${guest ? `<p class="set-hint">\u062a\u0642\u062f\u0651\u0645\u0643 \u0645\u062d\u0641\u0648\u0638 \u0639\u0644\u0649 \u0647\u0630\u0627 \u0627\u0644\u0645\u062a\u0635\u0641\u062d \u0641\u0642\u0637.</p>` : ""}
+      </div>
+
+      <div class="set-grp" data-g="goal">
+        <div class="set-lab">${ico("target", 16)} \u0627\u0644\u0647\u062f\u0641 \u0627\u0644\u064a\u0648\u0645\u064a</div>
+        <div class="set-seg">` + SET_GOALS.map(g =>
+          `<button class="${S.goal === g ? "on" : ""}" onclick="A.setGoal(${g})">${toAr(g)}</button>`).join("") + `</div>
+        <p class="set-hint">\u0639\u062f\u062f \u0627\u0644\u0623\u0633\u0626\u0644\u0629 \u0627\u0644\u0644\u064a \u062a\u0628\u064a \u062a\u062d\u0644\u0651\u0647\u0627 \u0643\u0644 \u064a\u0648\u0645.</p>
+      </div>
+
+      <div class="set-grp" data-g="track">
+        <div class="set-lab">${ico("nav-stats", 16)} \u0645\u0633\u0627\u0631\u0643</div>
+        <div class="set-seg set-seg2">
+          <button class="${S.track === "sci" ? "on" : ""}" onclick="A.setTrackM('sci')">\u0639\u0644\u0645\u064a</button>
+          <button class="${S.track === "lit" ? "on" : ""}" onclick="A.setTrackM('lit')">\u0623\u062f\u0628\u064a / \u0646\u0638\u0631\u064a</button>
+        </div>
+      </div>
+
+      <div class="set-grp" data-g="exam">
+        <button class="set-row" onclick="A.closeSettings(); A.examSetup();">
+          <span class="set-row-ic">${ico("timer", 20)}</span>
+          <span class="set-row-tx"><b>\u0645\u0648\u0639\u062f \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631</b>
+            <span>${days !== null ? "\u0628\u0627\u0642\u064d " + toAr(days) + " \u064a\u0648\u0645\u0627\u064b \u2014 " + fmtExamDate(S.exam) : "\u063a\u064a\u0631 \u0645\u062d\u062f\u0651\u062f"}</span></span>
+          <span class="pf-go">\u2190</span>
+        </button>
+      </div>
+
+      <div class="set-grp">
+        <div class="set-tog">
+          <span><b>\u0627\u0644\u0623\u0635\u0648\u0627\u062a</b><span>\u0645\u0624\u062b\u0631\u0627\u062a \u0639\u0646\u062f \u0627\u0644\u0625\u062c\u0627\u0628\u0629</span></span>
+          <button class="toggle ${S.sound ? "on" : ""}" onclick="A.setSound(this)" aria-label="\u0627\u0644\u0623\u0635\u0648\u0627\u062a"></button>
+        </div>
+        <div class="set-tog">
+          <span><b>\u0627\u0644\u062d\u0631\u0643\u0629 \u0627\u0644\u0643\u0627\u0645\u0644\u0629</b><span>${
+            motionReduced() ? "\u0645\u062e\u0641\u0651\u0641\u0629 \u2014 \u0628\u062f\u0648\u0646 \u0642\u0641\u0632\u0629 \u0648\u0644\u0627 \u0628\u0631\u0642"
+              : (osPrefersReduce() ? "\u0646\u0638\u0627\u0645\u0643 \u064a\u0642\u0644\u0651\u0644 \u0627\u0644\u062d\u0631\u0643\u0629 \u2014 \u0644\u0643\u0646\u0651\u0647\u0627 \u0645\u0641\u0639\u0651\u0644\u0629 \u0647\u0646\u0627"
+                : "\u0642\u0641\u0632\u0629 \u0627\u0644\u0625\u062c\u0627\u0628\u0629 \u0648\u0627\u0644\u0628\u0631\u0642")}</span></span>
+          <button class="toggle ${motionReduced() ? "" : "on"}" onclick="A.setMotion(this)" aria-label="\u0627\u0644\u062d\u0631\u0643\u0629"></button>
+        </div>
+      </div>
+
+      <div class="set-grp">
+        <button class="set-row" onclick="A.showAbout()">
+          <span class="set-row-ic">${ico("book", 20)}</span>
+          <span class="set-row-tx"><b>\u062d\u0648\u0644 \u0627\u0644\u062a\u0637\u0628\u064a\u0642</b><span>\u0625\u062e\u0644\u0627\u0621 \u0645\u0633\u0624\u0648\u0644\u064a\u0629 \u0648\u0645\u0639\u0644\u0648\u0645\u0627\u062a</span></span>
+          <span class="pf-go">\u2190</span>
+        </button>
+        <a class="set-row" href="https://etec.gov.sa" target="_blank" rel="noopener">
+          <span class="set-row-ic">${ico("guide", 20)}</span>
+          <span class="set-row-tx"><b>\u0645\u0646\u0635\u0629 \u0642\u064a\u0627\u0633 \u0627\u0644\u0631\u0633\u0645\u064a\u0629</b><span>etec.gov.sa</span></span>
+          <span class="pf-go">\u2197</span>
+        </a>
+      </div>
+
+      <div class="set-grp set-danger">
+        ${guest ? "" : `<button class="set-row" onclick="A.closeSettings(); A.logout();">
+          <span class="set-row-tx"><b>\u062a\u0628\u062f\u064a\u0644 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645</b></span><span class="pf-go">\u2190</span></button>`}
+        <button class="set-row set-red" onclick="A.closeSettings(); A.resetAll();">
+          <span class="set-row-tx"><b>\u0625\u0639\u0627\u062f\u0629 \u062a\u0639\u064a\u064a\u0646 \u0627\u0644\u062a\u0642\u062f\u0651\u0645</b><span>\u062d\u0630\u0641 \u0643\u0644 \u0627\u0644\u0646\u0642\u0627\u0637 \u0648\u0627\u0644\u0625\u0646\u062c\u0627\u0632\u0627\u062a</span></span>
+          <span class="pf-go">\u2190</span></button>
+      </div>
+
+    </div>
+  </div>`;
+  veil.onclick = e => { if (e.target === veil) A.closeSettings(); };
+  document.body.appendChild(veil);
+  requestAnimationFrame(() => veil.classList.add("show"));
+  if (focus) {
+    const g = veil.querySelector('[data-g="' + focus + '"]');
+    if (g) setTimeout(() => {
+      g.scrollIntoView({ block: "center", behavior: "smooth" });
+      g.classList.add("flash");
+      if (focus === "name") { const i = veil.querySelector("#setName"); if (i) i.focus(); }
+    }, 260);
+  }
+};
+
+A.closeSettings = function () {
+  const v = document.querySelector(".set-veil");
+  if (!v) return;
+  v.classList.remove("show");
+  setTimeout(() => { v.remove(); if (view === "profile") render(); }, 240);
+};
+
+A.setGoal = function (g) {
+  S.goal = g; save();
+  document.querySelectorAll('[data-g="goal"] .set-seg button').forEach((b, i) =>
+    b.classList.toggle("on", SET_GOALS[i] === g));
+};
+A.setTrackM = function (t) {
+  S.track = t; save();
+  document.querySelectorAll('[data-g="track"] .set-seg button').forEach((b, i) =>
+    b.classList.toggle("on", (i === 0 ? "sci" : "lit") === t));
+};
+A.setSound = function (btn) { S.sound = !S.sound; save(); btn.classList.toggle("on", S.sound); };
+A.setMotion = function (btn) {
+  S.motion = motionReduced() ? "full" : "reduced";
+  motionApply(); save();
+  btn.classList.toggle("on", !motionReduced());
+  A.openSettings();                       // the hint line under it has to follow
+};
+A.setSaveName = function () {
+  const inp = document.getElementById("setName");
+  const name = (inp.value || "").trim();
+  if (!name) { inp.classList.remove("err"); void inp.offsetWidth; inp.classList.add("err"); inp.focus(); return; }
+  S.user = { name: name.slice(0, 20), guest: false };
+  save(); sndGood(); toast("\u062a\u0645 \u062d\u0641\u0638 \u0627\u0633\u0645\u0643 \u2713");
+  A.closeSettings();
+};
 
 /* ---------------- boot ---------------- */
 function boot() {
