@@ -1,71 +1,164 @@
 <!DOCTYPE html>
 <!-- معاينة الجوال — يعرض التطبيق داخل إطار بمقاس جهاز حقيقي.
      الـiframe يأخذ عرض الجهاز بالضبط، فتتصرّف استعلامات CSS تماماً كما
-     على الهاتف. شغّل: node tools/serve.js  ثم افتح /mobile.html -->
+     على الهاتف. شغّل خادماً محلياً ثم افتح /mobile.html -->
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>قدراتي — معاينة الجوال</title>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+  /* The harness borrows the app's own palette so the tool and the thing it
+     previews stop looking like two different products. Light, because the app
+     is light: a dark chrome wrapped around a white screen made everything
+     framed in here read as higher-contrast than it actually is. */
+  :root {
+    --green: #58CC02;   --green-dk: #58A700;   --green-lip: #478700;
+    --blue: #1CB0F6;
+    --ink: #3C3C3C;     --gray: #777777;       --gray-icon: #AFAFAF;
+    --line: #E5E5E5;    --snow: #FFFFFF;
+    --page: #FFFFFF;    --stage: #F7F8FA;      --well: #F4F5F7;
+    --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
+  }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
   body {
-    background: #14171F; color: #E8ECF4;
-    font-family: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
+    background: var(--page); color: var(--ink); font-family: var(--font);
     display: flex; flex-direction: column; overflow: hidden;
+    -webkit-font-smoothing: antialiased;
   }
 
+  /* ---------------- toolbar ---------------- */
   .bar {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
-    padding: 12px 18px; background: #1B1F2A;
-    border-bottom: 1px solid #2A3040; flex-shrink: 0;
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    padding: 11px 18px; background: var(--snow);
+    border-bottom: 1px solid var(--line); flex-shrink: 0;
   }
-  .brand { font-weight: 800; font-size: 17px; color: #58CC02; margin-left: 6px; }
-  .grp { display: flex; align-items: center; gap: 7px; }
-  .grp > label { font-size: 12.5px; font-weight: 700; color: #8B94A8; }
-  select, button {
-    font-family: inherit; font-size: 13.5px; font-weight: 700;
-    background: #232838; color: #E8ECF4;
-    border: 1px solid #333B4E; border-radius: 9px;
-    padding: 7px 11px 5px; cursor: pointer;
+  .brand {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 800; font-size: 16px; color: var(--ink);
+    margin-left: 8px; white-space: nowrap;
   }
-  select:hover, button:hover { border-color: #4A5570; }
-  button.on { background: #58CC02; border-color: #58CC02; color: #fff; }
-  .spacer { flex: 1; }
-  .size { font-size: 12.5px; font-weight: 700; color: #8B94A8; font-variant-numeric: tabular-nums; }
+  .brand .dot {
+    width: 26px; height: 26px; border-radius: 9px; flex: none;
+    background: var(--green); box-shadow: 0 2px 0 var(--green-lip);
+    display: grid; place-items: center; color: #fff; font-size: 13px; font-style: normal;
+  }
 
+  /* label and field welded into one pill, so the row reads as a few objects
+     rather than a dozen loose widgets */
+  .grp {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--well); border-radius: 11px; padding: 4px;
+  }
+  .grp > label {
+    font-size: 12px; font-weight: 700; color: var(--gray);
+    padding-inline-start: 7px; white-space: nowrap;
+  }
+  select {
+    font-family: inherit; font-size: 13px; font-weight: 700; color: var(--ink);
+    background: var(--snow); border: 1px solid var(--line); border-radius: 8px;
+    padding: 6px 10px 5px 26px; cursor: pointer; appearance: none; -webkit-appearance: none;
+    /* own arrow, on the correct side for RTL */
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'><path d='M1 1l4 4 4-4' fill='none' stroke='%23AFAFAF' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat: no-repeat; background-position: left 9px center;
+    transition: border-color .12s, box-shadow .12s;
+  }
+  select:hover { border-color: var(--gray-icon); }
+  select:focus-visible { outline: 0; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(28,176,246,.18); }
+
+  button {
+    font-family: inherit; font-size: 13px; font-weight: 700; color: var(--ink);
+    background: var(--snow); border: 1px solid var(--line);
+    border-bottom-width: 2px; border-radius: 10px;
+    padding: 7px 13px 6px; cursor: pointer; white-space: nowrap;
+    transition: background-color .12s, border-color .12s, transform .06s;
+  }
+  button:hover { background: var(--well); border-color: var(--gray-icon); }
+  button:active { transform: translateY(1px); border-bottom-width: 1px; }
+  button.on {
+    background: var(--green); border-color: var(--green-dk);
+    border-bottom-color: var(--green-lip); color: #fff;
+  }
+  button.on:hover { background: var(--green-dk); border-color: var(--green-lip); }
+  button:focus-visible { outline: 0; box-shadow: 0 0 0 3px rgba(28,176,246,.22); }
+
+  .spacer { flex: 1; }
+  .size {
+    font-size: 12.5px; font-weight: 700; color: var(--gray);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+    background: var(--well); border-radius: 999px; padding: 6px 12px 4px;
+  }
+  .size b { color: var(--ink); }
+
+  /* ---------------- stage ---------------- */
   .stage {
     flex: 1; display: flex; align-items: center; justify-content: center;
-    padding: 22px; min-height: 0; position: relative;
+    padding: 24px; min-height: 0; position: relative; background: var(--stage);
+  }
+  /* a whisper of light behind the device so a white screen on a white page
+     still has somewhere to sit */
+  .stage::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(120% 78% at 50% 42%, rgba(255,255,255,.95) 0%, rgba(255,255,255,0) 70%);
   }
 
   /* the bezel is decoration; the iframe inside is the real device size */
   .phone {
     position: relative; flex-shrink: 0;
     padding: 13px; border-radius: 44px;
-    background: linear-gradient(160deg, #2E3444, #1D2230);
-    box-shadow: 0 0 0 2px #3C4356, 0 26px 60px rgba(0,0,0,.6);
+    background: linear-gradient(160deg, #3A3A3E 0%, #17171A 52%, #08080A 100%);
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,.55),
+      inset 0 1px 0 rgba(255,255,255,.14),
+      0 18px 40px rgba(0,0,0,.30),
+      0 4px 10px rgba(0,0,0,.16);
     transform-origin: center center;
   }
   .phone iframe {
     display: block; border: 0; border-radius: 32px;
-    background: #fff;
+    background: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.06);
+  }
+  /* earpiece slot and home indicator — both live inside the bezel's own
+     padding, so neither ever covers a pixel the app drew */
+  .phone::before {
+    content: ""; position: absolute; top: 5px; left: 50%; transform: translateX(-50%);
+    width: 52px; height: 4px; border-radius: 3px; background: rgba(255,255,255,.22);
+  }
+  .phone::after {
+    content: ""; position: absolute; bottom: 4.5px; left: 50%; transform: translateX(-50%);
+    width: 96px; height: 4px; border-radius: 3px; background: rgba(255,255,255,.30);
+  }
+  .phone.landscape::before, .phone.landscape::after { display: none; }
+
+  /* ---------------- footnote ---------------- */
+  .note {
+    flex-shrink: 0; padding: 11px 18px 13px; background: var(--snow);
+    border-top: 1px solid var(--line);
+    font-size: 11.5px; font-weight: 600; color: var(--gray);
+    text-align: center; line-height: 1.9;
+  }
+  .note b { color: var(--ink); }
+  .note kbd {
+    font-family: inherit; font-size: 11px; font-weight: 700; color: var(--ink);
+    background: var(--well); border: 1px solid var(--line); border-bottom-width: 2px;
+    border-radius: 6px; padding: 2px 6px 1px; margin: 0 2px;
   }
 
-  .note {
-    flex-shrink: 0; padding: 0 18px 12px;
-    font-size: 11.5px; font-weight: 600; color: #6B7488;
-    text-align: center; line-height: 1.7; pointer-events: none;
+  @media (max-width: 720px) {
+    .bar { padding: 10px 12px; gap: 7px; }
+    .brand span:last-child { display: none; }
+    .stage { padding: 14px; }
   }
-  .note b { color: #97A1B6; }
 </style>
 </head>
 <body>
 
 <div class="bar">
-  <span class="brand">معاينة الجوال</span>
+  <span class="brand"><i class="dot">★</i><span>معاينة الجوال</span></span>
 
   <div class="grp">
     <label for="dev">الجهاز</label>
@@ -101,7 +194,9 @@
 
 <div class="note">
   تأثيرات التمرير (hover) تظهر هنا ولا تظهر على هاتف حقيقي — للمس الفعلي استخدم
-  <b>DevTools ← Ctrl+Shift+M</b>. و«شاشة محددة» تكتب بيانات تجريبية فوق تقدّمك في هذا المتصفح.
+  <b>DevTools</b> <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>M</kbd>.
+  و«شاشة محددة» تكتب بيانات تجريبية فوق تقدّمك في هذا المتصفح.
+  اضغط <kbd>R</kbd> للتحديث.
 </div>
 
 <script>
@@ -155,7 +250,8 @@
     var avail = stage.clientHeight - 30, need = phone.offsetHeight;
     var k = Math.min(1, avail / need);
     phone.style.transform = "scale(" + k.toFixed(3) + ")";
-    sizeEl.textContent = s.w + " × " + s.h + (k < 1 ? "  ·  عرض " + Math.round(k * 100) + "٪" : "");
+    sizeEl.innerHTML = "<b>" + s.w + " × " + s.h + "</b>" +
+      (k < 1 ? "  ·  عرض " + Math.round(k * 100) + "٪" : "");
   }
 
   function src() {
