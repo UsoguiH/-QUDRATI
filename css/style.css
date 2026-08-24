@@ -3411,19 +3411,33 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 .exam-pick {
   --polar: #F7F7F7;                 /* one surface tint the palette lacks */
   --ease: cubic-bezier(.2,.8,.25,1);
-  display: flex; flex-direction: column; gap: 0;
-  width: 100%; max-width: var(--col-max, 430px); margin-inline: auto;
+  /* NOT --col-max. That is a reading measure and it reaches 760px on a wide
+     display; seven columns of it make ~105px cells and a grid 630px tall, which
+     pushed the save button off the bottom. A calendar's width is set by what a
+     day cell should be, not by how wide the page is. */
+  width: 100%; max-width: 440px; margin-inline: auto;
+  /* one screen, no scroll: the calendar takes whatever is left after the
+     header, the countdown and the footer have been paid */
+  height: 100dvh;
+  display: flex; flex-direction: column;
+  padding: 10px 0 calc(8px + env(safe-area-inset-bottom, 0px));
+  overflow: hidden;
 }
-.exam-pick h1 { font-size: 27px; font-weight: 800; line-height: 1.4; margin: 0; }
+.exam-pick h1 {
+  flex: none; font-size: clamp(20px, 5.4vw, 27px); font-weight: 800;
+  line-height: 1.3; margin: 0;
+}
 
 /* ---- countdown ---- */
 .ep-count {
-  margin: 16px 0 14px; padding: 14px 16px;
+  flex: none;
+  margin: clamp(8px, 1.8vh, 16px) 0 clamp(8px, 1.4vh, 14px);
+  padding: clamp(10px, 1.5vh, 14px) 16px;
   background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px;
-  border-radius: 16px; display: flex; align-items: center; gap: 14px; min-height: 98px;
+  border-radius: 16px; display: flex; align-items: center; gap: 14px;
 }
 .ep-badge {
-  flex: none; width: 66px; height: 66px; border-radius: 18px;
+  flex: none; width: clamp(52px, 8vh, 66px); height: clamp(52px, 8vh, 66px); border-radius: 18px;
   background: var(--green-bg); display: grid; place-items: center;
   font-size: 28px; font-weight: 800; color: var(--green-dk); line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -3444,11 +3458,16 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 
 /* ---- calendar ---- */
 .ep-cal {
+  flex: 1; min-height: 0;                 /* min-height:0 or the grid cannot shrink */
   position: relative; background: var(--snow);
   border: 2px solid var(--line); border-bottom-width: 4px;
-  border-radius: 16px; padding: 14px 10px;
+  border-radius: 16px; padding: clamp(8px, 1.4vh, 14px) 10px;
+  display: flex; flex-direction: column;
 }
-.ep-top { display: flex; align-items: center; justify-content: space-between; padding: 0 4px 12px; }
+.ep-top {
+  flex: none; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 4px clamp(6px, 1.2vh, 12px);
+}
 .ep-month { font-size: 19px; font-weight: 800; color: var(--ink); }
 .ep-nav { display: flex; gap: 8px; }
 .ep-nav button {
@@ -3461,21 +3480,35 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 .ep-nav button:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; }
 .ep-nav button:disabled { color: var(--line); cursor: not-allowed; }
 
-.ep-dow { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; margin-bottom: 8px; }
+.ep-dow {
+  flex: none; display: grid; grid-template-columns: repeat(7,1fr);
+  gap: 5px; margin-bottom: clamp(4px, .8vh, 8px);
+}
 .ep-dow span {
   text-align: center; font-size: 12px; font-weight: 700; color: var(--gray-icon); letter-spacing: .2px;
 }
 .ep-dow span.we { color: #D9C48A; }
 
-.ep-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 5px; }
+/* The rows split whatever height is left, so a 5-row month and a 6-row month
+   both fill the card instead of one of them overflowing it. */
+.ep-grid {
+  flex: 1; min-height: 0;
+  display: grid; grid-template-columns: repeat(7,1fr);
+  grid-auto-rows: minmax(0, 1fr); gap: 5px;
+}
 .ep-grid.slide-r { animation: epSlideR .26s var(--ease); }
 .ep-grid.slide-l { animation: epSlideL .26s var(--ease); }
 @keyframes epSlideR { from{transform:translateX(-16px);opacity:0} to{transform:none;opacity:1} }
 @keyframes epSlideL { from{transform:translateX(16px);opacity:0} to{transform:none;opacity:1} }
 
+/* No aspect-ratio: the cell fills its grid row. With aspect-ratio the row was
+   sized from the column width, which is what made the cells enormous on a wide
+   display and forced the page to scroll. */
 .ep-day {
-  position: relative; aspect-ratio: 1/1; border: 2px solid transparent; background: transparent;
-  border-radius: 14px; cursor: pointer; font-family: inherit; font-size: 16px; font-weight: 700;
+  position: relative; min-width: 0; min-height: 0;
+  border: 2px solid transparent; background: transparent;
+  border-radius: clamp(9px, 1.6vh, 14px); cursor: pointer; font-family: inherit;
+  font-size: clamp(13px, 2vh, 16px); font-weight: 700;
   color: var(--ink); display: grid; place-items: center;
   transition: background-color .12s var(--ease), transform .08s var(--ease);
 }
@@ -3486,15 +3519,15 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 
 /* the stretch of days between now and the exam — the plan, not just a range */
 .ep-day.run { background: var(--green-bg); border-radius: 6px; color: #4C8B18; }
-.ep-day.run.run-start { border-start-start-radius: 14px; border-end-start-radius: 14px; }
-.ep-day.run.run-end { border-start-end-radius: 14px; border-end-end-radius: 14px; }
+.ep-day.run.run-start { border-start-start-radius: clamp(9px,1.6vh,14px); border-end-start-radius: clamp(9px,1.6vh,14px); }
+.ep-day.run.run-end { border-start-end-radius: clamp(9px,1.6vh,14px); border-end-end-radius: clamp(9px,1.6vh,14px); }
 .ep-day.today {
   background: var(--blue-light); border-color: var(--blue-border); color: var(--blue-dk);
-  border-radius: 14px; font-weight: 800;
+  font-weight: 800;
 }
 .ep-day.selected {
   background: var(--green); border-color: var(--green-dk); border-bottom-width: 4px;
-  color: #fff; font-weight: 800; border-radius: 14px;
+  color: #fff; font-weight: 800;
 }
 
 /* the landing: crouch, launch, hang, fall, two decaying bounces */
@@ -3549,10 +3582,12 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 }
 
 .ep-legend {
-  display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
-  padding-top: 12px; margin-top: 10px;
+  flex: none; display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+  padding-top: clamp(6px, 1.2vh, 12px); margin-top: clamp(4px, 1vh, 10px);
   font-size: 12px; font-weight: 600; color: var(--gray-icon);
 }
+/* the first thing to go when there is genuinely no room */
+@media (max-height: 620px) { .ep-legend { display: none; } }
 .ep-legend i {
   display: inline-block; width: 11px; height: 11px; border-radius: 4px;
   margin-inline-end: 5px; vertical-align: -1px;
@@ -3562,9 +3597,12 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 .ep-legend .l3 { background: var(--blue-light); box-shadow: inset 0 0 0 2px var(--blue-border); }
 
 /* ---- footer ---- */
-.ep-foot { margin-top: 22px; padding: 20px 0 4px; border-top: 2px solid var(--line); }
+.ep-foot {
+  flex: none; margin-top: clamp(10px, 1.8vh, 22px);
+  padding: clamp(10px, 1.8vh, 20px) 0 2px; border-top: 2px solid var(--line);
+}
 .ep-foot.done { border-top-color: transparent; background: var(--green-bg); border-radius: 16px; padding: 18px 16px 16px; }
-.ep-done { display: none; align-items: center; gap: 12px; margin-bottom: 16px; }
+.ep-done { display: none; align-items: center; gap: 12px; margin-bottom: clamp(9px, 1.6vh, 16px); }
 .ep-foot.done .ep-done { display: flex; }
 .ep-done .tick {
   flex: none; width: 44px; height: 44px; border-radius: 50%; background: #fff;
@@ -3574,8 +3612,9 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 .ep-done .txt span { font-size: 14px; font-weight: 600; color: #5F8B33; }
 .ep-foot.done .ep-ghost { display: none; }
 .ep-ghost {
-  display: block; width: 100%; margin-top: 12px; padding: 8px; background: none; border: 0;
-  cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 700; color: var(--gray-icon);
+  display: block; width: 100%; margin-top: clamp(6px, 1.2vh, 12px); padding: 6px;
+  background: none; border: 0; cursor: pointer; font-family: inherit;
+  font-size: 15px; font-weight: 700; color: var(--gray-icon);
 }
 .ep-ghost:hover { color: var(--gray); }
 
