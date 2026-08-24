@@ -783,9 +783,10 @@ function renderPath() {
       const cls = done ? "node-done" : open ? "" : "node-locked";
       const x = offsets[gi % offsets.length];
       // every node is a star: gold star-done when completed, the white star otherwise
-      /* star-done.svg is #AA572A — brown. Clearing a lesson should pay the
-         same gold star the win screen already shows. */
-      const nodeIcon = done ? ico("star-gold", 40) : ico("star", 40);
+      /* star-done.svg is #AA572A, and that is the point: the completed node's
+         own face is gold (#FFC800 below), so the darker star is what reads
+         against it. star-gold here put a gold star on a gold coin. */
+      const nodeIcon = done ? ico("star-done", 40) : ico("star", 40);
       const ring = current ? `<svg class="node-ring" viewBox="0 0 89 84" fill="none">
           <ellipse cx="44.5" cy="42" rx="41.5" ry="39" stroke="#E5E5E5" stroke-width="6"/>
           <path d="M 44.5 3 A 41.5 39 0 0 1 81.5 25" stroke="${u.c}" stroke-width="6" stroke-linecap="round"/>
