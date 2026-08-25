@@ -58,16 +58,30 @@ function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
 
 /* ---------------- state ---------------- */
 const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {} };
-const LEAGUE_NAMES = ["عبدالله", "محمد", "نورة", "سارة", "فهد", "ريم", "خالد", "لمى", "تركي", "جواهر", "عمر", "هند", "سلمان", "رنا", "بدر", "ليان", "ناصر", "شهد", "يزيد", "دانة", "مازن", "أصيل", "وليد", "غادة"];
-/* Permanent rank tiers (badge art in assets/icons/ranks/). A user's tier is
-   the highest threshold their LIFETIME total XP (S.totalXp) has crossed —
-   it never drops, even when spending gems (S.xp) on hints. */
-/* Rebased against what the content can actually yield. The old ceiling —
-   playing all 30 lessons perfectly with the paid 2x boost on every one, plus
-   56 daily questions — was 6,448, and Champion sat at 7,000. It could not be
-   reached by finishing the product, only by grinding replays. An honest
-   75%-first-try player who clears everything now lands in Champion in their
-   final week, which is where that beat belongs. */
+/* The rivals. A student who suspects the board is padded looks at the names
+   first, and a column of two dozen tidy Arabic first names is the one
+   arrangement that never occurs on a real sign-up sheet. These are drawn in
+   the proportions a Saudi one actually has: bare first names, full names,
+   Latin handles with a birth year in them, initials, kunyas, and the handful
+   of people who sign up as a slogan. */
+const LEAGUE_NAMES = [
+  "عبدالله", "محمد", "نورة", "سارة", "فهد", "ريم", "خالد", "لمى", "تركي", "جواهر",
+  "عمر", "هند", "سلمان", "رنا", "بدر", "ليان", "ناصر", "شهد", "يزيد", "دانة",
+  "مازن", "أصيل", "وليد", "غادة", "رغد", "ماجد", "أسامة", "جنى", "مشاري", "ريماس",
+  "عبدالله الشمري", "نورة القحطاني", "محمد العتيبي", "سارة الدوسري",
+  "فهد الحربي", "ريم الغامدي", "خالد الزهراني", "لمى المطيري",
+  "تركي السبيعي", "دانة العنزي", "بدر الرشيدي", "شهد البقمي",
+  "سلطان المالكي", "جوري الأحمدي", "فيصل القرني", "أروى الشهراني",
+  "م. العتيبي", "ع. الحربي", "ن. القحطاني", "س. الدوسري", "أ.م",
+  "Fahad_99", "sara.m", "Nouf2006", "khaled_alq", "Turki7", "rimaz", "abdullah.s",
+  "MshariX", "lulu_04", "3bdulaziz", "Reem.A", "y.alsubaie", "Noura___", "dana2007",
+  "Bader_88", "s7r", "aljoharah", "nayef.k", "ManarQ", "wjdan_", "Ali__2005", "Hessa.z",
+  "أبو فهد", "أم يزيد", "أبو ناصر", "أم ريم",
+  "طموح", "الفارس", "بنت الرياض", "مستعد", "قدرات ٩٩", "هدفي ١٠٠",
+  "الصقر", "نجم القياس", "لا مستحيل", "مجتهد", "ابن القصيم",
+  "ريما ✨", "نايف ⚡", "جود 🌙", "سلطان 🦅", "أروى 🎯", "راكان 🔥"
+];
+const LEAGUE_SIZE = 29;   /* + you = 30, the size a real weekly league runs at */
 const LEAGUE_TIERS = [
   { key: "bronze", name: "البرونزي", min: 0 },
   { key: "silver", name: "الفضي", min: 300 },
@@ -1843,6 +1857,11 @@ A.debugPool = function () {                                         // dev harne
 };
 A.debugEarn = function (n) { gainXP(n); gainGems(n); save(); render(); };        // dev harness only
 A.debugMock = function () { return MOCK && MOCK.sections[MOCK.si].items[MOCK.qi].q; }; // dev harness only
+A.debugLeague = function (n) { return leagueStandings(n); };       // dev harness only
+A.debugWeek   = function (n) { return leagueWeek(n || Date.now()); }; // dev harness only
+A.debugTiers  = function () { return LEAGUE_TIERS; };              // dev harness only
+A.debugTick   = function () { lbTick(); return LB_TIMER; };        // dev harness only
+A.debugSetXp  = function (n) { S.totalXp = n; save(); };            // dev harness only
 
 A.next = function () {
   if (SES.mode !== "review" && SES.hearts <= 0) { sessionFailed(); return; }
@@ -2322,17 +2341,92 @@ A.mockDetail = function (i) {
    you placed by your own total. Crossing a threshold fires the
    full-screen rank-up celebration (showRankUp).
    ============================================================ */
-function leagueStandings() {
+function lcg(seed) {
+  let s = seed >>> 0;
+  return function () { s = (s * 1103515245 + 12345) >>> 0; return s / 4294967296; };
+}
+
+/* Monday 00:00 local, and how many Mondays have passed since the epoch. The
+   cohort is keyed on that number, so the board turns over once a week the way
+   a real league does — which is also the honest-looking reason the names are
+   different on Monday from what they were on Sunday. */
+function leagueWeek(now) {
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  const start = d.getTime() - ((d.getDay() + 6) % 7) * 864e5;
+  return { start: start, idx: Math.round(start / 6048e5) };
+}
+
+/* A rival's score is not stored anywhere — it is rebuilt from their habits
+   and the clock every time the board is drawn. That buys three things at once:
+   it climbs while the app is shut, it is the same number on two devices at the
+   same instant, and it never needs a server to keep it moving. */
+function ghostXp(g, hoursIn) {
+  const rnd = lcg(g.seed);
+  const spd = g.grind > 0.88 ? 3 : g.grind > 0.5 ? 2 : 1;
+  let active = 0;
+  for (let d = 0; d < 7 && d <= g.quit; d++) if (!(g.off & (1 << d))) active++;
+  const per = g.budget / Math.max(1, active * spd);
+
+  let xp = g.base;
+  for (let d = 0; d < 7; d++) {
+    if (hoursIn <= d * 24) break;
+    if (d > g.quit) break;                       /* they stopped showing up */
+    for (let s = 0; s < spd; s++) {
+      /* Both draws happen before either test, so the stream advances the same
+         way no matter which sessions have landed yet. Skip a draw and every
+         later score changes the moment the clock ticks past it. */
+      const at = d * 24 + g.h0 + s * (3 + rnd() * 5);
+      const chunk = Math.max(5, Math.round(per * (0.7 + rnd() * 0.6) / 5) * 5);
+      if (g.off & (1 << d)) continue;            /* a day they didn't study */
+      if (hoursIn <= at) continue;               /* hasn't happened yet */
+      xp += chunk;
+    }
+  }
+  return xp;
+}
+
+function leagueStandings(now) {
+  now = now || Date.now();
   const ti = tierIndex();
   const tier = LEAGUE_TIERS[ti], next = LEAGUE_TIERS[ti + 1];
-  const lo = tier.min, hi = next ? next.min : tier.min + 6000;
-  let seed = (ti * 2654435761 + 999983) >>> 0; // stable cohort per tier
-  const rnd = () => { seed = (seed * 1103515245 + 12345) >>> 0; return seed / 4294967296; };
+  const lo = tier.min, span = (next ? next.min : tier.min + 4000) - lo;
+  const wk = leagueWeek(now);
+  const rnd = lcg(ti * 2654435761 + wk.idx * 40503 + 999983);
+
   const pool = LEAGUE_NAMES.slice();
-  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-  const list = pool.slice(0, 13).map(n => ({ name: n, xp: Math.round(lo + rnd() * (hi - lo) * 0.96), you: false }));
+  for (let i = pool.length - 1; i > 0; i--) {
+    const k = Math.floor(rnd() * (i + 1)), t = pool[i]; pool[i] = pool[k]; pool[k] = t;
+  }
+
+  const hoursIn = (now - wk.start) / 36e5;
+  const list = [];
+  for (let i = 0; i < LEAGUE_SIZE; i++) {
+    const grind = rnd();
+    /* Most of a cohort sits near the floor of its band and two or three run
+       away with it. A flat draw put the median rival mid-band, which parked
+       every newcomer in last place for their entire first week. */
+    const base = Math.round((lo + span * Math.pow(rnd(), 3.2) * 0.62) / 5) * 5;
+    let off = 0;
+    for (let d = 0; d < 7; d++) if (rnd() < 0.22) off |= (1 << d);
+    const g = {
+      name: pool[i % pool.length],
+      base: base,
+      grind: grind,
+      off: off,
+      /* roughly one in five drifts away partway through the week */
+      quit: rnd() < 0.2 ? 1 + Math.floor(rnd() * 5) : 9,
+      /* the week's whole gain, kept proportional to the band so nobody climbs
+         out of the tier they are supposed to be competing in */
+      budget: span * (0.05 + grind * grind * 0.28),
+      h0: 7 + rnd() * 9,                          /* when they tend to start */
+      seed: Math.floor(rnd() * 4294967296) >>> 0
+    };
+    g.xp = ghostXp(g, hoursIn);
+    list.push(g);
+  }
   list.push({ name: (S.user && S.user.name) || "أنت", xp: S.totalXp || 0, you: true });
-  list.sort((a, b) => b.xp - a.xp || (a.you ? 1 : -1));
+  list.sort(function (a, b) { return b.xp - a.xp || (a.you ? 1 : -1); });
   return list;
 }
 const AVATAR_COLORS = ["#58CC02", "#1CB0F6", "#CE82FF", "#FF9600", "#FF4B4B", "#2BB0A6", "#A560E8"];
@@ -2353,19 +2447,55 @@ const MEDAL = i => `<span class="lb-medal">${MEDAL_SVGS[i - 1]}</span>`;
 /* padlock for the locked tiers — colors stay visible behind a soft scrim */
 const LOCK_SVG = `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7.5 10.5V8a4.5 4.5 0 0 1 9 0v2.5" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><rect x="4.7" y="10" width="14.6" height="11" rx="3.4" fill="#fff"/><circle cx="12" cy="14.7" r="1.7" fill="#4B4B4B"/><rect x="11" y="15.4" width="2" height="3.4" rx="1" fill="#4B4B4B"/></svg>`;
 
-function renderLeague() {
-  const ti = tierIndex(), tier = LEAGUE_TIERS[ti], next = LEAGUE_TIERS[ti + 1];
-  const entries = leagueStandings();
-  const myRank = entries.findIndex(e => e.you) + 1;
-  const rows = entries.map((e, i) => {
+/* Last drawn score per rival, so a redraw can tell who moved and say so. */
+let LB_PREV = null;
+let LB_TIMER = 0;
+
+function lbRows(entries) {
+  const prev = LB_PREV;
+  const now = {};
+  const html = entries.map(function (e, i) {
+    now[e.name] = e.xp;
     const rank = i + 1;
-    const rankCell = rank <= 3 ? MEDAL(rank) : `<span class="lb-rank">${toAr(rank)}</span>`;
-    return `<div class="lb-row ${e.you ? "me" : ""}">
-      ${rankCell}${avatarFor(e.name, e.you)}
+    const cell = rank <= 3 ? MEDAL(rank) : `<span class="lb-rank">${toAr(rank)}</span>`;
+    const gain = prev && !e.you && prev[e.name] != null ? e.xp - prev[e.name] : 0;
+    return `<div class="lb-row ${e.you ? "me" : ""} ${gain > 0 ? "gained" : ""}">
+      ${cell}${avatarFor(e.name, e.you)}
       <span class="lb-name">${esc(e.name)}${e.you ? " <b>(أنت)</b>" : ""}</span>
+      ${gain > 0 ? `<span class="lb-gain">+${toAr(gain)}</span>` : ""}
       <span class="lb-xp">${toAr(e.xp)} <i>XP</i></span>
     </div>`;
   }).join("");
+  LB_PREV = now;
+  return html;
+}
+
+/* Redraw on a slow beat while the board is open. Most ticks change nothing —
+   thirty people studying a couple of times a day is about three events an hour
+   between them — but the one that does land, with the row lifting past its
+   neighbour and a +١٥ floating off it, is worth more than any amount of copy. */
+function lbTick() {
+  if (view !== "league") { clearInterval(LB_TIMER); LB_TIMER = 0; return; }
+  const list = document.querySelector(".lb-list"), foot = document.querySelector(".lb-foot");
+  if (!list) { clearInterval(LB_TIMER); LB_TIMER = 0; return; }
+  const entries = leagueStandings();
+  list.classList.add("settled");
+  list.innerHTML = lbRows(entries);
+  if (foot) foot.innerHTML = lbFoot(entries);
+}
+
+function lbFoot(entries) {
+  const r = entries.findIndex(function (e) { return e.you; }) + 1;
+  return `ترتيبك: <b>${toAr(r)}</b> من ${toAr(entries.length)} — ` +
+    (r === 1 ? "أنت المتصدّر! 🏆"
+             : "اكسب الخبرة لتتصدّر");
+}
+
+function renderLeague() {
+  const ti = tierIndex(), tier = LEAGUE_TIERS[ti], next = LEAGUE_TIERS[ti + 1];
+  LB_PREV = null;
+  const entries = leagueStandings();
+  const rows = lbRows(entries);
   const ladder = LEAGUE_TIERS.map((t, i) => {
     const cls = i < ti ? "done" : i === ti ? "cur" : "locked";
     return `<div class="lb-tier ${cls} lb-tier-${t.key}">
@@ -2392,10 +2522,16 @@ function renderLeague() {
       <div class="lb-sub">مستواك دائم — تكسبه بالخبرة ولا ينخفض أبداً</div>
     </div>
     ${prog}
-    <div class="lb-listhead">${ico("guide", 18)} المتصدّرون في مستواك</div>
+    <div class="lb-listhead">
+      ${ico("guide", 18)} المتصدّرون في مستواك
+      <span class="lb-live"><i></i>مباشر</span>
+    </div>
     <div class="lb-list">${rows}</div>
-    <div class="lb-foot">ترتيبك: <b>${toAr(myRank)}</b> من ${toAr(entries.length)} — ${myRank === 1 ? "أنت المتصدّر! 🏆" : "اكسب الخبرة لتتصدّر"}</div>
+    <div class="lb-foot">${lbFoot(entries)}</div>
+    <div class="lb-note">يتجدّد المجلس كل اثنين مع منافسين جدد</div>
   </div></div>` + bottomnav("league");
+  clearInterval(LB_TIMER);
+  LB_TIMER = setInterval(lbTick, 22000);
 }
 
 /* ============================================================

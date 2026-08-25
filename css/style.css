@@ -2077,6 +2077,41 @@ button.dom-stat:active { transform: scale(.99); }
 .lb-xp i { font-style: normal; font-size: 12px; color: var(--gray-icon); }
 .lb-foot { text-align: center; font-size: 14px; font-weight: 600; color: var(--gray); margin: 16px 0 4px; }
 .lb-foot b { color: var(--gold-dk); }
+.lb-note { text-align: center; font-size: 12px; font-weight: 600; color: var(--gray-icon); margin: 2px 0 6px; }
+
+/* The board redraws on a slow beat while it is open. Replaying the entrance
+   stagger on every beat would read as the page re-mounting — louder than the
+   staleness it was meant to cure — so once the list has landed, only the row
+   that actually moved is allowed to animate. */
+.lb-list.settled .lb-row { animation: none; }
+.lb-list.settled .lb-row.gained { animation: lbBump .55s cubic-bezier(.3,1.2,.5,1); }
+@keyframes lbBump { from { background: var(--green-bg); } to { background: transparent; } }
+
+.lb-gain {
+  flex: none; font-weight: 800; font-size: 12.5px; color: var(--green-dk);
+  background: var(--green-bg); border-radius: 64px; padding: 2px 8px 1px;
+  font-variant-numeric: tabular-nums;
+  animation: lbGain 2.6s ease-out forwards;
+}
+@keyframes lbGain {
+  0%   { opacity: 0; transform: translateY(7px); }
+  14%  { opacity: 1; transform: translateY(0); }
+  72%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-7px); }
+}
+
+.lb-live {
+  margin-inline-start: auto; display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 800; color: var(--green-dk);
+  background: var(--green-bg); border-radius: 64px; padding: 3px 9px 2px;
+}
+.lb-live i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: lbLive 2.2s ease-in-out infinite; }
+@keyframes lbLive { 0%, 100% { opacity: 1; } 50% { opacity: .28; } }
+
+:root[data-motion="reduced"] .lb-live i,
+:root[data-motion="reduced"] .lb-gain,
+:root[data-motion="reduced"] .lb-list .lb-row { animation: none; }
+:root[data-motion="reduced"] .lb-gain { opacity: 1; }
 
 /* ============================================================
    RANK-UP CELEBRATION
