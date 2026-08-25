@@ -2758,7 +2758,7 @@ body:has(.screen-session) { overflow: hidden; }
   .page { width: 100%; max-width: var(--page-max); margin-inline: auto; }
   /* these sit above the path, so they take the PATH width, not the page
      width - otherwise the yellow card is visibly wider than the banner. */
-  .dq-card {
+  .ec2, .dq-card {
     width: calc(100% - 32px); max-width: var(--path-max); margin-inline: auto;
   }
 
@@ -3682,8 +3682,11 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
   --tone-bg: var(--blue-light);
   --tone-ink: var(--blue-dk);
 
-  display: flex; align-items: center; gap: 14px; width: 100%;
-  max-width: var(--path-max, 430px); margin: 0 auto 14px;
+  /* the same box as .dq-card and .unit-banner below it — same width formula,
+     same 16px gutters. It was width:100% with no margin, so it full-bled to the
+     phone's edges while every card under it was inset. */
+  display: flex; align-items: center; gap: 14px;
+  width: calc(100% - 32px); margin: 0 16px 14px;
   background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px;
   border-radius: 18px; padding: 13px 14px; cursor: pointer; text-align: right;
   font-family: inherit;
@@ -3780,3 +3783,10 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 
 :root[data-motion="reduced"] .ec2,
 :root[data-motion="reduced"] .ec2 * { animation: none !important; }
+
+/* This block is appended after the 768px tier, so the shorthand margin above
+   outranks the centring rule there by source order. Restate it here rather
+   than moving the whole block and risking the rest of the cascade. */
+@media (min-width: 768px) {
+  .ec2 { margin-inline: auto; }
+}
