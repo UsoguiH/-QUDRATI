@@ -3720,41 +3720,35 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 .ec2-sub { font-size: 12.5px; font-weight: 600; color: var(--gray); line-height: 1.5; }
 .ec2-empty .ec2-sub, .ec2-past .ec2-sub { text-wrap: balance; }
 
-/* Readiness as a bar again. The one thing kept from the segmented version is
-   the floor: a fill under 6% is a sliver indistinguishable from empty, and 3%
-   is what a student sees after their first lesson — so a non-zero score always
-   draws something. Zero still draws nothing, because zero is true. */
-.ec2-ready { display: flex; align-items: center; gap: 8px; margin-top: 7px; }
-.ec2-label { font-size: 11.5px; font-weight: 700; color: var(--gray); flex: none; }
-.ec2-bar {
-  flex: 1; height: 11px; border-radius: 64px; background: var(--line);
-  overflow: hidden; min-width: 0;
+/* Readiness as ten segments. A continuous bar at 3% is a sliver that reads as
+   broken, and 3% is what a student sees after their first lesson; one lit
+   segment out of ten reads as "started". */
+.ec2-ready { display: flex; align-items: center; gap: 9px; margin-top: 7px; }
+.ec2-pips { display: flex; gap: 3.5px; flex: none; }
+.ec2-pips i {
+  width: 10px; height: 10px; border-radius: 3px; background: var(--line);
+  transition: background-color .2s;
 }
-.ec2-bar > i {
-  display: block; height: 100%; border-radius: 64px; background: var(--tone);
-  position: relative;
-  animation: ec2Fill .62s cubic-bezier(.25,1.1,.4,1) .16s backwards;
+.ec2-pips i.on {
+  background: var(--tone);
+  animation: ec2Pip .34s cubic-bezier(.3,1.6,.45,1) calc(.18s + var(--p) * 45ms) backwards;
 }
-/* The fill is only emitted when there is something to show, so this floor can
-   never apply to a zero score. An attribute-substring selector could not do
-   that job: the inline style has no space after the colon, and matching there
-   is literal. */
-.ec2-bar > i { min-width: 11px; }
-.ec2-bar > i::after {
-  content: ""; position: absolute; top: 3px; right: 5px; left: 5px; height: 3px;
-  border-radius: 4px; background: rgba(255,255,255,.42);
+@keyframes ec2Pip {
+  0%   { transform: scale(.3); background: var(--line); }
+  60%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
 }
-@keyframes ec2Fill { from { width: 0 !important; } }
 .ec2-pct {
-  font-size: 12px; font-weight: 800; color: var(--tone-ink); flex: none;
-  min-width: 30px; text-align: left; font-variant-numeric: tabular-nums;
+  font-size: 11.5px; font-weight: 700; color: var(--gray-icon);
+  white-space: nowrap; font-variant-numeric: tabular-nums;
 }
 
 .ec2-go {
-  flex: none; color: var(--gray-icon); font-size: 30px; font-weight: 700;
-  line-height: 1; padding-inline: 2px;
-  transition: transform .15s var(--ease, ease), color .15s;
+  flex: none; display: grid; place-items: center;
+  width: 30px; height: 30px; color: var(--gray-icon);
+  transition: transform .15s ease, color .15s;
 }
+.ec2-chev { width: 100%; height: 100%; display: block; }
 .ec2:hover .ec2-go { color: var(--tone); transform: translateX(-3px); }
 
 /* ---- the escalation ---- */

@@ -662,6 +662,11 @@ function bottomnav(active) {
    than one bar — a sliver of a bar reads as broken, one lit
    segment out of ten reads as started.
    ============================================================ */
+/* Duolingo's chevron: a stroked path with round caps and joins, not a glyph.
+   A text ← renders at the mercy of whatever font is loaded and sits on the
+   text baseline; this one is centred and scales with the box. */
+const CHEV_SVG = `<svg class="ec2-chev" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5 8 12 15 19" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
 function examTone(days) {
   if (days === 0) return "today";
   if (days <= 7) return "urgent";
@@ -680,7 +685,7 @@ function countdownCard() {
         <b>\u0645\u062a\u0649 \u0627\u062e\u062a\u0628\u0627\u0631 \u0642\u062f\u0631\u0627\u062a\u0643\u061f</b>
         <span class="ec2-sub">\u062d\u062f\u0651\u062f \u0627\u0644\u0645\u0648\u0639\u062f \u0648\u0646\u062d\u0633\u0628 \u0644\u0643 \u0627\u0644\u0639\u062f \u0627\u0644\u062a\u0646\u0627\u0632\u0644\u064a \u0648\u062c\u0627\u0647\u0632\u064a\u062a\u0643</span>
       </span>
-      <span class="ec2-go">\u2190</span>
+      <span class="ec2-go">${CHEV_SVG}</span>
     </button>`;
   }
 
@@ -691,11 +696,14 @@ function countdownCard() {
         <b>\u0627\u0646\u062a\u0647\u0649 \u0645\u0648\u0639\u062f \u0627\u062e\u062a\u0628\u0627\u0631\u0643</b>
         <span class="ec2-sub">\u062d\u062f\u0651\u062b \u0627\u0644\u0645\u0648\u0639\u062f \u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0627\u0644\u0639\u062f \u0627\u0644\u062a\u0646\u0627\u0632\u0644\u064a</span>
       </span>
-      <span class="ec2-go">\u2190</span>
+      <span class="ec2-go">${CHEV_SVG}</span>
     </button>`;
   }
 
   const pct = readiness();
+  /* ceil, so any real progress lights a segment: a student one lesson in has
+     started, and rounding them down to an empty meter says the opposite */
+  const lit = pct > 0 ? Math.max(1, Math.min(10, Math.ceil(pct / 10))) : 0;
   const tone = examTone(days);
   const when = new Date(S.exam + "T00:00:00");
   const dateTxt = EP_DAYNAMES[when.getDay()] + " " + toAr(when.getDate()) + " " + AR_MONTHS[when.getMonth()];
@@ -715,12 +723,13 @@ function countdownCard() {
       <b>${headline}</b>
       <span class="ec2-sub">${dateTxt}</span>
       <span class="ec2-ready">
-        <span class="ec2-label">\u062c\u0627\u0647\u0632\u064a\u062a\u0643</span>
-        <span class="ec2-bar">${pct > 0 ? `<i style="width:${pct}%"></i>` : ""}</span>
-        <b class="ec2-pct">${toAr(pct)}\u066a</b>
+        <span class="ec2-pips" aria-hidden="true">` +
+          Array.from({ length: 10 }, (_, i) =>
+            `<i class="${i < lit ? "on" : ""}" style="--p:${i}"></i>`).join("") + `</span>
+        <span class="ec2-pct">\u062c\u0627\u0647\u0632\u064a\u062a\u0643 ${toAr(pct)}\u066a</span>
       </span>
     </span>
-    <span class="ec2-go">\u2190</span>
+    <span class="ec2-go">${CHEV_SVG}</span>
   </button>`;
 }
 
