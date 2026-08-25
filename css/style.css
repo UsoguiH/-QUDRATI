@@ -3422,7 +3422,8 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
   display: flex; flex-direction: column;
   /* .screen-full supplies no horizontal padding, so without this the title and
      both cards sit flush against the phone's edge. */
-  padding: 10px 16px calc(8px + env(safe-area-inset-bottom, 0px));
+  /* the title sat almost against the status bar; give it room to breathe */
+  padding: clamp(18px, 3.4vh, 34px) 16px calc(8px + env(safe-area-inset-bottom, 0px));
   padding-inline: max(16px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
   overflow: hidden;
 }

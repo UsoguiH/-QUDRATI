@@ -3571,9 +3571,11 @@ A.saveExam = function () {
   const foot = document.getElementById("epFoot"), sub = document.getElementById("epDoneSub");
   const btn = document.getElementById("epSave");
   if (foot && sub && btn) {
-    /* "\u0661 \u0623\u0633\u0627\u0628\u064a\u0639" is not Arabic. One and two take their own forms, and
-       under a week the weeks figure is a rounding artefact anyway \u2014 say the
-       days. arPlural() already encodes the 1 / 2 / 3-10 / 11+ rule. */
+    /* arPlural() RETURNS THE COUNT for 3 and up \u2014 "toAr(n) + ' ' + few" \u2014 so
+       prefixing it with toAr() again printed "\u0644\u0640 \u0664 \u0664 \u0623\u0633\u0627\u0628\u064a\u0639". It yields the
+       bare word for 1 and 2, which take their own forms and attach the lam
+       directly. Under a week the weeks figure is a rounding artefact, so that
+       range counts days instead. */
     const weeks = Math.round(n / 7);
     sub.textContent =
       n <= 0 ? "\u0628\u0627\u0644\u062a\u0648\u0641\u064a\u0642 \u0627\u0644\u064a\u0648\u0645"
@@ -3582,7 +3584,7 @@ A.saveExam = function () {
       : n < 7 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0640 " + toAr(n) + " \u0623\u064a\u0627\u0645"
       : weeks === 1 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0623\u0633\u0628\u0648\u0639 \u0648\u0627\u062d\u062f"
       : weeks === 2 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0623\u0633\u0628\u0648\u0639\u064a\u0646"
-      : "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0640 " + toAr(weeks) + " " +
+      : "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0640 " +
         arPlural(weeks, "\u0623\u0633\u0628\u0648\u0639", "\u0623\u0633\u0628\u0648\u0639\u064a\u0646", "\u0623\u0633\u0627\u0628\u064a\u0639", "\u0623\u0633\u0628\u0648\u0639\u0627\u064b");
     foot.classList.add("done");
     btn.textContent = "\u0645\u062a\u0627\u0628\u0639\u0629";
