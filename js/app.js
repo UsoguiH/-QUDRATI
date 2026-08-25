@@ -2524,7 +2524,7 @@ function renderLeague() {
     ${prog}
     <div class="lb-listhead">
       ${ico("guide", 18)} المتصدّرون في مستواك
-      <span class="lb-live"><i></i>مباشر</span>
+      <span class="lb-live" aria-hidden="true"><i></i></span>
     </div>
     <div class="lb-list">${rows}</div>
     <div class="lb-foot">${lbFoot(entries)}</div>

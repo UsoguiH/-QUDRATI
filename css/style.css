@@ -2100,13 +2100,18 @@ button.dom-stat:active { transform: scale(.99); }
   100% { opacity: 0; transform: translateY(-7px); }
 }
 
-.lb-live {
-  margin-inline-start: auto; display: inline-flex; align-items: center; gap: 5px;
-  font-size: 11px; font-weight: 800; color: var(--green-dk);
-  background: var(--green-bg); border-radius: 64px; padding: 3px 9px 2px;
+/* A live marker with no caption. The word was doing the job the dot already
+   does, and a board that says out loud that it is live invites the question of
+   whether it is. */
+.lb-live { margin-inline-start: auto; display: inline-flex; align-items: center; }
+.lb-live i {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--green);
+  animation: lbLive 2.6s ease-in-out infinite;
 }
-.lb-live i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: lbLive 2.2s ease-in-out infinite; }
-@keyframes lbLive { 0%, 100% { opacity: 1; } 50% { opacity: .28; } }
+@keyframes lbLive {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(88, 204, 2, .45); }
+  70%      { box-shadow: 0 0 0 6px rgba(88, 204, 2, 0); }
+}
 
 :root[data-motion="reduced"] .lb-live i,
 :root[data-motion="reduced"] .lb-gain,
