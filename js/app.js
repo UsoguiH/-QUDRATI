@@ -696,9 +696,6 @@ function countdownCard() {
   }
 
   const pct = readiness();
-  /* ceil, so any real progress lights a segment: a student one lesson in has
-     started, and rounding them to an empty meter says the opposite */
-  const lit = pct > 0 ? Math.max(1, Math.min(10, Math.ceil(pct / 10))) : 0;
   const tone = examTone(days);
   const when = new Date(S.exam + "T00:00:00");
   const dateTxt = EP_DAYNAMES[when.getDay()] + " " + toAr(when.getDate()) + " " + AR_MONTHS[when.getMonth()];
@@ -718,10 +715,9 @@ function countdownCard() {
       <b>${headline}</b>
       <span class="ec2-sub">${dateTxt}</span>
       <span class="ec2-ready">
-        <span class="ec2-pips" aria-hidden="true">` +
-          Array.from({ length: 10 }, (_, i) =>
-            `<i class="${i < lit ? "on" : ""}" style="--p:${i}"></i>`).join("") + `</span>
-        <span class="ec2-pct">\u062c\u0627\u0647\u0632\u064a\u062a\u0643 ${toAr(pct)}\u066a</span>
+        <span class="ec2-label">\u062c\u0627\u0647\u0632\u064a\u062a\u0643</span>
+        <span class="ec2-bar">${pct > 0 ? `<i style="width:${pct}%"></i>` : ""}</span>
+        <b class="ec2-pct">${toAr(pct)}\u066a</b>
       </span>
     </span>
     <span class="ec2-go">\u2190</span>
@@ -3360,7 +3356,7 @@ const EP_JUMP = [
   [.82,0,1.08,.93,"linear"], [.89,-1.5,.99,1.01,"linear"], [.95,0,1.02,.98,"linear"], [1,0,1,1,"linear"]
 ];
 
-let EP = { sel: null, view: null, first: false, shown: 0, raf: 0, timer: 0, enter: false };
+let EP = { sel: null, view: null, first: false, shown: 0, raf: 0, timer: 0, enter: false, from: "path" };
 
 const epDay0  = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const epKey   = d => d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
@@ -3635,7 +3631,13 @@ function epBindSwipe() {
   });
 }
 
-A.examSetup = function () { renderExamSetup(false); };
+A.examSetup = function () {
+  /* The picker opens from the countdown card, the profile and settings.
+     backFromExam used to go("settings") unconditionally, so picking a date
+     from the path screen dumped the student in settings. Remember the origin. */
+  EP.from = view || "path";
+  renderExamSetup(false);
+};
 A.saveExam = function () {
   if (!EP.sel) return;
   const d = EP.sel;
@@ -3675,7 +3677,7 @@ A.saveExam = function () {
 A.skipExam = function () { S.examAsked = true; save(); go("path"); };
 /* "رجوع" from Settings used to call skipExam, which lands on the path — the
    one place the student was not coming back from */
-A.backFromExam = function () { go("settings"); };
+A.backFromExam = function () { go(EP.from || "path"); };
 
 /* ---------------- login (local profile, no server) ---------------- */
 function bankSize() {
