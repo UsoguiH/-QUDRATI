@@ -3423,7 +3423,7 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
   /* .screen-full supplies no horizontal padding, so without this the title and
      both cards sit flush against the phone's edge. */
   /* the title sat almost against the status bar; give it room to breathe */
-  padding: clamp(18px, 3.4vh, 34px) 16px calc(8px + env(safe-area-inset-bottom, 0px));
+  padding: clamp(26px, 5vh, 48px) 16px calc(8px + env(safe-area-inset-bottom, 0px));
   padding-inline: max(16px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
   overflow: hidden;
 }
@@ -3434,12 +3434,8 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 
 /* ---- countdown ---- */
 .ep-count {
-  /* auto top margin, paired with the calendar's auto bottom margin, centres the
-     pair in whatever is left — a tall phone leaves ~200px spare and pinning
-     everything to the top left it as one hole above the button */
   flex: none;
-  margin: max(clamp(8px, 1.8vh, 16px), auto) 0 clamp(8px, 1.4vh, 14px);
-  margin-top: auto;
+  margin: clamp(8px, 1.8vh, 16px) 0 clamp(8px, 1.4vh, 14px);
   padding: clamp(10px, 1.5vh, 14px) 16px;
   background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px;
   border-radius: 16px; display: flex; align-items: center; gap: 14px;
@@ -3469,7 +3465,6 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
   /* hugs its contents rather than stretching: with the grid capped near square
      a stretched card left a band of dead space under the legend */
   flex: 0 1 auto; min-height: 0;          /* min-height:0 or the grid cannot shrink */
-  margin-bottom: auto;
   position: relative; background: var(--snow);
   border: 2px solid var(--line); border-bottom-width: 4px;
   border-radius: 16px; padding: clamp(8px, 1.4vh, 14px) 10px;
@@ -3619,9 +3614,10 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 
 /* ---- footer ---- */
 .ep-foot {
-  /* auto margin takes the slack, so the button sits at the bottom on a tall
-     screen and simply follows the calendar on a short one */
-  flex: none; margin-top: clamp(10px, 1.8vh, 22px); padding-top: clamp(10px, 1.8vh, 22px);
+  /* The slack goes BELOW the footer, so the button follows the calendar
+     instead of floating ~100px under it. */
+  flex: none; margin-top: clamp(10px, 1.8vh, 22px); margin-bottom: auto;
+  padding-top: clamp(10px, 1.8vh, 22px);
   padding-bottom: 2px; border-top: 2px solid var(--line);
 }
 .ep-foot.done { border-top-color: transparent; background: var(--green-bg); border-radius: 16px; padding: 18px 16px 16px; }
@@ -3647,3 +3643,50 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 :root[data-motion="reduced"] .exam-pick *::after {
   animation: none !important; transition: none !important;
 }
+
+/* ---- entrance ----------------------------------------------------------
+   One staged sequence rather than four things appearing at once: the title
+   drops in, the countdown and the calendar rise behind it, then the days
+   cascade across the grid and the footer arrives last. The cascade is what
+   makes it read as a calendar being dealt out; its per-cell delay is set in
+   epMonth(), so it follows the real grid order including the leading pads.
+   .ep-enter is removed once it has played, or every month change would
+   re-run it. Reduced motion already kills all of this a few rules below. */
+@keyframes epInTitle {
+  from { opacity: 0; transform: translateY(-14px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes epInCard {
+  from { opacity: 0; transform: translateY(22px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes epInDay {
+  0%   { opacity: 0; transform: scale(.45) translateY(6px); }
+  70%  { opacity: 1; transform: scale(1.06) translateY(0); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes epInFoot {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.exam-pick.ep-enter > h1 {
+  animation: epInTitle .5s cubic-bezier(.22,1.2,.36,1) both;
+}
+.exam-pick.ep-enter .ep-count {
+  animation: epInCard .52s cubic-bezier(.22,1.14,.36,1) .10s both;
+}
+.exam-pick.ep-enter .ep-cal {
+  animation: epInCard .54s cubic-bezier(.22,1.14,.36,1) .18s both;
+}
+.exam-pick.ep-enter .ep-day {
+  /* --d is the cell's index in the grid, set in JS */
+  animation: epInDay .42s cubic-bezier(.3,1.5,.45,1) calc(.30s + var(--d, 0) * 13ms) both;
+}
+.exam-pick.ep-enter .ep-foot {
+  animation: epInFoot .46s cubic-bezier(.22,1.14,.36,1) .40s both;
+}
+/* the month label and arrows come with their card, not on their own clock */
+.exam-pick.ep-enter .ep-top,
+.exam-pick.ep-enter .ep-dow,
+.exam-pick.ep-enter .ep-legend { animation: epInFoot .4s ease .26s both; }

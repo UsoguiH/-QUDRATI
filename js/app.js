@@ -3303,7 +3303,7 @@ const EP_JUMP = [
   [.82,0,1.08,.93,"linear"], [.89,-1.5,.99,1.01,"linear"], [.95,0,1.02,.98,"linear"], [1,0,1,1,"linear"]
 ];
 
-let EP = { sel: null, view: null, first: false, shown: 0, raf: 0, timer: 0 };
+let EP = { sel: null, view: null, first: false, shown: 0, raf: 0, timer: 0, enter: false };
 
 const epDay0  = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const epKey   = d => d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
@@ -3366,9 +3366,26 @@ function renderExamSetup(first) {
     </div>
   </div></div>`;
 
+  /* Only the first paint cascades. Leaving the class on would re-run the
+     whole entrance every time a month is flipped, which would fight the
+     slide and feel broken. */
+  EP.enter = !motionReduced();
   epMonth(0, false);
   epCount();
   epBindSwipe();
+
+  if (EP.enter) {
+    const wrap = document.querySelector(".exam-pick");
+    if (wrap) {
+      wrap.classList.add("ep-enter");
+      const cells = wrap.querySelectorAll(".ep-day").length;
+      clearTimeout(EP.enterT);
+      EP.enterT = setTimeout(() => {
+        wrap.classList.remove("ep-enter");
+        EP.enter = false;
+      }, 300 + cells * 13 + 460);        // last cell's delay + its duration
+    }
+  }
 }
 
 function epSetBadge(txt) {
@@ -3497,8 +3514,10 @@ function epMonth(dir, animate) {
 
   const firstDay = new Date(y, m, 1).getDay();
   const total = new Date(y, m + 1, 0).getDate();
+  let cellIdx = 0;                      // grid position, pads included, for the cascade
   for (let i = 0; i < firstDay; i++) {
     const s = document.createElement("div"); s.className = "ep-day pad"; grid.appendChild(s);
+    cellIdx++;
   }
   for (let d = 1; d <= total; d++) {
     const date = new Date(y, m, d);
@@ -3525,6 +3544,8 @@ function epMonth(dir, animate) {
         if (animate && !motionReduced()) jumpBtn = b;
       }
     }
+    if (EP.enter) b.style.setProperty("--d", cellIdx);
+    cellIdx++;
     b.addEventListener("click", () => { EP.sel = date; epMonth(0, true); epCount(); });
     grid.appendChild(b);
   }
