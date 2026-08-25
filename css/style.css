@@ -319,7 +319,6 @@ svg.ic { display: block; }
    ============================================================ */
 .qt-svg .qt-face { fill: var(--blue-light); transition: fill .3s; }
 /* the same ticking clock as the result card, on the exam countdown */
-.ec-clock { display: flex; color: var(--blue); flex-shrink: 0; }
 /* and on the timed-out sheet, in red */
 .fb-clock { color: var(--red); }
 .fb-clock .qt-svg { width: 22px; height: 22px; }
@@ -1466,20 +1465,6 @@ button.dom-stat:active { transform: scale(.99); }
 
 .dt-month { flex: 1.5; }
 
-/* --- countdown card on the path --- */
-.exam-card {
-  background: #fff; border: 2px solid var(--line); border-radius: 16px;
-  padding: 14px 16px; margin: 4px 16px 18px; cursor: pointer;
-  animation: fadeUp .4s cubic-bezier(.3,1.3,.5,1) backwards;
-}
-.exam-card:active { transform: translateY(1px); }
-.ec-row { display: flex; align-items: center; gap: 10px; }
-.ec-head { flex: 1; font-weight: 700; font-size: 16px; }
-.ec-head .ec-days { color: var(--orange); }
-.ec-edit { color: var(--gray-icon); font-size: 17px; }
-.ec-ready { display: flex; align-items: center; gap: 10px; margin-top: 11px; }
-.ec-label { font-size: 13px; font-weight: 700; color: var(--gray); }
-.ec-bar { flex: 1; }
 
 /* --- shared Duolingo bar: 16px r64 track, solid fill, 5px r6 inset
    shine stripe (exact anatomy from the Figma Progress Bar set),
@@ -1494,15 +1479,6 @@ button.dom-stat:active { transform: scale(.99); }
 .duo-bar > i::after {
   content: ''; position: absolute; top: 4px; right: 8px; left: 8px;
   height: 5px; border-radius: 6px; background: var(--bar-shine, rgba(255,255,255,.45));
-}
-.ec-pct { font-size: 14px; color: var(--gold-dk); min-width: 34px; text-align: left; }
-.exam-card-empty .ec-txt { flex: 1; }
-.exam-card-empty .ec-txt b { display: block; font-size: 16px; }
-.exam-card-empty .ec-txt span { font-size: 13px; color: var(--gray); font-weight: 500; }
-.ec-go {
-  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
-  background: var(--green); color: #fff; box-shadow: 0 3px 0 var(--green-lip);
-  font-size: 22px; font-weight: 700; line-height: 32px; text-align: center;
 }
 
 /* ============================================================
@@ -2615,7 +2591,6 @@ body:has(.screen-session) { overflow: hidden; }
   .card[onclick]:hover,
   .mistakes-card:hover,
   .rank-card:hover,
-  .exam-card:hover                 { border-color: var(--blue-border); }
   .chest-float:hover .cf-chest     { transform: scale(1.06); }
   .seg button:not(.on):hover       { color: var(--ink); }
   .fb-solution-toggle:hover        { opacity: .75; }
@@ -2783,7 +2758,7 @@ body:has(.screen-session) { overflow: hidden; }
   .page { width: 100%; max-width: var(--page-max); margin-inline: auto; }
   /* these sit above the path, so they take the PATH width, not the page
      width - otherwise the yellow card is visibly wider than the banner. */
-  .exam-card, .exam-card-empty, .dq-card {
+  .dq-card {
     width: calc(100% - 32px); max-width: var(--path-max); margin-inline: auto;
   }
 
@@ -3690,3 +3665,102 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 .exam-pick.ep-enter .ep-top,
 .exam-pick.ep-enter .ep-dow,
 .exam-pick.ep-enter .ep-legend { animation: epInFoot .4s ease .26s both; }
+
+
+/* ============================================================
+   EXAM COUNTDOWN CARD
+   ------------------------------------------------------------
+   Built on the app's card idiom — 2px border, 4px bottom lip,
+   18px radius — so it sits with the unit banner and the daily
+   card instead of beside them. The tone class carries the whole
+   escalation: one variable set per urgency band, everything else
+   reads from it.
+   ============================================================ */
+.ec2 {
+  --tone: var(--blue);
+  --tone-dk: var(--blue-dk);
+  --tone-bg: var(--blue-light);
+  --tone-ink: var(--blue-dk);
+
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  max-width: var(--path-max, 430px); margin: 0 auto 14px;
+  background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px;
+  border-radius: 18px; padding: 13px 14px; cursor: pointer; text-align: right;
+  font-family: inherit;
+  transition: background-color .15s, border-color .15s, transform .07s;
+  animation: fadeUp .4s ease backwards;
+}
+.ec2:hover { background: var(--tone-bg); border-color: var(--tone); }
+.ec2:active { transform: translateY(2px); border-bottom-width: 2px; }
+.ec2:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+/* the number is the object, not a word inside a sentence */
+.ec2-num {
+  flex: none; width: 66px; height: 66px; border-radius: 19px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: var(--tone); color: #fff;
+  box-shadow: 0 3px 0 var(--tone-dk);
+  line-height: 1;
+}
+.ec2-num b {
+  font-size: 29px; font-weight: 800; font-variant-numeric: tabular-nums;
+  letter-spacing: -.01em;
+}
+.ec2-num i {
+  font-style: normal; font-size: 11.5px; font-weight: 700;
+  opacity: .88; margin-top: 3px;
+}
+.ec2-today-ic { font-size: 30px !important; }
+
+.ec2-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ec2-body > b { font-size: 16px; font-weight: 800; color: var(--ink); line-height: 1.35; }
+.ec2-sub { font-size: 12.5px; font-weight: 600; color: var(--gray); }
+
+/* readiness as ten segments. A continuous bar at 3% is a sliver that reads as
+   broken; one lit segment out of ten reads as "started". */
+.ec2-ready { display: flex; align-items: center; gap: 9px; margin-top: 6px; }
+.ec2-pips { display: flex; gap: 3px; flex: none; }
+.ec2-pips i {
+  width: 9px; height: 9px; border-radius: 3px; background: var(--line);
+  transition: background-color .2s;
+}
+.ec2-pips i.on {
+  background: var(--tone);
+  animation: ec2Pip .34s cubic-bezier(.3,1.6,.45,1) calc(.18s + var(--p) * 45ms) backwards;
+}
+@keyframes ec2Pip {
+  0%   { transform: scale(.3); background: var(--line); }
+  60%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+.ec2-pct { font-size: 11.5px; font-weight: 700; color: var(--gray-icon); white-space: nowrap; }
+
+.ec2-go { flex: none; color: var(--gray-icon); font-size: 19px; line-height: 1; }
+
+/* ---- the escalation ---- */
+.ec2-far    { --tone: var(--green);  --tone-dk: var(--green-lip); --tone-bg: var(--green-bg);   --tone-ink: var(--green-dk); }
+.ec2-soon   { --tone: var(--gold);   --tone-dk: var(--gold-dk);   --tone-bg: #FFF6D6;           --tone-ink: var(--brown); }
+.ec2-near   { --tone: var(--orange); --tone-dk: #C97600;          --tone-bg: #FFEFD6;           --tone-ink: #A35E00; }
+.ec2-urgent { --tone: var(--red);    --tone-dk: var(--red-dk2);   --tone-bg: var(--red-bg);     --tone-ink: var(--red-dk2); }
+.ec2-today  { --tone: var(--gold);   --tone-dk: var(--gold-dk);   --tone-bg: #FFF6D6;           --tone-ink: var(--brown); }
+
+/* the last week earns a heartbeat; nothing before it does */
+.ec2-urgent .ec2-num { animation: ec2Pulse 2.1s ease-in-out 1.1s infinite; }
+@keyframes ec2Pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 3px 0 var(--tone-dk); }
+  50%      { transform: scale(1.045); box-shadow: 0 3px 0 var(--tone-dk), 0 0 0 7px rgba(255,75,75,.14); }
+}
+.ec2-today .ec2-num { animation: ec2Pulse 2.1s ease-in-out 1.1s infinite; }
+.ec2-urgent .ec2-body > b,
+.ec2-today .ec2-body > b { color: var(--tone-ink); }
+
+/* ---- empty and expired ---- */
+.ec2-empty .ec2-num, .ec2-past .ec2-num {
+  background: var(--line); color: var(--gray-icon); box-shadow: 0 3px 0 var(--divider);
+}
+.ec2-empty .ec2-plus { font-style: normal; font-size: 32px; font-weight: 700; line-height: 1; }
+.ec2-past .ec2-num b { font-size: 26px; }
+.ec2-empty:hover, .ec2-past:hover { background: var(--line); border-color: var(--gray-icon); }
+
+:root[data-motion="reduced"] .ec2,
+:root[data-motion="reduced"] .ec2 * { animation: none !important; }

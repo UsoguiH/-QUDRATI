@@ -647,28 +647,85 @@ function bottomnav(active) {
 }
 
 /* ---------------- exam countdown card (top of path) ---------------- */
+/* ============================================================
+   EXAM COUNTDOWN
+   ------------------------------------------------------------
+   The old card buried the only number that matters inside a
+   sentence, drew readiness as a continuous bar that looks broken
+   at 3%, and looked identical at thirty days and at three. On a
+   screen of solid green banners and big round nodes it read as a
+   settings row.
+
+   Now: the day count is the object, sized and coloured to be read
+   first. The colour escalates as the date closes, so the card
+   changes character on its own. Readiness is ten segments rather
+   than one bar — a sliver of a bar reads as broken, one lit
+   segment out of ten reads as started.
+   ============================================================ */
+function examTone(days) {
+  if (days === 0) return "today";
+  if (days <= 7) return "urgent";
+  if (days <= 14) return "near";
+  if (days <= 30) return "soon";
+  return "far";
+}
+
 function countdownCard() {
   const days = examDaysLeft();
+
   if (days === null) {
-    return `<div class="exam-card exam-card-empty" onclick="A.examSetup()">
-      <div class="ec-row"><span class="ec-clock">${TIMER_SVG}</span>
-        <div class="ec-txt"><b>متى اختبار قدراتك؟</b><span>حدد الموعد لنحسب لك العد التنازلي والجاهزية</span></div>
-        <span class="ec-go">+</span>
-      </div>
-    </div>`;
+    return `<button class="ec2 ec2-empty" onclick="A.examSetup()">
+      <span class="ec2-num"><i class="ec2-plus">+</i></span>
+      <span class="ec2-body">
+        <b>\u0645\u062a\u0649 \u0627\u062e\u062a\u0628\u0627\u0631 \u0642\u062f\u0631\u0627\u062a\u0643\u061f</b>
+        <span class="ec2-sub">\u062d\u062f\u0651\u062f \u0627\u0644\u0645\u0648\u0639\u062f \u0648\u0646\u062d\u0633\u0628 \u0644\u0643 \u0627\u0644\u0639\u062f \u0627\u0644\u062a\u0646\u0627\u0632\u0644\u064a \u0648\u062c\u0627\u0647\u0632\u064a\u062a\u0643</span>
+      </span>
+      <span class="ec2-go">\u2190</span>
+    </button>`;
   }
+
+  if (days < 0) {
+    return `<button class="ec2 ec2-past" onclick="A.examSetup()">
+      <span class="ec2-num"><b>\u2014</b></span>
+      <span class="ec2-body">
+        <b>\u0627\u0646\u062a\u0647\u0649 \u0645\u0648\u0639\u062f \u0627\u062e\u062a\u0628\u0627\u0631\u0643</b>
+        <span class="ec2-sub">\u062d\u062f\u0651\u062b \u0627\u0644\u0645\u0648\u0639\u062f \u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0627\u0644\u0639\u062f \u0627\u0644\u062a\u0646\u0627\u0632\u0644\u064a</span>
+      </span>
+      <span class="ec2-go">\u2190</span>
+    </button>`;
+  }
+
   const pct = readiness();
-  const head = days > 0 ? `باقي <b class="ec-days">${dayPhrase(days)}</b> على الاختبار`
-    : days === 0 ? `اختبارك <b class="ec-days">اليوم</b> — بالتوفيق! 💪`
-      : `انتهى موعد اختبارك — حدّث الموعد`;
-  return `<div class="exam-card" onclick="A.examSetup()">
-    <div class="ec-row"><span class="ec-clock">${TIMER_SVG}</span><div class="ec-head">${head}</div><span class="ec-edit" aria-hidden="true">✎</span></div>
-    <div class="ec-ready">
-      <span class="ec-label">جاهزيتك</span>
-      <div class="ec-bar duo-bar"><i style="width:${pct}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft);animation-delay:.35s"></i></div>
-      <b class="ec-pct">${toAr(pct)}٪</b>
-    </div>
-  </div>`;
+  /* ceil, so any real progress lights a segment: a student one lesson in has
+     started, and rounding them to an empty meter says the opposite */
+  const lit = pct > 0 ? Math.max(1, Math.min(10, Math.ceil(pct / 10))) : 0;
+  const tone = examTone(days);
+  const when = new Date(S.exam + "T00:00:00");
+  const dateTxt = EP_DAYNAMES[when.getDay()] + " " + toAr(when.getDate()) + " " + AR_MONTHS[when.getMonth()];
+
+  const numBlock = days === 0
+    ? `<span class="ec2-num"><b class="ec2-today-ic">\ud83c\udfaf</b></span>`
+    : `<span class="ec2-num"><b>${toAr(days)}</b><i>${days === 1 ? "\u064a\u0648\u0645" : days === 2 ? "\u064a\u0648\u0645\u0627\u0646" : "\u064a\u0648\u0645\u0627\u064b"}</i></span>`;
+
+  const headline = days === 0
+    ? "\u0627\u062e\u062a\u0628\u0627\u0631\u0643 \u0627\u0644\u064a\u0648\u0645 \u2014 \u0628\u0627\u0644\u062a\u0648\u0641\u064a\u0642"
+    : "\u0628\u0627\u0642\u064d \u0639\u0644\u0649 \u0627\u062e\u062a\u0628\u0627\u0631\u0643";
+
+  return `<button class="ec2 ec2-${tone}" onclick="A.examSetup()"
+      aria-label="${headline} \u2014 ${days === 0 ? "" : dayPhrase(days)}\u060c \u062c\u0627\u0647\u0632\u064a\u062a\u0643 ${toAr(pct)}\u066a">
+    ${numBlock}
+    <span class="ec2-body">
+      <b>${headline}</b>
+      <span class="ec2-sub">${dateTxt}</span>
+      <span class="ec2-ready">
+        <span class="ec2-pips" aria-hidden="true">` +
+          Array.from({ length: 10 }, (_, i) =>
+            `<i class="${i < lit ? "on" : ""}" style="--p:${i}"></i>`).join("") + `</span>
+        <span class="ec2-pct">\u062c\u0627\u0647\u0632\u064a\u062a\u0643 ${toAr(pct)}\u066a</span>
+      </span>
+    </span>
+    <span class="ec2-go">\u2190</span>
+  </button>`;
 }
 
 /* ---------------- daily quest card + chest ---------------- */
