@@ -109,6 +109,11 @@ svg.ic { display: block; }
 .stat-streak.zero img { filter: grayscale(1); opacity: .45; }
 .stat-xp     { color: var(--blue); }
 .stat-hearts { color: var(--red); }
+/* it is a <button> so the league is one tap away — but a button with no
+   reset wears the browser's grey face and border, which is what showed in the
+   bar. Strip the chrome; it is a counter like the two beside it. */
+.stat-rank { background: none; border: 0; padding: 0; margin: 0; color: var(--ink); font: inherit; font-weight: 700; line-height: 1; }
+.stat-rank:active { transform: translateY(1px); }
 
 /* The lesson intro: the rule before the quiz, on a first attempt only. */
 .lesson-intro { padding: 0 0 96px; position: relative; }
