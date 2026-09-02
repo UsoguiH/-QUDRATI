@@ -468,7 +468,7 @@ svg.ic { display: block; }
 .toast.ice { background: var(--blue); box-shadow: 0 4px 0 var(--blue-dk), 0 8px 18px rgba(28,150,220,.28); }
 .toast.snip { background: #FF9600; box-shadow: 0 4px 0 #E07D00, 0 8px 18px rgba(224,125,0,.28); }
 
-.q-area { flex: 1; padding: 4px 16px 150px; overflow-y: auto; }
+.q-area { flex: 1; padding: 4px 16px calc(144px + env(safe-area-inset-bottom)); overflow-y: auto; }
 /* Header — Figma "Translate this sentence": 26px/700 #4B4B4B */
 .q-kicker { color: var(--ink); font-weight: 700; font-size: 26px; line-height: 1.25; margin: 10px 0 16px; }
 .q-count { color: var(--gray-icon); font-weight: 700; font-size: 14px; text-transform: uppercase; margin: 8px 0 0; }
@@ -567,6 +567,12 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .feedback.bad .fb-correct { color: var(--red-dk2); }
 .fb-solution-toggle { background:none; border:0; font-weight:700; font-size:15px; padding:6px 0; text-decoration: underline; }
 .feedback.good .fb-solution-toggle { color:var(--green-dk); } .feedback.bad .fb-solution-toggle { color:var(--red-dk2); }
+/* The correct sheet is two rows — verdict + "show the solution" on one line,
+   the button under it — so it fits the space the action bar already reserves
+   and nothing has to scroll out from under it while the card is jumping. */
+.fb-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.fb-row .fb-solution-toggle { white-space: nowrap; padding: 6px 0; }
+.feedback.good { padding-top: 14px; }
 .fb-solution {
   background: rgba(255,255,255,.75); border-radius: 12px; padding: 10px 12px;
   max-height: 34vh; overflow-y: auto; margin-bottom: 8px;
@@ -1444,14 +1450,14 @@ button.dom-stat:active { transform: scale(.99); }
 
 /* --- popup + modal --- */
 .lesson-pop { animation: springIn .35s cubic-bezier(.3,1.5,.5,1); transform-origin: top center; }
+/* held back while the path scrolls the node into place; springs in on landing */
+.lesson-pop.pending { visibility: hidden; animation: none; }
 .modal { animation: springIn .4s cubic-bezier(.3,1.4,.5,1); }
 .modal .m-owl { display: inline-block; animation: starRise .6s .15s cubic-bezier(.3,1.6,.5,1) backwards; }
 
 /* --- boot hero --- */
 .hero .win-hero { margin: 0 auto 10px; }
 .hero h1 { animation: titleIn .5s .3s cubic-bezier(.3,1.5,.5,1) backwards; }
-/* held back while the path scrolls the node into place; springs in on landing */
-.lesson-pop.pending { visibility: hidden; animation: none; }
 .hero p { animation: fadeUp .4s .55s ease backwards; }
 
 /* ============================================================
@@ -2299,9 +2305,11 @@ button.dom-stat:active { transform: scale(.99); }
     rgba(255,255,255,.92) 50%, rgba(255,255,255,.55) 78%, rgba(255,255,255,0));
 }
 .ch-spk {
-  position: absolute; width: 11px; height: 11px; background: #fff; opacity: 0; z-index: 3;
+  position: absolute; width: 11px; height: 11px; opacity: 0; z-index: 3;
   pointer-events: none; transform: scale(0);
-  clip-path: polygon(50% 0%,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0% 50%,39% 39%);
+  /* a rasterised star, not a clip-path mask: three masked layers per jump
+     was three too many for a weak GPU */
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon fill='%23fff' points='50,0 61,39 100,50 61,61 50,100 39,61 0,50 39,39'/%3E%3C/svg%3E") center/contain no-repeat;
 }
 .ch-spk.k1 { top: 8px; left: 11px; }
 .ch-spk.k2 { top: 10px; right: 13px; }
@@ -2330,15 +2338,8 @@ button.dom-stat:active { transform: scale(.99); }
   width: 100%; max-width: var(--col-max);
   overflow: hidden; pointer-events: none; z-index: 70;
 }
-.storm svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.bolt { fill: none; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
-
-/* both live inside .storm now, so their percentages are of the column */
-.fx-spark {
-  position: absolute; width: 12px; height: 12px; opacity: 0; z-index: 71; pointer-events: none;
-  clip-path: polygon(50% 0%,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0% 50%,39% 39%);
-}
-.fx-bit { position: absolute; opacity: 0; z-index: 69; pointer-events: none; }
+/* one canvas holds the bolts, the sparks and the confetti — see fxCanvas() */
+.storm canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
 /* streak tag, under the progress bar */
 /* The bar and its streak tag share a parent, so the tag centres on the BAR.
@@ -2377,7 +2378,7 @@ button.dom-stat:active { transform: scale(.99); }
    CSS slide stays as the fallback for reduced motion and for a missing GSAP.
    .up is brief trap 1: the parked sheet sits over the check button, so it
    must not be tappable until it has actually arrived. */
-.feedback.fx-anim        { transition: none; pointer-events: none; }
+.feedback.fx-anim        { transition: none; pointer-events: none; will-change: transform; }
 .feedback.fx-anim.up     { pointer-events: auto; }
 .feedback.fx-anim .fb-head,
 .feedback.fx-anim .fb-head img,
@@ -2389,10 +2390,7 @@ button.dom-stat:active { transform: scale(.99); }
 /* Same rule: the saved setting, never the media query. This selector is why
    the bolts could never render on a Windows box with animations turned off. */
 :root[data-motion="reduced"] .ch-shine,
-:root[data-motion="reduced"] .ch-spk,
-:root[data-motion="reduced"] .bolt,
-:root[data-motion="reduced"] .fx-spark,
-:root[data-motion="reduced"] .fx-bit { display: none !important; }
+:root[data-motion="reduced"] .ch-spk { display: none !important; }
 
 /* ============================================================
    ANSWER SCREEN — the UI from NewAnswerAnimation.txt, 1:1.
@@ -2584,7 +2582,10 @@ button.dom-stat:active { transform: scale(.99); }
 .q-area { width: 100%; max-width: var(--col-max); margin-inline: auto; }
 .q-area {
   flex: 1; display: flex; flex-direction: column;
-  padding-bottom: 92px;                 /* clears the fixed action bar */
+  /* clears the fixed action bar AND the compact correct sheet (≈134px + the
+     home-bar inset), set once at render — nothing grows this after an answer,
+     because the block is centred and any change here moves the choices */
+  padding-bottom: calc(144px + env(safe-area-inset-bottom));
 }
 .q-area > :first-child { margin-top: auto; }
 .q-area > :last-child  { margin-bottom: auto; }

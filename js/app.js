@@ -212,7 +212,7 @@ function audioCtx() {
 ["pointerdown", "keydown"].forEach(evt =>
   document.addEventListener(evt, function unlock() {
     ["pointerdown", "keydown"].forEach(e2 => document.removeEventListener(e2, unlock));
-    try { audioCtx(); } catch (e) {}
+    try { audioCtx(); loadCorrectBuffer(); } catch (e) {}
   }, { once: false, passive: true }));
 
 function beep(seq) {
@@ -258,8 +258,30 @@ function initCorrectVoice() {
     }
   } catch (e) { /* Audio unavailable — playCorrect will fall back to beep */ }
 }
+/* The clip decoded into an AudioBuffer, so the first correct answer plays it
+   from memory instead of spinning up a media element: on Android that spin-up
+   was a visible hitch right under the jump. Decoded after the first tap (the
+   context is unlocked by then); the element pool below stays as the fallback. */
+let correctBuf = null, correctBufP = null;
+function loadCorrectBuffer() {
+  if (correctBufP || !window.fetch) return;
+  const ac = audioCtx();
+  if (!ac) return;
+  correctBufP = fetch(CORRECT_SRC).then(r => r.arrayBuffer())
+    .then(ab => new Promise((res, rej) => ac.decodeAudioData(ab, res, rej)))
+    .then(b => { correctBuf = b; })
+    .catch(() => { correctBufP = null; });
+}
 function playCorrect() {
   if (!S.sound) return;
+  if (correctBuf && AC) {
+    try {
+      const src = AC.createBufferSource(), g = AC.createGain();
+      src.buffer = correctBuf; g.gain.value = 0.75;
+      src.connect(g); g.connect(AC.destination); src.start();
+      return;
+    } catch (e) { /* fall through to the element pool */ }
+  }
   if (!correctPool) initCorrectVoice();
   const a = correctPool[correctIdx];
   correctIdx = (correctIdx + 1) % (correctPool.length || 1);
@@ -474,12 +496,7 @@ A.openDailyQ = function () {
       `<span class="ch-letter">${LETTERS[i]}</span><span class="ch-txt">${c}</span></button></div>`).join("")}</div>
     <button class="btn dq-check" id="dqCheck" disabled onclick="A.checkDailyQ()">تحقق</button>
     <div class="dq-fb" id="dqFb"></div>
-    <div class="storm" id="storm" aria-hidden="true">
-      <svg viewBox="0 0 884 1920" preserveAspectRatio="xMidYMid slice">
-        <polyline class="bolt" id="fxBoltA"/>
-        <polyline class="bolt" id="fxBoltB"/>
-      </svg>
-    </div>
+    <div class="storm" id="storm" aria-hidden="true"></div>
   </div>`;
   veil.onclick = e => { if (e.target === veil) A.closeDailyQ(); };
   document.body.appendChild(veil);
@@ -631,6 +648,20 @@ function go(v) { view = v; render(); window.scrollTo(0, 0); }
 const ICO_FILE = { "nav-exam": "nav-exam-64.png" }; // raster icons (user-provided art)
 const ico = (name, size) => `<img class="ic" src="assets/icons/${ICO_FILE[name] || name + ".svg"}" width="${size}" height="${size}" alt="">`;
 
+/* ---------------- قدّور (the mascot) ----------------
+   One flat PNG per emotional state. Only the states whose art actually exists
+   are listed: a name that is not here renders nothing at all rather than a
+   broken-image icon on a live site. Add a key the same day you add its file.
+
+   `cls` carries the motion (pop / bob / bob-fast / shake) and the placement
+   class. He is decorative in every placement — the screen always states its
+   own meaning in text — so alt is empty and he is hidden from assistive tech. */
+const MASCOT_STATES = { encourage: 1, cheer: 1, point: 1, concerned: 1 };
+function mascot(state, cls) {
+  if (!MASCOT_STATES[state]) return "";
+  return `<img class="mascot ${cls || ""}" src="assets/mascot/qaddour-${state}.png" alt="" aria-hidden="true">`;
+}
+
 function statbar() {
   const t = LEAGUE_TIERS[tierIndex()];
   return `<div class="statbar">
@@ -648,20 +679,6 @@ A.chestTap = function () {
   toast(`باقي ${qCount(DAILY_GOAL - S.daily.n)} لفتح صندوق اليوم 🎁`);
 };
 function bottomnav(active) {
-/* ---------------- قدّور (the mascot) ----------------
-   One flat PNG per emotional state. Only the states whose art actually exists
-   are listed: a name that is not here renders nothing at all rather than a
-   broken-image icon on a live site. Add a key the same day you add its file.
-
-   `cls` carries the motion (pop / bob / bob-fast / shake) and the placement
-   class. He is decorative in every placement — the screen always states its
-   own meaning in text — so alt is empty and he is hidden from assistive tech. */
-const MASCOT_STATES = { encourage: 1, cheer: 1, point: 1, concerned: 1 };
-function mascot(state, cls) {
-  if (!MASCOT_STATES[state]) return "";
-  return `<img class="mascot ${cls || ""}" src="assets/mascot/qaddour-${state}.png" alt="" aria-hidden="true">`;
-}
-
   /* the labels were the state keys — "path", "league" — read aloud in Arabic */
   const items = [["path", "nav-home", "الدروس"], ["league", "nav-league", "المجلس"],
     ["mock", "nav-exam", "اختبار تجريبي"], ["stats", "nav-stats", "إحصائياتي"], ["more", "nav-more", "المزيد"]];
@@ -860,6 +877,12 @@ function renderPath() {
   if (firstOpenIdx === -1) firstOpenIdx = flat.length;
   let gi = 0, html = "";
   const offsets = [0, -46, -66, -46, 0, 46, 66, 46]; // winding path x-offsets
+  /* قدّور stands beside the path, the way Duo does — scenery the student walks past,
+     not a card or a sheet. Index 5 is deliberate: `right:46` swings that node to the
+     LEFT, which is the only side that leaves him room, and it puts the path on his
+     pointing side so he gestures INTO the lessons instead of off-screen. He must never
+     be flipped to face the other way — see the mascot note in style.css. */
+  const PATH_MASCOT_AT = 5;
   ds.forEach((d, di) => {
     const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
     const uDone = d.lessons.filter(l => lessonProg(d.key + "." + l.key).stars > 0).length;
@@ -877,12 +900,6 @@ function renderPath() {
          own face is gold (#FFC800 below), so the darker star is what reads
          against it. star-gold here put a gold star on a gold coin. */
       const nodeIcon = done ? ico("star-done", 40) : ico("star", 40);
-  /* قدّور stands beside the path, the way Duo does — scenery the student walks past,
-     not a card or a sheet. Index 5 is deliberate: `right:46` swings that node to the
-     LEFT, which is the only side that leaves him room, and it puts the path on his
-     pointing side so he gestures INTO the lessons instead of off-screen. He must never
-     be flipped to face the other way — see the mascot note in style.css. */
-  const PATH_MASCOT_AT = 5;
       const ring = current ? `<svg class="node-ring" viewBox="0 0 89 84" fill="none">
           <ellipse cx="44.5" cy="42" rx="41.5" ry="39" stroke="#E5E5E5" stroke-width="6"/>
           <path d="M 44.5 3 A 41.5 39 0 0 1 81.5 25" stroke="${u.c}" stroke-width="6" stroke-linecap="round"/>
@@ -1016,23 +1033,6 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   const dx = (nr.left + nr.width / 2) - (pcr.left + pcr.width / 2);
   pop.style.setProperty("--arrow-x",
     "clamp(20px, calc(50% - " + dx.toFixed(1) + "px), calc(100% - 20px))");
-};
-
-A.startLesson = function (domKey, lesKey, boost) {
-  const d = window.QBANK[domKey], l = d.lessons.find(x => x.key === lesKey);
-  const key = domKey + "." + lesKey;
-  const qs = pickLessonQuestions(l, key);
-  if (!qs.length) { showModal(mascot("point", "pop"), "لا توجد أسئلة", "لا توجد أسئلة متاحة لهذا الدرس في مسارك الحالي.", "حسناً"); return; }
-  warmStreak();                                          // preload the fire-streak assets during the lesson
-  const prev = S.lessons[key];
-  const replay = !!(prev && prev.stars > 0);            // already cleared → farm mode (+2/+2)
-  let xpBoost = false;
-  if (boost && S.xp >= BOOST_COST) { S.xp -= BOOST_COST; xpBoost = true; save(); }  // pay for 2× rank XP up front
-  SES = { mode: "lesson", domKey, lesKey, key, title: l.title, method: l.method || "", queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null, locked: false, xp: 0, gems: 0, replay, xpBoost, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
-  /* Every lesson ships a written intro — the rule, the method, the common
-     mistake — and none of it had ever rendered, because each question also
-     carries its own method and "q.method || SES.method" always took the
-     question's. Teach first on a lesson you have not cleared. */
   /* Make room the way Duolingo does. The bubble used to be clamped to the
      viewport, which parked it ON TOP of the node it was pointing at whenever
      that node sat in the lower part of the screen. Now: if the bubble would
@@ -1060,6 +1060,22 @@ A.startLesson = function (domKey, lesKey, boost) {
     setTimeout(land, 450);                                      // browsers without scrollend
     window.scrollBy({ top: dy, behavior: "smooth" });
   }
+};
+
+A.startLesson = function (domKey, lesKey, boost) {
+  const d = window.QBANK[domKey], l = d.lessons.find(x => x.key === lesKey);
+  const key = domKey + "." + lesKey;
+  const qs = pickLessonQuestions(l, key);
+  if (!qs.length) { showModal(mascot("point", "pop"), "لا توجد أسئلة", "لا توجد أسئلة متاحة لهذا الدرس في مسارك الحالي.", "حسناً"); return; }
+  const prev = S.lessons[key];
+  const replay = !!(prev && prev.stars > 0);            // already cleared → farm mode (+2/+2)
+  let xpBoost = false;
+  if (boost && S.xp >= BOOST_COST) { S.xp -= BOOST_COST; xpBoost = true; save(); }  // pay for 2× rank XP up front
+  SES = { mode: "lesson", domKey, lesKey, key, title: l.title, method: l.method || "", queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null, locked: false, xp: 0, gems: 0, replay, xpBoost, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
+  /* Every lesson ships a written intro — the rule, the method, the common
+     mistake — and none of it had ever rendered, because each question also
+     carries its own method and "q.method || SES.method" always took the
+     question's. Teach first on a lesson you have not cleared. */
   if (!replay && l.method) { renderLessonIntro(d, l); return; }
   renderSession();
 };
@@ -1267,7 +1283,7 @@ function fxDrawCrest() {
   fill.setAttribute("d", d + `L${FX_W},90 L0,90 Z`);
 }
 
-let fxTl = null, fxSparks = [];
+let fxTl = null;
 
 /* Feature flag, so this can be switched off without a revert:
    localStorage.qudratiFx = "off". A.fxSlow(.35) is the dev slow-motion the
@@ -1299,10 +1315,8 @@ function fxReduced() { return motionReduced(); }
 
 function fxClear() {
   if (fxTl) { fxTl.kill(); fxTl = null; }
-  fxSparks.forEach(s => s.remove()); fxSparks = [];
-  const st = document.getElementById("storm");
-  if (st && window.gsap) gsap.set(st.querySelectorAll(".bolt"), { opacity: 0, x: 0, y: 0 });
-  document.querySelectorAll(".fx-spark, .fx-bit").forEach(n => n.remove());
+  fxFrames = null; fxParts = []; fxBolts = [];
+  fxDraw();                              // an empty draw is a clear
   /* give the sheet back to CSS and clear the inline transform GSAP left on it
      — otherwise a killed timeline strands it half way up the screen */
   const fb0 = document.getElementById("fb");
@@ -1327,9 +1341,12 @@ function fxAddJump(tl, card, at) {
 
   const air = FX_JUMP.launch + FX_JUMP.rise + FX_JUMP.hang + FX_JUMP.fall;
   const sh = card.querySelector(".ch-shine");
-  if (sh) {
-    tl.fromTo(sh, { left: '-32%', opacity: 0 },
-      { left: '112%', opacity: 1, duration: air, ease: 'none' }, at)
+  /* the sweep rides on xPercent (its own width is 23% of the card, so -140 → 490
+     is the old -32% → 112%): a transform, not `left`, so it never asks for layout
+     mid-jump. Skipped outright on a weak phone. */
+  if (sh && !fxLite()) {
+    tl.fromTo(sh, { xPercent: -140, opacity: 0 },
+      { xPercent: 490, opacity: 1, duration: air, ease: 'none' }, at)
       .to(sh, { opacity: 0, duration: .06 }, at + air - .06);
   }
   const spk = card.querySelectorAll(".ch-spk");
@@ -1344,37 +1361,120 @@ function fxAddJump(tl, card, at) {
   }
 }
 
-/* ---------- particles ---------- */
-function fxSeedBits(host, TH) {
-  const made = [];
-  for (let i = 0; i < 28; i++) {
-    const el = document.createElement("i"); el.className = "fx-bit";
-    if (i % 3 === 0) {
-      const w = 9 + Math.random() * 12;
-      el.style.cssText += `width:${w}px;height:${w * .7}px;background:${TH.shard};
-        clip-path:polygon(0% 40%,45% 0%,100% 25%,72% 100%,20% 78%);`;
-    } else {
-      const w = 7 + Math.random() * 8;
-      const tone = ['#8ee000', '#58cc02', '#b8f36a'][i % 3];
-      el.style.cssText += `width:${w}px;height:${w}px;border-radius:2px;background:${tone};`;
-    }
-    el.style.left = (Math.random() * 100) + '%';
-    el.style.bottom = '200px';
-    host.appendChild(el); made.push(el);
+/* --------------------------------------------------------------------------
+   ONE CANVAS FOR EVERYTHING THAT FLIES.
+   The bolts, the sparks and the confetti used to be 44 DOM nodes plus an SVG
+   the size of the column, and GSAP promoted every one of them to its own
+   compositor layer the moment it touched them — ten of the confetti bits
+   carried a clip-path mask on top. Allocating those layers is where the FIRST
+   correct answer stuttered, and repainting a full-column SVG polyline at 60fps
+   is where a weak phone kept stuttering. They are now shapes drawn into one
+   canvas that the same GSAP timeline drives through plain objects: one layer,
+   one paint per frame, nothing to promote, nothing to allocate on the next run.
+   -------------------------------------------------------------------------- */
+let fxCv = null, fxGeo = null, fxParts = [], fxBolts = [], fxFrames = null;
+const FX_STAR  = [[.5, 0], [.61, .39], [1, .5], [.61, .61], [.5, 1], [.39, .61], [0, .5], [.39, .39]];
+const FX_SHARD = [[0, .4], [.45, 0], [1, .25], [.72, 1], [.2, .78]];
+
+/* Weak-phone mode: fewer particles and no shine sweep. Decided up front from
+   the device, and then for good from the first full run — if a quarter of its
+   frames came in slower than 28ms, the next one is lite and stays lite. */
+const FX_LITE_KEY = "qudratiFxLite";
+function fxLite() {
+  try { if (localStorage.getItem(FX_LITE_KEY) === "1") return true; } catch (e) {}
+  const mem = navigator.deviceMemory, cores = navigator.hardwareConcurrency;
+  return (mem && mem <= 3) || (cores && cores <= 2);
+}
+function fxSetLite() { try { localStorage.setItem(FX_LITE_KEY, "1"); } catch (e) {} }
+
+function fxCanvas() {
+  const storm = document.getElementById("storm");
+  if (!storm) return null;
+  let cv = storm.querySelector("canvas");
+  if (!cv) { cv = document.createElement("canvas"); storm.appendChild(cv); }
+  const r = storm.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, fxLite() ? 1 : 2);   // lite: half the pixels to fill
+  const w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
   }
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  /* the bolt paths were authored in the old SVG's 884x1920 box with
+     preserveAspectRatio "slice": scale to cover, centred */
+  const sc = Math.max(w / 884, h / 1920);
+  fxGeo = { w, h, sc, ox: (w - 884 * sc) / 2, oy: (h - 1920 * sc) / 2 };
+  fxCv = { cv, ctx };
+  return fxCv;
+}
+function fxPoly(ctx, pts, w, h) {
+  ctx.beginPath();
+  pts.forEach(([u, v], i) => { const X = (u - .5) * w, Y = (v - .5) * h; i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
+  ctx.closePath(); ctx.fill();
+}
+function fxDraw() {
+  if (!fxCv || !fxGeo || !fxCv.cv.isConnected) return;
+  const { ctx } = fxCv, { w, h, sc, ox, oy } = fxGeo;
+  ctx.clearRect(0, 0, w, h);
+  for (const b of fxBolts) {
+    if (b.o <= 0) continue;
+    ctx.globalAlpha = b.o;
+    ctx.strokeStyle = b.color; ctx.lineWidth = b.w * sc; ctx.lineCap = ctx.lineJoin = "round";
+    ctx.beginPath();
+    b.pts.forEach(([x, y], i) => { const X = x * sc + ox + b.dx, Y = y * sc + oy + b.dy; i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
+    ctx.stroke();
+  }
+  for (const p of fxParts) {
+    if (p.o <= 0) continue;
+    ctx.globalAlpha = p.o; ctx.fillStyle = p.color;
+    ctx.save();
+    ctx.translate(p.x0 + p.x, p.y0 + p.y); ctx.rotate(p.r * Math.PI / 180); ctx.scale(p.s, p.s);
+    if (p.kind === "star") fxPoly(ctx, FX_STAR, p.size, p.size);
+    else if (p.kind === "shard") fxPoly(ctx, FX_SHARD, p.size, p.size * .7);
+    else ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+}
+/* one tick per frame for the whole timeline: draw, and time the frame */
+function fxTick() {
+  if (fxFrames) { const t = performance.now(); fxFrames.gaps.push(t - fxFrames.last); fxFrames.last = t; }
+  fxDraw();
+}
+function fxDone() {
+  if (fxFrames && fxFrames.gaps.length > 12) {
+    const g = fxFrames.gaps.slice(2).sort((a, b) => a - b);
+    if (g[Math.floor(g.length * .75)] > 28) fxSetLite();
+  }
+  fxFrames = null;
+  fxParts = []; fxBolts = [];
+  fxDraw();                              // clears
+}
+
+function fxSeedBits(TH, n) {
+  const { w, h } = fxGeo, made = [];
+  for (let i = 0; i < n; i++) {
+    const shard = i % 3 === 0;
+    made.push({
+      kind: shard ? "shard" : "bit",
+      size: shard ? 9 + Math.random() * 12 : 7 + Math.random() * 8,
+      color: shard ? TH.shard : ['#8ee000', '#58cc02', '#b8f36a'][i % 3],
+      x0: Math.random() * w, y0: h - 200, x: 0, y: 0, r: 0, s: .5, o: 0
+    });
+  }
+  fxParts.push(...made);
   return made;
 }
-function fxSeedSparks(host, n, box, TH) {
-  const made = [];
+function fxSeedSparks(n, box, TH) {
+  const { w, h } = fxGeo, made = [];
   for (let i = 0; i < n; i++) {
-    const el = document.createElement("i"); el.className = "fx-spark";
-    const s = 7 + Math.random() * 9;
-    el.style.width = el.style.height = s + 'px';
-    el.style.background = TH.bolt;
-    el.style.left = (box.x + Math.random() * box.w) + '%';
-    el.style.top = (box.y + Math.random() * box.h) + '%';
-    host.appendChild(el); made.push(el);
+    made.push({
+      kind: "star", size: 7 + Math.random() * 9, color: TH.bolt,
+      x0: (box.x + Math.random() * box.w) / 100 * w, y0: (box.y + Math.random() * box.h) / 100 * h,
+      x: 0, y: 0, r: 0, s: 0, o: 0
+    });
   }
+  fxParts.push(...made);
   return made;
 }
 
@@ -1407,20 +1507,18 @@ function fxSheetIn(tl, bad, at) {
 
 /* ---------- the strike ---------- */
 function fxAddStrike(tl, TH, at, run) {
-  const storm = document.getElementById("storm");
-  if (!storm) return;
-  /* particles belong to the column box too — appended to the page they would
-     spread across the whole window on desktop */
-  const host = storm;
-  const boltA = storm.querySelector("#fxBoltA"), boltB = storm.querySelector("#fxBoltB");
+  if (!fxGeo) return;
+  const lite = fxLite();
   const warm = document.querySelector(".progress > i");
   const cool = document.querySelector(".progress > .prog-cool");
   const tag = document.getElementById("fxTag");
 
   if (TH.bolts !== false) {
-    boltA.setAttribute("points", TH.pA); boltB.setAttribute("points", TH.pB);
-    boltA.setAttribute("stroke", TH.bolt); boltB.setAttribute("stroke", TH.bolt);
-    boltA.setAttribute("stroke-width", TH.wA); boltB.setAttribute("stroke-width", TH.wB);
+    const pts = str => str.split(" ").map(p => p.split(",").map(Number));
+    fxBolts = [
+      { pts: pts(TH.pA), w: TH.wA, color: TH.bolt, o: 0, dx: 0, dy: 0 },
+      { pts: pts(TH.pB), w: TH.wB, color: TH.bolt, o: 0, dx: 0, dy: 0 }
+    ];
     /* the layer we are turning over TO is the tier this run has just earned,
        not a bare colour - it needs the matching shine line too */
     const bar = document.querySelector(".screen-session .progress");
@@ -1432,7 +1530,7 @@ function fxAddStrike(tl, TH, at, run) {
     if (tag) tag.style.color = TH.ink;
   }
 
-  const bitEls = fxSeedBits(host, TH);
+  const bitEls = fxSeedBits(TH, lite ? 12 : 28);
 
   /* THE SHEET. Measured, not styled: 200ms power3.out starting 133ms after the
      jump, so it is already on its way while the card is still in the air. The
@@ -1471,35 +1569,39 @@ function fxAddStrike(tl, TH, at, run) {
     ], onUpdate: fxDrawCrest
   }, at + .153);
 
+  /* confetti: same launch window, a shorter flight — the tail used to outlive
+     the sheet by a third of a second, which read as the screen still "doing
+     something" after the answer had already landed */
   bitEls.forEach(el => {
     const w = at + .173 + Math.random() * .16;
-    tl.fromTo(el, { opacity: 1, y: 0, x: 0, rotate: 0, scale: .5 },
+    tl.fromTo(el, { o: 1, y: 0, x: 0, r: 0, s: .5 },
       {
         y: -(60 + Math.random() * 130), x: (Math.random() - .5) * 120,
-        rotate: (Math.random() - .5) * 420, scale: 1,
-        duration: .42 + Math.random() * .2, ease: 'power2.out'
+        r: (Math.random() - .5) * 420, s: 1,
+        duration: .34 + Math.random() * .14, ease: 'power2.out'
       }, w)
-      .to(el, { y: '+=170', opacity: 0, rotate: '+=140', duration: .55, ease: 'power1.in' }, w + .4);
+      .to(el, { y: '+=170', o: 0, r: '+=140', duration: .40, ease: 'power1.in' }, w + .32);
   });
 
   if (TH.bolts === false) return;
 
-  fxSparks = [...fxSeedSparks(host, 8, { x: 28, y: 8, w: 44, h: 16 }, TH),
-              ...fxSeedSparks(host, 6, { x: 12, y: 26, w: 60, h: 22 }, TH)];
+  const sparks = [...fxSeedSparks(lite ? 4 : 8, { x: 28, y: 8, w: 44, h: 16 }, TH),
+                  ...fxSeedSparks(lite ? 3 : 6, { x: 12, y: 26, w: 60, h: 22 }, TH)];
 
-  [[boltA, TH.a, TH.aHold, -14, -10], [boltB, TH.b, TH.bHold, 12, -12]].forEach(([el, t0, hold, dx, dy]) => {
-    tl.set(el, { opacity: 1 }, at + t0)
-      .to(el, { x: dx, y: dy, duration: hold, ease: 'none' }, at + t0)
-      .to(el, { opacity: 0, duration: .05, ease: 'power2.in' }, at + t0 + hold);
+  [[fxBolts[0], TH.a, TH.aHold, -14, -10], [fxBolts[1], TH.b, TH.bHold, 12, -12]].forEach(([b, t0, hold, dx, dy]) => {
+    tl.set(b, { o: 1 }, at + t0)
+      .to(b, { dx, dy, duration: hold, ease: 'none' }, at + t0)
+      .to(b, { o: 0, duration: .05, ease: 'power2.in' }, at + t0 + hold);
   });
 
-  const twinkle = (arr, w) => arr.forEach((s, i) => {
-    tl.fromTo(s, { opacity: 0, scale: 0, rotate: 0 },
-      { opacity: 1, scale: 1, rotate: 22, duration: .12, ease: 'back.out(3)' }, w + i * .03)
-      .to(s, { opacity: 0, scale: .2, duration: .16, ease: 'power1.in' }, w + i * .03 + .22);
+  const twinkle = (arr, w) => arr.forEach((p, i) => {
+    tl.fromTo(p, { o: 0, s: 0, r: 0 },
+      { o: 1, s: 1, r: 22, duration: .12, ease: 'back.out(3)' }, w + i * .03)
+      .to(p, { o: 0, s: .2, duration: .16, ease: 'power1.in' }, w + i * .03 + .22);
   });
-  twinkle(fxSparks.slice(0, 8), at + TH.a + .02);
-  twinkle(fxSparks.slice(8), at + TH.b + .02);
+  const nA = lite ? 4 : 8;
+  twinkle(sparks.slice(0, nA), at + TH.a + .02);
+  twinkle(sparks.slice(nA), at + TH.b + .02);
 }
 
 /* The reference's press feedback: the card sinks into its base while held.
@@ -1578,7 +1680,9 @@ function answerFx(card, run) {
     tag.textContent = toAr(run) + " على التوالي";
     gsap.set(tag, { opacity: 0, y: 6, scale: .8 });
   }
-  fxTl = gsap.timeline();
+  fxCanvas();                            // sized to the column before anything is seeded
+  fxFrames = fxLite() ? null : { last: performance.now(), gaps: [] };
+  fxTl = gsap.timeline({ onUpdate: fxTick, onComplete: fxDone });
   fxAddJump(fxTl, card, 0);
   fxAddStrike(fxTl, TH, 0, run);         // STRIKE = 0: fires with the jump
 }
@@ -1631,12 +1735,7 @@ function renderSession() {
       <div class="q-area">${questionBody(q, SES.sel, false, null, q.method || SES.method)}</div>
       <div class="action-bar"><button class="btn" id="checkBtn" onclick="A.check()" ${SES.sel === null ? "disabled" : ""}>تحقق</button></div>
       <div class="feedback" id="fb" role="status" aria-live="assertive"></div>
-      <div class="storm" id="storm" aria-hidden="true">
-        <svg viewBox="0 0 884 1920" preserveAspectRatio="xMidYMid slice">
-          <polyline class="bolt" id="fxBoltA"/>
-          <polyline class="bolt" id="fxBoltB"/>
-        </svg>
-      </div>
+      <div class="storm" id="storm" aria-hidden="true"></div>
     </div>`;
   fxBindPress();
   fxPaintBar(SES.run);       // carries the streak tier + tag into this question
@@ -1742,7 +1841,6 @@ function timeUp() {
     <button class="fb-solution-toggle" onclick="A.toggleSol()">اعرض الحل</button>
     <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
     <button class="btn btn-red" onclick="A.next()">متابعة</button>`;
-  clearFeedbackOverlap();
   save();
 }
 
@@ -1797,15 +1895,14 @@ A.check = function () {
     fb.innerHTML = `<svg class="fb-crest" viewBox="0 0 380 90" preserveAspectRatio="none" aria-hidden="true">
         <path class="fb-crest-fill"></path>
         <path class="fb-crest-line" fill="none" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"></path>
-      </svg><div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> أحسنت!</div>
-      <button class="fb-solution-toggle" onclick="A.toggleSol()">لماذا؟ اعرض الحل</button>
+      </svg><div class="fb-row"><div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> أحسنت!</div>
+        <button class="fb-solution-toggle" onclick="A.toggleSol()">اعرض الحل</button></div>
       <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
       <button class="btn" onclick="A.next()">متابعة</button>`;
     /* after the sheet exists, never before: the timeline slides the sheet and
        animates the crest inside it, so both have to be in the DOM when it is
        built. Same synchronous block, so nothing paints in between. */
     answerFx(document.querySelector(`.choice[data-ci="${q.answer}"]`), SES.run);
-    clearFeedbackOverlap();
   } else {
     sndBad();
     SES.run = 0;                         // one miss and the run is gone
@@ -1830,32 +1927,28 @@ A.check = function () {
       <button class="btn btn-red" onclick="A.next()">${hLeft === 0 ? "شوف النتيجة" : "متابعة"}</button>`;
     /* after the sheet exists: the miss timeline slides it and snaps the cross */
     answerFxFail(document.querySelector(`.choice[data-ci="${SES.sel}"]`));
-    clearFeedbackOverlap();
   }
+  /* The fire-streak runtimes (two libraries and a 1.3MB wasm) used to start
+     loading the moment a lesson began, which on a slow phone put their parse
+     and compile right under the first correct answer. Warm them while the
+     student is reading the sheet instead: the celebration is a whole lesson
+     away, and the main thread is idle here. */
+  setTimeout(() => (window.requestIdleCallback || (f => f()))(warmStreak), 1400);
   save();
 };
 
 A.toggleSol = function () {
   const s = document.getElementById("sol");
   s.style.display = s.style.display === "none" ? "block" : "none";
-  clearFeedbackOverlap();
 };
 
-/* The feedback sheet is fixed to the bottom; without this it covers the very
-   choices it is explaining. */
-function clearFeedbackOverlap() {
-  const fb = document.getElementById("fb"), qa = document.querySelector(".q-area");
-  if (!fb || !qa || !fb.classList.contains("show")) return;
-  requestAnimationFrame(() => {
-    const h = fb.offsetHeight;
-    qa.style.paddingBottom = (h + 24) + "px";
-    const focus = document.querySelector(".choice.correct") || document.querySelector(".choice.wrong");
-    if (!focus) return;
-    const limit = window.innerHeight - h - 14;
-    const bottom = focus.getBoundingClientRect().bottom;
-    if (bottom > limit) window.scrollBy({ top: bottom - limit, behavior: "smooth" });
-  });
-}
+/* Nothing moves when the sheet comes up. The question block is anchored to
+   the BOTTOM of .q-area (`.q-area > :first-child { margin-top: auto }`), so the
+   old habit of growing the area's padding to "clear" the sheet shoved the
+   choices upward by exactly the sheet's height, mid-jump — and a window scroll
+   on top of that. The sheet is an overlay that states the answer itself, as
+   Duolingo's does; the reserve under the choices already fits the correct
+   sheet, and the wrong sheet is allowed to cover what it explains. */
 
 /* Method sheet (كيف أحلّها؟): teacher walks through how to approach THIS
    specific question — its own numbers, its own steps — but stops short of the
@@ -3930,8 +4023,40 @@ function showDisclaimerSheet(onAccept) {
    and the first lesson — a wall in front of someone who had not yet seen
    anything worth agreeing to. The notice still ships; it lives in Settings
    → حول التطبيق, where it can be read instead of dismissed. */
+/* ---------------- "إليك ما ستحصل عليه" (first run) ----------------
+   Sells the outcome before asking for effort. It runs BEFORE the exam-date picker,
+   because the picker asks the student to commit something and this is what earns
+   that. Shown once ever — S.introSeen — so it never becomes a nag. */
+const INTRO_VALUE = [
+  { ic: "book",   c: "purple", t: "تدرّب على نمط الاختبار الحقيقي",
+    s: "أسئلة أصلية بصيغة قياس، ولكل سؤال حل مشروح خطوة بخطوة" },
+  { ic: "target", c: "blue",   t: "اعرف مستواك بالضبط",
+    s: "محاكاة كاملة للاختبار مع تقدير لدرجتك وأضعف أقسامك" },
+  { ic: "streak", c: "gold",   t: "خلِّ المذاكرة عادة",
+    s: "سلسلة يومية، وعدّاد يعدّ معك لموعد اختبارك" }
+];
+function renderIntroValue() {
+  $app.innerHTML = `<div class="screen screen-full iv-screen">
+    <div class="iv-top">
+      <div class="iv-bubble">إليك ما ستحصل عليه مع قدراتي!</div>
+      ${mascot("point", "iv-mascot pop")}
+    </div>
+    <div class="iv-rows">` + INTRO_VALUE.map((r, i) => `
+      <div class="iv-row iv-${r.c}" style="--d:${(0.18 + i * 0.12).toFixed(2)}s">
+        <span class="iv-ic">${ico(r.ic, 26)}</span>
+        <span class="iv-tx"><b>${r.t}</b><span>${r.s}</span></span>
+      </div>`).join("") + `
+    </div>
+    <div class="login-form iv-cta"><button class="btn" onclick="A.introDone()">المتابعة</button></div>
+  </div>`;
+  window.scrollTo(0, 0);
+}
+A.introDone = function () { S.introSeen = true; save(); afterLogin(); };
+A.introReplay = function () { renderIntroValue(); };   // preview.html#intro
+
 function afterLogin() {
   S.joined = S.joined || todayKey();
+  if (!S.introSeen) { renderIntroValue(); return; }
   if (!S.examAsked && !S.exam) { renderExamSetup(true); return; }
   save(); render();
 }
@@ -4049,40 +4174,8 @@ function renderProfile() {
   const flat = allLessons();
   let doneN = 0; flat.forEach(x => { if (lessonProg(x.key).stars > 0) doneN++; });
   const acc = overallAccuracy(), days = examDaysLeft();
-/* ---------------- "إليك ما ستحصل عليه" (first run) ----------------
-   Sells the outcome before asking for effort. It runs BEFORE the exam-date picker,
-   because the picker asks the student to commit something and this is what earns
-   that. Shown once ever — S.introSeen — so it never becomes a nag. */
-const INTRO_VALUE = [
-  { ic: "book",   c: "purple", t: "تدرّب على نمط الاختبار الحقيقي",
-    s: "أسئلة أصلية بصيغة قياس، ولكل سؤال حل مشروح خطوة بخطوة" },
-  { ic: "target", c: "blue",   t: "اعرف مستواك بالضبط",
-    s: "محاكاة كاملة للاختبار مع تقدير لدرجتك وأضعف أقسامك" },
-  { ic: "streak", c: "gold",   t: "خلِّ المذاكرة عادة",
-    s: "سلسلة يومية، وعدّاد يعدّ معك لموعد اختبارك" }
-];
-function renderIntroValue() {
-  $app.innerHTML = `<div class="screen screen-full iv-screen">
-    <div class="iv-top">
-      <div class="iv-bubble">إليك ما ستحصل عليه مع قدراتي!</div>
-      ${mascot("point", "iv-mascot pop")}
-    </div>
-    <div class="iv-rows">` + INTRO_VALUE.map((r, i) => `
-      <div class="iv-row iv-${r.c}" style="--d:${(0.18 + i * 0.12).toFixed(2)}s">
-        <span class="iv-ic">${ico(r.ic, 26)}</span>
-        <span class="iv-tx"><b>${r.t}</b><span>${r.s}</span></span>
-      </div>`).join("") + `
-    </div>
-    <div class="login-form iv-cta"><button class="btn" onclick="A.introDone()">المتابعة</button></div>
-  </div>`;
-  window.scrollTo(0, 0);
-}
-A.introDone = function () { S.introSeen = true; save(); afterLogin(); };
-A.introReplay = function () { renderIntroValue(); };   // preview.html#intro
-
   const nextT = LEAGUE_TIERS[tierIndex() + 1];
   const tierPct = nextT
-  if (!S.introSeen) { renderIntroValue(); return; }
     ? Math.max(0, Math.min(100, Math.round((S.totalXp - t.min) / (nextT.min - t.min) * 100))) : 100;
 
   $app.innerHTML = statbar() + `<div class="screen"><div class="page pf">
