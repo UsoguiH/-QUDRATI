@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>قدّور — animation lab</title>
+<style>
+/* ============================================================
+   قدّور — animation lab
+   Three ways to animate one still PNG. Nothing here needs a rig file,
+   a library, or a second generation: the art is the reference drawing,
+   cut out and split by tools/slice_mascot.py.
+
+   --speed scales every duration at once so the timing can be inspected
+   in slow motion. Ship value is 1.
+   ============================================================ */
+:root{
+  --speed:1;
+  --breathe:calc(3.2s / var(--speed));
+  --drift:calc(7.3s / var(--speed));      /* co-prime-ish with --breathe so the loop never visibly repeats */
+  --sway:calc(5.1s / var(--speed));
+  --bg:#FFFBF4; --card:#fff; --ink:#3C3C3C; --dim:#8A8178; --line:#EDE3D6;
+  --accent:#58CC02; --accent-d:#46A302;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#17140F; --card:#211D17; --ink:#F2EDE4; --dim:#A2988B; --line:#332C23; }
+}
+*{box-sizing:border-box}
+body{margin:0;padding:28px 18px 90px;background:var(--bg);color:var(--ink);
+     font:16px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1180px;margin:0 auto}
+h1{font-size:30px;margin:0 0 6px}
+.lede{color:var(--dim);margin:0 0 22px;max-width:70ch}
+h2{font-size:20px;margin:38px 0 6px}
+.why{color:var(--dim);margin:0 0 16px;max-width:78ch}
+code{font:13px/1.4 ui-monospace,Consolas,monospace;background:var(--line);
+     padding:1px 5px;border-radius:5px}
+
+/* ---------- controls ---------- */
+.bar{position:sticky;top:0;z-index:20;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+     background:var(--bg);padding:10px 0 14px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.bar span{color:var(--dim);font-size:14px}
+button{font:600 14px/1 inherit;color:#fff;background:var(--accent);border:0;
+       border-bottom:3px solid var(--accent-d);border-radius:10px;padding:10px 16px;cursor:pointer}
+button:active{transform:translateY(2px);border-bottom-width:1px}
+button.ghost{background:transparent;color:var(--dim);border:1px solid var(--line);border-bottom-width:1px}
+button.ghost[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent-d)}
+
+/* ---------- stage ---------- */
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 14px 10px;
+       display:flex;flex-direction:column}
+.panel h3{font-size:15px;margin:0 0 2px}
+.panel p{font-size:13px;color:var(--dim);margin:0 0 8px;min-height:34px}
+.stage{position:relative;height:330px;display:flex;align-items:flex-end;justify-content:center}
+.stage img{display:block;height:300px;width:auto;user-select:none;-webkit-user-drag:none}
+
+/* The ground shadow is a CSS ellipse, NOT part of the art. A shadow baked into the PNG
+   travels with him, and a contact shadow that never touches the ground is the single
+   loudest "this is a sticker" tell. */
+.shadow{position:absolute;bottom:8px;left:50%;margin-left:-46px;width:92px;height:15px;
+        border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.42),rgba(0,0,0,0));
+        opacity:.4}
+
+/* ---------- 0. what is in the app today ---------- */
+.now img{animation:mascotBob calc(3.6s / var(--speed)) ease-in-out infinite}
+@keyframes mascotBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+
+/* ---------- 1. weight rig ---------- */
+/* Pivot at the feet, asymmetric timing (slow lift, accelerating fall), and a squash that
+   inverts at the top. Per-keyframe animation-timing-function is what buys the gravity. */
+.rig{transform-origin:50% 100%;animation:qBreathe var(--breathe) infinite}
+@keyframes qBreathe{
+  0%   {transform:translateY(0)    scale(1.018,.982); animation-timing-function:cubic-bezier(.33,0,.15,1)}
+  52%  {transform:translateY(-9px) scale(.992,1.012); animation-timing-function:cubic-bezier(.62,0,.86,.12)}
+  100% {transform:translateY(0)    scale(1.018,.982)}
+}
+/* Out of phase with the body: he leaves the ground, the shadow shrinks and lightens. */
+.w-shadow{animation:qShadow var(--breathe) infinite}
+@keyframes qShadow{
+  0%   {transform:scale(1);        opacity:.40; animation-timing-function:cubic-bezier(.33,0,.15,1)}
+  52%  {transform:scale(.84,.78);  opacity:.22; animation-timing-function:cubic-bezier(.62,0,.86,.12)}
+  100% {transform:scale(1);        opacity:.40}
+}
+/* A second, much slower period on a separate element. Two loops whose lengths do not
+   divide evenly never line up, so a 3s loop stops reading as a 3s loop. */
+.drift{animation:qDrift var(--drift) ease-in-out infinite}
+@keyframes qDrift{
+  0%,100%{transform:translateX(-1.5px) rotate(-.25deg)}
+  50%    {transform:translateX(1.5px)  rotate(.25deg)}
+}
+
+/* ---------- 2. head follow-through ---------- */
+.layers{position:relative;height:300px}
+.layers img{height:300px}
+.layers .body{position:relative;z-index:1}
+.head-sway{position:absolute;inset:0;z-index:0;animation:qSway var(--sway) ease-in-out infinite}
+.head-lag{width:100%;height:100%;transform-origin:64% 51%;
+          animation:qHeadLag var(--breathe) infinite;
+          /* negative delay = same phase, started in the past: the head TRAILS the body
+             by 8% of the cycle without a dead first loop */
+          animation-delay:calc(var(--breathe) * -.92)}
+@keyframes qHeadLag{
+  0%   {transform:rotate(1.7deg);  animation-timing-function:cubic-bezier(.33,0,.15,1)}
+  52%  {transform:rotate(-1.7deg); animation-timing-function:cubic-bezier(.62,0,.86,.12)}
+  100% {transform:rotate(1.7deg)}
+}
+@keyframes qSway{
+  0%,100%{transform:rotate(-.7deg)}
+  50%    {transform:rotate(.7deg)}
+}
+
+/* ---------- 3. masked state swap ---------- */
+.swap{transform-origin:50% 100%}
+.swap.dip {animation:qDip  calc(.10s / var(--speed)) cubic-bezier(.4,0,1,1) forwards}
+.swap.rise{animation:qRise calc(.34s / var(--speed)) cubic-bezier(.2,1.5,.4,1)}
+@keyframes qDip{
+  from{transform:translateY(0)   scale(1,1)}
+  to  {transform:translateY(7px) scale(1.07,.90)}
+}
+@keyframes qRise{
+  0%  {transform:translateY(7px)  scale(1.07,.90)}
+  52% {transform:translateY(-7px) scale(.96,1.05)}
+  100%{transform:translateY(0)    scale(1,1)}
+}
+.tag{font:600 12px/1 inherit;color:var(--dim);text-align:center;padding:6px 0 2px}
+
+/* ---------- 4. vector face rig ---------- */
+/* Every origin the generator wrote is in viewBox units, so the transform box has to be
+   the viewBox and not each element's own tight bounds. */
+#qaddour{display:block;height:420px;width:294px}   /* 420 x 710/1014 */
+#qaddour g{transform-box:view-box}
+
+/* Blink: the lid is already drawn as the dome that covers the top of the eye, so a blink
+   is that same dome scaled down over the rest of it -- no second drawing needed. Falling
+   is faster than lifting, because that is what a lid does. */
+/* the generator writes each part's pivot inline, in viewBox units, so it wins here */
+#lidL,#lidR{transform:scaleY(var(--lid,1));
+            transition:transform calc(.2s / var(--speed)) cubic-bezier(.3,1.3,.5,1)}
+.blinking #lidL,.blinking #lidR{animation:qBlink calc(.22s / var(--speed)) ease-in-out}
+@keyframes qBlink{
+  0%  {transform:scaleY(var(--lid,1))}
+  32% {transform:scaleY(2.45)}
+  100%{transform:scaleY(var(--lid,1))}
+}
+/* Pupils jump and hold. A pupil that glides between targets is the loudest fake tell
+   in a face rig -- real saccades are ballistic. */
+#pupilL,#pupilR{transform:translate(var(--px,0px),var(--py,0px));
+                transition:transform calc(.045s / var(--speed)) cubic-bezier(.2,.9,.3,1)}
+#browL{transform:translateY(var(--brow-ly,0px)) rotate(var(--brow-l,0deg))}
+#browR{transform:translateY(var(--brow-ry,0px)) rotate(var(--brow-r,0deg))}
+#browL,#browR{transition:transform calc(.26s / var(--speed)) cubic-bezier(.3,1.4,.5,1)}
+#mouth{transform:scale(var(--mx,1),var(--my,1));
+       transition:transform calc(.22s / var(--speed)) cubic-bezier(.3,1.4,.5,1)}
+.talking #mouth{animation:qTalk calc(.42s / var(--speed)) ease-in-out infinite;transition:none}
+@keyframes qTalk{
+  0%  {transform:scale(1.02,.30)}
+  22% {transform:scale(.97,1.06)}
+  46% {transform:scale(1.01,.48)}
+  68% {transform:scale(.98,.92)}
+  86% {transform:scale(1.02,.36)}
+  100%{transform:scale(1.02,.30)}
+}
+.note{background:var(--card);border:1px solid var(--line);border-radius:12px;
+      padding:12px 15px;margin:18px 0;color:var(--dim);font-size:14px}
+.note b{color:var(--ink)}
+</style>
+
+<main>
+<h1>قدّور — animation lab</h1>
+<p class="lede">One still drawing, cut out and split by our own Python. No rig file, no library,
+no second generation. Drop the speed to <b>0.25×</b> to see the timing — that is where the
+difference actually lives.</p>
+
+<div class="bar">
+  <span>Speed</span>
+  <button class="ghost" data-speed="1" aria-pressed="true">1×</button>
+  <button class="ghost" data-speed="0.5" aria-pressed="false">0.5×</button>
+  <button class="ghost" data-speed="0.25" aria-pressed="false">0.25×</button>
+  <span style="margin-inline-start:12px">Ground shadow</span>
+  <button class="ghost" id="sh" aria-pressed="true">on</button>
+</div>
+
+<div class="row">
+  <div class="panel">
+    <h3>0 · In the app today</h3>
+    <p>Symmetric <code>translateY</code>. Nothing responds to it.</p>
+    <div class="stage now">
+      <div class="shadow" style="opacity:.28"></div>
+      <img src="assets/mascot/lab/qaddour-full.png" alt="">
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>1 · Weight rig</h3>
+    <p>Feet pivot, gravity timing, squash, and a shadow moving out of phase.</p>
+    <div class="stage">
+      <div class="shadow w-shadow"></div>
+      <div class="drift"><div class="rig"><img src="assets/mascot/lab/qaddour-full.png" alt=""></div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3>2 · + head follow-through</h3>
+    <p>Same rig, head split off and trailing the body by 8% of the cycle.</p>
+    <div class="stage">
+      <div class="shadow w-shadow"></div>
+      <div class="drift"><div class="rig"><div class="layers">
+        <div class="head-sway"><div class="head-lag">
+          <img class="head" src="assets/mascot/lab/qaddour-head.png" alt="">
+        </div></div>
+        <img class="body" src="assets/mascot/lab/qaddour-body.png" alt="">
+      </div></div></div>
+    </div>
+  </div>
+</div>
+
+<h2>3 · Masked state swaps</h2>
+<p class="why">The idle is not what gives a mascot away — the <b>cut</b> between states is. Left is a
+straight <code>src</code> change. Right dips and squashes first, swaps at the bottom of the dip while
+he is compressed, then springs out. Same two pictures, and the eye reads one character crouching
+and jumping instead of a slideshow.</p>
+
+<div class="row" style="max-width:660px">
+  <div class="panel">
+    <h3>Hard cut</h3>
+    <p>What a plain <code>src</code> swap looks like.</p>
+    <div class="stage"><div class="shadow" style="opacity:.28"></div>
+      <img id="cut" src="assets/mascot/qaddour-point.png" alt=""></div>
+    <div class="tag">slideshow</div>
+  </div>
+  <div class="panel">
+    <h3>Masked swap</h3>
+    <p>Dip → swap at the extreme → overshoot out.</p>
+    <div class="stage"><div class="shadow" style="opacity:.28"></div>
+      <img id="msk" class="swap" src="assets/mascot/qaddour-point.png" alt=""></div>
+    <div class="tag">one character</div>
+  </div>
+</div>
+
+<div class="bar" style="position:static;border:0;margin-top:4px">
+  <button id="go">Swap state</button>
+  <button class="ghost" id="auto" aria-pressed="true">auto</button>
+  <span id="state">point</span>
+</div>
+
+<h2>4 · Vector face rig</h2>
+<p class="why">The drawing was flat vector art before it was flattened, so the parts that need to move
+trace straight back to paths. <code>tools/vectorize_face.py</code> pulls out the brows, eyelids, eye
+whites, pupils and mouth as <b>13 SVG paths</b> — 12 KB — and erases them from the raster underneath.
+Everything that never moves (hair, beard, glasses, nose, body) stays raster, because re-tracing it
+would only add error.</p>
+
+<div class="row" style="grid-template-columns:minmax(280px,420px) 1fr;align-items:start">
+  <div class="panel">
+    <h3>Live rig</h3>
+    <p>Breathing, blinking, looking around and talking — all from one still drawing.</p>
+    <div class="stage" style="height:440px">
+      <div class="shadow w-shadow" style="bottom:2px"></div>
+      <div class="drift"><div class="rig"><div id="rigHost"></div></div></div>
+    </div>
+  </div>
+  <div class="panel">
+    <h3>Drive it</h3>
+    <p>Presets set brows, lids and mouth together. Toggles run underneath, always.</p>
+    <div class="bar" style="position:static;border:0;padding:0;margin-bottom:10px">
+      <button class="ghost preset" data-mood="idle"      aria-pressed="true">idle</button>
+      <button class="ghost preset" data-mood="happy"     aria-pressed="false">happy</button>
+      <button class="ghost preset" data-mood="surprised" aria-pressed="false">surprised</button>
+      <button class="ghost preset" data-mood="thinking"  aria-pressed="false">thinking</button>
+      <button class="ghost preset" data-mood="talking"   aria-pressed="false">talking</button>
+      <button class="ghost preset" data-mood="sad"       aria-pressed="false">sad</button>
+    </div>
+    <div class="bar" style="position:static;border:0;padding:0">
+      <button class="ghost" id="tBlink" aria-pressed="true">blinking</button>
+      <button class="ghost" id="tSacc"  aria-pressed="true">eye darts</button>
+      <button id="oneBlink">blink now</button>
+    </div>
+    <div class="note" style="margin-top:14px">
+      <b>Why it reads as alive.</b> Blinks are irregular — 2.4&ndash;6.5&nbsp;s apart, and about one in
+      five is a double. Closing takes 70&nbsp;ms, opening 150&nbsp;ms, because a real lid falls and is
+      lifted. The pupils dart to a new spot in 45&nbsp;ms and then hold; eyes never drift smoothly
+      without something to follow. A metronome blink and a gliding pupil are the two things that
+      read instantly as fake.
+    </div>
+  </div>
+</div>
+
+<div class="note">
+  <b>Note.</b> The four swap images are the old flat placeholder states, so they jump in scale —
+  that is the art, not the animation. Real states cut from one approved reference will land in
+  register. This page deliberately ignores <code>prefers-reduced-motion</code>; the app's
+  <code>:root[data-motion="reduced"]</code> guard still applies in production.
+</div>
+</main>
+
+<script>
+const root = document.documentElement;
+
+document.querySelectorAll("[data-speed]").forEach(b => b.onclick = () => {
+  document.querySelectorAll("[data-speed]").forEach(o => o.setAttribute("aria-pressed", o === b));
+  root.style.setProperty("--speed", b.dataset.speed);
+});
+
+const shBtn = document.getElementById("sh");
+shBtn.onclick = () => {
+  const on = shBtn.getAttribute("aria-pressed") !== "true";
+  shBtn.setAttribute("aria-pressed", on); shBtn.textContent = on ? "on" : "off";
+  document.querySelectorAll(".shadow").forEach(s => s.style.visibility = on ? "" : "hidden");
+};
+
+const STATES = ["point", "cheer", "encourage", "concerned"];
+let i = 0;
+const cut = document.getElementById("cut"), msk = document.getElementById("msk"),
+      label = document.getElementById("state");
+
+function src(s) { return "assets/mascot/qaddour-" + s + ".png"; }
+
+function swap() {
+  i = (i + 1) % STATES.length;
+  const next = STATES[i];
+  label.textContent = next;
+  cut.src = src(next);                                  // the slideshow, for contrast
+
+  msk.classList.remove("rise");
+  msk.classList.add("dip");
+  msk.addEventListener("animationend", () => {
+    msk.src = src(next);                                // swapped while squashed — invisible
+    msk.classList.remove("dip");
+    void msk.offsetWidth;                               // restart the rise cleanly
+    msk.classList.add("rise");
+  }, { once: true });
+}
+
+document.getElementById("go").onclick = swap;
+
+/* ---------- 4 · vector face rig ---------- */
+/* Rotation is clockwise in SVG, so a brow's INNER end (nearest the nose) is on the right
+   for the viewer's-left brow and on the left for the other one. Inner ends up reads sad,
+   inner ends down reads stern -- which is why the two signs are always opposite. */
+const MOOD = {
+  idle:      {lid:1,    ly:0,   ry:0,   bl:0,  br:0,  mx:1,    my:1,   talk:0},
+  happy:     {lid:.80,  ly:-6,  ry:-6,  bl:-2, br:2,  mx:1.10, my:1.14,talk:0},
+  surprised: {lid:.32,  ly:-15, ry:-15, bl:-4, br:4,  mx:.76,  my:1.55,talk:0},
+  thinking:  {lid:1.04, ly:-11, ry:1,   bl:-9, br:2,  mx:.90,  my:.34, talk:0},
+  talking:   {lid:.94,  ly:-2,  ry:-2,  bl:-1, br:1,  mx:1,    my:1,   talk:1},
+  sad:       {lid:1.22, ly:5,   ry:5,   bl:-8, br:8,  mx:1.06, my:.30, talk:0},
+};
+
+let svg = null, blinkOn = true, saccOn = true, blinkTimer = 0, saccTimer = 0;
+
+fetch("assets/mascot/lab/face-rig.svg")
+  .then(r => r.text())
+  .then(t => { document.getElementById("rigHost").innerHTML =
+                 t.replace('"face-base.png"', '"assets/mascot/lab/face-base.png"');
+               svg = document.getElementById("qaddour");
+               setMood("idle"); scheduleBlink(); scheduleSaccade(); })
+  .catch(() => { document.getElementById("rigHost").textContent =
+                 "face-rig.svg did not load — run: python tools/vectorize_face.py"; });
+
+function setMood(name) {
+  const m = MOOD[name]; if (!svg) return;
+  svg.style.setProperty("--lid", m.lid);
+  svg.style.setProperty("--brow-ly", m.ly + "px");
+  svg.style.setProperty("--brow-ry", m.ry + "px");
+  svg.style.setProperty("--brow-l", m.bl + "deg");
+  svg.style.setProperty("--brow-r", m.br + "deg");
+  svg.style.setProperty("--mx", m.mx);
+  svg.style.setProperty("--my", m.my);
+  svg.classList.toggle("talking", !!m.talk);
+}
+
+function blink(again) {
+  if (!svg) return;
+  svg.classList.remove("blinking"); void svg.getBoundingClientRect();
+  svg.classList.add("blinking");
+  const lid = document.getElementById("lidL");
+  lid.addEventListener("animationend", () => {
+    svg.classList.remove("blinking");
+    if (again) setTimeout(() => blink(false), 90);       // the occasional double
+  }, { once: true });
+}
+
+function scheduleBlink() {
+  clearTimeout(blinkTimer);
+  // irregular on purpose: a blink on a fixed beat reads as a machine
+  const wait = 2400 + Math.random() * 4100;
+  blinkTimer = setTimeout(() => {
+    if (blinkOn) blink(Math.random() < 0.2);
+    scheduleBlink();
+  }, wait);
+}
+
+function scheduleSaccade() {
+  clearTimeout(saccTimer);
+  saccTimer = setTimeout(() => {
+    if (saccOn && svg) {
+      // mostly small darts, occasionally back to dead centre
+      const c = Math.random() < 0.3;
+      svg.style.setProperty("--px", (c ? 0 : (Math.random() * 2 - 1) * 7).toFixed(1) + "px");
+      svg.style.setProperty("--py", (c ? 0 : (Math.random() * 2 - 1) * 4).toFixed(1) + "px");
+    }
+    scheduleSaccade();
+  }, 900 + Math.random() * 2400);
+}
+
+document.querySelectorAll(".preset").forEach(b => b.onclick = () => {
+  document.querySelectorAll(".preset").forEach(o => o.setAttribute("aria-pressed", o === b));
+  setMood(b.dataset.mood);
+});
+function toggle(btn, set) {
+  btn.onclick = () => {
+    const on = btn.getAttribute("aria-pressed") !== "true";
+    btn.setAttribute("aria-pressed", on); set(on);
+  };
+}
+toggle(document.getElementById("tBlink"), v => blinkOn = v);
+toggle(document.getElementById("tSacc"),  v => saccOn = v);
+document.getElementById("oneBlink").onclick = () => blink(false);
+
+const autoBtn = document.getElementById("auto");
+let timer = setInterval(swap, 2600);
+autoBtn.onclick = () => {
+  const on = autoBtn.getAttribute("aria-pressed") !== "true";
+  autoBtn.setAttribute("aria-pressed", on);
+  clearInterval(timer);
+  if (on) timer = setInterval(swap, 2600);
+};
+</script>
+</html>

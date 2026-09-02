@@ -34,3 +34,14 @@ Thumbs.db
 # Stakeholder pitch deck + its assets — private, never publish
 # (the repo is public and Vercel deploys the whole tree)
 deck/
+
+# Python bytecode from tools/
+tools/__pycache__/
+
+# Mascot: Duolingo reference screenshots (their IP — local reference only, same
+# rule as design-ref/), the superseded generated model sheets, and the edit
+# intermediates that `python tools/mascot_masks.py` regenerates. The drawing,
+# the rig and the shipped states stay tracked.
+assets/mascot/reference/duolingo/
+assets/mascot/sheets/
+assets/mascot/edits/

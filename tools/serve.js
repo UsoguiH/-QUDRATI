@@ -18,6 +18,10 @@ const MIME = {
   ".js": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  // text/plain so the browser SHOWS notes and prompt files instead of downloading
+  // them -- without this they fall through to octet-stream and land in Downloads
+  ".md": "text/plain; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
   ".webmanifest": "application/manifest+json; charset=utf-8",
   ".svg": "image/svg+xml",
   ".png": "image/png",

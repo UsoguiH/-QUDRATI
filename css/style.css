@@ -3824,3 +3824,107 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 @media (min-width: 768px) {
   .ec2 { margin-inline: auto; }
 }
+
+/* ============================================================
+   قدّور — the mascot
+   ------------------------------------------------------------
+   One flat PNG per emotional state plus a small motion layer. Not Rive, not
+   Lottie, not a layered SVG rig — the states are art, and only the entrance
+   is animated.
+
+   HE CAN NEVER BE MIRRORED. `transform: scaleX(-1)` reverses the قدرات on his
+   book, and reversed Arabic is not a stylistic choice, it is a typo the whole
+   audience can read. He points to the viewer's left, so in an RTL column he
+   belongs at the inline-start edge, pointing into the content — never flipped
+   to face the other way.
+   ============================================================ */
+.mascot {
+  display: block; width: auto; height: auto;
+  user-select: none; -webkit-user-drag: none;
+}
+.mascot.pop      { animation: mascotPop .42s cubic-bezier(.3,1.6,.5,1) backwards; }
+.mascot.bob      { animation: mascotBob 2.4s ease-in-out infinite; }
+.mascot.bob-fast { animation: mascotBob .9s ease-in-out infinite; }   /* urgency = tempo, not new art */
+.mascot.shake    { animation: mascotShake .4s ease; }
+
+@keyframes mascotPop {
+  from { transform: translateY(14px) scale(.72); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+@keyframes mascotBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-7px); }
+}
+@keyframes mascotShake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-5px); }
+  75%      { transform: translateX(5px); }
+}
+
+/* The generic modal slot. showModal's first argument was named `emoji` and every
+   caller passed "⭐"; it now takes any HTML, so one change upgrades every modal. */
+.modal .m-owl .mascot { height: 152px; margin: 0 auto; }
+
+:root[data-motion="reduced"] .mascot { animation: none !important; }
+
+/* ---------- قدّور beside the path (Duolingo's placement) ----------
+   Ambient, not a UI element: he stands ON the path's own ground, at z-index 0 so the
+   trail line and the nodes both pass in front of him, and pointer-events:none so he
+   can never eat a tap meant for a lesson. He is sized in rem-free px because the row
+   height that carries him is fixed at 128px. */
+.path-mascot {
+  position: absolute; z-index: 0; pointer-events: none;
+  inset-inline-start: 4px; bottom: -6px;
+  height: 196px;
+  animation: mascotBob 3.6s ease-in-out infinite;
+}
+/* On a narrow phone the path column already fills the width; he would sit on top of
+   the node labels, so he steps out rather than crowding them. */
+@media (max-width: 400px) { .path-mascot { height: 158px; inset-inline-start: -14px; } }
+@media (max-width: 330px) { .path-mascot { display: none; } }
+
+/* ---------- "إليك ما ستحصل عليه" — first-run value screen ----------
+   Modelled on the Duolingo screen in assets/mascot/reference/duolingo: mascot and
+   speech bubble at the top, three icon/title/subtitle rows, one CTA at the bottom. */
+.iv-screen { display: flex; flex-direction: column; padding: 18px 20px calc(20px + env(safe-area-inset-bottom)); }
+.iv-top { display: flex; align-items: flex-end; justify-content: center; gap: 6px; margin: 8px 0 22px; }
+.iv-mascot { height: 184px; flex-shrink: 0; }
+.iv-bubble {
+  position: relative; align-self: center;
+  background: var(--snow); border: 2px solid var(--line); border-radius: 16px;
+  padding: 12px 15px; font-size: 17px; font-weight: 700; color: var(--ink);
+  max-width: 210px; line-height: 1.5;
+  animation: fadeUp .34s .1s ease backwards;
+}
+/* the tail points at قدّور, who stands on the inline-start side */
+.iv-bubble::after,
+.iv-bubble::before {
+  content: ""; position: absolute; top: 50%; margin-top: -9px;
+  border: 9px solid transparent; inset-inline-start: -18px;
+}
+.iv-bubble::before { border-inline-end-color: var(--line); }
+.iv-bubble::after  { border-inline-end-color: var(--snow); margin-inline-start: 3px; }
+
+.iv-rows { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.iv-row {
+  display: flex; align-items: center; gap: 14px; padding: 15px 4px;
+  animation: fadeUp .38s var(--d, .2s) ease backwards;
+}
+.iv-row + .iv-row { border-top: 2px solid var(--line); }
+.iv-ic {
+  width: 46px; height: 46px; border-radius: 13px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.iv-purple .iv-ic { background: var(--purple-tint); }
+.iv-blue   .iv-ic { background: var(--blue-light); }
+.iv-gold   .iv-ic { background: #FFF3C4; }
+.iv-tx { display: flex; flex-direction: column; gap: 3px; }
+.iv-tx b { font-size: 16.5px; font-weight: 800; color: var(--ink); line-height: 1.35; }
+.iv-tx span { font-size: 14px; font-weight: 600; color: var(--gray); line-height: 1.55; }
+.iv-cta { margin-top: 18px; }
+
+@media (max-height: 660px) {
+  .iv-mascot { height: 140px; }
+  .iv-row { padding: 11px 4px; }
+  .iv-top { margin-bottom: 14px; }
+}

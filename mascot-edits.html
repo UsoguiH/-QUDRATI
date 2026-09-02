@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>قدّور — the edits</title>
+<style>
+:root { --bg:#fff; --fg:#1f2328; --dim:#59636e; --line:#d8dee4; --card:#f6f8fa;
+        --accent:#58CC02; --accent-d:#46a302; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#0d1117; --fg:#e6edf3; --dim:#9198a1; --line:#30363d; --card:#161b22; } }
+* { box-sizing:border-box; }
+body { margin:0; padding:24px 16px 80px; background:var(--bg); color:var(--fg);
+       font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif; }
+main { max-width:900px; margin:0 auto; }
+h1 { font-size:30px; margin:0 0 4px; }
+p.sub { color:var(--dim); margin:0 0 20px; }
+.note { background:var(--card); border:1px solid var(--line); border-radius:10px;
+        padding:14px 16px; margin:16px 0 28px; }
+.note b { color:var(--fg); }
+.card { border:1px solid var(--line); border-radius:12px; overflow:hidden; margin:0 0 24px; }
+.bar { display:flex; align-items:center; gap:12px; padding:10px 12px;
+       background:var(--card); border-bottom:1px solid var(--line); }
+.bar .name { font-weight:600; flex:1; }
+.bar .file { color:var(--dim); font:13px/1 ui-monospace,SFMono-Regular,Consolas,monospace; }
+.body { display:grid; grid-template-columns:260px 1fr; }
+@media (max-width:640px) { .body { grid-template-columns:1fr; } }
+.zone { padding:12px; border-right:1px solid var(--line); }
+.zone img { width:100%; border-radius:8px; display:block; }
+.zone .cap { color:var(--dim); font-size:13px; margin-top:6px; }
+.zone .cap code { font-size:12px; }
+button { font:600 15px/1 inherit; color:#fff; background:var(--accent); border:0;
+         border-bottom:3px solid var(--accent-d); border-radius:10px; padding:11px 20px;
+         cursor:pointer; }
+button:active { transform:translateY(2px); border-bottom-width:1px; }
+button.done { background:#1899D6; border-bottom-color:#1077b0; }
+pre { margin:0; padding:14px 16px; white-space:pre-wrap;
+      font:13px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace; color:var(--dim); }
+.check { padding:10px 16px; border-top:1px solid var(--line); color:var(--dim); font-size:14px; }
+.err { color:#c33; }
+</style>
+<main>
+  <h1>قدّور — the edits</h1>
+  <p class="sub">Two arm repaints. The drawing itself is the third pose. The face rig does every expression.</p>
+  <div class="note">
+    <b>ChatGPT:</b> upload <code>assets/mascot/edits/qaddour-base.png</code> → Edit → brush over
+    the red zone shown beside each prompt → paste. &nbsp;
+    <b>fal.ai / API:</b> image = <code>qaddour-base.png</code>, mask = the
+    <code>mask-…png</code> named on the card. &nbsp;
+    Save the result at its original <b>1361×1156</b> — no crop, no resize.
+  </div>
+  <div id="out"><p class="sub">Loading…</p></div>
+</main>
+<script>
+/* Reads MASCOT-EDITS.md so the prompts live in exactly one place.
+   Needs the dev server (node tools/serve.js) — file:// blocks the fetch. */
+fetch("MASCOT-EDITS.md").then(function (r) {
+  if (!r.ok) throw new Error(r.status);
+  return r.text();
+}).then(render).catch(function () {
+  document.getElementById("out").innerHTML =
+    '<p class="err">Could not read MASCOT-EDITS.md — run <code>node tools/serve.js</code> ' +
+    'and open this page from http://localhost:8080/, not from the file system.</p>';
+});
+
+function esc(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function render(md) {
+  var out = [], i = 0;
+  /* "## 1 — `down`" … "Save as **file**" … (any lines) … ```prompt``` … "**Check:** …" … "---" */
+  var re = /^## \d+ — `([a-z]+)`\s*\n+Save as \*\*(.+?)\*\*[\s\S]*?```\n([\s\S]*?)\n```\s*\n+\*\*Check:\*\*([\s\S]*?)(?=\n---)/gm, m;
+  while ((m = re.exec(md))) {
+    i++;
+    var pose = m[1];
+    out.push(
+      '<div class="card">' +
+        '<div class="bar">' +
+          '<span class="name">' + i + '. ' + esc(pose) + '</span>' +
+          '<span class="file">' + esc(m[2]) + '</span>' +
+          '<button data-for="p' + i + '">Copy prompt</button>' +
+        '</div>' +
+        '<div class="body">' +
+          '<div class="zone">' +
+            '<img src="assets/mascot/edits/preview-' + pose + '.png" alt="repaint zone for ' + pose + '">' +
+            '<div class="cap">Red = the only pixels that change.<br>mask: <code>mask-' + pose + '.png</code></div>' +
+          '</div>' +
+          '<pre id="p' + i + '">' + esc(m[3]) + '</pre>' +
+        '</div>' +
+        '<div class="check"><b>Check:</b>' + esc(m[4].trim()) + '</div>' +
+      '</div>');
+  }
+  document.getElementById("out").innerHTML =
+    out.length ? out.join("") : '<p class="err">No edits found in the markdown.</p>';
+}
+
+document.addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-for]");
+  if (!b) return;
+  var txt = document.getElementById(b.dataset.for).textContent;
+  navigator.clipboard.writeText(txt).then(function () {
+    var was = b.textContent;
+    b.textContent = "Copied ✓"; b.classList.add("done");
+    setTimeout(function () { b.textContent = was; b.classList.remove("done"); }, 1600);
+  });
+});
+</script>
+</html>

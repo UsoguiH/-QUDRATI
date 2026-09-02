@@ -57,7 +57,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {} };
+const DEFAULT_STATE = { v: 1, disclaimer: false, introSeen: false, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], dailyQ: null, league: null, mistakes: {} };
 /* The rivals. A student who suspects the board is padded looks at the names
    first, and a column of two dozen tidy Arabic first names is the one
    arrangement that never occurs on a real sign-up sheet. These are drawn in
@@ -648,6 +648,20 @@ A.chestTap = function () {
   toast(`باقي ${qCount(DAILY_GOAL - S.daily.n)} لفتح صندوق اليوم 🎁`);
 };
 function bottomnav(active) {
+/* ---------------- قدّور (the mascot) ----------------
+   One flat PNG per emotional state. Only the states whose art actually exists
+   are listed: a name that is not here renders nothing at all rather than a
+   broken-image icon on a live site. Add a key the same day you add its file.
+
+   `cls` carries the motion (pop / bob / bob-fast / shake) and the placement
+   class. He is decorative in every placement — the screen always states its
+   own meaning in text — so alt is empty and he is hidden from assistive tech. */
+const MASCOT_STATES = { encourage: 1, cheer: 1, point: 1, concerned: 1 };
+function mascot(state, cls) {
+  if (!MASCOT_STATES[state]) return "";
+  return `<img class="mascot ${cls || ""}" src="assets/mascot/qaddour-${state}.png" alt="" aria-hidden="true">`;
+}
+
   /* the labels were the state keys — "path", "league" — read aloud in Arabic */
   const items = [["path", "nav-home", "الدروس"], ["league", "nav-league", "المجلس"],
     ["mock", "nav-exam", "اختبار تجريبي"], ["stats", "nav-stats", "إحصائياتي"], ["more", "nav-more", "المزيد"]];
@@ -863,13 +877,19 @@ function renderPath() {
          own face is gold (#FFC800 below), so the darker star is what reads
          against it. star-gold here put a gold star on a gold coin. */
       const nodeIcon = done ? ico("star-done", 40) : ico("star", 40);
+  /* قدّور stands beside the path, the way Duo does — scenery the student walks past,
+     not a card or a sheet. Index 5 is deliberate: `right:46` swings that node to the
+     LEFT, which is the only side that leaves him room, and it puts the path on his
+     pointing side so he gestures INTO the lessons instead of off-screen. He must never
+     be flipped to face the other way — see the mascot note in style.css. */
+  const PATH_MASCOT_AT = 5;
       const ring = current ? `<svg class="node-ring" viewBox="0 0 89 84" fill="none">
           <ellipse cx="44.5" cy="42" rx="41.5" ry="39" stroke="#E5E5E5" stroke-width="6"/>
           <path d="M 44.5 3 A 41.5 39 0 0 1 81.5 25" stroke="${u.c}" stroke-width="6" stroke-linecap="round"/>
         </svg>` : "";
       // exact Figma "Level" colors per state: gold done / unit-color open / gray locked
       const nc = done ? ["#FFC800", "#E6A000", "#FFE700"] : open ? [u.c, u.s, u.h] : ["#D2D2D2", "#ADADAD", "transparent"];
-      html += `<div class="path-row"><div class="node-col${current ? " bob" : ""}" style="right:${x}px">
+      html += `<div class="path-row">${gi === PATH_MASCOT_AT ? mascot("point", "path-mascot") : ""}<div class="node-col${current ? " bob" : ""}" style="right:${x}px">
         ${ring}
         <button class="node ${cls}" style="--node-c:${nc[0]};--node-s:${nc[1]};--node-h:${nc[2]};--d:${(gi % 10) * 0.06}s"
           aria-label="${l.title} — ${done ? "مكتمل، " + arPlural(p.stars, "نجمة واحدة", "نجمتان", "نجوم", "نجمة") : current ? "الدرس الحالي" : "مقفل"}"
@@ -1003,7 +1023,7 @@ A.startLesson = function (domKey, lesKey, boost) {
   const d = window.QBANK[domKey], l = d.lessons.find(x => x.key === lesKey);
   const key = domKey + "." + lesKey;
   const qs = pickLessonQuestions(l, key);
-  if (!qs.length) { showModal("⭐", "لا توجد أسئلة", "لا توجد أسئلة متاحة لهذا الدرس في مسارك الحالي.", "حسناً"); return; }
+  if (!qs.length) { showModal(mascot("point", "pop"), "لا توجد أسئلة", "لا توجد أسئلة متاحة لهذا الدرس في مسارك الحالي.", "حسناً"); return; }
   warmStreak();                                          // preload the fire-streak assets during the lesson
   const prev = S.lessons[key];
   const replay = !!(prev && prev.stars > 0);            // already cleared → farm mode (+2/+2)
@@ -2071,7 +2091,7 @@ A.startMock = function () {
       left: MOCK_SECS
     });
   }
-  if (!sections[0].items.length) { showModal("⭐", "لا توجد أسئلة", "بنك الأسئلة غير متاح.", "حسناً"); return; }
+  if (!sections[0].items.length) { showModal(mascot("point", "pop"), "لا توجد أسئلة", "بنك الأسئلة غير متاح.", "حسناً"); return; }
   MOCK = { sections, si: 0, qi: 0, timer: null };
   startMockSection();
 };
@@ -3332,16 +3352,18 @@ function askConfirm(title, body, stayText, goText, onGo) {
   veil.querySelector("#askStay").focus();
 }
 
-function showModal(emoji, title, bodyHtml, btnText, onclose) {
+/* `hero` is raw HTML, not text: the slot has always been injected unescaped, and it
+   now carries قدّور rather than the ⭐ every caller used to pass. */
+function showModal(hero, title, bodyHtml, btnText, onclose) {
   const veil = document.createElement("div");
   veil.className = "modal-veil";
-  veil.innerHTML = `<div class="modal"><div class="m-owl">${emoji}</div><h2>${title}</h2><p>${bodyHtml}</p>
+  veil.innerHTML = `<div class="modal"><div class="m-owl">${hero}</div><h2>${title}</h2><p>${bodyHtml}</p>
     <button class="btn" id="mOk">${btnText}</button></div>`;
   document.body.appendChild(veil);
   veil.querySelector("#mOk").onclick = () => { veil.remove(); if (onclose) onclose(); };
 }
 A.showAbout = function () {
-  showModal("⭐", "حول تطبيق قدراتي", DISCLAIMER_HTML + `<br><a class="linkout" href="https://etec.gov.sa" target="_blank" rel="noopener">↗ الموقع الرسمي لهيئة تقويم التعليم والتدريب</a>`, "حسناً");
+  showModal(mascot("point", "pop"), "حول تطبيق قدراتي", DISCLAIMER_HTML + `<br><a class="linkout" href="https://etec.gov.sa" target="_blank" rel="noopener">↗ الموقع الرسمي لهيئة تقويم التعليم والتدريب</a>`, "حسناً");
 };
 
 /* Start-screen hero: XP-coins trio (recreated from the Duolingo UI-kit
@@ -4001,8 +4023,40 @@ function renderProfile() {
   const flat = allLessons();
   let doneN = 0; flat.forEach(x => { if (lessonProg(x.key).stars > 0) doneN++; });
   const acc = overallAccuracy(), days = examDaysLeft();
+/* ---------------- "إليك ما ستحصل عليه" (first run) ----------------
+   Sells the outcome before asking for effort. It runs BEFORE the exam-date picker,
+   because the picker asks the student to commit something and this is what earns
+   that. Shown once ever — S.introSeen — so it never becomes a nag. */
+const INTRO_VALUE = [
+  { ic: "book",   c: "purple", t: "تدرّب على نمط الاختبار الحقيقي",
+    s: "أسئلة أصلية بصيغة قياس، ولكل سؤال حل مشروح خطوة بخطوة" },
+  { ic: "target", c: "blue",   t: "اعرف مستواك بالضبط",
+    s: "محاكاة كاملة للاختبار مع تقدير لدرجتك وأضعف أقسامك" },
+  { ic: "streak", c: "gold",   t: "خلِّ المذاكرة عادة",
+    s: "سلسلة يومية، وعدّاد يعدّ معك لموعد اختبارك" }
+];
+function renderIntroValue() {
+  $app.innerHTML = `<div class="screen screen-full iv-screen">
+    <div class="iv-top">
+      <div class="iv-bubble">إليك ما ستحصل عليه مع قدراتي!</div>
+      ${mascot("point", "iv-mascot pop")}
+    </div>
+    <div class="iv-rows">` + INTRO_VALUE.map((r, i) => `
+      <div class="iv-row iv-${r.c}" style="--d:${(0.18 + i * 0.12).toFixed(2)}s">
+        <span class="iv-ic">${ico(r.ic, 26)}</span>
+        <span class="iv-tx"><b>${r.t}</b><span>${r.s}</span></span>
+      </div>`).join("") + `
+    </div>
+    <div class="login-form iv-cta"><button class="btn" onclick="A.introDone()">المتابعة</button></div>
+  </div>`;
+  window.scrollTo(0, 0);
+}
+A.introDone = function () { S.introSeen = true; save(); afterLogin(); };
+A.introReplay = function () { renderIntroValue(); };   // preview.html#intro
+
   const nextT = LEAGUE_TIERS[tierIndex() + 1];
   const tierPct = nextT
+  if (!S.introSeen) { renderIntroValue(); return; }
     ? Math.max(0, Math.min(100, Math.round((S.totalXp - t.min) / (nextT.min - t.min) * 100))) : 100;
 
   $app.innerHTML = statbar() + `<div class="screen"><div class="page pf">
