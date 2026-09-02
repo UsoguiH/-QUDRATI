@@ -96,8 +96,9 @@ svg.ic { display: block; }
   position: sticky; top: 0; z-index: 30;
   display: flex; justify-content: space-around; align-items: center;
   height: 54px; padding: 0 16px;
-  background: none;
-  pointer-events: none;          /* the gaps belong to the path underneath */
+  /* Opaque, like Duolingo's: with no background the lesson labels scrolled
+     up under it and showed through between the counters. */
+  background: var(--snow);
 }
 .statbar > * { pointer-events: auto; }
 .stat { display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: 16px; }
@@ -201,6 +202,8 @@ svg.ic { display: block; }
    ============================================================ */
 .path { display: flex; flex-direction: column; align-items: center; padding: 38px 0 6px; position: relative; }
 .path-row { position: relative; height: 142px; width: 100%; display: flex; justify-content: center; }
+/* room under the last node so its start bubble can always scroll it up into view */
+.path-tail { height: 200px; }
 .node-col { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
 
 .node {
@@ -1447,6 +1450,8 @@ button.dom-stat:active { transform: scale(.99); }
 /* --- boot hero --- */
 .hero .win-hero { margin: 0 auto 10px; }
 .hero h1 { animation: titleIn .5s .3s cubic-bezier(.3,1.5,.5,1) backwards; }
+/* held back while the path scrolls the node into place; springs in on landing */
+.lesson-pop.pending { visibility: hidden; animation: none; }
 .hero p { animation: fadeUp .4s .55s ease backwards; }
 
 /* ============================================================

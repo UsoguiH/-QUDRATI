@@ -905,7 +905,7 @@ function renderPath() {
     });
     html += `</div>`;
   });
-  $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${dailyQuestionCard()}${html}<div style="height:20px"></div></div>` + floatingQuest() + bottomnav("path");
+  $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${dailyQuestionCard()}${html}<div class="path-tail"></div></div>` + floatingQuest() + bottomnav("path");
   requestAnimationFrame(() => {
     drawTrails();
     const cur = document.querySelector('.path-row .bob');
@@ -1014,7 +1014,6 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   const nr = btn.getBoundingClientRect();
   const pcr = (path || btn.parentElement).getBoundingClientRect();
   const dx = (nr.left + nr.width / 2) - (pcr.left + pcr.width / 2);
-  pop.style.top = Math.max(8, Math.min(nr.bottom + 14, window.innerHeight - 200)) + "px";
   pop.style.setProperty("--arrow-x",
     "clamp(20px, calc(50% - " + dx.toFixed(1) + "px), calc(100% - 20px))");
 };
@@ -1034,6 +1033,33 @@ A.startLesson = function (domKey, lesKey, boost) {
      mistake — and none of it had ever rendered, because each question also
      carries its own method and "q.method || SES.method" always took the
      question's. Teach first on a lesson you have not cleared. */
+  /* Make room the way Duolingo does. The bubble used to be clamped to the
+     viewport, which parked it ON TOP of the node it was pointing at whenever
+     that node sat in the lower part of the screen. Now: if the bubble would
+     run under the tab bar, scroll the node up by exactly that much, open the
+     bubble where the node is going to be, and let it spring in once the
+     scroll lands. offsetHeight is used because it ignores the spring-in
+     transform — getBoundingClientRect() read back zero mid-spring. */
+  const gap = 14, popH = pop.offsetHeight;
+  const navH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h")) || 0;
+  const floor = window.innerHeight - navH - 10;
+  const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight - window.scrollY);
+  let dy = Math.min(maxScroll, Math.max(0, nr.bottom + gap + popH - floor));
+  if (nr.top - dy < 64) dy = Math.max(0, nr.top - 64);           // never under the stat bar
+  pop.style.top = Math.max(8, nr.bottom - dy + gap) + "px";
+  if (dy > 0) {
+    pop.classList.add("pending");
+    let landed = false;
+    const land = () => {
+      if (landed) return;
+      landed = true;
+      window.removeEventListener("scrollend", land);
+      pop.classList.remove("pending");
+    };
+    window.addEventListener("scrollend", land);
+    setTimeout(land, 450);                                      // browsers without scrollend
+    window.scrollBy({ top: dy, behavior: "smooth" });
+  }
   if (!replay && l.method) { renderLessonIntro(d, l); return; }
   renderSession();
 };
