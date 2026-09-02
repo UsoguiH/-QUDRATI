@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>متى اختبارك؟ — قدراتي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;500;600;700;800&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<style>
+  @property --sp{syntax:"<number>";initial-value:1;inherits:true}
+  :root{
+    /* Duolingo-ish palette */
+    --feather:#58CC02;
+    --feather-dark:#46A302;
+    --feather-light:#D7FFB8;
+    --macaw:#1CB0F6;
+    --macaw-dark:#1899D6;
+    --macaw-light:#DDF4FF;
+    --bee:#FFC800;
+    --bee-dark:#E6A100;
+    --eel:#4B4B4B;
+    --wolf:#777777;
+    --hare:#AFAFAF;
+    --swan:#E5E5E5;
+    --polar:#F7F7F7;
+    --snow:#FFFFFF;
+    --ease:cubic-bezier(.2,.8,.25,1);
+    --sp:1;              /* animation speed multiplier, 4 = slow motion */
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    background:var(--snow);color:var(--eel);
+    font-family:"Baloo Bhaijaan 2","Nunito",system-ui,sans-serif;
+    font-weight:600;
+    display:flex;justify-content:center;
+  }
+  .screen{
+    width:100%;max-width:440px;min-height:100%;
+    display:flex;flex-direction:column;
+    padding:16px 16px 0;
+  }
+
+  /* ---------- top bar ---------- */
+  .topbar{display:flex;align-items:center;padding:6px 0 14px}
+  .x{
+    border:0;background:none;cursor:pointer;color:var(--hare);
+    font-size:26px;font-weight:800;line-height:1;padding:2px 4px;
+    font-family:"Nunito",sans-serif;
+  }
+  .x:hover{color:var(--wolf)}
+  /* ---------- header ---------- */
+  h1{font-size:27px;font-weight:800;line-height:1.4}
+
+  /* ---------- countdown ---------- */
+  .count{
+    margin:16px 0 14px;padding:14px 16px;
+    background:var(--snow);border:2px solid var(--swan);border-bottom-width:4px;border-radius:16px;
+    display:flex;align-items:center;gap:14px;min-height:98px;
+  }
+  .count .badge{
+    flex:none;width:66px;height:66px;border-radius:18px;
+    background:var(--feather-light);border:0;
+    display:grid;place-items:center;
+    font-size:28px;font-weight:800;color:var(--feather-dark);line-height:1;
+    font-variant-numeric:tabular-nums;
+  }
+  .count .badge.flash{animation:springBadge calc(.52s*var(--sp)) var(--ease) calc(.58s*var(--sp)) forwards}
+  @keyframes springBadge{
+    0%  {transform:scale(1.22,.84)}
+    28% {transform:scale(.93,1.06)}
+    52% {transform:scale(1.06,.97)}
+    76% {transform:scale(.98,1.01)}
+    100%{transform:scale(1,1)}
+  }
+
+  .count .meta{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .count .meta.flash{animation:riseIn calc(.4s*var(--sp)) var(--ease) calc(.64s*var(--sp)) forwards}
+  @keyframes riseIn{0%{transform:translateY(7px)}100%{transform:none}}
+  .count .unit{font-size:18px;font-weight:800;color:var(--feather-dark)}
+  .count .when{font-size:14px;font-weight:600;color:var(--eel)}
+  .count .hijri{font-size:13px;font-weight:500;color:var(--hare)}
+  .count.empty .badge{background:var(--polar);border-color:var(--swan);color:var(--hare);font-size:30px}
+  .count.empty .unit{color:var(--wolf)}
+
+  /* ---------- calendar ---------- */
+  .cal{position:relative;background:var(--snow);border:2px solid var(--swan);border-bottom-width:4px;border-radius:16px;padding:14px 10px 14px}
+  .cal-top{display:flex;align-items:center;justify-content:space-between;padding:0 4px 12px}
+  .month{font-size:19px;font-weight:800}
+  .nav{display:flex;gap:8px}
+  .nav button{
+    width:40px;height:40px;border:2px solid var(--swan);border-bottom-width:4px;
+    background:var(--snow);border-radius:14px;color:var(--macaw);
+    font-family:"Nunito",sans-serif;font-size:18px;font-weight:900;cursor:pointer;
+    display:grid;place-items:center;transition:background .12s var(--ease),transform .08s var(--ease);
+  }
+  .nav button:hover:not(:disabled){background:var(--polar)}
+  .nav button:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px}
+  .nav button:disabled{color:var(--swan);cursor:not-allowed}
+  .nav button:focus-visible,.day:focus-visible,.cta:focus-visible,.ghost:focus-visible,.x:focus-visible{
+    outline:3px solid var(--macaw);outline-offset:2px;
+  }
+
+  .dow{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:8px}
+  .dow span{text-align:center;font-size:12px;font-weight:700;color:var(--hare);letter-spacing:.2px}
+  .dow span.we{color:#D9C48A}
+
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .grid.slide-r{animation:slideR .26s var(--ease)}
+  .grid.slide-l{animation:slideL .26s var(--ease)}
+  @keyframes slideR{from{transform:translateX(-16px);opacity:0}to{transform:none;opacity:1}}
+  @keyframes slideL{from{transform:translateX(16px);opacity:0}to{transform:none;opacity:1}}
+
+  .day{
+    position:relative;aspect-ratio:1/1;border:2px solid transparent;background:transparent;
+    border-radius:14px;cursor:pointer;font-family:inherit;font-size:16px;font-weight:700;
+    color:var(--eel);display:grid;place-items:center;
+    transition:background .12s var(--ease),transform .08s var(--ease);
+  }
+  .day.pad{visibility:hidden}
+  .day:hover:not(:disabled):not(.selected){background:var(--polar)}
+  .day:active:not(:disabled){transform:scale(.92)}
+  .day:disabled{color:#DEDEDE;cursor:default}
+
+  .day.run{background:var(--feather-light);border-radius:6px;color:#4C8B18}
+  .day.run.run-start{border-start-start-radius:14px;border-end-start-radius:14px}
+  .day.run.run-end{border-start-end-radius:14px;border-end-end-radius:14px}
+
+  .day.today{
+    background:var(--macaw-light);border-color:#84D8FF;color:var(--macaw-dark);
+    border-radius:14px;font-weight:800;
+  }
+  .day.selected{
+    background:var(--feather);border-color:var(--feather-dark);border-bottom-width:4px;
+    color:#fff;font-weight:800;border-radius:14px;
+  }
+  /* ---------- THE JUMP ----------
+     0-80ms   crouch (squash into the grid)
+     80-120   explosive extension, stretched thin
+     120-380  rise, decelerating, shape recovers
+     380-420  apex hang at -52px
+     420-580  fall, accelerating, stretch again
+     580      IMPACT: hard squash + sparks + card thud
+     580-1000 two decaying bounces (16px, 5px) then settle
+  ------------------------------------ */
+  .day.jump{
+    animation:duoJump calc(1s*var(--sp)) both;
+    transform-origin:bottom center;
+    z-index:3;
+  }
+  @keyframes duoJump{
+    0%   {transform:translateY(0) scale(1,1);        animation-timing-function:cubic-bezier(.34,.1,.64,1)}
+    8%   {transform:translateY(4px) scale(1.24,.74); animation-timing-function:cubic-bezier(.05,.7,.1,1)}
+    12%  {transform:translateY(-12px) scale(.82,1.32);animation-timing-function:cubic-bezier(.1,.6,.35,1)}
+    21%  {transform:translateY(-34px) scale(.9,1.16);animation-timing-function:cubic-bezier(.25,.55,.45,1)}
+    32%  {transform:translateY(-48px) scale(.98,1.04);animation-timing-function:cubic-bezier(.3,.5,.5,1)}
+    38%  {transform:translateY(-52px) scale(1,1);    animation-timing-function:cubic-bezier(.55,.05,.85,.3)}
+    47%  {transform:translateY(-35px) scale(.94,1.1)}
+    54%  {transform:translateY(-7px) scale(.86,1.22); animation-timing-function:cubic-bezier(.4,0,.2,1)}
+    58%  {transform:translateY(0) scale(1.3,.7);     animation-timing-function:cubic-bezier(.1,.7,.3,1)}
+    64%  {transform:translateY(-16px) scale(.92,1.11);animation-timing-function:cubic-bezier(.5,.05,.8,.4)}
+    71%  {transform:translateY(0) scale(1.16,.86);   animation-timing-function:cubic-bezier(.1,.8,.3,1)}
+    77%  {transform:translateY(-5px) scale(.97,1.05);animation-timing-function:cubic-bezier(.5,.05,.8,.4)}
+    82%  {transform:translateY(0) scale(1.08,.93)}
+    89%  {transform:translateY(-1.5px) scale(.99,1.01)}
+    95%  {transform:translateY(0) scale(1.02,.98)}
+    100% {transform:translateY(0) scale(1,1)}
+  }
+
+  /* ground shadow: shrinks as it flies, splats on landing */
+  .fx{position:absolute;inset:0;pointer-events:none;overflow:visible}
+  .fx-back{z-index:0}
+  .fx-front{z-index:5}
+  .fx .shade{
+    position:absolute;border-radius:50%;
+    background:rgba(30,50,20,.3);filter:blur(2.5px);
+    animation:shade calc(1s*var(--sp)) both;
+  }
+  @keyframes shade{
+    0%  {transform:scale(1,1);opacity:.22}
+    8%  {transform:scale(1.3,1);opacity:.26}
+    38% {transform:scale(.26,.6);opacity:.03}
+    58% {transform:scale(1.45,1.1);opacity:.3}
+    64% {transform:scale(.75,.85);opacity:.12}
+    71% {transform:scale(1.2,1);opacity:.24}
+    82% {transform:scale(1.05,1);opacity:.18}
+    100%{transform:scale(1,1);opacity:0}
+  }
+
+  /* sparks kicked up by the landing */
+  .fx .spark{
+    position:absolute;border-radius:50%;opacity:0;
+    animation:spark calc(.5s*var(--sp)) cubic-bezier(.2,.7,.4,1) calc(.58s*var(--sp)) both;
+  }
+  @keyframes spark{
+    0%  {transform:translate(0,0) scale(.3);opacity:1}
+    70% {opacity:1}
+    100%{transform:translate(var(--tx),var(--ty)) scale(.2);opacity:0}
+  }
+
+  .cal.thud{animation:thud calc(.24s*var(--sp)) ease-out calc(.56s*var(--sp))}
+  @keyframes thud{0%,100%{transform:translateY(0)}45%{transform:translateY(2px)}}
+
+  /* trail: numbers always visible; green ripples out from the exam day on impact */
+  .day.run.anim{background-color:transparent;animation:runIn calc(.3s*var(--sp)) var(--ease) forwards}
+  @keyframes runIn{
+    0%  {background-color:rgba(215,255,184,0);transform:scale(1)}
+    45% {background-color:var(--feather-light);transform:scale(1.18)}
+    100%{background-color:var(--feather-light);transform:scale(1)}
+  }
+
+  .mbanner{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    background:#FFF6D6;border:2px solid #FFE08A;border-radius:14px;
+    padding:11px 14px;margin-bottom:14px;font-size:13px;font-weight:600;color:#8A6100;
+  }
+  .mbanner button{
+    margin-inline-start:auto;border:0;border-radius:10px;padding:8px 14px;
+    background:var(--bee);color:#7A5300;font-family:inherit;font-weight:800;font-size:13px;cursor:pointer;
+    box-shadow:0 3px 0 var(--bee-dark);
+  }
+  .mbanner button:active{transform:translateY(3px);box-shadow:none}
+
+  .tools{
+    display:flex;gap:8px;justify-content:center;
+    padding-top:14px;margin-top:12px;border-top:2px solid var(--swan);
+  }
+  .tool{
+    border:2px solid var(--swan);border-bottom-width:4px;background:#fff;border-radius:12px;
+    padding:8px 14px;font-family:inherit;font-weight:700;font-size:13px;color:var(--wolf);cursor:pointer;
+  }
+  .tool:hover:not(:disabled){background:var(--polar)}
+  .tool:active:not(:disabled){transform:translateY(2px);border-bottom-width:2px}
+  .tool:disabled{opacity:.4;cursor:not-allowed}
+  .tool.on{border-color:var(--macaw);color:var(--macaw)}
+
+  .legend{
+    display:flex;gap:14px;flex-wrap:wrap;justify-content:center;
+    padding-top:12px;margin-top:10px;
+    font-size:12px;font-weight:600;color:var(--hare);
+  }
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:4px;margin-inline-end:5px;vertical-align:-1px}
+  .legend .l1{background:var(--feather)}
+  .legend .l2{background:var(--feather-light)}
+  .legend .l3{background:var(--macaw-light);box-shadow:inset 0 0 0 2px #84D8FF}
+
+  /* ---------- footer ---------- */
+  .foot{margin-top:auto;padding:20px 0 22px;border-top:2px solid var(--swan);margin-top:auto}
+  .foot.done{border-top-color:transparent;background:var(--feather-light);margin-inline:-16px;padding-inline:16px}
+  .doneMsg{display:none;align-items:center;gap:12px;margin-bottom:16px}
+  .foot.done .doneMsg{display:flex}
+  .doneMsg .tick{
+    flex:none;width:44px;height:44px;border-radius:50%;background:#fff;
+    display:grid;place-items:center;color:var(--feather-dark);
+    font-family:"Nunito",sans-serif;font-weight:900;font-size:22px;
+  }
+  .doneMsg .txt b{display:block;font-size:19px;font-weight:800;color:var(--feather-dark)}
+  .doneMsg .txt span{font-size:14px;font-weight:600;color:#5F8B33}
+  .foot.done .ghost{display:none}
+
+  .cta{
+    width:100%;border:0;border-radius:16px;padding:16px;
+    background:var(--feather);color:#fff;cursor:pointer;
+    font-family:inherit;font-weight:800;font-size:18px;letter-spacing:.4px;
+    box-shadow:0 4px 0 var(--feather-dark);
+    transition:transform .08s var(--ease),box-shadow .08s var(--ease),background .12s var(--ease);
+  }
+  .cta:hover:not(:disabled){background:#61DB03}
+  .cta:active:not(:disabled){transform:translateY(4px);box-shadow:0 0 0 var(--feather-dark)}
+  .cta:disabled{background:var(--swan);color:var(--hare);box-shadow:none;cursor:not-allowed}
+  .ghost{
+    display:block;width:100%;margin-top:12px;padding:6px;background:none;border:0;cursor:pointer;
+    font-family:inherit;font-size:15px;font-weight:700;color:var(--hare);letter-spacing:.3px;
+  }
+  .ghost:hover{color:var(--wolf)}
+
+
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  /* Windows "animation effects: off" and macOS "reduce motion" both report
+     prefers-reduced-motion:reduce, which used to kill every animation here
+     with no way back. It is now scoped: adding .motion-on to <html> opts in. */
+  @media (prefers-reduced-motion:reduce){
+    :root:not(.motion-on) *{animation:none!important;transition:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+
+  <div class="topbar">
+    <button class="x" type="button" id="close" aria-label="إغلاق">✕</button>
+  </div>
+
+  <div class="mbanner" id="mBanner" hidden>
+    <span>جهازك مضبوط على <b>تقليل الحركة</b>، لذلك الرسوم متوقفة.</span>
+    <button type="button" id="mOn">تفعيل الحركة</button>
+  </div>
+
+  <h1>متى اختبارك؟</h1>
+
+  <section class="count empty" id="count" aria-live="polite">
+    <div class="badge" id="badge">؟</div>
+    <div class="meta">
+      <div class="unit" id="unit">اختر يوم اختبارك</div>
+      <div class="when" id="when">اضغط على أي يوم في التقويم</div>
+      <div class="hijri" id="hijri"></div>
+    </div>
+  </section>
+
+  <section class="cal">
+    <div class="fx fx-back" id="fxBack" aria-hidden="true"></div>
+    <div class="cal-top">
+      <div class="month" id="monthLabel"></div>
+      <div class="nav">
+        <button id="prev" type="button" aria-label="الشهر السابق"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true"><path d="M9 5 16 12 9 19" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button id="next" type="button" aria-label="الشهر التالي"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" aria-hidden="true"><path d="M15 5 8 12 15 19" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+    </div>
+
+    <div class="dow" aria-hidden="true">
+      <span>أحد</span><span>إثنين</span><span>ثلاثاء</span><span>أربعاء</span><span>خميس</span><span class="we">جمعة</span><span class="we">سبت</span>
+    </div>
+
+    <div class="grid" id="grid" role="grid" aria-label="اختر تاريخ الاختبار"></div>
+
+    <div class="fx fx-front" id="fxFront" aria-hidden="true"></div>
+
+    <div class="tools">
+      <button class="tool" id="replay" type="button" disabled>▶ إعادة الحركة</button>
+      <button class="tool" id="slow" type="button">🐢 بطيء ×٤</button>
+    </div>
+
+    <div class="legend">
+      <span><i class="l1"></i>يوم الاختبار</span>
+      <span><i class="l2"></i>أيام المذاكرة</span>
+      <span><i class="l3"></i>اليوم</span>
+    </div>
+  </section>
+
+  <div class="foot" id="foot">
+    <div class="doneMsg">
+      <div class="tick">✓</div>
+      <div class="txt"><b>تم حفظ الموعد!</b><span id="doneSub"></span></div>
+    </div>
+    <button class="cta" id="save" type="button" disabled>حفظ الموعد</button>
+    <button class="ghost" id="back" type="button">رجوع</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const MONTHS=["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+  const DAYNAMES=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+  const ARDIG="٠١٢٣٤٥٦٧٨٩";
+  const ar=n=>String(n).replace(/\d/g,d=>ARDIG[+d]);
+  const startOfDay=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  const key=d=>d.getFullYear()+"-"+d.getMonth()+"-"+d.getDate();
+  const addDays=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
+  const diffDays=(a,b)=>Math.round((startOfDay(b)-startOfDay(a))/86400000);
+
+  const today=startOfDay(new Date());
+  const maxDate=new Date(today.getFullYear()+2,today.getMonth(),today.getDate());
+  let selected=null, view=new Date(today.getFullYear(),today.getMonth(),1);
+
+  const el=id=>document.getElementById(id);
+  const grid=el("grid"), monthLabel=el("monthLabel"), countCard=el("count");
+  const badge=el("badge"), unitEl=el("unit"), whenEl=el("when"), hijriEl=el("hijri");
+  const saveBtn=el("save"), foot=el("foot"), doneSub=el("doneSub");
+
+  function hijriOf(date){
+    try{return new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura",{day:"numeric",month:"long",year:"numeric"}).format(date);}
+    catch(e){return "";}
+  }
+
+  const MQ=window.matchMedia("(prefers-reduced-motion: reduce)");
+  let forced=false;                       // user pressed "تفعيل الحركة"
+  const isReduced=()=>MQ.matches&&!forced;
+  function forceMotion(){
+    forced=true;
+    document.documentElement.classList.add("motion-on");
+    const b=el("mBanner"); if(b) b.hidden=true;
+  }
+  let SP=1;   // animation speed multiplier, kept in sync with --sp
+  const SPARKS=[[-34,-16],[-22,-32],[-6,-38],[10,-36],[24,-28],[36,-12]];
+  const SPARK_COLORS=["#58CC02","#FFC800","#1CB0F6","#58CC02","#FFC800","#84D8FF"];
+
+  // identical to the duoJump keyframes, driven through the Web Animations API.
+  // used as a fallback when the CSS animation does not start (a stylesheet or
+  // an OS setting suppressing it, a cascade problem, anything).
+  const JUMP=[
+    [0,   0,   1,   1,    "cubic-bezier(.34,.1,.64,1)"],
+    [.08, 3,   1.22,.76,  "cubic-bezier(.05,.7,.1,1)"],
+    [.12,-12,  .82, 1.32, "cubic-bezier(.1,.6,.35,1)"],
+    [.21,-34,  .9,  1.16, "cubic-bezier(.25,.55,.45,1)"],
+    [.32,-48,  .98, 1.04, "cubic-bezier(.3,.5,.5,1)"],
+    [.38,-52,  1,   1,    "cubic-bezier(.55,.05,.85,.3)"],
+    [.47,-35,  .94, 1.1,  "linear"],
+    [.54,-7,   .86, 1.22, "cubic-bezier(.4,0,.2,1)"],
+    [.58, 0,   1.3, .7,   "cubic-bezier(.1,.7,.3,1)"],
+    [.64,-16,  .92, 1.11, "cubic-bezier(.5,.05,.8,.4)"],
+    [.71, 0,   1.16,.86,  "cubic-bezier(.1,.8,.3,1)"],
+    [.77,-5,   .97, 1.05, "cubic-bezier(.5,.05,.8,.4)"],
+    [.82, 0,   1.08,.93,  "linear"],
+    [.89,-1.5, .99, 1.01, "linear"],
+    [.95, 0,   1.02,.98,  "linear"],
+    [1,   0,   1,   1,    "linear"]
+  ];
+  function jumpViaWAAPI(b){
+    if(!b.animate) return;
+    b.style.transformOrigin="bottom center";
+    b.animate(
+      JUMP.map(([o,y,sx,sy,e])=>({offset:o,transform:"translateY("+y+"px) scale("+sx+","+sy+")",easing:e})),
+      {duration:1000*SP,fill:"both"}
+    );
+  }
+
+  function addJump(b){
+    const cal=document.querySelector(".cal");
+    const back=document.getElementById("fxBack");
+    const front=document.getElementById("fxFront");
+    back.innerHTML=""; front.innerHTML="";
+
+    const cr=cal.getBoundingClientRect(), br=b.getBoundingClientRect();
+    if(!br.width){ b.classList.add("jump"); requestAnimationFrame(()=>jumpViaWAAPI(b)); return; }
+    const x=br.left-cr.left, y=br.top-cr.top, w=br.width, h=br.height;
+    const cx=x+w/2, groundY=y+h;
+
+    // ground shadow, sits just under the tile
+    const shade=document.createElement("span");
+    shade.className="shade";
+    shade.style.width=(w*0.72)+"px";
+    shade.style.height="7px";
+    shade.style.left=(cx-w*0.36)+"px";
+    shade.style.top=(groundY+3)+"px";
+    back.appendChild(shade);
+
+    // sparks kicked up on landing
+    SPARKS.forEach((p,i)=>{
+      const s=document.createElement("span");
+      const size=i%2?5:7;
+      s.className="spark";
+      s.style.width=s.style.height=size+"px";
+      s.style.left=(cx-size/2)+"px";
+      s.style.top=(groundY-9)+"px";
+      s.style.background=SPARK_COLORS[i];
+      s.style.setProperty("--tx",p[0]+"px");
+      s.style.setProperty("--ty",p[1]+"px");
+      s.style.animationDelay=((580+i*14)*SP)+"ms";
+      front.appendChild(s);
+    });
+
+    b.classList.add("jump");
+    cal.classList.remove("thud"); void cal.offsetWidth; cal.classList.add("thud");
+
+    // did the CSS animation actually start? if not, drive it directly.
+    requestAnimationFrame(()=>{
+      const live=b.getAnimations?b.getAnimations():[];
+      if(!live.some(a=>a.animationName==="duoJump"||a.playState==="running")) jumpViaWAAPI(b);
+    });
+
+    b.addEventListener("animationend",e=>{
+      if(e.animationName!=="duoJump") return;
+      back.innerHTML=""; front.innerHTML="";
+    });
+  }
+
+  let shown=0, tickRAF=null, tickTimer=null;
+
+  function setBadge(txt){
+    badge.textContent=txt;
+    const len=String(txt).length;
+    badge.style.fontSize = len>=3 ? "22px" : len===2 ? "27px" : "30px";
+  }
+
+  // rolls the number up to the target, starting the instant the tile smacks down
+  function countTo(target){
+    cancelAnimationFrame(tickRAF); clearTimeout(tickTimer);
+    const from=shown||0;
+    shown=target;
+
+    if(isReduced()||from===target){ setBadge(ar(target)); return; }
+
+    setBadge(ar(from));
+    const dur=Math.min(320+Math.abs(target-from)*14,900)*SP;
+
+    tickTimer=setTimeout(()=>{
+      const t0=performance.now();
+      const step=now=>{
+        const p=Math.min((now-t0)/dur,1);
+        const eased=1-Math.pow(1-p,3);           // ease-out: fast, then settles
+        setBadge(ar(Math.round(from+(target-from)*eased)));
+        if(p<1) tickRAF=requestAnimationFrame(step);
+      };
+      tickRAF=requestAnimationFrame(step);
+    },580*SP);                                    // 580ms = the impact frame
+  }
+
+  function renderCount(){
+    foot.classList.remove("done");
+    if(!selected){
+      countCard.classList.add("empty");
+      cancelAnimationFrame(tickRAF); clearTimeout(tickTimer); shown=0;
+      setBadge("؟");
+      unitEl.textContent="اختر يوم اختبارك";
+      whenEl.textContent="اضغط على أي يوم في التقويم";
+      hijriEl.textContent="";
+      saveBtn.disabled=true;
+      return;
+    }
+    const n=diffDays(today,selected);
+    countCard.classList.remove("empty");
+    saveBtn.disabled=false;
+
+    if(n===0){setBadge("🎯");unitEl.textContent="اختبارك اليوم — بالتوفيق";}
+    else if(n===1){countTo(1);unitEl.textContent="غداً اختبارك";}
+    else{
+      countTo(n);
+      unitEl.textContent=(n===2)?"يومان حتى الاختبار":(n<=10)?"أيام حتى الاختبار":"يوماً حتى الاختبار";
+    }
+    whenEl.textContent=DAYNAMES[selected.getDay()]+" "+ar(selected.getDate())+" "+MONTHS[selected.getMonth()]+" "+ar(selected.getFullYear());
+    hijriEl.textContent=hijriOf(selected);
+
+    const meta=countCard.querySelector(".meta");
+    badge.classList.remove("flash"); meta.classList.remove("flash");
+    void badge.offsetWidth;
+    badge.classList.add("flash"); meta.classList.add("flash");
+  }
+
+  function renderMonth(dir,animate){
+    const y=view.getFullYear(), m=view.getMonth();
+    monthLabel.textContent=MONTHS[m]+" "+ar(y);
+    grid.classList.remove("slide-r","slide-l");
+    if(dir){void grid.offsetWidth; grid.classList.add(dir>0?"slide-r":"slide-l");}
+    grid.innerHTML="";
+    let jumpBtn=null;
+
+    const firstDay=new Date(y,m,1).getDay();
+    const total=new Date(y,m+1,0).getDate();
+    for(let i=0;i<firstDay;i++){
+      const s=document.createElement("div"); s.className="day pad"; grid.appendChild(s);
+    }
+    for(let d=1;d<=total;d++){
+      const date=new Date(y,m,d);
+      const b=document.createElement("button");
+      b.type="button"; b.className="day"; b.textContent=ar(d);
+      b.setAttribute("aria-label",DAYNAMES[date.getDay()]+" "+ar(d)+" "+MONTHS[m]+" "+ar(y));
+      if(date<today||date>maxDate) b.disabled=true;
+      if(key(date)===key(today)) b.classList.add("today");
+
+      if(selected){
+        const back=diffDays(date,selected); // days back from the exam date
+        if(date>today && date<selected){
+          b.classList.add("run");
+          if(date.getDay()===0||d===1) b.classList.add("run-start");
+          if(date.getDay()===6||d===total||key(addDays(date,1))===key(selected)) b.classList.add("run-end");
+          if(animate&&!isReduced()){
+            b.classList.add("anim");
+            b.style.animationDelay=((580+Math.min(back*15,540))*SP)+"ms";
+          }
+        }
+        if(key(date)===key(selected)){
+          b.classList.remove("today");
+          b.classList.add("selected");
+          b.setAttribute("aria-current","date");
+          if(animate&&!isReduced()) jumpBtn=b;
+        }
+      }
+      b.addEventListener("click",()=>{selected=date;renderMonth(0,true);renderCount();});
+      grid.appendChild(b);
+    }
+    if(jumpBtn) requestAnimationFrame(()=>addJump(jumpBtn));
+
+    el("prev").disabled=(y===today.getFullYear()&&m===today.getMonth());
+    el("next").disabled=(y===maxDate.getFullYear()&&m===maxDate.getMonth());
+  }
+
+  function shift(step){view=new Date(view.getFullYear(),view.getMonth()+step,1);renderMonth(step);}
+  el("prev").addEventListener("click",()=>shift(-1));
+  el("next").addEventListener("click",()=>shift(1));
+  document.addEventListener("keydown",e=>{
+    if(e.key==="ArrowRight"&&!el("prev").disabled) shift(-1);
+    if(e.key==="ArrowLeft"&&!el("next").disabled) shift(1);
+  });
+
+  let x0=null;
+  grid.addEventListener("touchstart",e=>{x0=e.touches[0].clientX;},{passive:true});
+  grid.addEventListener("touchend",e=>{
+    if(x0===null) return;
+    const dx=e.changedTouches[0].clientX-x0;
+    if(Math.abs(dx)>55){
+      if(dx>0&&!el("next").disabled) shift(1);
+      if(dx<0&&!el("prev").disabled) shift(-1);
+    }
+    x0=null;
+  });
+
+  el("mOn").addEventListener("click",()=>{ forceMotion(); if(selected) renderMonth(0,true); });
+
+  el("replay").addEventListener("click",()=>{
+    forceMotion();                       // pressing play always means "show me"
+    if(selected) renderMonth(0,true);
+  });
+
+  el("slow").addEventListener("click",e=>{
+    forceMotion();
+    SP = SP===1 ? 4 : 1;
+    document.documentElement.style.setProperty("--sp",String(SP));
+    e.currentTarget.classList.toggle("on",SP!==1);
+    e.currentTarget.textContent = SP===1 ? "🐢 بطيء ×٤" : "⏩ سرعة عادية";
+    if(selected) renderMonth(0,true);
+  });
+
+  saveBtn.addEventListener("click",()=>{
+    if(!selected||foot.classList.contains("done")) return;
+    const n=diffDays(today,selected);
+    const weeks=Math.max(1,Math.round(n/7));
+    doneSub.textContent = n>0 ? ("خطة مذاكرتك جاهزة لـ "+ar(weeks)+" أسابيع") : "بالتوفيق اليوم";
+    foot.classList.add("done");
+    saveBtn.textContent="متابعة";
+  });
+
+  el("back").addEventListener("click",()=>{});
+  el("close").addEventListener("click",()=>{});
+
+  if(MQ.matches) el("mBanner").hidden=false;
+  MQ.addEventListener&&MQ.addEventListener("change",e=>{ if(!forced) el("mBanner").hidden=!e.matches; });
+
+  renderMonth(); renderCount();
+})();
+</script>
+
+</body>
+</html>

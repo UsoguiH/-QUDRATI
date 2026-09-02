@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>اختيار من متعدد — برق أزرق / ذهبي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=IBM+Plex+Sans+Arabic:wght@500;600;700&display=swap" rel="stylesheet">
+<!-- GSAP is loaded at the bottom of <body>: local copy first, CDN only as a fallback. -->
+<style>
+  :root{
+    --bg:#fffffc; --ink:#4b4b4b; --muted:#afafaf; --hair:#e5e5e5;
+    --pick-face:#ddf4ff; --pick-edge:#84d8ff; --pick-ink:#1899d6;
+    --grn-face:#d0ffb5; --grn-edge:#95ed63; --grn-ink:#58a700;
+    --grn-go:#40ca12;   --grn-go-lo:#33a30c;
+    --banner-g:#d0fdb3;
+    --red-face:#ffdfe0; --red-edge:#ff8f8f; --red-ink:#ea2b2b;
+    --red-go:#ff4b4b;   --red-go-lo:#e02b2b;
+    --banner-r:#ffdfe0;
+    --radius:15px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{
+    background:#eceae4;padding:14px 10px 26px;touch-action:manipulation;
+    font-family:"IBM Plex Sans Arabic","Nunito",system-ui,sans-serif;color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  /* normal flow only — no viewport units, no fixed positioning */
+  .phone{
+    position:relative;width:100%;max-width:400px;margin:0 auto;min-height:560px;
+    background:var(--bg);border-radius:24px;overflow:hidden;
+    box-shadow:0 14px 40px rgba(0,0,0,.16);display:flex;flex-direction:column;
+  }
+
+  .head{display:flex;align-items:center;gap:12px;padding:16px 18px 0;flex:none}
+  .quit{width:30px;height:30px;flex:none;border:0;background:none;color:#c9c9c9;padding:3px}
+  .quit svg{width:100%;height:100%}
+  .bar{position:relative;flex:1;height:17px;border-radius:9px;background:var(--hair);overflow:hidden}
+  .lay{position:absolute;inset:0;border-radius:9px;box-shadow:inset 0 5px 0 rgba(255,255,255,.28)}
+  .tagwrap{position:relative;height:0;flex:none}
+  .tag{position:absolute;top:3px;left:0;right:0;text-align:center;
+       font-size:12.5px;font-weight:700;opacity:0}
+
+  .prompt{padding:22px 20px 0;font-size:18px;font-weight:700;color:#3c3c3c;text-align:right}
+  .source{margin:12px 20px 0;padding:12px 16px;border:2px solid var(--hair);border-radius:14px;
+          font-family:"Nunito",sans-serif;font-size:16px;font-weight:700;text-align:left;direction:ltr}
+
+  .opts{padding:16px 20px 0;display:flex;flex-direction:column;gap:10px}
+  .slot{position:relative;height:60px}
+  .base{position:absolute;inset:0;border-radius:var(--radius);background:var(--hair)}
+  .card{
+    position:absolute;inset:0;touch-action:manipulation;display:flex;align-items:center;gap:11px;padding:0 13px;
+    background:#fff;border:2px solid var(--hair);border-bottom-width:4px;border-radius:var(--radius);
+    font:inherit;font-size:14.5px;font-weight:600;color:var(--ink);text-align:right;
+    overflow:hidden;cursor:pointer;transform-origin:50% 100%;will-change:transform;user-select:none;
+    transition:background-color .06s linear,border-color .06s linear,color .06s linear,opacity .18s;
+  }
+  .card .key{flex:none;width:26px;height:26px;border:2px solid var(--hair);border-radius:8px;
+             display:grid;place-items:center;font-family:"Nunito",sans-serif;font-size:12px;
+             font-weight:800;color:var(--muted)}
+  .card .txt{position:relative;z-index:2;line-height:1.3}
+  .card.pick{background:var(--pick-face);border-color:var(--pick-edge);color:var(--pick-ink)}
+  .card.pick .key{border-color:var(--pick-edge);color:var(--pick-ink)}
+  .card.hit{background:var(--grn-face);border-color:var(--grn-edge);color:var(--grn-ink)}
+  .card.hit .key{border-color:var(--grn-edge);color:var(--grn-ink)}
+  .card.miss{background:var(--red-face);border-color:var(--red-edge);color:var(--red-ink)}
+  .card.miss .key{border-color:var(--red-edge);color:var(--red-ink)}
+  .card.dim{opacity:.4}
+
+  .shine{position:absolute;top:-25%;bottom:-25%;width:23%;left:0;z-index:1;opacity:0;
+    pointer-events:none;transform:skewX(-25deg);
+    background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.55) 22%,
+      rgba(255,255,255,.92) 50%,rgba(255,255,255,.55) 78%,rgba(255,255,255,0))}
+  .spk{position:absolute;width:11px;height:11px;background:#fff;opacity:0;z-index:3;
+    pointer-events:none;transform:scale(0);
+    clip-path:polygon(50% 0%,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0% 50%,39% 39%)}
+  .k1{top:8px;left:11px}.k2{top:10px;right:13px}.k3{bottom:11px;right:62px}
+
+  .foot{position:relative;z-index:7;flex:none;margin-top:auto;padding:18px 20px 20px}
+  .cta{position:relative;z-index:6;display:block;width:100%;height:58px;
+       touch-action:manipulation;-webkit-user-select:none;user-select:none;border:0;border-radius:14px;background:var(--hair);
+       color:var(--muted);font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;
+       transition:background-color .12s,color .12s}
+  .cta.live{background:var(--grn-go);border-bottom:4px solid var(--grn-go-lo);color:#fff}
+
+  .storm{position:absolute;inset:0;pointer-events:none;z-index:9}
+  .storm svg{position:absolute;inset:0;width:100%;height:100%}
+  .bolt{fill:none;stroke-linecap:round;stroke-linejoin:round;opacity:0}
+  .spark{position:absolute;width:12px;height:12px;opacity:0;z-index:10;pointer-events:none;
+    clip-path:polygon(50% 0%,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0% 50%,39% 39%)}
+
+  .banner{position:absolute;left:0;right:0;bottom:0;z-index:8;height:212px;
+          background:var(--banner-g);transform:translateY(101%);
+          pointer-events:none}          /* parked: cannot intercept anything */
+  .banner.up{pointer-events:auto}        /* only live once it has slid in */
+  .banner.bad{background:var(--banner-r)}
+  .crest{position:absolute;left:0;right:0;top:-88px;width:100%;height:90px;display:block}
+  .bbody{position:relative;padding:16px 20px 18px;display:flex;flex-direction:column;height:100%}
+  .hdr{display:flex;align-items:center;gap:9px;flex-direction:row-reverse;justify-content:flex-end}
+  .hdr b{font-size:18px;font-weight:800;color:var(--grn-ink)}
+  .banner.bad .hdr b{color:var(--red-ink)}
+  .hdr .tick{width:26px;height:26px;flex:none;color:var(--grn-ink)}
+  .banner.bad .hdr .tick{color:var(--red-ink)}
+  .sol{margin-top:8px;font-size:15px;font-weight:600;color:var(--grn-ink);text-align:right;line-height:1.45}
+  .banner.bad .sol{color:var(--red-ink)}
+  .go{margin-top:auto;width:100%;height:52px;border:0;border-radius:14px;background:var(--grn-go);
+      border-bottom:4px solid var(--grn-go-lo);color:#fff;font-family:inherit;font-size:15px;
+      font-weight:800;cursor:pointer}
+  .banner.bad .go{background:var(--red-go);border-bottom-color:var(--red-go-lo)}
+  .bits{position:absolute;inset:0;pointer-events:none;z-index:8;overflow:hidden}
+  .bit{position:absolute;opacity:0}
+
+  .dev{width:100%;max-width:400px;margin:12px auto 0;display:flex;gap:8px;flex-wrap:wrap;
+       justify-content:center;direction:ltr;
+       font-family:"Nunito",system-ui,sans-serif;font-size:13px;font-weight:800}
+  .diag{width:100%;max-width:400px;margin:8px auto 0;text-align:center;direction:rtl;
+        font-size:12px;font-weight:700;color:#8a8a86;font-family:"IBM Plex Sans Arabic",sans-serif}
+  .dev button{touch-action:manipulation;border:0;background:#2b2b2b;color:#fff;font:inherit;padding:10px 16px;
+              border-radius:999px;cursor:pointer}
+  .dev button.on{background:#00b6d6}
+  .dev button.gold.on{background:#e0a200}
+  .dev button.none.on{background:#58a700}
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+  <div class="head">
+    <button class="quit" type="button" aria-label="خروج">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+    <div class="bar"><div class="lay" id="warm"></div><div class="lay" id="cool"></div></div>
+  </div>
+  <div class="tagwrap"><div class="tag" id="tag">10 على التوالي</div></div>
+
+  <p class="prompt">اختر الترجمة الصحيحة</p>
+  <div class="source">Yes, I speak Spanish too</div>
+  <div class="opts" id="opts"></div>
+
+  <div class="foot"><button class="cta" type="button" id="cta">تحقق</button></div>
+
+  <div class="storm">
+    <svg viewBox="0 0 884 1920" preserveAspectRatio="xMidYMid slice">
+      <polyline class="bolt" id="boltA"/>
+      <polyline class="bolt" id="boltB"/>
+    </svg>
+  </div>
+  <div class="bits" id="bits"></div>
+
+  <div class="banner" id="banner">
+    <svg class="crest" viewBox="0 0 380 90" preserveAspectRatio="none">
+      <path id="crestFill"></path>
+      <path id="crestLine" fill="none" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"></path>
+    </svg>
+    <div class="bbody">
+      <div class="hdr">
+        <svg class="tick" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="12" cy="12" r="11"/>
+          <path id="tickPath" d="M7 12.4l3.3 3.3L17.2 9" stroke="#d0fdb3" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <b id="verdict">أحسنت. تعني:</b>
+      </div>
+      <p class="sol" id="sol"></p>
+      <button class="go" type="button" id="go">المتابعة</button>
+    </div>
+  </div>
+</div>
+
+<div class="diag" id="diag">اختر إجابة ثم اضغط تحقق</div>
+<div class="dev">
+  <button type="button" id="tBlue" class="on">⚡ برق أزرق</button>
+  <button type="button" id="tGold" class="gold">⚡ برق ذهبي</button>
+  <button type="button" id="tNone" class="none">بدون برق</button>
+  <button type="button" id="auto">⏸</button>
+  <button type="button" id="motion" class="on">✦ حركة كاملة</button>
+  <button type="button" id="slow">0.35×</button>
+</div>
+
+<script>
+/* ==========================================================================
+   THE JUMP — traced off the match-pairs recording, 60fps,
+   transform-origin 50% 100%.  AMP scales it past the measured values.
+       f0  y −15  sx .947  sy 1.056   launch, tall + narrow
+       f6  y −24  sx 1     sy 1       apex
+       f10 y −24                      apex hold ends
+       f19 y  −6  sx .980  sy 1.070   falling, stretching
+       f20 y  +1  sx 1.024 sy .926    impact, wide + short
+       f26 y  −7  sx 1     sy 1       settles, still lifted off its base
+   The dissolve-to-ghost tail is dropped — a quiz answer stays on screen.
+
+   TWO STRIKES, both measured, switchable below.  They are NOT the same
+   effect recoloured — every number differs:
+
+              bolt colour  stroke   bar transition            A / B
+     BLUE     #9efefd      62       #ff9600 → cyan gradient,  +200 / +500
+                                    HARD CUT in 50ms          hold 300/383
+     GOLD     #fae36a      34 / 20  #ffc800 → #ff9600,        +150 / +467
+                                    EASED 350ms sine.inOut    hold 300/267
+
+   The bar behaviour is the real tell: the blue capture cuts over in a
+   single 50ms step, the gold capture eases for 350ms (sampled green
+   channel 195→143 traced a clean S-curve).  Both bolts hold a dead-flat
+   colour every frame they are lit, so the strikes are always hard cuts.
+   ========================================================================== */
+/* GSAP arrives via the loader at the bottom of <body>, which calls boot().
+   Everything below lives inside boot() so nothing can touch gsap before it
+   exists — the old top-level `throw` left the page with zero answer cards
+   whenever an ad-blocker or proxy ate the CDN request. */
+function boot(){
+
+const AMP = 1.6;                                    // 60% past measured
+const P = v => +(v * AMP).toFixed(2);
+const A = v => +(1 + (v - 1) * AMP).toFixed(4);
+
+const JUMP   = { launch:.033, rise:.067, hang:.067, fall:.133, impact:.033, settle:.100 };
+const STRIKE = 0;                                   // strike fires with the jump
+
+const THEMES = {
+  blue:{
+    ink:'#03b9ed',
+    barFrom:'#ff9600',
+    barTo:'linear-gradient(90deg,#00fcfb,#0086ff)',
+    barDur:.05, barEase:'none',
+    bolt:'#9efefd', wA:62, wB:62,
+    pA:'400,-40 522,330 372,545 652,960 315,1370 430,1760',
+    pB:'432,-40 348,352 533,494 224,726 218,900 646,1178 512,1600',
+    a:.20, aHold:.30, b:.50, bHold:.383,
+    shard:'#9efefd'
+  },
+  gold:{
+    ink:'#f39100',
+    barFrom:'#ffc800',
+    barTo:'#ff9600',
+    barDur:.35, barEase:'sine.inOut',
+    bolt:'#fae36a', wA:34, wB:20,
+    pA:'388,-40 512,315 430,540 614,790 610,1015 452,1310 528,1700',
+    pB:'430,-40 546,300 452,560 640,806 634,1030 470,1330 556,1740',
+    a:.15, aHold:.30, b:.467, bHold:.267,
+    shard:'#fae36a'
+  },
+  /* plain correct answer: the jump, the banner, the crest and the
+     confetti — but no strike, no streak tag, and the bar just advances
+     in its own colour instead of turning over to a new tier. */
+  none:{
+    ink:'#58a700',
+    barFrom:'#ff9600', barTo:'#ff9600',
+    barDur:.25, barEase:'power2.out',
+    bolts:false,
+    shard:'#b8f36a'
+  }
+};
+let TH = THEMES.blue, theme = 'blue';
+
+const OPTIONS = [
+  { k:'1', t:'نعم، أنا أتكلم الإسبانية أيضًا.', ok:true  },
+  { k:'2', t:'لا، أنا لا أتكلم الإسبانية.',      ok:false },
+  { k:'3', t:'نعم، أنا أدرس الإسبانية الآن.',    ok:false },
+  { k:'4', t:'هل تتكلم الإسبانية جيدًا؟',        ok:false }
+];
+const ANSWER = OPTIONS.find(o => o.ok).t;
+
+const $  = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const phone=$('#phone'), opts=$('#opts'), cta=$('#cta');
+const banner=$('#banner'), bits=$('#bits');
+const crestFill=$('#crestFill'), crestLine=$('#crestLine');
+const warm=$('#warm'), cool=$('#cool'), tag=$('#tag');
+
+let picked=null, locked=false, tl=null, sparks=[], auto=false, timers=[];
+
+/* --------------------------------------------------------------------------
+   MOTION.
+   This used to read prefers-reduced-motion inline and silently throw away
+   the bolts, the crest and the confetti. Desktop OSes ship that setting ON
+   far more often than phones do (Windows > Visual effects > Animation
+   effects, macOS > Reduce motion), which is why the strike vanished on
+   the computer but played fine on mobile.
+   Now it is a visible switch. The page is a motion demo, so full motion is
+   the default on every device; the OS preference is reported, not obeyed
+   silently, and the toggle honours it for anyone who wants it back.
+   -------------------------------------------------------------------------- */
+let prefersReduce = false;
+try{ prefersReduce = !!(window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches); }catch(_){}
+let fullMotion = true;
+
+/* --------------------------------------------------------------------------
+   Every control used to hang off `click` alone. Some in-app webviews
+   (and any host that runs its own gesture recogniser over the page)
+   swallow the synthetic click, which leaves a perfectly healthy button
+   doing nothing. So bind pointerup + touchend + click + keyboard and
+   collapse them into one logical tap with a short guard.
+   -------------------------------------------------------------------------- */
+function say(msg){ const d=$('#diag'); if(d) d.textContent=msg; }
+const TAPS = {};                 // name -> handler, looked up by data-tap
+function tapBind(el, fn){
+  if(!el) return;
+  const name = el.dataset.tap || ('auto' + Object.keys(TAPS).length);
+  el.dataset.tap = name;
+  TAPS[name] = fn;
+}
+/* Delegated at the document, not per element: survives the board being
+   rebuilt, works when the tap lands on a child <span>, and needs no
+   rebinding. Listens on every channel because some in-app webviews
+   swallow the synthetic click. */
+(function(){
+  /* One action per physical gesture.
+     Keying on the element was wrong: pressing المتابعة fires pointerup on
+     #go, reset() drops the banner, and then the click of that SAME tap
+     re-hit-tests onto #cta underneath — a different element, so it slipped
+     through and ran check() with nothing picked. Keying on a gesture
+     counter (bumped by pointerdown) fixes that without swallowing a
+     genuine fast second tap, because a new tap always starts with a
+     fresh pointerdown. */
+  let gesture = 0, firedFor = -1;
+  const DOWN = ('PointerEvent' in window)
+      ? ['pointerdown']                    // covers mouse, touch and pen
+      : ['touchstart','mousedown'];        // legacy fallback
+  DOWN.forEach(t => document.addEventListener(t, () => { gesture++; }, true));
+
+  const fire = e => {
+    if(firedFor === gesture) return;                 // already acted on this tap
+    const t = e.target && e.target.closest && e.target.closest('[data-tap]');
+    if(!t) return;
+    firedFor = gesture;
+    const fn = TAPS[t.dataset.tap];
+    if(!fn) return;
+    try{ fn(e); }
+    catch(err){ say('خطأ: ' + err.message); locked = false; }
+  };
+  ['pointerup','touchend','click'].forEach(t =>
+    document.addEventListener(t, fire, true));   // capture phase
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Enter' || e.key === ' '){ gesture++; fire(e); }
+  });
+})();
+
+/* ---------- crest ---------- */
+const W=380, BASE=78, wave={a:BASE,b:BASE,c:BASE,d:BASE,e:BASE};
+function paintCrest(good){
+  crestLine.setAttribute('stroke', good ? '#8ee000' : '#ffb3b3');
+  crestFill.setAttribute('fill',   good ? '#d0fdb3' : '#ffdfe0');
+}
+function drawCrest(){
+  const s=W/4;
+  const d=`M0,${wave.a}`+
+    `C${s*.5},${wave.a} ${s*.5},${wave.b} ${s},${wave.b}`+
+    `C${s*1.5},${wave.b} ${s*1.5},${wave.c} ${s*2},${wave.c}`+
+    `C${s*2.5},${wave.c} ${s*2.5},${wave.d} ${s*3},${wave.d}`+
+    `C${s*3.5},${wave.d} ${s*3.5},${wave.e} ${s*4},${wave.e}`;
+  crestLine.setAttribute('d',d);
+  crestFill.setAttribute('d',d+`L${W},90 L0,90 Z`);
+}
+
+/* ---------- apply a theme to the static bits ---------- */
+function applyTheme(){
+  if(TH.bolts!==false){
+  $('#boltA').setAttribute('points',TH.pA);
+  $('#boltB').setAttribute('points',TH.pB);
+  $('#boltA').setAttribute('stroke',TH.bolt);
+  $('#boltB').setAttribute('stroke',TH.bolt);
+  $('#boltA').setAttribute('stroke-width',TH.wA);
+  $('#boltB').setAttribute('stroke-width',TH.wB);
+  }
+  tag.style.color = TH.ink;
+  warm.style.background = TH.barFrom;
+  cool.style.background = TH.barTo;
+}
+
+/* ---------- board ---------- */
+function build(){
+  opts.innerHTML='';
+  OPTIONS.forEach(o=>{
+    const slot=document.createElement('div');
+    slot.className='slot';
+    slot.innerHTML=
+      `<div class="base"></div>
+       <button class="card" type="button" data-ok="${o.ok}">
+         <span class="shine"></span>
+         <i class="spk k1"></i><i class="spk k2"></i><i class="spk k3"></i>
+         <span class="key">${o.k}</span><span class="txt">${o.t}</span>
+       </button>`;
+    opts.appendChild(slot);
+  });
+  $$('.card').forEach(c=>{
+    gsap.set(c,{y:0,scaleX:1,scaleY:1});
+    const dn=()=>{ if(!locked) gsap.to(c,{y:4,scaleY:.96,duration:.06,overwrite:'auto'}); };
+    const up=()=>{ if(!locked) gsap.to(c,{y:0,scaleY:1,duration:.09,ease:'power2.out',overwrite:'auto'}); };
+    c.addEventListener('pointerdown',dn);
+    c.addEventListener('pointerup',up);
+    c.addEventListener('pointercancel',up);
+    c.addEventListener('pointerleave',up);
+    tapBind(c,()=>{ if(auto) stopAuto(); choose(c); });
+  });
+}
+function choose(card){
+  if(locked) return;
+  $$('.card').forEach(c=>c.classList.remove('pick'));
+  card.classList.add('pick'); picked=card; cta.classList.add('live');
+  say('تم الاختيار ✓ — اضغط تحقق');
+}
+
+function reset(){
+  if(tl) tl.kill();
+  sparks.forEach(s=>s.remove()); sparks=[];
+  locked=false; picked=null;
+  build(); applyTheme();
+  cta.classList.remove('live');
+  gsap.set(warm,{opacity:1,width:'74%'});
+  gsap.set(cool,{opacity:0,width:'74%'});
+  gsap.set(tag,{opacity:0,y:6,scale:.8});
+  gsap.set(banner,{y:'101%'});
+  banner.classList.remove('bad'); banner.classList.remove('up');
+  gsap.set(['#boltA','#boltB'],{opacity:0,x:0,y:0});
+  Object.assign(wave,{a:BASE,b:BASE,c:BASE,d:BASE,e:BASE});
+  paintCrest(true); drawCrest();
+  gsap.set('.hdr .tick',{scale:1,rotate:0});
+  bits.innerHTML='';
+}
+
+/* ---------- particles ---------- */
+function seedBits(good){
+  bits.innerHTML=''; const made=[];
+  for(let i=0;i<28;i++){
+    const el=document.createElement('i'); el.className='bit';
+    if(i%3===0){
+      const w=9+Math.random()*12;
+      el.style.cssText+=`width:${w}px;height:${w*.7}px;background:${TH.shard};
+        clip-path:polygon(0% 40%,45% 0%,100% 25%,72% 100%,20% 78%);`;
+    }else{
+      const w=7+Math.random()*8;
+      const tone=good?['#8ee000','#58cc02','#b8f36a'][i%3]:['#ff8f8f','#ffb3b3','#ffc9c9'][i%3];
+      el.style.cssText+=`width:${w}px;height:${w}px;border-radius:2px;background:${tone};`;
+    }
+    el.style.left=(Math.random()*100)+'%'; el.style.bottom='200px';
+    bits.appendChild(el); made.push(el);
+  }
+  return made;
+}
+function seedSparks(n,box){
+  const made=[];
+  for(let i=0;i<n;i++){
+    const el=document.createElement('i'); el.className='spark';
+    const s=7+Math.random()*9;
+    el.style.width=el.style.height=s+'px';
+    el.style.background=TH.bolt;
+    el.style.left=(box.x+Math.random()*box.w)+'%';
+    el.style.top =(box.y+Math.random()*box.h)+'%';
+    phone.appendChild(el); made.push(el);
+  }
+  return made;
+}
+
+/* ---------- the jump ---------- */
+function addJump(tl,card,at){
+  tl.call(()=>card.classList.add('hit'),null,at)
+    .to(card,{keyframes:[
+      { y:P(-15), scaleX:A(.947), scaleY:A(1.056), duration:JUMP.launch, ease:'power2.out' },
+      { y:P(-24), scaleX:1,       scaleY:1,        duration:JUMP.rise,   ease:'power2.out' },
+      { y:P(-24),                                  duration:JUMP.hang },
+      { y:P(-6),  scaleX:A(.980), scaleY:A(1.070), duration:JUMP.fall,   ease:'power2.in' },
+      { y:P( 1),  scaleX:A(1.024),scaleY:A(.926),  duration:JUMP.impact, ease:'power2.in' },
+      { y:P(-7),  scaleX:1,       scaleY:1,        duration:JUMP.settle, ease:'back.out(2.6)' }
+    ]},at);
+
+  const air=JUMP.launch+JUMP.rise+JUMP.hang+JUMP.fall;
+  const sh=card.querySelector('.shine');
+  tl.fromTo(sh,{left:'-32%',opacity:0},
+      {left:'112%',opacity:1,duration:air,ease:'none'},at)
+    .to(sh,{opacity:0,duration:.06},at+air-.06);
+
+  tl.to(card.querySelectorAll('.spk'),{keyframes:[
+      {opacity:1,scale:1, rotate:12,duration:.10,ease:'back.out(3)'},
+      {opacity:1,scale:.9,rotate:-6,duration:.12},
+      {opacity:0,scale:.2,          duration:.10,ease:'power1.in'}
+    ],stagger:.045},at+.02);
+}
+
+/* ---------- the strike ---------- */
+function addStrike(tl,at){
+  const bitEls=seedBits(true);
+  const reduce = !fullMotion;
+
+  {
+    /* the bar always advances; only a strike turns it over to a new tier */
+    tl.to(warm,{width:'82%',duration:TH.barDur,ease:TH.barEase},at);
+    if(TH.bolts!==false){
+      /* per-theme: blue cuts in 50ms, gold eases over 350ms */
+      tl.to(warm,{opacity:0,duration:TH.barDur,ease:TH.barEase},at)
+        .to(cool,{opacity:1,width:'82%',duration:TH.barDur,ease:TH.barEase},at)
+        .to(tag, {opacity:1,y:0,scale:1,duration:.24,ease:'back.out(2.4)'},at+TH.barDur*.3);
+    }
+  }
+
+  tl.call(()=>banner.classList.add('up'),null,at+.133)
+    .to(banner,{y:'0%',duration:.20,ease:'power3.out'},at+.133);
+
+  if(!reduce){
+    tl.to(wave,{keyframes:[
+        {a:14,b:56,c:6, d:44,e:20,duration:.16,ease:'power2.out'},
+        {a:52,b:20,c:48,d:12,e:56,duration:.20,ease:'sine.inOut'},
+        {a:66,b:58,c:70,d:60,e:68,duration:.18,ease:'sine.inOut'},
+        {a:BASE,b:BASE,c:BASE,d:BASE,e:BASE,duration:.24,ease:'power2.out'}
+      ],onUpdate:drawCrest},at+.153);
+    bitEls.forEach(el=>{
+      const w=at+.173+Math.random()*.16;
+      tl.fromTo(el,{opacity:1,y:0,x:0,rotate:0,scale:.5},
+        {y:-(60+Math.random()*130),x:(Math.random()-.5)*120,
+         rotate:(Math.random()-.5)*420,scale:1,
+         duration:.42+Math.random()*.2,ease:'power2.out'},w)
+        .to(el,{y:'+=170',opacity:0,rotate:'+=140',duration:.55,ease:'power1.in'},w+.4);
+    });
+  }
+  if(reduce||TH.bolts===false) return;
+
+  sparks=[...seedSparks(8,{x:28,y:8,w:44,h:16}),...seedSparks(6,{x:12,y:26,w:60,h:22})];
+
+  [['#boltA',TH.a,TH.aHold,-14,-10],['#boltB',TH.b,TH.bHold,12,-12]].forEach(([id,t0,hold,dx,dy])=>{
+    tl.set(id,{opacity:1},at+t0)
+      .to(id,{x:dx,y:dy,duration:hold,ease:'none'},at+t0)
+      .to(id,{opacity:0,duration:.05,ease:'power2.in'},at+t0+hold);
+  });
+
+  const twinkle=(arr,w)=>arr.forEach((s,i)=>{
+    tl.fromTo(s,{opacity:0,scale:0,rotate:0},
+      {opacity:1,scale:1,rotate:22,duration:.12,ease:'back.out(3)'},w+i*.03)
+      .to(s,{opacity:0,scale:.2,duration:.16,ease:'power1.in'},w+i*.03+.22);
+  });
+  twinkle(sparks.slice(0,8),at+TH.a+.02);
+  twinkle(sparks.slice(8),  at+TH.b+.02);
+}
+
+/* --------------------------------------------------------------------------
+   THE MISS.
+   Deliberately NOT the win sequence in red. Nothing here celebrates:
+     - the card drops INTO its base instead of hopping off it
+       (the exact inverse of the win: +y, squashed, no lift, no shine,
+        no sparks) and shakes off the impact
+     - the crest stays flat — no liquid swell
+     - no confetti, no bolts, no streak tag
+     - the streak bar does not advance at all
+     - the banner comes up faster and harder, and the cross snaps in
+   -------------------------------------------------------------------------- */
+function addFail(tl,card,at){
+  tl.call(()=>card.classList.add('miss'),null,at)
+    /* sinks into the slot — the opposite of the winning hop */
+    .to(card,{keyframes:[
+        { y:P(5), scaleX:A(1.02), scaleY:A(.95), duration:.07, ease:'power2.in' },
+        { y:P(2), scaleX:1,       scaleY:1,      duration:.10, ease:'power2.out' },
+        { y:P(2),                                duration:.10 }
+      ]},at)
+    /* and shakes it off */
+    .to(card,{keyframes:[
+        {x:-9,duration:.05},{x:9,duration:.07},{x:-6,duration:.06},
+        {x:4,duration:.06},{x:0,duration:.06}
+      ]},at+.02);
+
+  /* banner: quicker and blunter than the win's 200ms power3.out */
+  tl.call(()=>banner.classList.add('up'),null,at+.10)
+    .to(banner,{y:'0%',duration:.16,ease:'power4.out'},at+.10)
+    /* one small recoil as it lands, instead of the liquid crest */
+    .to(banner,{keyframes:[{y:'1.5%',duration:.06},{y:'0%',duration:.10,ease:'power2.out'}]},at+.26);
+
+  /* the cross snaps in */
+  tl.fromTo('.hdr .tick',{scale:0,rotate:-45},
+      {scale:1,rotate:0,duration:.28,ease:'back.out(3.2)'},at+.18);
+}
+
+/* ---------- check ---------- */
+function check(){
+  if(locked) return;
+  if(!picked){
+    say('اختر إجابة أولًا');
+    gsap.fromTo(opts,{x:0},{keyframes:[{x:-6,duration:.05},{x:6,duration:.07},
+      {x:-4,duration:.07},{x:0,duration:.07}]});
+    return;
+  }
+  locked=true;
+  const good=picked.dataset.ok==='true';
+  cta.classList.remove('live');
+  $$('.card').forEach(c=>{ if(c!==picked) c.classList.add('dim'); });
+  picked.classList.remove('pick');
+
+  banner.classList.toggle('bad',!good);
+  paintCrest(good);
+  $('#tickPath').setAttribute('stroke',good?'#d0fdb3':'#ffdfe0');
+  $('#tickPath').setAttribute('d',good?'M7 12.4l3.3 3.3L17.2 9':'M8.5 8.5l7 7M15.5 8.5l-7 7');
+  $('#verdict').textContent=good?'أحسنت. تعني:':'الإجابة الصحيحة:';
+  $('#sol').textContent=ANSWER;
+
+  say(good?'إجابة صحيحة — اضغط تحقق للإعادة':'إجابة خاطئة — اضغط تحقق للإعادة');
+  tl=gsap.timeline();
+  if(good){ addJump(tl,picked,0); addStrike(tl,STRIKE); }
+  else     { addFail(tl,picked,0); }
+}
+
+/* ---------- autoplay ---------- */
+const BEAT={pick:.75,press:.85,hold:2.6,gap:.9};
+function clearTimers(){ timers.forEach(t=>t.kill()); timers=[]; }
+function later(d,fn){ timers.push(gsap.delayedCall(d,fn)); }
+function pressCTA(){ gsap.fromTo(cta,{scale:1},{scale:.95,duration:.07,yoyo:true,repeat:1,ease:'power2.out'}); }
+function cycle(){
+  clearTimers(); reset();
+  later(BEAT.pick,()=>{
+    const c=$$('.card').find(x=>x.dataset.ok==='true'); if(!c) return;
+    gsap.fromTo(c,{y:0},{y:4,scaleY:.96,duration:.06,yoyo:true,repeat:1,ease:'power1.out'});
+    choose(c);
+  });
+  later(BEAT.pick+BEAT.press,()=>{ pressCTA(); check(); });
+  later(BEAT.pick+BEAT.press+BEAT.hold+BEAT.gap,()=>{ if(auto) cycle(); });
+}
+function startAuto(){ auto=true; $('#auto').textContent='⏸'; clearTimers(); cycle(); }
+function stopAuto(){ auto=false; $('#auto').textContent='▶'; clearTimers(); }
+
+function setTheme(t){
+  theme=t; TH=THEMES[t];
+  say({blue:'برق أزرق',gold:'برق ذهبي',none:'بدون برق'}[t]+' — اختر إجابة');
+  $('#tBlue').classList.toggle('on',t==='blue');
+  $('#tGold').classList.toggle('on',t==='gold');
+  $('#tNone').classList.toggle('on',t==='none');
+  clearTimers(); auto?cycle():reset();
+}
+tapBind($('#tBlue'),()=>setTheme('blue'));
+tapBind($('#tGold'),()=>setTheme('gold'));
+tapBind($('#tNone'),()=>setTheme('none'));
+tapBind($('#auto'),()=>auto?stopAuto():startAuto());
+tapBind(cta,()=>{
+  if(auto) stopAuto();
+  /* once the round has played out تحقق becomes "go again",
+     so the button is never a dead tap in any state */
+  locked ? (reset(), say('جولة جديدة — اختر إجابة')) : check();
+});
+tapBind($('#go'),()=>{ if(auto) stopAuto(); reset(); say('جولة جديدة — اختر إجابة'); });
+
+const slowBtn=$('#slow'); let slow=false;
+tapBind($('#motion'),()=>{
+  fullMotion=!fullMotion;
+  $('#motion').classList.toggle('on',fullMotion);
+  $('#motion').textContent = fullMotion ? '✦ حركة كاملة' : '✦ حركة مخففة';
+  say(fullMotion?'الحركة الكاملة مفعّلة':'الحركة المخففة مفعّلة');
+});
+
+tapBind(slowBtn,()=>{
+  slow=!slow; gsap.globalTimeline.timeScale(slow?.35:1);
+  slowBtn.classList.toggle('on',slow); slowBtn.textContent=slow?'1×':'0.35×';
+});
+
+drawCrest();
+/* Runs hands-free by default so it is fully watchable even where the host
+   swallows touch. The first tap that DOES land calls stopAuto() and hands
+   control over. */
+/* Autoplay stays OFF by default. With it on, the success banner slides up
+   over the bottom 212px within ~1.6s and parks there — which is exactly
+   where تحقق lives. Press ▶ if you want the hands-free loop. */
+reset();
+$('#auto').textContent='▶';
+say(prefersReduce
+  ? 'نظامك يقلّل الحركة — الحركة الكاملة مفعّلة هنا'
+  : 'اختر إجابة ثم اضغط تحقق');
+}   /* end boot() */
+
+/* --------------------------------------------------------------------------
+   GSAP LOADER.
+   Order matters: the vendored copy first, so the demo works offline, behind
+   a proxy, and with uBlock/Privacy Badger/DNS filtering active — all of which
+   silently kill cdnjs. The CDNs stay as a fallback only so this single file
+   still runs if it is moved somewhere without assets/.
+   If every source fails the page says so loudly instead of rendering blank.
+   -------------------------------------------------------------------------- */
+(function(){
+  const SOURCES = [
+    'assets/vendor/gsap.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js',
+    'https://unpkg.com/gsap@3.12.5/dist/gsap.min.js'
+  ];
+  function fail(){
+    const d = document.getElementById('diag');
+    if(d){
+      d.style.cssText += ';color:#fff;background:#ea2b2b;padding:10px 14px;' +
+                         'border-radius:12px;font-size:13px;line-height:1.6';
+      d.textContent = 'تعذّر تحميل GSAP من أي مصدر. الملف assets/vendor/gsap.min.js مفقود، ' +
+                        'أو تم فتح الصفحة خارج مجلد المشروع.';
+    }
+    console.error('[quiz-two-bolts] GSAP unavailable from', SOURCES);
+  }
+  (function next(i){
+    if(window.gsap){ try{ boot(); }catch(e){ console.error(e); } return; }
+    if(i >= SOURCES.length) return fail();
+    const s = document.createElement('script');
+    s.src = SOURCES[i];
+    s.onload  = function(){ next(i + 1); };   // re-checks window.gsap at the top
+    s.onerror = function(){ next(i + 1); };
+    document.head.appendChild(s);
+  })(0);
+})();
+</script>
+</body>
+</html>
