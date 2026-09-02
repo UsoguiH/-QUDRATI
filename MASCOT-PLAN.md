@@ -80,7 +80,6 @@ going to play is a nag, not a nudge. Duolingo warns at night for the same reason
 | 5 | **Exam countdown card** | `countdownCard()` `app.js:706` | tone-driven | see below | `far` → `calm`<br>`soon` ≤30d → `point`<br>`near` ≤14d → `encourage`<br>`urgent` ≤7d, readiness < 70% → `concerned` + `bob-fast`<br>`urgent` ≤7d, readiness ≥ 70% → `strong`<br>day 0 → `strong`, always |
 | 6 | **Streak celebration** | `showStreakCelebration()` `app.js:3091` | `celebrate` | `pop` | `crown` at 7 / 30 / 100 days |
 | 7 | **Daily chest ceremony** | `A.openChest()` `app.js:810` | `cheer` | `pop` | never |
-| 8 | **«سؤال اليوم» sheet** | `A.openDailyQ()` `app.js:454` | `point` | `pop` | never |
 
 `examTone()` at `app.js:698` already returns `far / soon / near / urgent`, and
 `readiness()` is computed two lines into `countdownCard()` — the whole map is a lookup
@@ -94,15 +93,15 @@ Showing him a worried face there would be the one thing the register forbids.
 
 | # | Where | Code | State | Motion | Changes when |
 |---|---|---|---|---|---|
-| 9 | **Rank-up ceremony** | `showRankUp()` `app.js:2994` | `celebrate` | `pop` | `crown` at champion tier |
-| 10 | **Review empty «لا أخطاء للمراجعة»** | `renderReview()` `app.js:3218` | `proud` | `pop` | never |
-| 11 | **Mock exam home** | `renderMockHome()` `app.js:2048` | `strong` | `bob` | never — steady before a hard thing |
-| 12 | **Mock result** | mock done screen | score-driven | `pop` | ≥70% → `proud`<br>40–69% → `encourage`<br><40% → `concerned` |
-| 13 | **First-run value screen** | `renderIntroValue()` `app.js:3923` | `wave` | `pop` | never — currently `point`, should be a hello |
-| 14 | **Exam date picker** | `renderExamSetup()` `app.js:3538` | `point` | `pop` | never |
-| 15 | **Question bank loading** | `renderPath()` `app.js:855` | `think` | `bob` | never |
-| 16 | **League ladder** | `renderLeague()` `app.js:2540` | `stand` | `bob` | `crown` at max tier (`lb-prog-max`) |
-| 17 | **Toasts / profile avatar** | derived `qaddour-head.png` | — | — | crop of `point`, never generated |
+| 8 | **Rank-up ceremony** | `showRankUp()` `app.js:2994` | `celebrate` | `pop` | `crown` at champion tier |
+| 9 | **Review empty «لا أخطاء للمراجعة»** | `renderReview()` `app.js:3218` | `proud` | `pop` | never |
+| 10 | **Mock exam home** | `renderMockHome()` `app.js:2048` | `strong` | `bob` | never — steady before a hard thing |
+| 11 | **Mock result** | mock done screen | score-driven | `pop` | ≥70% → `proud`<br>40–69% → `encourage`<br><40% → `concerned` |
+| 12 | **First-run value screen** | `renderIntroValue()` `app.js:3923` | `wave` | `pop` | never — currently `point`, should be a hello |
+| 13 | **Exam date picker** | `renderExamSetup()` `app.js:3538` | `point` | `pop` | never |
+| 14 | **Question bank loading** | `renderPath()` `app.js:855` | `think` | `bob` | never |
+| 15 | **League ladder** | `renderLeague()` `app.js:2540` | `stand` | `bob` | `crown` at max tier (`lb-prog-max`) |
+| 16 | **Toasts / profile avatar** | derived `qaddour-head.png` | — | — | crop of `point`, never generated |
 
 ---
 

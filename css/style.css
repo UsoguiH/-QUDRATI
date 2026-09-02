@@ -1885,111 +1885,6 @@ button.dom-stat:active { transform: scale(.99); }
 .ds-btn { background: var(--green); box-shadow: 0 4px 0 var(--green-lip); }
 
 /* ============================================================
-   سؤال اليوم (Question of the Day) — card + answer sheet
-   ============================================================ */
-.dq-card {
-  position: relative; overflow: hidden;
-  display: block; width: calc(100% - 32px); margin: 0 16px 18px;
-  background: #fff; border: 2px solid var(--gold); border-radius: 16px;
-  padding: 14px 16px; text-align: right; font-family: var(--font);
-  cursor: pointer; -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 4px 0 rgba(255,200,0,.25);
-  animation: fadeUp .4s .12s cubic-bezier(.3,1.3,.5,1) backwards;
-}
-.dq-card.dq-open:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(255,200,0,.25); }
-.dq-card.dq-claimed { border-color: var(--line); box-shadow: 0 4px 0 var(--line); cursor: default; }
-.dq-row { display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; }
-.dq-icon { animation: dqStarSpin 4s ease-in-out infinite; display: inline-block; }
-@keyframes dqStarSpin { 0%,100% { transform: rotate(-8deg) scale(1); } 50% { transform: rotate(8deg) scale(1.1); } }
-.dq-txt { flex: 1; }
-.dq-txt b { display: block; font-size: 16px; color: var(--ink); }
-.dq-txt span { font-size: 13px; color: var(--gray); font-weight: 600; display: inline-flex; align-items: center; gap: 3px; }
-.dq-go {
-  background: var(--gold); color: #fff; font-weight: 800; font-size: 14px;
-  padding: 8px 16px 6px; border-radius: 12px; box-shadow: 0 3px 0 var(--gold-dk);
-  animation: tapPulse 1.8s ease-in-out infinite;
-}
-.dq-badge {
-  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 800;
-}
-.dq-badge.ok { background: var(--green); box-shadow: 0 3px 0 var(--green-lip); }
-.dq-badge.ok svg { width: 17px; height: 17px; color: #fff; }
-.dq-badge.miss { background: var(--line); color: var(--gray); }
-/* sweeping shine across the open card */
-.dq-glow { position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(105deg, transparent 38%, rgba(255,220,90,.35) 50%, transparent 62%);
-  transform: translateX(-130%); animation: sweep 3.4s 1s ease-in-out infinite; }
-
-/* --- the answer sheet (slides up) --- */
-.dq-veil {
-  position: fixed; inset: 0; z-index: 210;
-  display: flex; align-items: flex-end; justify-content: center;
-  background: rgba(20,12,0,0); transition: background .3s ease;
-}
-.dq-veil.show { background: rgba(20,12,0,.5); }
-.dq-sheet {
-  position: relative;
-  width: 100%; max-width: 430px; background: #fff;
-  border-radius: 24px 24px 0 0; padding: 10px 18px calc(18px + env(safe-area-inset-bottom));
-  transform: translateY(100%); transition: transform .34s cubic-bezier(.25,1.05,.4,1);
-  max-height: 90vh; overflow-y: auto; box-shadow: 0 -10px 34px rgba(0,0,0,.2);
-}
-.dq-veil.show .dq-sheet { transform: translateY(0); }
-.dq-x {
-  position: absolute; top: 12px; left: 14px; z-index: 2;
-  width: 34px; height: 34px; border: 0; border-radius: 50%;
-  background: var(--line); display: grid; place-items: center; cursor: pointer;
-}
-.dq-note { font-size: 12.5px; font-weight: 700; color: var(--gray); margin: -6px 0 12px; }
-.dq-sheet .ms-grip { width: 44px; height: 5px; border-radius: 3px; background: var(--line); margin: 4px auto 12px; }
-.dq-head { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
-.dq-head h3 { font-size: 21px; color: var(--gold-dk); margin: 0; }
-.dq-hstar { animation: dqStarSpin 4s ease-in-out infinite; display: inline-block; }
-.stat-rank {
-  border: 0; background: none; padding: 3px 8px; border-radius: 10px;
-  font-family: var(--font); font-size: 14px; font-weight: 800; color: var(--gray);
-  gap: 6px; cursor: pointer; transition: background .12s;
-}
-.stat-rank img { height: 25px; width: auto; }
-.stat-rank:active { transform: scale(.94); }
-@media (hover: hover) and (pointer: fine) { .stat-rank:hover { background: var(--line); } }
-
-.dq-stem { font-size: 18px; font-weight: 700; color: var(--ink); line-height: 1.6; margin-bottom: 14px; }
-.dq-choices { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
-/* the daily question gets the same card treatment as the session: a base the
-   jump lifts off, a 4px lip, and no CSS animation to fight GSAP over transform */
-.dq-sheet { --hair: #e5e5e5; --card-radius: 15px; }
-.dq-choices .slot { position: relative; min-height: 62px; display: flex; }
-.dq-choices .slot > .base {
-  display: block; position: absolute; inset: 0;
-  border-radius: var(--card-radius); background: var(--hair); z-index: 0;
-}
-.dq-choices .choice {
-  position: relative; z-index: 1; flex: 1;
-  border: 2px solid var(--line); border-bottom-width: 4px;
-  border-radius: var(--card-radius); box-shadow: none;
-  overflow: hidden; transform-origin: 50% 100%; will-change: transform;
-  animation: none;
-}
-.dq-choices .choice:active { transform: none; box-shadow: none; }
-.dq-sheet .storm { position: absolute; inset: 0; width: auto; max-width: none; transform: none; left: 0; }
-.dq-check { margin-bottom: 6px; }
-.dq-fb { display: none; }
-.dq-fb.show { display: block; animation: fadeUp .4s cubic-bezier(.3,1.2,.5,1); text-align: center; }
-.dq-reward {
-  display: inline-flex; align-items: center; gap: 8px; justify-content: center;
-  font-size: 32px; font-weight: 800; color: var(--gold-dk); margin: 4px 0 8px;
-  animation: rewardPop .6s cubic-bezier(.3,1.8,.4,1);
-}
-.dq-fb.bad .dq-reward { color: var(--gray); }
-.dq-msg { font-weight: 700; font-size: 16px; margin-bottom: 10px; }
-.dq-fb.good .dq-msg { color: var(--green-dk); } .dq-fb.bad .dq-msg { color: var(--red-dk2); }
-.dq-soltoggle { background: none; border: 0; font-weight: 700; font-size: 14px; color: var(--blue-dk); text-decoration: underline; padding: 4px 0 8px; cursor: pointer; }
-.dq-sol { background: rgba(0,0,0,.04); border-radius: 12px; padding: 10px 14px; font-size: 15px; line-height: 1.8; white-space: pre-line; margin: 0 0 12px; text-align: right; }
-
-
-/* ============================================================
    الدوري الأسبوعي (weekly league) — Duolingo-style leaderboard
    ============================================================ */
 .lb-page { padding-top: 8px; }
@@ -2804,7 +2699,7 @@ body:has(.screen-session) { overflow: hidden; }
   .page { width: 100%; max-width: var(--page-max); margin-inline: auto; }
   /* these sit above the path, so they take the PATH width, not the page
      width - otherwise the yellow card is visibly wider than the banner. */
-  .ec2, .dq-card {
+  .ec2 {
     width: calc(100% - 32px); max-width: var(--path-max); margin-inline: auto;
   }
 
@@ -3728,7 +3623,7 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
   --tone-bg: var(--blue-light);
   --tone-ink: var(--blue-dk);
 
-  /* the same box as .dq-card and .unit-banner below it — same width formula,
+  /* the same box as .unit-banner below it — same width formula,
      same 16px gutters. It was width:100% with no margin, so it full-bled to the
      phone's edges while every card under it was inset. */
   display: flex; align-items: center; gap: 14px;
