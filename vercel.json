@@ -10,6 +10,17 @@
       ],
       "destination": "https://qudrati.xyz/:path*",
       "statusCode": 301
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "qudrati-lime.vercel.app"
+        }
+      ],
+      "destination": "https://qudrati.xyz/:path*",
+      "statusCode": 308
     }
   ]
 }
