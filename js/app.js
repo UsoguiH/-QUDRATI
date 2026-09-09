@@ -541,10 +541,52 @@ const ico = (name, size) => `<img class="ic" src="assets/icons/${ICO_FILE[name] 
    `cls` carries the motion (pop / bob / bob-fast / shake) and the placement
    class. He is decorative in every placement — the screen always states its
    own meaning in text — so alt is empty and he is hidden from assistive tech. */
-const MASCOT_STATES = { encourage: 1, cheer: 1, point: 1, concerned: 1 };
+const MASCOT_STATES = { celebrate: 1, strong: 1 };
 function mascot(state, cls) {
   if (!MASCOT_STATES[state]) return "";
   return `<img class="mascot ${cls || ""}" src="assets/mascot/qaddour-${state}.png" alt="" aria-hidden="true">`;
+}
+
+/* The win-screen hero. Nothing behind him: the character is the celebration.
+   One jump only, and it is the entrance: he drops in from above under gravity, lands
+   hard with a squash as the title pops, springs back, and then stands there, alive
+   but still — a slow sway, never another hop. The grammar is the card's jump
+   (fxAddJump): stretch on the fall, squash on impact, a back-out settle — driven by
+   GSAP so every beat has its own ease. A live shadow under him grows as he comes down
+   and spreads on impact; the painted one was cut off the PNG for exactly this. */
+function winHero() {
+  return `<div class="win-hero qd-hero" style="--wh:236px">
+    <span class="qd-shadow"></span>
+    ${mascot("celebrate", "qd-mascot")}
+  </div>`;
+}
+let qdTl = null;
+function winHeroStop() { if (qdTl) { qdTl.kill(); qdTl = null; } }
+function winHeroPlay() {
+  winHeroStop();
+  const el = document.querySelector(".qd-mascot"), sh = document.querySelector(".qd-shadow");
+  if (!el || !sh || !window.gsap) return;
+  if (motionReduced()) { gsap.set(el, { opacity: 1 }); gsap.set(sh, { opacity: 1 }); return; }
+  const H = el.getBoundingClientRect().height || 236;
+  const P = v => +(v * H / 236).toFixed(1);          // travel scales with the hero's size
+  gsap.set(el, { transformOrigin: "50% 100%", opacity: 0 });
+  gsap.set(sh, { transformOrigin: "50% 50%", opacity: 0, scaleX: .4 });
+
+  const tl = qdTl = gsap.timeline();
+  /* the drop: gravity in, a hard squash, a springy settle */
+  tl.fromTo(el, { y: P(-320), scaleX: .95, scaleY: 1.1, opacity: 1 },
+               { y: 0, duration: .5, ease: "power2.in" }, .12)
+    .to(el, { y: P(4), scaleX: 1.14, scaleY: .84, duration: .08, ease: "power1.in" })
+    .to(el, { y: 0, scaleX: 1, scaleY: 1, duration: .34, ease: "back.out(2.4)" });
+  tl.to(sh, { opacity: 1, scaleX: 1, duration: .5, ease: "power2.in" }, .12)
+    .to(sh, { scaleX: 1.28, opacity: .5, duration: .08 })
+    .to(sh, { scaleX: 1, opacity: 1, duration: .34, ease: "back.out(2)" });
+
+  /* then he stays down: a slow sway so he is alive, no more air */
+  const idle = gsap.timeline({ repeat: -1, yoyo: true });
+  idle.to(el, { rotation: 2.5, duration: 1.6, ease: "sine.inOut" })
+      .to(el, { rotation: -2.5, duration: 1.6, ease: "sine.inOut" });
+  tl.add(idle, 1.1);
 }
 
 function statbar() {
@@ -762,12 +804,6 @@ function renderPath() {
   if (firstOpenIdx === -1) firstOpenIdx = flat.length;
   let gi = 0, html = "";
   const offsets = [0, -46, -66, -46, 0, 46, 66, 46]; // winding path x-offsets
-  /* قدّور stands beside the path, the way Duo does — scenery the student walks past,
-     not a card or a sheet. Index 5 is deliberate: `right:46` swings that node to the
-     LEFT, which is the only side that leaves him room, and it puts the path on his
-     pointing side so he gestures INTO the lessons instead of off-screen. He must never
-     be flipped to face the other way — see the mascot note in style.css. */
-  const PATH_MASCOT_AT = 5;
   ds.forEach((d, di) => {
     const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
     const uDone = d.lessons.filter(l => lessonProg(d.key + "." + l.key).stars > 0).length;
@@ -791,7 +827,7 @@ function renderPath() {
         </svg>` : "";
       // exact Figma "Level" colors per state: gold done / unit-color open / gray locked
       const nc = done ? ["#FFC800", "#E6A000", "#FFE700"] : open ? [u.c, u.s, u.h] : ["#D2D2D2", "#ADADAD", "transparent"];
-      html += `<div class="path-row">${gi === PATH_MASCOT_AT ? mascot("point", "path-mascot") : ""}<div class="node-col${current ? " bob" : ""}" style="right:${x}px">
+      html += `<div class="path-row"><div class="node-col${current ? " bob" : ""}" style="right:${x}px">
         ${ring}
         <button class="node ${cls}" style="--node-c:${nc[0]};--node-s:${nc[1]};--node-h:${nc[2]};--d:${(gi % 10) * 0.06}s"
           aria-label="${l.title} — ${done ? "مكتمل، " + arPlural(p.stars, "نجمة واحدة", "نجمتان", "نجوم", "نجمة") : current ? "الدرس الحالي" : "مقفل"}"
@@ -951,7 +987,7 @@ A.startLesson = function (domKey, lesKey, boost) {
   const d = window.QBANK[domKey], l = d.lessons.find(x => x.key === lesKey);
   const key = domKey + "." + lesKey;
   const qs = pickLessonQuestions(l, key);
-  if (!qs.length) { showModal(mascot("point", "pop"), "لا توجد أسئلة", "لا توجد أسئلة متاحة لهذا الدرس في مسارك الحالي.", "حسناً"); return; }
+  if (!qs.length) { showModal("⭐", "لا توجد أسئلة", "لا توجد أسئلة متاحة لهذا الدرس في مسارك الحالي.", "حسناً"); return; }
   const prev = S.lessons[key];
   const replay = !!(prev && prev.stars > 0);            // already cleared → farm mode (+2/+2)
   let xpBoost = false;
@@ -1985,7 +2021,7 @@ function lessonComplete() {
   const xpWon = rankGain, gemsWon = SES.gems, boosted = SES.xpBoost, tTot = SES.tSpent;
   const dayWord = S.streak.count === 1 ? "يوم واحد" : S.streak.count === 2 ? "يومان" : S.streak.count <= 10 ? toAr(S.streak.count) + " أيام" : toAr(S.streak.count) + " يوماً";
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
-    ${flameHero(115)}
+    ${winHero()}
     <h1 class="win-title">أكملت الدرس!</h1>
     <p class="win-sub">سلسلة ${dayWord}</p>
     <div class="win-gems">${ico("gem", 20)} +${toAr(gemsWon)} جوهرة${boosted ? ` · ⚡ الخبرة ×٢` : ""}</div>
@@ -1998,6 +2034,7 @@ function lessonComplete() {
       <button class="btn" onclick="A.winContinue()">متابعة</button>
     </div>
   </div></div>`;
+  winHeroPlay();
   setTimeout(() => {
     const xpEl = document.getElementById("cv-xp"), accEl = document.getElementById("cv-acc"), tEl = document.getElementById("cv-time");
     if (xpEl) countUp(xpEl, xpWon); if (accEl) countUp(accEl, acc, "٪"); if (tEl) countUpTime(tEl, tTot);
@@ -2053,7 +2090,7 @@ function renderMockHome() {
   $app.innerHTML = statbar() + `<div class="screen"><div class="page">
     <h1>محاكاة الاختبار</h1><div class="sub">جرّب جو الاختبار الحقيقي وقس مستواك</div>
     <div class="mock-hero-card">
-      <div class="mh-trophy"><img class="ic" src="assets/icons/nav-exam-192.png" width="84" height="84" alt=""></div>
+      <div class="mh-hero"><span class="mh-spot"></span>${mascot("strong", "mh-mascot")}</div>
       <div class="mh-rules">
         <div class="mh-rule">${ico("guide", 20)} قسمان كمّيان × ${toAr(S.track === "lit" ? 15 : 24)} سؤالاً — بالتوزيع الرسمي للمواضيع</div>
         <div class="mh-rule">${ico("timer", 20)} ${toAr(25)} دقيقة لكل قسم بمؤقّت مستقل</div>
@@ -2091,7 +2128,7 @@ A.startMock = function () {
       left: MOCK_SECS
     });
   }
-  if (!sections[0].items.length) { showModal(mascot("point", "pop"), "لا توجد أسئلة", "بنك الأسئلة غير متاح.", "حسناً"); return; }
+  if (!sections[0].items.length) { showModal("⭐", "لا توجد أسئلة", "بنك الأسئلة غير متاح.", "حسناً"); return; }
   MOCK = { sections, si: 0, qi: 0, timer: null };
   startMockSection();
 };
@@ -3085,6 +3122,7 @@ function streakDayLabel(c) {
   return word + " من الحماس";
 }
 A.winContinue = function () {
+  winHeroStop();
   if (pendingStreak > 0) { const c = pendingStreak; pendingStreak = 0; showStreakCelebration(c, () => A.go("path")); }
   else A.go("path");
 };
@@ -3363,7 +3401,7 @@ function showModal(hero, title, bodyHtml, btnText, onclose) {
   veil.querySelector("#mOk").onclick = () => { veil.remove(); if (onclose) onclose(); };
 }
 A.showAbout = function () {
-  showModal(mascot("point", "pop"), "حول تطبيق قدراتي", DISCLAIMER_HTML + `<br><a class="linkout" href="https://etec.gov.sa" target="_blank" rel="noopener">↗ الموقع الرسمي لهيئة تقويم التعليم والتدريب</a>`, "حسناً");
+  showModal("⭐", "حول تطبيق قدراتي", DISCLAIMER_HTML + `<br><a class="linkout" href="https://etec.gov.sa" target="_blank" rel="noopener">↗ الموقع الرسمي لهيئة تقويم التعليم والتدريب</a>`, "حسناً");
 };
 
 /* Start-screen hero: XP-coins trio (recreated from the Duolingo UI-kit
@@ -3918,10 +3956,7 @@ const INTRO_VALUE = [
 ];
 function renderIntroValue() {
   $app.innerHTML = `<div class="screen screen-full iv-screen">
-    <div class="iv-top">
-      <div class="iv-bubble">إليك ما ستحصل عليه مع قدراتي!</div>
-      ${mascot("point", "iv-mascot pop")}
-    </div>
+    <div class="iv-top"><h1 class="iv-title">إليك ما ستحصل عليه مع قدراتي!</h1></div>
     <div class="iv-rows">` + INTRO_VALUE.map((r, i) => `
       <div class="iv-row iv-${r.c}" style="--d:${(0.18 + i * 0.12).toFixed(2)}s">
         <span class="iv-ic">${ico(r.ic, 26)}</span>

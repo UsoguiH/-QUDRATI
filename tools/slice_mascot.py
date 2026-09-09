@@ -4,14 +4,14 @@ Whatever the generator produces, this script does everything after generation:
 cell split -> cutout -> alpha -> uniform canvas -> size budget.
 
 Two input shapes, because the prompt library changed shape twice:
-  - GRID sheets (v1/v2): several poses in one image, split on the real gutters. `--check`
+  - GRID sheets: several poses in one image, split on the real gutters. `--check`
     reports; a sheet number processes just that one.
-  - Single figures (v3): one pose per image, no split at all. `--single`.
+  - Single figures: one pose per image, no split at all. `--single`.
 
 Both land in the same place and matter for the same reason: every state must sit on the
-same canvas at the same visual height, or one CSS `height` renders them at different
-sizes. The grid is data-driven (see GRID), so a sheet can move between 4-up, 2-up and a
-lone figure by editing SHEETS alone.
+same canvas at the same CHARACTER scale, or one CSS `height` renders him at different
+sizes. Within a sheet that scale comes from one standing anchor pose (ANCHOR); the grid
+is data-driven (SHEETS), rows may be ragged, and feet share one baseline.
 
 Descended from ClaudeBot/tools/{slice,normalize}_mascots.py, with three corrections
 that copy would have gotten wrong here:
@@ -40,30 +40,38 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SHEET_DIR = os.path.join(ROOT, "assets", "mascot", "sheets")
 OUT_DIR = os.path.join(ROOT, "assets", "mascot")
 
-# Cells in visual order. Keep in step with Mascotprompt.md -- the prompt names the
-# same positions, so a mislabelled cell here silently swaps two emotional states in the app.
+# Cells in visual order, one inner list per ROW. Keep in step with the prompt files
+# (Mascotprompt.md for sheet 1, `5 prompts.md` and `5 prompts 2.md` for 2 and 3) -- the
+# prompt names the same positions, so a mislabelled cell here silently swaps two
+# emotional states in the app.
 #
-# Two per sheet, not four: the first 4-up attempt came back with amputated arms and a
-# duplicated book because the layout ate the model's budget. Two figures in a square image
-# also gives each a portrait-shaped cell, which suits a full-body figure far better.
+# Rows may be ragged: sheets 2 and 3 came back as three figures over two.
 SHEETS = {
-    1: ["encourage", "cheer", "point", "concerned"],   # the core loop
-    2: ["wave", "proud", "celebrate", "teach"],        # welcome + wins
-    3: ["think", "timeup", "strong", "calm"],          # completes Tier 1
-    4: ["sleep", "stop", "crown", "oops"],             # Tier 2
+    1: [["encourage", "cheer"], ["point", "concerned"]],        # the core loop
+    2: [["stand", "wave", "celebrate"], ["proud", "strong"]],   # the first five
+    3: [["teach", "wait", "read"], ["sleep", "crown"]],         # the second five
 }
-# Layout is inferred from how many states a sheet declares, so a sheet can go back to 4-up
-# (or down to a single figure) by editing SHEETS alone.
-GRID = {1: (1, 1), 2: (1, 2), 4: (2, 2)}
-CELL_NAME = {
-    (1, 1): ["centre"],
-    (1, 2): ["left", "right"],
-    (2, 2): ["top-left", "top-right", "bottom-left", "bottom-right"],
-}
+# One STANDING pose per sheet sets that sheet's scale, and every other cell on the sheet
+# is scaled by the same factor. Scaling each cell to a fixed height (the old rule) would
+# blow the sitting poses up until `read` had a bigger head than `stand` -- and those two
+# swap in the same slot on the path. The anchor lands at TARGET_H; a taller pose on the
+# same sheet (arms up, mid-jump) simply gets more of the canvas.
+ANCHOR = {1: "encourage", 2: "stand", 3: "teach"}
+ROW_NAME = ["top", "middle", "bottom"]
+# Only these land in assets/mascot/. The sheets carry fourteen poses and the app uses
+# two (2026-09-09: the user cut every other placement); the rest still get cut and
+# reported by --check, they are just not written, so nothing unused ships.
+SHIP = {"celebrate", "strong"}
+# Poses whose painted floor shadow is cut away, because the app draws a live one under
+# them (the win screen's shadow shrinks as he rises and spreads as he lands, which a
+# shadow glued to his feet cannot do). Only a shadow that floats clear of the feet is
+# removed — a standing pose's shadow touches the shoes and is left alone.
+LIVE_SHADOW = {"celebrate"}
 
 CANVAS = 512                      # ~2x the largest on-screen use (200px hero)
-TARGET_H = int(CANVAS * 0.94)     # one content height for every state, so a CSS
-MAX_W = int(CANVAS * 0.96)        # height: Npx renders them all at the same size
+TARGET_H = int(CANVAS * 0.94)     # the anchor pose's content height on the canvas
+MAX_W = int(CANVAS * 0.96)        # no pose may be wider than this
+BASELINE = (CANVAS - TARGET_H) // 2   # feet sit this far above the canvas bottom
 SIZE_LIMIT = 45 * 1024            # the repo's benchmark: rank-*.png ship at 42-45 KB
 # Small on purpose. The pad is only there to give the feathered edge somewhere to live,
 # and it is measured in SOURCE pixels -- so it scales differently for a compact pose than
@@ -182,18 +190,44 @@ def cut_cell(cell_rgb, bg):
     return out, (int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max()))
 
 
-def to_canvas(img):
-    """Uniform visual height on a square canvas. Without this the natural bounding
-    boxes differ per pose, so `celebrate` (arms up, tall) renders small and `calm`
-    (compact) renders large at the same CSS height."""
+def drop_floor_shadow(img):
+    """Erase the painted ellipse under a mid-air pose. Scanning up from the bottom, the
+    first opaque band is the shadow and the transparent gap above it is the air under
+    his feet; everything below that gap goes. A band taller than an eighth of the figure
+    is not a shadow, and no gap means the feet stand on it — both leave the image as is."""
+    a = np.asarray(img)[:, :, 3]
+    rows = np.where(a.max(axis=1) > 20)[0]
+    if not len(rows):
+        return img
+    bottom = rows[-1]
+    y = bottom
+    while y > 0 and a[y].max() > 20:
+        y -= 1
+    band = bottom - y
+    if band > img.height / 8:
+        return img
+    gap_top = y
+    while gap_top > 0 and a[gap_top].max() <= 20:
+        gap_top -= 1
+    if y - gap_top < 3:
+        return img
+    arr = np.array(img)
+    arr[y + 1:, :, 3] = 0
+    out = Image.fromarray(arr, "RGBA")
+    bbox = out.getbbox()
+    return out.crop((0, 0, out.width, bbox[3] + 1)) if bbox else out
+
+
+def to_canvas(img, scale):
+    """Place one cut on the square canvas at the sheet's shared scale, feet on a common
+    baseline. Bottom-aligned, not centred, because states swap inside one fixed-height
+    slot (the path: stand / read / sleep) and a centred sitting figure would float up
+    off the ground when it replaced a standing one."""
     w, h = img.size
-    scale = TARGET_H / h
-    if w * scale > MAX_W:
-        scale = MAX_W / w
     nw, nh = max(1, round(w * scale)), max(1, round(h * scale))
     shape = img.resize((nw, nh), Image.LANCZOS)
     canvas = Image.new("RGBA", (CANVAS, CANVAS), (0, 0, 0, 0))
-    canvas.paste(shape, ((CANVAS - nw) // 2, (CANVAS - nh) // 2), shape)
+    canvas.paste(shape, ((CANVAS - nw) // 2, CANVAS - BASELINE - nh), shape)
     return canvas, nw, nh
 
 
@@ -213,7 +247,9 @@ def save_budgeted(img, path):
     return size, f"p64 OVER"
 
 
-def process(n, check_only=False):
+def cut_sheet(n):
+    """Split one sheet on its real gutters and return every cell as a tight RGBA
+    cutout, unscaled. Scaling is a sheet-wide decision, so it happens in process()."""
     src = None
     for ext in (".png", ".webp", ".jpg", ".jpeg"):
         p = os.path.join(SHEET_DIR, f"sheet-{n}{ext}")
@@ -222,7 +258,7 @@ def process(n, check_only=False):
             break
     if not src:
         print(f"sheet {n}: not found in assets/mascot/sheets/ -- skipped")
-        return {}
+        return []
 
     im = Image.open(src)
     has_alpha = im.mode in ("RGBA", "LA") and np.asarray(im.convert("RGBA"))[:, :, 3].min() < 250
@@ -237,69 +273,87 @@ def process(n, check_only=False):
         bg = sample_background(np.asarray(im).astype(int))
         print(f"  background sampled: #{int(bg[0]):02x}{int(bg[1]):02x}{int(bg[2]):02x}")
 
-    meta = {}
-    states = SHEETS[n]
-    if len(states) not in GRID:
-        print(f"  sheet {n} declares {len(states)} states; expected one of {sorted(GRID)}")
-        return {}
-    rows, cols = GRID[len(states)]
-    names = CELL_NAME[(rows, cols)]
-
+    rows = SHEETS[n]
     # Cut on the real gutters, not on W/n. Row bands come from the whole image; the
-    # column gutter is then found WITHIN each row band, because the figure in the
-    # top-left and the one in the bottom-left need not occupy the same x range.
+    # column gutters are then found WITHIN each row band, because a row of three and a
+    # row of two do not share x ranges.
     if has_alpha:
         ink = np.asarray(im)[:, :, 3] > 127
     else:
         ink = ~paper_mask(np.asarray(im).astype(int), bg)
-    ybounds = [0] + find_splits(ink_projection(ink, 1), rows) + [H]
+    ybounds = [0] + find_splits(ink_projection(ink, 1), len(rows)) + [H]
     xbounds_by_row = []
-    for r in range(rows):
+    for r, row in enumerate(rows):
         band = ink[ybounds[r]:ybounds[r + 1]]
-        xbounds_by_row.append([0] + find_splits(ink_projection(band, 0), cols) + [W])
-    if rows > 1 or cols > 1:
-        print(f"  gutters: y={ybounds[1:-1] or '-'}  x={[b[1:-1] for b in xbounds_by_row]}")
+        xbounds_by_row.append([0] + find_splits(ink_projection(band, 0), len(row)) + [W])
+    print(f"  gutters: y={ybounds[1:-1] or '-'}  x={[b[1:-1] for b in xbounds_by_row]}")
 
-    for i, name in enumerate(states):
-        r, c = divmod(i, cols)
-        xs_ = xbounds_by_row[r]
-        box = (xs_[c], ybounds[r], xs_[c + 1], ybounds[r + 1])
-        region = im.crop(box)
+    cells = []
+    for r, row in enumerate(rows):
+        for c, name in enumerate(row):
+            xs_ = xbounds_by_row[r]
+            box = (xs_[c], ybounds[r], xs_[c + 1], ybounds[r + 1])
+            region = im.crop(box)
+            label = f"{ROW_NAME[r]}-{c + 1}"
 
-        if has_alpha:
-            arr = np.asarray(region)
-            ys, xs = np.nonzero(arr[:, :, 3] > 127)
-            if not len(ys):
-                print(f"  {names[i]:<12} {name:<10} EMPTY -- nothing found")
-                continue
-            cut = region.crop((max(xs.min() - PAD, 0), max(ys.min() - PAD, 0),
-                               min(xs.max() + PAD, region.width - 1) + 1,
-                               min(ys.max() + PAD, region.height - 1) + 1))
-            bbox = (int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max()))
-        else:
-            cut, bbox = cut_cell(region.convert("RGB"), bg)
-            if cut is None:
-                print(f"  {names[i]:<12} {name:<10} EMPTY -- nothing found")
-                continue
+            if has_alpha:
+                arr = np.asarray(region)
+                ys, xs = np.nonzero(arr[:, :, 3] > 127)
+                if not len(ys):
+                    print(f"  {label:<12} {name:<10} EMPTY -- nothing found")
+                    continue
+                cut = region.crop((max(xs.min() - PAD, 0), max(ys.min() - PAD, 0),
+                                   min(xs.max() + PAD, region.width - 1) + 1,
+                                   min(ys.max() + PAD, region.height - 1) + 1))
+                bbox = (int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max()))
+            else:
+                cut, bbox = cut_cell(region.convert("RGB"), bg)
+                if cut is None:
+                    print(f"  {label:<12} {name:<10} EMPTY -- nothing found")
+                    continue
 
-        # A pose touching its quadrant edge means the model ignored the grid and the
-        # figure is clipped. Louder than a size warning: the art is wrong, not heavy.
-        touch = []
-        if bbox[0] <= 1: touch.append("left")
-        if bbox[1] <= 1: touch.append("top")
-        if bbox[2] >= region.width - 2: touch.append("right")
-        if bbox[3] >= region.height - 2: touch.append("bottom")
+            # A pose touching its cell edge means the model ignored the grid and the
+            # figure is clipped. Louder than a size warning: the art is wrong, not heavy.
+            touch = []
+            if bbox[0] <= 1: touch.append("left")
+            if bbox[1] <= 1: touch.append("top")
+            if bbox[2] >= region.width - 2: touch.append("right")
+            if bbox[3] >= region.height - 2: touch.append("bottom")
+            cells.append((label, name, cut, touch))
+    return cells
 
-        canvas, nw, nh = to_canvas(cut)
+
+def process(n, check_only=False):
+    cells = cut_sheet(n)
+    if not cells:
+        return {}
+    names = [c[1] for c in cells]
+    anchor = ANCHOR.get(n, names[0])
+    if anchor not in names:
+        print(f"  anchor '{anchor}' is not on sheet {n}; using '{names[0]}'")
+        anchor = names[0]
+    ah = next(c[2].size[1] for c in cells if c[1] == anchor)
+    scale = TARGET_H / ah
+    # The anchor sets the scale; a taller or wider pose must still fit the canvas,
+    # and if one does not, the whole sheet shrinks together so proportions hold.
+    tallest = max(c[2].size[1] for c in cells)
+    widest = max(c[2].size[0] for c in cells)
+    scale = min(scale, (CANVAS - BASELINE) / tallest, MAX_W / widest)
+    print(f"  anchor {anchor}: {ah}px -> {round(ah * scale)}px  (scale {scale:.3f})")
+
+    meta = {}
+    for label, name, cut, touch in cells:
+        if name in LIVE_SHADOW:
+            cut = drop_floor_shadow(cut)
+        canvas, nw, nh = to_canvas(cut, scale)
         flag = f"  !! CLIPPED at {'/'.join(touch)} -- regenerate this sheet" if touch else ""
-        if check_only:
-            print(f"  {names[i]:<12} {name:<10} content {nw}x{nh}{flag}")
+        if check_only or name not in SHIP:
+            print(f"  {label:<12} {name:<10} content {nw}x{nh}{'' if name in SHIP else '  (not shipped)'}{flag}")
             continue
-
         out = os.path.join(OUT_DIR, f"qaddour-{name}.png")
         size, mode = save_budgeted(canvas, out)
         over = "  !! OVER 45 KB" if size > SIZE_LIMIT else ""
-        print(f"  {names[i]:<12} {name:<10} -> qaddour-{name}.png  "
+        print(f"  {label:<12} {name:<10} -> qaddour-{name}.png  "
               f"{size/1024:5.1f} KB  {mode}{over}{flag}")
         meta[name] = {"w": CANVAS, "h": CANVAS, "renderedW": nw, "renderedH": nh,
                       "bytes": size, "sheet": n}
@@ -341,7 +395,7 @@ def process_single(check_only=False):
                 print(f"  {name:<12} EMPTY -- nothing found")
                 continue
 
-        canvas, nw, nh = to_canvas(cut)
+        canvas, nw, nh = to_canvas(cut, min(TARGET_H / cut.size[1], MAX_W / cut.size[0]))
         if check_only:
             print(f"  {name:<12} content {nw}x{nh}   ({'transparent' if has_alpha else 'cut'})")
             continue
@@ -379,5 +433,5 @@ if __name__ == "__main__":
         print("Next: eyeball each against the QA gate in Mascotprompt.md.")
     else:
         print("\nNothing processed."
-              "\n  sheets (v2): assets/mascot/sheets/sheet-1.png ... sheet-4.png"
-              "\n  singles (v3): assets/mascot/sheets/single/qaddour-<state>.png, cut with --single")
+              "\n  sheets: assets/mascot/sheets/sheet-1.png ... sheet-3.png"
+              "\n  singles: assets/mascot/sheets/single/qaddour-<state>.png, cut with --single")

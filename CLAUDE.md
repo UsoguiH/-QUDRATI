@@ -38,6 +38,11 @@ tools/methods/          — audit scripts for question method coverage
 tools/app_icon.py       — builds favicon.ico + assets/app-icon/ (every web icon size) from the 1024 master
 assets/app-icon/        — the web app icon (قدّور on his purple tile): icon-1024 master + favicon/apple/manifest sizes — GENERATED
 assets/icons/           — SVG icons + rank badge PNGs
+assets/mascot/          — قدّور: the two shipped states, qaddour-celebrate.png and qaddour-strong.png (512² canvas, ≤45 KB) — GENERATED
+assets/mascot/sheets/   — the GPT Image character sheets the states are cut from (sheet-1 … sheet-3)
+tools/slice_mascot.py   — cuts the sheets into the state PNGs (`python tools/slice_mascot.py`, `--check` to dry-run)
+5 prompts.md / 5 prompts 2.md — the prompts behind sheets 2 and 3, each state with its placement; MASCOTS.PNG is the reference to attach
+MASCOT-PLAN.md          — the placement map and the six Duolingo rules it follows
 assets/streak/          — Rive animations (flame.riv, big.riv) + Lottie (daycheck.json)
 assets/sounds/          — correct.mp3
 ```
@@ -45,6 +50,7 @@ assets/sounds/          — correct.mp3
 ## Game systems
 
 - **Structure**: 4 units × ~18 lessons = ~72 lessons, unlocked sequentially
+- **Mascot «قدّور»** (`assets/mascot/`, helper `mascot(state, cls)` in app.js): a flat cartoon teacher with a pointer stick and a purple «قدرات» book. **Exactly two placements, both big, and nothing else** (the user cut every other one on 2026-09-09, including the path, the hello screen, the modals and the value screen — do not add him anywhere): the **win screen**, where `celebrate` replaced the streak flame (`winHero()` + `winHeroPlay()`, GSAP, the same grammar as the card's `fxAddJump`: he drops in from above and lands hard as the title pops, then cheers in a rhythm — hop, hop, a sway — with anticipation, stretch, hang time, squash and a back-out settle, over a live shadow that shrinks in the air and spreads on impact. **Nothing behind him and no confetti, rings or particle sprays, ever**: the user calls that AI slop; the character is the celebration), and the **mock exam home** card, where `strong` stands ready (`mhReady` entrance, then breathes). `MASCOT_STATES` gates the two files; an unlisted state renders nothing. Motion is CSS only, off under `data-motion="reduced"`. He is never mirrored (`scaleX(-1)` reverses the book's Arabic). The full 14-pose sheets stay in `assets/mascot/sheets/`; `tools/slice_mascot.py` cuts them but writes only `SHIP`.
 - **Questions**: 216+ original questions — MCQ (`format:"mcq"`) and comparison (`format:"comparison"`)
 - **Tracks**: `"sci"` (scientific) and `"lit"` (literary — lighter quant load, excludes `track:"sci"` questions)
 - **Hearts**: 3 per level; losing all resets the level
@@ -139,6 +145,7 @@ Open `preview.html#<screen>` to jump directly to any screen (bypasses disclaimer
 | `#review` | mistakes review |
 | `#chest` | open daily chest |
 | `#rankup` | rank-up celebration |
+| `<hash>cap` | any hash with `cap` appended freezes every animation for a screenshot (`#donecap`, `#mockdonecap`); `#rankcapN` keeps its own meaning |
 
 ## Key constants (app.js)
 

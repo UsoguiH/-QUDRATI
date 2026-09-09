@@ -234,6 +234,21 @@
     o.value = s[0]; o.textContent = s[1];
     scr.appendChild(o);
   });
+  /* mobile.html#<screen> opens the frame on that preview hash — any hash preview.html
+     knows, listed above or not, so a new screen is reachable before it has a label */
+  var want = location.hash.replace("#", "");
+  if (want) {
+    if (!SCREENS.some(function (s) { return s[0] === want; })) {
+      var extra = document.createElement("option");
+      extra.value = want; extra.textContent = want;
+      scr.appendChild(extra);
+    }
+    scr.value = want;
+  }
+  window.addEventListener("hashchange", function () {
+    var h = location.hash.replace("#", "");
+    if (h && scr.value !== h) { scr.value = h; load(); }
+  });
 
   function dims() {
     var d = DEVICES[dev.value];

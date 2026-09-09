@@ -1767,7 +1767,6 @@ button.dom-stat:active { transform: scale(.99); }
   padding: 18px 16px 16px; margin-bottom: 14px; text-align: center;
   animation: fadeUp .4s cubic-bezier(.3,1.3,.5,1) backwards;
 }
-.mh-trophy { margin-bottom: 6px; animation: chestBounce 2.6s cubic-bezier(.3,1.6,.4,1) 1s infinite; display: inline-block; }
 .mh-rules { text-align: right; margin: 10px 2px 16px; }
 .mh-rule {
   display: flex; align-items: center; gap: 10px;
@@ -3840,49 +3839,66 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
   75%      { transform: translateX(5px); }
 }
 
-/* The generic modal slot. showModal's first argument was named `emoji` and every
-   caller passed "⭐"; it now takes any HTML, so one change upgrades every modal. */
-.modal .m-owl .mascot { height: 152px; margin: 0 auto; }
-
 :root[data-motion="reduced"] .mascot { animation: none !important; }
 
-/* ---------- قدّور beside the path (Duolingo's placement) ----------
-   Ambient, not a UI element: he stands ON the path's own ground, at z-index 0 so the
-   trail line and the nodes both pass in front of him, and pointer-events:none so he
-   can never eat a tap meant for a lesson. He is sized in rem-free px because the row
-   height that carries him is fixed at 128px. */
-.path-mascot {
-  position: absolute; z-index: 0; pointer-events: none;
-  inset-inline-start: 4px; bottom: -6px;
-  height: 196px;
-  animation: mascotBob 3.6s ease-in-out infinite;
+/* ---------- the win screen: قدّور replaces the flame ----------
+   Nothing behind him. The motion lives in winHeroPlay() (app.js, GSAP): a drop-in
+   with a hard landing, then hop, hop, sway, again — with a live shadow. These rules
+   only lay the two pieces out; he starts invisible so the drop, not the paint, is
+   the first thing seen (GSAP sets opacity 1 on the first frame; without GSAP the
+   reduced-motion rule below shows him still). */
+.qd-hero { overflow: visible; margin-bottom: 4px; }
+.qd-mascot { position: relative; z-index: 1; height: 100%; opacity: 0; will-change: transform; }
+.qd-shadow {
+  position: absolute; bottom: 3%; left: 50%; width: 44%; height: 7%;
+  margin-left: -22%; border-radius: 50%;
+  background: rgba(31, 31, 31, .16); filter: blur(1.5px);
+  opacity: 0; will-change: transform;
 }
-/* On a narrow phone the path column already fills the width; he would sit on top of
-   the node labels, so he steps out rather than crowding them. */
-@media (max-width: 400px) { .path-mascot { height: 158px; inset-inline-start: -14px; } }
-@media (max-width: 330px) { .path-mascot { display: none; } }
+@media (max-height: 700px) { .qd-hero { --wh: 196px !important; } }
+:root[data-motion="reduced"] .qd-mascot, :root[data-motion="reduced"] .qd-shadow { opacity: 1; }
+
+/* ---------- the mock exam home: steady before a hard thing ----------
+   He rises into the card and plants the stick with a small settle (mhReady), then
+   breathes (mhBreathe). Big on purpose: this card is the one screen a student
+   opens deliberately, so he can carry it. */
+.mh-hero {
+  position: relative; height: 232px; margin: -4px 0 8px;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.mh-spot {
+  position: absolute; bottom: 4px; width: 210px; height: 64px; border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(28, 176, 246, .22), rgba(28, 176, 246, 0) 70%);
+  animation: fadeUp .5s .3s ease backwards;
+}
+.mh-mascot {
+  position: relative; height: 100%; transform-origin: 50% 100%;
+  animation: mhReady .75s cubic-bezier(.25, 1.35, .4, 1) .1s backwards,
+             mhBreathe 3.4s 1.2s ease-in-out infinite;
+}
+@keyframes mhReady {
+  0%   { transform: translateY(46px) scale(.88); opacity: 0; }
+  65%  { transform: translateY(-8px) scale(1.03, .98); opacity: 1; }
+  82%  { transform: translateY(2px) scale(.99, 1.01); }
+  100% { transform: none; opacity: 1; }
+}
+@keyframes mhBreathe {
+  0%, 100% { transform: scale(1, 1); }
+  50%      { transform: scale(1.012, 1.018) translateY(-1px); }
+}
+@media (max-height: 700px) { .mh-hero { height: 190px; } }
+:root[data-motion="reduced"] .mh-hero * { animation: none !important; opacity: 1; }
 
 /* ---------- "إليك ما ستحصل عليه" — first-run value screen ----------
-   Modelled on the Duolingo screen in assets/mascot/reference/duolingo: mascot and
-   speech bubble at the top, three icon/title/subtitle rows, one CTA at the bottom. */
+   Modelled on the Duolingo screen in assets/mascot/reference/duolingo: a headline at
+   the top, three icon/title/subtitle rows, one CTA at the bottom. */
 .iv-screen { display: flex; flex-direction: column; padding: 18px 20px calc(20px + env(safe-area-inset-bottom)); }
-.iv-top { display: flex; align-items: flex-end; justify-content: center; gap: 6px; margin: 8px 0 22px; }
-.iv-mascot { height: 184px; flex-shrink: 0; }
-.iv-bubble {
-  position: relative; align-self: center;
-  background: var(--snow); border: 2px solid var(--line); border-radius: 16px;
-  padding: 12px 15px; font-size: 17px; font-weight: 700; color: var(--ink);
-  max-width: 210px; line-height: 1.5;
+.iv-top { display: flex; justify-content: center; margin: 18px 0 20px; }
+.iv-title {
+  font-size: 22px; font-weight: 800; color: var(--ink); line-height: 1.4;
+  text-align: center; text-wrap: balance; max-width: 300px; margin: 0;
   animation: fadeUp .34s .1s ease backwards;
 }
-/* the tail points at قدّور, who stands on the inline-start side */
-.iv-bubble::after,
-.iv-bubble::before {
-  content: ""; position: absolute; top: 50%; margin-top: -9px;
-  border: 9px solid transparent; inset-inline-start: -18px;
-}
-.iv-bubble::before { border-inline-end-color: var(--line); }
-.iv-bubble::after  { border-inline-end-color: var(--snow); margin-inline-start: 3px; }
 
 .iv-rows { display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .iv-row {
@@ -3903,7 +3919,6 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 .iv-cta { margin-top: 18px; }
 
 @media (max-height: 660px) {
-  .iv-mascot { height: 140px; }
   .iv-row { padding: 11px 4px; }
   .iv-top { margin-bottom: 14px; }
 }

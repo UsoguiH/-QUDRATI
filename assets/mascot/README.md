@@ -1,47 +1,36 @@
-# قدّور — mascot art drop-in spec
+# قدّور — the mascot files
 
-One flat image per emotional state. Drop the finished files here using the exact
-filenames below; the CSS motion layer at the end of `css/style.css` is already in place.
+Two states ship. The character sheets in `sheets/` carry fourteen poses;
+`python tools/slice_mascot.py` cuts them all, reports them with `--check`, and writes only
+the ones in its `SHIP` set. Do not hand-edit the state files.
 
-## Filenames (Tier 1 — required before any placement is wired)
+| File | Where | How it moves |
+|---|---|---|
+| `qaddour-celebrate.png` | the win screen, in place of the streak flame (`winHero()` in app.js) | drops in and lands hard, then hop, hop, sway, again — anticipation, stretch, hang, squash, settle, over a live shadow (`winHeroPlay()` in app.js, GSAP). Nothing behind him, no confetti, no particles: Duolingo's grammar only. The painted floor shadow is cut off this PNG by the slicer (`LIVE_SHADOW`) so the live one can move |
+| `qaddour-strong.png` | the mock exam home card (`renderMockHome()`) | rises into the card and plants the stick, then breathes (`.mh-*`) |
 
-    qaddour-wave.png        warm hello              login / welcome hero
-    qaddour-point.png       explaining, hero pose   generic modal, exam setup, disclaimer
-    qaddour-cheer.png       delighted               correct answer, lesson complete
-    qaddour-encourage.png   gentle reassurance      wrong answer  ← most-used state
-    qaddour-proud.png       quiet approval          three stars, "no mistakes left"
-    qaddour-concerned.png   worried FOR the student fail screen, streak at risk
-    qaddour-think.png       considering             loading
-    qaddour-teach.png       step-by-step            method sheet
-    qaddour-timeup.png      time has run out        time-up feedback
-    qaddour-celebrate.png   biggest moment          rank-up ceremony
+**Nothing else.** On 2026-09-09 the user cut every other placement — the path, the hello
+screen, the teaching cards, the quit dialog, the review, the countdown card, the league,
+the chest, the rank-up, the streak, the modals and the value screen. Do not put him back.
 
-## Filenames (Tier 2)
+`mascot.json` is the slicer's manifest for the shipped states.
 
-    qaddour-sleep.png  qaddour-stop.png  qaddour-calm.png
-    qaddour-strong.png qaddour-crown.png qaddour-oops.png
+## Sheets
 
-## Derived
+| Sheet | Cells (row by row) | Prompts |
+|---|---|---|
+| `sheet-1.png` | encourage, cheer / point, concerned | `Mascotprompt.md` (historical) |
+| `sheet-2.png` | stand, wave, **celebrate** / proud, **strong** | `5 prompts.md` |
+| `sheet-3.png` | teach, wait, read / sleep, crown | `5 prompts 2.md` |
 
-    qaddour-head.png    tight bust crop of qaddour-point.png — crop it, do not
-                        generate it. Used at 28px in toasts and 44px as the avatar.
+To attach as the reference for a new sheet: `MASCOTS.PNG` in the repo root (sheet 1, the
+«قدرات» book). Never the old `reference/qaddour-reference.jpg`, whose book reads EGYPT.
 
 ## Format
 
-- PNG, transparent background, ~512px tall (2x the largest on-screen use).
-- Cropped to content with even margins on all four sides.
-- **≤45 KB each.** That is the existing tolerance benchmark in this repo —
-  `assets/icons/ranks/rank-*.png` ship at 42–45 KB.
-- No build step exists in this project, so files must be committed pre-optimized.
-
-## Before committing a state
-
-1. Flatten to black at 96px — it must still read as this character.
-2. Hair volume, glasses shape, the silver streak in the beard, vest colour and
-   the book must match the reference exactly. Drift means the anchor didn't hold.
-3. The book must read `EGYPT` + `عربي`, spelled correctly, not mirrored, not
-   duplicated. Arabic text is the most common image-model failure — check every time.
-4. Background transparent, or a single flat `#F5E9DA` with no gradient.
-5. Show it to someone with no context and ask what he is feeling. `encourage` must
-   not read as angry; `concerned` must not read as disappointed in you.
-6. No two states may look near-identical.
+- Cut from a flat cream sheet (`#F5E9DA` or close; never dark — the slicer flood-fills
+  from the border and his hair, shoes and stick are near-black).
+- 512×512 canvas, feet on a shared baseline, one character scale per sheet set by a
+  standing anchor pose (`ANCHOR` in the slicer).
+- ≤45 KB each, committed pre-optimised. No build step exists.
+- He is never mirrored in CSS.

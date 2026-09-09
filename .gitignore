@@ -39,9 +39,13 @@ deck/
 tools/__pycache__/
 
 # Mascot: Duolingo reference screenshots (their IP — local reference only, same
-# rule as design-ref/), the superseded generated model sheets, and the edit
-# intermediates that `python tools/mascot_masks.py` regenerates. The drawing,
-# the rig and the shipped states stay tracked.
+# rule as design-ref/) and the edit intermediates that `python tools/mascot_masks.py`
+# regenerates. The drawing, the rig, the character sheets (the source the shipped
+# states are cut from) and the states themselves stay tracked. The three sheet
+# copies at the repo root are the same pixels again — MASCOTS.PNG is the one to
+# attach to a prompt, the other two were the raw downloads.
 assets/mascot/reference/duolingo/
-assets/mascot/sheets/
 assets/mascot/edits/
+/MASCOTS.PNG
+/5 Style Mascots.png
+/5 STYLE MASCOTS 2.png

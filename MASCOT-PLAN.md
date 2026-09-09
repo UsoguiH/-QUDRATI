@@ -3,6 +3,13 @@
 Where he appears, which state, and what makes it change.
 Verified against `js/app.js` (4,348 lines) on 2026-09-02.
 
+**Status 2026-09-09, end of day: cut to two.** Everything below was built, shown to the
+user in the app, and rejected wholesale — *"delete everything else, absolutely everything
+else, I don't like them."* What survives: `celebrate` as the win screen's hero in place
+of the streak flame, and `strong` as the mock exam home's hero. Both big. This document
+is now history; `assets/mascot/README.md` is current.
+
+
 ---
 
 ## What Duolingo actually does — the six rules we're copying
