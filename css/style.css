@@ -2255,10 +2255,13 @@ button.dom-stat:active { transform: scale(.99); }
 .sk-days .day { display: flex; flex-direction: column; align-items: center; gap: 9px; width: 40px; }
 .sk-days .lbl { color: #ff9600; font-weight: 800; font-size: 15px; }
 .sk-days .dot { width: 32px; height: 32px; border-radius: 50%; background: #E5E5E5; position: relative; }
-.sk-days .dot.live { background: transparent; }
+/* a checked day keeps its grey dot underneath: the check's orange dot pops from a
+   point to 39px, so the grey is what shows until the pop — a dot, not an empty slot */
 .sk-days .check { position: absolute; left: 50%; top: 50%; width: 56px; height: 74px; transform: translate(-50%,-58%); pointer-events: none; }
 .sk-days .check svg { width: 100% !important; height: 100% !important; }
-.sk-btn { margin-top: 36px; width: 100%; }
+.sk-foot { margin-top: 36px; width: 100%; opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s cubic-bezier(.2,.7,.3,1); }
+.sk-foot.show { opacity: 1; transform: none; }
+.sk-btn { width: 100%; }
 
 /* ============================================================
    CORRECT-ANSWER MOTION — the jump, and the two strikes.

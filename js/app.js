@@ -3139,13 +3139,17 @@ function showStreakCelebration(count, onDone) {
     <div class="sk-num"><canvas id="skNum" width="300" height="260"></canvas></div>
     <div class="sk-sub" id="skSub">${streakDayLabel(count)}</div>
     <div class="sk-cal" id="skCal"><div class="sk-days">${days}</div></div>
-    <button class="btn sk-btn" onclick="A.closeStreak()">متابعة</button>
+    <div class="sk-foot" id="skFoot"><button class="btn sk-btn" onclick="A.closeStreak()">متابعة</button></div>
   </div>`;
   document.body.appendChild(veil);
   requestAnimationFrame(() => veil.classList.add("show"));
-  const sub = veil.querySelector("#skSub"), cal = veil.querySelector("#skCal");
+  const sub = veil.querySelector("#skSub"), cal = veil.querySelector("#skCal"), foot = veil.querySelector("#skFoot");
   streakInst = { flame: null, num: null, checks: [], flameIns: null, numIns: null, onDone, ran: false };
   sndWin && sndWin();
+  /* whatever the runtimes do, the way out must appear: if the flame has not fired
+     within a few seconds, show the copy, the tracker and the button as they are */
+  const showAll = () => { sub.classList.add("show"); cal.classList.add("show"); foot.classList.add("show"); };
+  setTimeout(() => { if (!streakInst.ran) showAll(); }, 4500);
 
   function tryRun() {
     if (streakInst.ran || !streakInst.flameIns || !streakInst.numIns) return;
@@ -3155,9 +3159,16 @@ function showStreakCelebration(count, onDone) {
     const g = n => streakInst.numIns.find(i => i.name === n);
     setOdo(g, "old", Math.max(0, count - 1)); setOdo(g, "new", count);
     fireI(streakInst.numIns, "play_trig");                            // number rolls up to the streak
+    /* Duolingo's order, after the flame and the number: the label slides up, then the
+       tracker slides up with its grey dots, and only once it has SETTLED do the checks
+       pop in one after another — a pop under a half-faded row is a pop nobody sees,
+       which is what used to happen. The button comes last. */
     setTimeout(() => {
-      sub.classList.add("show"); cal.classList.add("show");
-      streakInst.checks.forEach((a, i) => setTimeout(() => a.goToAndPlay(0, true), 280 + i * 150));
+      sub.classList.add("show");
+      setTimeout(() => cal.classList.add("show"), 180);
+      const n = streakInst.checks.length;
+      streakInst.checks.forEach((a, i) => setTimeout(() => a.goToAndPlay(0, true), 760 + i * 170));
+      setTimeout(() => foot.classList.add("show"), 760 + Math.max(0, n - 1) * 170 + 520);
     }, 1300);
   }
 
@@ -3189,9 +3200,7 @@ function showStreakCelebration(count, onDone) {
         animationData: JSON.parse(JSON.stringify(data)), rendererSettings: { preserveAspectRatio: "xMidYMid meet" }
       }));
     }).catch(() => {});
-  }).catch(() => { /* runtime failed to load — leave the static text/days visible */
-    sub.classList.add("show"); cal.classList.add("show");
-  });
+  }).catch(showAll);   /* runtime failed to load — the static text, days and button */
 }
 A.closeStreak = function () {
   const v = document.querySelector(".streak-veil"), done = streakInst.onDone;
