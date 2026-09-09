@@ -19,6 +19,7 @@ A Duolingo-style Arabic web game for practicing the Quantitative section of the 
 ```
 index.html              — app shell: `<div id="app">` holds the pre-rendered landing + «عن قدراتي» (H1, features, FAQ) that crawlers read; the app replaces it on boot and re-attaches `#about` under the start screen
 robots.txt / sitemap.xml / llms.txt — crawler files; vercel.json redirects www → qudrati.xyz (the canonical host)
+qudrat-kami.html        — «دليل القسم الكمي»: the one content page (what the GAT quantitative section covers, track shares, time management, a training plan, FAQ) with Article + Breadcrumb + FAQPage JSON-LD; linked from #about and back to the game
 preview.html            — dev harness: bypasses disclaimer, seeds state, jumps to any screen via #hash
 mobile.html             — device-frame preview of the app, auto-reloads when style.css or app.js changes
 css/style.css           — full design system (2059 lines, Figma-exact values)

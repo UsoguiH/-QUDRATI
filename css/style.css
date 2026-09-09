@@ -1002,6 +1002,37 @@ button.dom-stat:active { transform: scale(.99); }
 .about-links a { color: var(--blue); text-decoration: none; }
 .about-en { margin-top: 14px; font-size: 13px; font-weight: 500; }
 
+/* ---------- the guide page (qudrat-kami.html): one article column ---------- */
+.guide-body { background: var(--snow); }
+.guide { max-width: 640px; margin: 0 auto; padding: 22px 22px calc(40px + env(safe-area-inset-bottom)); color: var(--ink); }
+.guide-crumb { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--gray); margin-bottom: 26px; }
+.guide-crumb a { display: inline-flex; align-items: center; gap: 6px; color: var(--green-dk); text-decoration: none; }
+.guide-crumb img { border-radius: 6px; }
+.guide h1 { font-size: 28px; line-height: 1.5; color: var(--ink); text-wrap: balance; }
+.guide .guide-lead { font-size: 17px; font-weight: 600; line-height: 1.9; margin: 12px 0 0; }
+.guide h2 { font-size: 21px; margin: 34px 0 10px; }
+.guide p, .guide li { font-size: 16px; font-weight: 500; line-height: 1.95; margin: 0; }
+.guide p + p { margin-top: 10px; }
+.guide a { color: var(--blue); }
+.guide-list { margin: 0; padding-inline-start: 24px; }
+.guide-list li { margin-bottom: 6px; }
+.guide-list li::marker { color: var(--green); font-weight: 800; }
+.guide-table-wrap { overflow-x: auto; margin: 4px 0 12px; }
+.guide-table { width: 100%; border-collapse: collapse; font-size: 16px; font-weight: 600; text-align: center; }
+.guide-table th, .guide-table td { border: 2px solid var(--line); padding: 10px 12px; }
+.guide-table th { background: var(--green-bg); color: var(--green-dk); font-weight: 800; }
+.guide-table td:first-child { text-align: start; font-weight: 700; }
+.guide .faq summary { font-size: 16px; }
+.guide-cta {
+  margin-top: 36px; padding: 24px 22px 22px; text-align: center;
+  background: var(--green-bg); border-radius: 18px;
+}
+.guide-cta img { border-radius: 16px; }
+.guide-cta h2 { margin: 10px 0 6px; color: var(--green-dk); }
+.guide-cta p { margin-bottom: 18px; }
+.guide-btn { display: block; max-width: 300px; margin: 0 auto; line-height: 43px; text-decoration: none; color: #fff; }
+.guide .guide-note { margin-top: 26px; font-size: 13.5px; color: var(--gray); }
+
 /* --- XP-coins hero (UI-kit frame): coins rain in, gold one slams
    down, then everything floats, the bolt zaps, sparks twinkle --- */
 .coins-hero { position: relative; width: 296px; height: 188px; margin: 0 auto 10px; }
