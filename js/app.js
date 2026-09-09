@@ -536,7 +536,7 @@ const ico = (name, size) => `<img class="ic" src="assets/icons/${ICO_FILE[name] 
    `cls` carries the motion (pop / bob / bob-fast / shake) and the placement
    class. He is decorative in every placement — the screen always states its
    own meaning in text — so alt is empty and he is hidden from assistive tech. */
-const MASCOT_STATES = { celebrate: 1, strong: 1 };
+const MASCOT_STATES = { celebrate: 1, strong: 1, point: 1 };
 function mascot(state, cls) {
   if (!MASCOT_STATES[state]) return "";
   return `<img class="mascot ${cls || ""}" src="assets/mascot/qaddour-${state}.png" alt="" aria-hidden="true">`;
@@ -3960,7 +3960,10 @@ const INTRO_VALUE = [
 ];
 function renderIntroValue() {
   $app.innerHTML = `<div class="screen screen-full iv-screen">
-    <div class="iv-top"><h1 class="iv-title">إليك ما ستحصل عليه مع قدراتي!</h1></div>
+    <div class="iv-top">
+      <h1 class="iv-bubble">إليك ما ستحصل عليه مع قدراتي!</h1>
+      ${mascot("point", "iv-mascot pop")}
+    </div>
     <div class="iv-rows">` + INTRO_VALUE.map((r, i) => `
       <div class="iv-row iv-${r.c}" style="--d:${(0.18 + i * 0.12).toFixed(2)}s">
         <span class="iv-ic">${ico(r.ic, 26)}</span>

@@ -3906,15 +3906,26 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 :root[data-motion="reduced"] .mh-hero * { animation: none !important; opacity: 1; }
 
 /* ---------- "إليك ما ستحصل عليه" — first-run value screen ----------
-   Modelled on the Duolingo screen in assets/mascot/reference/duolingo: a headline at
-   the top, three icon/title/subtitle rows, one CTA at the bottom. */
+   Modelled on the Duolingo screen in assets/mascot/reference/duolingo: mascot and
+   speech bubble at the top, three icon/title/subtitle rows, one CTA at the bottom. */
 .iv-screen { display: flex; flex-direction: column; padding: 18px 20px calc(20px + env(safe-area-inset-bottom)); }
-.iv-top { display: flex; justify-content: center; margin: 18px 0 20px; }
-.iv-title {
-  font-size: 22px; font-weight: 800; color: var(--ink); line-height: 1.4;
-  text-align: center; text-wrap: balance; max-width: 300px; margin: 0;
+.iv-top { display: flex; align-items: flex-end; justify-content: center; gap: 6px; margin: 8px 0 22px; }
+.iv-mascot { height: 184px; flex-shrink: 0; }
+.iv-bubble {
+  position: relative; align-self: center; margin: 0;
+  background: var(--snow); border: 2px solid var(--line); border-radius: 16px;
+  padding: 12px 15px; font-size: 17px; font-weight: 700; color: var(--ink);
+  max-width: 210px; line-height: 1.5;
   animation: fadeUp .34s .1s ease backwards;
 }
+/* the tail points at قدّور, who stands on the inline-start side */
+.iv-bubble::after,
+.iv-bubble::before {
+  content: ""; position: absolute; top: 50%; margin-top: -9px;
+  border: 9px solid transparent; inset-inline-start: -18px;
+}
+.iv-bubble::before { border-inline-end-color: var(--line); }
+.iv-bubble::after  { border-inline-end-color: var(--snow); margin-inline-start: 3px; }
 
 .iv-rows { display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .iv-row {
@@ -3935,6 +3946,7 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 .iv-cta { margin-top: 18px; }
 
 @media (max-height: 660px) {
+  .iv-mascot { height: 140px; }
   .iv-row { padding: 11px 4px; }
   .iv-top { margin-bottom: 14px; }
 }
