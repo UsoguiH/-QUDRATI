@@ -1005,7 +1005,7 @@ button.dom-stat:active { transform: scale(.99); }
 /* ---------- the guide page (qudrat-kami.html): one article column ---------- */
 .guide-body { background: var(--snow); }
 .guide { max-width: 640px; margin: 0 auto; padding: 22px 22px calc(40px + env(safe-area-inset-bottom)); color: var(--ink); }
-.guide-crumb { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--gray); margin-bottom: 26px; }
+.guide-crumb { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 26px; }
 .guide-crumb a { display: inline-flex; align-items: center; gap: 6px; color: var(--green-dk); text-decoration: none; }
 .guide-crumb img { border-radius: 6px; }
 .guide h1 { font-size: 28px; line-height: 1.5; color: var(--ink); text-wrap: balance; }
@@ -1031,7 +1031,16 @@ button.dom-stat:active { transform: scale(.99); }
 .guide-cta h2 { margin: 10px 0 6px; color: var(--green-dk); }
 .guide-cta p { margin-bottom: 18px; }
 .guide-btn { display: block; max-width: 300px; margin: 0 auto; line-height: 43px; text-decoration: none; color: #fff; }
-.guide .guide-note { margin-top: 26px; font-size: 13.5px; color: var(--gray); }
+.guide .guide-note { margin-top: 26px; font-size: 13.5px; color: var(--ink); }
+/* the methods page: a table of contents, then one card per lesson */
+.methods-toc ul { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.methods-toc a { display: inline-block; background: var(--green-bg); color: var(--green-dk); font-weight: 800; text-decoration: none; border-radius: 999px; padding: 6px 14px 4px; font-size: 14.5px; }
+.methods-toc span { font-size: 13px; color: var(--ink); font-weight: 600; }
+.methods-unit h2 { margin-top: 40px; padding-bottom: 8px; border-bottom: 2px solid var(--line); }
+.method { margin-top: 22px; }
+.method h3 { display: flex; align-items: center; gap: 8px; font-size: 18px; margin: 0 0 8px; }
+.method-ico { font-size: 22px; line-height: 1; }
+.guide .method-tip { margin-top: 8px; padding: 10px 14px; background: var(--blue-light); border-radius: 12px; font-size: 15px; }
 
 /* --- XP-coins hero (UI-kit frame): coins rain in, gold one slams
    down, then everything floats, the bolt zaps, sparks twinkle --- */

@@ -8,6 +8,7 @@
 - تطبيق أندرويد: https://qudrati.xyz/Qudrati.apk
 - المصدر: https://github.com/UsoguiH/-QUDRATI
 - دليل القسم الكمي في اختبار القدرات: https://qudrati.xyz/qudrat-kami.html
+- طرق حل أسئلة القسم الكمي (٣٠ درساً، أربع خطوات ونصيحة لكل درس): https://qudrati.xyz/qudrat-methods.html
 - اللغة: العربية (واجهة من اليمين إلى اليسار)
 - السعر: مجاني بالكامل، بدون تسجيل ولا اشتراك
 
