@@ -1,0 +1,17 @@
+{
+  "name": "قدراتي — تدرب على القسم الكمي",
+  "short_name": "قدراتي",
+  "description": "لعبة مجانية للتدريب على القسم الكمي في اختبار القدرات العامة",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#58CC02",
+  "icons": [
+    { "src": "assets/app-icon/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/app-icon/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "assets/app-icon/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

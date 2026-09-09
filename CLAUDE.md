@@ -31,6 +31,8 @@ tools/validate.js       — Node.js validator for question-bank structure
 tools/figma-dump.js     — Figma API dump helper
 tools/figma-export.js   — icon export from Figma
 tools/methods/          — audit scripts for question method coverage
+tools/app_icon.py       — builds favicon.ico + assets/app-icon/ (every web icon size) from the 1024 master
+assets/app-icon/        — the web app icon (قدّور on his purple tile): icon-1024 master + favicon/apple/manifest sizes — GENERATED
 assets/icons/           — SVG icons + rank badge PNGs
 assets/streak/          — Rive animations (flame.riv, big.riv) + Lottie (daycheck.json)
 assets/sounds/          — correct.mp3
