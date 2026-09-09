@@ -3622,11 +3622,7 @@ function renderExamSetup(first) {
       </div>
     </section>
 
-    <div class="ep-foot" id="epFoot">
-      <div class="ep-done">
-        <div class="tick">\u2713</div>
-        <div class="txt"><b>\u062a\u0645 \u062d\u0641\u0638 \u0627\u0644\u0645\u0648\u0639\u062f!</b><span id="epDoneSub"></span></div>
-      </div>
+    <div class="ep-foot">
       <button class="btn" id="epSave" type="button" onclick="A.saveExam()" disabled>\u062d\u0641\u0638 \u0627\u0644\u0645\u0648\u0639\u062f</button>
       <button class="ep-ghost" type="button" onclick="${first ? "A.skipExam()" : "A.backFromExam()"}">${
         first ? "\u0644\u0645 \u0623\u062d\u062c\u0632 \u0645\u0648\u0639\u062f\u0627\u064b \u0628\u0639\u062f \u2014 \u0644\u0627\u062d\u0642\u0627\u064b" : "\u0631\u062c\u0648\u0639"}</button>
@@ -3684,10 +3680,9 @@ function epCountTo(target) {
 
 function epCount() {
   const today = epDay0(new Date());
-  const card = document.getElementById("epCount"), foot = document.getElementById("epFoot");
+  const card = document.getElementById("epCount");
   const save = document.getElementById("epSave");
   if (!card) return;
-  foot.classList.remove("done");
   if (!EP.sel) {
     card.classList.add("empty");
     cancelAnimationFrame(EP.raf); clearTimeout(EP.timer); EP.shown = 0;
@@ -3730,6 +3725,7 @@ function epJumpWAAPI(b) {
 function epLand(b) {
   const cal = document.querySelector(".ep-cal");
   const back = document.getElementById("epFxBack"), front = document.getElementById("epFxFront");
+  if (!cal || !back || !front) return;   /* the screen moved on before this frame */
   back.innerHTML = ""; front.innerHTML = "";
   const cr = cal.getBoundingClientRect(), br = b.getBoundingClientRect();
   if (!br.width) { b.classList.add("jump"); requestAnimationFrame(() => epJumpWAAPI(b)); return; }
@@ -3857,34 +3853,7 @@ A.saveExam = function () {
   const d = EP.sel;
   S.exam = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   S.examAsked = true; save(); sndGood();
-
-  /* confirm in place rather than snapping away: the count-up and the landing
-     have just finished selling the date, and cutting the screen at that exact
-     moment throws the payoff away */
-  const n = epDiff(epDay0(new Date()), d);
-  const foot = document.getElementById("epFoot"), sub = document.getElementById("epDoneSub");
-  const btn = document.getElementById("epSave");
-  if (foot && sub && btn) {
-    /* arPlural() RETURNS THE COUNT for 3 and up \u2014 "toAr(n) + ' ' + few" \u2014 so
-       prefixing it with toAr() again printed "\u0644\u0640 \u0664 \u0664 \u0623\u0633\u0627\u0628\u064a\u0639". It yields the
-       bare word for 1 and 2, which take their own forms and attach the lam
-       directly. Under a week the weeks figure is a rounding artefact, so that
-       range counts days instead. */
-    const weeks = Math.round(n / 7);
-    sub.textContent =
-      n <= 0 ? "\u0628\u0627\u0644\u062a\u0648\u0641\u064a\u0642 \u0627\u0644\u064a\u0648\u0645"
-      : n === 1 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u064a\u0648\u0645 \u0648\u0627\u062d\u062f"
-      : n === 2 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u064a\u0648\u0645\u064a\u0646"
-      : n < 7 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0640 " + toAr(n) + " \u0623\u064a\u0627\u0645"
-      : weeks === 1 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0623\u0633\u0628\u0648\u0639 \u0648\u0627\u062d\u062f"
-      : weeks === 2 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0623\u0633\u0628\u0648\u0639\u064a\u0646"
-      : "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0640 " +
-        arPlural(weeks, "\u0623\u0633\u0628\u0648\u0639", "\u0623\u0633\u0628\u0648\u0639\u064a\u0646", "\u0623\u0633\u0627\u0628\u064a\u0639", "\u0623\u0633\u0628\u0648\u0639\u0627\u064b");
-    foot.classList.add("done");
-    btn.textContent = "\u0645\u062a\u0627\u0628\u0639\u0629";
-    btn.onclick = () => { EP.first ? go("path") : A.backFromExam(); };
-    return;
-  }
+  cancelAnimationFrame(EP.raf); clearTimeout(EP.timer);
   EP.first ? go("path") : A.backFromExam();
 };
 

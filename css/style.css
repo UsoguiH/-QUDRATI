@@ -3620,16 +3620,6 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
   padding-top: clamp(10px, 1.8vh, 22px);
   padding-bottom: 2px; border-top: 2px solid var(--line);
 }
-.ep-foot.done { border-top-color: transparent; background: var(--green-bg); border-radius: 16px; padding: 18px 16px 16px; }
-.ep-done { display: none; align-items: center; gap: 12px; margin-bottom: clamp(9px, 1.6vh, 16px); }
-.ep-foot.done .ep-done { display: flex; }
-.ep-done .tick {
-  flex: none; width: 44px; height: 44px; border-radius: 50%; background: #fff;
-  display: grid; place-items: center; color: var(--green-dk); font-weight: 900; font-size: 22px;
-}
-.ep-done .txt b { display: block; font-size: 19px; font-weight: 800; color: var(--green-dk); }
-.ep-done .txt span { font-size: 14px; font-weight: 600; color: #5F8B33; }
-.ep-foot.done .ep-ghost { display: none; }
 .ep-ghost {
   display: block; width: 100%; margin-top: clamp(6px, 1.2vh, 12px); padding: 6px;
   background: none; border: 0; cursor: pointer; font-family: inherit;
