@@ -10,11 +10,6 @@
       ],
       "destination": "https://qudrati.xyz/:path*",
       "statusCode": 301
-    },
-    {
-      "source": "/redirect-probe",
-      "destination": "/",
-      "statusCode": 301
     }
   ]
 }
