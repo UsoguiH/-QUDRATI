@@ -28,7 +28,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=45">
+<link rel="stylesheet" href="css/style.css?v=46">
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="96x96" href="assets/app-icon/favicon-96.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/app-icon/favicon-32.png">
@@ -138,69 +138,6 @@
     "educationalRole": "student",
     "audienceType": "طلاب الثانوية المتقدمون لاختبار القدرات العامة"
    }
-  },
-  {
-   "@type": "FAQPage",
-   "@id": "https://qudrati.xyz/#faq",
-   "inLanguage": "ar",
-   "mainEntity": [
-    {
-     "@type": "Question",
-     "name": "هل قدراتي مجاني؟",
-     "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "نعم. قدراتي مجاني بالكامل، بلا اشتراك ولا تسجيل، على الموقع وفي تطبيق أندرويد."
-     }
-    },
-    {
-     "@type": "Question",
-     "name": "هل أحتاج إلى حساب لأبدأ؟",
-     "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "لا. تبدأ فوراً كضيف أو باسمك فقط، ويُحفظ تقدّمك على جهازك نفسه."
-     }
-    },
-    {
-     "@type": "Question",
-     "name": "هل الأسئلة من اختبارات قياس الحقيقية؟",
-     "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "لا. كل الأسئلة أصلية أُلِّفت بأسلوب الاختبار الرسمي ومستوياته ولا تمثّل أسئلة الاختبار الفعلية. وقدراتي مبادرة مستقلة غير تابعة لهيئة تقويم التعليم والتدريب (قياس) وغير معتمدة منها."
-     }
-    },
-    {
-     "@type": "Question",
-     "name": "ما الذي يغطيه قدراتي من القسم الكمي؟",
-     "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "أربع وحدات تغطي القسم الكمي: مهارات وقوانين القدرات، أساسيات الأعداد، النسب والنسبة المئوية، والهندسة. كل وحدة دروس قصيرة تُفتح بالتتابع، وكل سؤال معه طريقة الحل خطوة بخطوة."
-     }
-    },
-    {
-     "@type": "Question",
-     "name": "كيف يحاكي قدراتي الاختبار الحقيقي؟",
-     "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "مؤقّت ٦٠ ثانية لكل سؤال بإيقاع الاختبار، أسئلة اختيار من متعدد وأسئلة مقارنة بين قيمتين، واختبار محاكي من قسمين بمؤقّت ٢٥ دقيقة لكل قسم مع تنقّل حر ووضع علامات على الأسئلة، مثل الاختبار المحوسب."
-     }
-    },
-    {
-     "@type": "Question",
-     "name": "هل يوجد تطبيق للجوال؟",
-     "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "نعم. يوجد تطبيق أندرويد (APK) بنفس المحتوى، ويمكنك أيضاً إضافة الموقع إلى الشاشة الرئيسية على أي جوال والعمل به مثل التطبيق."
-     }
-    },
-    {
-     "@type": "Question",
-     "name": "هل يناسب قدراتي طلاب المسار الأدبي؟",
-     "acceptedAnswer": {
-      "@type": "Answer",
-      "text": "نعم. اختر المسار الأدبي (النظري) من الإعدادات فيخفّ الحمل الكمي وتُستبعد الأسئلة الخاصة بالمسار العلمي."
-     }
-    }
-   ]
   }
  ]
 }
@@ -210,13 +147,19 @@
   <div class="app-shell">
     <nav id="sidebar" class="sidebar" aria-label="التنقل الرئيسي"></nav>
     <div id="app" class="app">
-    <!-- Pre-rendered landing: what crawlers and readers without JavaScript see.
-         The app replaces it on boot and re-attaches #about under the start screen. -->
+    <!-- Pre-rendered page: what crawlers and readers without JavaScript get.
+         Its first screen is a splash that mirrors the start screen, so the second
+         before the app boots looks like loading; «عن قدراتي» sits under the fold.
+         The app replaces all of it on boot and shows none of it. -->
     <div class="landing">
-      <img class="landing-icon" src="assets/app-icon/icon-192.webp" width="96" height="96" alt="أيقونة قدراتي — قدّور المعلّم">
-      <h1>قدراتي — تدرّب على القسم الكمي في اختبار القدرات</h1>
-      <p class="landing-sub">لعبة مجانية بأسلوب دولينجو لاختبار القدرات العامة (قياس): أسئلة أصلية، دروس قصيرة، ومؤقّت بإيقاع الاختبار — بدون تسجيل.</p>
-      <noscript><p class="landing-noscript">يحتاج قدراتي إلى تشغيل JavaScript في المتصفح ليعمل.</p></noscript>
+      <div class="landing-hero">
+        <img class="landing-icon" src="assets/app-icon/icon-192.webp" width="96" height="96" alt="قدّور — أيقونة قدراتي">
+        <h1 class="login-title">قدراتي</h1>
+        <p class="login-sub">تدرّب على القسم الكمي في اختبار القدرات — درساً بعد درس</p>
+        <div class="login-badges"><span>أسئلة أصلية</span><span>مجاني بالكامل</span><span>بدون حساب</span></div>
+        <p class="landing-loading" aria-hidden="true"><i></i><i></i><i></i></p>
+        <noscript><p class="landing-noscript">يحتاج قدراتي إلى تشغيل JavaScript في المتصفح ليعمل.</p></noscript>
+      </div>
 <section class="about" id="about" aria-label="عن قدراتي">
   <h2>ما هو قدراتي؟</h2>
   <p>قدراتي (Qudrati) لعبة تعليمية مجانية على الويب وأندرويد للتدريب على القسم الكمي في اختبار القدرات العامة الذي تقدّمه هيئة تقويم التعليم والتدريب (قياس). تتدرّب فيها بأسلوب دولينجو: دروس قصيرة، أسئلة أصلية بنفس نمط الاختبار، قلوب ونقاط وسلسلة أيام، ومؤقّت يحاكي زمن الاختبار الحقيقي.</p>
@@ -252,6 +195,6 @@
   <script defer src="js/data/ratios.js"></script>
   <script defer src="js/data/geometry.js"></script>
   <script defer src="assets/vendor/gsap.min.js?v=40"></script>
-  <script defer src="js/app.js?v=43"></script>
+  <script defer src="js/app.js?v=44"></script>
 </body>
 </html>

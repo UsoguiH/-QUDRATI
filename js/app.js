@@ -6,11 +6,6 @@
 
 /* ---------------- helpers ---------------- */
 const $app = document.getElementById("app");
-/* «عن قدراتي» is written once, in index.html, as the pre-rendered landing a
-   crawler or a no-JavaScript reader gets. Boot keeps a copy and the start
-   screen hangs it under the hero, so the page a bot reads and the page a
-   person sees say the same thing. */
-const ABOUT_HTML = (document.getElementById("about") || {}).outerHTML || "";
 window.A = {}; // global handlers (filled in throughout the file)
 const AR_DIGITS = "٠١٢٣٤٥٦٧٨٩";
 const toAr = n => String(n).replace(/[0-9]/g, d => AR_DIGITS[d]);
@@ -3884,7 +3879,7 @@ function renderLogin() {
       <button class="btn" onclick="A.login()">ابدأ التعلّم</button>
       <button class="login-skip" onclick="A.loginGuest()">المتابعة كضيف</button>
     </div>
-  </div>${ABOUT_HTML}`;
+  </div>`;
   setTimeout(() => { const i = document.getElementById("loginName"); if (i) i.focus(); }, 450);
 }
 A.login = function () {
