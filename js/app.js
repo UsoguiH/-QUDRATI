@@ -59,7 +59,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, introSeen: false, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], league: null, mistakes: {} };
+const DEFAULT_STATE = { v: 1, disclaimer: false, introSeen: false, user: null, track: "sci", sound: true, motion: "full", joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], league: null, mistakes: {} };
 /* The rivals. A student who suspects the board is padded looks at the names
    first, and a column of two dozen tidy Arabic first names is the one
    arrangement that never occurs on a real sign-up sheet. These are drawn in
@@ -438,10 +438,7 @@ function renderSidebar() {
     { k: "mock",     icon: "nav-exam",   label: "اختبار تجريبي",   short: "تجريبي" },
     { k: "stats",    icon: "nav-stats",  label: "إحصائياتي",       short: "إحصائيات" },
     { k: "review",   icon: "target",     label: "مراجعة الأخطاء",  short: "الأخطاء" },
-    { k: "profile",  icon: "nav-more",   label: "ملفي الشخصي",     short: "ملفي" },
-    /* The two-way sheet is a phone affordance — it hangs off the bottom bar,
-       and there is no bottom bar here. Desktop has room to list both. */
-    { k: "settings", icon: "guide",      label: "الإعدادات",       short: "إعدادات" },
+    { k: "settings", icon: "nav-more",   label: "الإعدادات",       short: "إعدادات" },
   ];
   el.innerHTML = `
     <div class="sb-logo">
@@ -518,7 +515,7 @@ function renderAside() {
 }
 
 function render() {
-  ({ path: renderPath, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings, review: renderReview, profile: renderProfile })[view]();
+  ({ path: renderPath, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings, review: renderReview })[view]();
   flushRankUp();
   renderSidebar();
   renderAside();
@@ -603,13 +600,10 @@ A.chestTap = function () {
 function bottomnav(active) {
   /* the labels were the state keys — "path", "league" — read aloud in Arabic */
   const items = [["path", "nav-home", "الدروس"], ["league", "nav-league", "المجلس"],
-    ["mock", "nav-exam", "اختبار تجريبي"], ["stats", "nav-stats", "إحصائياتي"], ["more", "nav-more", "المزيد"]];
+    ["mock", "nav-exam", "اختبار تجريبي"], ["stats", "nav-stats", "إحصائياتي"], ["settings", "nav-more", "الإعدادات"]];
   return `<nav class="bottomnav">` + items.map(([k, i, label]) => {
-    /* the last slot is a menu, not a destination, so it lights up for the
-       screens it can reach rather than for one of its own */
-    const act = k === "more" ? (active === "profile" || active === "settings") : (active === k);
-    const call = k === "more" ? "A.openMore()" : `A.go('${k}')`;
-    return `<button class="navbtn ${act ? "active" : ""}" onclick="${call}" aria-label="${label}"${act ? ' aria-current="page"' : ""}>${ico(i, 30)}</button>`;
+    const act = active === k;
+    return `<button class="navbtn ${act ? "active" : ""}" onclick="A.go('${k}')" aria-label="${label}"${act ? ' aria-current="page"' : ""}>${ico(i, 30)}</button>`;
   }).join("") + `</nav>`;
 }
 
@@ -3682,7 +3676,15 @@ function epCount() {
   const card = document.getElementById("epCount"), foot = document.getElementById("epFoot");
   const save = document.getElementById("epSave");
   if (!card) return;
-  foot.classList.remove("done");
+  /* a tap on another day after saving: the confirmation goes, and the button
+     has to become «حفظ الموعد» again — leaving it as «متابعة» with the
+     leave-handler on it looked like the save had vanished, and the next tap
+     walked out without saving the new day */
+  if (foot.classList.contains("done")) {
+    foot.classList.remove("done");
+    save.textContent = "\u062d\u0641\u0638 \u0627\u0644\u0645\u0648\u0639\u062f";
+    save.onclick = () => A.saveExam();
+  }
   if (!EP.sel) {
     card.classList.add("empty");
     cancelAnimationFrame(EP.raf); clearTimeout(EP.timer); EP.shown = 0;
@@ -3921,8 +3923,6 @@ A.login = function () {
   afterLogin();
 };
 A.loginGuest = function () { S.user = { name: "ضيف", guest: true }; save(); afterLogin(); };
-A.logout = function () { S.user = null; save(); renderLogin(); };
-
 /* No longer gates anything — kept because A.showAbout reuses DISCLAIMER_HTML. */
 function showDisclaimerSheet(onAccept) {
   const veil = document.createElement("div");
@@ -4022,18 +4022,19 @@ document.addEventListener("keydown", e => {
 
 
 /* ============================================================
-   PROFILE
+   SETTINGS — the fifth tab
    ------------------------------------------------------------
-   Not a settings list with a name on top. This is the screen a
-   student opens to answer one question: am I on track? Who they
-   are, how long the streak is, what this week looked like, how
-   far each unit has come, how many days are left.
-
-   Settings is a pop-up launched from here, not a sibling screen,
-   because settings is something you dip into and leave — the
-   profile is somewhere you stay.
+   One screen that reads like a phone's own settings: who you
+   are on top, then short grouped lists — the track, the exam
+   date, two switches, the disclaimer — and the reset at the
+   bottom in red. Only what the game actually uses is here: the
+   daily goal was a control wired to nothing (the chest counts
+   DAILY_GOAL), «تبديل المستخدم» only re-asked the name, and the
+   stats tab already owns the numbers, so the profile page that
+   repeated them under a gear is gone with the two-way menu that
+   led to it.
    ============================================================ */
-const PROF_WK = ["\u062d", "\u0646", "\u062b", "\u0631", "\u062e", "\u062c", "\u0633"];
+let SET_EDIT = false;
 
 /* todayKey() emits an unpadded y-m-d, which fmtExamDate cannot parse. */
 function fmtDayKey(k) {
@@ -4041,344 +4042,107 @@ function fmtDayKey(k) {
   return a.length === 3 ? toAr(+a[2]) + " / " + toAr(+a[1]) + " / " + toAr(+a[0]) : "";
 }
 
-function unitMastery() {
-  return domains().map(d => {
-    let done = 0;
-    d.lessons.forEach(l => { if (lessonProg(d.key + "." + l.key).stars > 0) done++; });
-    return { title: d.title, color: d.color, done, total: d.lessons.length,
-             pct: d.lessons.length ? Math.round(done / d.lessons.length * 100) : 0 };
-  });
-}
-
-function overallAccuracy() {
-  let r = 0, w = 0;
-  for (const k in S.qstats) { r += S.qstats[k].r || 0; w += S.qstats[k].w || 0; }
-  return (r + w) ? Math.round(r / (r + w) * 100) : null;
-}
-
-/* The last seven days, oldest first — so in RTL the week reads from the right
-   and today lands at the left, where the eye finishes. Reads S.days — the days
-   actually practised — rather than deducing them from the streak, because a
-   day you practised on after the streak broke is still a day you practised. */
-function streakWeek() {
-  const out = [], today = new Date(); today.setHours(0, 0, 0, 0);
-  const days = S.days || {};
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(today.getTime() - i * 864e5);
-    const key = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
-    out.push({ dow: PROF_WK[d.getDay()], n: days[key] || 0, on: !!days[key], today: i === 0 });
-  }
-  return out;
-}
-
-/* The three lessons the student is measurably worst at, each one tappable.
-   The profile was otherwise a wall of numbers with no next move on it: you
-   could read "\u0627\u0644\u062f\u0642\u0629 \u0666\u0667\u066a" and have nowhere to go with it. Hidden until
-   there is enough history to rank honestly. */
-function weakCard() {
-  const weak = weakLessons(3);
-  if (!weak.length) return "";
-  return `<div class="pf-card">
-    <div class="pf-head"><h3>\u0623\u0636\u0639\u0641 \u0645\u0648\u0627\u0636\u064a\u0639\u0643</h3>
-      <span class="pf-goal pf-static">\u0627\u0628\u062f\u0623 \u0645\u0646 \u0647\u0646\u0627</span></div>
-    <div class="pf-weak">` + weak.map(l => `
-      <button class="pf-w" onclick="A.startLesson('${l.dom}','${l.key}')">
-        <span class="pf-w-acc pm-${l.color === "yellow" ? "gold" : l.color}">${toAr(l.acc)}\u066a</span>
-        <span class="pf-w-tx">${l.title}</span>
-        <span class="pf-w-go">\u062a\u062f\u0631\u0651\u0628</span>
-      </button>`).join("") + `</div>
-  </div>`;
-}
-
-function renderProfile() {
-  const t = LEAGUE_TIERS[tierIndex()];
-  const name = (S.user && S.user.name) || "\u0636\u064a\u0641";
-  const guest = !S.user || S.user.guest;
-  const flat = allLessons();
-  let doneN = 0; flat.forEach(x => { if (lessonProg(x.key).stars > 0) doneN++; });
-  const acc = overallAccuracy(), days = examDaysLeft();
-  const nextT = LEAGUE_TIERS[tierIndex() + 1];
-  const tierPct = nextT
-    ? Math.max(0, Math.min(100, Math.round((S.totalXp - t.min) / (nextT.min - t.min) * 100))) : 100;
-
-  $app.innerHTML = statbar() + `<div class="screen"><div class="page pf">
-
-    <div class="pf-hero">
-      <div class="pf-av"><span>${esc(name.trim().charAt(0) || "\u0642")}</span></div>
-      <div class="pf-id">
-        <h1>${esc(name)}</h1>
-        <p>${S.joined ? "\u0628\u062f\u0623 \u0645\u0639\u0646\u0627 " + fmtDayKey(S.joined) : "\u0639\u0636\u0648 \u062c\u062f\u064a\u062f"}</p>
-      </div>
-      <button class="pf-gear" onclick="A.gotoSettings()" aria-label="\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a">${GEAR_SVG}</button>
-    </div>
-
-    ${guest ? `<button class="pf-claim" onclick="A.gotoSettings('name')">
-      <span class="pf-cl-ic">${ico("guide", 20)}</span>
-      <span class="pf-cl-tx"><b>\u0627\u062d\u0641\u0638 \u062a\u0642\u062f\u0651\u0645\u0643</b><span>\u0623\u0636\u0641 \u0627\u0633\u0645\u0643 \u0639\u0634\u0627\u0646 \u0645\u0627 \u062a\u0636\u064a\u0639 \u062f\u0631\u0648\u0633\u0643</span></span>
-      <span class="pf-go">\u2190</span></button>` : ""}
-
-    <button class="pf-rank" onclick="A.go('league')">
-      ${rankImg(t.key, 54)}
-      <span class="pf-rank-tx">
-        <b>\u0627\u0644\u0645\u0633\u062a\u0648\u0649 ${t.name}</b>
-        <span class="pf-rank-bar"><i style="width:${tierPct}%"></i></span>
-        <small>${nextT ? toAr(Math.max(0, nextT.min - S.totalXp)) + " \u0646\u0642\u0637\u0629 \u0644\u0644\u0645\u0633\u062a\u0648\u0649 " + nextT.name : "\u0623\u0639\u0644\u0649 \u0645\u0633\u062a\u0648\u0649 \u2014 \u0623\u062d\u0633\u0646\u062a"}</small>
-      </span>
-      <span class="pf-go">\u2190</span>
-    </button>
-
-    <div class="pf-grid">
-      <div class="pf-tile"><span class="pf-t-ic">${ico("streak", 26)}</span><b>${toAr(S.streak.count)}</b><span>\u064a\u0648\u0645 \u0645\u062a\u062a\u0627\u0644\u064d</span></div>
-      <div class="pf-tile"><span class="pf-t-ic">${ico("gem", 26)}</span><b>${toAr(S.xp)}</b><span>\u062c\u0648\u0647\u0631\u0629</span></div>
-      <div class="pf-tile"><span class="pf-t-ic">${ico("star-gold", 26)}</span><b>${toAr(doneN)}</b><span>\u062f\u0631\u0633\u0627\u064b \u0645\u0643\u062a\u0645\u0644\u0627\u064b</span></div>
-      <div class="pf-tile"><span class="pf-t-ic">${ico("target", 26)}</span><b>${acc === null ? "\u2014" : toAr(acc) + "\u066a"}</b><span>\u0627\u0644\u062f\u0642\u0629</span></div>
-    </div>
-
-    <div class="pf-card">
-      <div class="pf-head"><h3>\u0623\u0633\u0628\u0648\u0639\u0643</h3>
-        <button class="pf-goal" onclick="A.gotoSettings('goal')">${ico("target", 15)} \u0647\u062f\u0641\u0643 ${toAr(S.goal)} \u064a\u0648\u0645\u064a\u0627\u064b</button></div>
-      <div class="pf-week">` + streakWeek().map(d => `
-        <div class="pf-day${d.on ? " on" : ""}${d.today ? " now" : ""}">
-          <span class="pf-dot">${d.on ? CHECK_BADGE : ""}</span><span class="pf-dow">${d.dow}</span>
-        </div>`).join("") + `</div>
-      <p class="pf-wk-note">${(() => {
-        const act = streakWeek().filter(x => x.on).length;
-        return act
-          ? "\u062f\u0631\u0651\u0628\u062a " + arPlural(act, "\u064a\u0648\u0645\u0627\u064b \u0648\u0627\u062d\u062f\u0627\u064b", "\u064a\u0648\u0645\u064a\u0646", "\u0623\u064a\u0627\u0645", "\u064a\u0648\u0645\u0627\u064b") + " \u0647\u0630\u0627 \u0627\u0644\u0623\u0633\u0628\u0648\u0639"
-          : "\u0645\u0627 \u062f\u0631\u0651\u0628\u062a \u0647\u0630\u0627 \u0627\u0644\u0623\u0633\u0628\u0648\u0639 \u2014 \u0627\u0628\u062f\u0623 \u0627\u0644\u064a\u0648\u0645";
-      })()}</p>
-    </div>
-
-    ${days !== null ? `<button class="pf-exam" onclick="A.examSetup()">
-      <span class="pf-ex-n">${toAr(days)}</span>
-      <span class="pf-ex-t"><b>\u064a\u0648\u0645\u0627\u064b \u0639\u0644\u0649 \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631</b><span>${fmtExamDate(S.exam)}</span></span>
-      <span class="pf-go">\u2190</span></button>`
-      : `<button class="pf-exam pf-exam-empty" onclick="A.examSetup()">
-      <span class="pf-ex-t"><b>\u062d\u062f\u0651\u062f \u0645\u0648\u0639\u062f \u0627\u062e\u062a\u0628\u0627\u0631\u0643</b><span>\u0639\u0634\u0627\u0646 \u0646\u062a\u0627\u0628\u0639 \u062c\u0627\u0647\u0632\u064a\u062a\u0643</span></span>
-      <span class="pf-go">\u2190</span></button>`}
-
-    ${weakCard()}
-
-    <div class="pf-card">
-      <div class="pf-head"><h3>\u0625\u062a\u0642\u0627\u0646\u0643 \u062d\u0633\u0628 \u0627\u0644\u0648\u062d\u062f\u0629</h3></div>
-      <div class="pf-mast">` + unitMastery().map(m => `
-        <div>
-          <div class="pf-m-top"><span>${m.title}</span><b>${toAr(m.done)}/${toAr(m.total)}</b></div>
-          <div class="pf-m-bar pm-${m.color === "yellow" ? "gold" : m.color}"><i style="width:${m.pct}%"></i></div>
-        </div>`).join("") + `</div>
-    </div>
-
-    <button class="pf-line" onclick="A.go('review')"><span>${ico("target", 18)} \u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u0623\u062e\u0637\u0627\u0621</span><span class="pf-go">\u2190</span></button>
-    <button class="pf-line" onclick="A.gotoSettings()"><span>${GEAR_SVG} \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a</span><span class="pf-go">\u2190</span></button>
-
-  </div></div>` + bottomnav("profile");
-}
-
-const GEAR_SVG = `<svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-  <path d="M12 15.4a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8Z" stroke="currentColor" stroke-width="2"/>
-  <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.84 2.84l-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.11A1.7 1.7 0 0 0 8.9 19.3a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.84-2.84l.06-.06A1.7 1.7 0 0 0 4.52 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.11A1.7 1.7 0 0 0 4.7 8.9a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.84-2.84l.06.06A1.7 1.7 0 0 0 9 4.52a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.11A1.7 1.7 0 0 0 15 4.7a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.84 2.84l-.06.06A1.7 1.7 0 0 0 19.4 9v.03a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.11a1.7 1.7 0 0 0-1.49 1.03Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
-
-/* ============================================================
-   SETTINGS — a pop-up, the way Duolingo does it
-   ------------------------------------------------------------
-   Blur the app behind it, spring the card in, and put things a
-   student can actually use on it: the daily goal, the exam date,
-   the track, and their name — not just two toggles and a reset.
-   `focus` scrolls one group into view and flashes it, so the
-   profile can deep-link straight at the row it is talking about.
-   ============================================================ */
-const SET_GOALS = [5, 10, 15, 20];
-
-/* ============================================================
-   SETTINGS — a screen, not a sheet
-   ------------------------------------------------------------
-   It was a pop-up for a while. Wrong shape: this is nine controls
-   deep, it is somewhere you stop and read, and a sheet that tall
-   ends up scrolling inside a scrolling page. The two-way menu is
-   the sheet; what it opens is a destination.
-
-   SET_FOCUS lets the profile deep-link at one group — tapping
-   "\u0647\u062f\u0641\u0643 \u0661\u0660 \u064a\u0648\u0645\u064a\u0627\u064b" should land on the goal, not on the top
-   of a list with the goal somewhere in it.
-   ============================================================ */
-let SET_FOCUS = null;
-A.gotoSettings = function (focus) { SET_FOCUS = focus || null; go("settings"); };
-
 function renderSettings() {
   const guest = !S.user || S.user.guest;
+  const name = guest ? "" : ((S.user && S.user.name) || "");
   const days = examDaysLeft();
+  const chev = `<span class="set-chev" aria-hidden="true">${CHEV_SVG}</span>`;
+  const seg = (on, call, label) =>
+    `<button type="button" class="${on ? "on" : ""}" role="radio" aria-checked="${on}" onclick="${call}">${label}</button>`;
+  const examVal = days === null ? "غير محدّد"
+    : days < 0 ? "انتهى" : days === 0 ? "اليوم"
+    : days === 1 ? "غداً" : "باقٍ " + toAr(days) + (days <= 10 ? " أيام" : " يوماً");
 
   $app.innerHTML = statbar() + `<div class="screen"><div class="page set-page">
-    <h1>\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a</h1>
-    <div class="sub">\u062e\u0635\u0651\u0635 \u062a\u062c\u0631\u0628\u0629 \u062a\u062f\u0631\u064a\u0628\u0643</div>
+    <h1>الإعدادات</h1>
 
-    <div class="set-grp" data-g="name">
-      <div class="set-lab">\u0627\u0633\u0645\u0643</div>
-      <div class="set-name">
-        <input id="setName" class="login-input" type="text" maxlength="20"
-          placeholder="\u0645\u0627 \u0627\u0633\u0645\u0643\u061f" autocomplete="off"
-          value="${guest ? "" : esc((S.user && S.user.name) || "")}"
-          onkeydown="if(event.key==='Enter')A.setSaveName()">
-        <button class="btn set-save" onclick="A.setSaveName()">\u062d\u0641\u0638</button>
+    <div class="set-me${SET_EDIT ? " editing" : ""}">
+      <div class="set-av" aria-hidden="true"><span>${esc(name.trim().charAt(0) || "ق")}</span></div>
+      ${SET_EDIT ? `
+      <div class="set-me-edit">
+        <input id="setName" class="login-input" type="text" maxlength="20" placeholder="ما اسمك؟"
+          autocomplete="off" value="${esc(name)}"
+          onkeydown="if(event.key==='Enter')A.setSaveName();if(event.key==='Escape')A.setEditName(false)">
+        <div class="set-me-btns">
+          <button type="button" class="btn" onclick="A.setSaveName()">حفظ</button>
+          <button type="button" class="btn btn-ghost" onclick="A.setEditName(false)">إلغاء</button>
+        </div>
+      </div>` : `
+      <div class="set-me-tx">
+        <b>${guest ? "ضيف" : esc(name)}</b>
+        <span>${guest ? "أضف اسمك ليظهر في التطبيق" : (S.joined ? "بدأ معنا " + fmtDayKey(S.joined) : "عضو جديد")}</span>
       </div>
-      ${guest ? `<p class="set-hint">\u062a\u0642\u062f\u0651\u0645\u0643 \u0645\u062d\u0641\u0648\u0638 \u0639\u0644\u0649 \u0647\u0630\u0627 \u0627\u0644\u0645\u062a\u0635\u0641\u062d \u0641\u0642\u0637.</p>` : ""}
+      <button type="button" class="set-edit" onclick="A.setEditName(true)">${guest ? "أضف اسمك" : "تعديل"}</button>`}
     </div>
 
-    <div class="set-grp" data-g="goal">
-      <div class="set-lab">\u0627\u0644\u0647\u062f\u0641 \u0627\u0644\u064a\u0648\u0645\u064a</div>
-      <div class="set-seg">` + SET_GOALS.map(g =>
-        `<button class="${S.goal === g ? "on" : ""}" onclick="A.setGoal(${g})">${toAr(g)}</button>`).join("") + `</div>
-      <p class="set-hint">\u0639\u062f\u062f \u0627\u0644\u0623\u0633\u0626\u0644\u0629 \u0627\u0644\u0644\u064a \u062a\u0628\u064a \u062a\u062d\u0644\u0651\u0647\u0627 \u0643\u0644 \u064a\u0648\u0645.</p>
-    </div>
-
-    <div class="set-grp" data-g="track">
-      <div class="set-lab">\u0645\u0633\u0627\u0631\u0643</div>
-      <div class="set-seg set-seg2">
-        <button class="${S.track === "sci" ? "on" : ""}" onclick="A.setTrackM('sci')">\u0639\u0644\u0645\u064a</button>
-        <button class="${S.track === "lit" ? "on" : ""}" onclick="A.setTrackM('lit')">\u0623\u062f\u0628\u064a / \u0646\u0638\u0631\u064a</button>
+    <div class="set-lab">التدريب</div>
+    <div class="set-list">
+      <div class="set-item">
+        <span class="set-item-tx">المسار</span>
+        <div class="set-seg" role="radiogroup" aria-label="المسار">
+          ${seg(S.track === "sci", "A.setTrackM('sci')", "علمي")}
+          ${seg(S.track === "lit", "A.setTrackM('lit')", "أدبي / نظري")}
+        </div>
       </div>
-    </div>
-
-    <div class="set-grp" data-g="exam">
-      <div class="set-lab">\u0645\u0648\u0639\u062f \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631</div>
-      <button class="set-row" onclick="A.examSetup()">
-        <span class="set-row-ic">${ico("timer", 20)}</span>
-        <span class="set-row-tx"><b>${days !== null ? "\u0628\u0627\u0642\u064d " + toAr(days) + " \u064a\u0648\u0645\u0627\u064b" : "\u063a\u064a\u0631 \u0645\u062d\u062f\u0651\u062f \u0628\u0639\u062f"}</b>
-          <span>${S.exam ? fmtExamDate(S.exam) : "\u0627\u062e\u062a\u0631 \u064a\u0648\u0645 \u0627\u062e\u062a\u0628\u0627\u0631\u0643 \u0645\u0646 \u0627\u0644\u062a\u0642\u0648\u064a\u0645"}</span></span>
-        <span class="pf-go">\u2190</span>
+      <button type="button" class="set-item set-link" onclick="A.examSetup()">
+        <span class="set-item-tx">موعد الاختبار</span>
+        <span class="set-val">${examVal}</span>${chev}
       </button>
     </div>
 
-    <div class="set-grp">
-      <div class="set-tog">
-        <span><b>\u0627\u0644\u0623\u0635\u0648\u0627\u062a</b><span>\u0645\u0624\u062b\u0631\u0627\u062a \u0639\u0646\u062f \u0627\u0644\u0625\u062c\u0627\u0628\u0629</span></span>
-        <button class="toggle ${S.sound ? "on" : ""}" onclick="A.setSound(this)" aria-label="\u0627\u0644\u0623\u0635\u0648\u0627\u062a"></button>
+    <div class="set-lab">التفضيلات</div>
+    <div class="set-list">
+      <div class="set-item">
+        <span class="set-item-tx" id="setSoundLab">الأصوات</span>
+        <button type="button" class="toggle ${S.sound ? "on" : ""}" role="switch" aria-checked="${!!S.sound}"
+          aria-labelledby="setSoundLab" onclick="A.setSound(this)"></button>
       </div>
-      <div class="set-tog">
-        <span><b>\u0627\u0644\u062d\u0631\u0643\u0629 \u0627\u0644\u0643\u0627\u0645\u0644\u0629</b><span>${
-          motionReduced() ? "\u0645\u062e\u0641\u0651\u0641\u0629 \u2014 \u0628\u062f\u0648\u0646 \u0642\u0641\u0632\u0629 \u0648\u0644\u0627 \u0628\u0631\u0642"
-            : (osPrefersReduce() ? "\u0646\u0638\u0627\u0645\u0643 \u064a\u0642\u0644\u0651\u0644 \u0627\u0644\u062d\u0631\u0643\u0629 \u2014 \u0644\u0643\u0646\u0651\u0647\u0627 \u0645\u0641\u0639\u0651\u0644\u0629 \u0647\u0646\u0627"
-              : "\u0642\u0641\u0632\u0629 \u0627\u0644\u0625\u062c\u0627\u0628\u0629 \u0648\u0627\u0644\u0628\u0631\u0642")}</span></span>
-        <button class="toggle ${motionReduced() ? "" : "on"}" onclick="A.setMotion(this)" aria-label="\u0627\u0644\u062d\u0631\u0643\u0629"></button>
+      <div class="set-item">
+        <span class="set-item-tx" id="setMotionLab">الحركات</span>
+        <button type="button" class="toggle ${motionReduced() ? "" : "on"}" role="switch" aria-checked="${!motionReduced()}"
+          aria-labelledby="setMotionLab" onclick="A.setMotion(this)"></button>
       </div>
     </div>
 
-    <div class="set-grp">
-      <button class="set-row" onclick="A.showAbout()">
-        <span class="set-row-ic">${ico("book", 20)}</span>
-        <span class="set-row-tx"><b>\u062d\u0648\u0644 \u0627\u0644\u062a\u0637\u0628\u064a\u0642</b><span>\u0625\u062e\u0644\u0627\u0621 \u0645\u0633\u0624\u0648\u0644\u064a\u0629 \u0648\u0645\u0639\u0644\u0648\u0645\u0627\u062a</span></span>
-        <span class="pf-go">\u2190</span>
+    <div class="set-lab">عن التطبيق</div>
+    <div class="set-list">
+      <button type="button" class="set-item set-link" onclick="A.showAbout()">
+        <span class="set-item-tx">حول قدراتي</span>${chev}
       </button>
-      <a class="set-row" href="https://etec.gov.sa" target="_blank" rel="noopener">
-        <span class="set-row-ic">${ico("guide", 20)}</span>
-        <span class="set-row-tx"><b>\u0645\u0646\u0635\u0629 \u0642\u064a\u0627\u0633 \u0627\u0644\u0631\u0633\u0645\u064a\u0629</b><span>etec.gov.sa</span></span>
-        <span class="pf-go">\u2197</span>
-      </a>
     </div>
 
-    <div class="set-grp set-danger">
-      ${guest ? "" : `<button class="set-row" onclick="A.logout()">
-        <span class="set-row-tx"><b>\u062a\u0628\u062f\u064a\u0644 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645</b></span><span class="pf-go">\u2190</span></button>`}
-      <button class="set-row set-red" onclick="A.resetAll()">
-        <span class="set-row-tx"><b>\u0625\u0639\u0627\u062f\u0629 \u062a\u0639\u064a\u064a\u0646 \u0627\u0644\u062a\u0642\u062f\u0651\u0645</b><span>\u062d\u0630\u0641 \u0643\u0644 \u0627\u0644\u0646\u0642\u0627\u0637 \u0648\u0627\u0644\u0625\u0646\u062c\u0627\u0632\u0627\u062a</span></span>
-        <span class="pf-go">\u2190</span></button>
-    </div>
+    <button type="button" class="set-reset" onclick="A.resetAll()">إعادة تعيين التقدّم</button>
 
   </div></div>` + bottomnav("settings");
 
-  if (SET_FOCUS) {
-    const g = document.querySelector('[data-g="' + SET_FOCUS + '"]');
-    const want = SET_FOCUS; SET_FOCUS = null;
-    if (g) requestAnimationFrame(() => {
-      g.scrollIntoView({ block: "center", behavior: "smooth" });
-      g.classList.add("flash");
-      if (want === "name") { const i = document.getElementById("setName"); if (i) i.focus(); }
-    });
-  }
+  if (SET_EDIT) { const i = document.getElementById("setName"); if (i) { i.focus(); i.select(); } }
 }
 
-A.setGoal = function (g) {
-  S.goal = g; save();
-  document.querySelectorAll('[data-g="goal"] .set-seg button').forEach((b, i) =>
-    b.classList.toggle("on", SET_GOALS[i] === g));
-};
-A.setTrackM = function (t) {
-  S.track = t; save();
-  document.querySelectorAll('[data-g="track"] .set-seg button').forEach((b, i) =>
-    b.classList.toggle("on", (i === 0 ? "sci" : "lit") === t));
-};
-A.setSound = function (btn) { S.sound = !S.sound; save(); btn.classList.toggle("on", S.sound); };
-A.setMotion = function (btn) {
-  S.motion = motionReduced() ? "full" : "reduced";
-  motionApply(); save();
-  btn.classList.toggle("on", !motionReduced());
-  render();                               // the hint line under it has to follow
-};
+A.setEditName = function (on) { SET_EDIT = !!on; render(); };
 A.setSaveName = function () {
   const inp = document.getElementById("setName");
   const name = (inp.value || "").trim();
   if (!name) { inp.classList.remove("err"); void inp.offsetWidth; inp.classList.add("err"); inp.focus(); return; }
   S.user = { name: name.slice(0, 20), guest: false };
-  save(); sndGood(); toast("\u062a\u0645 \u062d\u0641\u0638 \u0627\u0633\u0645\u0643 \u2713");
+  SET_EDIT = false; save(); sndGood(); toast("تم حفظ اسمك ✓");
   render();
 };
-
-
-/* ============================================================
-   THE MORE MENU
-   ------------------------------------------------------------
-   The last nav slot used to jump straight to the profile, which
-   left settings a level further in. It offers the choice instead:
-   two destinations, the app blurred behind them, the card rising
-   from the bar it was launched from.
-   ============================================================ */
-A.openMore = function () {
-  if (document.querySelector(".more-veil")) return;
-  const veil = document.createElement("div");
-  veil.className = "more-veil";
-  veil.innerHTML = '<div class="more-card" role="dialog" aria-modal="true" aria-label="\u0627\u0644\u0645\u0632\u064a\u062f">' +
-    '<div class="more-grip" aria-hidden="true"></div>' +
-    '<button class="more-pick" onclick="A.moreGo(\'profile\')">' +
-      '<span class="more-ic mi-green">' + ico("nav-stats", 26) + '</span>' +
-      '<span class="more-tx"><b>\u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0634\u062e\u0635\u064a</b>' +
-      '<span>\u062a\u0642\u062f\u0651\u0645\u0643\u060c \u0633\u0644\u0633\u0644\u062a\u0643\u060c \u0648\u0625\u062a\u0642\u0627\u0646\u0643</span></span>' +
-      '<span class="pf-go">\u2190</span></button>' +
-    '<button class="more-pick" onclick="A.moreGo(\'settings\')">' +
-      '<span class="more-ic mi-blue">' + GEAR_SVG + '</span>' +
-      '<span class="more-tx"><b>\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a</b>' +
-      '<span>\u0627\u0644\u0647\u062f\u0641\u060c \u0627\u0644\u0645\u0633\u0627\u0631\u060c \u0648\u0645\u0648\u0639\u062f \u0627\u062e\u062a\u0628\u0627\u0631\u0643</span></span>' +
-      '<span class="pf-go">\u2190</span></button>' +
-  '</div>';
-  veil.onclick = e => { if (e.target === veil) A.closeMore(); };
-  document.body.appendChild(veil);
-  requestAnimationFrame(() => veil.classList.add("show"));
-};
-A.closeMore = function (then) {
-  const v = document.querySelector(".more-veil");
-  if (!v) { if (then) then(); return; }
-  v.classList.remove("show");
-  setTimeout(() => { v.remove(); if (then) then(); }, 220);
-};
-A.moreGo = function (what) {
-  A.closeMore(() => {
-    if (what !== "settings") { go("profile"); return; }
-    go("settings");
+A.setTrackM = function (t) {
+  S.track = t; save();
+  document.querySelectorAll(".set-seg button").forEach((b, i) => {
+    const on = (i === 0 ? "sci" : "lit") === t;
+    b.classList.toggle("on", on); b.setAttribute("aria-checked", on);
   });
 };
-
-/* Weakest lessons by the student's own accuracy. Four attempts is the floor:
-   below that a single slip reads as 0% and the list becomes noise, not advice. */
-function weakLessons(n) {
-  const out = [];
-  domains().forEach(d => d.lessons.forEach(l => {
-    let r = 0, w = 0;
-    l.questions.forEach(q => { const st = S.qstats[q.id]; if (st) { r += st.r || 0; w += st.w || 0; } });
-    if (r + w >= 4) out.push({ dom: d.key, key: l.key, title: l.title,
-                               color: d.color, acc: Math.round(r / (r + w) * 100) });
-  }));
-  return out.sort((a, b) => a.acc - b.acc).slice(0, n);
-}
+A.setSound = function (btn) {
+  S.sound = !S.sound; save();
+  btn.classList.toggle("on", S.sound); btn.setAttribute("aria-checked", S.sound);
+};
+A.setMotion = function (btn) {
+  S.motion = motionReduced() ? "full" : "reduced";
+  motionApply(); save();
+  btn.classList.toggle("on", !motionReduced()); btn.setAttribute("aria-checked", !motionReduced());
+};
 
 /* ---------------- boot ---------------- */
 function boot() {
