@@ -44,7 +44,7 @@ assets/sounds/          — correct.mp3
 - **Questions**: 216+ original questions — MCQ (`format:"mcq"`) and comparison (`format:"comparison"`)
 - **Tracks**: `"sci"` (scientific) and `"lit"` (literary — lighter quant load, excludes `track:"sci"` questions)
 - **Hearts**: 3 per level; losing all resets the level
-- **Timer**: 60 seconds per question (matches real GAT pace)
+- **Timer**: 60 seconds per question (matches real GAT pace) — shown as Duolingo's timed-challenge pill (cream capsule, orange stopwatch, m:ss, yellow rays); rays blink at ≤15s, the pill turns red at ≤5s
 - **Gems** (`S.xp`): spendable currency — hint power-ups, revive (50), 2× boost (50)
 - **Rank XP** (`S.totalXp`): lifetime total, never decremented; drives the 5 rank tiers (bronze → silver → gold → diamond → champion)
 - **Streak**: daily streak with Rive flame animation

@@ -38,6 +38,8 @@ const MOCK_SECTIONS = 2;
 const MOCK_SECS = 25 * 60;   // per section, like the real thing
 const todayKey = () => { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
 const fmtTime = s => toAr(String(Math.floor(Math.max(0, s) / 60)).padStart(2, "0")) + ":" + toAr(String(Math.max(0, s) % 60).padStart(2, "0"));
+/* the question pill reads like Duolingo's timed challenge: m:ss, no leading zero on the minute */
+const fmtClock = s => toAr(Math.floor(Math.max(0, s) / 60)) + ":" + toAr(String(Math.max(0, s) % 60).padStart(2, "0"));
 
 /* The authored key is badly lopsided — across the 475 MCQs, أ is correct
    40.4% of the time and د only 3.6%. Choices render in file order, so a
@@ -1620,7 +1622,6 @@ function renderSession() {
   startQTimer();
 }
 
-/* 90-second countdown — horizontal capsule whose colored fill drains away */
 /* The clock is a deadline, not a tick count. An interval stops firing when
    the tab is backgrounded or a modal blocks the loop, so counting ticks let
    a student pause the exam by locking their phone. */
@@ -1629,7 +1630,7 @@ function startQTimer(resume) {
   if (!resume) SES.left = Q_SECS;
   SES.endsAt = Date.now() + SES.left * 1000;
   const w0 = document.getElementById("qtWrap");
-  if (w0) { w0.style.setProperty("--p", SES.left / Q_SECS * 100); w0.classList.remove("low", "crit", "paused"); }
+  if (w0) w0.classList.remove("low", "crit", "paused");
   SES.timer = setInterval(qTick, 250);
 }
 function qTick() {
@@ -1639,8 +1640,7 @@ function qTick() {
   if (left < SES.left && left <= 5 && left > 0) sndTick();
   SES.left = left;
   const n = document.getElementById("qtNum"), w = document.getElementById("qtWrap");
-  if (n) n.textContent = toAr(Math.max(0, left));
-  if (w) w.style.setProperty("--p", Math.max(0, left) / Q_SECS * 100);
+  if (n) n.textContent = fmtClock(left);
   if (w) { w.classList.toggle("low", left <= 15 && left > 5); w.classList.toggle("crit", left <= 5); }
   if (left <= 0) { clearInterval(SES.timer); SES.timer = null; timeUp(); }
 }
@@ -1653,16 +1653,28 @@ function stopQTimer() {
   if (w) w.classList.add("paused");
 }
 
-/* ---------------- question timer (Duolingo-style draining capsule) ---------------- */
+/* ---------------- question timer — Duolingo's timed-challenge pill ---------------- */
 const CLOCK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.8"/></svg>`;
+/* The stopwatch on that pill: a stem on top, a wind-up nub at two o'clock,
+   a quarter of the dial filled in, and a dark pin at the centre. It is the
+   Figma clock (TIMER_SVG) with the stopwatch hardware Duolingo draws on it. */
+const STOPWATCH_SVG = `<svg class="qt-ico" viewBox="0 0 24 24" aria-hidden="true">
+  <rect x="9.4" y="1.4" width="5.2" height="3.4" rx="1.3" fill="currentColor"/>
+  <rect x="-1.7" y="-1.3" width="3.4" height="2.6" rx=".9" fill="currentColor" transform="translate(19 6.4) rotate(45)"/>
+  <circle cx="12" cy="13.4" r="8.2" fill="none" stroke="currentColor" stroke-width="2.6"/>
+  <path d="M12 13.4V5.2a8.2 8.2 0 0 1 8.2 8.2Z" fill="currentColor"/>
+  <circle class="qt-pin" cx="12" cy="13.4" r="1.5"/>
+</svg>`;
+/* the yellow shine around the pill — two short rays off each top corner,
+   drawn in boxes anchored to those corners so the pill can be any width */
+const RAYS_SVG = `<svg class="qt-rays qt-rays-l" viewBox="-16 -16 32 32" aria-hidden="true"><path d="M-10 8.5l6-2M-4.5 3.5l4-5.5"/></svg>
+    <svg class="qt-rays qt-rays-r" viewBox="-16 -16 32 32" aria-hidden="true"><path d="M-1 -2l4-8M4 7l9-3.5"/></svg>`;
 function timerBar() {
-  return `<span class="qtimer" id="qtWrap" style="--p:100" title="الوقت المتبقي" aria-label="الوقت المتبقي">
-    <svg class="qt-ring" viewBox="0 0 44 44" width="44" height="44" aria-hidden="true">
-      <circle class="qt-track" cx="22" cy="22" r="19"/>
-      <circle class="qt-arc" cx="22" cy="22" r="19" pathLength="100"/>
-    </svg>
-    <b class="qt-num" id="qtNum">${toAr(Q_SECS)}</b>
+  return `<span class="qtimer" id="qtWrap" title="الوقت المتبقي" aria-label="الوقت المتبقي">
+    ${RAYS_SVG}
+    ${STOPWATCH_SVG}
+    <b class="qt-num" id="qtNum">${fmtClock(Q_SECS)}</b>
   </span>`;
 }
 
