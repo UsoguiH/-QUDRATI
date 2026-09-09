@@ -137,7 +137,7 @@ Open `preview.html#<screen>` to jump directly to any screen (bypasses disclaimer
 | `#done` | lesson complete |
 | `#fail` | lose screen |
 | `#stats` | stats page |
-| `#settings` | the settings tab (name, track, exam date, sounds, motion, about, reset — nothing else; the profile page and the «المزيد» sheet are gone) |
+| `#settings` | the settings tab (name, track, exam date, sounds, motion, reset, one disclaimer line — nothing else; the profile page, the «المزيد» sheet and the «حول قدراتي» sheet are gone) |
 | `#mock` | mock exam |
 | `#mocktest` | start mock exam immediately |
 | `#mockdone` | completed mock |

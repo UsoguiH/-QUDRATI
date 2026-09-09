@@ -846,7 +846,6 @@ function renderPath() {
   });
 }
 
-
 /* ---------------- LESSON SESSION ---------------- */
 let SES = null; // current session
 
@@ -3341,31 +3340,6 @@ A.resetAll = function () {
     "خلّه مثل ما هو", "احذف كل شيء", () => { localStorage.removeItem("qudratState"); location.reload(); });
 };
 
-const DISCLAIMER_HTML = `تطبيق «قدراتي» أداة تدريب <b>مستقلة</b> وغير تابعة لهيئة تقويم التعليم والتدريب (قياس) وغير معتمدة منها.<br><br>
-جميع الأسئلة في التطبيق أسئلة تدريبية <b>أصلية</b> أُلِّفت بأسلوب الاختبار الرسمي ومستوياته، ولا تمثل أسئلة الاختبار الفعلية.<br><br>
-للتسجيل في الاختبار الرسمي والاطلاع على النماذج الرسمية، تفضل بزيارة موقع الهيئة.`;
-
-/* document/clipboard icon for the disclaimer modal (provided artwork) */
-const DISCLAIMER_ICON = `<svg class="disc-icon" width="66" height="66" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#clip0_9001_129)">
-<path d="M23.1994 32.4619H16.8005C16.2799 32.4619 15.8579 32.8839 15.8579 33.4045V35.3427C15.8579 35.8633 16.2799 36.2853 16.8005 36.2853H23.1994C23.7199 36.2853 24.1419 35.8633 24.1419 35.3427V33.4045C24.1419 32.8839 23.7199 32.4619 23.1994 32.4619Z" fill="#9069CD"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M1.88509 3.78711H38.1149C39.156 3.78711 40 4.63109 40 5.6722V33.4449C40 34.486 39.156 35.33 38.1149 35.33H1.88509C0.843984 35.33 0 34.486 0 33.4449V5.6722C0 4.63109 0.843984 3.78711 1.88509 3.78711Z" fill="#9069CD"/>
-<path d="M22.4895 30.3115H17.5107C16.9901 30.3115 16.5681 30.7335 16.5681 31.2541V32.4755C16.5681 32.996 16.9901 33.418 17.5107 33.418H22.4895C23.01 33.418 23.432 32.996 23.432 32.4755V31.2541C23.432 30.7335 23.01 30.3115 22.4895 30.3115Z" fill="#D2E4E8"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M2.60352 26.0107H37.6331V31.2812C37.6331 31.8017 37.2111 32.2237 36.6906 32.2237H20.1188H14.6741H3.54606C3.02551 32.2237 2.60352 31.8017 2.60352 31.2812V26.0107Z" fill="#D2E4E8"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M37.6331 28.8776H23.4172C21.5953 28.8776 20.1183 30.3545 20.1183 32.1765C20.1183 30.3545 18.6413 28.8776 16.8194 28.8776H2.60352V5.92399C2.60352 5.40343 3.02551 4.98145 3.54606 4.98145H16.8194C18.6413 4.98145 20.1183 6.45841 20.1183 8.28034C20.1183 6.45841 21.5953 4.98145 23.4172 4.98145H36.6906C37.2111 4.98145 37.6331 5.40343 37.6331 5.92399V28.8776Z" fill="white"/>
-<path d="M17.0446 7.37134H5.20398C4.81356 7.37134 4.49707 7.68783 4.49707 8.07825V8.81508C4.49707 9.20549 4.81356 9.52199 5.20398 9.52199H17.0446C17.435 9.52199 17.7515 9.20549 17.7515 8.81508V8.07825C17.7515 7.68783 17.435 7.37134 17.0446 7.37134Z" fill="#D2E4E8"/>
-<path d="M17.0446 17.1689H5.20398C4.81356 17.1689 4.49707 17.4854 4.49707 17.8759V18.6127C4.49707 19.0031 4.81356 19.3196 5.20398 19.3196H17.0446C17.435 19.3196 17.7515 19.0031 17.7515 18.6127V17.8759C17.7515 17.4854 17.435 17.1689 17.0446 17.1689Z" fill="#D2E4E8"/>
-<path d="M14.441 12.3894H5.20398C4.81356 12.3894 4.49707 12.7059 4.49707 13.0963V13.8331C4.49707 14.2236 4.81356 14.5401 5.20398 14.5401H14.441C14.8315 14.5401 15.148 14.2236 15.148 13.8331V13.0963C15.148 12.7059 14.8315 12.3894 14.441 12.3894Z" fill="#D2E4E8"/>
-<path d="M14.441 21.9482H5.20398C4.81356 21.9482 4.49707 22.2647 4.49707 22.6552V23.392C4.49707 23.7824 4.81356 24.0989 5.20398 24.0989H14.441C14.8315 24.0989 15.148 23.7824 15.148 23.392V22.6552C15.148 22.2647 14.8315 21.9482 14.441 21.9482Z" fill="#D2E4E8"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M8.28088 2.83105H13.731C14.1214 2.83105 14.4379 3.14755 14.4379 3.53796V20.7491C14.4379 21.1395 14.1214 21.456 13.731 21.456C13.6018 21.456 13.4752 21.4206 13.3647 21.3537L11.2672 20.0832C11.0353 19.9428 10.7436 19.9473 10.5162 20.0948L8.66566 21.2955C8.33814 21.508 7.90036 21.4147 7.68786 21.0872C7.61353 20.9727 7.57397 20.839 7.57397 20.7025V3.53796C7.57397 3.14755 7.89047 2.83105 8.28088 2.83105Z" fill="#FF4B4B"/>
-<path d="M35.2695 7.37134H23.4288C23.0384 7.37134 22.7219 7.68783 22.7219 8.07825V8.81508C22.7219 9.20549 23.0384 9.52199 23.4288 9.52199H35.2695C35.6599 9.52199 35.9764 9.20549 35.9764 8.81508V8.07825C35.9764 7.68783 35.6599 7.37134 35.2695 7.37134Z" fill="#D2E4E8"/>
-<path d="M35.2695 17.1689H23.4288C23.0384 17.1689 22.7219 17.4854 22.7219 17.8759V18.6127C22.7219 19.0031 23.0384 19.3196 23.4288 19.3196H35.2695C35.6599 19.3196 35.9764 19.0031 35.9764 18.6127V17.8759C35.9764 17.4854 35.6599 17.1689 35.2695 17.1689Z" fill="#D2E4E8"/>
-<path d="M32.6659 12.3894H23.4288C23.0384 12.3894 22.7219 12.7059 22.7219 13.0963V13.8331C22.7219 14.2236 23.0384 14.5401 23.4288 14.5401H32.6659C33.0563 14.5401 33.3728 14.2236 33.3728 13.8331V13.0963C33.3728 12.7059 33.0563 12.3894 32.6659 12.3894Z" fill="#D2E4E8"/>
-<path d="M32.6659 21.9482H23.4288C23.0384 21.9482 22.7219 22.2647 22.7219 22.6552V23.392C22.7219 23.7824 23.0384 24.0989 23.4288 24.0989H32.6659C33.0563 24.0989 33.3728 23.7824 33.3728 23.392V22.6552C33.3728 22.2647 33.0563 21.9482 32.6659 21.9482Z" fill="#D2E4E8"/>
-</g>
-<defs><clipPath id="clip0_9001_129"><rect width="40" height="40" fill="white"/></clipPath></defs>
-</svg>`;
-
 /* Ask before something irreversible, in the app's own voice. The primary
    button is always the safe one — a native confirm() binds Enter to OK, which
    here was always the button that destroyed the lesson. */
@@ -3398,9 +3372,6 @@ function showModal(hero, title, bodyHtml, btnText, onclose) {
   document.body.appendChild(veil);
   veil.querySelector("#mOk").onclick = () => { veil.remove(); if (onclose) onclose(); };
 }
-A.showAbout = function () {
-  showModal("⭐", "حول تطبيق قدراتي", DISCLAIMER_HTML + `<br><a class="linkout" href="https://etec.gov.sa" target="_blank" rel="noopener">↗ الموقع الرسمي لهيئة تقويم التعليم والتدريب</a>`, "حسناً");
-};
 
 /* Start-screen hero: XP-coins trio (recreated from the Duolingo UI-kit
    frame: blue & green coins behind a big gold lightning coin, floating
@@ -3559,7 +3530,7 @@ const EP_JUMP = [
   [.82,0,1.08,.93,"linear"], [.89,-1.5,.99,1.01,"linear"], [.95,0,1.02,.98,"linear"], [1,0,1,1,"linear"]
 ];
 
-let EP = { sel: null, view: null, first: false, shown: 0, raf: 0, timer: 0, enter: false, from: "path" };
+let EP = { sel: null, view: null, first: false, shown: 0, raf: 0, timer: 0, enter: false, from: "path", saved: null };
 
 const epDay0  = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const epKey   = d => d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
@@ -3577,7 +3548,7 @@ function renderExamSetup(first) {
   EP.sel = S.exam ? epDay0(new Date(S.exam + "T00:00:00")) : null;
   if (EP.sel && EP.sel < today) EP.sel = null;
   EP.view = new Date((EP.sel || today).getFullYear(), (EP.sel || today).getMonth(), 1);
-  EP.shown = 0;
+  EP.shown = 0; EP.saved = null;
 
   $app.innerHTML = `<div class="screen screen-full"><div class="exam-pick">
     <h1>\u0645\u062a\u0649 \u0627\u062e\u062a\u0628\u0627\u0631\u0643\u061f</h1>
@@ -3671,20 +3642,28 @@ function epCountTo(target) {
   }, 580);                                   // 580ms is the impact frame
 }
 
+/* The footer follows one rule: the green «تم حفظ الموعد!» shows exactly while
+   the selected day is the one that was saved. A tap on the saved day keeps
+   it, a tap on another day asks to save again, a tap back restores it. It
+   used to be flipped on by the save and off by any tap on the calendar,
+   which left the button reading «متابعة» — with the leave-handler on it —
+   over an unsaved day, so the save looked lost and the next press walked
+   out without saving. */
+function epFootState() {
+  const foot = document.getElementById("epFoot"), btn = document.getElementById("epSave");
+  if (!foot || !btn) return;
+  const done = !!EP.sel && EP.saved === epKey(EP.sel);
+  foot.classList.toggle("done", done);
+  btn.textContent = done ? "متابعة" : "حفظ الموعد";
+  btn.onclick = done ? () => { EP.first ? go("path") : A.backFromExam(); } : () => A.saveExam();
+}
+
 function epCount() {
   const today = epDay0(new Date());
-  const card = document.getElementById("epCount"), foot = document.getElementById("epFoot");
+  const card = document.getElementById("epCount");
   const save = document.getElementById("epSave");
   if (!card) return;
-  /* a tap on another day after saving: the confirmation goes, and the button
-     has to become «حفظ الموعد» again — leaving it as «متابعة» with the
-     leave-handler on it looked like the save had vanished, and the next tap
-     walked out without saving the new day */
-  if (foot.classList.contains("done")) {
-    foot.classList.remove("done");
-    save.textContent = "\u062d\u0641\u0638 \u0627\u0644\u0645\u0648\u0639\u062f";
-    save.onclick = () => A.saveExam();
-  }
+  epFootState();
   if (!EP.sel) {
     card.classList.add("empty");
     cancelAnimationFrame(EP.raf); clearTimeout(EP.timer); EP.shown = 0;
@@ -3859,9 +3838,8 @@ A.saveExam = function () {
      have just finished selling the date, and cutting the screen at that exact
      moment throws the payoff away */
   const n = epDiff(epDay0(new Date()), d);
-  const foot = document.getElementById("epFoot"), sub = document.getElementById("epDoneSub");
-  const btn = document.getElementById("epSave");
-  if (foot && sub && btn) {
+  const sub = document.getElementById("epDoneSub");
+  if (sub) {
     /* arPlural() RETURNS THE COUNT for 3 and up \u2014 "toAr(n) + ' ' + few" \u2014 so
        prefixing it with toAr() again printed "\u0644\u0640 \u0664 \u0664 \u0623\u0633\u0627\u0628\u064a\u0639". It yields the
        bare word for 1 and 2, which take their own forms and attach the lam
@@ -3877,9 +3855,8 @@ A.saveExam = function () {
       : weeks === 2 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0623\u0633\u0628\u0648\u0639\u064a\u0646"
       : "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0640 " +
         arPlural(weeks, "\u0623\u0633\u0628\u0648\u0639", "\u0623\u0633\u0628\u0648\u0639\u064a\u0646", "\u0623\u0633\u0627\u0628\u064a\u0639", "\u0623\u0633\u0628\u0648\u0639\u0627\u064b");
-    foot.classList.add("done");
-    btn.textContent = "\u0645\u062a\u0627\u0628\u0639\u0629";
-    btn.onclick = () => { EP.first ? go("path") : A.backFromExam(); };
+    EP.saved = epKey(d);
+    epFootState();
     return;
   }
   EP.first ? go("path") : A.backFromExam();
@@ -3923,29 +3900,6 @@ A.login = function () {
   afterLogin();
 };
 A.loginGuest = function () { S.user = { name: "ضيف", guest: true }; save(); afterLogin(); };
-/* No longer gates anything — kept because A.showAbout reuses DISCLAIMER_HTML. */
-function showDisclaimerSheet(onAccept) {
-  const veil = document.createElement("div");
-  veil.className = "disc-veil";
-  veil.innerHTML = `<div class="disc-sheet">
-    <div class="ms-grip"></div>
-    <div class="ds-icon">${DISCLAIMER_ICON}</div>
-    <h2 class="ds-title">إخلاء مسؤولية</h2>
-    <div class="ds-body">${DISCLAIMER_HTML}</div>
-    <button class="btn ds-btn" id="discOk">فهمت، لنبدأ!</button>
-  </div>`;
-  document.body.appendChild(veil);
-  requestAnimationFrame(() => veil.classList.add("show"));
-  veil.querySelector("#discOk").onclick = () => {
-    veil.classList.remove("show");
-    setTimeout(() => { veil.remove(); onAccept(); }, 320);
-  };
-}
-
-/* The disclaimer used to be a non-dismissible sheet between the login screen
-   and the first lesson — a wall in front of someone who had not yet seen
-   anything worth agreeing to. The notice still ships; it lives in Settings
-   → حول التطبيق, where it can be read instead of dismissed. */
 /* ---------------- "إليك ما ستحصل عليه" (first run) ----------------
    Sells the outcome before asking for effort. It runs BEFORE the exam-date picker,
    because the picker asks the student to commit something and this is what earns
@@ -4019,7 +3973,6 @@ document.addEventListener("keydown", e => {
     if (btn && !btn.disabled && !btn.classList.contains("eliminated")) { e.preventDefault(); A.pick(n - 1); }
   }
 });
-
 
 /* ============================================================
    SETTINGS — the fifth tab
@@ -4104,14 +4057,8 @@ function renderSettings() {
       </div>
     </div>
 
-    <div class="set-lab">عن التطبيق</div>
-    <div class="set-list">
-      <button type="button" class="set-item set-link" onclick="A.showAbout()">
-        <span class="set-item-tx">حول قدراتي</span>${chev}
-      </button>
-    </div>
-
     <button type="button" class="set-reset" onclick="A.resetAll()">إعادة تعيين التقدّم</button>
+    <p class="set-foot">قدراتي أداة تدريب مستقلة، غير تابعة لهيئة تقويم التعليم والتدريب (قياس)</p>
 
   </div></div>` + bottomnav("settings");
 
