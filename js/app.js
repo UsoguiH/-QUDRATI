@@ -1656,24 +1656,11 @@ function stopQTimer() {
 /* ---------------- question timer — Duolingo's timed-challenge pill ---------------- */
 const CLOCK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.8"/></svg>`;
-/* The stopwatch on that pill: a stem on top, a wind-up nub at two o'clock,
-   a quarter of the dial filled in, and a dark pin at the centre. It is the
-   Figma clock (TIMER_SVG) with the stopwatch hardware Duolingo draws on it. */
-const STOPWATCH_SVG = `<svg class="qt-ico" viewBox="0 0 24 24" aria-hidden="true">
-  <rect x="9.4" y="1.4" width="5.2" height="3.4" rx="1.3" fill="currentColor"/>
-  <rect x="-1.7" y="-1.3" width="3.4" height="2.6" rx=".9" fill="currentColor" transform="translate(19 6.4) rotate(45)"/>
-  <circle cx="12" cy="13.4" r="8.2" fill="none" stroke="currentColor" stroke-width="2.6"/>
-  <path d="M12 13.4V5.2a8.2 8.2 0 0 1 8.2 8.2Z" fill="currentColor"/>
-  <circle class="qt-pin" cx="12" cy="13.4" r="1.5"/>
-</svg>`;
-/* the yellow shine around the pill — two short rays off each top corner,
-   drawn in boxes anchored to those corners so the pill can be any width */
-const RAYS_SVG = `<svg class="qt-rays qt-rays-l" viewBox="-16 -16 32 32" aria-hidden="true"><path d="M-10 8.5l6-2M-4.5 3.5l4-5.5"/></svg>
-    <svg class="qt-rays qt-rays-r" viewBox="-16 -16 32 32" aria-hidden="true"><path d="M-1 -2l4-8M4 7l9-3.5"/></svg>`;
+/* The clock on the pill is TIMER_SVG, the same Figma clock the timed-out
+   sheet and the result cards show, hand spinning (.qt-hand). */
 function timerBar() {
   return `<span class="qtimer" id="qtWrap" title="الوقت المتبقي" aria-label="الوقت المتبقي">
-    ${RAYS_SVG}
-    ${STOPWATCH_SVG}
+    ${TIMER_SVG}
     <b class="qt-num" id="qtNum">${fmtClock(Q_SECS)}</b>
   </span>`;
 }

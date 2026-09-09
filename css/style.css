@@ -15,7 +15,7 @@
   --gold: #FFC800;         --gold-dk: #E6A000;
   --gold-shine: #FFE700;   --gold-soft: #FBE56D;    --brown: #AA572A;
   --red: #FF4B4B;          --red-soft: #FFB2B2;
-  --orange: #FF9600;       --orange-bg: #FFEFD6;    --orange-dk: #AD6C07;
+  --orange: #FF9600;       --orange-bg: #FFEFD6;    --gold-bg: #FFF4BF;
   --ink: #4B4B4B;          --gray: #777777;         --gray-icon: #AFAFAF;
   --gray-shadow: #B7B7B7;  --line: #E5E5E5;         --divider: #D9D9D9;
   --disabled: #D9D9D9;     --snow: #FFFFFF;
@@ -320,11 +320,10 @@ svg.ic { display: block; }
 @keyframes pulse { 50% { opacity: .45; } }
 
 /* ============================================================
-   Question timer — Duolingo's timed-challenge pill: a cream
-   capsule, the orange stopwatch, m:ss in orange, and two yellow
-   rays off each top corner. Orange at rest; the rays blink at
-   ≤15s; the whole pill turns red at ≤5s. (.qt-svg / .qt-hand
-   below style the TIMER_SVG on the win/fail result cards.)
+   Question timer — Duolingo's timed-challenge pill: a tinted
+   capsule, the Figma clock with its hand spinning, and m:ss.
+   Green at rest, yellow at ≤15s, red at ≤5s. (.qt-svg / .qt-hand
+   below also style TIMER_SVG on the sheets and result cards.)
    ============================================================ */
 .qt-svg .qt-face { fill: var(--blue-light); transition: fill .3s; }
 /* the same ticking clock as the result card, on the exam countdown */
@@ -340,37 +339,26 @@ svg.ic { display: block; }
   position: relative; flex-shrink: 0;
   display: inline-flex; align-items: center; gap: 5px;
   height: 30px; padding: 0 10px 0 7px; border-radius: 999px;
-  margin: 0 4px 0 6px;   /* room for the rays before the bar and the hearts */
-  /* stopwatch on the left, digits on the right, as on Duolingo's own RTL screen */
+  /* clock on the left, digits on the right, as on Duolingo's own RTL screen */
   direction: ltr;
-  background: var(--orange-bg); color: var(--orange);
+  background: var(--green-bg); color: var(--green-dk);
   animation: fadeUp .4s ease backwards;
   transition: background .3s ease, color .3s ease;
 }
-.qt-ico { display: block; width: 22px; height: 22px; }
-.qt-pin { fill: var(--orange-dk); transition: fill .3s ease; }
+.qtimer .qt-svg { width: 22px; height: 22px; }
+/* the dial takes the pill's tint, so only the ring, the pin and the hand show */
+.qtimer .qt-svg .qt-face { fill: none; }
 .qt-num {
   font-weight: 800; font-size: 17px; line-height: 1; color: currentColor;
   font-variant-numeric: tabular-nums;
   /* the widest reading sets the width, so the pill never breathes with the digits */
   min-width: 34px; text-align: center; padding-top: 2px;
 }
-/* each ray box is 32px square, centred on a top corner of the pill;
-   its viewBox puts that corner at (0,0), so the paths are in pill pixels */
-.qt-rays {
-  position: absolute; top: -16px; width: 32px; height: 32px;
-  fill: none; stroke: var(--gold); stroke-width: 3.2; stroke-linecap: round;
-  pointer-events: none; transition: stroke .3s ease;
-}
-.qt-rays-l { left: -16px; }
-.qt-rays-r { right: -16px; }
-.qtimer.low .qt-rays { animation: rayBlink .9s ease-in-out infinite; }
+.qtimer.low  { background: var(--gold-bg); color: var(--gold-dk); }
 .qtimer.crit { background: var(--red-bg); color: var(--red); }
-.qtimer.crit .qt-pin { fill: var(--red-dk2); }
-.qtimer.crit .qt-rays { stroke: var(--red); animation: rayBlink .45s ease-in-out infinite; }
 .qtimer.crit .qt-num { animation: numPop 1s ease infinite; }
 .qtimer.paused { opacity: .5; }
-@keyframes rayBlink { 50% { opacity: .2; } }
+.qtimer.paused .qt-hand { animation-play-state: paused; }
 @keyframes numPop { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.28); } }
 
 /* ============================================================
