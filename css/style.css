@@ -2257,7 +2257,11 @@ button.dom-stat:active { transform: scale(.99); }
 .sk-days .dot { width: 32px; height: 32px; border-radius: 50%; background: #E5E5E5; position: relative; }
 /* a checked day keeps its grey dot underneath: the check's orange dot pops from a
    point to 39px, so the grey is what shows until the pop — a dot, not an empty slot */
-.sk-days .check { position: absolute; left: 50%; top: 50%; width: 56px; height: 74px; transform: translate(-50%,-58%); pointer-events: none; }
+/* 46×60 puts the Lottie's orange dot (68 of its 97 units) at 32px: the same circle as
+   the grey days, not a bigger one sitting on top of them. The dot is drawn at 53% of the
+   composition's width and 72% of its height, and the translate parks that point on the
+   grey dot's centre, so the orange grows out of the grey rather than under it. */
+.sk-days .check { position: absolute; left: 50%; top: 50%; width: 46px; height: 60px; transform: translate(-53%,-72%); pointer-events: none; }
 .sk-days .check svg { width: 100% !important; height: 100% !important; }
 .sk-foot { margin-top: 36px; width: 100%; opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s cubic-bezier(.2,.7,.3,1); }
 .sk-foot.show { opacity: 1; transform: none; }
