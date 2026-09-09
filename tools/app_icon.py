@@ -12,6 +12,7 @@ Outputs (assets/app-icon/ unless noted):
     icon-1024.png            master — rounded tile, transparent corners
     icon-512.png             manifest icon  (purpose "any")
     icon-192.png             manifest icon  (purpose "any")
+    icon-192.webp            the pre-rendered landing's icon (a fifth of the PNG)
     maskable-512.png         manifest icon  (purpose "maskable") — full bleed
     apple-touch-icon.png     180×180, full bleed (iOS rounds it itself)
     favicon-96.png           Google's search-result favicon (multiple of 48)
@@ -101,6 +102,8 @@ def build_set():
 
     save(tile, "icon-512.png", 512)
     save(tile, "icon-192.png", 192)
+    tile.resize((192, 192), Image.LANCZOS).save(OUT / "icon-192.webp", quality=88, method=6)
+    print(" 192px  ", (OUT / "icon-192.webp").relative_to(ROOT), "(the landing's icon)")
     save(tile, "favicon-96.png", 96)
     save(tile, "favicon-32.png", 32)
     save(tile, "favicon-16.png", 16)

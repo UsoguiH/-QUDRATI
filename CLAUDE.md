@@ -17,7 +17,8 @@ A Duolingo-style Arabic web game for practicing the Quantitative section of the 
 ## File map
 
 ```
-index.html              — app shell (single <div id="app">)
+index.html              — app shell: `<div id="app">` holds the pre-rendered landing + «عن قدراتي» (H1, features, FAQ) that crawlers read; the app replaces it on boot and re-attaches `#about` under the start screen
+robots.txt / sitemap.xml / llms.txt — crawler files; vercel.json redirects www → qudrati.xyz (the canonical host)
 preview.html            — dev harness: bypasses disclaimer, seeds state, jumps to any screen via #hash
 mobile.html             — device-frame preview of the app, auto-reloads when style.css or app.js changes
 css/style.css           — full design system (2059 lines, Figma-exact values)
@@ -168,3 +169,10 @@ const MOCK_SECTIONS  = 2;
 ## Deployment
 
 Static hosting, no server required. The app is live at **qudrati.xyz**. The Android APK (`Qudrati.apk`) is a Capacitor wrapper over the same static files.
+
+### SEO / AEO
+
+- The canonical host is `https://qudrati.xyz/` (`<link rel="canonical">`, `og:url`, sitemap, and the www → apex redirect in `vercel.json` all agree). Keep them agreeing.
+- The head carries JSON-LD (`Organization` with the logo, `WebSite`, `WebPage`, `WebApplication`, `FAQPage`). The FAQ text in the JSON-LD must stay word-for-word identical to the visible `#about` FAQ in the same file — edit both or neither.
+- Every dev page (`preview.html`, `mobile.html`, `mascot-*.html`, `exam-date-picker.html`, `quiz-two-bolts.html`) carries `<meta name="robots" content="noindex, nofollow">` because Vercel deploys the whole tree. Give any new dev page the same tag.
+- `llms.txt` is the plain-text summary answer engines read; it repeats the landing copy and the FAQ.

@@ -1,0 +1,8 @@
+# قدراتي — qudrati.xyz
+User-agent: *
+Allow: /
+# dev tooling and the repo's notes are deployed with the site; nothing to index there
+Disallow: /tools/
+Disallow: /*.md$
+
+Sitemap: https://qudrati.xyz/sitemap.xml

@@ -956,7 +956,51 @@ button.dom-stat:active { transform: scale(.99); }
 .login-screen {
   align-items: center; justify-content: center; text-align: center;
   padding: 36px 24px calc(36px + env(safe-area-inset-bottom));
+  min-height: 100dvh;   /* the hero keeps the whole first screen; «عن قدراتي» starts under the fold */
 }
+
+/* ============================================================
+   Landing + «عن قدراتي» — the pre-rendered content in index.html
+   (what crawlers and no-JavaScript readers get) and, after boot,
+   the same #about section under the start screen
+   ============================================================ */
+.landing {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 48px 24px 40px;
+}
+.landing-icon { width: 96px; height: 96px; border-radius: 22px; margin-bottom: 14px; }
+.landing h1 { font-size: 26px; color: var(--green); line-height: 1.5; text-wrap: balance; }
+.landing-sub { color: var(--ink); font-weight: 600; line-height: 1.8; max-width: 380px; text-wrap: balance; margin: 8px 0 0; }
+.landing-noscript { color: var(--red); font-weight: 700; margin: 12px 0 0; }
+.about {
+  width: 100%; max-width: 430px; margin: 0 auto;
+  padding: 8px 24px calc(36px + env(safe-area-inset-bottom));
+  text-align: start; color: var(--ink);
+}
+.login-screen + .about { border-top: 2px solid var(--line); padding-top: 18px; }
+.about h2 { font-size: 19px; color: var(--ink); margin: 26px 0 8px; }
+.about p, .about li { font-size: 15px; font-weight: 500; line-height: 1.9; color: var(--ink); margin: 0; }
+.about-list { padding-inline-start: 22px; margin: 0; }
+.about-list li { margin-bottom: 4px; }
+.about-list li::marker { color: var(--green); }
+.faq details { border-top: 2px solid var(--line); padding: 10px 0; }
+.faq details:last-child { border-bottom: 2px solid var(--line); }
+.faq summary {
+  cursor: pointer; list-style: none; font-weight: 700; font-size: 15.5px; color: var(--ink);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.faq summary::-webkit-details-marker { display: none; }
+/* the chevron: a bordered corner, turned down when closed and up when open */
+.faq summary::after {
+  content: ''; width: 9px; height: 9px; flex-shrink: 0; margin-bottom: 4px;
+  border-right: 2.5px solid var(--gray-icon); border-bottom: 2.5px solid var(--gray-icon);
+  transform: rotate(45deg); transition: transform .2s ease, margin .2s ease;
+}
+.faq details[open] summary::after { transform: rotate(-135deg); margin-bottom: -4px; }
+.faq details p { padding-top: 6px; }
+.about-links { margin-top: 18px; font-weight: 700; }
+.about-links a { color: var(--blue); text-decoration: none; }
+.about-en { margin-top: 14px; font-size: 13px; font-weight: 500; }
 
 /* --- XP-coins hero (UI-kit frame): coins rain in, gold one slams
    down, then everything floats, the bolt zaps, sparks twinkle --- */
