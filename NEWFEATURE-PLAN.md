@@ -56,14 +56,14 @@ scratchpad drives a real Chrome and reports console errors).
       the three that already had them
 - [x] Every lesson's untaught rules routed to the guidebook
 
-### W4 — Learn smart
+### W4 — Learn smart ✅
 - [x] Spaced repetition: a due date per missed question, and «مراجعة اليوم» on the path
 - [x] Review without the cap of 12, ordered by what is due and how often it was missed
 - [x] Skill decay: a lesson last practised weeks ago says so on the path
 - [x] A placement test at the start, so a strong student does not grind lesson 1
 - [x] A daily mix drawn from the domains the student is weakest in
 
-### W5 — Pacing and retention
+### W5 — Pacing and retention ✅
 - [x] Choose علمي or أدبي on the first run instead of defaulting silently
 - [x] The daily goal the student sets (`S.goal`), driving the quest — ٥، ١٠، ٢٠ in Settings, and
       the chest pays in proportion, pile and all
@@ -72,13 +72,13 @@ scratchpad drives a real Chrome and reports console errors).
 - [x] «أبلغ عن السؤال» — kept in the save, listed in Settings, copyable; it never claims to
       have reached a server, because there is none
 
-### W6 — Offline and installable
+### W6 — Offline and installable ✅
 - [x] `sw.js`: precaches the shell under a VERSION-named cache; navigations go to the
       network first, and a dev harness is never served from a cache
 - [x] Registered from the app's own page; the install prompt is kept and offered in Settings
 - [x] Tell the student when they are offline — a note that says what still works
 
-### W7 — Delight
+### W7 — Delight ✅
 - [x] The motion pass: the path reveals node by node as you scroll; a press answers on
       the mock chips, the solution link and the settings rows; a mouse gets hover where
       there was none; the power-up FAB, the ring, the glow and the four twinkles are gone
@@ -95,7 +95,7 @@ scratchpad drives a real Chrome and reports console errors).
   **nine-step type scale** (retrofitting every `font-size` in 3,900 lines changes nothing
   a student sees and risks everything they read)
 
-### W8 — Reachable by everyone
+### W8 — Reachable by everyone ✅
 - [x] Answer choices are a radio group — one tab stop, `aria-checked` where the pick is,
       and the arrows move it, in the lesson and the mock both
 - [x] Every sheet is a dialog that works: focus moves in, Tab stays in, Escape closes,
