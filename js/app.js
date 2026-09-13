@@ -593,10 +593,22 @@ function statbar() {
 }
 A.chestTap = function () {
   dailyReset();
-  if (S.daily.claimed) { toast("🎁 عُد غداً لصندوق جديد"); return; }
+  if (S.daily.claimed) { chestTip("عُد غداً لصندوق جديد"); return; }
   if (S.daily.n >= DAILY_GOAL) { A.openChest(); return; }
-  toast(`باقي ${qCount(DAILY_GOAL - S.daily.n)} لفتح صندوق اليوم 🎁`);
+  chestTip(`باقي <b>${qCount(DAILY_GOAL - S.daily.n)}</b> لفتح صندوق اليوم`);
 };
+/* the chest answers in a speech bubble over itself, the path's white node tip with its tail on the
+   chest; it pops in, floats, and leaves after a moment. Off the path there is no chest to point at. */
+let chestTipT = 0;
+function chestTip(msg) {
+  const host = document.querySelector(".chest-float");
+  if (!host) { toast(msg.replace(/<[^>]+>/g, "")); return; }
+  host.querySelectorAll(".chest-tip").forEach(e => e.remove());
+  const tip = document.createElement("span"); tip.className = "chest-tip"; tip.setAttribute("role", "status"); tip.innerHTML = msg;
+  host.appendChild(tip);
+  clearTimeout(chestTipT);
+  chestTipT = setTimeout(() => { tip.classList.add("out"); setTimeout(() => tip.remove(), 240); }, 2600);
+}
 function bottomnav(active) {
   /* the labels were the state keys — "path", "league" — read aloud in Arabic */
   const items = [["path", "nav-home", "الدروس"], ["league", "nav-league", "المجلس"],
