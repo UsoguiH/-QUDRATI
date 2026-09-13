@@ -3126,7 +3126,18 @@ function renderMockHome() {
   </div></div>` + bottomnav("mock");
 }
 
-A.startMock = function () {
+A.startMock = function (replace) {
+  /* A held attempt is twenty minutes of somebody's exam, and mockClear() below
+     takes it without a word — from a button that sits directly under a card
+     saying the attempt is still waiting. Ask first, with the safe answer
+     focused; the card itself is still the way back into it. */
+  const held = replace ? null : mockSaved();
+  if (held) {
+    askConfirm("نبدأ محاكاة جديدة؟",
+      `عندك محاكاة ما كملت — القسم ${toAr(held.si + 1)} وباقٍ ${fmtClock(held.sections[held.si].left)}. الجديدة تمسحها وما فيه رجعة.`,
+      "لا، أرجع", "ابدأ جديدة", () => A.startMock(true));
+    return;
+  }
   const plan = MOCK_SECTION_PLAN[S.track === "lit" ? "lit" : "sci"];
   const pools = {};
   DOMAIN_ORDER.forEach(k => {
@@ -3517,7 +3528,10 @@ function leagueStandings(now) {
     g.xp = ghostXp(g, hoursIn);
     list.push(g);
   }
-  list.push({ name: (S.user && S.user.name) || "أنت", xp: S.totalXp || 0, you: true });
+  const me = ((S.user && S.user.name) || "").trim();
+  /* `named` so the row can tell a real name from the fallback: appending the
+     «(أنت)» marker to a row whose name IS «أنت» read as «أنت (أنت)». */
+  list.push({ name: me || "أنت", named: !!me, xp: S.totalXp || 0, you: true });
   list.sort(function (a, b) { return b.xp - a.xp || (a.you ? 1 : -1); });
   return list;
 }
@@ -3553,7 +3567,7 @@ function lbRows(entries) {
     const gain = prev && !e.you && prev[e.name] != null ? e.xp - prev[e.name] : 0;
     return `<div class="lb-row ${e.you ? "me" : ""} ${gain > 0 ? "gained" : ""}">
       ${cell}${avatarFor(e.name, e.you)}
-      <span class="lb-name">${esc(e.name)}${e.you ? " <b>(أنت)</b>" : ""}</span>
+      <span class="lb-name">${esc(e.name)}${e.you && e.named ? " <b>(أنت)</b>" : ""}</span>
       ${gain > 0 ? `<span class="lb-gain">+${toAr(gain)}</span>` : ""}
       <span class="lb-xp">${toAr(e.xp)} <i>خبرة</i></span>
     </div>`;
@@ -4366,8 +4380,8 @@ function renderStats() {
     </button>`; })()}
     ${(() => { const mc = mistakeList().length; return `<button class="card mistakes-card ${mc ? "" : "clean"}" onclick="A.go('review')">
       <span class="mc-ico">${mc ? "✕" : CHECK_BADGE}</span>
-      <div class="mc-txt"><b>مراجعة الأخطاء</b><span>${mc ? qCount(mc) + " بحاجة لمراجعة" : (r + w) ? "لا أخطاء — أحسنت!" : "ستظهر أخطاءك هنا لتراجعها"}</span></div>
-      <span class="mc-go">${mc ? "راجع ←" : "✓"}</span>
+      <div class="mc-txt"><b>مراجعة الأخطاء</b><span>${mc ? qCount(mc) + " بحاجة لمراجعة" : (r + w) ? "لا أخطاء — أحسنت!" : "ستظهر أخطاؤك هنا لتراجعها"}</span></div>
+      <span class="mc-go">${mc ? "راجع ←" : "عرض ←"}</span>
     </button>`; })()}
     ${weekCard()}
     ${(r + w) ? `<div class="card"><h3>الدقة حسب المجال</h3>${domBars}</div>` : statsEmpty()}
