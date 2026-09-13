@@ -5275,6 +5275,10 @@ function renderSettings() {
 
     <div class="set-lab">تقدّمك</div>
     <div class="set-list">
+      ${window.__qInstall ? `<button type="button" class="set-item set-link" onclick="A.installApp()">
+        <span class="set-item-tx">ثبّت التطبيق على جهازك</span>
+        <span class="set-val">يعمل بلا اتصال</span>${chev}
+      </button>` : ""}
       <button type="button" class="set-item set-link" onclick="A.backupShow()">
         <span class="set-item-tx">نسخة احتياطية</span>
         <span class="set-val">رمز تحفظه</span>${chev}
@@ -5340,6 +5344,40 @@ A.setMotion = function (btn) {
   btn.classList.toggle("on", !motionReduced()); btn.setAttribute("aria-checked", !motionReduced());
 };
 
+/* ---------------- installing, and losing the network ----------------
+   Everything this app needs is a static file and progress lives in
+   localStorage, so offline costs a student almost nothing — but a screen that
+   says only "no connection" makes it feel as though everything stopped. Say
+   what still works instead, and say it once. */
+function netBar() {
+  const el = document.querySelector(".net-bar");
+  if (navigator.onLine) {
+    if (el) { el.classList.remove("show"); setTimeout(() => el.remove(), 320); }
+    return;
+  }
+  if (el) return;
+  const bar = document.createElement("div");
+  bar.className = "net-bar"; bar.setAttribute("role", "status");
+  bar.innerHTML = `<b>أنت بلا اتصال</b><span>التمرين يكمل معك، وتقدّمك محفوظ على جهازك</span>`;
+  document.body.appendChild(bar);
+  requestAnimationFrame(() => bar.classList.add("show"));
+}
+addEventListener("online", netBar);
+addEventListener("offline", netBar);
+addEventListener("qinstall", () => { if (view === "settings") render(); });
+
+A.installApp = function () {
+  const p = window.__qInstall;
+  if (!p) return;
+  window.__qInstall = null;
+  try {
+    p.prompt();
+    if (p.userChoice && p.userChoice.then)
+      p.userChoice.then(r => { if (r && r.outcome === "accepted") toast("تمّ التثبيت ✓"); render(); }, () => render());
+    else render();
+  } catch (e) { render(); }
+};
+
 /* ---------------- boot ---------------- */
 function boot() {
   initCorrectVoice(); // preload the correct-answer clip so the first play is instant
@@ -5353,5 +5391,23 @@ const DEV = /(^|\/)(preview|mobile|chest-animation|chest-animation-tiers|chest-a
   || /[?&]dev=1(&|$)/.test(location.search);
 if (!DEV) for (const k of Object.keys(A)) if (k.indexOf("debug") === 0 || k === "fxDemo") delete A[k];
 
+/* The worker caches the shell so a lesson survives a tunnel. It is registered
+   only from the app's own page, only where a worker is allowed at all, and never
+   on a dev harness — those exist to show the file on disk right now. */
+if ("serviceWorker" in navigator && !DEV
+    && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname))
+    && /(^|\/)(index\.html)?$/.test(location.pathname)) {
+  /* not on load alone: one slow font request keeps that event waiting, and the
+     worker is the thing a student on a bad connection needs most */
+  let swDone = false;
+  const swGo = () => {
+    if (swDone) return; swDone = true;
+    try { navigator.serviceWorker.register("sw.js"); } catch (e) { }
+  };
+  if (document.readyState === "complete") swGo();
+  else { addEventListener("load", swGo); setTimeout(swGo, 4000); }
+}
+
 boot();
+netBar();
 })();

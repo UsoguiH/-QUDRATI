@@ -1803,6 +1803,21 @@ button.dom-stat:active { transform: scale(.99); }
 .due-tx span { display: block; font-size: 13px; font-weight: 700; color: var(--gray); margin-top: 1px; }
 .due-go { font-size: 14px; font-weight: 800; color: var(--blue); flex-shrink: 0; }
 
+/* --- losing the network: a note, not an alarm --- */
+.net-bar {
+  position: fixed; right: 50%; bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 10px);
+  width: calc(100% - 28px); max-width: 402px; z-index: 337;
+  display: flex; flex-direction: column; gap: 2px; text-align: center;
+  padding: 11px 16px 10px; border-radius: 16px;
+  background: #FFF1DB; border: 2px solid #FFD08A; color: #8A5300;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .1);
+  transform: translate(50%, 160%); transition: transform .32s cubic-bezier(.25, 1.1, .4, 1);
+}
+.net-bar.show { transform: translate(50%, 0); }
+.net-bar b { font-size: 14.5px; font-weight: 800; }
+.net-bar span { font-size: 12.5px; font-weight: 600; line-height: 1.5; }
+:root[data-motion="reduced"] .net-bar { transition: none; }
+
 /* --- a streak about to break, and the three-way goal segment --- */
 .due-card.due-risk { border-color: var(--orange); box-shadow: 0 4px 0 #E07D00; }
 .due-card.due-risk .due-ico { background: #FFF1DB; }

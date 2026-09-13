@@ -28,14 +28,24 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=51">
+<link rel="stylesheet" href="css/style.css?v=52">
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="96x96" href="assets/app-icon/favicon-96.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/app-icon/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/app-icon/favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icon/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<script>addEventListener("beforeinstallprompt",function(e){e.preventDefault();});</script>
+<script>
+/* The browser's own install bar was swallowed here and nothing replaced it, so
+   the app could be installed only by a student who knew the browser menu. Keep
+   the event instead: Settings offers it, in Arabic, where the rest of the
+   choices about this app already live. */
+window.__qInstall = null;
+addEventListener("beforeinstallprompt", function (e) {
+  e.preventDefault(); window.__qInstall = e; dispatchEvent(new Event("qinstall"));
+});
+addEventListener("appinstalled", function () { window.__qInstall = null; dispatchEvent(new Event("qinstall")); });
+</script>
 <script type="application/ld+json">
 {
  "@context": "https://schema.org",
@@ -197,6 +207,6 @@
   <script defer src="js/data/teach.js"></script>
   <script defer src="js/data/teach-figures.js"></script>
   <script defer src="assets/vendor/gsap.min.js?v=40"></script>
-  <script defer src="js/app.js?v=51"></script>
+  <script defer src="js/app.js?v=52"></script>
 </body>
 </html>

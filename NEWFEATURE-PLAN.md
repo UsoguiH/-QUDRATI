@@ -71,10 +71,10 @@ scratchpad drives a real Chrome and reports console errors).
       have reached a server, because there is none
 
 ### W6 — Offline and installable
-- [ ] `sw.js`: precache the shell, the four data files and the teaching data; cache-first
-      with a version bump
-- [ ] Register it, and stop suppressing the install prompt
-- [ ] Tell the student when they are offline instead of failing silently
+- [x] `sw.js`: precaches the shell under a VERSION-named cache; navigations go to the
+      network first, and a dev harness is never served from a cache
+- [x] Registered from the app's own page; the install prompt is kept and offered in Settings
+- [x] Tell the student when they are offline — a note that says what still works
 
 ### W7 — Delight
 - [ ] The motion pass from the design audit, screen by screen
