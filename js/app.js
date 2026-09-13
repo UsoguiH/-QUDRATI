@@ -2153,10 +2153,36 @@ function brokenHeartHero() {
   </div>`;
 }
 
+/* How full is the bar? The old answer was correct-answers over a total frozen at
+   the start, while a miss quietly pushed the question to the back of the queue —
+   so at seven of eight the bar claimed 88% with three retries still hidden behind
+   it. The queue is the honest denominator: a correct answer fills the bar, a miss
+   lengthens the queue and the bar gives a little ground, and it reaches the end
+   exactly when the student does. */
+function sesPct(resolved) {
+  const n = Math.max(1, SES.queue.length);
+  return Math.round(Math.min(1, (resolved === undefined ? SES.idx : resolved) / n) * 100);
+}
+/* The bar moved only on the next render, so the single loudest reward in the loop —
+   your answer pushing the bar forward — never happened. Paint it the moment the
+   answer lands, and let the CSS transition carry it. */
+function paintProg(resolved) {
+  const pct = sesPct(resolved);
+  document.querySelectorAll(".screen-session .progress > i").forEach(i => { i.style.width = pct + "%"; });
+  const bar = document.querySelector(".screen-session .progress");
+  if (bar) bar.setAttribute("aria-valuenow", pct);
+  const c = document.getElementById("sesCount");
+  if (c) c.textContent = sesCountLine(resolved);
+}
+function sesCountLine(resolved) {
+  const at = Math.min((resolved === undefined ? SES.idx : resolved) + 1, SES.queue.length);
+  return "سؤال " + toAr(at) + " من " + toAr(SES.queue.length);
+}
+
 function renderSession() {
   if (SES.teach && teachGate()) { renderTeach(); return; }
   const q = SES.queue[SES.idx];
-  const pct = Math.round(SES.done / SES.total * 100);
+  const pct = sesPct();
   $app.innerHTML = `
     <div class="screen screen-full screen-session">
       <div class="session-top">
@@ -2170,7 +2196,7 @@ function renderSession() {
           ? `<span class="sess-hearts sess-review">${ico("target", 22)} ${toAr(SES.done)}/${toAr(SES.total)}</span>`
           : `<span class="sess-hearts" id="sesHearts" aria-label="القلوب المتبقية: ${toAr(SES.hearts)}">${ico("heart", 22)} ${toAr(SES.hearts)}</span>`}
       </div>
-      <div class="q-area">${questionBody(q, SES.sel, false, null, q.method || SES.method)}</div>
+      <div class="q-area">${SES.mode === "review" ? "" : `<div class="q-count" id="sesCount">${sesCountLine()}</div>`}${questionBody(q, SES.sel, false, null, q.method || SES.method)}</div>
       <div class="action-bar"><button class="btn" id="checkBtn" onclick="A.check()" ${SES.sel === null ? "disabled" : ""}>تحقق</button></div>
       <div class="feedback" id="fb" role="status" aria-live="assertive"></div>
       <div class="storm" id="storm" aria-hidden="true"></div>
@@ -2249,6 +2275,15 @@ function loseHeart() {
   }
 }
 
+/* A missed question comes back at the end, the way Duolingo does it. In a lesson three
+   hearts bound how often that can happen; review runs on 999 hearts, so a question the
+   student simply cannot get right used to re-queue itself forever with no way out but
+   quitting. Park it after two attempts and let the session end. */
+function requeue(q) {
+  SES.retried[q.id] = (SES.retried[q.id] || 0) + 1;
+  if (SES.retried[q.id] < (SES.mode === "review" ? 2 : 3)) SES.queue.push(q);
+}
+
 function timeUp() {
   if (!SES || SES.locked) return;
   SES.locked = true;
@@ -2258,8 +2293,8 @@ function timeUp() {
   qs.w++;
   noteAnswer(q, false);
   if (!(q.id in SES.firstTry)) SES.firstTry[q.id] = false;
-  SES.retried[q.id] = true;
-  SES.queue.push(q);
+  requeue(q);
+  paintProg();
   loseHeart();
   document.querySelectorAll(".choice").forEach((b, j) => {
     b.disabled = true;
@@ -2288,8 +2323,22 @@ A.pick = function (i) {
   const cb = document.getElementById("checkBtn"); if (cb) cb.disabled = false;
 };
 
+/* Eight identical «أحسنت!» in a row is wallpaper. The same beat can carry where the
+   student is instead: the halfway mark, a run that is getting away from them, the last
+   question. The run count itself is already on the bar's tag, so the run line here says
+   something else. */
+function praiseFor() {
+  const n = SES.queue.length, at = SES.idx + 1;
+  if (at >= n && SES.done >= SES.total) return "أنهيتها!";
+  if (SES.run >= 5) return "لا شيء يوقفك!";
+  if (SES.run === 3) return "ثلاث على التوالي!";
+  if (n >= 4 && at === Math.ceil(n / 2)) return "نصف الطريق!";
+  if (at === n - 1) return "بقي سؤال واحد!";
+  return ["أحسنت!", "ممتاز!", "تمام!", "صحيح!", "أجدت!"][at % 5];
+}
+
 A.check = function () {
-  if (SES.sel === null || SES.locked) return;
+  if (!SES || SES.sel === null || SES.locked) return;
   SES.locked = true;
   stopQTimer();
   SES.tSpent += Q_SECS - SES.left; SES.tAnswered++;
@@ -2326,11 +2375,12 @@ A.check = function () {
     const seenBefore = (S.qstats[q.id] || {}).r > 0;
     if (seenBefore || SES.retried[q.id]) { SES.xp += 3; SES.gems += 2; }
     else { const d = q.difficulty || 2; SES.xp += [0, 6, 10, 16][d] || 10; SES.gems += [0, 3, 5, 8][d] || 5; }
+    paintProg(SES.idx + 1);              // the bar moves with the answer, not with the next screen
     fb.className = "feedback good show has-crest";
     fb.innerHTML = `<svg class="fb-crest" viewBox="0 0 380 90" preserveAspectRatio="none" aria-hidden="true">
         <path class="fb-crest-fill"></path>
         <path class="fb-crest-line" fill="none" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"></path>
-      </svg><div class="fb-row"><div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> أحسنت!</div>
+      </svg><div class="fb-row"><div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> ${praiseFor()}</div>
         <button class="fb-solution-toggle" onclick="A.toggleSol()">اعرض الحل</button></div>
       <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
       <button class="btn" onclick="A.next()">متابعة</button>`;
@@ -2341,8 +2391,8 @@ A.check = function () {
   } else {
     sndBad();
     SES.run = 0;                         // one miss and the run is gone
-    SES.retried[q.id] = true;
-    SES.queue.push(q); // Duolingo behavior: wrong question comes back at the end
+    requeue(q);
+    paintProg();                         // the queue just grew, so the bar gives ground
     loseHeart();
     fb.className = "feedback bad show";
     /* the heart counter lives in the opposite corner from where the eye is, so
@@ -2441,6 +2491,7 @@ A.debugTick   = function () { lbTick(); return LB_TIMER; };        // dev harnes
 A.debugSetXp  = function (n) { S.totalXp = n; save(); };            // dev harness only
 
 A.next = function () {
+  if (!SES) return;                    // a stray Enter after the win screen
   if (SES.mode !== "review" && SES.hearts <= 0) { sessionFailed(); return; }
   SES.idx++; SES.sel = null; SES.locked = false;
   if (SES.done >= SES.total || SES.idx >= SES.queue.length) {
@@ -2541,8 +2592,16 @@ function lessonComplete() {
   pendingStreak = streakUp ? S.streak.count : 0;   // show the fire-streak celebration after this win screen
   const xpWon = rankGain, gemsWon = SES.gems, boosted = SES.xpBoost, tTot = SES.tSpent;
   const dayWord = S.streak.count === 1 ? "يوم واحد" : S.streak.count === 2 ? "يومان" : S.streak.count <= 10 ? toAr(S.streak.count) + " أيام" : toAr(S.streak.count) + " يوماً";
+  /* The stars are the path's own currency and the screen that awards them never showed
+     them. Three of them land one after another, gold for earned, and the row says how
+     many out of three for anyone listening to it rather than looking. */
+  LAST_MISSES = Object.keys(SES.firstTry).filter(k => SES.firstTry[k] === false);
+  const missCount = LAST_MISSES.length;
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
     ${winHero()}
+    <div class="win-stars" role="img" aria-label="نجومك في هذا الدرس: ${toAr(stars)} من ${toAr(3)}">
+      ${[1, 2, 3].map(i => `<span class="wstar${i <= stars ? " on" : ""}" style="--d:${(.55 + i * .2).toFixed(2)}s">${WIN_STAR}</span>`).join("")}
+    </div>
     <h1 class="win-title">أكملت الدرس!</h1>
     <p class="win-sub">سلسلة ${dayWord}</p>
     <div class="win-gems">${ico("gem", 20)} +${toAr(gemsWon)} جوهرة${boosted ? ` · ⚡ الخبرة ×٢` : ""}</div>
@@ -2554,15 +2613,36 @@ function lessonComplete() {
     ${SES.teach ? `<div class="tc-coach win-coach">${BULB_SVG}<span>${TEACH_COACH.win}</span></div>` : ""}
     <div class="action-bar win-action" style="position:relative;right:auto;transform:none;max-width:340px;padding:0;background:none">
       <button class="btn" onclick="A.winContinue()">متابعة</button>
+      ${missCount ? `<button class="btn btn-white win-again" onclick="A.reviewMissed()">راجع أخطاء الدرس</button>` : ""}
     </div>
   </div></div>`;
   winHeroPlay();
+  /* one tick per star as it lands, so the row is heard as well as seen */
+  if (!motionReduced()) for (let i = 1; i <= stars; i++) setTimeout(() => cvSnd.tick(), (.55 + i * .2) * 1000 + 120);
   setTimeout(() => {
     const xpEl = document.getElementById("cv-xp"), accEl = document.getElementById("cv-acc"), tEl = document.getElementById("cv-time");
     if (xpEl) countUp(xpEl, xpWon); if (accEl) countUp(accEl, acc, "٪"); if (tEl) countUpTime(tEl, tTot);
   }, 700);
   SES = null;
 }
+
+/* Straight from the win screen into the questions that beat you, while they are still
+   fresh. The ids are held here because SES is torn down as the screen is built. */
+let LAST_MISSES = [];
+A.reviewMissed = function () {
+  const qs = LAST_MISSES.map(id => questionById(id)).filter(Boolean).map(x => shuffleChoices(x.q));
+  if (!qs.length) { A.winContinue(); return; }
+  SES = { mode: "review", domKey: null, lesKey: null, key: null, title: "مراجعة الدرس", method: "",
+    queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null,
+    locked: false, xp: 0, gems: 0, replay: false, xpBoost: false, hearts: 999, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
+  renderSession();
+};
+
+/* A chunky five-pointed star: the sharp path, then the same path stroked to round every
+   corner by half the stroke — the Duolingo star is fat, not spiky. */
+const WIN_STAR = `<svg viewBox="0 0 44 44" aria-hidden="true">
+  <path d="M22 4.2l5.6 12.1 13.2 1.4-9.9 8.9 2.8 13-11.7-6.6-11.7 6.6 2.8-13-9.9-8.9 13.2-1.4z"
+    stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 
 /* Win-screen hero: the streak flame (exact paths from the Figma streak icon,
    assets/icons/streak.svg) drops in over rotating sunrays, then burns:
@@ -2730,9 +2810,17 @@ function mockTick() {
 
 /* a backgrounded tab stops firing intervals; recompute the moment we return */
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) return;
+  if (document.hidden) {
+    /* A lesson is practice. A phone put down mid-question used to come back to a
+       question already marked wrong and a heart gone, because the clock is a deadline
+       and the deadline had passed. Hold it instead — the timer pill shows it paused.
+       The mock keeps its deadline: there, the clock is the point. */
+    if (SES && SES.timer && !SES.locked) { SES.paused = true; stopQTimer(); }
+    return;
+  }
   if (MOCK && MOCK.timer) mockTick();
-  if (SES && SES.timer) qTick();
+  if (SES && SES.paused) { SES.paused = false; startQTimer(true); }
+  else if (SES && SES.timer) qTick();
 });
 
 /* numbered navigator: answered / flagged / current — jump anywhere inside the section */

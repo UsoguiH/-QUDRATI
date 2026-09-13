@@ -1789,6 +1789,25 @@ button.dom-stat:active { transform: scale(.99); }
   box-shadow: 0 3px 0 var(--green-lip);
 }
 
+/* --- the win screen's three stars: they land one after another, and the earned ones
+   carry the gold lip the path's node uses --- */
+.win-stars { display: flex; justify-content: center; gap: 10px; margin: 2px 0 6px; }
+.wstar { display: block; width: 44px; height: 44px; transform: scale(0); animation: wstarPop .46s cubic-bezier(.3,1.6,.45,1) var(--d) forwards; }
+.wstar svg { display: block; width: 100%; height: 100%; }
+.wstar svg path { fill: var(--line); stroke: var(--line); }
+.wstar.on svg path { fill: var(--gold); stroke: var(--gold); }
+.wstar.on { filter: drop-shadow(0 3px 0 var(--gold-dk)); }
+@keyframes wstarPop {
+  0%   { transform: scale(0) rotate(-38deg); }
+  62%  { transform: scale(1.22) rotate(6deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+.win-again { margin-top: 10px; }
+:root[data-motion="reduced"] .wstar { animation: none; transform: scale(1); }
+
+/* --- the question counter, above the question --- */
+.screen-session .q-count { margin: 2px 0 -2px; font-size: 13.5px; font-weight: 700; color: var(--gray-icon); text-transform: none; }
+
 /* --- the progress-backup sheet: the standard bottom sheet with a code field --- */
 .bk-sheet .bk-code {
   width: 100%; box-sizing: border-box; margin: 4px 0 10px;
