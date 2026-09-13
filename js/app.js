@@ -342,6 +342,34 @@ function questionById(id) {
    retry that comes moments after the solution was on screen. It now needs two
    correct answers on two different days, which is the whole point of keeping
    a mistake list six weeks before an exam. */
+/* ---- when should this come back? ------------------------------------------
+   The list knew what a student had missed and never when to show it again, so
+   review only happened if they went looking. A missed question is due at once;
+   getting it right once pushes it two days out, because the gap is the part
+   that makes it stick; the second correct answer on a later day retires it.
+   `due` is a day key, so it survives a timezone move and reads plainly in a
+   backup. A record from before this existed has no `due` and counts as due. */
+const SRS_GAP = 2;                                  // days between the first and second correct answer
+function dayKeyAdd(days) {
+  const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + days);
+  return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+}
+function dayKeyTime(k) {
+  const a = String(k || "").split("-");
+  if (a.length !== 3) return 0;
+  return new Date(+a[0], +a[1] - 1, +a[2]).setHours(0, 0, 0, 0);
+}
+function daysSinceKey(k) {
+  const t = dayKeyTime(k);
+  if (!t) return null;
+  return Math.round((dayKeyTime(todayKey()) - t) / 864e5);
+}
+function isDue(rec) {
+  if (!rec || typeof rec !== "object" || !rec.due) return true;
+  return dayKeyTime(rec.due) <= dayKeyTime(todayKey());
+}
+function dueCount() { return mistakeList().filter(x => x.due).length; }
+
 function noteAnswer(q, correct) {
   S.mistakes = S.mistakes || {};
   S.teach = S.teach || {};
@@ -352,25 +380,25 @@ function noteAnswer(q, correct) {
     const today = todayKey();
     if (rec.day === today) return;                 // same-day retry does not count
     rec.ok = (rec.ok || 0) + 1; rec.day = today; rec.t = Date.now();
+    rec.due = dayKeyAdd(SRS_GAP);
     if (rec.ok >= 2) delete S.mistakes[q.id];
     else S.mistakes[q.id] = rec;
     return;
   }
-  S.mistakes[q.id] = { t: Date.now(), ok: 0, day: null };
+  S.mistakes[q.id] = { t: Date.now(), ok: 0, day: null, due: todayKey(), n: ((rec && rec.n) || 0) + 1 };
 }
 /* mistakes that still exist in the bank and match the current track, newest first */
 function mistakeList() {
   const m = S.mistakes || {};
   return Object.keys(m).map(id => {
-    const v = m[id], t = (v && typeof v === "object") ? v.t : v;
-    return { id, t, ok: (v && typeof v === "object" && v.ok) || 0, rec: questionById(id) };
+    const v = m[id], o = (v && typeof v === "object") ? v : { t: v, ok: 0 };
+    return { id, t: o.t, ok: o.ok || 0, n: o.n || 1, due: isDue(o), dueKey: o.due || todayKey(), rec: questionById(id) };
   })
     .filter(x => x.rec && trackFilter([x.rec.q]).length)
-    /* it used to be strictly newest-first and the drill took the top twelve,
-       so the questions you kept missing pinned themselves to the head of the
-       list and everything behind them was unreachable. Oldest-first surfaces
-       what is actually going stale. */
-    .sort((a, b) => a.t - b.t);
+    /* Due first — that is the whole point of a schedule — then the ones missed
+       most often, then the oldest. It used to be strictly oldest-first with the
+       drill taking the top twelve, so everything behind them was unreachable. */
+    .sort((a, b) => (b.due - a.due) || (dayKeyTime(a.dueKey) - dayKeyTime(b.dueKey)) || (b.n - a.n) || (a.t - b.t));
 }
 
 /* ---------------- exam countdown + readiness ---------------- */
@@ -674,6 +702,8 @@ function bottomnav(active) {
 /* Duolingo's chevron: a stroked path with round caps and joins, not a glyph.
    A text ← renders at the mercy of whatever font is loaded and sits on the
    text baseline; this one is centred and scales with the box. */
+const REFRESH_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true">
+  <path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 3.5V8h-4.5"/></svg>`;
 const CHEV_SVG = `<svg class="ec2-chev" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5 8 12 15 19" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 function examTone(days) {
@@ -682,6 +712,18 @@ function examTone(days) {
   if (days <= 14) return "near";
   if (days <= 30) return "soon";
   return "far";
+}
+
+/* Told, not hunted for: when the schedule says something is ripe, the path says so
+   once, at the top, and disappears again when the student is clear. */
+function dueCard() {
+  const n = dueCount();
+  if (!n) return "";
+  return `<button type="button" class="due-card" onclick="A.startReview()">
+    <span class="due-ico">${ico("target", 22)}</span>
+    <span class="due-tx"><b>مراجعة اليوم</b><span>${qCount(n)} بانتظار المراجعة</span></span>
+    <span class="due-go">راجع</span>
+  </button>`;
 }
 
 function countdownCard() {
@@ -1085,6 +1127,12 @@ function renderPath() {
     d.lessons.forEach((l, li) => {
       const key = d.key + "." + l.key, p = lessonProg(key);
       const done = p.stars > 0, open = gi <= firstOpenIdx, current = gi === firstOpenIdx;
+      /* A lesson passed six weeks ago used to look exactly like one passed this
+         morning. If it has not been practised in a fortnight it says so, quietly:
+         its stars dim and it wears a refresh mark. Saves from before this shipped
+         carry no date, so they stay unmarked until their next play. */
+      const ago = done && p.last ? daysSinceKey(p.last) : null;
+      const stale = ago !== null && ago >= 14 && !current;
       const cls = done ? "node-done" : open ? "" : "node-locked";
       const x = offsets[gi % offsets.length];
       // every node is a star: gold star-done when completed, the white star otherwise
@@ -1098,8 +1146,9 @@ function renderPath() {
         </svg>` : "";
       // exact Figma "Level" colors per state: gold done / unit-color open / gray locked
       const nc = done ? ["#FFC800", "#E6A000", "#FFE700"] : open ? [u.c, u.s, u.h] : ["#D2D2D2", "#ADADAD", "transparent"];
-      html += `<div class="path-row"><div class="node-col${current ? " bob" : ""}" style="right:${x}px">
+      html += `<div class="path-row"><div class="node-col${current ? " bob" : ""}${stale ? " stale" : ""}" style="right:${x}px">
         ${ring}
+        ${stale ? `<span class="node-refresh" title="حان وقت المراجعة" aria-hidden="true">${REFRESH_SVG}</span>` : ""}
         <button class="node ${cls}" style="--node-c:${nc[0]};--node-s:${nc[1]};--node-h:${nc[2]};--d:${(gi % 10) * 0.06}s"
           aria-label="${l.title} — ${done ? "مكتمل، " + arPlural(p.stars, "نجمة واحدة", "نجمتان", "نجوم", "نجمة") : current ? "الدرس الحالي" : "مقفل"}"
           ${open ? `onclick="A.nodeTap(event,'${d.key}','${l.key}',${li})"` : "disabled"}>
@@ -1114,7 +1163,7 @@ function renderPath() {
     });
     html += `</div></section>`;
   });
-  $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${html}<div class="path-tail"></div></div>` + floatingQuest() + bottomnav("path");
+  $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${dueCard()}${html}<div class="path-tail"></div></div>` + floatingQuest() + bottomnav("path");
   requestAnimationFrame(() => {
     drawTrails();
     const cur = document.querySelector('.path-row .bob');
@@ -2586,6 +2635,7 @@ function lessonComplete() {
   if (perfect && !SES.replay) { SES.xp += 20; SES.gems += 25; }   // perfect bonus only on a fresh clear
   const p = S.lessons[SES.key] = S.lessons[SES.key] || { stars: 0, plays: 0 };
   p.plays++; p.stars = Math.max(p.stars, stars);
+  p.last = todayKey();               // so the path can say when a lesson is going stale
   const rankGain = SES.xp * (SES.xpBoost ? 2 : 1);   // 2× boost doubles RANK XP only (gems unaffected)
   gainXP(rankGain); gainGems(SES.gems);
   const streakUp = bumpStreak(); save(); sndWin();
@@ -3887,10 +3937,14 @@ A.debugStreak = function (c) { showStreakCelebration(c || S.streak.count || 7, (
    got wrong and still hasn't re-mastered, and can re-quiz only those.
    Getting one right (anywhere) clears it from the list.
    ============================================================ */
-A.startReview = function () {
+A.startReview = function (allOfThem) {
   const list = mistakeList();
   if (!list.length) { toast("✨ لا توجد أخطاء للمراجعة"); return; }
-  const qs = list.slice(0, 12).map(x => shuffleChoices(x.rec.q));
+  /* the drill leads with what the schedule says is due; if nothing is, it takes
+     the head of the list so a student who wants to practise early still can */
+  const due = list.filter(x => x.due);
+  const pick = allOfThem ? list : (due.length ? due : list);
+  const qs = pick.slice(0, 15).map(x => shuffleChoices(x.rec.q));
   SES = { mode: "review", domKey: null, lesKey: null, key: null, title: "مراجعة الأخطاء", method: "",
     queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null,
     locked: false, xp: 0, gems: 0, replay: false, xpBoost: false, hearts: 999, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };

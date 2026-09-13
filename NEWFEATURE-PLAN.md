@@ -55,9 +55,9 @@ scratchpad drives a real Chrome and reports console errors).
 - [x] Every lesson's untaught rules routed to the guidebook
 
 ### W4 — Learn smart
-- [ ] Spaced repetition: a due date per missed question, and «مراجعة اليوم» on the path
-- [ ] Review without the cap of 12, ordered by what is due and how often it was missed
-- [ ] Skill decay: a lesson last practised weeks ago says so on the path
+- [x] Spaced repetition: a due date per missed question, and «مراجعة اليوم» on the path
+- [x] Review without the cap of 12, ordered by what is due and how often it was missed
+- [x] Skill decay: a lesson last practised weeks ago says so on the path
 - [ ] A placement test at the start, so a strong student does not grind lesson 1
 - [ ] A daily mix drawn from the domains the student is weakest in
 
