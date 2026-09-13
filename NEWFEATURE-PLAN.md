@@ -63,10 +63,12 @@ scratchpad drives a real Chrome and reports console errors).
 
 ### W5 — Pacing and retention
 - [x] Choose علمي or أدبي on the first run instead of defaulting silently
-- [ ] The daily goal the student sets (`S.goal`), driving the quest
-- [ ] A study plan off the exam date, and a weekly summary from `S.days`
-- [ ] The streak-at-risk nudge when the day is nearly over
-- [ ] «أبلغ عن السؤال» — a student can report a bad key and see it acknowledged
+- [x] The daily goal the student sets (`S.goal`), driving the quest — ٥، ١٠، ٢٠ in Settings, and
+      the chest pays in proportion, pile and all
+- [x] A study plan off the exam date, and a weekly summary from `S.days`
+- [x] The streak-at-risk nudge when the day is nearly over
+- [x] «أبلغ عن السؤال» — kept in the save, listed in Settings, copyable; it never claims to
+      have reached a server, because there is none
 
 ### W6 — Offline and installable
 - [ ] `sw.js`: precache the shell, the four data files and the teaching data; cache-first

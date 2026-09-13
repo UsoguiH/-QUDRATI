@@ -28,7 +28,16 @@ const Q_SECS = 60;           // seconds per question — matches the real GAT pa
 const REVIVE_COST = 50;      // gems to refill hearts and continue after failing a lesson
 const BOOST_COST = 50;       // gems to double a lesson's rank XP (gems unaffected)
 const CHEST_GEMS = 50;       // gems from the daily-quest chest
-const DAILY_GOAL = 10;       // questions to answer for today's quest chest
+const DAILY_GOAL = 10;       // the default daily quest; S.goal is the student's own
+const GOALS = [5, 10, 20];   // هادئ · معتاد · جدّي
+/* A goal someone else picked is a target; a goal you picked is a promise. The chest
+   scales with it, so choosing the calm goal is a lighter day rather than the same
+   reward for half the work. */
+function dailyGoal() {
+  const g = +S.goal;
+  return GOALS.indexOf(g) >= 0 ? g : DAILY_GOAL;
+}
+function chestGems() { return Math.round(CHEST_GEMS * dailyGoal() / DAILY_GOAL); }
 /* Real computerized GAT format (researched 2026): quant sections of 25
    min each, free navigation + flagging inside a section, sealed once
    ended. Official topic mix ≈ 40% arithmetic / 24% algebra /
@@ -59,7 +68,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, introSeen: false, trackAsked: false, placeAsked: false, placed: null, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], league: null, mistakes: {}, teach: {} };
+const DEFAULT_STATE = { v: 1, disclaimer: false, introSeen: false, trackAsked: false, placeAsked: false, placed: null, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], league: null, mistakes: {}, teach: {}, reports: {} };
 /* The rivals. A student who suspects the board is padded looks at the names
    first, and a column of two dozen tidy Arabic first names is the one
    arrangement that never occurs on a real sign-up sheet. These are drawn in
@@ -156,7 +165,7 @@ if (S.tierSeen == null) S.tierSeen = tierIndex();
    used to blank the whole app with no way back to Settings. Coerce the
    containers before anything reads them. */
 (function repair() {
-  const shape = { streak: { count: 0, last: null }, lessons: {}, qstats: {}, mistakes: {}, mocks: [], days: {} };
+  const shape = { streak: { count: 0, last: null }, lessons: {}, qstats: {}, mistakes: {}, mocks: [], days: {}, reports: {} };
   for (const k in shape) {
     const want = shape[k], got = S[k];
     const ok = Array.isArray(want) ? Array.isArray(got) : (got && typeof got === "object");
@@ -456,9 +465,9 @@ function dailyTick() {
         .sort((a, b) => a[1] - b[1]).slice(0, keys.length - 63)
         .forEach(pair => delete S.days[pair[0]]);
   }
-  if (S.daily.n >= DAILY_GOAL) return;
+  if (S.daily.n >= dailyGoal()) return;
   S.daily.n++;
-  if (S.daily.n === DAILY_GOAL) setTimeout(A.questBanner, 1200);
+  if (S.daily.n === dailyGoal()) setTimeout(A.questBanner, 1200);
 }
 
 /* Arabic counted nouns: 1 singular, 2 dual, 3-10 plural, 11+ singular accusative */
@@ -520,12 +529,12 @@ function renderAside() {
   const acc = (r + w) ? Math.round(r / (r + w) * 100) : null;
 
   dailyReset();
-  const goal = Math.min(S.daily.n, DAILY_GOAL);
-  const questPct = Math.round(goal / DAILY_GOAL * 100);
-  const questReady = S.daily.n >= DAILY_GOAL && !S.daily.claimed;
+  const goal = Math.min(S.daily.n, dailyGoal());
+  const questPct = Math.round(goal / dailyGoal() * 100);
+  const questReady = S.daily.n >= dailyGoal() && !S.daily.claimed;
   const questSub = S.daily.claimed ? "استلمت صندوق اليوم — عُد غداً"
-    : S.daily.n >= DAILY_GOAL ? "صندوقك جاهز — افتحه الآن!"
-      : `باقي ${toAr(DAILY_GOAL - S.daily.n)} من الأسئلة`;
+    : S.daily.n >= dailyGoal() ? "صندوقك جاهز — افتحه الآن!"
+      : `باقي ${toAr(dailyGoal() - S.daily.n)} من الأسئلة`;
 
   const nextLine = next
     ? `اكسب ${toAr(next.min - (S.totalXp || 0))} خبرة للمستوى ${next.name}`
@@ -556,7 +565,7 @@ function renderAside() {
       <button class="as-quest${S.daily.claimed ? " quest-claimed" : ""}" onclick="A.chestTap()">
         <div class="as-quest-row">
           ${chestSVG("cf-chest" + (questReady ? " qc-bounce" : ""))}
-          <b>${toAr(goal)} / ${toAr(DAILY_GOAL)} أسئلة</b>
+          <b>${toAr(goal)} / ${toAr(dailyGoal())} أسئلة</b>
         </div>
         <div class="duo-bar"><i style="width:${questPct}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft)"></i></div>
         <div class="as-quest-sub">${questSub}</div>
@@ -644,8 +653,8 @@ function statbar() {
 A.chestTap = function () {
   dailyReset();
   if (S.daily.claimed) { chestTip("عُد غداً لصندوق جديد"); return; }
-  if (S.daily.n >= DAILY_GOAL) { A.openChest(); return; }
-  chestTip(`باقي <b>${qCount(DAILY_GOAL - S.daily.n)}</b> لفتح صندوق اليوم`);
+  if (S.daily.n >= dailyGoal()) { A.openChest(); return; }
+  chestTip(`باقي <b>${qCount(dailyGoal() - S.daily.n)}</b> لفتح صندوق اليوم`);
 };
 /* the chest answers in a speech bubble over itself, the path's white node tip with its tail on the
    chest; it pops in, floats, and leaves after a moment. Off the path there is no chest to point at. */
@@ -658,10 +667,10 @@ A.questBanner = function () {
   el.innerHTML = `<div class="qb-card">
     ${chestSVG("qb-chest")}
     <div class="qb-txt"><b>اكتمل تمرين اليوم!</b><span>صندوقك بانتظارك في الرئيسية</span>
-      <div class="qb-bar"><div class="duo-bar"><i style="width:${Math.round((DAILY_GOAL - 1) / DAILY_GOAL * 100)}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft)"></i></div><em>${toAr(DAILY_GOAL - 1)}/${toAr(DAILY_GOAL)}</em></div>
+      <div class="qb-bar"><div class="duo-bar"><i style="width:${Math.round((dailyGoal() - 1) / dailyGoal() * 100)}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft)"></i></div><em>${toAr(dailyGoal() - 1)}/${toAr(dailyGoal())}</em></div>
     </div></div>`;
   document.body.appendChild(el);
-  const fill = () => { el.querySelector(".duo-bar > i").style.width = "100%"; el.querySelector(".qb-bar em").textContent = `${toAr(DAILY_GOAL)}/${toAr(DAILY_GOAL)}`; el.classList.add("full"); };
+  const fill = () => { el.querySelector(".duo-bar > i").style.width = "100%"; el.querySelector(".qb-bar em").textContent = `${toAr(dailyGoal())}/${toAr(dailyGoal())}`; el.classList.add("full"); };
   if (motionReduced()) fill(); else setTimeout(fill, 650);
   clearTimeout(questBannerT);
   questBannerT = setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 420); }, 3600);
@@ -722,6 +731,16 @@ function examTone(days) {
    says is ripe, or — once a student has enough history to aim at — practice drawn from
    the domains they are weakest in. A beginner sees neither and just walks the path. */
 function dueCard() {
+  /* Before anything else: a streak about to be lost without the student being
+     told. repair() has already zeroed any streak older than yesterday, so a
+     count that survives here means they practised yesterday and not yet today. */
+  const st = S.streak || { count: 0, last: null };
+  if (st.count > 0 && st.last !== todayKey() && new Date().getHours() >= 17)
+    return `<button type="button" class="due-card due-risk" onclick="A.startStreakSave()">
+      <span class="due-ico">${ico("streak", 22)}</span>
+      <span class="due-tx"><b>سلسلتك في خطر</b><span>${dayPhrase(st.count)} — درس واحد اليوم يحفظها</span></span>
+      <span class="due-go">أكمل</span>
+    </button>`;
   const n = dueCount();
   if (n) return `<button type="button" class="due-card" onclick="A.startReview()">
     <span class="due-ico">${ico("target", 22)}</span>
@@ -769,6 +788,15 @@ function weakestDomain() {
   a.sort((x, y) => (x.acc === null ? -1 : y.acc === null ? 1 : x.acc - y.acc) || (x.seen / x.total - y.seen / y.total));
   return a[0];
 }
+/* The nudge has to land them in something finishable tonight: what is due if
+   anything is, the next lesson if the path has one, else the mix. */
+A.startStreakSave = function () {
+  if (dueCount()) { A.startReview(); return; }
+  const next = allLessons().find(x => !lessonProg(x.key).stars);
+  if (next) { A.startLesson(next.dom.key, next.les.key); return; }
+  A.startMix();
+};
+
 A.startMix = function () {
   const acc = domAccuracy();
   const weights = {};
@@ -871,6 +899,19 @@ function placementComplete() {
   SES = null;
 }
 
+/* What the date actually asks of them, in one clause: the lessons still unopened
+   spread over the weeks that are left. When the date is too close for that to mean
+   anything, it says what the last week before an exam is really for. */
+function planChip(days) {
+  const left = allLessons().filter(x => !lessonProg(x.key).stars).length;
+  if (!left) return `<span class="ec2-plan">المنهج مكتمل — راجع وجرّب المحاكاة</span>`;
+  if (days <= 7) return `<span class="ec2-plan">الوقت قريب — ركّز على المحاكاة والمراجعة</span>`;
+  const weeks = Math.max(1, Math.round(days / 7));
+  const per = Math.ceil(left / weeks);
+  if (per > 12) return `<span class="ec2-plan">الوقت ضيّق — ابدأ بأضعف مجالاتك</span>`;
+  return `<span class="ec2-plan">${qLessons(per)} أسبوعياً تكفي لإنهاء المنهج</span>`;
+}
+
 function countdownCard() {
   const days = examDaysLeft();
 
@@ -924,6 +965,7 @@ function countdownCard() {
             `<i class="${i < lit ? "on" : ""}" style="--p:${i}"></i>`).join("") + `</span>
         <span class="ec2-pct">\u062c\u0627\u0647\u0632\u064a\u062a\u0643 ${toAr(pct)}\u066a</span>
       </span>
+      ${planChip(days)}
     </span>
     <span class="ec2-go">${CHEV_SVG}</span>
   </button>`;
@@ -978,12 +1020,12 @@ function chestSVG(cls) { return chestArt(CHEST_PAINT).closed.replace('class="clo
    the n/10 count, a pulsing "افتح!" when ready, or a green ✓. */
 function floatingQuest() {
   dailyReset();
-  const n = S.daily.n, ready = n >= DAILY_GOAL && !S.daily.claimed;
+  const n = S.daily.n, ready = n >= dailyGoal() && !S.daily.claimed;
   return `<button class="chest-float ${ready ? "ready" : ""} ${S.daily.claimed ? "claimed" : ""}" onclick="A.chestTap()" aria-label="صندوق اليوم">
-    ${chestSVG("cf-chest" + (ready ? " qc-bounce" : n >= DAILY_GOAL - 2 && !S.daily.claimed ? " qc-excited" : ""))}
+    ${chestSVG("cf-chest" + (ready ? " qc-bounce" : n >= dailyGoal() - 2 && !S.daily.claimed ? " qc-excited" : ""))}
     ${S.daily.claimed ? `<span class="sc-pill sc-done">${CHECK_BADGE}</span>`
       : ready ? `<span class="sc-pill sc-open">افتح!</span>`
-        : `<span class="sc-pill sc-count">${toAr(n)}/${toAr(DAILY_GOAL)}</span>`}
+        : `<span class="sc-pill sc-count">${toAr(n)}/${toAr(dailyGoal())}</span>`}
   </button>`;
 }
 
@@ -1027,7 +1069,20 @@ function cvPile(rows, gs) {
   });
   return out.sort((a, b) => b[4] - a[4]);
 }
-const CV_PILE_50 = cvPile([10, 9, 8, 7, 6, 5, 3, 2], 56);
+/* A fifty-gem pyramid over a twenty-five-gem reward is the kind of small lie a
+   student notices once and then stops believing the rest of the screen. The pile
+   is built from the count the counter is about to tick to: fifty keeps the rows
+   measured off the video frame by frame, and any other count builds the same
+   shape with a smaller gem so a hundred still stands on the stage. */
+function cvRowsFor(n) {
+  if (n === CHEST_GEMS) return [10, 9, 8, 7, 6, 5, 3, 2];
+  const rows = [];
+  let left = n, w = Math.max(2, Math.round(Math.sqrt(n * 2)));
+  while (left > 0) { const t = Math.min(w, left); rows.push(t); left -= t; w = Math.max(1, w - 1); }
+  return rows;
+}
+const cvGemSize = n => n > 60 ? 44 : 56;
+const cvPileFor = n => cvPile(cvRowsFor(n), cvGemSize(n));
 
 /* synthesized cues, on the app's audio context and gated by the sound setting */
 function cvTone(f0, f1, dur, type, gain, at) {
@@ -1082,9 +1137,9 @@ function cvTrack(tr, t) {
 
 A.openChest = function () {
   dailyReset();
-  if (S.daily.n < DAILY_GOAL || S.daily.claimed) return;
+  if (S.daily.n < dailyGoal() || S.daily.claimed) return;
   if (CV) return;
-  const art = chestArt(CHEST_PAINT), gems = CHEST_GEMS;
+  const art = chestArt(CHEST_PAINT), gems = chestGems();
   const veil = document.createElement("div");
   veil.className = "chest-veil";
   veil.innerHTML = `<div class="cv-stage">
@@ -1218,15 +1273,16 @@ A.openChest = function () {
 /* the reward screen: the pile pops in gem by gem, then the counter climbs in ticks with the title and the button fading in */
 function cvReward(instant) {
   const veil = CV.veil, reward = veil.querySelector(".cv-reward"), pile = veil.querySelector(".cv-pile"), num = veil.querySelector(".cv-counter .num"), counter = veil.querySelector(".cv-counter");
-  const from = S.xp, n = CV.gems, stagger = 0.02;
-  CV_PILE_50.forEach(([x, y, rot, dark], i) => {
+  const from = S.xp, n = CV.gems, stagger = 0.02, art = cvPileFor(n);
+  pile.style.setProperty("--gs", cvGemSize(n) + "px");
+  art.forEach(([x, y, rot, dark], i) => {
     const g = document.createElement("span"); g.className = "cv-gem pop";
     g.style.cssText = `left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;--r:${rot}deg;--o:${(0.05 + i * stagger).toFixed(3)}s`; g.innerHTML = dark ? CV_GEM_DARK : CV_GEM; pile.appendChild(g);
   });
   veil.querySelector(".cv-chest").classList.remove("on"); reward.classList.add("on");
   if (instant) { reward.classList.add("piled", "told"); num.textContent = toAr(from + n); return; }
   setTimeout(() => reward.classList.add("piled"), 60);
-  const last = 0.05 + (CV_PILE_50.length - 1) * stagger + 0.3;
+  const last = 0.05 + (art.length - 1) * stagger + 0.3;
   setTimeout(() => {
     if (!CV) return;
     reward.classList.add("told"); cvSnd.gems();
@@ -2607,6 +2663,7 @@ A.check = function () {
       ${heartLine}
       <div class="fb-correct">الإجابة الصحيحة: ${correctTxt}</div>
       <div class="fb-solution" id="sol">${formatExplain(q.solution)}</div>
+      <button type="button" class="fb-report" onclick="A.reportQ('${q.id}')">${(S.reports || {})[q.id] ? "وصلتنا ملاحظتك على هذا السؤال ✓" : "أبلغ عن هذا السؤال"}</button>
       <button class="btn btn-red" onclick="A.next()">${hLeft === 0 ? "شوف النتيجة" : "متابعة"}</button>`;
     /* after the sheet exists: the miss timeline slides it and snaps the cross */
     answerFxFail(document.querySelector(`.choice[data-ci="${SES.sel}"]`));
@@ -4225,8 +4282,38 @@ function renderStats() {
       <div class="mc-txt"><b>مراجعة الأخطاء</b><span>${mc ? qCount(mc) + " بحاجة لمراجعة" : "لا أخطاء — أحسنت!"}</span></div>
       <span class="mc-go">${mc ? "راجع ←" : "✓"}</span>
     </button>`; })()}
+    ${weekCard()}
     <div class="card"><h3>الدقة حسب المجال</h3>${domBars}</div>
   </div></div>` + bottomnav("stats");
+}
+
+/* dailyTick has counted every answered question by day since it was written and
+   nothing has ever read it back. Seven bars, this week against last, and the
+   honest sentence for what they add up to. */
+function weekCard() {
+  const days = S.days || {};
+  const midnight = new Date(); midnight.setHours(0, 0, 0, 0);
+  const keyOf = d => d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+  const back = n => { const d = new Date(midnight); d.setDate(d.getDate() - n); return d; };
+  const sum = off => { let t = 0; for (let i = 0; i < 7; i++) t += days[keyOf(back(i + off))] || 0; return t; };
+  const week = [];
+  for (let i = 6; i >= 0; i--) { const d = back(i); week.push({ d: d, n: days[keyOf(d)] || 0 }); }
+  const now = sum(0), prev = sum(7);
+  if (!now && !prev) return "";
+  const top = Math.max(4, ...week.map(x => x.n));
+  const delta = now - prev;
+  const line = !prev ? `${qCount(now)} هذا الأسبوع — بداية طيبة`
+    : delta > 0 ? `${qCount(now)} هذا الأسبوع · أكثر من الأسبوع الماضي بـ${qCount(delta)}`
+    : delta < 0 ? `${qCount(now)} هذا الأسبوع · أقل من الأسبوع الماضي بـ${qCount(-delta)}`
+    : `${qCount(now)} هذا الأسبوع — نفس إيقاع الأسبوع الماضي`;
+  return `<div class="card week-card">
+    <h3>هذا الأسبوع</h3>
+    <div class="wk-bars">${week.map((x, i) => `<div class="wk-col">
+      <div class="wk-track"><i style="height:${Math.round(x.n / top * 100)}%;--d:${(i * .05).toFixed(2)}s"></i></div>
+      <span class="wk-day${i === 6 ? " on" : ""}">${STREAK_WK[x.d.getDay()]}</span>
+    </div>`).join("")}</div>
+    <p class="wk-line">${line}</p>
+  </div>`;
 }
 
 /* ---------------- SETTINGS / ABOUT ---------------- */
@@ -4355,6 +4442,66 @@ A.restoreShow = function () {
         location.reload();
       });
   };
+};
+
+/* ---- reporting a question ---------------------------------------------------
+   Two hundred and fifty-five original questions written without a formal review
+   pass will contain mistakes, and a student who finds one and cannot say so stops
+   trusting the other two hundred and fifty-four. There is no server to send it
+   to, so the note is kept in the save - which means it travels inside a backup
+   code - and Settings lists them with the text ready to copy. Claiming it was
+   received would be a lie, so the sheet says where it actually is. */
+const REPORT_WHY = [
+  "الإجابة المعتمدة خطأ",
+  "السؤال غير مفهوم",
+  "خطأ في خطوات الحل",
+  "الشكل أو الأرقام غير واضحة",
+  "شيء آخر"
+];
+A.reportQ = function (id) {
+  const rec = questionById(id);
+  if (!rec) return;
+  const old = (S.reports || {})[id];
+  const sheet = backupSheet(`<h2>أبلغ عن السؤال</h2>
+    <p>${esc(rec.lesTitle)}</p>
+    <div class="rp-list">${REPORT_WHY.map((w, i) =>
+      `<button type="button" class="rp-opt${old && old.w === i ? " on" : ""}" data-i="${i}">${w}</button>`).join("")}</div>
+    <p class="rp-note">تُحفظ ملاحظتك على جهازك مع تقدّمك، وتجدها في الإعدادات لتنسخها وترسلها لنا.</p>
+    <button class="ask-go" id="bkClose">إغلاق</button>`, "أبلغ عن السؤال");
+  sheet.veil.querySelector("#bkClose").onclick = sheet.close;
+  sheet.veil.querySelectorAll(".rp-opt").forEach(b => b.onclick = () => {
+    S.reports = S.reports || {};
+    S.reports[id] = { w: +b.dataset.i, at: todayKey(), les: rec.lesTitle };
+    save(); sndGood(); sheet.close();
+    const btn = document.querySelector(".fb-report");
+    if (btn) btn.textContent = "وصلتنا ملاحظتك على هذا السؤال ✓";
+    toast("سجّلنا ملاحظتك ✓");
+  });
+};
+A.reportsShow = function () {
+  const r = S.reports || {}, ids = Object.keys(r);
+  if (!ids.length) return;
+  const text = ids.map(id => (r[id].les || "") + " — " + (REPORT_WHY[r[id].w] || "") + " (" + id + ")").join("\n");
+  const sheet = backupSheet(`<h2>ملاحظاتك على الأسئلة</h2>
+    <p>انسخ النص وأرسله لنا — كل ملاحظة تصلنا تُصلِح السؤال للجميع.</p>
+    <textarea class="bk-code bk-ar" id="bkCode" readonly rows="5" spellcheck="false" dir="rtl"></textarea>
+    <button class="btn" id="bkCopy">انسخ الملاحظات</button>
+    <button class="ask-go" id="bkClose">إغلاق</button>
+    <button type="button" class="rp-clear" id="bkClear">امسح ملاحظاتي</button>`, "ملاحظاتك على الأسئلة");
+  const ta = sheet.veil.querySelector("#bkCode");
+  ta.value = text;
+  sheet.veil.querySelector("#bkCopy").onclick = function () {
+    const done = () => { this.textContent = "تم النسخ ✓"; this.classList.add("bk-done"); };
+    if (navigator.clipboard && navigator.clipboard.writeText)
+      navigator.clipboard.writeText(text).then(done, () => { ta.select(); this.textContent = "انسخ يدوياً من الحقل"; });
+    else { ta.select(); try { document.execCommand("copy"); done(); } catch (e) { this.textContent = "انسخ يدوياً من الحقل"; } }
+  };
+  sheet.veil.querySelector("#bkClose").onclick = sheet.close;
+  /* the wipe sits one tap from the copy button, so it asks first */
+  sheet.veil.querySelector("#bkClear").onclick = () => askConfirm(
+    "نمسح ملاحظاتك؟",
+    "تُمسح من جهازك نهائياً. انسخها أولاً إن كنت تريد إرسالها لنا.",
+    "لا، رجوع", "امسح", () => { S.reports = {}; save(); render(); });
 };
 
 function askConfirm(title, body, stayText, goText, onGo) {
@@ -5038,7 +5185,7 @@ document.addEventListener("keydown", e => {
    date, two switches, the disclaimer — and the reset at the
    bottom in red. Only what the game actually uses is here: the
    daily goal was a control wired to nothing (the chest counts
-   DAILY_GOAL), «تبديل المستخدم» only re-asked the name, and the
+   dailyGoal()), «تبديل المستخدم» only re-asked the name, and the
    stats tab already owns the numbers, so the profile page that
    repeated them under a gear is gone with the two-way menu that
    led to it.
@@ -5087,8 +5234,14 @@ function renderSettings() {
     <div class="set-lab">التدريب</div>
     <div class="set-list">
       <div class="set-item">
+        <span class="set-item-tx">هدفي اليومي</span>
+        <div class="set-seg set-seg-goal" role="radiogroup" aria-label="الهدف اليومي">
+          ${GOALS.map(g => seg(dailyGoal() === g, `A.setGoal(${g})`, toAr(g))).join("")}
+        </div>
+      </div>
+      <div class="set-item">
         <span class="set-item-tx">المسار</span>
-        <div class="set-seg" role="radiogroup" aria-label="المسار">
+        <div class="set-seg set-seg-track" role="radiogroup" aria-label="المسار">
           ${seg(S.track === "sci", "A.setTrackM('sci')", "علمي")}
           ${seg(S.track === "lit", "A.setTrackM('lit')", "أدبي / نظري")}
         </div>
@@ -5126,6 +5279,10 @@ function renderSettings() {
       <button type="button" class="set-item set-link" onclick="A.restoreShow()">
         <span class="set-item-tx">استعادة من رمز</span>${chev}
       </button>
+      ${Object.keys(S.reports || {}).length ? `<button type="button" class="set-item set-link" onclick="A.reportsShow()">
+        <span class="set-item-tx">ملاحظاتك على الأسئلة</span>
+        <span class="set-val">${toAr(Object.keys(S.reports).length)}</span>${chev}
+      </button>` : ""}
     </div>
 
     <button type="button" class="set-reset" onclick="A.resetAll()">إعادة تعيين التقدّم</button>
@@ -5152,9 +5309,20 @@ A.setSaveName = function () {
   SET_EDIT = false; save(); sndGood(); toast("تم حفظ اسمك ✓");
   render();
 };
+/* The chest scales with the goal, so the confirmation says what changed rather
+   than letting a student discover a smaller chest on their own. */
+A.setGoal = function (g) {
+  if (GOALS.indexOf(g) < 0) return;
+  S.goal = g; save();
+  document.querySelectorAll(".set-seg-goal button").forEach((b, i) => {
+    const on = GOALS[i] === g;
+    b.classList.toggle("on", on); b.setAttribute("aria-checked", on);
+  });
+  toast(`${qCount(g)} يومياً · صندوق ${toAr(chestGems())} جوهرة`);
+};
 A.setTrackM = function (t) {
   S.track = t; save();
-  document.querySelectorAll(".set-seg button").forEach((b, i) => {
+  document.querySelectorAll(".set-seg-track button").forEach((b, i) => {
     const on = (i === 0 ? "sci" : "lit") === t;
     b.classList.toggle("on", on); b.setAttribute("aria-checked", on);
   });

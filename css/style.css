@@ -1803,6 +1803,59 @@ button.dom-stat:active { transform: scale(.99); }
 .due-tx span { display: block; font-size: 13px; font-weight: 700; color: var(--gray); margin-top: 1px; }
 .due-go { font-size: 14px; font-weight: 800; color: var(--blue); flex-shrink: 0; }
 
+/* --- a streak about to break, and the three-way goal segment --- */
+.due-card.due-risk { border-color: var(--orange); box-shadow: 0 4px 0 #E07D00; }
+.due-card.due-risk .due-ico { background: #FFF1DB; }
+.due-card.due-risk .due-go { color: #E07D00; }
+.set-seg-goal button { padding-inline: 15px; }
+
+/* --- what the exam date asks of them, inside the countdown card --- */
+.ec2-plan { font-size: 12px; font-weight: 700; color: var(--gray); line-height: 1.5; }
+.ec2-urgent .ec2-plan, .ec2-today .ec2-plan { color: var(--tone-ink); opacity: .85; }
+
+/* --- the week they actually had, from S.days --- */
+.week-card h3 { margin-bottom: 14px; }
+.wk-bars { display: flex; align-items: flex-end; gap: 8px; height: 76px; }
+.wk-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 7px; height: 100%; }
+.wk-track { flex: 1; width: 100%; display: flex; align-items: flex-end; background: var(--line); border-radius: 7px; overflow: hidden; }
+.wk-track > i {
+  display: block; width: 100%; min-height: 3px; border-radius: 7px; background: var(--blue);
+  animation: wkGrow .55s var(--d) cubic-bezier(.25,1.1,.4,1) backwards;
+}
+@keyframes wkGrow { from { height: 0 !important; } }
+.wk-col:last-child .wk-track > i { background: var(--blue-dk); }
+.wk-day { font-size: 12px; font-weight: 800; color: var(--gray-icon); }
+.wk-day.on { color: var(--blue-dk); }
+.wk-line { margin: 13px 0 0; font-size: 13.5px; font-weight: 700; color: var(--ink); line-height: 1.6; }
+:root[data-motion="reduced"] .wk-track > i { animation: none; }
+
+/* --- reporting a question ---
+   The sheet behind this link is pink, not red: white text on it is a ghost. It
+   takes the same ink as the sheet's other secondary action. */
+.fb-report {
+  display: block; width: 100%; margin: 0 0 8px; padding: 7px 0;
+  background: none; border: 0; font-family: inherit; font-size: 13.5px; font-weight: 700;
+  color: var(--red-dk2); opacity: .78; text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+.fb-report:active { opacity: .5; }
+.rp-clear {
+  width: 100%; margin-top: 2px; padding: 8px 0; background: none; border: 0;
+  font-family: inherit; font-size: 13px; font-weight: 700; color: var(--gray);
+  text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+.rp-clear:active { color: var(--red-dk2); }
+.bk-sheet .bk-code.bk-ar { font: 700 13px/1.9 var(--font); word-break: normal; text-align: start; }
+.rp-list { display: flex; flex-direction: column; gap: 9px; margin: 4px 0 14px; }
+.rp-opt {
+  text-align: start; padding: 12px 14px; font-family: inherit; font-size: 14.5px; font-weight: 700;
+  color: var(--ink); background: var(--snow); border: 2px solid var(--line);
+  border-bottom-width: 3px; border-radius: 14px; cursor: pointer;
+  transition: background-color .14s, border-color .14s, transform .06s;
+}
+.rp-opt:active { transform: translateY(2px); border-bottom-width: 2px; }
+.rp-opt.on { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+.rp-note { font-size: 12.5px; font-weight: 600; color: var(--gray); line-height: 1.7; margin: 0 0 14px; }
+
 /* --- the two first-run choices: the track, and whether to test out --- */
 .tp-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px 20px calc(28px + env(safe-area-inset-bottom)); }
 .tp-list { width: 100%; max-width: 380px; margin-top: 22px; }
