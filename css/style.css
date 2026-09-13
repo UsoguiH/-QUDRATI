@@ -1813,7 +1813,7 @@ button.dom-stat:active { transform: scale(.99); }
   animation: fadeUp .45s .25s cubic-bezier(.3,1.3,.5,1) backwards;
 }
 .chest-float .cf-chest {
-  width: 58px; height: 54px; overflow: visible;
+  width: 66px; height: 62px; overflow: visible;
   filter: drop-shadow(0 4px 0 rgba(0,0,0,.13));
 }
 .chest-float .ch-glow { opacity: 0; }
@@ -1831,7 +1831,7 @@ button.dom-stat:active { transform: scale(.99); }
 }
 .chest-tip b { color: var(--chest); font-weight: 800; }
 .chest-tip::after {
-  content: ''; position: absolute; bottom: -7px; left: 22px; transform: rotate(45deg);
+  content: ''; position: absolute; bottom: -7px; left: 26px; transform: rotate(45deg);
   width: 10px; height: 10px; background: #fff;
   border-left: 2px solid var(--line); border-bottom: 2px solid var(--line);
   clip-path: polygon(0 0, 0% 100%, 100% 100%);
