@@ -695,33 +695,48 @@ function countdownCard() {
 }
 
 /* ---------------- daily quest card + chest ---------------- */
-/* Duolingo-style chest, redrawn by hand from the design-system
-   proportions: big rounded lid with a lighter inner panel hanging
-   over a narrower base, gold strap + latch. Lid is its own group so
-   the ceremony can swing it open. */
-function chestSVG(cls) {
-  return `<svg class="qc-chest ${cls || ""}" viewBox="0 0 56 52" fill="none" aria-hidden="true">
-    <ellipse class="ch-glow" cx="28" cy="26" rx="17" ry="7" fill="#FFE700"/>
-    <g class="ch-base">
-      <path d="M9 26 H47 V42 Q47 48 41 48 H15 Q9 48 9 42 Z" fill="#AA572A"/>
-      <path d="M9 40 H47 V42 Q47 48 41 48 H15 Q9 48 9 42 Z" fill="#90461F"/>
-      <rect x="23" y="26" width="10" height="22" fill="#FFC800"/>
-      <rect x="23" y="44" width="10" height="4" fill="#E6A000"/>
-      <rect x="20" y="23" width="16" height="15" rx="4.5" fill="#FFC800"/>
-      <rect x="20" y="32" width="16" height="6" rx="3" fill="#E6A000"/>
-      <circle cx="28" cy="29" r="2.6" fill="#90461F"/>
-      <rect x="26.7" y="29" width="2.6" height="5" rx="1.3" fill="#90461F"/>
-    </g>
-    <g class="ch-lid">
-      <rect x="4" y="2" width="48" height="24" rx="10" fill="#C07F41"/>
-      <rect x="10" y="8" width="36" height="13" rx="5.5" fill="#E5AE7C"/>
-      <rect x="4" y="21" width="48" height="5" fill="#90461F"/>
-      <rect x="23" y="2" width="10" height="24" fill="#FFC800"/>
-      <rect x="23" y="2" width="10" height="4" fill="#FFE700"/>
-      <rect x="23" y="21" width="10" height="5" fill="#E6A000"/>
-    </g>
-  </svg>`;
+/* The daily chest, ported from chest-animation.html: the Duolingo
+   monthly-challenge chest measured frame-by-frame off "chest animation.mp4",
+   wearing colourway ١٢ of that file — a navy body with gold straps and a
+   gold latch. The same art draws the small chest on the path (chestSVG) and
+   the big one in the ceremony; the open state is a second drawing with the
+   lid lifted, swapped in at the pop, exactly as the video does it. */
+const CHEST_PAINT = { body: "#1E3A8A", bodyDk: "#172C6B", trim: "#FFC800", trimDk: "#E6A800", latch: "#FFF1B8", lidIn: "#2A4AA6", lidInDk: "#1E3A8A", intA: "#B8C2E0", intB: "#EEF1FA", title: "#1E3A8A", dot: "#FFE9A8" };
+function chestArt(c) {
+  return {
+    closed: `<svg class="closed" viewBox="0 0 260 290" aria-hidden="true">
+      <g class="ch-base">
+        <rect x="24" y="180" width="41" height="87" rx="10" fill="${c.trimDk}"/><rect x="195" y="180" width="41" height="87" rx="10" fill="${c.trimDk}"/>
+        <rect x="65" y="180" width="130" height="87" fill="${c.body}"/><rect x="65" y="245" width="130" height="4" fill="${c.bodyDk}"/>
+      </g>
+      <g class="ch-lid">
+        <rect x="24" y="75" width="41" height="112" rx="10" fill="${c.trim}"/><rect x="195" y="75" width="41" height="112" rx="10" fill="${c.trim}"/>
+        <rect x="65" y="82" width="130" height="100" fill="${c.body}"/><rect x="65" y="123" width="130" height="4" fill="${c.bodyDk}"/>
+        <circle cx="130" cy="192" r="30" fill="${c.trim}"/>
+        <rect x="12" y="167" width="236" height="58" rx="8" fill="${c.trim}"/>
+        <rect x="12" y="213" width="236" height="12" rx="4" fill="${c.trimDk}"/>
+        <circle cx="130" cy="212" r="22" fill="${c.latch}"/>
+      </g>
+    </svg>`,
+    open: `<svg class="open" viewBox="0 0 260 290" aria-hidden="true">
+      <defs>
+        <linearGradient id="cvInt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.intA}"/><stop offset="1" stop-color="${c.intB}"/></linearGradient>
+        <radialGradient id="cvBleach" cx="130" cy="120" r="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".55" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+      </defs>
+      <rect x="24" y="42" width="41" height="64" rx="10" fill="${c.trim}"/><rect x="195" y="42" width="41" height="64" rx="10" fill="${c.trim}"/>
+      <rect x="65" y="48" width="130" height="58" fill="${c.lidIn}"/><rect x="65" y="74" width="130" height="4" fill="${c.lidInDk}"/>
+      <rect x="34" y="150" width="192" height="66" fill="url(#cvInt)"/>
+      <rect x="24" y="150" width="41" height="117" rx="10" fill="${c.trimDk}"/><rect x="195" y="150" width="41" height="117" rx="10" fill="${c.trimDk}"/>
+      <rect x="65" y="227" width="130" height="40" fill="${c.body}"/>
+      <rect x="65" y="212" width="130" height="15" fill="${c.trim}"/>
+      <rect x="12" y="92" width="236" height="58" rx="8" fill="${c.trim}"/>
+      <rect x="12" y="92" width="236" height="10" rx="4" fill="${c.trimDk}"/>
+      <circle cx="130" cy="118" r="22" fill="#FFFFFF"/>
+      <rect x="0" y="30" width="260" height="200" fill="url(#cvBleach)"/>
+    </svg>`
+  };
 }
+function chestSVG(cls) { return chestArt(CHEST_PAINT).closed.replace('class="closed"', `class="qc-chest ${cls || ""}"`); }
 
 /* Floating daily chest (Duolingo style): fixed above the bottom nav
    on the path, stays put while scrolling. The pill under it shows
@@ -737,46 +752,263 @@ function floatingQuest() {
   </button>`;
 }
 
-/* Chest-opening ceremony: veil → chest drops & lands with a squash →
-   anticipation shakes → lid swings open with sunrays, flash, flying
-   gems → reward pops in → claim */
+/* ---- the ceremony: a 480×1044 stage scaled to the viewport, so every measured
+   coordinate (hop heights, the comet's ellipse, the sparkle ring) lands the same
+   on every phone. Three taps, each with a leap and a comet; the title fades on
+   press and the chest opens on release; lift, burst, rising motes, the light cone,
+   the drop, the white wash; then the pile of gems and the counter ticking up. ---- */
+const CV_STAR = '<svg viewBox="0 0 24 24"><path d="M12 0C13 8 16 11 24 12 16 13 13 16 12 24 11 16 8 13 0 12 8 11 11 8 12 0Z" fill="currentColor"/></svg>';
+const CV_MOTE = '<svg viewBox="0 0 10 26"><path d="M5 0C7.5 8 9.5 11 10 13 9.5 15 7.5 18 5 26 2.5 18 .5 15 0 13 .5 11 2.5 8 5 0Z" fill="#fff"/></svg>';
+const CV_ARROW = '<svg viewBox="0 0 24 24"><path d="M12 19.5V5.5M5.5 12l6.5-6.5 6.5 6.5" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+/* the app's own gem (assets/icons/gem.svg), inlined so the pile can pop and jiggle it; the back rows are a shade darker */
+const CV_GEM = `<svg viewBox="0 0 17 22" aria-hidden="true">
+  <path d="M0 15.4119V6.14389C0 5.43516 0.375083 4.77936 0.98596 4.42002L7.48596 0.596494C8.11186 0.228319 8.88814 0.228319 9.51404 0.596494L16.014 4.42002C16.6249 4.77936 17 5.43516 17 6.14389V15.4119C17 16.0904 16.6561 16.7225 16.0865 17.0911L9.5865 21.297C8.92534 21.7248 8.07466 21.7248 7.4135 21.297L0.913497 17.0911C0.343916 16.7225 0 16.0904 0 15.4119Z" fill="#1CB0F6"/>
+  <path d="M6.93347 2.57699L2.15482 5.86231C1.47453 6.33001 1.62193 7.37398 2.40512 7.63504L4.57583 8.35861C4.84574 8.44858 5.14118 8.41932 5.3882 8.27817L7.99614 6.78792C8.30771 6.60988 8.5 6.27853 8.5 5.91968V3.40103C8.5 2.59585 7.59697 2.12083 6.93347 2.57699Z" fill="#DDF4FF"/>
+</svg>`;
+const CV_GEM_DARK = CV_GEM.replace("#1CB0F6", "#1899D6").replace("#DDF4FF", "#B6E2F8");
+const CV_CAPS = ["اضغط للحصول على فرصة لترقيته!", "اضغط! اضغط!", "باقي فرصة واحدة فحسب!", "اضغط لفتحه!"];
+/* hop choreography, measured off the video at 60 fps: [t, y, lean°, scaleY] */
+const CV_IDLE_HOP = [
+  [0.00, 0, 0, 1.00], [0.15, 0, 0, 0.90], [0.25, 0, 0, 0.90],
+  [0.29, -10, -8, 1.07], [0.35, -24, -4, 1.03], [0.43, -32, -1, 1.00], [0.55, -33, 0, 1.00],
+  [0.62, -28, 2, 1.00], [0.70, -16, 5, 1.00], [0.76, -4, 8, 1.00], [0.79, 2, 6, 0.96],
+  [0.83, -4, 0, 1.00], [0.88, -10, -4, 1.00], [0.95, -10, -2, 1.00], [1.10, -10, 0, 1.00], [1.17, -6, 0, 1.00], [1.22, 0, 0, 1.00]];
+const CV_TAP_HOP = [
+  [0.00, 0, 0, 1.00], [0.03, -4, 8, 1.10], [0.05, -8, 12, 1.10], [0.08, -22, 8, 1.06], [0.12, -32, 2, 1.03],
+  [0.17, -42, -2, 1.00], [0.22, -47, -4, 1.00], [0.27, -50, -1, 1.00], [0.37, -50, 0, 1.00],
+  [0.43, -44, -3, 1.00], [0.48, -34, -6, 1.00], [0.52, -20, -9, 1.00], [0.55, -4, -10, 1.00], [0.58, 3, -3, 0.96],
+  [0.62, -4, 3, 1.00], [0.66, -10, 4, 1.00], [0.72, -16, 2, 1.00], [0.80, -18, 0, 1.00], [0.88, -18, 0, 1.00], [0.93, -10, 0, 1.00], [0.98, 0, 0, 1.00]];
+const CV_SPARKS = [[175, 316, 22], [433, 475, 16], [46, 495, 14], [335, 286, 10], [410, 395, 8], [150, 590, 10], [330, 600, 14], [395, 565, 8], [95, 430, 8], [280, 240, 8], [70, 560, 10], [420, 330, 6], [120, 640, 8]];
+/* the comet's path: a tilted ellipse around the chest */
+const CV_ORBIT = { cx: 232, cy: 412, rx: 146, ry: 110, phi: -18 * Math.PI / 180, th0: 18 * Math.PI / 180, sweep: 270 * Math.PI / 180 };
+/* the reward pile: rows counted from the floor, top rows drawn first so the front row overlaps them */
+function cvPile(rows, gs) {
+  const out = [], dx = gs * .64, dy = gs * .5;
+  rows.forEach((n, r) => {
+    for (let i = 0; i < n; i++) {
+      const x = (i - (n - 1) / 2) * dx + ((i * 7 + r * 3) % 7 - 3) * 2.2, y = -r * dy - gs * .28 + ((i * 5 + r * 11) % 5 - 2) * 2;
+      out.push([x, y, (i * 7 + r * 5) % 13 - 6, r < rows.length - 1 && (i + r) % 3 === 1 ? 1 : 0, r]);
+    }
+  });
+  return out.sort((a, b) => b[4] - a[4]);
+}
+const CV_PILE_50 = cvPile([10, 9, 8, 7, 6, 5, 3, 2], 56);
+
+/* synthesized cues, on the app's audio context and gated by the sound setting */
+function cvTone(f0, f1, dur, type, gain, at) {
+  if (!S.sound) return;
+  try {
+    const ac = audioCtx(); if (!ac) return;
+    const t = ac.currentTime + (at || 0), o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || "sine"; o.frequency.setValueAtTime(f0, t);
+    if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur * .6);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + .015); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur + .05);
+  } catch (e) { /* no audio */ }
+}
+function cvHiss(dur, gain, at, f0, f1) {
+  if (!S.sound) return;
+  try {
+    const ac = audioCtx(); if (!ac) return;
+    const t = ac.currentTime + (at || 0), n = ac.sampleRate * dur, buf = ac.createBuffer(1, n, ac.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    const src = ac.createBufferSource(); src.buffer = buf;
+    const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 1.2;
+    bp.frequency.setValueAtTime(f0, t); bp.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + .03); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(bp); bp.connect(g); g.connect(ac.destination); src.start(t);
+  } catch (e) { /* no audio */ }
+}
+const cvSnd = {
+  hop() { cvTone(300, 620, .22, "sine", .16); cvTone(140, 90, .1, "sine", .12); },
+  tap() { cvTone(360, 760, .22, "sine", .18); cvTone(150, 95, .1, "sine", .12); cvHiss(.28, .07, .02, 900, 3200); },
+  open() {
+    [523, 659, 784, 1047, 1319].forEach((f, i) => cvTone(f, 0, .9, "triangle", .11, i * .06));
+    cvHiss(.9, .05, 0, 5000, 2000);
+    for (let i = 0; i < 9; i++) cvTone(2000 + Math.random() * 3200, 0, .08, "sine", .05, .1 + i * .075);
+  },
+  gems() { [1319, 1568, 1976, 2637].forEach((f, i) => cvTone(f, 0, .28, "sine", .1, i * .05)); },
+  tick() { cvTone(1900, 1500, .06, "triangle", .05); }
+};
+
+let CV = null;   /* the live ceremony, one at a time */
+const cvNow = () => performance.now() / 1000;
+const cvLerp = (a, b, t) => a + (b - a) * t;
+const cvClamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const cvEaseOut = (t, p) => 1 - Math.pow(1 - cvClamp(t, 0, 1), p || 2.3);
+function cvTrack(tr, t) {
+  if (t <= 0) return tr[0].slice(1);
+  for (let i = 1; i < tr.length; i++) if (t <= tr[i][0]) {
+    const a = tr[i - 1], b = tr[i], u = (t - a[0]) / (b[0] - a[0]), s = u * u * (3 - 2 * u);
+    return [cvLerp(a[1], b[1], s), cvLerp(a[2], b[2], s), cvLerp(a[3], b[3], s)];
+  }
+  return null;
+}
+
 A.openChest = function () {
   dailyReset();
   if (S.daily.n < DAILY_GOAL || S.daily.claimed) return;
-  const gems = CHEST_GEMS; // flat 50
+  if (CV) return;
+  const art = chestArt(CHEST_PAINT), gems = CHEST_GEMS;
   const veil = document.createElement("div");
   veil.className = "chest-veil";
-  veil.innerHTML = `<div class="chest-scene">
-    <span class="cs-rays"></span>
-    <span class="cs-flash"></span>
-    <div class="cs-chest">${chestSVG("qc-big")}</div>
-    <div class="cs-burst"></div>
-    <div class="cs-reward">${ico("gem", 36)}<b>+${toAr(gems)}</b></div>
-    <h2 class="cs-title">صندوق اليوم!</h2>
-    <button class="btn cs-btn" onclick="A.claimChest(${gems})">رائع!</button>
+  veil.innerHTML = `<div class="cv-stage">
+    <section class="cv-scr cv-chest on">
+      <h2 class="cv-ttl">صندوق اليوم</h2>
+      <div class="cv-sparks"></div>
+      <div class="cv-wrap">
+        <div class="cv-body"><div class="cv-cone"></div><div class="cv-plate"></div><div class="cv-box">${art.closed}${art.open}</div><div class="cv-glow"></div></div>
+        <div class="cv-fx"></div>
+      </div>
+      <canvas class="cv-arc" width="960" height="2088" aria-hidden="true"></canvas>
+      <div class="cv-dots">${[0, 1, 2].map(i => `<div class="cv-dot${i === 0 ? " active" : ""}"><i>${CV_ARROW}</i><b class="sh"></b></div>`).join("")}</div>
+      <div class="cv-cap"><span class="a">${CV_CAPS[0]}</span><span class="b hide"></span></div>
+      <div class="cv-wash"></div>
+    </section>
+    <section class="cv-scr cv-reward">
+      <div class="cv-counter">${CV_GEM}<b class="num">${toAr(S.xp)}</b></div>
+      <h2 class="cv-rtitle">+${toAr(gems)} جوهرة</h2>
+      <div class="cv-pile"><div class="cv-pshadow"></div></div>
+      <div class="cv-foot"><button class="btn cv-btn" onclick="A.claimChest(${gems})">المتابعة</button></div>
+    </section>
   </div>`;
   document.body.appendChild(veil);
-  requestAnimationFrame(() => veil.classList.add("drop"));
-  setTimeout(() => veil.classList.add("shake"), 850);
-  setTimeout(() => {
-    veil.classList.add("open");
-    sndChest();
-    const burst = veil.querySelector(".cs-burst");
-    for (let i = 0; i < 12; i++) {
-      const dx = (Math.random() * 2 - 1) * 130;
-      const up = -(70 + Math.random() * 120);
-      const el = document.createElement("img");
-      el.src = "assets/icons/gem.svg";
-      el.className = "cs-gem";
-      el.style.cssText = `--dx:${dx.toFixed(0)}px;--up:${up.toFixed(0)}px;--rot:${((Math.random() * 2 - 1) * 220).toFixed(0)}deg;animation-delay:${(i * 0.045).toFixed(2)}s;width:${(16 + Math.random() * 14).toFixed(0)}px`;
-      burst.appendChild(el);
+  const $c = s => veil.querySelector(s);
+  const stage = $c(".cv-stage"), chest = $c(".cv-chest"), body = $c(".cv-body"), box = $c(".cv-box"), fx = $c(".cv-fx"),
+        ttl = $c(".cv-ttl"), capA = $c(".cv-cap .a"), capB = $c(".cv-cap .b"), dots = Array.from(veil.querySelectorAll(".cv-dot")),
+        dotsRow = $c(".cv-dots"), wash = $c(".cv-wash"), arc = $c(".cv-arc"), actx = arc.getContext("2d");
+  actx.scale(2, 2);
+  const fit = () => { stage.style.transform = `scale(${Math.min(innerWidth / 480, innerHeight / 1044)})`; };
+  fit(); addEventListener("resize", fit);
+  CV = { veil, fit, gems, taps: 0, open: false, hop: null, pose: [0, 0, 1], dir: 1, idleAt: cvNow() + 0.78, arc: null, openT0: 0, running: true, nextMote: 0, capOnB: false, pressed: false, m: {} };
+
+  const sparks = $c(".cv-sparks");
+  sparks.style.color = "#F8EC98";
+  CV_SPARKS.forEach(([x, y, s], i) => {
+    const e = document.createElement("span"); e.className = "cv-sp";
+    e.style.cssText = `left:${x}px;top:${y}px;--s:${s}px;--d:${(1.5 + (i * .37) % 1.1).toFixed(2)}s;--o:${(-(i * .53) % 2).toFixed(2)}s`;
+    e.innerHTML = CV_STAR; sparks.appendChild(e);
+  });
+
+  if (motionReduced()) { cvReward(true); return; }
+
+  const setCap = text => {
+    const hide = CV.capOnB ? capB : capA, show = CV.capOnB ? capA : capB;
+    show.textContent = text; show.classList.remove("hide"); hide.classList.add("hide"); CV.capOnB = !CV.capOnB;
+  };
+  const startHop = track => { CV.hop = { track, t0: cvNow(), from: CV.pose.slice(), dir: CV.dir }; CV.dir = -CV.dir; };
+  const orbitPt = th => {
+    const c = Math.cos(th), s = Math.sin(th), cp = Math.cos(CV_ORBIT.phi), sp = Math.sin(CV_ORBIT.phi);
+    return [CV_ORBIT.cx + CV_ORBIT.rx * c * cp - CV_ORBIT.ry * s * sp, CV_ORBIT.cy + CV_ORBIT.rx * c * sp + CV_ORBIT.ry * s * cp];
+  };
+  const drawArc = t => {
+    actx.clearRect(0, 0, 480, 1044);
+    if (t > 0.33) { CV.arc = null; return; }
+    const head = CV_ORBIT.th0 - CV_ORBIT.sweep * cvEaseOut(t / 0.24, 2.3), tail = CV_ORBIT.th0 - CV_ORBIT.sweep * cvEaseOut((t - 0.075) / 0.22, 2.3);
+    if (tail - head < 0.02) return;
+    const N = 44, pts = [];
+    for (let i = 0; i <= N; i++) pts.push(orbitPt(cvLerp(tail, head, i / N)));
+    actx.strokeStyle = "#F8E46C"; actx.lineCap = "round"; actx.lineJoin = "round";
+    actx.globalAlpha = t > 0.27 ? 1 - (t - 0.27) / 0.06 : 1;
+    for (let i = 0; i < N; i++) {
+      actx.lineWidth = 1 + 14 * Math.pow((i + 1) / N, 0.85);
+      actx.beginPath(); actx.moveTo(pts[i][0], pts[i][1]); actx.lineTo(pts[i + 1][0], pts[i + 1][1]); actx.stroke();
     }
-  }, 1650);
-  setTimeout(() => veil.classList.add("rewarded"), 2150);
+    actx.globalAlpha = 1;
+  };
+  const at = (dt, t, name, fn) => { if (dt >= t && !CV.m[name]) { CV.m[name] = true; fn(); } };
+  const openStep = dt => {
+    const lift = -48 * cvEaseOut(dt / 0.1, 3);
+    const ft = Math.max(0, dt - 0.13), fall = 1200 * ft * ft;
+    body.style.transform = `translateY(${fall.toFixed(1)}px)`;
+    box.style.transform = `translateY(${lift.toFixed(1)}px)`;
+    while (CV.nextMote <= dt && dt < 0.72) {
+      const e = document.createElement("span"); e.className = "cv-mote";
+      e.style.cssText = `left:${(130 + (Math.random() * 128 - 64)).toFixed(0)}px;top:${(150 + fall + lift).toFixed(0)}px;--dy:${(-(240 + Math.random() * 320)).toFixed(0)}px;--d:${(.9 + Math.random() * .45).toFixed(2)}s`;
+      e.innerHTML = CV_MOTE; fx.appendChild(e);
+      CV.nextMote += 0.07;
+    }
+    at(dt, 0.5, "wash", () => wash.classList.add("go"));
+    at(dt, 1.25, "done", () => { CV.running = false; cvReward(false); });
+  };
+  const loop = () => {
+    if (!CV || !CV.running) return;
+    const t = cvNow();
+    if (!CV.open) {
+      /* the idle hop keeps a strict 2 s rhythm; a slot that lands mid-hop is skipped, never stacked */
+      if (t >= CV.idleAt) { if (!CV.hop) { startHop(CV_IDLE_HOP); cvSnd.hop(); } CV.idleAt += 2.0; }
+      let pose = [0, 0, 1];
+      if (CV.hop) {
+        const dt = t - CV.hop.t0, v = cvTrack(CV.hop.track, dt);
+        if (!v) CV.hop = null;
+        else { const b = cvClamp(dt / 0.07, 0, 1); pose = [cvLerp(CV.hop.from[0], v[0], b), cvLerp(CV.hop.from[1], v[1] * CV.hop.dir, b), cvLerp(CV.hop.from[2], v[2], b)]; }
+      }
+      CV.pose = pose;
+      body.style.transform = `translateY(${pose[0].toFixed(2)}px) rotate(${pose[1].toFixed(2)}deg) scaleY(${pose[2].toFixed(3)})`;
+    } else openStep(t - CV.openT0);
+    if (CV.arc) drawArc(t - CV.arc.t0);
+    requestAnimationFrame(loop);
+  };
+  const tap = () => {
+    if (CV.open || CV.taps >= 3) return;
+    CV.taps++;
+    dots[CV.taps - 1].classList.remove("active"); dots[CV.taps - 1].classList.add("used");
+    if (CV.taps < 3) dots[CV.taps].classList.add("active", "pop");
+    setCap(CV_CAPS[CV.taps]);
+    CV.arc = { t0: cvNow() }; startHop(CV_TAP_HOP); cvSnd.tap();
+    if (CV.taps === 3) setTimeout(() => { if (CV && CV.taps === 3 && !CV.open) { dotsRow.classList.add("hide"); setCap(CV_CAPS[3]); } }, 250);
+  };
+  const openChest = () => {
+    CV.open = true; CV.openT0 = cvNow(); CV.hop = null; CV.arc = null; actx.clearRect(0, 0, 480, 1044);
+    chest.classList.add("opened"); ttl.classList.add("hide"); capA.classList.add("hide"); capB.classList.add("hide");
+    body.style.transform = ""; cvSnd.open();
+    [[-62, -40], [-22, -84], [30, -66], [72, -34], [4, -22]].forEach((p, i) => {
+      const e = document.createElement("span"); e.className = "cv-burst"; e.style.cssText = `left:130px;top:150px;--dx:${p[0]}px;--dy:${p[1]}px;--o:${i * .04}s;color:#fff`;
+      e.innerHTML = CV_STAR; fx.appendChild(e);
+    });
+  };
+  /* the video fades the title on press and opens on release */
+  chest.addEventListener("pointerdown", () => {
+    if (!CV || CV.open) return;
+    if (CV.taps < 3) { tap(); return; }
+    CV.pressed = true; ttl.classList.add("hide");
+  });
+  const release = () => { if (CV && CV.pressed && !CV.open) { CV.pressed = false; openChest(); } };
+  chest.addEventListener("pointerup", release);
+  chest.addEventListener("pointercancel", release);
+  chest.addEventListener("pointerleave", release);
+  requestAnimationFrame(loop);
 };
+
+/* the reward screen: the pile pops in gem by gem, then the counter climbs in ticks with the title and the button fading in */
+function cvReward(instant) {
+  const veil = CV.veil, reward = veil.querySelector(".cv-reward"), pile = veil.querySelector(".cv-pile"), num = veil.querySelector(".cv-counter .num"), counter = veil.querySelector(".cv-counter");
+  const from = S.xp, n = CV.gems, stagger = 0.02;
+  CV_PILE_50.forEach(([x, y, rot, dark], i) => {
+    const g = document.createElement("span"); g.className = "cv-gem pop";
+    g.style.cssText = `left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;--r:${rot}deg;--o:${(0.05 + i * stagger).toFixed(3)}s`; g.innerHTML = dark ? CV_GEM_DARK : CV_GEM; pile.appendChild(g);
+  });
+  veil.querySelector(".cv-chest").classList.remove("on"); reward.classList.add("on");
+  if (instant) { reward.classList.add("piled", "told"); num.textContent = toAr(from + n); return; }
+  setTimeout(() => reward.classList.add("piled"), 60);
+  const last = 0.05 + (CV_PILE_50.length - 1) * stagger + 0.3;
+  setTimeout(() => {
+    if (!CV) return;
+    reward.classList.add("told"); cvSnd.gems();
+    const t0 = cvNow(), steps = 12; let shown = from;
+    (function step() {
+      if (!CV) return;
+      const u = cvClamp((cvNow() - t0) / 0.8, 0, 1), v = from + Math.round(Math.floor(u * steps + 1e-6) * n / steps);
+      if (v !== shown) { shown = v; num.textContent = toAr(v); counter.classList.remove("bump"); void counter.offsetWidth; counter.classList.add("bump"); cvSnd.tick(); }
+      if (u < 1) requestAnimationFrame(step); else num.textContent = toAr(from + n);
+    })();
+  }, (last + 0.2) * 1000);
+  setTimeout(() => { if (CV) Array.from(pile.querySelectorAll(".cv-gem")).forEach((g, i) => { g.classList.remove("pop"); g.style.transform = "scale(1) rotate(var(--r))"; g.style.setProperty("--o", (i * .02).toFixed(2) + "s"); g.classList.add("jig"); }); }, (last + 0.35) * 1000);
+}
 A.claimChest = function (gems) {
   gainGems(gems); S.daily.claimed = true; save();
   const v = document.querySelector(".chest-veil");
+  if (CV) { CV.running = false; removeEventListener("resize", CV.fit); CV = null; }
   if (v) { v.classList.add("out"); setTimeout(() => { v.remove(); render(); }, 380); }
   else render();
 };

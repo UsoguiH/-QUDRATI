@@ -24,6 +24,7 @@ tools/build_methods_page.js — the generator above (zero deps)
 qudrat-kami.html        — «دليل القسم الكمي»: the one content page (what the GAT quantitative section covers, track shares, time management, a training plan, FAQ) with Article + Breadcrumb + FAQPage JSON-LD; linked from #about and back to the game
 preview.html            — dev harness: bypasses disclaimer, seeds state, jumps to any screen via #hash
 mobile.html             — device-frame preview of the app, auto-reloads when style.css or app.js changes
+chest-animation.html    — standalone chest-ceremony playground (four tiers, 18 common colourways, #palette gallery); the app ships colourway 12
 css/style.css           — full design system (2059 lines, Figma-exact values)
 js/app.js               — ALL game logic (~1939 lines, single IIFE, no imports)
 js/data/skills.js       — Unit 1 questions: مهارات وقوانين القدرات  (3548 lines)
@@ -60,7 +61,7 @@ assets/sounds/          — correct.mp3
 - **Streak**: daily streak with Rive flame animation
 - **Stars**: 1–3 per lesson
 - **Wrong-answer queue**: incorrect questions are replayed at session end
-- **Daily quest**: 10 questions → chest reward (50 gems)
+- **Daily quest**: 10 questions → chest reward (50 gems). The chest is navy with gold trims (`CHEST_PAINT` in app.js; `chestSVG()` draws the small icon on the path and the quest card). Opening it (`A.openChest`) plays a frame-measured clone of Duolingo's chest ceremony on a fixed 480×1044 stage scaled to the phone (`.chest-veil > .cv-stage`): three taps, each with a leap and a comet arc, the third opens it, light pours out, a white wash, then the 50-gem pyramid and the counter ticking up; «المتابعة» claims. Sound cues are synthesized on the app's audio context and gated by `S.sound`; reduced motion jumps straight to the reward. `chest-animation.html` at the root is the standalone playground it was ported from (rare/epic/legendary tiers and 18 colourways live only there).
 - **League**: ghost leaderboard opponents
 - **Mock exam**: 2 sections × 25 min, free navigation + flagging (mirrors real GAT computerized format)
 - **Power-ups**: freeze timer (ice), 50/50 choice elimination — gooey FAB animation
