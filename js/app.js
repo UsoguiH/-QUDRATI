@@ -621,7 +621,7 @@ function chestTip(msg) {
   if (!host) { toast(msg.replace(/<[^>]+>/g, "")); return; }
   host.querySelectorAll(".chest-tip").forEach(e => e.remove());
   const tip = document.createElement("span"); tip.className = "chest-tip"; tip.setAttribute("role", "status");
-  tip.innerHTML = msg + '<svg class="ct-tail" viewBox="0 0 26 15" aria-hidden="true"><path d="M1 0H25L13 12Z" fill="#fff"/><path d="M1 0L13 12L25 0" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  tip.innerHTML = msg + '<svg class="ct-tail" viewBox="0 0 32 19" aria-hidden="true"><path d="M1 0H31C25 2.5 20.5 8 17.6 15.2 16.8 17.2 15.2 17.2 14.4 15.2 11.5 8 7 2.5 1 0Z" fill="#fff"/><path d="M1 0C7 2.5 11.5 8 14.4 15.2 15.2 17.2 16.8 17.2 17.6 15.2 20.5 8 25 2.5 31 0" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   host.appendChild(tip);
   clearTimeout(chestTipT);
   chestTipT = setTimeout(() => { tip.classList.add("out"); setTimeout(() => tip.remove(), 240); }, 2600);
