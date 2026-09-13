@@ -5229,6 +5229,7 @@ const INTRO_VALUE = [
 ];
 function renderIntroValue() {
   $app.innerHTML = `<div class="screen screen-full iv-screen">
+    <div class="iv-body">
     <div class="iv-top">
       <h1 class="iv-bubble">إليك ما ستحصل عليه مع قدراتي!</h1>
       ${mascot("point", "iv-mascot pop")}
@@ -5238,6 +5239,7 @@ function renderIntroValue() {
         <span class="iv-ic">${ico(r.ic, 26)}</span>
         <span class="iv-tx"><b>${r.t}</b><span>${r.s}</span></span>
       </div>`).join("") + `
+    </div>
     </div>
     <div class="login-form iv-cta"><button class="btn" onclick="A.introDone()">المتابعة</button></div>
   </div>`;

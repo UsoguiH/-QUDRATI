@@ -3970,7 +3970,13 @@ body:has(.screen-session) { overflow: hidden; }
 .iv-bubble::before { border-inline-start-color: var(--line); }
 .iv-bubble::after  { border-inline-start-color: var(--snow); margin-inline-end: 3px; }
 
-.iv-rows { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+/* The rows used to take the leftover height and stack at the top of it, which on
+   a tall phone left a third of the screen blank between the last row and the
+   button. The slack belongs to قدّور and the rows together — .iv-body holds the
+   pair and centres it, so the button stays pinned at the bottom and the mascot
+   is not stranded at the top with a void under him. */
+.iv-body { display: flex; flex-direction: column; justify-content: center; flex: 1; min-height: 0; }
+.iv-rows { display: flex; flex-direction: column; gap: 4px; }
 .iv-row {
   display: flex; align-items: center; gap: 14px; padding: 15px 4px;
   animation: fadeUp .38s var(--d, .2s) ease backwards;
