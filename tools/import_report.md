@@ -44,17 +44,17 @@ Answers: أ 54 · ب 106 · ج 83 · د 12 — comparison questions: 35 — figu
 
 Stems that carried an ASCII sketch in the file (drawn as SVG):
 
-- `L18-Q05` — lesson 18 (الزوايا والمضلّعات) question 5 (line 3310)
-- `L19-Q02` — lesson 19 (المثلث) question 2 (line 3478)
-- `L20-Q07` — lesson 20 (المستطيل) question 7 (line 3759)
+- `L18-Q05` — lesson 18 (الزوايا والمضلّعات) question 5 (line 3312)
+- `L19-Q02` — lesson 19 (المثلث) question 2 (line 3480)
+- `L20-Q07` — lesson 20 (المستطيل) question 7 (line 3761)
 
 Solutions that carried an ASCII sketch (moved to the question's figure, since the app renders solutions as text):
 
-- `L21-Q03` — lesson 21 (المربع) question 3 (line 3882)
-- `L22-Q06` — lesson 22 (المعين و المتوازي و شبه المنحرف) question 6 (line 4107)
-- `L24-Q06` — lesson 24 (الدائرة) question 6 (line 4489)
-- `L24-Q09` — lesson 24 (الدائرة) question 9 (line 4535)
-- `L25-Q04` — lesson 25 (التوازي) question 4 (line 4660)
+- `L21-Q03` — lesson 21 (المربع) question 3 (line 3884)
+- `L22-Q06` — lesson 22 (المعين و المتوازي و شبه المنحرف) question 6 (line 4109)
+- `L24-Q06` — lesson 24 (الدائرة) question 6 (line 4491)
+- `L24-Q09` — lesson 24 (الدائرة) question 9 (line 4537)
+- `L25-Q04` — lesson 25 (التوازي) question 4 (line 4662)
 
 Reconciliation notes (the file disagrees with itself; the tables were taken as truth):
 
