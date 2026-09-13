@@ -1589,7 +1589,17 @@ function teachArrange(T) {
   const at = q => chunkOf[q.id] === undefined ? 99 : chunkOf[q.id];
   SES.queue.sort((a, b) => at(a) - at(b));
   const rec = S.teach[SES.key] || { taught: [] };
-  SES.teach = { T, chunkOf, shown: {}, cur: null, first: !rec.taught.length };
+  SES.teach = { T, chunkOf, shown: {}, cur: null, first: !rec.taught.length, steps: 0, seen: 0 };
+  /* The bar's denominator has to know about the cards before the first one is
+     drawn, so the same gate decision is made here in advance: a chunk is taught
+     when one of this session's questions needs it and one of its rules is new.
+     Over- or under-counting would only make the bar cautious, but this is
+     exact — it is the condition teachGate() applies, read from the same rec. */
+  const need = [];
+  SES.queue.forEach(q => { const ci = chunkOf[q.id]; if (ci !== undefined && need.indexOf(ci) < 0) need.push(ci); });
+  const live = need.filter(ci => T.chunks[ci].steps.some(s => s.type === "rule" && !rec.taught.includes(s.n)));
+  SES.teach.steps = live.reduce((n, ci) => n + T.chunks[ci].steps.length, 0)
+    + (SES.teach.first && live.length ? 1 : 0);     // the one-off «قبل ما نبدأ» card
 }
 function teachGate() {
   const t = SES.teach;
@@ -1617,7 +1627,7 @@ function renderTeach() {
   const t = SES.teach, cur = t.cur, chunk = t.T.chunks[cur.ci], step = cur.steps[cur.i];
   const d = window.QBANK[SES.domKey], l = d.lessons.find(x => x.key === SES.lesKey);
   const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
-  const n = cur.steps.length, last = cur.i === n - 1;
+  const n = cur.steps.length, last = cur.i === n - 1, pct = sesPct();
   const rules = chunk.steps.filter(s => s.type === "rule");
   const nq = chunk.q.filter(id => SES.queue.some(q => q.id === id)).length;
   const goLabel = last ? "يلا نحلّ" : "التالي";
@@ -1662,7 +1672,7 @@ function renderTeach() {
   $app.innerHTML = `<div class="screen screen-full screen-teach" style="--li-c:${u.c};--li-s:${u.s};--li-h:${u.h}">
     <div class="session-top teach-top">
       <button class="x-btn" onclick="A.teachExit()" aria-label="خروج">${X_SVG}</button>
-      <div class="progress teach-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${cur.i + 1}" aria-label="تقدمك في الشرح"><i style="width:${Math.round((cur.i + 1) / n * 100)}%"></i></div>
+      <div class="progress teach-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="تقدمك في الدرس"><i style="width:${pct}%"></i></div>
       <span class="tc-back-ph" aria-hidden="true"></span>
     </div>
     <div class="teach-body">${body}<div class="tc-coach">${BULB_SVG}<span>${coach}</span></div></div>
@@ -1709,6 +1719,7 @@ A.teachNext = function () {
   const rec = teachRecord();
   t.T.chunks[cur.ci].steps.forEach(s => { if (s.type === "rule" && !rec.taught.includes(s.n)) rec.taught.push(s.n); });
   save();
+  t.seen += cur.steps.length;           // banked, so the bar does not step back
   t.first = false; t.cur = null;
   renderSession();
 };
@@ -2462,10 +2473,20 @@ function brokenHeartHero() {
    so at seven of eight the bar claimed 88% with three retries still hidden behind
    it. The queue is the honest denominator: a correct answer fills the bar, a miss
    lengthens the queue and the bar gives a little ground, and it reaches the end
-   exactly when the student does. */
+   exactly when the student does.
+
+   The teaching cards are on the same track. They used to carry a bar of their
+   own, scaled to the chunk, which filled to 100% on the quick check and then
+   dropped back to nothing as the first question arrived — four times over in a
+   lesson with four chunks. The single loudest reward in the loop cannot also be
+   the thing that takes progress away, so the cards count as steps toward the one
+   denominator: the bar crosses the boundary without a seam. */
 function sesPct(resolved) {
-  const n = Math.max(1, SES.queue.length);
-  return Math.round(Math.min(1, (resolved === undefined ? SES.idx : resolved) / n) * 100);
+  const t = SES.teach;
+  const at = (t ? t.seen + (t.cur ? t.cur.i + 1 : 0) : 0)
+    + (resolved === undefined ? SES.idx : resolved);
+  const n = Math.max(1, (t ? t.steps : 0) + SES.queue.length);
+  return Math.round(Math.min(1, at / n) * 100);
 }
 /* The bar moved only on the next render, so the single loudest reward in the loop —
    your answer pushing the bar forward — never happened. Paint it the moment the
@@ -4123,13 +4144,8 @@ function warmStreak() {
       else if (rive.RuntimeLoader.getInstance) rive.RuntimeLoader.getInstance(() => {});
     } catch (e) {}
   }).catch(() => { streakWarmed = false; });
-  ["assets/streak/rive.wasm", "assets/streak/big.riv", "assets/streak/flame.riv", "assets/streak/daycheck.json"]
+  ["assets/streak/rive.wasm", "assets/streak/big.riv", "assets/streak/daycheck.json"]
     .forEach(u => { try { fetch(u).catch(() => {}); } catch (e) {} });   // warm the HTTP cache (wasm is the big one)
-}
-function setOdo(g, prefix, value) {            // drive the odometer digits (pos1 = rightmost)
-  const s = String(Math.max(0, value)), d = s.length;
-  for (let p = 1; p <= 4; p++) { const i = g(prefix + "_pos" + p + "_num"); if (i) i.value = p <= d ? +s[d - p] : 0; }
-  const da = g(prefix + "_digitamount_num"); if (da) da.value = d;
 }
 function streakDayLabel(c) {
   const word = c === 1 ? "يوم واحد" : c === 2 ? "يومان" : c <= 10 ? toAr(c) + " أيام" : toAr(c) + " يوماً";
@@ -4150,7 +4166,7 @@ function showStreakCelebration(count, onDone) {
   veil.className = "streak-veil";
   veil.innerHTML = `<div class="streak-scene">
     <div class="sk-flame"><canvas id="skFlame" width="400" height="400"></canvas></div>
-    <div class="sk-num"><canvas id="skNum" width="300" height="260"></canvas></div>
+    <div class="sk-num" aria-hidden="true"><div class="skn-roll" id="sknRoll"><b>${toAr(Math.max(0, count - 1))}</b><b>${toAr(count)}</b></div></div>
     <div class="sk-sub" id="skSub">${streakDayLabel(count)}</div>
     <div class="sk-cal" id="skCal"><div class="sk-days">${days}</div></div>
     <div class="sk-foot" id="skFoot"><button class="btn sk-btn" onclick="A.closeStreak()">متابعة</button></div>
@@ -4158,21 +4174,29 @@ function showStreakCelebration(count, onDone) {
   document.body.appendChild(veil);
   requestAnimationFrame(() => veil.classList.add("show"));
   const sub = veil.querySelector("#skSub"), cal = veil.querySelector("#skCal"), foot = veil.querySelector("#skFoot");
-  streakInst = { flame: null, num: null, checks: [], flameIns: null, numIns: null, onDone, ran: false };
+  streakInst = { flame: null, checks: [], flameIns: null, onDone, ran: false };
   sndWin && sndWin();
   /* whatever the runtimes do, the way out must appear: if the flame has not fired
      within a few seconds, show the copy, the tracker and the button as they are */
-  const showAll = () => { sub.classList.add("show"); cal.classList.add("show"); foot.classList.add("show"); };
+  /* The count used to be drawn by flame.riv's odometer artboard, whose digit
+     glyphs are Latin — a «1» on the one screen every student reaches on their
+     first day, in an app that reads every other number in Arabic. The roll is
+     two numbers stacked in a window one number tall, sliding up by exactly one
+     row: the streak the student had, then the streak they have. */
+  const roll = () => {
+    const r = veil.querySelector("#sknRoll"); if (!r) return;
+    if (motionReduced()) { r.classList.add("go", "still"); return; }
+    requestAnimationFrame(() => r.classList.add("go"));
+  };
+  const showAll = () => { roll(); sub.classList.add("show"); cal.classList.add("show"); foot.classList.add("show"); };
   setTimeout(() => { if (!streakInst.ran) showAll(); }, 4500);
 
   function tryRun() {
-    if (streakInst.ran || !streakInst.flameIns || !streakInst.numIns) return;
+    if (streakInst.ran || !streakInst.flameIns) return;
     streakInst.ran = true;
     const fireI = (ins, n) => { const i = ins.find(x => x.name === n); if (i) i.fire(); };
     fireI(streakInst.flameIns, "play_trig");                          // flame ignites
-    const g = n => streakInst.numIns.find(i => i.name === n);
-    setOdo(g, "old", Math.max(0, count - 1)); setOdo(g, "new", count);
-    fireI(streakInst.numIns, "play_trig");                            // number rolls up to the streak
+    roll();                                                           // number rolls up to the streak
     /* Duolingo's order, after the flame and the number: the label slides up, then the
        tracker slides up with its grey dots, and only once it has SETTLED do the checks
        pop in one after another — a pop under a half-faded row is a pop nobody sees,
@@ -4197,17 +4221,6 @@ function showStreakCelebration(count, onDone) {
         streakInst.flameIns = ins; tryRun();
       }
     });
-    streakInst.num = new rive.Rive({
-      src: "assets/streak/flame.riv", canvas: veil.querySelector("#skNum"),
-      artboard: "Main", stateMachines: "odometer_state_machine", autoplay: true,
-      onLoad: () => {
-        streakInst.num.resizeDrawingSurfaceToCanvas();
-        const ins = streakInst.num.stateMachineInputs("odometer_state_machine"), g = n => ins.find(i => i.name === n);
-        g("dark_bool").value = false; g("perfect_bool").value = false; g("blue_bool").value = false;   // light UI
-        setOdo(g, "new", count); setOdo(g, "old", Math.max(0, count - 1));
-        streakInst.numIns = ins; tryRun();
-      }
-    });
     fetch("assets/streak/daycheck.json").then(r => r.json()).then(data => {
       streakInst.checks = [...veil.querySelectorAll("[data-check]")].map(el => lottie.loadAnimation({
         container: el, renderer: "svg", loop: false, autoplay: false,
@@ -4220,10 +4233,9 @@ A.closeStreak = function () {
   const v = document.querySelector(".streak-veil"), done = streakInst.onDone;
   try {
     streakInst.flame && streakInst.flame.cleanup();
-    streakInst.num && streakInst.num.cleanup();
     streakInst.checks.forEach(a => a.destroy());
   } catch (e) {}
-  streakInst = { flame: null, num: null, checks: [], onDone: null };
+  streakInst = { flame: null, checks: [], onDone: null };
   // Render the destination (the path) UNDERNEATH the overlay first, then fade the
   // overlay out — so it reveals the path, never the lesson-complete screen behind it.
   (done || render)();

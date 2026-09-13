@@ -176,7 +176,6 @@ svg.ic { display: block; }
 }
 /* the teach bar IS .progress — same 16px r64 track, same inset shine line.
    Only the tint is local, through the hooks fxPaintBar() already uses. */
-.teach-bar { --bar-fill: var(--li-c, var(--gold)); --bar-shine: var(--li-h, var(--gold-soft)); }
 /* the bar keeps the session's width: hearts sit here in a lesson, nothing here in a card */
 .tc-back-ph { width: 44px; flex-shrink: 0; }
 /* the teach column is the session column, at every tier.
@@ -1823,7 +1822,7 @@ button.dom-stat:active { transform: scale(.99); }
 .tp-tx { flex: 1; display: block; }
 .tp-tx b { display: block; font-size: 17px; font-weight: 800; color: var(--ink); }
 .tp-tx span { display: block; font-size: 13px; font-weight: 600; color: var(--gray); margin-top: 2px; line-height: 1.45; }
-.tp-chev { color: var(--gray-icon); flex-shrink: 0; transform: scaleX(-1); }
+.tp-chev { color: var(--gray-icon); flex-shrink: 0; }
 .tp-chev svg { width: 20px; height: 20px; display: block; }
 .po-badge {
   display: flex; width: 108px; height: 108px; border-radius: 50%; margin-bottom: 14px;
@@ -1901,7 +1900,7 @@ button.dom-stat:active { transform: scale(.99); }
 .mock-resume .mr-tx { flex: 1; display: block; }
 .mock-resume b { display: block; font-size: 15.5px; font-weight: 800; color: var(--blue-dk); }
 .mock-resume .mr-tx span { display: block; font-size: 13px; font-weight: 700; color: var(--ink); margin-top: 2px; }
-.mock-resume .mr-go { color: var(--blue-dk); flex-shrink: 0; transform: scaleX(-1); }
+.mock-resume .mr-go { color: var(--blue-dk); flex-shrink: 0; }
 .mock-resume .mr-go svg { width: 20px; height: 20px; display: block; }
 
 /* --- the ceremony overlay: a 480×1044 stage scaled to the viewport, so the
@@ -2573,8 +2572,21 @@ button.dom-stat:active { transform: scale(.99); }
 .streak-scene { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 360px; padding: 0 24px; }
 .sk-flame { width: 310px; height: 310px; }
 .sk-flame canvas { width: 100%; height: 100%; display: block; }
-.sk-num { width: 168px; height: 132px; margin-top: -30px; }
-.sk-num canvas { width: 100%; height: 100%; display: block; }
+/* The streak count: a window one number tall, with the old number above the new
+   one inside it. .go slides the pair up by exactly one row, so the number the
+   student had rolls off the top as the number they now have arrives, and it
+   settles with the app's own overshoot instead of stopping dead. */
+.sk-num { position: relative; width: 168px; height: 132px; margin-top: -16px; overflow: hidden; }
+.skn-roll {
+  position: absolute; top: 0; inset-inline: 0; display: flex; flex-direction: column;
+  transition: transform .78s cubic-bezier(.22,.92,.26,1.06);
+}
+.skn-roll > b {
+  flex: none; height: 132px; display: flex; align-items: center; justify-content: center;
+  font-size: 96px; font-weight: 800; line-height: 1; color: #FF9600;
+}
+.skn-roll.go { transform: translateY(-132px); }
+.skn-roll.still { transition: none; }
 .sk-sub { color: #ff9600; font-weight: 800; font-size: 23px; margin-top: -4px; letter-spacing: .2px; opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s cubic-bezier(.2,.7,.3,1); }
 .sk-sub.show { opacity: 1; transform: none; }
 .sk-cal { margin-top: 20px; width: 100%; opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s cubic-bezier(.2,.7,.3,1); }
