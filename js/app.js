@@ -57,7 +57,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, introSeen: false, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], league: null, mistakes: {} };
+const DEFAULT_STATE = { v: 1, disclaimer: false, introSeen: false, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], league: null, mistakes: {}, teach: {} };
 /* The rivals. A student who suspects the board is padded looks at the names
    first, and a column of two dozen tidy Arabic first names is the one
    arrangement that never occurs on a real sign-up sheet. These are drawn in
@@ -324,6 +324,7 @@ function questionById(id) {
    a mistake list six weeks before an exam. */
 function noteAnswer(q, correct) {
   S.mistakes = S.mistakes || {};
+  S.teach = S.teach || {};
   const cur = S.mistakes[q.id];
   const rec = (cur && typeof cur === "object") ? cur : (cur ? { t: cur, ok: 0, day: null } : null);
   if (correct) {
@@ -405,8 +406,7 @@ function dailyTick() {
   }
   if (S.daily.n >= DAILY_GOAL) return;
   S.daily.n++;
-  if (S.daily.n === DAILY_GOAL)
-    setTimeout(() => toast(`🎁 اكتمل تمرين اليوم! صندوقك بانتظارك في الرئيسية`, "quest"), 1200);
+  if (S.daily.n === DAILY_GOAL) setTimeout(A.questBanner, 1200);
 }
 
 /* Arabic counted nouns: 1 singular, 2 dual, 3-10 plural, 11+ singular accusative */
@@ -534,10 +534,52 @@ const ico = (name, size) => `<img class="ic" src="assets/icons/${ICO_FILE[name] 
    `cls` carries the motion (pop / bob / bob-fast / shake) and the placement
    class. He is decorative in every placement — the screen always states its
    own meaning in text — so alt is empty and he is hidden from assistive tech. */
-const MASCOT_STATES = { encourage: 1, cheer: 1, point: 1, concerned: 1 };
+const MASCOT_STATES = { celebrate: 1, strong: 1 };
 function mascot(state, cls) {
   if (!MASCOT_STATES[state]) return "";
   return `<img class="mascot ${cls || ""}" src="assets/mascot/qaddour-${state}.png" alt="" aria-hidden="true">`;
+}
+
+/* The win-screen hero. Nothing behind him: the character is the celebration.
+   One jump only, and it is the entrance: he drops in from above under gravity, lands
+   hard with a squash as the title pops, springs back, and then stands there, alive
+   but still — a slow sway, never another hop. The grammar is the card's jump
+   (fxAddJump): stretch on the fall, squash on impact, a back-out settle — driven by
+   GSAP so every beat has its own ease. A live shadow under him grows as he comes down
+   and spreads on impact; the painted one was cut off the PNG for exactly this. */
+function winHero() {
+  return `<div class="win-hero qd-hero" style="--wh:236px">
+    <span class="qd-shadow"></span>
+    ${mascot("celebrate", "qd-mascot")}
+  </div>`;
+}
+let qdTl = null;
+function winHeroStop() { if (qdTl) { qdTl.kill(); qdTl = null; } }
+function winHeroPlay() {
+  winHeroStop();
+  const el = document.querySelector(".qd-mascot"), sh = document.querySelector(".qd-shadow");
+  if (!el || !sh || !window.gsap) return;
+  if (motionReduced()) { gsap.set(el, { opacity: 1 }); gsap.set(sh, { opacity: 1 }); return; }
+  const H = el.getBoundingClientRect().height || 236;
+  const P = v => +(v * H / 236).toFixed(1);          // travel scales with the hero's size
+  gsap.set(el, { transformOrigin: "50% 100%", opacity: 0 });
+  gsap.set(sh, { transformOrigin: "50% 50%", opacity: 0, scaleX: .4 });
+
+  const tl = qdTl = gsap.timeline();
+  /* the drop: gravity in, a hard squash, a springy settle */
+  tl.fromTo(el, { y: P(-320), scaleX: .95, scaleY: 1.1, opacity: 1 },
+               { y: 0, duration: .5, ease: "power2.in" }, .12)
+    .to(el, { y: P(4), scaleX: 1.14, scaleY: .84, duration: .08, ease: "power1.in" })
+    .to(el, { y: 0, scaleX: 1, scaleY: 1, duration: .34, ease: "back.out(2.4)" });
+  tl.to(sh, { opacity: 1, scaleX: 1, duration: .5, ease: "power2.in" }, .12)
+    .to(sh, { scaleX: 1.28, opacity: .5, duration: .08 })
+    .to(sh, { scaleX: 1, opacity: 1, duration: .34, ease: "back.out(2)" });
+
+  /* then he stays down: a slow sway so he is alive, no more air */
+  const idle = gsap.timeline({ repeat: -1, yoyo: true });
+  idle.to(el, { rotation: 2.5, duration: 1.6, ease: "sine.inOut" })
+      .to(el, { rotation: -2.5, duration: 1.6, ease: "sine.inOut" });
+  tl.add(idle, 1.1);
 }
 
 function statbar() {
@@ -552,10 +594,40 @@ function statbar() {
 }
 A.chestTap = function () {
   dailyReset();
-  if (S.daily.claimed) { toast("🎁 عُد غداً لصندوق جديد"); return; }
+  if (S.daily.claimed) { chestTip("عُد غداً لصندوق جديد"); return; }
   if (S.daily.n >= DAILY_GOAL) { A.openChest(); return; }
-  toast(`باقي ${qCount(DAILY_GOAL - S.daily.n)} لفتح صندوق اليوم 🎁`);
+  chestTip(`باقي <b>${qCount(DAILY_GOAL - S.daily.n)}</b> لفتح صندوق اليوم`);
 };
+/* the chest answers in a speech bubble over itself, the path's white node tip with its tail on the
+   chest; it pops in, floats, and leaves after a moment. Off the path there is no chest to point at. */
+/* the tenth answer of the day: a white quest card drops in from the top of the lesson — the chest, the
+   title, and the day's bar filling its last step as the count turns over — then lifts away. */
+let questBannerT = 0;
+A.questBanner = function () {
+  document.querySelectorAll(".quest-banner").forEach(e => e.remove());
+  const el = document.createElement("div"); el.className = "quest-banner"; el.setAttribute("role", "status");
+  el.innerHTML = `<div class="qb-card">
+    ${chestSVG("qb-chest")}
+    <div class="qb-txt"><b>اكتمل تمرين اليوم!</b><span>صندوقك بانتظارك في الرئيسية</span>
+      <div class="qb-bar"><div class="duo-bar"><i style="width:${Math.round((DAILY_GOAL - 1) / DAILY_GOAL * 100)}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft)"></i></div><em>${toAr(DAILY_GOAL - 1)}/${toAr(DAILY_GOAL)}</em></div>
+    </div></div>`;
+  document.body.appendChild(el);
+  const fill = () => { el.querySelector(".duo-bar > i").style.width = "100%"; el.querySelector(".qb-bar em").textContent = `${toAr(DAILY_GOAL)}/${toAr(DAILY_GOAL)}`; el.classList.add("full"); };
+  if (motionReduced()) fill(); else setTimeout(fill, 650);
+  clearTimeout(questBannerT);
+  questBannerT = setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 420); }, 3600);
+};
+let chestTipT = 0;
+function chestTip(msg) {
+  const host = document.querySelector(".chest-float");
+  if (!host) { toast(msg.replace(/<[^>]+>/g, "")); return; }
+  host.querySelectorAll(".chest-tip").forEach(e => e.remove());
+  const tip = document.createElement("span"); tip.className = "chest-tip"; tip.setAttribute("role", "status");
+  tip.innerHTML = msg + '<svg class="ct-tail" viewBox="0 0 32 19" aria-hidden="true"><path d="M1 0H31C25 2.5 20.5 8 17.6 15.2 16.8 17.2 15.2 17.2 14.4 15.2 11.5 8 7 2.5 1 0Z" fill="#fff"/><path d="M1 0C7 2.5 11.5 8 14.4 15.2 15.2 17.2 16.8 17.2 17.6 15.2 20.5 8 25 2.5 31 0" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  host.appendChild(tip);
+  clearTimeout(chestTipT);
+  chestTipT = setTimeout(() => { tip.classList.add("out"); setTimeout(() => tip.remove(), 240); }, 2600);
+}
 function bottomnav(active) {
   /* the labels were the state keys — "path", "league" — read aloud in Arabic */
   const items = [["path", "nav-home", "الدروس"], ["league", "nav-league", "المجلس"],
@@ -657,33 +729,48 @@ function countdownCard() {
 }
 
 /* ---------------- daily quest card + chest ---------------- */
-/* Duolingo-style chest, redrawn by hand from the design-system
-   proportions: big rounded lid with a lighter inner panel hanging
-   over a narrower base, gold strap + latch. Lid is its own group so
-   the ceremony can swing it open. */
-function chestSVG(cls) {
-  return `<svg class="qc-chest ${cls || ""}" viewBox="0 0 56 52" fill="none" aria-hidden="true">
-    <ellipse class="ch-glow" cx="28" cy="26" rx="17" ry="7" fill="#FFE700"/>
-    <g class="ch-base">
-      <path d="M9 26 H47 V42 Q47 48 41 48 H15 Q9 48 9 42 Z" fill="#AA572A"/>
-      <path d="M9 40 H47 V42 Q47 48 41 48 H15 Q9 48 9 42 Z" fill="#90461F"/>
-      <rect x="23" y="26" width="10" height="22" fill="#FFC800"/>
-      <rect x="23" y="44" width="10" height="4" fill="#E6A000"/>
-      <rect x="20" y="23" width="16" height="15" rx="4.5" fill="#FFC800"/>
-      <rect x="20" y="32" width="16" height="6" rx="3" fill="#E6A000"/>
-      <circle cx="28" cy="29" r="2.6" fill="#90461F"/>
-      <rect x="26.7" y="29" width="2.6" height="5" rx="1.3" fill="#90461F"/>
-    </g>
-    <g class="ch-lid">
-      <rect x="4" y="2" width="48" height="24" rx="10" fill="#C07F41"/>
-      <rect x="10" y="8" width="36" height="13" rx="5.5" fill="#E5AE7C"/>
-      <rect x="4" y="21" width="48" height="5" fill="#90461F"/>
-      <rect x="23" y="2" width="10" height="24" fill="#FFC800"/>
-      <rect x="23" y="2" width="10" height="4" fill="#FFE700"/>
-      <rect x="23" y="21" width="10" height="5" fill="#E6A000"/>
-    </g>
-  </svg>`;
+/* The daily chest, ported from chest-animation.html: the Duolingo
+   monthly-challenge chest measured frame-by-frame off "chest animation.mp4",
+   wearing colourway ١٢ of that file — a navy body with gold straps and a
+   gold latch. The same art draws the small chest on the path (chestSVG) and
+   the big one in the ceremony; the open state is a second drawing with the
+   lid lifted, swapped in at the pop, exactly as the video does it. */
+const CHEST_PAINT = { body: "#1E3A8A", bodyDk: "#172C6B", trim: "#FFC800", trimDk: "#E6A800", latch: "#FFF1B8", lidIn: "#2A4AA6", lidInDk: "#1E3A8A", intA: "#B8C2E0", intB: "#EEF1FA", title: "#1E3A8A", dot: "#FFE9A8" };
+function chestArt(c) {
+  return {
+    closed: `<svg class="closed" viewBox="0 0 260 290" aria-hidden="true">
+      <g class="ch-base">
+        <rect x="24" y="180" width="41" height="87" rx="10" fill="${c.trimDk}"/><rect x="195" y="180" width="41" height="87" rx="10" fill="${c.trimDk}"/>
+        <rect x="65" y="180" width="130" height="87" fill="${c.body}"/><rect x="65" y="245" width="130" height="4" fill="${c.bodyDk}"/>
+      </g>
+      <g class="ch-lid">
+        <rect x="24" y="75" width="41" height="112" rx="10" fill="${c.trim}"/><rect x="195" y="75" width="41" height="112" rx="10" fill="${c.trim}"/>
+        <rect x="65" y="82" width="130" height="100" fill="${c.body}"/><rect x="65" y="123" width="130" height="4" fill="${c.bodyDk}"/>
+        <circle cx="130" cy="192" r="30" fill="${c.trim}"/>
+        <rect x="12" y="167" width="236" height="58" rx="8" fill="${c.trim}"/>
+        <rect x="12" y="213" width="236" height="12" rx="4" fill="${c.trimDk}"/>
+        <circle cx="130" cy="212" r="22" fill="${c.latch}"/>
+      </g>
+    </svg>`,
+    open: `<svg class="open" viewBox="0 0 260 290" aria-hidden="true">
+      <defs>
+        <linearGradient id="cvInt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.intA}"/><stop offset="1" stop-color="${c.intB}"/></linearGradient>
+        <radialGradient id="cvBleach" cx="130" cy="120" r="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".55" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+      </defs>
+      <rect x="24" y="42" width="41" height="64" rx="10" fill="${c.trim}"/><rect x="195" y="42" width="41" height="64" rx="10" fill="${c.trim}"/>
+      <rect x="65" y="48" width="130" height="58" fill="${c.lidIn}"/><rect x="65" y="74" width="130" height="4" fill="${c.lidInDk}"/>
+      <rect x="34" y="150" width="192" height="66" fill="url(#cvInt)"/>
+      <rect x="24" y="150" width="41" height="117" rx="10" fill="${c.trimDk}"/><rect x="195" y="150" width="41" height="117" rx="10" fill="${c.trimDk}"/>
+      <rect x="65" y="227" width="130" height="40" fill="${c.body}"/>
+      <rect x="65" y="212" width="130" height="15" fill="${c.trim}"/>
+      <rect x="12" y="92" width="236" height="58" rx="8" fill="${c.trim}"/>
+      <rect x="12" y="92" width="236" height="10" rx="4" fill="${c.trimDk}"/>
+      <circle cx="130" cy="118" r="22" fill="#FFFFFF"/>
+      <rect x="0" y="30" width="260" height="200" fill="url(#cvBleach)"/>
+    </svg>`
+  };
 }
+function chestSVG(cls) { return chestArt(CHEST_PAINT).closed.replace('class="closed"', `class="qc-chest ${cls || ""}"`); }
 
 /* Floating daily chest (Duolingo style): fixed above the bottom nav
    on the path, stays put while scrolling. The pill under it shows
@@ -699,46 +786,263 @@ function floatingQuest() {
   </button>`;
 }
 
-/* Chest-opening ceremony: veil → chest drops & lands with a squash →
-   anticipation shakes → lid swings open with sunrays, flash, flying
-   gems → reward pops in → claim */
+/* ---- the ceremony: a 480×1044 stage scaled to the viewport, so every measured
+   coordinate (hop heights, the comet's ellipse, the sparkle ring) lands the same
+   on every phone. Three taps, each with a leap and a comet; the title fades on
+   press and the chest opens on release; lift, burst, rising motes, the light cone,
+   the drop, the white wash; then the pile of gems and the counter ticking up. ---- */
+const CV_STAR = '<svg viewBox="0 0 24 24"><path d="M12 0C13 8 16 11 24 12 16 13 13 16 12 24 11 16 8 13 0 12 8 11 11 8 12 0Z" fill="currentColor"/></svg>';
+const CV_MOTE = '<svg viewBox="0 0 10 26"><path d="M5 0C7.5 8 9.5 11 10 13 9.5 15 7.5 18 5 26 2.5 18 .5 15 0 13 .5 11 2.5 8 5 0Z" fill="#fff"/></svg>';
+const CV_ARROW = '<svg viewBox="0 0 24 24"><path d="M12 19.5V5.5M5.5 12l6.5-6.5 6.5 6.5" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+/* the app's own gem (assets/icons/gem.svg), inlined so the pile can pop and jiggle it; the back rows are a shade darker */
+const CV_GEM = `<svg viewBox="0 0 17 22" aria-hidden="true">
+  <path d="M0 15.4119V6.14389C0 5.43516 0.375083 4.77936 0.98596 4.42002L7.48596 0.596494C8.11186 0.228319 8.88814 0.228319 9.51404 0.596494L16.014 4.42002C16.6249 4.77936 17 5.43516 17 6.14389V15.4119C17 16.0904 16.6561 16.7225 16.0865 17.0911L9.5865 21.297C8.92534 21.7248 8.07466 21.7248 7.4135 21.297L0.913497 17.0911C0.343916 16.7225 0 16.0904 0 15.4119Z" fill="#1CB0F6"/>
+  <path d="M6.93347 2.57699L2.15482 5.86231C1.47453 6.33001 1.62193 7.37398 2.40512 7.63504L4.57583 8.35861C4.84574 8.44858 5.14118 8.41932 5.3882 8.27817L7.99614 6.78792C8.30771 6.60988 8.5 6.27853 8.5 5.91968V3.40103C8.5 2.59585 7.59697 2.12083 6.93347 2.57699Z" fill="#DDF4FF"/>
+</svg>`;
+const CV_GEM_DARK = CV_GEM.replace("#1CB0F6", "#1899D6").replace("#DDF4FF", "#B6E2F8");
+const CV_CAPS = ["اضغط للحصول على فرصة لترقيته!", "اضغط! اضغط!", "باقي فرصة واحدة فحسب!", "اضغط لفتحه!"];
+/* hop choreography, measured off the video at 60 fps: [t, y, lean°, scaleY] */
+const CV_IDLE_HOP = [
+  [0.00, 0, 0, 1.00], [0.15, 0, 0, 0.90], [0.25, 0, 0, 0.90],
+  [0.29, -10, -8, 1.07], [0.35, -24, -4, 1.03], [0.43, -32, -1, 1.00], [0.55, -33, 0, 1.00],
+  [0.62, -28, 2, 1.00], [0.70, -16, 5, 1.00], [0.76, -4, 8, 1.00], [0.79, 2, 6, 0.96],
+  [0.83, -4, 0, 1.00], [0.88, -10, -4, 1.00], [0.95, -10, -2, 1.00], [1.10, -10, 0, 1.00], [1.17, -6, 0, 1.00], [1.22, 0, 0, 1.00]];
+const CV_TAP_HOP = [
+  [0.00, 0, 0, 1.00], [0.03, -4, 8, 1.10], [0.05, -8, 12, 1.10], [0.08, -22, 8, 1.06], [0.12, -32, 2, 1.03],
+  [0.17, -42, -2, 1.00], [0.22, -47, -4, 1.00], [0.27, -50, -1, 1.00], [0.37, -50, 0, 1.00],
+  [0.43, -44, -3, 1.00], [0.48, -34, -6, 1.00], [0.52, -20, -9, 1.00], [0.55, -4, -10, 1.00], [0.58, 3, -3, 0.96],
+  [0.62, -4, 3, 1.00], [0.66, -10, 4, 1.00], [0.72, -16, 2, 1.00], [0.80, -18, 0, 1.00], [0.88, -18, 0, 1.00], [0.93, -10, 0, 1.00], [0.98, 0, 0, 1.00]];
+const CV_SPARKS = [[175, 316, 22], [433, 475, 16], [46, 495, 14], [335, 286, 10], [410, 395, 8], [150, 590, 10], [330, 600, 14], [395, 565, 8], [95, 430, 8], [280, 240, 8], [70, 560, 10], [420, 330, 6], [120, 640, 8]];
+/* the comet's path: a tilted ellipse around the chest */
+const CV_ORBIT = { cx: 232, cy: 412, rx: 146, ry: 110, phi: -18 * Math.PI / 180, th0: 18 * Math.PI / 180, sweep: 270 * Math.PI / 180 };
+/* the reward pile: rows counted from the floor, top rows drawn first so the front row overlaps them */
+function cvPile(rows, gs) {
+  const out = [], dx = gs * .64, dy = gs * .5;
+  rows.forEach((n, r) => {
+    for (let i = 0; i < n; i++) {
+      const x = (i - (n - 1) / 2) * dx + ((i * 7 + r * 3) % 7 - 3) * 2.2, y = -r * dy - gs * .28 + ((i * 5 + r * 11) % 5 - 2) * 2;
+      out.push([x, y, (i * 7 + r * 5) % 13 - 6, r < rows.length - 1 && (i + r) % 3 === 1 ? 1 : 0, r]);
+    }
+  });
+  return out.sort((a, b) => b[4] - a[4]);
+}
+const CV_PILE_50 = cvPile([10, 9, 8, 7, 6, 5, 3, 2], 56);
+
+/* synthesized cues, on the app's audio context and gated by the sound setting */
+function cvTone(f0, f1, dur, type, gain, at) {
+  if (!S.sound) return;
+  try {
+    const ac = audioCtx(); if (!ac) return;
+    const t = ac.currentTime + (at || 0), o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || "sine"; o.frequency.setValueAtTime(f0, t);
+    if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur * .6);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + .015); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur + .05);
+  } catch (e) { /* no audio */ }
+}
+function cvHiss(dur, gain, at, f0, f1) {
+  if (!S.sound) return;
+  try {
+    const ac = audioCtx(); if (!ac) return;
+    const t = ac.currentTime + (at || 0), n = ac.sampleRate * dur, buf = ac.createBuffer(1, n, ac.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    const src = ac.createBufferSource(); src.buffer = buf;
+    const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 1.2;
+    bp.frequency.setValueAtTime(f0, t); bp.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + .03); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(bp); bp.connect(g); g.connect(ac.destination); src.start(t);
+  } catch (e) { /* no audio */ }
+}
+const cvSnd = {
+  hop() { cvTone(300, 620, .22, "sine", .16); cvTone(140, 90, .1, "sine", .12); },
+  tap() { cvTone(360, 760, .22, "sine", .18); cvTone(150, 95, .1, "sine", .12); cvHiss(.28, .07, .02, 900, 3200); },
+  open() {
+    [523, 659, 784, 1047, 1319].forEach((f, i) => cvTone(f, 0, .9, "triangle", .11, i * .06));
+    cvHiss(.9, .05, 0, 5000, 2000);
+    for (let i = 0; i < 9; i++) cvTone(2000 + Math.random() * 3200, 0, .08, "sine", .05, .1 + i * .075);
+  },
+  gems() { [1319, 1568, 1976, 2637].forEach((f, i) => cvTone(f, 0, .28, "sine", .1, i * .05)); },
+  tick() { cvTone(1900, 1500, .06, "triangle", .05); }
+};
+
+let CV = null;   /* the live ceremony, one at a time */
+const cvNow = () => performance.now() / 1000;
+const cvLerp = (a, b, t) => a + (b - a) * t;
+const cvClamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const cvEaseOut = (t, p) => 1 - Math.pow(1 - cvClamp(t, 0, 1), p || 2.3);
+function cvTrack(tr, t) {
+  if (t <= 0) return tr[0].slice(1);
+  for (let i = 1; i < tr.length; i++) if (t <= tr[i][0]) {
+    const a = tr[i - 1], b = tr[i], u = (t - a[0]) / (b[0] - a[0]), s = u * u * (3 - 2 * u);
+    return [cvLerp(a[1], b[1], s), cvLerp(a[2], b[2], s), cvLerp(a[3], b[3], s)];
+  }
+  return null;
+}
+
 A.openChest = function () {
   dailyReset();
   if (S.daily.n < DAILY_GOAL || S.daily.claimed) return;
-  const gems = CHEST_GEMS; // flat 50
+  if (CV) return;
+  const art = chestArt(CHEST_PAINT), gems = CHEST_GEMS;
   const veil = document.createElement("div");
   veil.className = "chest-veil";
-  veil.innerHTML = `<div class="chest-scene">
-    <span class="cs-rays"></span>
-    <span class="cs-flash"></span>
-    <div class="cs-chest">${chestSVG("qc-big")}</div>
-    <div class="cs-burst"></div>
-    <div class="cs-reward">${ico("gem", 36)}<b>+${toAr(gems)}</b></div>
-    <h2 class="cs-title">صندوق اليوم!</h2>
-    <button class="btn cs-btn" onclick="A.claimChest(${gems})">رائع!</button>
+  veil.innerHTML = `<div class="cv-stage">
+    <section class="cv-scr cv-chest on">
+      <h2 class="cv-ttl">صندوق اليوم</h2>
+      <div class="cv-sparks"></div>
+      <div class="cv-wrap">
+        <div class="cv-body"><div class="cv-cone"></div><div class="cv-plate"></div><div class="cv-box">${art.closed}${art.open}</div><div class="cv-glow"></div></div>
+        <div class="cv-fx"></div>
+      </div>
+      <canvas class="cv-arc" width="960" height="2088" aria-hidden="true"></canvas>
+      <div class="cv-dots">${[0, 1, 2].map(i => `<div class="cv-dot${i === 0 ? " active" : ""}"><i>${CV_ARROW}</i><b class="sh"></b></div>`).join("")}</div>
+      <div class="cv-cap"><span class="a">${CV_CAPS[0]}</span><span class="b hide"></span></div>
+      <div class="cv-wash"></div>
+    </section>
+    <section class="cv-scr cv-reward">
+      <div class="cv-counter">${CV_GEM}<b class="num">${toAr(S.xp)}</b></div>
+      <h2 class="cv-rtitle">+${toAr(gems)} جوهرة</h2>
+      <div class="cv-pile"><div class="cv-pshadow"></div></div>
+      <div class="cv-foot"><button class="btn cv-btn" onclick="A.claimChest(${gems})">المتابعة</button></div>
+    </section>
   </div>`;
   document.body.appendChild(veil);
-  requestAnimationFrame(() => veil.classList.add("drop"));
-  setTimeout(() => veil.classList.add("shake"), 850);
-  setTimeout(() => {
-    veil.classList.add("open");
-    sndChest();
-    const burst = veil.querySelector(".cs-burst");
-    for (let i = 0; i < 12; i++) {
-      const dx = (Math.random() * 2 - 1) * 130;
-      const up = -(70 + Math.random() * 120);
-      const el = document.createElement("img");
-      el.src = "assets/icons/gem.svg";
-      el.className = "cs-gem";
-      el.style.cssText = `--dx:${dx.toFixed(0)}px;--up:${up.toFixed(0)}px;--rot:${((Math.random() * 2 - 1) * 220).toFixed(0)}deg;animation-delay:${(i * 0.045).toFixed(2)}s;width:${(16 + Math.random() * 14).toFixed(0)}px`;
-      burst.appendChild(el);
+  const $c = s => veil.querySelector(s);
+  const stage = $c(".cv-stage"), chest = $c(".cv-chest"), body = $c(".cv-body"), box = $c(".cv-box"), fx = $c(".cv-fx"),
+        ttl = $c(".cv-ttl"), capA = $c(".cv-cap .a"), capB = $c(".cv-cap .b"), dots = Array.from(veil.querySelectorAll(".cv-dot")),
+        dotsRow = $c(".cv-dots"), wash = $c(".cv-wash"), arc = $c(".cv-arc"), actx = arc.getContext("2d");
+  actx.scale(2, 2);
+  const fit = () => { stage.style.transform = `scale(${Math.min(innerWidth / 480, innerHeight / 1044)})`; };
+  fit(); addEventListener("resize", fit);
+  CV = { veil, fit, gems, taps: 0, open: false, hop: null, pose: [0, 0, 1], dir: 1, idleAt: cvNow() + 0.78, arc: null, openT0: 0, running: true, nextMote: 0, capOnB: false, pressed: false, m: {} };
+
+  const sparks = $c(".cv-sparks");
+  sparks.style.color = "#F8EC98";
+  CV_SPARKS.forEach(([x, y, s], i) => {
+    const e = document.createElement("span"); e.className = "cv-sp";
+    e.style.cssText = `left:${x}px;top:${y}px;--s:${s}px;--d:${(1.5 + (i * .37) % 1.1).toFixed(2)}s;--o:${(-(i * .53) % 2).toFixed(2)}s`;
+    e.innerHTML = CV_STAR; sparks.appendChild(e);
+  });
+
+  if (motionReduced()) { cvReward(true); return; }
+
+  const setCap = text => {
+    const hide = CV.capOnB ? capB : capA, show = CV.capOnB ? capA : capB;
+    show.textContent = text; show.classList.remove("hide"); hide.classList.add("hide"); CV.capOnB = !CV.capOnB;
+  };
+  const startHop = track => { CV.hop = { track, t0: cvNow(), from: CV.pose.slice(), dir: CV.dir }; CV.dir = -CV.dir; };
+  const orbitPt = th => {
+    const c = Math.cos(th), s = Math.sin(th), cp = Math.cos(CV_ORBIT.phi), sp = Math.sin(CV_ORBIT.phi);
+    return [CV_ORBIT.cx + CV_ORBIT.rx * c * cp - CV_ORBIT.ry * s * sp, CV_ORBIT.cy + CV_ORBIT.rx * c * sp + CV_ORBIT.ry * s * cp];
+  };
+  const drawArc = t => {
+    actx.clearRect(0, 0, 480, 1044);
+    if (t > 0.33) { CV.arc = null; return; }
+    const head = CV_ORBIT.th0 - CV_ORBIT.sweep * cvEaseOut(t / 0.24, 2.3), tail = CV_ORBIT.th0 - CV_ORBIT.sweep * cvEaseOut((t - 0.075) / 0.22, 2.3);
+    if (tail - head < 0.02) return;
+    const N = 44, pts = [];
+    for (let i = 0; i <= N; i++) pts.push(orbitPt(cvLerp(tail, head, i / N)));
+    actx.strokeStyle = "#F8E46C"; actx.lineCap = "round"; actx.lineJoin = "round";
+    actx.globalAlpha = t > 0.27 ? 1 - (t - 0.27) / 0.06 : 1;
+    for (let i = 0; i < N; i++) {
+      actx.lineWidth = 1 + 14 * Math.pow((i + 1) / N, 0.85);
+      actx.beginPath(); actx.moveTo(pts[i][0], pts[i][1]); actx.lineTo(pts[i + 1][0], pts[i + 1][1]); actx.stroke();
     }
-  }, 1650);
-  setTimeout(() => veil.classList.add("rewarded"), 2150);
+    actx.globalAlpha = 1;
+  };
+  const at = (dt, t, name, fn) => { if (dt >= t && !CV.m[name]) { CV.m[name] = true; fn(); } };
+  const openStep = dt => {
+    const lift = -48 * cvEaseOut(dt / 0.1, 3);
+    const ft = Math.max(0, dt - 0.13), fall = 1200 * ft * ft;
+    body.style.transform = `translateY(${fall.toFixed(1)}px)`;
+    box.style.transform = `translateY(${lift.toFixed(1)}px)`;
+    while (CV.nextMote <= dt && dt < 0.72) {
+      const e = document.createElement("span"); e.className = "cv-mote";
+      e.style.cssText = `left:${(130 + (Math.random() * 128 - 64)).toFixed(0)}px;top:${(150 + fall + lift).toFixed(0)}px;--dy:${(-(240 + Math.random() * 320)).toFixed(0)}px;--d:${(.9 + Math.random() * .45).toFixed(2)}s`;
+      e.innerHTML = CV_MOTE; fx.appendChild(e);
+      CV.nextMote += 0.07;
+    }
+    at(dt, 0.5, "wash", () => wash.classList.add("go"));
+    at(dt, 1.25, "done", () => { CV.running = false; cvReward(false); });
+  };
+  const loop = () => {
+    if (!CV || !CV.running) return;
+    const t = cvNow();
+    if (!CV.open) {
+      /* the idle hop keeps a strict 2 s rhythm; a slot that lands mid-hop is skipped, never stacked */
+      if (t >= CV.idleAt) { if (!CV.hop) { startHop(CV_IDLE_HOP); cvSnd.hop(); } CV.idleAt += 2.0; }
+      let pose = [0, 0, 1];
+      if (CV.hop) {
+        const dt = t - CV.hop.t0, v = cvTrack(CV.hop.track, dt);
+        if (!v) CV.hop = null;
+        else { const b = cvClamp(dt / 0.07, 0, 1); pose = [cvLerp(CV.hop.from[0], v[0], b), cvLerp(CV.hop.from[1], v[1] * CV.hop.dir, b), cvLerp(CV.hop.from[2], v[2], b)]; }
+      }
+      CV.pose = pose;
+      body.style.transform = `translateY(${pose[0].toFixed(2)}px) rotate(${pose[1].toFixed(2)}deg) scaleY(${pose[2].toFixed(3)})`;
+    } else openStep(t - CV.openT0);
+    if (CV.arc) drawArc(t - CV.arc.t0);
+    requestAnimationFrame(loop);
+  };
+  const tap = () => {
+    if (CV.open || CV.taps >= 3) return;
+    CV.taps++;
+    dots[CV.taps - 1].classList.remove("active"); dots[CV.taps - 1].classList.add("used");
+    if (CV.taps < 3) dots[CV.taps].classList.add("active", "pop");
+    setCap(CV_CAPS[CV.taps]);
+    CV.arc = { t0: cvNow() }; startHop(CV_TAP_HOP); cvSnd.tap();
+    if (CV.taps === 3) setTimeout(() => { if (CV && CV.taps === 3 && !CV.open) { dotsRow.classList.add("hide"); setCap(CV_CAPS[3]); } }, 250);
+  };
+  const openChest = () => {
+    CV.open = true; CV.openT0 = cvNow(); CV.hop = null; CV.arc = null; actx.clearRect(0, 0, 480, 1044);
+    chest.classList.add("opened"); ttl.classList.add("hide"); capA.classList.add("hide"); capB.classList.add("hide");
+    body.style.transform = ""; cvSnd.open();
+    [[-62, -40], [-22, -84], [30, -66], [72, -34], [4, -22]].forEach((p, i) => {
+      const e = document.createElement("span"); e.className = "cv-burst"; e.style.cssText = `left:130px;top:150px;--dx:${p[0]}px;--dy:${p[1]}px;--o:${i * .04}s;color:#fff`;
+      e.innerHTML = CV_STAR; fx.appendChild(e);
+    });
+  };
+  /* the video fades the title on press and opens on release */
+  chest.addEventListener("pointerdown", () => {
+    if (!CV || CV.open) return;
+    if (CV.taps < 3) { tap(); return; }
+    CV.pressed = true; ttl.classList.add("hide");
+  });
+  const release = () => { if (CV && CV.pressed && !CV.open) { CV.pressed = false; openChest(); } };
+  chest.addEventListener("pointerup", release);
+  chest.addEventListener("pointercancel", release);
+  chest.addEventListener("pointerleave", release);
+  requestAnimationFrame(loop);
 };
+
+/* the reward screen: the pile pops in gem by gem, then the counter climbs in ticks with the title and the button fading in */
+function cvReward(instant) {
+  const veil = CV.veil, reward = veil.querySelector(".cv-reward"), pile = veil.querySelector(".cv-pile"), num = veil.querySelector(".cv-counter .num"), counter = veil.querySelector(".cv-counter");
+  const from = S.xp, n = CV.gems, stagger = 0.02;
+  CV_PILE_50.forEach(([x, y, rot, dark], i) => {
+    const g = document.createElement("span"); g.className = "cv-gem pop";
+    g.style.cssText = `left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;--r:${rot}deg;--o:${(0.05 + i * stagger).toFixed(3)}s`; g.innerHTML = dark ? CV_GEM_DARK : CV_GEM; pile.appendChild(g);
+  });
+  veil.querySelector(".cv-chest").classList.remove("on"); reward.classList.add("on");
+  if (instant) { reward.classList.add("piled", "told"); num.textContent = toAr(from + n); return; }
+  setTimeout(() => reward.classList.add("piled"), 60);
+  const last = 0.05 + (CV_PILE_50.length - 1) * stagger + 0.3;
+  setTimeout(() => {
+    if (!CV) return;
+    reward.classList.add("told"); cvSnd.gems();
+    const t0 = cvNow(), steps = 12; let shown = from;
+    (function step() {
+      if (!CV) return;
+      const u = cvClamp((cvNow() - t0) / 0.8, 0, 1), v = from + Math.round(Math.floor(u * steps + 1e-6) * n / steps);
+      if (v !== shown) { shown = v; num.textContent = toAr(v); counter.classList.remove("bump"); void counter.offsetWidth; counter.classList.add("bump"); cvSnd.tick(); }
+      if (u < 1) requestAnimationFrame(step); else num.textContent = toAr(from + n);
+    })();
+  }, (last + 0.2) * 1000);
+  setTimeout(() => { if (CV) Array.from(pile.querySelectorAll(".cv-gem")).forEach((g, i) => { g.classList.remove("pop"); g.style.transform = "scale(1) rotate(var(--r))"; g.style.setProperty("--o", (i * .02).toFixed(2) + "s"); g.classList.add("jig"); }); }, (last + 0.35) * 1000);
+}
 A.claimChest = function (gems) {
   gainGems(gems); S.daily.claimed = true; save();
   const v = document.querySelector(".chest-veil");
+  if (CV) { CV.running = false; removeEventListener("resize", CV.fit); CV = null; }
   if (v) { v.classList.add("out"); setTimeout(() => { v.remove(); render(); }, 380); }
   else render();
 };
@@ -755,18 +1059,14 @@ function renderPath() {
   if (firstOpenIdx === -1) firstOpenIdx = flat.length;
   let gi = 0, html = "";
   const offsets = [0, -46, -66, -46, 0, 46, 66, 46]; // winding path x-offsets
-  /* قدّور stands beside the path, the way Duo does — scenery the student walks past,
-     not a card or a sheet. Index 5 is deliberate: `right:46` swings that node to the
-     LEFT, which is the only side that leaves him room, and it puts the path on his
-     pointing side so he gestures INTO the lessons instead of off-screen. He must never
-     be flipped to face the other way — see the mascot note in style.css. */
-  const PATH_MASCOT_AT = 5;
   ds.forEach((d, di) => {
     const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
     const uDone = d.lessons.filter(l => lessonProg(d.key + "." + l.key).stars > 0).length;
-    html += `<div class="unit-banner u-${d.color === "yellow" ? "gold" : d.color}" data-unit="${d.key}">
-      <div class="u-txt"><div class="u-kicker">القسم ${toAr(1)}، الوحدة ${toAr(di + 1)}</div><h2>${d.title}</h2></div>
-      <div class="u-side"><span class="u-divider"></span><span class="u-prog"><b>${toAr(uDone)}/${toAr(d.lessons.length)}</b><span>دروس</span></span></div>
+    /* each unit is its own block so its sticky banner is pushed away by the
+       next one, instead of every banner stacking at the top as you scroll */
+    html += `<section class="unit-block"><div class="unit-banner u-${d.color === "yellow" ? "gold" : d.color}" data-unit="${d.key}">
+      <div class="u-txt"><div class="u-kicker">القسم ${toAr(1)}، الوحدة ${toAr(di + 1)} · ${toAr(uDone)}/${toAr(d.lessons.length)} دروس</div><h2>${d.title}</h2></div>
+      <button class="u-book" onclick="A.openUnitBook('${d.key}')" aria-label="قوانين الوحدة"><img src="assets/icons/guide.svg" width="22" height="22" alt=""><span>القوانين</span></button>
     </div><div class="path">`;
     d.lessons.forEach((l, li) => {
       const key = d.key + "." + l.key, p = lessonProg(key);
@@ -784,7 +1084,7 @@ function renderPath() {
         </svg>` : "";
       // exact Figma "Level" colors per state: gold done / unit-color open / gray locked
       const nc = done ? ["#FFC800", "#E6A000", "#FFE700"] : open ? [u.c, u.s, u.h] : ["#D2D2D2", "#ADADAD", "transparent"];
-      html += `<div class="path-row">${gi === PATH_MASCOT_AT ? mascot("point", "path-mascot") : ""}<div class="node-col${current ? " bob" : ""}" style="right:${x}px">
+      html += `<div class="path-row"><div class="node-col${current ? " bob" : ""}" style="right:${x}px">
         ${ring}
         <button class="node ${cls}" style="--node-c:${nc[0]};--node-s:${nc[1]};--node-h:${nc[2]};--d:${(gi % 10) * 0.06}s"
           aria-label="${l.title} — ${done ? "مكتمل، " + arPlural(p.stars, "نجمة واحدة", "نجمتان", "نجوم", "نجمة") : current ? "الدرس الحالي" : "مقفل"}"
@@ -798,7 +1098,7 @@ function renderPath() {
       </div></div>`;
       gi++;
     });
-    html += `</div>`;
+    html += `</div></section>`;
   });
   $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${html}<div class="path-tail"></div></div>` + floatingQuest() + bottomnav("path");
   requestAnimationFrame(() => {
@@ -858,8 +1158,13 @@ window.addEventListener("resize", () => {
 function pickLessonQuestions(lesson, key) {
   const qs = trackFilter(lesson.questions);
   const stat = q => { const s = S.qstats[q.id] || { r: 0, w: 0 }; return s.r - s.w; };
-  // least-mastered first, then keep official easy→hard ordering
-  const chosen = qs.slice().sort((a, b) => stat(a) - stat(b) || a.difficulty - b.difficulty).slice(0, 8);
+  // least-mastered first; in a taught lesson whole chunks come before half
+  // chunks (so a first play never teaches two rules for one question); then
+  // keep official easy→hard ordering
+  const T = window.QTEACH && window.QTEACH[key], chunkOf = {};
+  if (T) T.chunks.forEach((c, i) => c.q.forEach(id => { chunkOf[id] = i; }));
+  const at = q => chunkOf[q.id] === undefined ? 99 : chunkOf[q.id];
+  const chosen = qs.slice().sort((a, b) => stat(a) - stat(b) || at(a) - at(b) || a.difficulty - b.difficulty).slice(0, 8);
   return chosen.sort((a, b) => a.difficulty - b.difficulty).map(shuffleChoices);
 }
 
@@ -944,7 +1249,7 @@ A.startLesson = function (domKey, lesKey, boost) {
   const d = window.QBANK[domKey], l = d.lessons.find(x => x.key === lesKey);
   const key = domKey + "." + lesKey;
   const qs = pickLessonQuestions(l, key);
-  if (!qs.length) { showModal(mascot("point", "pop"), "لا توجد أسئلة", "لا توجد أسئلة متاحة لهذا الدرس في مسارك الحالي.", "حسناً"); return; }
+  if (!qs.length) { showModal("⭐", "لا توجد أسئلة", "لا توجد أسئلة متاحة لهذا الدرس في مسارك الحالي.", "حسناً"); return; }
   const prev = S.lessons[key];
   const replay = !!(prev && prev.stars > 0);            // already cleared → farm mode (+2/+2)
   let xpBoost = false;
@@ -954,8 +1259,237 @@ A.startLesson = function (domKey, lesKey, boost) {
      mistake — and none of it had ever rendered, because each question also
      carries its own method and "q.method || SES.method" always took the
      question's. Teach first on a lesson you have not cleared. */
-  if (!replay && l.method) { renderLessonIntro(d, l); return; }
+  const T = window.QTEACH && window.QTEACH[key];
+  if (T) { teachArrange(T); renderSession(); return; }              // cards for any chunk not yet taught, then its questions
+  if (!replay && l.method) { renderLessonIntro(d, l); return; }     // lessons without cards yet
   renderSession();
+};
+/* «قانونان» / «٣ قوانين» / «١١ قانوناً» — a count with the noun in the form Arabic wants for it */
+function countAr(n, f) { return n === 1 ? f.one : n === 2 ? f.two : n <= 10 ? `${toAr(n)} ${f.few}` : `${toAr(n)} ${f.many}`; }
+const N_RULES = { one: "قانون واحد", two: "قانونان", few: "قوانين", many: "قانوناً" };
+const N_QS = { one: "سؤال واحد", two: "سؤالان", few: "أسئلة", many: "سؤالاً" };
+
+/* Teaching cards live INSIDE the lesson (js/data/teach.js). A chunk is two or
+   three rules and one quick check, and it is shown right before the first
+   question that needs it, so nobody reads twenty rules to answer eight
+   questions, and nobody meets a formula they will not use in the next minute.
+   The queue is regrouped by chunk first; a chunk none of the session's
+   questions need is not taught this time (it waits in the guidebook). */
+function teachArrange(T) {
+  const chunkOf = {};
+  T.chunks.forEach((c, i) => c.q.forEach(id => { chunkOf[id] = i; }));
+  const at = q => chunkOf[q.id] === undefined ? 99 : chunkOf[q.id];
+  SES.queue.sort((a, b) => at(a) - at(b));
+  const rec = S.teach[SES.key] || { taught: [] };
+  SES.teach = { T, chunkOf, shown: {}, cur: null, first: !rec.taught.length };
+}
+function teachGate() {
+  const t = SES.teach;
+  if (t.cur) return true;
+  const q = SES.queue[SES.idx];
+  const ci = q && t.chunkOf[q.id];
+  if (ci === undefined || t.shown[ci]) return false;
+  t.shown[ci] = true;
+  const rec = S.teach[SES.key] || { taught: [] };   // a chunk taught on an earlier play is not taught again
+  if (!t.T.chunks[ci].steps.some(s => s.type === "rule" && !rec.taught.includes(s.n))) return false;
+  const steps = (t.first ? [{ type: "title" }] : []).concat(t.T.chunks[ci].steps);
+  t.cur = { ci, steps, i: 0, picked: null, revealed: false };
+  return true;
+}
+const TEACH_COACH = {
+  title: "نتعلّم شوي ونحلّ شوي — ما نحفظ كل شيء مرة وحدة.",
+  rule: ["اقرأ المثال مرة بصوتك — يثبت أسرع.", "غطِّ الصيغة بإصبعك وحاول تتذكرها قبل ما تكمل."],
+  check: "جرّب قبل ما تشوف الحل — الغلط هنا مجاني.",
+  good: "تذكّرته بنفسك، فراح يثبت أطول.",
+  bad: "طبيعي. الغلط الآن أرخص من الغلط في الاختبار.",
+  book: "دفترك كامل هنا. لا تحفظه — ارجع له وقت الحاجة.",
+  win: "راجعها بكرة خمس دقائق — أفضل من ساعة اليوم."
+};
+function renderTeach() {
+  const t = SES.teach, cur = t.cur, chunk = t.T.chunks[cur.ci], step = cur.steps[cur.i];
+  const d = window.QBANK[SES.domKey], l = d.lessons.find(x => x.key === SES.lesKey);
+  const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
+  const n = cur.steps.length, last = cur.i === n - 1;
+  const rules = chunk.steps.filter(s => s.type === "rule");
+  const nq = chunk.q.filter(id => SES.queue.some(q => q.id === id)).length;
+  const goLabel = last ? "يلا نحلّ" : "التالي";
+  let body = "", coach = "", btn = "";
+  if (step.type === "title") {
+    body = `<div class="teach-card tc-hero">
+      <div class="tc-kicker">قبل ما نبدأ</div>
+      <h1 class="tc-chunk-title">${esc(l.title)}</h1>
+      <p class="tc-chunk-goal">${esc(l.goal || "")}</p>
+      <div class="tc-plan">${countAr(rules.length, N_RULES)} ← تمرين سريع ← ${countAr(nq, N_QS)}</div>
+    </div>`;
+    coach = TEACH_COACH.title;
+    btn = `<button class="btn" onclick="A.teachNext()">${goLabel}</button>`;
+  } else if (step.type === "rule") {
+    const k = rules.indexOf(step) + 1;
+    /* the chip shows the rule in words when the card has them (`plain`); the
+       book's letter formula stays exact in the guidebook, where it is reference */
+    const fig = window.QTEACH_FIG && window.QTEACH_FIG[SES.key + ":" + step.n];
+    body = `<div class="teach-card">
+      <div class="tc-kicker">${esc(chunk.title)} · قانون ${toAr(k)} من ${toAr(rules.length)}</div>
+      <div class="tc-head"><span class="li-num">${toAr(k)}</span><h2 class="tc-title">${esc(step.title)}</h2></div>
+      <p class="tc-say">${esc(step.say)}</p>
+      ${fig ? `<div class="tc-fig">${fig}</div>` : ""}
+      <div class="tc-formula">${esc(step.plain || step.formula)}</div>
+      <div class="tc-eg"><span class="tc-eg-l">مثال</span>${esc(step.example)}</div>
+      ${step.hook ? `<div class="tc-hook"><span class="tc-eg-l">تذكّر</span>${esc(step.hook)}</div>` : ""}
+    </div>`;
+    coach = TEACH_COACH.rule[(k - 1) % 2];
+    btn = `<button class="btn" onclick="A.teachNext()">${goLabel}</button>`;
+  } else {
+    const p = cur.picked, ok = p === step.answer;
+    const cls = i => p === null ? "" : i === step.answer ? (cur.revealed ? "correct" : "") : i === p ? "wrong" : "dim";
+    body = `<div class="tc-practice">تمرين سريع · بدون قلوب ولا وقت</div>
+      <div class="tc-q">${esc(step.q)}</div>
+      <div class="choices tc-choices${p === null ? "" : " answered"}">${step.choices.map((c, i) =>
+        `<div class="slot"><span class="base" aria-hidden="true"></span><button class="choice ${cls(i)}" data-ci="${i}" style="--d:${0.05 + i * 0.07}s" onclick="A.teachPick(${i})" ${p === null ? "" : "disabled"}><span class="ch-shine" aria-hidden="true"></span><i class="ch-spk k1" aria-hidden="true"></i><i class="ch-spk k2" aria-hidden="true"></i><i class="ch-spk k3" aria-hidden="true"></i><span class="ch-letter">${LETTERS[i]}</span><span class="ch-txt">${esc(c)}</span></button></div>`).join("")}</div>
+      ${p === null ? "" : `<div class="tc-why ${ok ? "good" : "bad"}">${ok ? "✓ بالضبط — " : ""}${esc(step.why)}</div>`}`;
+    coach = p === null ? TEACH_COACH.check : ok ? TEACH_COACH.good : TEACH_COACH.bad;
+    btn = p === null ? `<button class="btn" disabled>${goLabel}</button>` : `<button class="btn" onclick="A.teachNext()">${goLabel}</button>`;
+  }
+  const canBack = cur.i > 0;
+  $app.innerHTML = `<div class="screen screen-full screen-teach" style="--li-c:${u.c};--li-s:${u.s};--li-h:${u.h}">
+    <div class="session-top teach-top">
+      <button class="x-btn" onclick="A.teachExit()" aria-label="خروج">${X_SVG}</button>
+      <div class="progress teach-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${cur.i + 1}" aria-label="تقدمك في الشرح"><i style="width:${Math.round((cur.i + 1) / n * 100)}%"></i></div>
+      <span class="tc-back-ph" aria-hidden="true"></span>
+    </div>
+    <div class="teach-body">${body}<div class="tc-coach">${BULB_SVG}<span>${coach}</span></div></div>
+    <div class="action-bar mock-bar"><button class="btn btn-ghost mk-side" onclick="A.teachBack()" ${canBack ? "" : "disabled"}>السابق</button>${btn}</div>
+  </div>`;
+  window.scrollTo(0, 0);
+}
+function teachRecord() { return S.teach[SES.key] = S.teach[SES.key] || { taught: [], missed: [] }; }
+/* A practice tap: no hearts, no timer, no XP, no qstats (qstats orders the
+   real queue, and a practice miss must not poison it). The miss is remembered
+   per rule so the guidebook can float it to the top. */
+A.teachPick = function (i) {
+  const cur = SES && SES.teach && SES.teach.cur; if (!cur) return;
+  const step = cur.steps[cur.i]; if (step.type !== "check" || cur.picked !== null) return;
+  cur.picked = i; cur.revealed = i === step.answer;
+  const rec = teachRecord(), ns = SES.teach.T.chunks[cur.ci].steps.filter(s => s.type === "rule").map(s => s.n);
+  if (cur.revealed) { rec.missed = rec.missed.filter(n => !ns.includes(n)); playCorrect(); }
+  else ns.forEach(n => { if (!rec.missed.includes(n)) rec.missed.push(n); });
+  save();
+  renderTeach();
+  teachFx(document.querySelector(`.tc-choices .choice[data-ci="${i}"]`), cur.revealed);
+  if (!cur.revealed) setTimeout(() => {   // the right answer shows a beat later, so the eye follows the correction
+    cur.revealed = true;
+    const el = document.querySelector(`.tc-choices .choice[data-ci="${step.answer}"]`);
+    if (el) el.classList.add("correct");
+  }, motionReduced() ? 0 : 380);
+};
+/* The check answers with the lesson's own motion: the GSAP jump on a right
+   pick, the drop-and-shake on a wrong one. No strike, no confetti, no streak
+   tag — a practice tap is not a run. */
+function teachFx(card, ok) {
+  if (!fxOn() || !window.gsap || !card) return;
+  fxClear();
+  fxTl = gsap.timeline();
+  if (fxReduced()) {                     // the reduced variant: settle lifted, no travel
+    if (ok) fxTl.fromTo(card, { scale: .97 }, { scale: 1, y: FXP(-7), duration: .18, ease: 'power2.out' });
+    return;
+  }
+  if (ok) fxAddJump(fxTl, card, 0); else fxAddFail(fxTl, card, 0);
+}
+A.teachNext = function () {
+  const t = SES && SES.teach, cur = t && t.cur; if (!cur) return;
+  if (cur.i < cur.steps.length - 1) { cur.i++; cur.picked = null; cur.revealed = false; renderTeach(); return; }
+  const rec = teachRecord();
+  t.T.chunks[cur.ci].steps.forEach(s => { if (s.type === "rule" && !rec.taught.includes(s.n)) rec.taught.push(s.n); });
+  save();
+  t.first = false; t.cur = null;
+  renderSession();
+};
+A.teachBack = function () {
+  const cur = SES && SES.teach && SES.teach.cur; if (!cur || cur.i === 0) return;
+  cur.i--; cur.picked = null; cur.revealed = false; renderTeach();
+};
+/* Leaving before the first question costs nothing, so no confirm; after that
+   it is the session's own quit, which asks. */
+A.teachExit = function () {
+  if (!SES) return;
+  if (SES.done === 0 && SES.idx === 0) { if (SES.xpBoost) gainGems(BOOST_COST); SES = null; save(); go("path"); return; }
+  A.quitSession();
+};
+function teachRulesHtml(chunk) {
+  return chunk.steps.filter(s => s.type === "rule").map(s => `<div class="tc-mini"><b>${esc(s.title)}</b><div class="tc-formula">${esc(s.plain || s.formula)}</div><div class="tc-eg"><span class="tc-eg-l">مثال</span>${esc(s.example)}</div>${s.hook ? `<div class="tc-hook"><span class="tc-eg-l">تذكّر</span>${esc(s.hook)}</div>` : ""}</div>`).join("");
+}
+/* «دفتر القوانين»: every rule of the lesson, on demand. Rules the student
+   missed in a check come first, taught ones next with a tick, the rest under
+   a divider; the book's notes and exam tricks close it. */
+A.openBook = function (domKey, lesKey) {
+  const d = window.QBANK[domKey], l = d && d.lessons.find(x => x.key === lesKey);
+  if (!l || !l.rules) return;
+  const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
+  const rec = (S.teach || {})[domKey + "." + lesKey] || { taught: [], missed: [] };
+  const status = r => rec.missed.includes(r.n) ? "miss" : rec.taught.includes(r.n) ? "done" : "";
+  const rank = { miss: 0, done: 1, "": 2 };
+  const rules = l.rules.slice().sort((a, b) => rank[status(a)] - rank[status(b)] || a.n - b.n);
+  const anyTaught = rules.some(r => status(r));
+  const firstOpen = !S.bookSeen; S.bookSeen = true; save();
+  let rows = "", divided = false;
+  rules.forEach(r => {
+    const st = status(r);
+    if (anyTaught && !st && !divided) { divided = true; rows += `<div class="bk-sep">باقي القوانين</div>`; }
+    rows += bookRow(r, st);
+  });
+  const tips = (l.notes || []).concat(l.tricks || []).map(x => `<div class="ex-tip">${BULB_SVG}<span>${esc(x)}</span></div>`).join("");
+  const old = document.querySelector(".book-veil"); if (old) old.remove();
+  const veil = document.createElement("div");
+  veil.className = "method-veil book-veil";
+  veil.innerHTML = `<div class="method-sheet book-sheet" style="--li-c:${u.c};--li-s:${u.s}">
+    <div class="ms-grip"></div>
+    <div class="ms-head"><span class="ms-bulb bk-bulb"><img src="assets/icons/book.svg" width="22" height="22" alt=""></span><h3>دفتر القوانين</h3></div>
+    <div class="ms-sub">${esc(l.title)} · ${countAr(l.rules.length, N_RULES)}</div>
+    ${firstOpen ? `<div class="tc-coach bk-coach">${BULB_SVG}<span>${TEACH_COACH.book}</span></div>` : ""}
+    ${l.figure ? `<div class="li-fig">${l.figure}</div>` : ""}
+    <div class="ms-body bk-body">${rows}${tips}</div>
+    <button class="btn ms-close" onclick="A.closeBook()">رجوع</button>
+  </div>`;
+  veil.onclick = e => { if (e.target === veil) A.closeBook(); };
+  document.body.appendChild(veil);
+  requestAnimationFrame(() => veil.classList.add("show"));
+};
+A.closeBook = function () {
+  const v = document.querySelector(".book-veil"); if (!v) return;
+  v.classList.remove("show"); setTimeout(() => v.remove(), 320);
+};
+function bookRow(r, st) {
+  return `<div class="li-step bk-row ${st}"><span class="li-num">${st === "done" ? "✓" : st === "miss" ? "!" : toAr(r.n)}</span><span class="li-txt"><b class="li-lead">${esc(r.name)}</b><span class="li-formula">${esc(r.formula)}</span><span class="li-when">${esc(r.when)}</span></span></div>`;
+}
+/* «القوانين»: the whole unit in one book, from the banner. Every lesson in
+   order with its rules, each marked as the lesson book marks it, so the
+   student can look a law up without knowing which lesson it lives in. */
+A.openUnitBook = function (domKey) {
+  const d = window.QBANK[domKey]; if (!d) return;
+  const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
+  const firstOpen = !S.bookSeen; S.bookSeen = true; save();
+  let rows = "", total = 0;
+  d.lessons.forEach((l, li) => {
+    if (!l.rules) return;
+    const rec = (S.teach || {})[domKey + "." + l.key] || { taught: [], missed: [] };
+    total += l.rules.length;
+    rows += `<div class="bk-les"><span>الدرس ${toAr(li + 1)} · ${esc(l.title)}</span><span class="bk-les-c">${countAr(l.rules.length, N_RULES)}</span></div>`;
+    l.rules.forEach(r => rows += bookRow(r, rec.missed.includes(r.n) ? "miss" : rec.taught.includes(r.n) ? "done" : ""));
+  });
+  const old = document.querySelector(".book-veil"); if (old) old.remove();
+  const veil = document.createElement("div");
+  veil.className = "method-veil book-veil";
+  veil.innerHTML = `<div class="method-sheet book-sheet" style="--li-c:${u.c};--li-s:${u.s}">
+    <div class="ms-grip"></div>
+    <div class="ms-head"><span class="ms-bulb bk-bulb"><img src="assets/icons/book.svg" width="22" height="22" alt=""></span><h3>القوانين</h3></div>
+    <div class="ms-sub">${esc(d.title)} · ${countAr(total, N_RULES)} في ${toAr(d.lessons.length)} دروس</div>
+    ${firstOpen ? `<div class="tc-coach bk-coach">${BULB_SVG}<span>${TEACH_COACH.book}</span></div>` : ""}
+    <div class="ms-body bk-body">${rows}</div>
+    <button class="btn ms-close" onclick="A.closeBook()">رجوع</button>
+  </div>`;
+  veil.onclick = e => { if (e.target === veil) A.closeBook(); };
+  document.body.appendChild(veil);
+  requestAnimationFrame(() => veil.classList.add("show"));
 };
 
 /* Splits a lesson's method into numbered cards. The first clause of a step is
@@ -988,13 +1522,25 @@ function renderLessonIntro(d, l) {
     <div class="li-head" style="background:${u.c};box-shadow:0 5px 0 ${u.s}">
       <div class="li-kicker">قبل ما نبدأ</div>
       <h1>${l.title}</h1>
+      ${l.goal ? `<p class="li-goal">${esc(l.goal)}</p>` : ""}
     </div>
-    <div class="li-body" style="--li-c:${u.c};--li-s:${u.s}">${introSteps(l.method)}</div>
+    <div class="li-body" style="--li-c:${u.c};--li-s:${u.s}">${l.rules ? introRules(l) : introSteps(l.method)}</div>
     <div class="action-bar">
       <button class="btn" onclick="A.beginQuestions()">فهمت، ابدأ</button>
     </div>
   </div>`;
   window.scrollTo(0, 0);
+}
+/* The curriculum ships every rule as name / formula / when-to-use, with the
+   book's notes and exam tricks after them. Those are three columns, not one
+   sentence, so they get their own rows; `method` stays the flat fallback. */
+function introRules(l) {
+  let h = l.figure ? `<div class="li-fig">${l.figure}</div>` : "";
+  h += l.rules.map((r, i) => `<div class="li-step" style="--d:${(i * 0.06).toFixed(2)}s">
+      <span class="li-num">${toAr(i + 1)}</span>
+      <span class="li-txt"><b class="li-lead">${esc(r.name)}</b><span class="li-formula">${esc(r.formula)}</span><span class="li-when">${esc(r.when)}</span></span>
+    </div>`).join("");
+  return h + (l.notes || []).concat(l.tricks || []).map(t => `<div class="ex-tip">${BULB_SVG}<span>${esc(t)}</span></div>`).join("");
 }
 A.beginQuestions = function () { if (SES) renderSession(); };
 /* the intro must not be a room with no door - the daily-question sheet
@@ -1595,6 +2141,7 @@ function brokenHeartHero() {
 }
 
 function renderSession() {
+  if (SES.teach && teachGate()) { renderTeach(); return; }
   const q = SES.queue[SES.idx];
   const pct = Math.round(SES.done / SES.total * 100);
   $app.innerHTML = `
@@ -1837,15 +2384,19 @@ A.showMethod = function () {
   stopQTimer();          // the sheet covers the clock; do not charge for reading
   const cur = SES.queue && SES.queue[SES.idx];
   const method = (cur && cur.method) || SES.method;
-  if (!method) return;
+  const ci = SES.teach && cur ? SES.teach.chunkOf[cur.id] : undefined;
+  const chunk = ci === undefined ? null : SES.teach.T.chunks[ci];
+  const les = SES.domKey && window.QBANK[SES.domKey].lessons.find(x => x.key === SES.lesKey);
+  if (!method && !chunk) return;
   const old = document.querySelector(".method-veil"); if (old) old.remove();
   const veil = document.createElement("div");
   veil.className = "method-veil";
   veil.innerHTML = `<div class="method-sheet">
     <div class="ms-grip"></div>
     <div class="ms-head"><span class="ms-bulb">${BULB_SVG}</span><h3>كيف أحلّها؟</h3></div>
-    <div class="ms-sub">⏸ الوقت متوقف — خذ راحتك. خطوات حلّ هذا السؤال بالذات 👇</div>
-    <div class="ms-body">${formatExplain(method)}</div>
+    <div class="ms-sub">⏸ الوقت متوقف — خذ راحتك. ${cur && cur.method ? "خطوات حلّ هذا السؤال بالذات" : chunk ? "القوانين اللي يحتاجها هذا السؤال" : "قوانين هذا الدرس وخدع الاختبار"} 👇</div>
+    <div class="ms-body">${(cur && cur.method) || !chunk ? formatExplain(method) : teachRulesHtml(chunk)}</div>
+    ${les && les.rules ? `<button class="btn btn-ghost ms-link" onclick="A.openBook('${SES.domKey}','${SES.lesKey}')">افتح دفتر القوانين كاملاً</button>` : ""}
     <button class="btn ms-close" onclick="A.closeMethod()">فهمت، بحاول</button>
   </div>`;
   veil.onclick = e => { if (e.target === veil) A.closeMethod(); };
@@ -1981,7 +2532,7 @@ function lessonComplete() {
   const xpWon = rankGain, gemsWon = SES.gems, boosted = SES.xpBoost, tTot = SES.tSpent;
   const dayWord = S.streak.count === 1 ? "يوم واحد" : S.streak.count === 2 ? "يومان" : S.streak.count <= 10 ? toAr(S.streak.count) + " أيام" : toAr(S.streak.count) + " يوماً";
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
-    ${flameHero(115)}
+    ${winHero()}
     <h1 class="win-title">أكملت الدرس!</h1>
     <p class="win-sub">سلسلة ${dayWord}</p>
     <div class="win-gems">${ico("gem", 20)} +${toAr(gemsWon)} جوهرة${boosted ? ` · ⚡ الخبرة ×٢` : ""}</div>
@@ -1990,10 +2541,12 @@ function lessonComplete() {
       <div class="rcard rc-blue rc-time"><div class="rc-t">الوقت</div><div class="rc-v">${TIMER_SVG} <span id="cv-time">${fmtTime(0)}</span></div></div>
       <div class="rcard rc-green"><div class="rc-t">الدقة</div><div class="rc-v">${ico("target", 22)} <span id="cv-acc">٠</span></div></div>
     </div>
+    ${SES.teach ? `<div class="tc-coach win-coach">${BULB_SVG}<span>${TEACH_COACH.win}</span></div>` : ""}
     <div class="action-bar win-action" style="position:relative;right:auto;transform:none;max-width:340px;padding:0;background:none">
       <button class="btn" onclick="A.winContinue()">متابعة</button>
     </div>
   </div></div>`;
+  winHeroPlay();
   setTimeout(() => {
     const xpEl = document.getElementById("cv-xp"), accEl = document.getElementById("cv-acc"), tEl = document.getElementById("cv-time");
     if (xpEl) countUp(xpEl, xpWon); if (accEl) countUp(accEl, acc, "٪"); if (tEl) countUpTime(tEl, tTot);
@@ -2049,7 +2602,7 @@ function renderMockHome() {
   $app.innerHTML = statbar() + `<div class="screen"><div class="page">
     <h1>محاكاة الاختبار</h1><div class="sub">جرّب جو الاختبار الحقيقي وقس مستواك</div>
     <div class="mock-hero-card">
-      <div class="mh-trophy"><img class="ic" src="assets/icons/nav-exam-192.png" width="84" height="84" alt=""></div>
+      <div class="mh-hero"><span class="mh-spot"></span>${mascot("strong", "mh-mascot")}</div>
       <div class="mh-rules">
         <div class="mh-rule">${ico("guide", 20)} قسمان كمّيان × ${toAr(S.track === "lit" ? 15 : 24)} سؤالاً — بالتوزيع الرسمي للمواضيع</div>
         <div class="mh-rule">${ico("timer", 20)} ${toAr(25)} دقيقة لكل قسم بمؤقّت مستقل</div>
@@ -2087,7 +2640,7 @@ A.startMock = function () {
       left: MOCK_SECS
     });
   }
-  if (!sections[0].items.length) { showModal(mascot("point", "pop"), "لا توجد أسئلة", "بنك الأسئلة غير متاح.", "حسناً"); return; }
+  if (!sections[0].items.length) { showModal("⭐", "لا توجد أسئلة", "بنك الأسئلة غير متاح.", "حسناً"); return; }
   MOCK = { sections, si: 0, qi: 0, timer: null };
   startMockSection();
 };
@@ -3081,6 +3634,7 @@ function streakDayLabel(c) {
   return word + " من الحماس";
 }
 A.winContinue = function () {
+  winHeroStop();
   if (pendingStreak > 0) { const c = pendingStreak; pendingStreak = 0; showStreakCelebration(c, () => A.go("path")); }
   else A.go("path");
 };
@@ -3097,13 +3651,17 @@ function showStreakCelebration(count, onDone) {
     <div class="sk-num"><canvas id="skNum" width="300" height="260"></canvas></div>
     <div class="sk-sub" id="skSub">${streakDayLabel(count)}</div>
     <div class="sk-cal" id="skCal"><div class="sk-days">${days}</div></div>
-    <button class="btn sk-btn" onclick="A.closeStreak()">متابعة</button>
+    <div class="sk-foot" id="skFoot"><button class="btn sk-btn" onclick="A.closeStreak()">متابعة</button></div>
   </div>`;
   document.body.appendChild(veil);
   requestAnimationFrame(() => veil.classList.add("show"));
-  const sub = veil.querySelector("#skSub"), cal = veil.querySelector("#skCal");
+  const sub = veil.querySelector("#skSub"), cal = veil.querySelector("#skCal"), foot = veil.querySelector("#skFoot");
   streakInst = { flame: null, num: null, checks: [], flameIns: null, numIns: null, onDone, ran: false };
   sndWin && sndWin();
+  /* whatever the runtimes do, the way out must appear: if the flame has not fired
+     within a few seconds, show the copy, the tracker and the button as they are */
+  const showAll = () => { sub.classList.add("show"); cal.classList.add("show"); foot.classList.add("show"); };
+  setTimeout(() => { if (!streakInst.ran) showAll(); }, 4500);
 
   function tryRun() {
     if (streakInst.ran || !streakInst.flameIns || !streakInst.numIns) return;
@@ -3113,9 +3671,16 @@ function showStreakCelebration(count, onDone) {
     const g = n => streakInst.numIns.find(i => i.name === n);
     setOdo(g, "old", Math.max(0, count - 1)); setOdo(g, "new", count);
     fireI(streakInst.numIns, "play_trig");                            // number rolls up to the streak
+    /* Duolingo's order, after the flame and the number: the label slides up, then the
+       tracker slides up with its grey dots, and only once it has SETTLED do the checks
+       pop in one after another — a pop under a half-faded row is a pop nobody sees,
+       which is what used to happen. The button comes last. */
     setTimeout(() => {
-      sub.classList.add("show"); cal.classList.add("show");
-      streakInst.checks.forEach((a, i) => setTimeout(() => a.goToAndPlay(0, true), 280 + i * 150));
+      sub.classList.add("show");
+      setTimeout(() => cal.classList.add("show"), 180);
+      const n = streakInst.checks.length;
+      streakInst.checks.forEach((a, i) => setTimeout(() => a.goToAndPlay(0, true), 760 + i * 170));
+      setTimeout(() => foot.classList.add("show"), 760 + Math.max(0, n - 1) * 170 + 520);
     }, 1300);
   }
 
@@ -3147,9 +3712,7 @@ function showStreakCelebration(count, onDone) {
         animationData: JSON.parse(JSON.stringify(data)), rendererSettings: { preserveAspectRatio: "xMidYMid meet" }
       }));
     }).catch(() => {});
-  }).catch(() => { /* runtime failed to load — leave the static text/days visible */
-    sub.classList.add("show"); cal.classList.add("show");
-  });
+  }).catch(showAll);   /* runtime failed to load — the static text, days and button */
 }
 A.closeStreak = function () {
   const v = document.querySelector(".streak-veil"), done = streakInst.onDone;
@@ -3359,7 +3922,7 @@ function showModal(hero, title, bodyHtml, btnText, onclose) {
   veil.querySelector("#mOk").onclick = () => { veil.remove(); if (onclose) onclose(); };
 }
 A.showAbout = function () {
-  showModal(mascot("point", "pop"), "حول تطبيق قدراتي", DISCLAIMER_HTML + `<br><a class="linkout" href="https://etec.gov.sa" target="_blank" rel="noopener">↗ الموقع الرسمي لهيئة تقويم التعليم والتدريب</a>`, "حسناً");
+  showModal("⭐", "حول تطبيق قدراتي", DISCLAIMER_HTML + `<br><a class="linkout" href="https://etec.gov.sa" target="_blank" rel="noopener">↗ الموقع الرسمي لهيئة تقويم التعليم والتدريب</a>`, "حسناً");
 };
 
 /* Start-screen hero: XP-coins trio (recreated from the Duolingo UI-kit
@@ -3571,11 +4134,7 @@ function renderExamSetup(first) {
       </div>
     </section>
 
-    <div class="ep-foot" id="epFoot">
-      <div class="ep-done">
-        <div class="tick">\u2713</div>
-        <div class="txt"><b>\u062a\u0645 \u062d\u0641\u0638 \u0627\u0644\u0645\u0648\u0639\u062f!</b><span id="epDoneSub"></span></div>
-      </div>
+    <div class="ep-foot">
       <button class="btn" id="epSave" type="button" onclick="A.saveExam()" disabled>\u062d\u0641\u0638 \u0627\u0644\u0645\u0648\u0639\u062f</button>
       <button class="ep-ghost" type="button" onclick="${first ? "A.skipExam()" : "A.backFromExam()"}">${
         first ? "\u0644\u0645 \u0623\u062d\u062c\u0632 \u0645\u0648\u0639\u062f\u0627\u064b \u0628\u0639\u062f \u2014 \u0644\u0627\u062d\u0642\u0627\u064b" : "\u0631\u062c\u0648\u0639"}</button>
@@ -3633,10 +4192,9 @@ function epCountTo(target) {
 
 function epCount() {
   const today = epDay0(new Date());
-  const card = document.getElementById("epCount"), foot = document.getElementById("epFoot");
+  const card = document.getElementById("epCount");
   const save = document.getElementById("epSave");
   if (!card) return;
-  foot.classList.remove("done");
   if (!EP.sel) {
     card.classList.add("empty");
     cancelAnimationFrame(EP.raf); clearTimeout(EP.timer); EP.shown = 0;
@@ -3679,6 +4237,7 @@ function epJumpWAAPI(b) {
 function epLand(b) {
   const cal = document.querySelector(".ep-cal");
   const back = document.getElementById("epFxBack"), front = document.getElementById("epFxFront");
+  if (!cal || !back || !front) return;   /* the screen moved on before this frame */
   back.innerHTML = ""; front.innerHTML = "";
   const cr = cal.getBoundingClientRect(), br = b.getBoundingClientRect();
   if (!br.width) { b.classList.add("jump"); requestAnimationFrame(() => epJumpWAAPI(b)); return; }
@@ -3806,34 +4365,7 @@ A.saveExam = function () {
   const d = EP.sel;
   S.exam = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   S.examAsked = true; save(); sndGood();
-
-  /* confirm in place rather than snapping away: the count-up and the landing
-     have just finished selling the date, and cutting the screen at that exact
-     moment throws the payoff away */
-  const n = epDiff(epDay0(new Date()), d);
-  const foot = document.getElementById("epFoot"), sub = document.getElementById("epDoneSub");
-  const btn = document.getElementById("epSave");
-  if (foot && sub && btn) {
-    /* arPlural() RETURNS THE COUNT for 3 and up \u2014 "toAr(n) + ' ' + few" \u2014 so
-       prefixing it with toAr() again printed "\u0644\u0640 \u0664 \u0664 \u0623\u0633\u0627\u0628\u064a\u0639". It yields the
-       bare word for 1 and 2, which take their own forms and attach the lam
-       directly. Under a week the weeks figure is a rounding artefact, so that
-       range counts days instead. */
-    const weeks = Math.round(n / 7);
-    sub.textContent =
-      n <= 0 ? "\u0628\u0627\u0644\u062a\u0648\u0641\u064a\u0642 \u0627\u0644\u064a\u0648\u0645"
-      : n === 1 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u064a\u0648\u0645 \u0648\u0627\u062d\u062f"
-      : n === 2 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u064a\u0648\u0645\u064a\u0646"
-      : n < 7 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0640 " + toAr(n) + " \u0623\u064a\u0627\u0645"
-      : weeks === 1 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0623\u0633\u0628\u0648\u0639 \u0648\u0627\u062d\u062f"
-      : weeks === 2 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0623\u0633\u0628\u0648\u0639\u064a\u0646"
-      : "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0640 " +
-        arPlural(weeks, "\u0623\u0633\u0628\u0648\u0639", "\u0623\u0633\u0628\u0648\u0639\u064a\u0646", "\u0623\u0633\u0627\u0628\u064a\u0639", "\u0623\u0633\u0628\u0648\u0639\u0627\u064b");
-    foot.classList.add("done");
-    btn.textContent = "\u0645\u062a\u0627\u0628\u0639\u0629";
-    btn.onclick = () => { EP.first ? go("path") : A.backFromExam(); };
-    return;
-  }
+  cancelAnimationFrame(EP.raf); clearTimeout(EP.timer);
   EP.first ? go("path") : A.backFromExam();
 };
 
@@ -3914,10 +4446,7 @@ const INTRO_VALUE = [
 ];
 function renderIntroValue() {
   $app.innerHTML = `<div class="screen screen-full iv-screen">
-    <div class="iv-top">
-      <div class="iv-bubble">إليك ما ستحصل عليه مع قدراتي!</div>
-      ${mascot("point", "iv-mascot pop")}
-    </div>
+    <div class="iv-top"><h1 class="iv-title">إليك ما ستحصل عليه مع قدراتي!</h1></div>
     <div class="iv-rows">` + INTRO_VALUE.map((r, i) => `
       <div class="iv-row iv-${r.c}" style="--d:${(0.18 + i * 0.12).toFixed(2)}s">
         <span class="iv-ic">${ico(r.ic, 26)}</span>

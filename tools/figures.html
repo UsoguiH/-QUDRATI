@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الأشكال — معاينة</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  body { background: var(--bg, #fff); padding: 16px; }
+  .fig-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+  .fig-card { background: #fff; border: 2px solid var(--line); border-radius: 15px; padding: 12px 14px; box-shadow: 0 2px 0 var(--line); }
+  .fig-id { font-size: 12px; font-weight: 800; color: var(--gray); letter-spacing: .3px; margin-bottom: 6px; }
+  .fig-stem { font-size: 14.5px; font-weight: 600; line-height: 1.6; color: var(--ink); }
+  h1 { font-size: 20px; margin: 0 0 12px; }
+</style>
+</head>
+<body>
+<h1>كل الأشكال في بنك الأسئلة</h1>
+<div class="fig-grid" id="grid"></div>
+<script src="../js/data/skills.js"></script>
+<script src="../js/data/numbers.js"></script>
+<script src="../js/data/ratios.js"></script>
+<script src="../js/data/geometry.js"></script>
+<script>
+  // Every figure in the bank, drawn inside the same .q-figure box the question
+  // screen uses, so a drawing can be checked without playing to reach it.
+  const grid = document.getElementById("grid");
+  let h = "";
+  for (const d of Object.values(window.QBANK)) {
+    for (const l of d.lessons) {
+      if (l.figure) h += `<div class="fig-card"><div class="fig-id">${d.key}.${l.key} — مخطط الدرس</div><div class="q-figure">${l.figure}</div></div>`;
+      for (const q of l.questions) {
+        if (!q.figure) continue;
+        h += `<div class="fig-card"><div class="fig-id">${q.id}</div><div class="q-figure">${q.figure}</div><div class="fig-stem">${q.stem}</div></div>`;
+      }
+    }
+  }
+  grid.innerHTML = h;
+</script>
+</body>
+</html>

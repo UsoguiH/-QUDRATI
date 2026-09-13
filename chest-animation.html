@@ -1,0 +1,1187 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>فتح الصندوق — أربع درجات</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Chest opening in four tiers. The first («عادي») is the Duolingo
+   monthly-challenge chest rebuilt frame-by-frame from "chest
+   animation.mp4" (480×1044); the other three share its grammar but
+   own their design, their ceremony and their surprise.
+   Every coordinate is in that 480×1044 reference frame; #stage is
+   scaled uniformly to fit whatever viewport opens it.
+   ============================================================ */
+:root {
+  --snow: #FCFCFC; --macaw: #1CB0F6; --macaw-dk: #1899D6; --sky: #54C4FC;
+  --eel: #4B4B4B; --line: #E5E5E5;
+  --wood: #C87800; --tan: #ECC898;
+  --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body {
+  background: var(--snow); font-family: var(--font); color: var(--eel);
+  -webkit-user-select: none; user-select: none; touch-action: manipulation;
+  transition: background .32s ease;
+}
+#viewport { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+#stage { position: relative; width: 480px; height: 1044px; overflow: hidden; flex-shrink: 0; transform-origin: 50% 50%; }
+
+/* ---- screens: Android-style push, new one slides in from the right ---- */
+.scr { position: absolute; inset: 0; background: var(--snow); transform: translateX(100%); visibility: hidden; }
+.scr.on { transform: none; visibility: visible; }
+.scr.push-in  { visibility: visible; animation: pushIn  .32s cubic-bezier(.2,.7,.2,1) both; }
+.scr.push-out { visibility: visible; animation: pushOut .32s cubic-bezier(.2,.7,.2,1) both; }
+@keyframes pushIn  { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes pushOut { from { transform: none; } to { transform: translateX(-100%); } }
+
+h1, h2, h3, p { margin: 0; }
+button { font-family: var(--font); cursor: pointer; border: 0; background: none; padding: 0; color: inherit; }
+
+/* Duolingo's 3D button: face + 4px lip */
+.btn {
+  display: block; width: 440px; height: 56px; margin: 0 auto; border-radius: 16px;
+  background: var(--macaw); color: #fff; font-size: 17px; font-weight: 700;
+  box-shadow: 0 4px 0 var(--macaw-dk); transition: transform .06s, box-shadow .06s;
+}
+.btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--macaw-dk); }
+
+/* ============================================================
+   Start screen — the monthly-challenge card the video begins on
+   ============================================================ */
+#s-start .qtitle { position: absolute; top: 150px; left: 0; right: 0; text-align: center; font-size: 26px; font-weight: 800; color: var(--macaw); }
+.card { position: absolute; left: 20px; right: 20px; border: 2px solid var(--line); border-radius: 16px; background: #fff; }
+#s-start .quests { top: 232px; }
+.qrow { display: flex; align-items: center; gap: 14px; padding: 16px 16px; border-bottom: 2px solid var(--line); }
+.qrow:last-child { border-bottom: 0; }
+.qrow svg { width: 56px; height: 52px; flex-shrink: 0; overflow: visible; }
+.qrow .qtxt { flex: 1; }
+.qrow b { display: block; font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.bar { position: relative; height: 18px; border-radius: 9px; background: var(--line); overflow: hidden; }
+.bar i { position: absolute; top: 0; bottom: 0; right: 0; border-radius: 9px; background: var(--macaw); }
+.bar i::after { content: ""; position: absolute; top: 4px; left: 8px; right: 8px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.35); }
+.bar span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; }
+.bar.low span { color: #AFAFAF; }
+#s-start .month { top: 712px; height: 128px; display: flex; align-items: center; gap: 16px; padding: 0 16px; }
+.avatar { width: 84px; height: 84px; border-radius: 50%; border: 3px solid var(--macaw); background: #DDF4FF; display: flex; align-items: center; justify-content: center; }
+.avatar svg { width: 46px; height: 46px; }
+.month b { display: block; font-size: 17px; margin-bottom: 4px; }
+.month span { color: var(--macaw); font-weight: 700; font-size: 15px; }
+#s-start .btn { position: absolute; bottom: 84px; left: 20px; }
+
+/* ============================================================
+   Chest screen — one set of tokens per tier, nothing else keyed on the tier
+   ============================================================ */
+#s-chest {
+  cursor: pointer;
+  --bg: var(--snow); --plate: #E4E4E4; --ttl: var(--wood); --cap: var(--eel);
+  --dot: var(--tan); --dot-live: var(--wood); --dot-arrow: #fff; --dot-sh: #E4E4E1;
+  --cone: 255,240,190; --cone-a: .5; --halo: transparent; --flash: #fff; --prize: rgba(255,255,255,.9);
+}
+#s-chest.t-rare {
+  --bg: #54C4FC; --plate: #3FAEF0; --ttl: #fff; --cap: #fff;
+  --dot: #2494E4; --dot-live: #fff; --dot-arrow: #1CB0F6; --dot-sh: #3EAFF0;
+  --cone: 255,255,255; --cone-a: .92; --flash: #fff;
+}
+#s-chest.t-epic {
+  --bg: #8B5CF6; --plate: #6B3DD9; --ttl: #FFD54A; --cap: #fff;
+  --dot: #6B3DD9; --dot-live: #FFC800; --dot-arrow: #5B21B6; --dot-sh: #6A3BD0;
+  --cone: 255,230,160; --cone-a: .9; --halo: rgba(255,213,74,.5); --flash: #F3E8FF; --prize: rgba(255,225,140,.95);
+}
+#s-chest.t-legendary {
+  --bg: #FF9600; --plate: #E07F00; --ttl: #fff; --cap: #fff;
+  --dot: #D97800; --dot-live: #fff; --dot-arrow: #FF9600; --dot-sh: #DE7E00;
+  --cone: 255,236,170; --cone-a: 1; --halo: rgba(255,240,180,.6); --flash: #FFF1C2; --prize: rgba(255,240,180,1);
+}
+#s-chest { background: var(--bg); transition: background .32s ease; }
+/* a lightning flicker lights the chest itself, never the room */
+.flicker .chestwrap { filter: brightness(1.5); }
+.c3 .box, .cracking .box { animation: innerGlow .36s ease-in-out infinite alternate; }
+/* the ruby is the chest's heart: it beats, and races with every tap; the crown on the lid hops on each tap */
+.jewel { transform-box: fill-box; transform-origin: center; }
+.t-legendary .jewel { animation: heartbeat var(--hb, 1.4s) ease-in-out infinite; filter: drop-shadow(0 0 var(--hg, 0px) #FF4D6D); }
+#s-chest.c1 { --hb: 1s; --hg: 4px; } #s-chest.c2 { --hb: .66s; --hg: 8px; } #s-chest.c3 { --hb: .4s; --hg: 14px; }
+@keyframes heartbeat { 0%, 100% { transform: scale(1); } 14% { transform: scale(1.22); } 28% { transform: scale(1); } 42% { transform: scale(1.12); } 56% { transform: scale(1); } }
+.crownArt { transform-box: fill-box; transform-origin: 50% 100%; }
+.tapped .crownArt { animation: crownPop .45s cubic-bezier(.3,1.6,.5,1); }
+@keyframes crownPop { 0% { transform: scale(1) rotate(0); } 40% { transform: scale(1.3,.8) rotate(-9deg); } 70% { transform: scale(.92,1.14) rotate(5deg); } 100% { transform: scale(1) rotate(0); } }
+@keyframes innerGlow { from { filter: brightness(1); } to { filter: brightness(1.4) drop-shadow(0 0 16px rgba(255,220,120,.9)); } }
+.slam {
+  position: absolute; top: 640px; left: 0; right: 0; text-align: center; font-size: 50px; font-weight: 800; line-height: 1.2;
+  color: #FFF4CC; text-shadow: 0 5px 0 #D97800; opacity: 0; transform: scale(.3) rotate(-6deg); z-index: 6; pointer-events: none;
+}
+.slam.go { animation: slamIn .6s cubic-bezier(.2,1.6,.4,1) both; }
+@keyframes slamIn { 0% { opacity: 0; transform: scale(.3) rotate(-9deg); } 100% { opacity: 1; transform: scale(1) rotate(-3deg); } }
+.t-legendary .flash.go { animation-duration: .85s; }
+.ttl {
+  position: absolute; top: 222px; left: 0; right: 0; text-align: center;
+  font-size: 26px; font-weight: 800; color: var(--ttl); line-height: 1.2;
+  transition: opacity .22s ease;
+}
+.ttl.hide { opacity: 0; }
+
+/* the chest lives in a 260×290 box; its plate's bottom is the floor */
+.chestwrap { position: absolute; left: 110px; top: 285px; width: 260px; height: 290px; z-index: 2; }
+.body { position: absolute; inset: 0; transform-origin: 50% 98%; will-change: transform; }
+.plate { position: absolute; left: 15px; top: 235px; width: 232px; height: 46px; border-radius: 14px; background: var(--plate); transform-origin: 50% 50%; }
+.t-rare .plate, .t-epic .plate, .t-legendary .plate { left: 12px; top: 222px; width: 236px; height: 63px; border-radius: 16px; }
+.box { position: absolute; inset: 0; will-change: transform; }
+.box svg { position: absolute; left: 0; top: 0; width: 260px; height: 290px; overflow: visible; }
+.box svg.open { display: none; }
+.opened .box svg.closed { display: none; }
+.opened .box svg.open { display: block; }
+/* launch: the lid flies off the closed art while the open base shows underneath */
+.launch .box svg.open { display: block; }
+.launch .box svg.closed { display: block; z-index: 3; }
+.launch .box svg.closed .base { display: none; }
+.box svg .lid { transform-box: view-box; transform-origin: 130px 180px; }
+.t-epic.launch .box svg.closed .lid { animation: lidDrift .85s cubic-bezier(.2,.5,.3,1) forwards; }
+.t-legendary.launch .box svg.closed .lid { animation: lidBlast 1.7s linear forwards; }
+@keyframes lidDrift {
+  0%   { transform: translate(0,0) rotate(0); opacity: 1; }
+  18%  { transform: translate(-6px,-90px) rotate(-10deg); opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translate(-150px,-640px) rotate(-70deg); opacity: 0; }
+}
+@keyframes lidBlast {
+  0%   { transform: translate(0,0) rotate(0) scale(1); animation-timing-function: cubic-bezier(.1,.7,.3,1); }
+  32%  { transform: translate(80px,-860px) rotate(200deg) scale(1); animation-timing-function: cubic-bezier(.5,0,.8,.4); }
+  72%  { transform: translate(30px,470px) rotate(352deg) scale(1.1,.86); animation-timing-function: cubic-bezier(.2,.8,.4,1); }
+  80%  { transform: translate(30px,428px) rotate(356deg) scale(1); animation-timing-function: cubic-bezier(.5,0,.8,.4); }
+  88%  { transform: translate(30px,470px) rotate(358deg) scale(1.04,.95); animation-timing-function: cubic-bezier(.2,.8,.4,1); }
+  93%  { transform: translate(30px,458px) rotate(359deg) scale(1); animation-timing-function: cubic-bezier(.5,0,.8,.4); }
+  100% { transform: translate(30px,470px) rotate(360deg) scale(1); }
+}
+
+/* a soft light spill on the floor under the higher tiers */
+.halo {
+  position: absolute; left: 130px; top: 262px; width: 320px; height: 100px; transform: translate(-50%,-50%);
+  border-radius: 50%; background: radial-gradient(closest-side, var(--halo), transparent); opacity: 0; pointer-events: none; z-index: 0;
+  transition: opacity .4s ease;
+}
+.t-epic .halo, .t-legendary .halo { opacity: .8; animation: haloBreathe 2.2s ease-in-out infinite; }
+.c2 .halo { opacity: .6; --hs: 1.15; }
+.c3 .halo { opacity: .9; --hs: 1.35; animation: haloBreathe .8s ease-in-out infinite; }
+.cracking .halo { opacity: 1; --hs: 1.6; animation: haloBreathe .45s ease-in-out infinite; }
+@keyframes haloBreathe { 0%, 100% { transform: translate(-50%,-50%) scale(var(--hs, 1)); } 50% { transform: translate(-50%,-50%) scale(calc(var(--hs, 1) * 1.14)); } }
+
+/* glossy sweep across the chest silhouette on every tap (rare and up) */
+.sheen { position: absolute; inset: 0; clip-path: path(var(--sil)); pointer-events: none; }
+.sheen i {
+  position: absolute; top: -60px; bottom: -60px; left: -110px; width: 80px; transform: skewX(-18deg);
+  background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.62) 50%, rgba(255,255,255,0));
+}
+.sheen.go i { animation: sheenGo .5s cubic-bezier(.3,.5,.3,1) both; }
+@keyframes sheenGo { from { left: -110px; } to { left: 320px; } }
+
+/* light pouring out of the open chest: a soft pool at the mouth + a cone */
+.glow {
+  position: absolute; left: 130px; top: 150px; width: 320px; height: 240px; transform: translate(-50%,-50%);
+  background: radial-gradient(closest-side, rgba(255,255,255,.95), rgba(255,255,255,.55) 42%, rgba(255,255,255,0) 100%);
+  opacity: 0; pointer-events: none; z-index: 3;
+}
+.cone {
+  position: absolute; left: 130px; bottom: 130px; width: 380px; height: 560px; transform: translateX(-50%);
+  clip-path: polygon(32% 100%, 68% 100%, 100% 0, 0 0);
+  background: linear-gradient(to top, rgba(var(--cone),var(--cone-a)), rgba(var(--cone),calc(var(--cone-a) * .44)) 40%, rgba(var(--cone),0) 100%);
+  opacity: 0; pointer-events: none; z-index: 1;
+}
+.lit .glow { animation: glowIn .25s ease-out forwards; }
+.lit .cone { animation: coneIn .3s ease-out forwards, conePulse 1.1s ease-in-out .3s infinite; }
+@keyframes glowIn { to { opacity: 1; } }
+@keyframes coneIn { to { opacity: 1; } }
+@keyframes conePulse { 0%, 100% { opacity: 1; } 50% { opacity: .78; } }
+
+/* legendary only: gold light cracks through the seams while the lights are out */
+.cracks path, .floorcracks path { fill: none; stroke: #FFE680; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; filter: drop-shadow(0 0 6px #FFD54A) drop-shadow(0 0 14px rgba(255,180,60,.7)); }
+/* the legendary cracks a stage further on each tap (.c1 .c2 .c3); the release (.cracking) opens every seam */
+.c1 .cracks path.s1, .c2 .cracks path.s2, .c3 .cracks path.s3, .c3 .floorcracks path,
+.cracking .box .cracks path, .cracking .floorcracks path { opacity: 1; animation: crackGrow .55s ease-out var(--o) forwards, crackPulse .22s ease-in-out calc(var(--o) + .55s) infinite alternate; }
+@keyframes crackGrow { to { stroke-dashoffset: 0; } }
+@keyframes crackPulse { from { stroke-width: 3; stroke: #FFE680; } to { stroke-width: 6; stroke: #FFFBE0; } }
+.floorcracks { position: absolute; left: 0; top: 0; width: 260px; height: 290px; overflow: visible; z-index: 0; pointer-events: none; }
+.rays { position: absolute; left: 130px; top: 182px; width: 0; height: 0; pointer-events: none; z-index: 2; opacity: 0; }
+.ray {
+  position: absolute; left: -9px; top: -600px; width: 18px; height: 600px; transform-origin: 50% 100%;
+  transform: rotate(var(--a)) scaleY(0);
+  background: linear-gradient(to top, rgba(255,232,140,1), rgba(255,232,140,.45) 45%, rgba(255,232,140,0));
+}
+.c2 .rays, .c3 .rays, .cracking .rays { opacity: 1; animation: raysSway 1.1s ease-in-out infinite alternate; }
+@keyframes raysSway { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+.c2 .ray, .c3 .ray, .cracking .ray { animation: rayGrow .8s cubic-bezier(.2,.8,.3,1) var(--o) forwards, rayFlicker .12s ease-in-out calc(var(--o) + .8s) infinite alternate; }
+@keyframes rayGrow { to { transform: rotate(var(--a)) scaleY(var(--len, 1)); } }
+#s-chest.c2 { --len: .4; } #s-chest.c3 { --len: .72; } #s-chest.cracking { --len: 1; }
+@keyframes rayFlicker { from { opacity: 1; } to { opacity: .7; } }
+
+/* idle sparkles ringing the chest (4-point stars + tiny dots) */
+.sparks { position: absolute; inset: 0; pointer-events: none; z-index: 1; transition: opacity .35s ease; }
+.sp { position: absolute; width: var(--s); height: var(--s); margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2); opacity: 0; animation: twinkle var(--d) ease-in-out var(--o) infinite; }
+.sp svg { display: block; width: 100%; height: 100%; }
+.sp.dot { border-radius: 50%; background: #fff; }
+@keyframes twinkle {
+  0%, 100% { opacity: 0; transform: scale(.25) rotate(-12deg) translateY(4px); }
+  45%      { opacity: 1; transform: scale(1) rotate(8deg) translateY(-2px); }
+  70%      { opacity: .9; transform: scale(.92) rotate(14deg) translateY(-6px); }
+}
+
+/* burst stars, rising motes, flying gems and the prize (spawned by JS into .fx) */
+.fx { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+.burst { position: absolute; width: var(--s, 34px); height: var(--s, 34px); margin: calc(var(--s, 34px) / -2) 0 0 calc(var(--s, 34px) / -2); animation: burstPop .46s cubic-bezier(.2,.8,.3,1) var(--o) both; }
+.burst svg { display: block; width: 100%; height: 100%; }
+@keyframes burstPop {
+  0%   { opacity: 0; transform: translate(0,0) scale(0) rotate(0); }
+  35%  { opacity: 1; transform: translate(calc(var(--dx) * .7), calc(var(--dy) * .7)) scale(1.25) rotate(20deg); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(.4) rotate(45deg); }
+}
+.mote { position: absolute; width: 10px; height: 26px; margin: -13px 0 0 -5px; animation: moteRise var(--d) cubic-bezier(.15,.7,.3,1) both; }
+.mote svg { display: block; width: 100%; height: 100%; }
+@keyframes moteRise {
+  0%   { opacity: 0; transform: translateY(0) scale(.5); }
+  12%  { opacity: 1; transform: translateY(calc(var(--dy) * .12)) scale(1); }
+  75%  { opacity: .9; }
+  100% { opacity: 0; transform: translateY(var(--dy)) scale(.55); }
+}
+.fgem { position: absolute; left: 0; top: 0; width: 64px; height: 64px; margin: -32px 0 0 -32px; will-change: transform; }
+.fgem svg { display: block; width: 100%; height: 100%; }
+.prize { position: absolute; left: 130px; top: 150px; width: 170px; height: 170px; margin: -85px 0 0 -85px; z-index: 6; will-change: transform; transform: scale(0); }
+.prize::before { content: ""; position: absolute; inset: -60px; border-radius: 50%; background: radial-gradient(closest-side, var(--prize), transparent 72%); animation: prizeGlow .5s ease-in-out infinite alternate; }
+@keyframes prizeGlow { from { transform: scale(1); opacity: .85; } to { transform: scale(1.2); opacity: 1; } }
+.prize svg { position: relative; display: block; width: 100%; height: 100%; }
+
+/* the comet arc that orbits the chest on every tap */
+.arc { position: absolute; left: 0; top: 0; width: 480px; height: 1044px; pointer-events: none; z-index: 5; }
+
+/* a full-screen light flash and a screen kick for the bigger moments */
+.flash { position: absolute; inset: 0; background: var(--flash); opacity: 0; pointer-events: none; z-index: 7; }
+.flash.go { animation: flashGo .55s ease-out both; }
+@keyframes flashGo { 0% { opacity: 0; } 10% { opacity: .96; } 100% { opacity: 0; } }
+#s-chest.kick { animation: kick .3s cubic-bezier(.2,.9,.3,1) both; }
+#s-chest.kick.big { animation: kickBig .42s cubic-bezier(.2,.9,.3,1) both; }
+@keyframes kick { 0% { transform: none; } 30% { transform: scale(1.018) translateY(-3px); } 100% { transform: none; } }
+@keyframes kickBig { 0% { transform: none; } 20% { transform: scale(1.035) translateY(-6px); } 45% { transform: scale(1.01) translateY(2px); } 100% { transform: none; } }
+
+/* three chances: pale discs with an arrow; the live one is dark and hovers over its shadow */
+.dots { position: absolute; top: 676px; left: 0; right: 0; height: 70px; display: flex; justify-content: center; gap: 38px; transition: opacity .28s ease; }
+.dots.hide { opacity: 0; }
+.dot { position: relative; width: 44px; height: 44px; }
+.dot i {
+  position: absolute; inset: 0; border-radius: 50%; background: var(--dot);
+  display: flex; align-items: center; justify-content: center;
+  transition: background .12s ease;
+}
+.dot i svg { width: 22px; height: 22px; }
+.dot i svg path { stroke: var(--dot-arrow); }
+.dot .sh { position: absolute; left: 9px; right: 9px; bottom: -14px; height: 8px; border-radius: 50%; background: var(--dot-sh); opacity: 0; transition: opacity .15s; }
+.dot.active i { background: var(--dot-live); animation: dotBob 1.1s ease-in-out infinite; }
+.dot.active .sh { opacity: 1; animation: dotShade 1.1s ease-in-out infinite; }
+.dot.active.pop i { animation: dotPop .18s cubic-bezier(.3,1.6,.5,1), dotBob 1.1s ease-in-out .18s infinite; }
+.dot.used i svg { display: none; }
+@keyframes dotBob   { 0%, 100% { transform: translateY(-8px); } 50% { transform: translateY(-11px); } }
+@keyframes dotShade { 0%, 100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(.85); opacity: .8; } }
+@keyframes dotPop   { 0% { transform: translateY(-8px) scale(.7); } 100% { transform: translateY(-8px) scale(1); } }
+
+.cap { position: absolute; top: 782px; left: 0; right: 0; height: 40px; text-align: center; font-size: 20px; font-weight: 700; color: var(--cap); transition: opacity .25s ease; }
+.cap span { position: absolute; left: 0; right: 0; top: 0; transition: opacity .16s ease; }
+.cap span.hide { opacity: 0; }
+
+/* the white wash that sweeps down over the open chest */
+.wash {
+  position: absolute; left: 0; right: 0; top: 0; height: 1044px; pointer-events: none; z-index: 8;
+  background: linear-gradient(to bottom, #fff 0%, #fff 62%, rgba(255,255,255,0) 100%);
+  transform: translateY(-110%);
+}
+.wash.go { transition: transform .45s linear; transform: translateY(0); }
+
+/* ============================================================
+   Reward screen — the pile of gems
+   ============================================================ */
+#s-palette .ptitle { position: absolute; top: 64px; left: 0; right: 0; text-align: center; font-size: 24px; font-weight: 800; color: var(--eel); }
+#s-palette .psub { position: absolute; top: 104px; left: 0; right: 0; text-align: center; font-size: 15px; font-weight: 600; color: #AFAFAF; }
+#s-palette { overflow-y: auto; }
+.pal { position: absolute; top: 150px; left: 20px; right: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding-bottom: 40px; }
+.pcard { border: 2px solid var(--line); border-radius: 16px; background: #fff; padding: 12px 6px 10px; text-align: center; cursor: pointer; transition: transform .12s; }
+.pcard:hover { transform: translateY(-2px); }
+.pcard.cur { border-color: var(--macaw); box-shadow: 0 0 0 2px var(--macaw) inset; }
+.pcard svg { width: 100px; height: 112px; display: block; margin: 0 auto 6px; overflow: visible; }
+.pcard b { display: block; font-size: 15px; font-weight: 800; color: var(--ttl-c); }
+.pcard span { font-size: 12px; font-weight: 700; color: #AFAFAF; }
+#s-reward { background: var(--snow); --stamp: var(--macaw); }
+#s-reward.t-rare { --stamp: #1CB0F6; }
+#s-reward.t-epic { --stamp: #8B5CF6; }
+#s-reward.t-legendary { --stamp: #FF9600; }
+.counter { position: absolute; top: 82px; left: 22px; display: flex; align-items: center; gap: 6px; direction: rtl; font-size: 16px; font-weight: 800; color: var(--macaw); }
+.counter svg { width: 20px; height: 22px; }
+.counter.bump { animation: bump .22s cubic-bezier(.3,1.5,.5,1); }
+@keyframes bump { 50% { transform: scale(1.18); } }
+.stamp { position: absolute; top: 232px; left: 0; right: 0; text-align: center; font-size: 36px; font-weight: 800; color: var(--stamp); opacity: 0; transform: scale(.4) rotate(-6deg); }
+#s-reward.told .stamp.show { animation: stampIn .55s cubic-bezier(.2,1.5,.4,1) both; }
+@keyframes stampIn { 0% { opacity: 0; transform: scale(.4) rotate(-8deg); } 100% { opacity: 1; transform: scale(1) rotate(-3deg); } }
+.rtitle { position: absolute; top: 246px; left: 0; right: 0; text-align: center; font-size: 26px; font-weight: 800; color: var(--macaw); opacity: 0; transition: opacity .28s ease; }
+#s-reward.told .rtitle { opacity: 1; }
+.pile { position: absolute; left: 240px; top: 555px; width: 0; height: 0; --gs: 104px; }
+.pshadow { position: absolute; left: -105px; top: 18px; width: 210px; height: 30px; border-radius: 50%; background: var(--line); transform: scale(0); transition: transform .3s cubic-bezier(.3,1.4,.5,1); }
+#s-reward.piled .pshadow { transform: scale(1); }
+.gem { position: absolute; width: var(--gs); height: var(--gs); margin: calc(var(--gs) / -2) 0 0 calc(var(--gs) / -2); transform: scale(0) rotate(var(--r)); }
+.gem svg { display: block; width: 100%; height: 100%; }
+.gem.pop { animation: gemPop .3s cubic-bezier(.3,1.5,.5,1) var(--o) forwards; }
+.gem.jig { animation: gemJig .32s cubic-bezier(.3,1.3,.5,1) var(--o) both; }
+@keyframes gemPop { 0% { transform: scale(0) rotate(var(--r)); } 100% { transform: scale(1) rotate(var(--r)); } }
+@keyframes gemJig { 0% { transform: scale(1) translateY(0) rotate(var(--r)); } 40% { transform: scale(1.1) translateY(-14px) rotate(var(--r)); } 100% { transform: scale(1) translateY(0) rotate(var(--r)); } }
+.rfoot { position: absolute; left: 0; right: 0; bottom: 0; height: 240px; opacity: 0; transition: opacity .3s ease; }
+#s-reward.told .rfoot { opacity: 1; }
+.rfoot .ad { position: absolute; top: 22px; left: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.rfoot .ad svg { width: 22px; height: 22px; }
+.rfoot .ad.gone { opacity: 0; pointer-events: none; transition: opacity .25s; }
+.rfoot .link { position: absolute; top: 108px; left: 0; right: 0; text-align: center; font-size: 15px; font-weight: 700; color: var(--macaw); }
+.rfoot .cont { position: absolute; top: 100px; left: 20px; }
+#s-reward.big .ad, #s-reward.big .link { display: none; }
+#s-reward:not(.big) .cont { display: none; }
+
+/* tiny sound toggle, kept inside the empty status-bar band */
+#mute { position: absolute; top: 18px; right: 18px; z-index: 20; width: 40px; height: 40px; border-radius: 50%; font-size: 18px; opacity: .55; }
+#mute:hover { opacity: 1; }
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage">
+  <button id="mute" aria-label="الصوت">🔊</button>
+
+  <!-- ======== start ======== -->
+  <section class="scr on" id="s-start">
+    <h1 class="qtitle">+٢ نقطة مسابقات!</h1>
+    <div class="card quests">
+      <div class="qrow"><svg data-chest="common"></svg><div class="qtxt"><b>ابدأ حماسة جديدة</b><div class="bar"><i style="width:100%"></i><span>١ / ١</span></div></div></div>
+      <div class="qrow"><svg data-chest="rare"></svg><div class="qtxt"><b>حقّق ٩٠٪ أو أكثر في درس واحد</b><div class="bar"><i style="width:100%"></i><span>١ / ١</span></div></div></div>
+      <div class="qrow"><svg data-chest="epic"></svg><div class="qtxt"><b>اقضِ ٥ دقائق في التعلّم</b><div class="bar"><i style="width:100%"></i><span>٥ / ٥</span></div></div></div>
+      <div class="qrow"><svg data-chest="legendary"></svg><div class="qtxt"><b>أكمل ٣ دروس بلا أخطاء</b><div class="bar low"><i style="width:34%"></i><span>١ / ٣</span></div></div></div>
+    </div>
+    <div class="card month"><div class="avatar"><svg data-gem></svg></div><div><b>مسابقة سبتمبر</b><span>٢ / ٢٠</span></div></div>
+    <button class="btn" id="b-start">افتح ٤ صناديق</button>
+  </section>
+
+  <!-- ======== chest ======== -->
+  <section class="scr t-common" id="s-chest">
+    <h2 class="ttl">عادي</h2>
+    <div class="sparks"></div>
+    <div class="chestwrap">
+      <div class="halo"></div>
+      <svg class="floorcracks" viewBox="0 0 260 290">
+        <path pathLength="1" d="M30 270l-30 14-22-4-26 18" style="--o:.3s"/>
+        <path pathLength="1" d="M230 272l28 12 24-2 22 20" style="--o:.36s"/>
+        <path pathLength="1" d="M14 262l-24-6-20 8" style="--o:.42s"/>
+        <path pathLength="1" d="M246 260l26-8 18 10" style="--o:.46s"/>
+        <path pathLength="1" d="M80 284l-14 20 6 18" style="--o:.5s"/>
+        <path pathLength="1" d="M186 284l16 22-4 16" style="--o:.54s"/>
+        <path pathLength="1" d="M130 286l-6 18 10 14" style="--o:.6s"/>
+      </svg>
+      <div class="body">
+        <div class="cone"></div>
+        <div class="plate"></div>
+        <div class="rays"><i class="ray" style="--a:-58deg;--o:.24s"></i><i class="ray" style="--a:-42deg;--o:.1s"></i><i class="ray" style="--a:-26deg;--o:0s"></i><i class="ray" style="--a:-10deg;--o:.16s"></i><i class="ray" style="--a:6deg;--o:.06s"></i><i class="ray" style="--a:22deg;--o:.2s"></i><i class="ray" style="--a:38deg;--o:.12s"></i><i class="ray" style="--a:54deg;--o:.28s"></i></div>
+        <div class="box"></div>
+        <div class="glow"></div>
+      </div>
+      <div class="fx"></div>
+    </div>
+    <canvas class="arc" width="960" height="2088"></canvas>
+    <div class="dots">
+      <div class="dot active"><i></i><b class="sh"></b></div>
+      <div class="dot"><i></i><b class="sh"></b></div>
+      <div class="dot"><i></i><b class="sh"></b></div>
+    </div>
+    <div class="cap"><span class="a"></span><span class="b hide"></span></div>
+    <h2 class="slam"></h2>
+    <div class="flash"></div>
+    <div class="wash"></div>
+  </section>
+
+  <!-- ======== reward ======== -->
+  <!-- ======== palette: the five colourways of the common chest (#palette) ======== -->
+  <section class="scr" id="s-palette">
+    <h2 class="ptitle">ألوان الصندوق العادي</h2>
+    <p class="psub">اضغط لونًا لتجربته — يفتح الصندوق بذلك اللون</p>
+    <div class="pal"></div>
+  </section>
+
+  <section class="scr" id="s-reward">
+    <div class="counter"><svg data-gem></svg><b class="num">٢٠٦٩</b></div>
+    <h3 class="stamp"></h3>
+    <h2 class="rtitle">+٤ جواهر</h2>
+    <div class="pile"><div class="pshadow"></div></div>
+    <div class="rfoot">
+      <button class="btn ad"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.53.85l12-7.5a1 1 0 0 0 0-1.7l-12-7.5A1 1 0 0 0 7 4.5z" fill="#fff"/></svg><span>استحق ١٥ جوهرة أخرى</span></button>
+      <button class="link">المتابعة</button>
+      <button class="btn cont">المتابعة</button>
+    </div>
+  </section>
+</div></div>
+
+<script>
+(() => {
+"use strict";
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const AR = "٠١٢٣٤٥٦٧٨٩";
+const toAr = n => String(n).replace(/\d/g, d => AR[d]);
+const now = () => performance.now() / 1000;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const smooth = t => t * t * (3 - 2 * t);
+const easeOut = (t, p) => 1 - Math.pow(1 - clamp(t, 0, 1), p || 2.3);
+const elastic = t => { t = clamp(t, 0, 1); return 1 - Math.pow(2, -9 * t) * Math.cos(t * 3.4 * Math.PI); };
+const rnd = (a, b) => a + Math.random() * (b - a);
+
+/* ---------------- fit the 480×1044 reference frame to the viewport ---------------- */
+const stage = $("#stage");
+function fit() { stage.style.transform = `scale(${Math.min(innerWidth / 480, innerHeight / 1044)})`; }
+addEventListener("resize", fit); fit();
+
+/* ============================================================
+   Artwork. Box space is 260×290: the plate's floor sits at y≈283.
+   The common chest is traced from the reference frames; the other
+   three keep its proportions (posts, band, round latch) but each has
+   its own lid line, metal and stone. Closed art is split into a
+   .base and a .lid group so a lid can rattle or fly off on its own.
+   No ids in closed art: it is also stamped four times on the start screen.
+   ============================================================ */
+const STAR = '<svg viewBox="0 0 24 24"><path d="M12 0C13 8 16 11 24 12 16 13 13 16 12 24 11 16 8 13 0 12 8 11 11 8 12 0Z" fill="currentColor"/></svg>';
+const MOTE = '<svg viewBox="0 0 10 26"><path d="M5 0C7.5 8 9.5 11 10 13 9.5 15 7.5 18 5 26 2.5 18 .5 15 0 13 .5 11 2.5 8 5 0Z" fill="#fff"/></svg>';
+const MOTE_GOLD = MOTE.replace('fill="#fff"', 'fill="#FFE066"');
+const ARROW = '<svg viewBox="0 0 24 24"><path d="M12 19.5V5.5M5.5 12l6.5-6.5 6.5 6.5" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const GEM = `<svg viewBox="0 0 100 100">
+  <path d="M31 16h44l20 38-20 38H31L11 54Z" transform="translate(6 6)" fill="#0F9BE8" stroke="#0F9BE8" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M28 12h44l20 38-20 38H28L8 50Z" fill="#3CC0FA" stroke="#3CC0FA" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M72 12l20 38-20 38H56l6-38-4-38Z" fill="#24B2F6"/>
+  <path d="M37 18h26l-4 16H41Z" fill="#B4E8FF"/>
+</svg>`;
+const recolor = (svg, map) => Object.keys(map).reduce((s, k) => s.split(k).join(map[k]), svg);
+const GEM_DARK = recolor(GEM, { "#3CC0FA": "#1CA4EE", "#24B2F6": "#1798E4", "#B4E8FF": "#7CCDF6" });
+const GEM_AMETHYST = recolor(GEM, { "#0F9BE8": "#6A2FD0", "#3CC0FA": "#B57BFF", "#24B2F6": "#9A5CF5", "#B4E8FF": "#EBDBFF" });
+const GEM_GOLD = recolor(GEM, { "#0F9BE8": "#C98A00", "#3CC0FA": "#FFC800", "#24B2F6": "#F0B000", "#B4E8FF": "#FFF0A8" });
+
+/* the common chest's colours are a palette: body + trims + latch, the open lid's inside and the interior. Five ship;
+   ?c=1…18 picks one (default 1; 11 is the video's wood; 12–18 are two-tone) and #palette shows them all, scrolling. */
+const COMMON_COLORS = [
+  { name: "أخضر",          body: "#58CC02", bodyDk: "#46A302", trim: "#E1F5CF", trimDk: "#BFE79B", latch: "#F4FCEA", lidIn: "#6FD927", lidInDk: "#5BBE12", intA: "#C9E7B4", intB: "#F1F8EA", title: "#58CC02", dot: "#C9EFA9" },
+  { name: "حجري",          body: "#7C8A9C", bodyDk: "#66748A", trim: "#DCE3EA", trimDk: "#C0CBD6", latch: "#F6F8FA", lidIn: "#8E9CAE", lidInDk: "#7A889A", intA: "#C4CCD6", intB: "#F0F3F6", title: "#6F7C8E", dot: "#D6DDE5" },
+  { name: "جوز ونحاس",     body: "#6B4423", bodyDk: "#56361B", trim: "#E6C15A", trimDk: "#C9A03C", latch: "#FFF1B8", lidIn: "#7E5230", lidInDk: "#6A4325", intA: "#D8C4A8", intB: "#F3ECE2", title: "#A0763D", dot: "#EED9A0" },
+  { name: "فيروزي",        body: "#14B8A6", bodyDk: "#0F9C8C", trim: "#D3F5EF", trimDk: "#A8E6DC", latch: "#F0FCFA", lidIn: "#2CCDB9", lidInDk: "#1EB5A2", intA: "#BFE6E0", intB: "#EFF9F7", title: "#14B8A6", dot: "#BDEDE5" },
+  { name: "وردي",          body: "#F0559A", bodyDk: "#D1397D", trim: "#FFD9E8", trimDk: "#FFB8D3", latch: "#FFF0F6", lidIn: "#F76DAB", lidInDk: "#E45896", intA: "#EBCBD9", intB: "#FBF1F5", title: "#F0559A", dot: "#FFD0E2" },
+  { name: "ذهبي",          body: "#F0B429", bodyDk: "#D99A12", trim: "#FFF0C2", trimDk: "#F7DC8C", latch: "#FFFBEA", lidIn: "#F7C74A", lidInDk: "#E4AF2C", intA: "#EBD9A6", intB: "#FBF6E6", title: "#D99A12", dot: "#FFE9A8" },
+  { name: "برتقالي",       body: "#FF9600", bodyDk: "#E07F00", trim: "#FFE0B3", trimDk: "#FFC777", latch: "#FFF4E3", lidIn: "#FFA726", lidInDk: "#F08F0A", intA: "#F2CFA6", intB: "#FCF3E8", title: "#FF9600", dot: "#FFDCA8" },
+  { name: "زمردي",         body: "#1E9E5A", bodyDk: "#17804A", trim: "#BFEBD2", trimDk: "#8FDBB2", latch: "#EDFAF3", lidIn: "#2BB56C", lidInDk: "#1F9C5A", intA: "#B7DCC6", intB: "#EEF7F2", title: "#1E9E5A", dot: "#BDEAD0" },
+  { name: "فحمي",          body: "#3C3C46", bodyDk: "#2C2C34", trim: "#9A9AAE", trimDk: "#7C7C90", latch: "#E8E8F0", lidIn: "#4A4A56", lidInDk: "#3A3A44", intA: "#B0B0BE", intB: "#E9E9EF", title: "#55556A", dot: "#C9C9D6" },
+  { name: "طوبي",          body: "#C8643C", bodyDk: "#A94F2C", trim: "#F2D2B6", trimDk: "#E4B48E", latch: "#FCF0E6", lidIn: "#D9764C", lidInDk: "#C2623A", intA: "#E4C7B0", intB: "#F8EFE8", title: "#C8643C", dot: "#F2D2B6" },
+  /* the video's own wooden chest, as it was in the first version */
+  { name: "خشبي (الأصلي)", body: "#C87800", bodyDk: "#B46800", trim: "#FCCCA4", trimDk: "#ECB080", latch: "#FFEBDE", lidIn: "#D89A3A", lidInDk: "#C58428", intA: "#DCCBB0", intB: "#F3F0E8", title: "#C87800", dot: "#ECC898" },
+  /* two-tone: a contrasting metal on the body instead of a tint of the same hue */
+  { name: "بحري وذهبي",    body: "#1E3A8A", bodyDk: "#172C6B", trim: "#FFC800", trimDk: "#E6A800", latch: "#FFF1B8", lidIn: "#2A4AA6", lidInDk: "#1E3A8A", intA: "#B8C2E0", intB: "#EEF1FA", title: "#1E3A8A", dot: "#FFE9A8" },
+  { name: "أسود وذهبي",    body: "#23232B", bodyDk: "#17171D", trim: "#FFC800", trimDk: "#E6A800", latch: "#FFF1B8", lidIn: "#2F2F3A", lidInDk: "#23232B", intA: "#A8A8B4", intB: "#E9E9EF", title: "#E6A800", dot: "#FFE9A8" },
+  { name: "غابة وذهبي",    body: "#1B6B3A", bodyDk: "#145230", trim: "#FFC800", trimDk: "#E6A800", latch: "#FFF1B8", lidIn: "#23804A", lidInDk: "#1B6B3A", intA: "#B3CFBD", intB: "#EEF5F1", title: "#1B6B3A", dot: "#FFE9A8" },
+  { name: "تركوازي وذهبي", body: "#0FA3B1", bodyDk: "#0C8592", trim: "#FFC800", trimDk: "#E6A800", latch: "#FFF1B8", lidIn: "#1DB5C3", lidInDk: "#0FA3B1", intA: "#B4DDE1", intB: "#EEF8F9", title: "#0FA3B1", dot: "#FFE9A8" },
+  { name: "نعناعي ومرجاني", body: "#5FD3A8", bodyDk: "#46BF93", trim: "#FF8A80", trimDk: "#F26E63", latch: "#FFF0EE", lidIn: "#74DDB6", lidInDk: "#52C49B", intA: "#C6EBDD", intB: "#F0FAF6", title: "#2BB58C", dot: "#FFD5D0" },
+  { name: "زهري وذهبي",    body: "#F4A3B8", bodyDk: "#E58AA3", trim: "#FFD166", trimDk: "#F0B429", latch: "#FFF6DA", lidIn: "#F7B0C3", lidInDk: "#EC98AE", intA: "#EBCBD5", intB: "#FBF1F4", title: "#E58AA3", dot: "#FFE9A8" },
+  { name: "زيتوني وبيج",   body: "#7E8F3A", bodyDk: "#66752E", trim: "#EFE6C8", trimDk: "#D9CCA3", latch: "#FBF8EE", lidIn: "#8FA047", lidInDk: "#7E8F3A", intA: "#D5D8B8", intB: "#F4F5EC", title: "#7E8F3A", dot: "#E8E3C6" }
+];
+const commonIdx = clamp(parseInt(new URLSearchParams(location.search).get("c") || "1", 10) - 1 || 0, 0, COMMON_COLORS.length - 1);
+const commonArt = c => ({
+  closed: `<svg class="closed" viewBox="0 0 260 290">
+      <rect x="24" y="180" width="41" height="87" rx="10" fill="${c.trimDk}"/><rect x="195" y="180" width="41" height="87" rx="10" fill="${c.trimDk}"/>
+      <rect x="65" y="180" width="130" height="87" fill="${c.body}"/><rect x="65" y="245" width="130" height="4" fill="${c.bodyDk}"/>
+      <rect x="24" y="75" width="41" height="112" rx="10" fill="${c.trim}"/><rect x="195" y="75" width="41" height="112" rx="10" fill="${c.trim}"/>
+      <rect x="65" y="82" width="130" height="100" fill="${c.body}"/><rect x="65" y="123" width="130" height="4" fill="${c.bodyDk}"/>
+      <circle cx="130" cy="192" r="30" fill="${c.trim}"/>
+      <rect x="12" y="167" width="236" height="58" rx="8" fill="${c.trim}"/>
+      <rect x="12" y="213" width="236" height="12" rx="4" fill="${c.trimDk}"/>
+      <circle cx="130" cy="212" r="22" fill="${c.latch}"/>
+    </svg>`,
+  open: `<svg class="open" viewBox="0 0 260 290">
+      <defs>
+        <linearGradient id="cInt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c.intA}"/><stop offset="1" stop-color="${c.intB}"/></linearGradient>
+        <radialGradient id="cBleach" cx="130" cy="120" r="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".55" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+      </defs>
+      <rect x="24" y="42" width="41" height="64" rx="10" fill="${c.trim}"/><rect x="195" y="42" width="41" height="64" rx="10" fill="${c.trim}"/>
+      <rect x="65" y="48" width="130" height="58" fill="${c.lidIn}"/><rect x="65" y="74" width="130" height="4" fill="${c.lidInDk}"/>
+      <rect x="34" y="150" width="192" height="66" fill="url(#cInt)"/>
+      <rect x="24" y="150" width="41" height="117" rx="10" fill="${c.trimDk}"/><rect x="195" y="150" width="41" height="117" rx="10" fill="${c.trimDk}"/>
+      <rect x="65" y="227" width="130" height="40" fill="${c.body}"/>
+      <rect x="65" y="212" width="130" height="15" fill="${c.trim}"/>
+      <rect x="12" y="92" width="236" height="58" rx="8" fill="${c.trim}"/>
+      <rect x="12" y="92" width="236" height="10" rx="4" fill="${c.trimDk}"/>
+      <circle cx="130" cy="118" r="22" fill="#FFFFFF"/>
+      <rect x="0" y="30" width="260" height="200" fill="url(#cBleach)"/>
+    </svg>`
+});
+
+const ART = {
+  common: commonArt(COMMON_COLORS[commonIdx]),
+
+  /* نادر — steel-blue lacquer, brushed silver, a sapphire under the latch */
+  rare: {
+    closed: `<svg class="closed" viewBox="0 0 260 290">
+      <g class="base">
+        <rect x="18" y="176" width="32" height="92" rx="10" fill="#B7C7D6"/><rect x="210" y="176" width="32" height="92" rx="10" fill="#B7C7D6"/>
+        <rect x="50" y="176" width="160" height="92" fill="#1F66B8"/>
+        <rect x="50" y="176" width="160" height="10" fill="#2E7FD6"/>
+        <rect x="50" y="248" width="160" height="6" fill="#174F92"/>
+        <rect x="24" y="230" width="20" height="6" rx="3" fill="#DCE6F0"/><rect x="216" y="230" width="20" height="6" rx="3" fill="#DCE6F0"/>
+      </g>
+      <g class="lid">
+        <path d="M18 178V122Q18 68 66 62H194Q242 68 242 122V178Z" fill="#2E7FD6"/>
+        <path d="M30 178V122Q30 78 66 76H194Q230 78 230 122V178Z" fill="#3B8FE8"/>
+        <path d="M66 92Q130 82 194 92" fill="none" stroke="#6DB7F8" stroke-width="6" stroke-linecap="round"/>
+        <rect x="58" y="62" width="16" height="118" rx="6" fill="#DCE6F0"/><rect x="186" y="62" width="16" height="118" rx="6" fill="#DCE6F0"/>
+        <rect x="70" y="62" width="4" height="118" rx="2" fill="#B7C7D6"/><rect x="198" y="62" width="4" height="118" rx="2" fill="#B7C7D6"/>
+        <rect x="8" y="168" width="244" height="30" rx="8" fill="#DCE6F0"/>
+        <rect x="8" y="190" width="244" height="8" rx="4" fill="#B7C7D6"/>
+        <circle cx="130" cy="184" r="30" fill="#DCE6F0"/><circle cx="130" cy="184" r="24" fill="#B7C7D6"/>
+        <path d="M130 164l16 16-16 24-16-24Z" fill="#1CB0F6"/><path d="M130 164l16 16h-32Z" fill="#8CDBFF"/><path d="M118 182l12 18v-18Z" fill="#0F9BE8"/>
+      </g>
+    </svg>`,
+    open: `<svg class="open" viewBox="0 0 260 290">
+      <defs>
+        <linearGradient id="rInt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FA3BD"/><stop offset="1" stop-color="#DDEBF5"/></linearGradient>
+        <radialGradient id="rBleach" cx="130" cy="110" r="160" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".9"/><stop offset=".5" stop-color="#FFFFFF" stop-opacity=".4"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>
+      </defs>
+      <g transform="translate(0 -66)">
+        <path d="M18 178V122Q18 68 66 62H194Q242 68 242 122V178Z" fill="#2E7FD6"/>
+        <path d="M30 178V122Q30 78 66 76H194Q230 78 230 122V178Z" fill="#3B8FE8"/>
+        <rect x="58" y="62" width="16" height="118" rx="6" fill="#DCE6F0"/><rect x="186" y="62" width="16" height="118" rx="6" fill="#DCE6F0"/>
+        <rect x="8" y="168" width="244" height="30" rx="8" fill="#DCE6F0"/><rect x="8" y="190" width="244" height="8" rx="4" fill="#B7C7D6"/>
+        <circle cx="130" cy="184" r="30" fill="#DCE6F0"/><circle cx="130" cy="184" r="24" fill="#B7C7D6"/>
+        <path d="M130 164l16 16-16 24-16-24Z" fill="#8CDBFF"/>
+      </g>
+      <rect x="40" y="132" width="180" height="50" fill="url(#rInt)"/>
+      <rect x="18" y="140" width="32" height="128" rx="10" fill="#B7C7D6"/><rect x="210" y="140" width="32" height="128" rx="10" fill="#B7C7D6"/>
+      <rect x="50" y="182" width="160" height="86" fill="#1F66B8"/>
+      <rect x="50" y="176" width="160" height="10" fill="#2E7FD6"/>
+      <rect x="50" y="248" width="160" height="6" fill="#174F92"/>
+      <rect x="0" y="0" width="260" height="220" fill="url(#rBleach)"/>
+    </svg>`
+  },
+
+  /* ملحمي — violet with a faceted gable lid, gold straps, an amethyst latch and a crystal finial */
+  epic: {
+    closed: `<svg class="closed" viewBox="0 0 260 290">
+      <g class="base">
+        <rect x="16" y="178" width="32" height="90" rx="10" fill="#FFC800"/><rect x="212" y="178" width="32" height="90" rx="10" fill="#FFC800"/>
+        <rect x="48" y="178" width="164" height="90" fill="#5B2BC7"/>
+        <rect x="48" y="178" width="164" height="10" fill="#6F3BE0"/>
+        <rect x="48" y="248" width="164" height="6" fill="#4A1FA8"/>
+        <circle cx="32" cy="256" r="4" fill="#FFE066"/><circle cx="228" cy="256" r="4" fill="#FFE066"/>
+        <circle cx="32" cy="200" r="4" fill="#FFE066"/><circle cx="228" cy="200" r="4" fill="#FFE066"/>
+      </g>
+      <g class="lid">
+        <path d="M16 180V120L62 62H198L244 120V180Z" fill="#7C3AED"/>
+        <path d="M16 180V120L62 62H130V180Z" fill="#8F55F5"/>
+        <path d="M62 62H198L214 82H46Z" fill="#B48CFF"/>
+        <path d="M130 62H198L244 120H130Z" fill="#6D2FD8" opacity=".55"/>
+        <rect x="56" y="74" width="14" height="108" rx="5" fill="#FFC800"/><rect x="190" y="74" width="14" height="108" rx="5" fill="#FFC800"/>
+        <rect x="8" y="170" width="244" height="30" rx="8" fill="#FFC800"/>
+        <rect x="8" y="192" width="244" height="8" rx="4" fill="#E6A800"/>
+        <path d="M130 36l17 22-17 14-17-14Z" fill="#DDC6FF"/><path d="M130 36l17 22h-34Z" fill="#F4ECFF"/>
+        <circle cx="130" cy="186" r="31" fill="#FFC800"/><circle cx="130" cy="186" r="25" fill="#E6A800"/>
+        <path d="M130 164l18 20-18 24-18-24Z" fill="#C77DFF"/><path d="M130 164l18 20h-36Z" fill="#EBD0FF"/><path d="M116 184l14 20v-20Z" fill="#9A4DF0"/>
+      </g>
+    </svg>`,
+    open: `<svg class="open" viewBox="0 0 260 290">
+      <defs>
+        <linearGradient id="eInt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B1C7A"/><stop offset="1" stop-color="#C9B3F5"/></linearGradient>
+        <radialGradient id="eBleach" cx="130" cy="150" r="150" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFF4D6" stop-opacity=".85"/><stop offset=".5" stop-color="#FFF4D6" stop-opacity=".35"/><stop offset="1" stop-color="#FFF4D6" stop-opacity="0"/></radialGradient>
+      </defs>
+      <rect x="40" y="150" width="180" height="40" fill="url(#eInt)"/>
+      <rect x="16" y="150" width="32" height="118" rx="10" fill="#FFC800"/><rect x="212" y="150" width="32" height="118" rx="10" fill="#FFC800"/>
+      <rect x="48" y="184" width="164" height="84" fill="#5B2BC7"/>
+      <rect x="48" y="178" width="164" height="10" fill="#6F3BE0"/>
+      <rect x="48" y="248" width="164" height="6" fill="#4A1FA8"/>
+      <rect x="8" y="176" width="244" height="14" rx="6" fill="#FFC800"/>
+      <circle cx="32" cy="256" r="4" fill="#FFE066"/><circle cx="228" cy="256" r="4" fill="#FFE066"/>
+      <rect x="0" y="40" width="260" height="220" fill="url(#eBleach)"/>
+    </svg>`
+  },
+
+  /* أسطوري — crimson with a domed lid, gold everywhere, a ruby latch and a crown on top */
+  legendary: {
+    closed: `<svg class="closed" viewBox="0 0 260 290">
+      <g class="base">
+        <rect x="14" y="180" width="32" height="88" rx="10" fill="#FFC800"/><rect x="214" y="180" width="32" height="88" rx="10" fill="#FFC800"/>
+        <rect x="46" y="180" width="168" height="88" fill="#B3202E"/>
+        <rect x="46" y="180" width="168" height="10" fill="#D62839"/>
+        <rect x="46" y="248" width="168" height="6" fill="#8F1826"/>
+        <circle cx="30" cy="258" r="4" fill="#FFE066"/><circle cx="230" cy="258" r="4" fill="#FFE066"/>
+        <circle cx="30" cy="200" r="4" fill="#FFE066"/><circle cx="230" cy="200" r="4" fill="#FFE066"/>
+        <g class="cracks">
+          <path class="s2" pathLength="1" d="M60 182l-6 22 10 16-8 20 6 18" style="--o:.3s"/>
+          <path class="s2" pathLength="1" d="M200 182l8 20-10 18 6 22-6 14" style="--o:.36s"/>
+          <path class="s3" pathLength="1" d="M130 222l-10 14 6 16-8 14" style="--o:.2s"/>
+          <path class="s3" pathLength="1" d="M96 268l6-16-10-12 8-16" style="--o:.28s"/>
+          <path class="s3" pathLength="1" d="M166 268l-8-14 10-14-6-18" style="--o:.32s"/>
+          <path class="s3" pathLength="1" d="M30 230l12 8-4 14 10 8" style="--o:.38s"/>
+          <path class="s3" pathLength="1" d="M230 226l-12 10 4 14-10 8" style="--o:.42s"/>
+        </g>
+      </g>
+      <g class="lid">
+        <path d="M14 182V132Q14 66 130 60Q246 66 246 132V182Z" fill="#E63946"/>
+        <path d="M30 182V132Q30 80 130 76Q230 80 230 132V182Z" fill="#F0525E"/>
+        <path d="M70 98Q130 86 190 98" fill="none" stroke="#FF8A94" stroke-width="6" stroke-linecap="round"/>
+        <rect x="54" y="78" width="16" height="106" rx="6" fill="#FFC800"/><rect x="190" y="78" width="16" height="106" rx="6" fill="#FFC800"/>
+        <rect x="66" y="78" width="4" height="106" rx="2" fill="#E6A800"/><rect x="202" y="78" width="4" height="106" rx="2" fill="#E6A800"/>
+        <rect x="4" y="172" width="252" height="30" rx="8" fill="#FFC800"/>
+        <rect x="4" y="194" width="252" height="8" rx="4" fill="#E6A800"/>
+        <g class="crownArt">
+          <path d="M104 64L98 34l18 14 14-26 14 26 18-14-6 30Z" fill="#FFC800"/>
+          <rect x="102" y="58" width="56" height="10" rx="3" fill="#E6A800"/>
+          <circle cx="130" cy="22" r="5" fill="#FF4D6D"/><circle cx="98" cy="34" r="4" fill="#FF4D6D"/><circle cx="162" cy="34" r="4" fill="#FF4D6D"/>
+        </g>
+        <circle cx="130" cy="188" r="32" fill="#FFC800"/><circle cx="130" cy="188" r="26" fill="#E6A800"/>
+        <g class="jewel">
+          <path d="M118 174h24l10 12-22 24-22-24Z" fill="#FF4D6D"/><path d="M118 174h24l10 12h-44Z" fill="#FFA3B3"/><path d="M108 186h22v24Z" fill="#E0304F"/>
+        </g>
+        <g class="cracks">
+          <path class="s1" pathLength="1" d="M14 182H246" style="--o:0s"/>
+          <path class="s1" pathLength="1" d="M92 182l-8-26 12-18-6-22 10-14" style="--o:.1s"/>
+          <path class="s1" pathLength="1" d="M170 182l10-24-12-16 8-24-8-16" style="--o:.16s"/>
+          <path class="s2" pathLength="1" d="M130 156l-6-22 10-16-4-18 8-14" style="--o:0s"/>
+          <path class="s2" pathLength="1" d="M40 182l6-30-12-22 8-20" style="--o:.08s"/>
+          <path class="s2" pathLength="1" d="M222 182l-4-28 12-20-6-24" style="--o:.14s"/>
+          <path class="s2" pathLength="1" d="M98 200l14 8 8-10 12 12" style="--o:.2s"/>
+          <path class="s2" pathLength="1" d="M162 202l-12 8-10-8-12 12" style="--o:.24s"/>
+          <path class="s3" pathLength="1" d="M84 132l16-6 8-14 14 6" style="--o:0s"/>
+          <path class="s3" pathLength="1" d="M176 128l-14-8-6-16-14 4" style="--o:.06s"/>
+          <path class="s3" pathLength="1" d="M66 100l12-14 14 4 8-14" style="--o:.12s"/>
+          <path class="s3" pathLength="1" d="M194 98l-12-14-14 6-8-14" style="--o:.16s"/>
+        </g>
+      </g>
+    </svg>`,
+    open: `<svg class="open" viewBox="0 0 260 290">
+      <defs>
+        <linearGradient id="lInt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6E1220"/><stop offset="1" stop-color="#FFD1D6"/></linearGradient>
+        <radialGradient id="lBleach" cx="130" cy="150" r="160" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFF1C2" stop-opacity=".9"/><stop offset=".5" stop-color="#FFF1C2" stop-opacity=".4"/><stop offset="1" stop-color="#FFF1C2" stop-opacity="0"/></radialGradient>
+      </defs>
+      <rect x="40" y="150" width="180" height="42" fill="url(#lInt)"/>
+      <rect x="14" y="150" width="32" height="118" rx="10" fill="#FFC800"/><rect x="214" y="150" width="32" height="118" rx="10" fill="#FFC800"/>
+      <rect x="46" y="186" width="168" height="82" fill="#B3202E"/>
+      <rect x="46" y="180" width="168" height="10" fill="#D62839"/>
+      <rect x="46" y="248" width="168" height="6" fill="#8F1826"/>
+      <rect x="4" y="178" width="252" height="14" rx="6" fill="#FFC800"/>
+      <circle cx="30" cy="258" r="4" fill="#FFE066"/><circle cx="230" cy="258" r="4" fill="#FFE066"/>
+      <rect x="0" y="40" width="260" height="220" fill="url(#lBleach)"/>
+    </svg>`
+  }
+};
+
+/* the small quest-row chests and the counter gem */
+$$("svg[data-chest]").forEach(s => { s.outerHTML = ART[s.dataset.chest].closed.replace('class="closed"', 'class="mini"'); });
+$$("svg[data-gem]").forEach(s => { s.outerHTML = GEM; });
+
+/* ============================================================
+   Sound — synthesized stand-ins, one voice per moment
+   ============================================================ */
+let AC = null, muted = false;
+const ctx = () => { try { AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === "suspended") AC.resume(); return AC; } catch (e) { return null; } };
+function tone(f0, f1, dur, type, gain, at, filt) {
+  const ac = ctx(); if (!ac || muted) return;
+  const t = ac.currentTime + (at || 0);
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type || "sine"; o.frequency.setValueAtTime(f0, t);
+  if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur * .6);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + .015); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur + .05);
+}
+function hiss(dur, gain, at, f0, f1) {
+  const ac = ctx(); if (!ac || muted) return;
+  const t = ac.currentTime + (at || 0);
+  const n = ac.sampleRate * dur, buf = ac.createBuffer(1, n, ac.sampleRate), d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+  const src = ac.createBufferSource(); src.buffer = buf;
+  const bp = ac.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 1.2;
+  bp.frequency.setValueAtTime(f0, t); bp.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain, t + .03); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(bp); bp.connect(g); g.connect(ac.destination); src.start(t);
+}
+const Snd = {
+  hop() { tone(300, 620, .22, "sine", .16); tone(140, 90, .1, "sine", .12); },
+  tap() { tone(360, 760, .22, "sine", .18); tone(150, 95, .1, "sine", .12); hiss(.28, .07, .02, 900, 3200); },
+  open() {
+    [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0, .9, "triangle", .11, i * .06));
+    hiss(.9, .05, 0, 5000, 2000);
+    for (let i = 0; i < 9; i++) tone(rnd(2000, 5200), 0, .08, "sine", .05, .1 + i * .075);
+  },
+  gems() { [1319, 1568, 1976, 2637].forEach((f, i) => tone(f, 0, .28, "sine", .1, i * .05)); },
+  rattle() { for (let i = 0; i < 7; i++) tone(rnd(700, 1100), 0, .05, "square", .035, i * .055); hiss(.4, .04, 0, 2500, 6000); },
+  shimmer() { for (let i = 0; i < 10; i++) tone(rnd(2200, 5200), 0, .14, "sine", .05, i * .045); },
+  clink(at) { tone(2600, 2000, .09, "triangle", .06, at || 0); },
+  rise(dur) { tone(160, 760, dur, "sawtooth", .045); tone(80, 380, dur, "sine", .08); hiss(dur, .04, 0, 300, 3200); },
+  whoosh() { hiss(.4, .1, 0, 500, 4200); tone(220, 900, .3, "sine", .07); },
+  rumble(dur) { hiss(dur, .13, 0, 50, 130); tone(48, 42, dur, "sine", .1); },
+  crackle() { for (let i = 0; i < 6; i++) hiss(.05, .06, i * .13, 3000, 6000); },
+  crack() { hiss(.09, .12, 0, 1800, 5000); tone(220, 90, .12, "square", .06); },
+  thud() { tone(110, 45, .3, "sine", .26); hiss(.16, .1, 0, 300, 90); },
+  plink() { tone(3400, 2500, .12, "sine", .08); },
+  boom() { tone(150, 38, .7, "sine", .3); hiss(.55, .16, 0, 2200, 140); },
+  fanfare() {
+    [523, 659, 784, 1047].forEach((f, i) => tone(f, 0, .5, "square", .045, i * .09));
+    [784, 1047, 1319, 1568].forEach((f, i) => tone(f, 0, 1.0, "triangle", .09, .36 + i * .09));
+  },
+  tick() { tone(1900, 1500, .06, "triangle", .05); }
+};
+$("#mute").addEventListener("click", e => { e.stopPropagation(); muted = !muted; $("#mute").textContent = muted ? "🔇" : "🔊"; });
+
+/* ============================================================
+   Screens
+   ============================================================ */
+let cur = $("#s-start"), moving = false;
+function go(next, cb) {
+  if (moving || next === cur) return; moving = true;
+  next.classList.remove("push-out"); next.classList.add("push-in", "on");
+  const prev = cur; prev.classList.add("push-out"); prev.classList.remove("on");
+  cur = next; setBg(next);
+  setTimeout(() => { prev.classList.remove("push-out"); next.classList.remove("push-in"); moving = false; cb && cb(); }, 340);
+}
+function setBg(scr) { document.body.style.background = scr === chestEl ? KIND[ch.kind].bg : ""; }
+
+/* ============================================================
+   Chest screen — the state machine driving the hops, taps and the opening
+   ============================================================ */
+const chestEl = $("#s-chest"), body = $(".body", chestEl), box = $(".box", chestEl), fx = $(".fx", chestEl), plate = $(".plate", chestEl), glow = $(".glow", chestEl),
+      sparks = $(".sparks", chestEl), dots = $$(".dot", chestEl), dotsRow = $(".dots", chestEl), flashEl = $(".flash", chestEl),
+      ttl = $(".ttl", chestEl), capA = $(".cap .a", chestEl), capB = $(".cap .b", chestEl), wash = $(".wash", chestEl), slam = $(".slam", chestEl),
+      arcCv = $(".arc", chestEl), actx = arcCv.getContext("2d");
+actx.scale(2, 2);
+let lid = null, sheen = null;
+
+/* hop choreography, measured off the video at 60 fps: [t, y, lean°, scaleY] */
+const IDLE_HOP = [
+  [0.00, 0, 0, 1.00], [0.15, 0, 0, 0.90], [0.25, 0, 0, 0.90],
+  [0.29, -10, -8, 1.07], [0.35, -24, -4, 1.03], [0.43, -32, -1, 1.00], [0.55, -33, 0, 1.00],
+  [0.62, -28, 2, 1.00], [0.70, -16, 5, 1.00], [0.76, -4, 8, 1.00], [0.79, 2, 6, 0.96],
+  [0.83, -4, 0, 1.00], [0.88, -10, -4, 1.00], [0.95, -10, -2, 1.00], [1.10, -10, 0, 1.00], [1.17, -6, 0, 1.00], [1.22, 0, 0, 1.00]];
+const TAP_HOP = [
+  [0.00, 0, 0, 1.00], [0.03, -4, 8, 1.10], [0.05, -8, 12, 1.10], [0.08, -22, 8, 1.06], [0.12, -32, 2, 1.03],
+  [0.17, -42, -2, 1.00], [0.22, -47, -4, 1.00], [0.27, -50, -1, 1.00], [0.37, -50, 0, 1.00],
+  [0.43, -44, -3, 1.00], [0.48, -34, -6, 1.00], [0.52, -20, -9, 1.00], [0.55, -4, -10, 1.00], [0.58, 3, -3, 0.96],
+  [0.62, -4, 3, 1.00], [0.66, -10, 4, 1.00], [0.72, -16, 2, 1.00], [0.80, -18, 0, 1.00], [0.88, -18, 0, 1.00], [0.93, -10, 0, 1.00], [0.98, 0, 0, 1.00]];
+function evalTrack(tr, t) {
+  if (t <= 0) return tr[0].slice(1);
+  for (let i = 1; i < tr.length; i++) if (t <= tr[i][0]) {
+    const a = tr[i - 1], b = tr[i], u = smooth((t - a[0]) / (b[0] - a[0]));
+    return [lerp(a[1], b[1], u), lerp(a[2], b[2], u), lerp(a[3], b[3], u)];
+  }
+  return null;
+}
+
+const CAPS = ["اضغط للحصول على فرصة لترقيته!", "اضغط! اضغط!", "باقي فرصة واحدة فحسب!", "اضغط لفتحه!"];
+const ORDER = ["common", "rare", "epic", "legendary"];
+/* hopK scales the tap leap; comets is how many chase the chest; sil is the silhouette the tap sheen is clipped to */
+const KIND = {
+  common:    { title: "عادي",   gems: 4,  bg: "#FCFCFC", spark: "#F8EC98", comet: "#F8E46C", comets: 1, hopK: 1,    sil: null, stamp: "" },
+  rare:      { title: "نادر",   gems: 12, bg: "#54C4FC", spark: "#FFFFFF", comet: "#FFFFFF", comets: 1, hopK: 1.1,  sil: "M18 178V122Q18 68 66 62H194Q242 68 242 122V268H18Z", stamp: "نادر!" },
+  epic:      { title: "ملحمي",  gems: 24, bg: "#8B5CF6", spark: "#FFD54A", comet: "#FFD54A", comets: 1, hopK: 1.2,  sil: "M16 180V120L62 62H198L244 120V268H16Z", stamp: "ملحمي!" },
+  legendary: { title: "أسطوري", gems: 40, bg: "#FF9600", spark: "#FFFFFF", comet: "#FFF1B0", comets: 2, hopK: 1.3,  sil: "M14 182V132Q14 66 130 60Q246 66 246 132V268H14Z", stamp: "أسطوري!" }
+};
+const SPARKS = [[175, 316, 22], [433, 475, 16], [46, 495, 14], [335, 286, 10], [410, 395, 8], [150, 590, 10], [330, 600, 14], [395, 565, 8], [95, 430, 8], [280, 240, 8], [70, 560, 10], [420, 330, 6], [120, 640, 8]];
+const RARE_DOTS = [[150, 455], [395, 470], [250, 560], [60, 380], [440, 600], [300, 655]];
+
+const ch = { kind: "common", taps: 0, open: false, hop: null, pose: [0, 0, 1], dir: 1, idleAt: 0, arc: null, openT0: 0, running: false, nextMote: 0, done: false, pressed: false, holdU: 0, total: 2069, capOnB: false, m: {}, fg: [], prize: null };
+
+function showChest(kind) {
+  ch.kind = kind; ch.taps = 0; ch.open = false; ch.hop = null; ch.pose = [0, 0, 1]; ch.arc = null; ch.done = false; ch.pressed = false; ch.holdU = 0; ch.nextMote = 0; ch.emberAt = 0; ch.m = {}; ch.fg = []; ch.fgT = null; ch.prize = null;
+  chestEl.classList.remove("t-common", "t-rare", "t-epic", "t-legendary", "opened", "lit", "launch", "cracking", "flicker", "kick", "big", "c1", "c2", "c3", "tapped"); chestEl.classList.add("t-" + kind);
+  ["--ttl", "--dot", "--dot-live"].forEach(p => chestEl.style.removeProperty(p));
+  if (kind === "common") { const c = COMMON_COLORS[commonIdx]; chestEl.style.setProperty("--ttl", c.title); chestEl.style.setProperty("--dot", c.dot); chestEl.style.setProperty("--dot-live", c.body); }
+  ttl.textContent = KIND[kind].title; ttl.classList.remove("hide");
+  box.innerHTML = ART[kind].closed + ART[kind].open + (KIND[kind].sil ? '<div class="sheen"><i></i></div>' : "");
+  lid = $("svg.closed .lid", box); sheen = $(".sheen", box);
+  if (sheen) sheen.style.setProperty("--sil", `"${KIND[kind].sil}"`);
+  body.style.transform = ""; box.style.transform = ""; plate.style.transform = ""; plate.style.opacity = ""; glow.style.transform = "";
+  wash.classList.remove("go"); wash.style.transition = "none"; void wash.offsetHeight; wash.style.transition = "";
+  fx.innerHTML = "";
+  dots.forEach((d, i) => { d.className = "dot" + (i === 0 ? " active" : ""); $("i", d).innerHTML = ARROW; });
+  dotsRow.classList.remove("hide");
+  capA.textContent = CAPS[0]; capA.className = "a"; capB.className = "b hide"; ch.capOnB = false;
+  buildSparks(kind);
+  actx.clearRect(0, 0, 480, 1044);
+  setBg(chestEl);
+  ch.idleAt = now() + 0.78; ch.running = true; requestAnimationFrame(loop);
+}
+function buildSparks(kind) {
+  sparks.innerHTML = "";
+  sparks.style.color = KIND[kind].spark;
+  SPARKS.forEach(([x, y, s], i) => {
+    const e = document.createElement("span"); e.className = "sp";
+    e.style.cssText = `left:${x}px;top:${y}px;--s:${s}px;--d:${(1.5 + (i * .37) % 1.1).toFixed(2)}s;--o:${(-(i * .53) % 2).toFixed(2)}s`;
+    e.innerHTML = STAR; sparks.appendChild(e);
+  });
+  if (kind !== "common") RARE_DOTS.forEach(([x, y], i) => {
+    const e = document.createElement("span"); e.className = "sp dot";
+    e.style.cssText = `left:${x}px;top:${y}px;--s:6px;--d:${(1.8 + (i * .41) % 1).toFixed(2)}s;--o:${(-(i * .71) % 2).toFixed(2)}s`;
+    sparks.appendChild(e);
+  });
+}
+function setCap(text) {
+  const hide = ch.capOnB ? capB : capA, show = ch.capOnB ? capA : capB;
+  show.textContent = text; show.classList.remove("hide"); hide.classList.add("hide"); ch.capOnB = !ch.capOnB;
+}
+function startHop(track) { ch.hop = { track, t0: now(), from: ch.pose.slice(), dir: ch.dir }; ch.dir = -ch.dir; }
+const retrigger = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+const kick = big => { chestEl.classList.remove("kick", "big"); void chestEl.offsetWidth; chestEl.classList.add("kick"); if (big) chestEl.classList.add("big"); };
+chestEl.addEventListener("animationend", e => { if (e.target === chestEl && /^kick/.test(e.animationName)) chestEl.classList.remove("kick", "big"); });
+const flash = () => retrigger(flashEl, "go");
+
+function loop() {
+  if (!ch.running) return;
+  const t = now();
+  if (!ch.open) {
+    /* the idle hop keeps a strict 2 s rhythm; a slot that lands mid-hop is skipped, never stacked */
+    if (t >= ch.idleAt) { if (!ch.hop) { startHop(IDLE_HOP); Snd.hop(); } ch.idleAt += 2.0; }
+    let pose = [0, 0, 1];
+    const k = ch.hop && ch.hop.track === TAP_HOP ? KIND[ch.kind].hopK : 1;
+    if (ch.hop) {
+      const dt = t - ch.hop.t0, v = evalTrack(ch.hop.track, dt);
+      if (!v) ch.hop = null;
+      else { const b = clamp(dt / 0.07, 0, 1); pose = [lerp(ch.hop.from[0], v[0] * k, b), lerp(ch.hop.from[1], v[1] * ch.hop.dir * k, b), lerp(ch.hop.from[2], 1 + (v[2] - 1) * k, b)]; }
+    }
+    ch.pose = pose;
+    /* rare and up hunker down while held before the open; the common stays true to the video */
+    ch.holdU += ((ch.pressed && ch.kind !== "common" ? 1 : 0) - ch.holdU) * 0.22;
+    const sx = 1 + 0.06 * ch.holdU, sy = pose[2] * (1 - 0.08 * ch.holdU);
+    /* a cracked legendary can't keep still: it shivers after the second tap and trembles after the third, embers leaking out */
+    const sh = ch.kind === "legendary" ? [0, 0, 1.2, 2.6][ch.taps] : 0;
+    body.style.transform = `translate(${rnd(-sh, sh).toFixed(1)}px,${rnd(-sh * .5, sh * .5).toFixed(1)}px) translateY(${pose[0].toFixed(2)}px) rotate(${pose[1].toFixed(2)}deg) scale(${sx.toFixed(3)},${sy.toFixed(3)})`;
+    if (sh && t >= ch.emberAt) { ember(); ch.emberAt = t + (ch.taps >= 3 ? 0.07 : 0.16); }
+  } else OPEN[ch.kind].step(t - ch.openT0);
+  if (ch.arc) drawArc(t - ch.arc.t0);
+  requestAnimationFrame(loop);
+}
+
+/* ---- the comet: a tapered stroke chasing its head around a tilted ellipse ---- */
+const ORBIT = { cx: 232, cy: 412, rx: 146, ry: 110, phi: -18 * Math.PI / 180, th0: 18 * Math.PI / 180, sweep: 270 * Math.PI / 180 };
+function orbitPt(th) {
+  const c = Math.cos(th), s = Math.sin(th), cp = Math.cos(ORBIT.phi), sp = Math.sin(ORBIT.phi);
+  return [ORBIT.cx + ORBIT.rx * c * cp - ORBIT.ry * s * sp, ORBIT.cy + ORBIT.rx * c * sp + ORBIT.ry * s * cp];
+}
+function drawArc(t) {
+  actx.clearRect(0, 0, 480, 1044);
+  if (t > 0.33) { ch.arc = null; return; }
+  const N = 44;
+  actx.strokeStyle = KIND[ch.kind].comet; actx.lineCap = "round"; actx.lineJoin = "round";
+  actx.globalAlpha = t > 0.27 ? 1 - (t - 0.27) / 0.06 : 1;
+  for (let c = 0; c < KIND[ch.kind].comets; c++) {
+    const off = c * Math.PI;
+    const head = ORBIT.th0 + off - ORBIT.sweep * easeOut(t / 0.24, 2.3);
+    const tail = ORBIT.th0 + off - ORBIT.sweep * easeOut((t - 0.075) / 0.22, 2.3);
+    if (tail - head < 0.02) continue;
+    const pts = [];
+    for (let i = 0; i <= N; i++) pts.push(orbitPt(lerp(tail, head, i / N)));
+    for (let i = 0; i < N; i++) {
+      actx.lineWidth = 1 + 14 * Math.pow((i + 1) / N, 0.85);
+      actx.beginPath(); actx.moveTo(pts[i][0], pts[i][1]); actx.lineTo(pts[i + 1][0], pts[i + 1][1]); actx.stroke();
+    }
+  }
+  actx.globalAlpha = 1;
+}
+
+/* ---- taps ---- */
+function tap() {
+  if (!ch.running || ch.open) return;
+  if (ch.taps < 3) {
+    ch.taps++;
+    dots[ch.taps - 1].classList.remove("active"); dots[ch.taps - 1].classList.add("used");
+    if (ch.taps < 3) { dots[ch.taps].classList.add("active", "pop"); }
+    setCap(CAPS[ch.taps]);
+    ch.arc = { t0: now() }; startHop(TAP_HOP); Snd.tap();
+    if (sheen) retrigger(sheen, "go");
+    if (ch.kind === "epic" || ch.kind === "legendary") kick(false);
+    if (ch.kind === "legendary") { chestEl.classList.add("c" + ch.taps); retrigger(chestEl, "tapped"); Snd.crack(); Snd.clink(.08); }
+    if (ch.taps === 3) setTimeout(() => { if (ch.taps === 3 && !ch.open) { dotsRow.classList.add("hide"); setCap(CAPS[3]); } }, 250);
+  }
+}
+/* the video fades the title on press and opens on release */
+chestEl.addEventListener("pointerdown", e => {
+  if (e.target.closest("#mute")) return;
+  if (!ch.running || ch.open) return;
+  if (ch.taps < 3) { tap(); return; }
+  ch.pressed = true; ttl.classList.add("hide");
+});
+const release = () => { if (ch.pressed && !ch.open) { ch.pressed = false; openChest(); } };
+chestEl.addEventListener("pointerup", release);
+chestEl.addEventListener("pointercancel", release);
+chestEl.addEventListener("pointerleave", release);
+
+/* ============================================================
+   Opening — one ceremony per tier. `at` fires a milestone once.
+   ============================================================ */
+function openChest() {
+  ch.open = true; ch.openT0 = now(); ch.hop = null; ch.arc = null; ch.m = {}; actx.clearRect(0, 0, 480, 1044);
+  ttl.classList.add("hide"); capA.classList.add("hide"); capB.classList.add("hide");
+  body.style.transform = "";
+  OPEN[ch.kind].start();
+}
+const at = (dt, t, name, fn) => { if (dt >= t && !ch.m[name]) { ch.m[name] = true; fn(); } };
+function burst(x, y, color, k) {
+  k = k || 1;
+  const pts = k > 1 ? [[-62, -40], [-22, -84], [30, -66], [72, -34], [4, -22], [-88, -10], [92, -60], [-40, -110], [50, -104]] : [[-62, -40], [-22, -84], [30, -66], [72, -34], [4, -22]];
+  pts.forEach((p, i) => {
+    const e = document.createElement("span"); e.className = "burst";
+    e.style.cssText = `left:${x}px;top:${y}px;--dx:${p[0] * k}px;--dy:${p[1] * k}px;--o:${i * .04}s;--s:${Math.round(34 * Math.sqrt(k))}px;color:${color}`;
+    e.innerHTML = STAR; fx.appendChild(e);
+  });
+}
+function ember() {
+  const e = document.createElement("span"); e.className = "mote";
+  e.style.cssText = `left:${(130 + rnd(-64, 64)).toFixed(0)}px;top:182px;--dy:${(-rnd(200, 460)).toFixed(0)}px;--d:${rnd(.9, 1.35).toFixed(2)}s`;
+  e.innerHTML = MOTE_GOLD; fx.appendChild(e);
+  setTimeout(() => e.remove(), 1400);
+}
+function motes(dt, until, y, svg, gap) {
+  while (ch.nextMote <= dt && dt < until) {
+    const e = document.createElement("span"); e.className = "mote";
+    e.style.cssText = `left:${(130 + rnd(-64, 64)).toFixed(0)}px;top:${y.toFixed(0)}px;--dy:${(-rnd(240, 560)).toFixed(0)}px;--d:${rnd(.9, 1.35).toFixed(2)}s`;
+    e.innerHTML = svg || MOTE; fx.appendChild(e);
+    ch.nextMote += gap || 0.07;
+  }
+}
+/* the rare's surprise: a fountain of gems, each on its own ballistic arc */
+/* floor: when given, the gems land on it, bounce with a clink and come to rest around the chest instead of flying off */
+function spawnFountain(n, svg, floor) {
+  ch.fg = []; ch.fgT = null;
+  for (let i = 0; i < n; i++) {
+    const a = lerp(-1, 1, i / (n - 1)) + rnd(-.12, .12);
+    gemOut({ t0: i * 0.03, x: 130 + a * 12, y: 118, vx: a * 300 + rnd(-30, 30), vy: -rnd(560, 760), w: rnd(-420, 420), s: rnd(.75, 1.05), floor }, svg || (i % 3 === 1 ? GEM_DARK : GEM));
+    Snd.clink(i * 0.04);
+  }
+}
+function gemOut(g, svg) {
+  const e = document.createElement("span"); e.className = "fgem"; e.innerHTML = svg; e.style.transform = "scale(0)"; fx.appendChild(e);
+  g.el = e; g.r = 0; g.rest = false; g.bounced = false; if (g.floor != null) g.floor += rnd(-8, 8);
+  ch.fg.push(g);
+}
+function stepFountain(t) {
+  const dt = ch.fgT == null ? 0 : Math.min(0.05, t - ch.fgT); ch.fgT = t;
+  ch.fg.forEach(g => {
+    if (t < g.t0) return;
+    if (!g.rest) {
+      g.vy += 1500 * dt; g.x += g.vx * dt; g.y += g.vy * dt; g.r += g.w * dt;
+      if (g.floor != null && g.y > g.floor && g.vy > 0) {
+        g.y = g.floor; g.vy = -g.vy * .42; g.vx *= .55; g.w *= .45;
+        if (!g.bounced) { g.bounced = true; Snd.clink(); }
+        if (Math.abs(g.vy) < 90) { g.rest = true; g.vy = 0; g.vx = 0; g.w = 0; }
+      }
+      if (g.floor == null && g.y > 900) { g.el.style.transform = "scale(0)"; g.rest = true; return; }
+    }
+    g.el.style.transform = `translate(${g.x.toFixed(1)}px,${g.y.toFixed(1)}px) rotate(${g.r.toFixed(0)}deg) scale(${(g.s * Math.min(1, (t - g.t0) * 8)).toFixed(3)})`;
+  });
+}
+/* the epic's surprise: one big prize lifts out of the mouth and hangs in the light */
+function spawnPrize(svg) {
+  const e = document.createElement("span"); e.className = "prize"; e.innerHTML = svg; fx.appendChild(e); ch.prize = e;
+}
+function stepPrize(t, mouthY, riseTo) {
+  if (!ch.prize) return;
+  const u = elastic(t / 0.75), y = lerp(mouthY, riseTo, u), s = Math.min(1, t * 3) * lerp(.3, 1, easeOut(t / .5, 2)), bob = t > .75 ? Math.sin((t - .75) * 5) * 6 : 0, r = Math.sin(t * 2.4) * 5;
+  ch.prize.style.transform = `translateY(${(y - 150 + bob).toFixed(1)}px) rotate(${r.toFixed(1)}deg) scale(${s.toFixed(3)})`;
+}
+const finish = () => { ch.done = true; ch.running = false; showReward(); };
+
+/* the legendary's buildup: the camera pushes in on the chest; a shiver, then a shake that builds in surges, lightning
+   flickers on the chest, gold cracks spreading over the lid, the body and out across the floor, rays through the seams,
+   embers rising, the chest glowing from inside, the whole screen trembling by the end; then a dead-still beat with the
+   push-in held. The screen stays orange throughout. True until the blast. */
+const BLAST_AT = 1.85;
+const flick = () => { chestEl.classList.add("flicker"); Snd.crackle(); setTimeout(() => chestEl.classList.remove("flicker"), 80); };
+/* the taps have already cracked the chest three stages deep, so the release goes straight into the shake */
+function prelude(dt) {
+  at(dt, 0, "crack", () => { chestEl.classList.add("cracking"); flick(); });
+  [0.35, 0.7, 1.05, 1.35].forEach((t, i) => at(dt, t, "flick" + i, flick));
+  const zoom = 1 + 0.16 * easeOut(dt / 1.5, 1.6);
+  motes(dt, 1.5, 182, MOTE_GOLD, 0.06);
+  if (dt < 1.5) {
+    const u = clamp(dt / 1.5, 0, 1);
+    const a = (4 + 16 * u * u) * (1 + 0.4 * Math.sin(dt * 15));
+    body.style.transform = `translate(${rnd(-a, a).toFixed(1)}px,${rnd(-a * .6, a * .6).toFixed(1)}px) rotate(${rnd(-a * .35, a * .35).toFixed(2)}deg) scale(${(1 + .04 * u).toFixed(3)},${(1 - .07 * u).toFixed(3)})`;
+    const s = 6 * u * u;
+    chestEl.style.transformOrigin = "240px 440px";
+    chestEl.style.transform = `translate(${rnd(-s, s).toFixed(1)}px,${rnd(-s, s).toFixed(1)}px) scale(${zoom.toFixed(3)})`;
+    return true;
+  }
+  if (dt < BLAST_AT) { body.style.transform = "scale(1.05,.93)"; chestEl.style.transform = `scale(${zoom.toFixed(3)})`; return true; }
+  return false;
+}
+const OPEN = {
+  /* عادي — the video, frame for frame: lift, burst, motes, fall, wash */
+  common: {
+    start() { chestEl.classList.add("opened", "lit"); Snd.open(); burst(130, 150, "#fff"); },
+    step(dt) {
+      const lift = -48 * easeOut(dt / 0.1, 3);
+      const ft = Math.max(0, dt - 0.13), fall = 1200 * ft * ft;
+      body.style.transform = `translateY(${fall.toFixed(1)}px)`;
+      box.style.transform = `translateY(${lift.toFixed(1)}px)`;
+      motes(dt, 0.72, 150 + fall + lift);
+      at(dt, 0.5, "wash", () => wash.classList.add("go"));
+      at(dt, 1.25, "done", finish);
+    }
+  },
+  /* نادر — the lid rattles like something wants out, then the chest erupts a fountain of gems and drops away */
+  rare: {
+    start() { Snd.rattle(); },
+    step(dt) {
+      if (dt < 0.42) {
+        const a = 1.5 + 9 * dt / 0.42, j = Math.sin(dt * 95) * a;
+        lid.style.transform = `translate(${j.toFixed(1)}px,${(-Math.abs(j) * .35).toFixed(1)}px) rotate(${(j * .35).toFixed(2)}deg)`;
+        body.style.transform = `translateX(${(j * .3).toFixed(1)}px)`;
+        return;
+      }
+      at(dt, 0.42, "pop", () => { lid.style.transform = ""; chestEl.classList.add("opened", "lit"); Snd.open(); Snd.shimmer(); burst(130, 150, "#fff"); flash(); kick(false); spawnFountain(11); });
+      const t = dt - 0.42;
+      const lift = -48 * easeOut(t / 0.1, 3);
+      const ft = Math.max(0, t - 0.5), fall = 1200 * ft * ft;
+      body.style.transform = `translateY(${fall.toFixed(1)}px)`;
+      box.style.transform = `translateY(${lift.toFixed(1)}px)`;
+      motes(t, 1.0, 150 + fall + lift);
+      stepFountain(t);
+      at(dt, 1.45, "wash", () => wash.classList.add("go"));
+      at(dt, 2.2, "done", finish);
+    }
+  },
+  /* ملحمي — the chest lifts off its plate, hangs there, the lid drifts away and a great amethyst rises into the light */
+  epic: {
+    start() { Snd.rise(0.8); },
+    step(dt) {
+      const u = easeOut(dt / 0.75, 2.6), rise = -76 * u, wob = Math.sin(dt * 9) * 3.5 * u;
+      const bob = dt > 0.75 ? Math.sin((dt - 0.75) * 5.5) * 5 : 0;
+      box.style.transform = `translateY(${(rise + bob).toFixed(1)}px) rotate(${(dt < 0.75 ? wob : Math.sin(dt * 3) * 1.5).toFixed(2)}deg)`;
+      glow.style.transform = `translate(-50%,-50%) translateY(${(rise + bob).toFixed(1)}px)`;
+      plate.style.transform = `scale(${(1 - .22 * u).toFixed(3)})`; plate.style.opacity = (1 - .35 * u).toFixed(2);
+      at(dt, 0.75, "launch", () => { chestEl.classList.add("launch", "lit"); Snd.whoosh(); Snd.open(); burst(130, 74, "#FFD54A", 1.3); flash(); kick(false); });
+      at(dt, 0.9, "prize", () => spawnPrize(GEM_AMETHYST));
+      if (dt >= 0.9) stepPrize(dt - 0.9, 80, -95);
+      if (dt >= 0.75) motes(dt - 0.75, 1.3, 74 + bob);
+      at(dt, 2.0, "wash", () => wash.classList.add("go"));
+      at(dt, 2.75, "done", finish);
+    }
+  },
+  /* أسطوري — the buildup, then it blows its lid and erupts a fountain of golden gems */
+  legendary: {
+    start() { Snd.rumble(1.9); Snd.rise(1.8); },
+    step(dt) {
+      if (prelude(dt)) return;
+      at(dt, BLAST_AT, "blast", () => {
+        chestEl.classList.remove("cracking", "c1", "c2", "c3"); chestEl.classList.add("launch", "lit");
+        chestEl.style.transform = ""; chestEl.style.transformOrigin = ""; ch.nextMote = 0;
+        Snd.boom(); Snd.fanfare(); Snd.shimmer(); burst(130, 150, "#FFE680", 2.2); flash(); kick(true); spawnFountain(16, GEM_GOLD, 262);
+      });
+      /* the lid lands in the foreground with a thud; one last gem plinks out late and bounces to rest */
+      at(dt, BLAST_AT + 1.22, "lidland", () => { Snd.thud(); kick(false); });
+      at(dt, BLAST_AT + 1.5, "burp", () => { gemOut({ t0: dt - BLAST_AT, x: 130, y: 118, vx: rnd(-90, 90), vy: -400, w: rnd(-300, 300), s: .8, floor: 262 }, GEM_GOLD); Snd.plink(); });
+      const bt = dt - BLAST_AT, sy = 1 + 0.22 * Math.exp(-bt * 5) * Math.sin(bt * 20);
+      body.style.transform = `scale(${(2 - sy).toFixed(3)},${sy.toFixed(3)})`;
+      stepFountain(bt);
+      /* aftershock: the screen keeps rattling for half a second after the kick, dying out */
+      if (bt > 0.42 && bt < 0.95) { const a = 5 * (1 - (bt - 0.42) / 0.53); chestEl.style.transform = `translate(${rnd(-a, a).toFixed(1)}px,${rnd(-a, a).toFixed(1)}px)`; }
+      else if (bt >= 0.95) chestEl.style.transform = "";
+      at(dt, BLAST_AT + 0.6, "slam", () => { slam.textContent = KIND.legendary.stamp; retrigger(slam, "go"); Snd.gems(); });
+      motes(bt, 1.5, 150, MOTE_GOLD, 0.04);
+      at(dt, BLAST_AT + 2.25, "wash", () => wash.classList.add("go"));
+      at(dt, BLAST_AT + 3.0, "done", finish);
+    }
+  }
+};
+
+/* ============================================================
+   Reward screen
+   ============================================================ */
+const rewardEl = $("#s-reward"), pile = $(".pile", rewardEl), pshadow = $(".pshadow", rewardEl), numEl = $(".num", rewardEl), rtitle = $(".rtitle", rewardEl), stamp = $(".stamp", rewardEl), counter = $(".counter", rewardEl);
+/* [x, y, rotation°, dark]: back gems sit in shadow and are drawn first */
+const PILES = {
+  4: [[0, -98, -8], [40, -72, 6, 1], [-33, -68, 10], [-60, -12, -6], [43, -12, 6]],
+  12: [[4, -150, -6], [48, -110, 8, 1], [-42, -106, -10], [-88, -62, 4, 1], [86, -60, -6, 1], [0, -64, 7], [-60, -12, -5], [96, -16, 5, 1], [30, -14, -8], [-14, -6, 4]]
+};
+/* bigger hauls are stacked in a pyramid: rows counted from the floor, top rows drawn first so the front row overlaps them */
+function pyramid(rows, gs) {
+  const out = [], dx = gs * .78, dy = gs * .5;
+  rows.forEach((n, r) => {
+    for (let i = 0; i < n; i++) {
+      const x = (i - (n - 1) / 2) * dx + ((i * 7 + r * 3) % 7 - 3) * 2.2, y = -r * dy - gs * .28 + ((i * 5 + r * 11) % 5 - 2) * 2;
+      out.push([x, y, (i * 7 + r * 5) % 13 - 6, r < rows.length - 1 && (i + r) % 3 === 1 ? 1 : 0, r]);
+    }
+  });
+  return out.sort((a, b) => b[4] - a[4]);
+}
+PILES[24] = pyramid([7, 6, 5, 4, 2], 76);
+PILES[40] = pyramid([9, 8, 7, 6, 5, 3, 2], 60);
+/* pile floor, gem size, shadow width */
+const PILE_LAYOUT = { 4: [555, 104, 210], 12: [555, 104, 210], 24: [600, 76, 400], 40: [630, 60, 440] };
+
+function showReward() {
+  const kind = ch.kind, n = KIND[kind].gems, from = ch.total, spots = PILES[n], stagger = n <= 4 ? 0.06 : n <= 12 ? 0.035 : 0.022;
+  const [top, gs, shw] = PILE_LAYOUT[n];
+  rewardEl.className = "scr on t-" + kind + (kind === "common" ? "" : " big");
+  $(".ad", rewardEl).classList.remove("gone");
+  rtitle.style.top = kind === "common" ? "246px" : "286px";
+  rtitle.textContent = "+" + toAr(n) + (n === 4 ? " جواهر" : " جوهرة");
+  stamp.textContent = KIND[kind].stamp; stamp.classList.toggle("show", !!KIND[kind].stamp);
+  numEl.textContent = toAr(from);
+  pile.style.top = top + "px"; pile.style.setProperty("--gs", gs + "px");
+  pshadow.style.width = shw + "px"; pshadow.style.left = -shw / 2 + "px";
+  $$(".gem", pile).forEach(g => g.remove());
+  spots.forEach(([x, y, rot, dark], i) => {
+    const g = document.createElement("span"); g.className = "gem pop";
+    g.style.cssText = `left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;--r:${rot}deg;--o:${(0.05 + i * stagger).toFixed(3)}s`; g.innerHTML = dark ? GEM_DARK : GEM; pile.appendChild(g);
+  });
+  cur = rewardEl; setBg(rewardEl);
+  chestEl.classList.remove("on");
+  setTimeout(() => rewardEl.classList.add("piled"), 60);
+  const last = 0.05 + (spots.length - 1) * stagger + 0.3;
+  setTimeout(() => { countTo(from, from + n, n <= 4 ? 0.3 : n <= 12 ? 0.4 : 0.8); ch.total = from + n; rewardEl.classList.add("told"); Snd.gems(); }, (last + 0.2) * 1000);
+  setTimeout(() => $$(".gem", pile).forEach((g, i) => { g.classList.remove("pop"); g.style.transform = "scale(1) rotate(var(--r))"; g.style.setProperty("--o", (i * .03).toFixed(2) + "s"); g.classList.add("jig"); }), (last + 0.35) * 1000);
+  setTimeout(showChest.reset, 400);
+}
+showChest.reset = () => {
+  chestEl.classList.remove("opened", "lit", "launch", "cracking", "flicker", "kick", "big", "c1", "c2", "c3", "tapped"); chestEl.style.transform = ""; chestEl.style.transformOrigin = ""; slam.classList.remove("go");
+  body.style.transform = ""; box.style.transform = ""; plate.style.transform = ""; plate.style.opacity = ""; glow.style.transform = ""; fx.innerHTML = ""; ch.prize = null; ch.fg = [];
+};
+/* the counter climbs in discrete ticks, bumping on each */
+function countTo(a, b, dur) {
+  const t0 = now(), steps = Math.min(b - a, 12); let shown = a;
+  (function step() {
+    const u = clamp((now() - t0) / dur, 0, 1), n = a + Math.round(Math.floor(u * steps + 1e-6) * (b - a) / steps);
+    if (n !== shown) { shown = n; numEl.textContent = toAr(n); retrigger(counter, "bump"); if (steps > 4) Snd.tick(); }
+    if (u < 1) requestAnimationFrame(step); else numEl.textContent = toAr(b);
+  })();
+}
+$(".ad", rewardEl).addEventListener("click", e => {
+  const b = e.currentTarget; if (b.classList.contains("gone")) return;
+  b.classList.add("gone"); countTo(ch.total, ch.total + 15, 0.4); ch.total += 15; Snd.gems();
+});
+const next = () => { const i = ORDER.indexOf(ch.kind); if (i < ORDER.length - 1) { go(chestEl); showChest(ORDER[i + 1]); } else go($("#s-start")); };
+$(".link", rewardEl).addEventListener("click", next);
+$(".cont", rewardEl).addEventListener("click", next);
+$("#b-start").addEventListener("click", () => { ctx(); go(chestEl); showChest("common"); });
+
+/* ---- deep links: #<tier> · #open<tier> · #reward<tier> · #auto<tier> (tier omitted = common; #reward12 etc. still work) ---- */
+/* the palette screen: every colourway of the common chest, the live one outlined; a tap reloads with that colour */
+const palEl = $("#s-palette");
+$(".pal", palEl).innerHTML = COMMON_COLORS.map((c, i) => `<div class="pcard${i === commonIdx ? " cur" : ""}" data-i="${i + 1}" style="--ttl-c:${c.title}">${commonArt(c).closed.replace('class="closed"', 'class="mini"')}<b>${c.name}</b><span>اللون ${toAr(i + 1)}</span></div>`).join("");
+$$(".pcard", palEl).forEach(el => el.addEventListener("click", () => { location.href = location.pathname + "?c=" + el.dataset.i + "#common"; }));
+
+const h = location.hash.slice(1);
+const tierOf = s => ORDER.includes(s) ? s : ({ "": "common", "4": "common", "12": "rare", "24": "epic", "40": "legendary" })[s] || null;
+const jump = kind => { chestEl.classList.add("on"); $("#s-start").classList.remove("on"); cur = chestEl; showChest(kind); };
+if (h === "palette") { palEl.classList.add("on"); $("#s-start").classList.remove("on"); cur = palEl; }
+else if (h && ORDER.includes(h)) jump(h);
+else if (h.startsWith("open") && tierOf(h.slice(4))) { jump(tierOf(h.slice(4))); ch.taps = 3; dotsRow.classList.add("hide"); setTimeout(openChest, 300); }
+else if (h.startsWith("reward") && tierOf(h.slice(6))) { ch.kind = tierOf(h.slice(6)); $("#s-start").classList.remove("on"); showReward(); }
+else if (h.startsWith("auto") && tierOf(h.slice(4))) {
+  /* scripted run for frame captures: three taps a second apart, then press and release */
+  jump(tierOf(h.slice(4)));
+  [1.0, 1.9, 2.7].forEach(t => setTimeout(tap, t * 1000));
+  setTimeout(() => { ch.pressed = true; ttl.classList.add("hide"); }, 3600);
+  setTimeout(release, 3900);
+}
+})();
+</script>
+</body>
+</html>

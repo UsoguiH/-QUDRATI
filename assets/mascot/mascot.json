@@ -1,34 +1,18 @@
 {
- "encourage": {
+ "celebrate": {
   "w": 512,
   "h": 512,
-  "renderedW": 345,
-  "renderedH": 481,
-  "bytes": 27491,
-  "sheet": 1
+  "renderedW": 349,
+  "renderedH": 478,
+  "bytes": 22672,
+  "sheet": 2
  },
- "cheer": {
+ "strong": {
   "w": 512,
   "h": 512,
-  "renderedW": 406,
-  "renderedH": 481,
-  "bytes": 29717,
-  "sheet": 1
- },
- "point": {
-  "w": 512,
-  "h": 512,
-  "renderedW": 360,
-  "renderedH": 481,
-  "bytes": 27252,
-  "sheet": 1
- },
- "concerned": {
-  "w": 512,
-  "h": 512,
-  "renderedW": 292,
-  "renderedH": 481,
-  "bytes": 25401,
-  "sheet": 1
+  "renderedW": 309,
+  "renderedH": 438,
+  "bytes": 24067,
+  "sheet": 2
  }
 }

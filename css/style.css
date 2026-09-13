@@ -24,6 +24,7 @@
   --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
   --nav-h: 80px;
   --scrim: rgba(40, 40, 48, .55);   /* one dim for every overlay */
+  --chest: #1E3A8A;       --chest-dot: #FFE9A8;   /* the daily chest's navy and the pale gold of its tap dots */
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -151,6 +152,147 @@ svg.ic { display: block; }
 /* a step with no natural lead clause would otherwise be one bold wall */
 .li-solo { display: block; font-size: 15.5px; font-weight: 700; color: var(--ink); line-height: 1.62; }
 .li-body .ex-tip { margin-top: 4px; }
+/* the imported curriculum: goal under the title, then rule = name / formula /
+   when-to-use as three rows, and the book's own key drawing above them */
+.li-goal { margin: 8px 0 0; font-size: 14px; font-weight: 600; line-height: 1.55; opacity: .92; }
+.li-formula { display: block; font-size: 15px; font-weight: 700; color: var(--ink); line-height: 1.65; }
+.li-when { display: block; font-size: 13.5px; font-weight: 600; color: var(--gray); line-height: 1.6; margin-top: 2px; }
+.li-when::before { content: "متى؟ "; color: var(--li-c, var(--green)); font-weight: 800; }
+.li-fig {
+  display: flex; justify-content: center; margin-bottom: 10px; padding: 10px;
+  background: #fff; border: 2px solid var(--line); border-radius: 15px; box-shadow: 0 2px 0 var(--line);
+}
+.li-fig svg { max-width: 100%; height: auto; }
+
+/* ---- teaching cards (js/data/teach.js): one rule, one tap, then its questions ---- */
+.screen-teach {
+  padding-bottom: calc(110px + env(safe-area-inset-bottom));
+  /* the check is a lesson question, so its card is the session's option card;
+     these are .screen-session's own values, declared again so the two skins
+     cannot drift apart */
+  --hair: #e5e5e5;      --card-radius: 15px;
+  --grn-face: #d0ffb5;  --grn-edge: #95ed63;  --grn-ink: #58a700;
+  --red-face: #ffdfe0;  --red-edge: #ff8f8f;  --red-ink: #ea2b2b;
+}
+/* the teach bar IS .progress — same 16px r64 track, same inset shine line.
+   Only the tint is local, through the hooks fxPaintBar() already uses. */
+.teach-bar { --bar-fill: var(--li-c, var(--gold)); --bar-shine: var(--li-h, var(--gold-soft)); }
+/* the bar keeps the session's width: hearts sit here in a lesson, nothing here in a card */
+.tc-back-ph { width: 44px; flex-shrink: 0; }
+/* the teach column is the session column, at every tier */
+.teach-body {
+  width: 100%; max-width: var(--col-max); margin-inline: auto;
+  padding: 18px 16px 0;
+}
+.teach-card {
+  background: #fff; border: 2px solid var(--line); border-radius: 16px;
+  padding: 16px; box-shadow: 0 2px 0 var(--line);
+  animation: fadeUp .35s ease backwards;
+}
+.tc-kicker { font-size: 12.5px; font-weight: 800; color: var(--li-c, var(--green)); letter-spacing: .3px; margin-bottom: 10px; }
+.tc-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.tc-title { font-size: 20px; font-weight: 700; color: var(--ink); margin: 0; line-height: 1.3; }
+.tc-say { font-size: 15.5px; font-weight: 700; color: var(--ink); line-height: 1.62; margin: 0 0 14px; }
+/* A formula is read, not tapped. It keeps .choice.sel's blue face and border,
+   but not its 0 2px 0 lip — the lip is what makes a card look pressable, and
+   a static panel in this file (.fb-solution, .ex-tip) is r12 with no lip. */
+.tc-formula {
+  font-size: 17px; font-weight: 800; color: var(--blue-dk); line-height: 1.6; text-align: center;
+  background: var(--blue-light); border: 2px solid var(--blue-border); border-radius: 12px;
+  padding: 12px 14px; margin-bottom: 14px;
+}
+/* the example is an .ex-step: the same 3px spine on the reading-start edge */
+.tc-eg {
+  font-size: 15px; font-weight: 600; color: var(--ink); line-height: 1.7;
+  border-right: 3px solid var(--line); padding: 7px 14px 7px 4px;
+}
+/* a rule's picture sits between the words and the formula; the hook is the
+   one line to keep when everything else fades */
+.tc-fig { display: flex; justify-content: center; margin: 0 0 14px; }
+.tc-fig svg { max-width: 100%; height: auto; }
+.tc-hook { margin-top: 12px; font-size: 14.5px; font-weight: 700; color: var(--ink); line-height: 1.6; }
+.tc-eg-l { display: inline-block; font-size: 12.5px; font-weight: 800; color: var(--li-c, var(--green)); margin-left: 8px; }
+.tc-hero { text-align: center; padding: 24px 16px 20px; }
+.tc-chunk-title { font-size: 26px; font-weight: 700; color: var(--ink); margin: 4px 0 10px; line-height: 1.25; text-wrap: balance; }
+.tc-chunk-goal { font-size: 15px; font-weight: 600; color: var(--gray); line-height: 1.7; margin: 0 0 16px; }
+/* the file's pill is a tinted fill with no border (.pf-goal, .pf-w-go,
+   .login-badges span) — a white face with a 2px edge is button grammar */
+.tc-plan, .tc-practice {
+  display: inline-block; font-size: 12.5px; font-weight: 700; color: var(--gray);
+  background: var(--line); border-radius: 999px; padding: 6px 11px 5px;
+}
+.tc-practice { margin-bottom: 14px; }
+.tc-q { font-size: 21px; font-weight: 700; color: var(--ink); line-height: 1.65; margin: 0 0 18px; padding: 2px 2px 0; }
+.tc-choices { display: flex; flex-direction: column; gap: 10px; }
+
+/* ---- the check's option card: the session's, verbatim ---- */
+.screen-teach .slot { position: relative; min-height: 62px; display: flex; }
+.screen-teach .slot > .base {
+  display: block; position: absolute; inset: 0;
+  border-radius: var(--card-radius); background: var(--hair); z-index: 0;
+}
+.screen-teach .choice {
+  position: relative; z-index: 1; flex: 1; overflow: hidden;
+  border: 2px solid var(--hair); border-bottom-width: 4px;
+  border-radius: var(--card-radius); box-shadow: none;
+}
+/* once answered, the card moves on GSAP's transform — the entry fade and the
+   CSS shake would fight it, so they are off from that render on */
+.tc-choices.answered .choice, .screen-teach .choice.wrong { animation: none; }
+.screen-teach .choice:active { transform: none; box-shadow: none; }
+.screen-teach .choice .ch-letter { border-color: var(--hair); background: transparent; }
+.screen-teach .choice.correct { background: var(--grn-face); border-color: var(--grn-edge); color: var(--grn-ink); box-shadow: none; }
+.screen-teach .choice.correct .ch-letter { border-color: var(--grn-edge); color: var(--grn-ink); }
+.screen-teach .choice.wrong { background: var(--red-face); border-color: var(--red-edge); color: var(--red-ink); box-shadow: none; }
+.screen-teach .choice.wrong .ch-letter { border-color: var(--red-edge); color: var(--red-ink); }
+
+.tc-why {
+  margin-top: 14px; padding: 10px 12px; border-radius: 12px;
+  font-size: 15px; font-weight: 700; line-height: 1.65;
+  animation: fadeUp .3s ease backwards;
+}
+.tc-why.good { background: var(--green-bg); color: var(--green-dk); }
+.tc-why.bad  { background: var(--red-bg);   color: var(--red-dk2); }
+/* the coach speaks from the gutter, outside the card: a study move, not a
+   fifth thing to memorise */
+.tc-coach {
+  display: flex; align-items: flex-start; gap: 8px; margin: 14px 4px 0;
+  font-size: 13.5px; font-weight: 700; color: var(--gray); line-height: 1.6;
+}
+.tc-coach svg { width: 17px; height: 17px; flex-shrink: 0; color: var(--gold-dk); margin-top: 2px; }
+.win-coach { justify-content: center; text-align: center; text-wrap: balance; margin: 4px auto 18px; max-width: 320px; }
+.bk-coach { margin: 0 2px 14px; }
+
+/* the chunk's rules inside the «كيف أحلّها؟» sheet */
+.tc-mini { padding: 10px 0; }
+.tc-mini + .tc-mini { border-top: 1px solid #F3F3F3; }
+.tc-mini b { display: block; font-size: 15.5px; color: var(--ink); margin-bottom: 8px; }
+.tc-mini .tc-formula { font-size: 15.5px; padding: 8px 12px; margin-bottom: 8px; }
+.tc-mini .tc-eg { font-size: 14px; }
+/* the sheet's second action is a button, not an underline — .btn-ghost is the
+   pair the fail screen and both mock screens already stack over a primary */
+.ms-link { color: var(--blue-dk); }
+
+/* the guidebook sheet: the .ms-bulb disc, with the white knocked-out icon
+   every other disc in this app carries */
+.bk-bulb img { width: 22px; height: 22px; filter: brightness(0) invert(1); }
+.bk-body .li-step { animation: none; }
+.bk-row.done .li-num { background: var(--green); box-shadow: 0 2px 0 var(--green-dk); }
+.bk-row.miss .li-num { background: var(--orange); box-shadow: 0 2px 0 #E07D00; }
+.bk-sep { font-size: 13px; font-weight: 800; color: var(--gray); margin: 8px 4px 10px; }
+.bk-les {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+  margin: 18px 4px 10px; font-size: 13.5px; font-weight: 800; letter-spacing: .3px; line-height: 1.4;
+  color: var(--li-c, var(--green));
+}
+.bk-les:first-child { margin-top: 0; }
+.bk-les-c { font-size: 12.5px; font-weight: 700; color: var(--gray); white-space: nowrap; }
+
+:root[data-motion="reduced"] .screen-teach .choice,
+:root[data-motion="reduced"] .teach-card,
+:root[data-motion="reduced"] .tc-why,
+:root[data-motion="reduced"] .bk-bulb { animation: none; }
+:root[data-motion="reduced"] .teach-bar > i { transition: none; }
 
 /* stars under a cleared node — they were stored and never drawn */
 .node-stars { display: flex; gap: 4px; margin-top: 8px; }
@@ -182,22 +324,29 @@ svg.ic { display: block; }
   letter-spacing: .3px; opacity: .95;
 }
 .unit-banner h2 { font-size: 21px; font-weight: 700; line-height: 1.15; }
-.unit-banner .u-side {
-  display: flex; align-items: center; gap: 14px; align-self: stretch;
+/* the unit's book button: white 2px border with a white lip on the tinted
+   face, the way the reference's guidebook button sits on its banner */
+.unit-banner .u-book {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 12px 8px; border-radius: 12px;
+  background: rgba(255,255,255,.18); border: 2px solid #fff; box-shadow: 0 2px 0 #fff;
+  color: #fff; font-family: var(--font); font-size: 15px; font-weight: 800; line-height: 1;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: transform .08s, box-shadow .08s, background .15s;
 }
-.unit-banner .u-divider { width: 2px; align-self: stretch; margin: -2px 0; }
+/* the guidebook glyph, knocked out white and mirrored: the rings sit on the
+   reading edge, as the reference draws it in RTL */
+.unit-banner .u-book img { width: 22px; height: 22px; filter: brightness(0) invert(1); transform: scaleX(-1); }
+.unit-banner .u-book:active { transform: translateY(2px); box-shadow: none; }
+.unit-banner .u-book:focus-visible { outline-color: #fff; }
 .u-purple { background: var(--purple); box-shadow: 0 4px 0 var(--purple-dk); }
 .u-purple .u-kicker { color: var(--purple-tint); }
-.u-purple .u-divider { background: var(--purple-dk); }
 .u-green  { background: var(--green);  box-shadow: 0 4px 0 var(--green-dk); }
 .u-green .u-kicker { color: #C8F0A8; }
-.u-green .u-divider { background: var(--green-dk); }
 .u-blue   { background: var(--blue);   box-shadow: 0 4px 0 var(--blue-dk); }
 .u-blue .u-kicker { color: var(--blue-light); }
-.u-blue .u-divider { background: var(--blue-dk); }
 .u-gold { background: var(--gold); box-shadow: 0 4px 0 var(--gold-dk); }
 .u-gold .u-kicker { color: #FFF1C1; }
-.u-gold .u-divider { background: var(--gold-dk); }
 
 /* ============================================================
    Level path — Figma "Level": 71x58 ellipse face on same-size
@@ -1092,6 +1241,7 @@ button.dom-stat:active { transform: scale(.99); }
 }
 .login-input::placeholder { color: var(--gray-icon); font-weight: 600; }
 .login-input:focus { border-color: var(--blue-border); background: #fff; }
+.login-input:focus-visible { outline: none; }   /* its own border is the focus ring; the global ring made two */
 .login-input.err { border-color: var(--red); background: var(--red-bg); animation: shake .4s ease; }
 .login-form .btn { animation: fadeUp .4s .7s ease backwards; }
 .login-skip {
@@ -1217,7 +1367,6 @@ button.dom-stat:active { transform: scale(.99); }
 
 /* --- unit banners + path --- */
 .unit-banner { animation: bannerIn .45s cubic-bezier(.3,1.4,.5,1) backwards; }
-.unit-banner .u-side img { animation: wiggle 3.5s 2s ease-in-out infinite; }
 .node { animation: springIn .5s cubic-bezier(.3,1.6,.5,1) backwards; animation-delay: var(--d, 0s); }
 .path-row .bob { animation: nodeBob 1.8s .8s ease-in-out infinite; }
 .node-ring { animation: ringPulse 1.8s ease-in-out infinite; }
@@ -1559,89 +1708,143 @@ button.dom-stat:active { transform: scale(.99); }
   box-shadow: 0 3px 0 var(--green-lip);
 }
 
-/* --- the ceremony overlay --- */
+/* --- the ceremony overlay: a 480×1044 stage scaled to the viewport, so the
+   measured hop, comet and open land the same on every phone --- */
 .chest-veil {
-  position: fixed; inset: 0; z-index: 320;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--scrim); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  position: fixed; inset: 0; z-index: 350; background: var(--snow);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  -webkit-user-select: none; user-select: none; touch-action: manipulation;
   animation: veilIn .35s ease;
 }
 .chest-veil.out { animation: veilOut .35s ease forwards; }
 @keyframes veilIn { from { opacity: 0; } }
 @keyframes veilOut { to { opacity: 0; } }
-.chest-scene {
-  position: relative; display: flex; flex-direction: column; align-items: center;
-  width: min(86vw, 360px);
+.cv-stage { position: relative; width: 480px; height: 1044px; flex-shrink: 0; overflow: hidden; transform-origin: 50% 50%; color: var(--ink); }
+.cv-scr { position: absolute; inset: 0; background: var(--snow); visibility: hidden; }
+.cv-scr.on { visibility: visible; }
+.cv-chest { cursor: pointer; }
+.cv-ttl {
+  position: absolute; top: 222px; left: 0; right: 0; margin: 0; text-align: center;
+  font-size: 26px; font-weight: 800; color: var(--chest); line-height: 1.2; transition: opacity .22s ease;
+}
+.cv-ttl.hide { opacity: 0; }
+
+/* the chest lives in a 260×290 box; its plate's bottom is the floor */
+.cv-wrap { position: absolute; left: 110px; top: 285px; width: 260px; height: 290px; z-index: 2; }
+.cv-body { position: absolute; inset: 0; transform-origin: 50% 98%; will-change: transform; }
+.cv-plate { position: absolute; left: 15px; top: 235px; width: 232px; height: 46px; border-radius: 14px; background: var(--line); }
+.cv-box { position: absolute; inset: 0; will-change: transform; }
+.cv-box svg { position: absolute; left: 0; top: 0; width: 260px; height: 290px; overflow: visible; }
+.cv-box svg.open { display: none; }
+.opened .cv-box svg.closed { display: none; }
+.opened .cv-box svg.open { display: block; }
+
+/* light pouring out of the open chest: a soft pool at the mouth + a cone */
+.cv-glow {
+  position: absolute; left: 130px; top: 150px; width: 320px; height: 240px; transform: translate(-50%,-50%);
+  background: radial-gradient(closest-side, rgba(255,255,255,.95), rgba(255,255,255,.55) 42%, rgba(255,255,255,0) 100%);
+  opacity: 0; pointer-events: none; z-index: 3;
+}
+.cv-cone {
+  position: absolute; left: 130px; bottom: 130px; width: 380px; height: 560px; transform: translateX(-50%);
+  clip-path: polygon(32% 100%, 68% 100%, 100% 0, 0 0);
+  background: linear-gradient(to top, rgba(255,240,190,.5), rgba(255,240,190,.22) 40%, rgba(255,240,190,0) 100%);
+  opacity: 0; pointer-events: none; z-index: 1;
+}
+.opened .cv-glow { animation: cvGlowIn .25s ease-out forwards; }
+.opened .cv-cone { animation: cvConeIn .3s ease-out forwards, cvConePulse 1.1s ease-in-out .3s infinite; }
+@keyframes cvGlowIn { to { opacity: 1; } }
+@keyframes cvConeIn { to { opacity: 1; } }
+@keyframes cvConePulse { 0%, 100% { opacity: 1; } 50% { opacity: .78; } }
+
+/* idle sparkles ringing the chest */
+.cv-sparks { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+.cv-sp { position: absolute; width: var(--s); height: var(--s); margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2); opacity: 0; animation: cvTwinkle var(--d) ease-in-out var(--o) infinite; }
+.cv-sp svg { display: block; width: 100%; height: 100%; }
+@keyframes cvTwinkle {
+  0%, 100% { opacity: 0; transform: scale(.25) rotate(-12deg) translateY(4px); }
+  45%      { opacity: 1; transform: scale(1) rotate(8deg) translateY(-2px); }
+  70%      { opacity: .9; transform: scale(.92) rotate(14deg) translateY(-6px); }
 }
 
-/* rotating sunrays behind the chest, revealed at the open moment */
-.cs-rays {
-  position: absolute; top: 50%; left: 50%; width: 380px; height: 380px;
-  margin: -325px 0 0 -190px; border-radius: 50%;
-  background: repeating-conic-gradient(rgba(255,200,0,.32) 0 13deg, transparent 13deg 26deg);
-  -webkit-mask-image: radial-gradient(closest-side, #000 18%, transparent 68%);
-  mask-image: radial-gradient(closest-side, #000 18%, transparent 68%);
-  opacity: 0; transform: scale(.4); pointer-events: none;
-  animation: raysSpin 16s linear infinite;
+/* burst stars and rising motes at the pop */
+.cv-fx { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+.cv-burst { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; animation: cvBurst .46s cubic-bezier(.2,.8,.3,1) var(--o) both; }
+.cv-burst svg { display: block; width: 100%; height: 100%; }
+@keyframes cvBurst {
+  0%   { opacity: 0; transform: translate(0,0) scale(0) rotate(0); }
+  35%  { opacity: 1; transform: translate(calc(var(--dx) * .7), calc(var(--dy) * .7)) scale(1.25) rotate(20deg); }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(.4) rotate(45deg); }
 }
-.chest-veil.open .cs-rays { opacity: 1; transform: scale(1); transition: opacity .4s ease, transform .6s cubic-bezier(.3,1.4,.5,1); }
-@keyframes raysSpin { to { rotate: 360deg; } }
-
-/* white flash exactly when the lid pops */
-.cs-flash {
-  position: absolute; top: 50%; left: 50%; width: 90px; height: 90px;
-  margin: -105px 0 0 -45px; border-radius: 50%; background: #fff;
-  opacity: 0; pointer-events: none;
-}
-.chest-veil.open .cs-flash { animation: flashPop .5s ease-out; }
-@keyframes flashPop { 0% { opacity: .95; transform: scale(.3); } 100% { opacity: 0; transform: scale(4.2); } }
-
-/* the chest itself: drop in → land squash → shake → lid swings open */
-.cs-chest { position: relative; z-index: 2; transform: translateY(-78vh); }
-.qc-big { width: 170px; height: 156px; overflow: visible; filter: drop-shadow(0 10px 0 rgba(0,0,0,.18)); }
-.chest-veil.drop .cs-chest { animation: chestDrop .75s cubic-bezier(.34,1.2,.5,1) forwards; }
-@keyframes chestDrop {
-  0% { transform: translateY(-78vh); }
-  58% { transform: translateY(0) scale(1, 1); }
-  70% { transform: translateY(0) scale(1.14, .8); }
-  84% { transform: translateY(-7px) scale(.95, 1.08); }
-  100% { transform: translateY(0) scale(1, 1); }
-}
-.chest-veil.shake .cs-chest { animation: chestShake .72s ease forwards; }
-@keyframes chestShake {
-  0%, 100% { transform: rotate(0); }
-  12% { transform: rotate(-6deg); } 26% { transform: rotate(6deg); }
-  40% { transform: rotate(-9deg) scale(1.03); } 54% { transform: rotate(9deg) scale(1.03); }
-  68% { transform: rotate(-5deg); } 82% { transform: rotate(3deg); }
-}
-.qc-big .ch-lid { transform-box: fill-box; transform-origin: 6% 88%; transition: transform .55s cubic-bezier(.3,1.65,.45,1); }
-.chest-veil.open .qc-big .ch-lid { transform: rotate(-114deg) translateY(-3px); }
-.qc-big .ch-glow { transition: opacity .4s ease .12s; }
-.chest-veil.open .qc-big .ch-glow { opacity: 1; }
-
-/* gems erupting from the chest mouth */
-.cs-burst { position: absolute; top: 50%; left: 50%; z-index: 3; pointer-events: none; }
-.cs-gem { position: absolute; top: -70px; left: -10px; opacity: 0; animation: gemFly 1.15s cubic-bezier(.2,.6,.4,1) forwards; }
-@keyframes gemFly {
-  0% { opacity: 0; transform: translate(0, 0) scale(.25) rotate(0); }
-  12% { opacity: 1; }
-  55% { transform: translate(calc(var(--dx) * .8), var(--up)) scale(1.05) rotate(var(--rot)); opacity: 1; }
-  100% { transform: translate(var(--dx), calc(var(--up) + 150px)) scale(.9) rotate(var(--rot)); opacity: 0; }
+.cv-mote { position: absolute; width: 10px; height: 26px; margin: -13px 0 0 -5px; animation: cvMote var(--d) cubic-bezier(.15,.7,.3,1) both; }
+.cv-mote svg { display: block; width: 100%; height: 100%; }
+@keyframes cvMote {
+  0%   { opacity: 0; transform: translateY(0) scale(.5); }
+  12%  { opacity: 1; transform: translateY(calc(var(--dy) * .12)) scale(1); }
+  75%  { opacity: .9; }
+  100% { opacity: 0; transform: translateY(var(--dy)) scale(.55); }
 }
 
-/* reward + title + button cascade after the burst */
-.cs-reward {
-  display: flex; align-items: center; gap: 10px; margin-top: 26px; z-index: 4;
-  font-size: 40px; font-weight: 800; color: #fff;
-  text-shadow: 0 3px 0 rgba(0,0,0,.25);
-  transform: scale(0);
+/* the comet arc that orbits the chest on every tap */
+.cv-arc { position: absolute; left: 0; top: 0; width: 480px; height: 1044px; pointer-events: none; z-index: 5; }
+
+/* three chances: pale discs with an arrow; the live one is dark and hovers over its shadow */
+.cv-dots { position: absolute; top: 676px; left: 0; right: 0; height: 70px; display: flex; justify-content: center; gap: 38px; transition: opacity .28s ease; }
+.cv-dots.hide { opacity: 0; }
+.cv-dot { position: relative; width: 44px; height: 44px; }
+.cv-dot i {
+  position: absolute; inset: 0; border-radius: 50%; background: var(--chest-dot);
+  display: flex; align-items: center; justify-content: center; transition: background .12s ease;
 }
-.chest-veil.rewarded .cs-reward { animation: rewardPop .6s cubic-bezier(.3,1.8,.4,1) forwards; }
-@keyframes rewardPop { 0% { transform: scale(0) rotate(-8deg); } 100% { transform: scale(1) rotate(0); } }
-.cs-title { color: #FFE700; font-size: 24px; margin: 10px 0 18px; opacity: 0; }
-.chest-veil.rewarded .cs-title { animation: fadeUp .45s .15s ease forwards; }
-.cs-btn { max-width: 240px; opacity: 0; }
-.chest-veil.rewarded .cs-btn { animation: fadeUp .45s .3s ease forwards; }
+.cv-dot i svg { width: 22px; height: 22px; }
+.cv-dot i svg path { stroke: #fff; }
+.cv-dot .sh { position: absolute; left: 9px; right: 9px; bottom: -14px; height: 8px; border-radius: 50%; background: var(--line); opacity: 0; transition: opacity .15s; }
+.cv-dot.active i { background: var(--chest); animation: cvDotBob 1.1s ease-in-out infinite; }
+.cv-dot.active .sh { opacity: 1; animation: cvDotShade 1.1s ease-in-out infinite; }
+.cv-dot.active.pop i { animation: cvDotPop .18s cubic-bezier(.3,1.6,.5,1), cvDotBob 1.1s ease-in-out .18s infinite; }
+.cv-dot.used i svg { display: none; }
+@keyframes cvDotBob   { 0%, 100% { transform: translateY(-8px); } 50% { transform: translateY(-11px); } }
+@keyframes cvDotShade { 0%, 100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(.85); opacity: .8; } }
+@keyframes cvDotPop   { 0% { transform: translateY(-8px) scale(.7); } 100% { transform: translateY(-8px) scale(1); } }
+
+.cv-cap { position: absolute; top: 782px; left: 0; right: 0; height: 40px; text-align: center; font-size: 20px; font-weight: 700; color: var(--ink); }
+.cv-cap span { position: absolute; left: 0; right: 0; top: 0; transition: opacity .16s ease; }
+.cv-cap span.hide { opacity: 0; }
+
+/* the white wash that sweeps down over the open chest */
+.cv-wash {
+  position: absolute; left: 0; right: 0; top: 0; height: 1044px; pointer-events: none; z-index: 8;
+  background: linear-gradient(to bottom, #fff 0%, #fff 62%, rgba(255,255,255,0) 100%);
+  transform: translateY(-110%);
+}
+.cv-wash.go { transition: transform .45s linear; transform: translateY(0); }
+
+/* the reward: the pile of gems, the counter ticking up, the title and the button */
+.cv-counter { position: absolute; top: 82px; left: 22px; display: flex; align-items: center; gap: 6px; direction: rtl; font-size: 16px; font-weight: 800; color: var(--blue); }
+.cv-counter svg { width: 20px; height: 22px; }
+.cv-counter.bump { animation: cvBump .22s cubic-bezier(.3,1.5,.5,1); }
+@keyframes cvBump { 50% { transform: scale(1.18); } }
+.cv-rtitle { position: absolute; top: 286px; left: 0; right: 0; margin: 0; text-align: center; font-size: 26px; font-weight: 800; color: var(--blue); opacity: 0; transition: opacity .28s ease; }
+.cv-reward.told .cv-rtitle { opacity: 1; }
+.cv-pile { position: absolute; left: 240px; top: 640px; width: 0; height: 0; --gs: 56px; }
+.cv-pshadow { position: absolute; left: -190px; top: 18px; width: 380px; height: 30px; border-radius: 50%; background: var(--line); transform: scale(0); transition: transform .3s cubic-bezier(.3,1.4,.5,1); }
+.cv-reward.piled .cv-pshadow { transform: scale(1); }
+.cv-gem { position: absolute; width: var(--gs); height: var(--gs); margin: calc(var(--gs) / -2) 0 0 calc(var(--gs) / -2); transform: scale(0) rotate(var(--r)); }
+.cv-gem svg { display: block; width: 100%; height: 100%; }
+.cv-gem.pop { animation: cvGemPop .3s cubic-bezier(.3,1.5,.5,1) var(--o) forwards; }
+.cv-gem.jig { animation: cvGemJig .32s cubic-bezier(.3,1.3,.5,1) var(--o) both; }
+@keyframes cvGemPop { 0% { transform: scale(0) rotate(var(--r)); } 100% { transform: scale(1) rotate(var(--r)); } }
+@keyframes cvGemJig { 0% { transform: scale(1) translateY(0) rotate(var(--r)); } 40% { transform: scale(1.1) translateY(-14px) rotate(var(--r)); } 100% { transform: scale(1) translateY(0) rotate(var(--r)); } }
+.cv-foot { position: absolute; left: 20px; right: 20px; bottom: 84px; opacity: 0; transition: opacity .3s ease; }
+.cv-reward.told .cv-foot { opacity: 1; }
+.cv-btn { height: 56px; border-radius: 16px; font-size: 17px; text-transform: none; letter-spacing: 0; background: var(--blue); box-shadow: 0 4px 0 var(--blue-dk); }
+.cv-btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--blue-dk); }
+
+/* reduced motion: the pile is simply there */
+:root[data-motion="reduced"] .chest-veil,
+:root[data-motion="reduced"] .chest-veil * { animation: none !important; transition: none !important; }
+:root[data-motion="reduced"] .cv-gem { transform: scale(1) rotate(var(--r)); }
+:root[data-motion="reduced"] .cv-pshadow { transform: scale(1); }
 
 /* --- daily chest lives in the statbar (Duolingo toolbar style) --- */
 .stat-chest {
@@ -1677,7 +1880,7 @@ button.dom-stat:active { transform: scale(.99); }
   animation: fadeUp .45s .25s cubic-bezier(.3,1.3,.5,1) backwards;
 }
 .chest-float .cf-chest {
-  width: 58px; height: 54px; overflow: visible;
+  width: 66px; height: 62px; overflow: visible;
   filter: drop-shadow(0 4px 0 rgba(0,0,0,.13));
 }
 .chest-float .ch-glow { opacity: 0; }
@@ -1685,6 +1888,50 @@ button.dom-stat:active { transform: scale(.99); }
 .chest-float.ready { animation: questGlowSoft 1.6s ease-in-out infinite; }
 .chest-float.claimed .cf-chest { filter: saturate(.5) opacity(.78) drop-shadow(0 4px 0 rgba(0,0,0,.08)); }
 .sc-done svg { width: 12px; height: 12px; color: #fff; display: block; }
+/* the chest's speech bubble: the path's node tip, white with the grey line and a tail, sitting over the chest */
+.chest-tip {
+  position: absolute; left: -8px; bottom: calc(100% - 3px); z-index: 6;
+  background: #fff; color: var(--ink); border: 2px solid var(--line); border-radius: 18px;
+  padding: 11px 18px 10px; font-size: 15px; font-weight: 700; line-height: 1.3; white-space: nowrap; text-align: right;
+  transform-origin: 14% 100%; pointer-events: none;
+  animation: chestTipIn .32s cubic-bezier(.3,1.6,.5,1), chestTipFloat 1.6s ease-in-out .32s infinite;
+}
+.chest-tip b { color: var(--chest); font-weight: 800; }
+/* the tail: a drawn curve hung from the padding box — its white covers the bubble's line, its own outline
+   flares out of that line and rounds to a soft tip over the chest */
+.chest-tip .ct-tail { position: absolute; top: 100%; left: 29px; width: 32px; height: 19px; display: block; stroke: var(--line); }
+.chest-tip.out { animation: chestTipOut .22s ease forwards; }
+@keyframes chestTipIn { from { opacity: 0; transform: scale(.6); } }
+@keyframes chestTipOut { to { opacity: 0; transform: translateY(6px) scale(.9); } }
+@keyframes chestTipFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+:root[data-motion="reduced"] .chest-tip { animation: none; }
+
+/* the quest card: white with the grey line and a lip, dropping in from the top of the lesson when the
+   tenth answer completes the day; the chest bounces once the bar has filled */
+.quest-banner {
+  position: fixed; top: calc(12px + env(safe-area-inset-top)); left: 12px; right: 12px; z-index: 70;
+  display: flex; justify-content: center; pointer-events: none;
+  animation: qbIn .55s cubic-bezier(.3,1.4,.5,1);
+}
+.quest-banner.out { animation: qbOut .38s ease-in forwards; }
+@keyframes qbIn { from { transform: translateY(-150%); } }
+@keyframes qbOut { to { transform: translateY(-150%); opacity: 0; } }
+.qb-card {
+  width: 100%; max-width: 406px; background: #fff; border: 2px solid var(--line); border-radius: 16px;
+  box-shadow: 0 4px 0 var(--line); padding: 12px 14px; display: flex; align-items: center; gap: 12px; direction: rtl;
+}
+.qb-chest { width: 54px; height: 50px; flex-shrink: 0; overflow: visible; }
+.qb-chest .ch-glow { opacity: 0; }
+.quest-banner.full .qb-chest { animation: chestBounce .9s cubic-bezier(.3,1.6,.4,1) 2; }
+.qb-txt { flex: 1; min-width: 0; text-align: right; }
+.qb-txt b { display: block; font-size: 16px; font-weight: 800; color: var(--ink); line-height: 1.25; }
+.qb-txt span { display: block; font-size: 13px; font-weight: 700; color: var(--gray); margin-top: 2px; }
+.qb-bar { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.qb-bar .duo-bar { flex: 1; height: 14px; }
+.qb-bar .duo-bar > i { animation: none; transition: width .55s cubic-bezier(.3,1,.4,1); }
+.qb-bar em { font-style: normal; font-size: 13px; font-weight: 800; color: var(--gold-dk); min-width: 36px; text-align: left; }
+:root[data-motion="reduced"] .quest-banner, :root[data-motion="reduced"] .qb-chest { animation: none; }
+:root[data-motion="reduced"] .qb-bar .duo-bar > i { transition: none; }
 
 /* ============================================================
    Mock exam (محاكاة الاختبار)
@@ -1694,7 +1941,6 @@ button.dom-stat:active { transform: scale(.99); }
   padding: 18px 16px 16px; margin-bottom: 14px; text-align: center;
   animation: fadeUp .4s cubic-bezier(.3,1.3,.5,1) backwards;
 }
-.mh-trophy { margin-bottom: 6px; animation: chestBounce 2.6s cubic-bezier(.3,1.6,.4,1) 1s infinite; display: inline-block; }
 .mh-rules { text-align: right; margin: 10px 2px 16px; }
 .mh-rule {
   display: flex; align-items: center; gap: 10px;
@@ -1757,11 +2003,7 @@ button.dom-stat:active { transform: scale(.99); }
 .mk-flag span { font-size: 11.5px; font-weight: 800; }
 .mk-flag:active { transform: translateY(4px); box-shadow: none; }
 .mk-flag.on { background: var(--gold); border-color: var(--gold-dk); color: #fff; box-shadow: 0 4px 0 var(--gold-dk); }
-.mk-side {
-  flex: 0 0 auto !important; width: auto; padding: 13px 18px 9px;
-  background: #fff; color: var(--blue); border: 2px solid var(--line);
-  box-shadow: 0 5px 0 var(--line);
-}
+.mk-side { flex: 0 0 auto !important; width: auto; }
 .mock-band {
   font-size: 17px; font-weight: 800; color: var(--gold-dk);
   margin: 4px 0 2px; animation: fadeUp .5s .8s ease backwards;
@@ -2183,10 +2425,17 @@ button.dom-stat:active { transform: scale(.99); }
 .sk-days .day { display: flex; flex-direction: column; align-items: center; gap: 9px; width: 40px; }
 .sk-days .lbl { color: #ff9600; font-weight: 800; font-size: 15px; }
 .sk-days .dot { width: 32px; height: 32px; border-radius: 50%; background: #E5E5E5; position: relative; }
-.sk-days .dot.live { background: transparent; }
-.sk-days .check { position: absolute; left: 50%; top: 50%; width: 56px; height: 74px; transform: translate(-50%,-58%); pointer-events: none; }
+/* a checked day keeps its grey dot underneath: the check's orange dot pops from a
+   point to 39px, so the grey is what shows until the pop — a dot, not an empty slot */
+/* 46×60 puts the Lottie's orange dot (68 of its 97 units) at 32px: the same circle as
+   the grey days, not a bigger one sitting on top of them. The dot is drawn at 53% of the
+   composition's width and 72% of its height, and the translate parks that point on the
+   grey dot's centre, so the orange grows out of the grey rather than under it. */
+.sk-days .check { position: absolute; left: 50%; top: 50%; width: 46px; height: 60px; transform: translate(-53%,-72%); pointer-events: none; }
 .sk-days .check svg { width: 100% !important; height: 100% !important; }
-.sk-btn { margin-top: 36px; width: 100%; }
+.sk-foot { margin-top: 36px; width: 100%; opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s cubic-bezier(.2,.7,.3,1); }
+.sk-foot.show { opacity: 1; transform: none; }
+.sk-btn { width: 100%; }
 
 /* ============================================================
    CORRECT-ANSWER MOTION — the jump, and the two strikes.
@@ -2373,12 +2622,32 @@ button.dom-stat:active { transform: scale(.99); }
   background: var(--hair); color: var(--gray-icon); box-shadow: none;
   border: 0; border-bottom: 4px solid transparent;
   font-size: 16px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
-  transition: background-color .12s, color .12s;
+  transition: background-color .12s, color .12s, opacity .12s;
 }
 .screen-session .action-bar .btn:not(:disabled) {
   background: var(--grn-go); border-bottom-color: var(--grn-go-lo); color: #fff;
 }
 .screen-session .action-bar .btn:active { transform: none; }
+/* «السابق» beside it: the ghost button at the neighbour's height, a line lip
+   instead of the green one. When there is nothing behind it, it fades rather
+   than greys out — it is still the same button, just not a way back right now. */
+.screen-session .action-bar .btn.mk-side {
+  background: #fff; color: var(--blue);
+  border: 2px solid var(--line); border-bottom-width: 4px; padding: 0 18px;
+}
+.screen-session .action-bar .btn.mk-side:disabled { opacity: .45; }
+/* «السابق» on the teach cards: the reference's secondary button — white face,
+   line border, line lip, grey label — at .btn's own height beside the green
+   «التالي». Unavailable = the same button faded, never a grey slab. */
+.screen-teach .action-bar .btn.mk-side {
+  padding: 0 18px; background: #fff; color: var(--gray);
+  border: 2px solid var(--line); box-shadow: 0 5px 0 var(--line);
+  transition: transform .08s, box-shadow .08s, opacity .12s;
+}
+.screen-teach .action-bar .btn.mk-side:active { transform: translateY(5px); box-shadow: 0 0 0 var(--line); }
+.screen-teach .action-bar .btn.mk-side:disabled {
+  background: #fff; color: var(--gray); box-shadow: 0 5px 0 var(--line); opacity: .45; transform: none;
+}
 
 /* ---- the banner ---- */
 .screen-session .feedback {
@@ -2469,6 +2738,7 @@ button.dom-stat:active { transform: scale(.99); }
 }
 .feedback.show { transform: translateY(0); }
 .toast         { left: calc(50% + var(--col-off)); }
+.quest-banner  { left: calc(12px + var(--col-off)); right: calc(12px - var(--col-off)); }
 
 /* the win/review result screens re-flow their action bar inline as a
    static block - it must opt out of the column centring entirely */
@@ -2900,17 +3170,14 @@ body:has(.screen-session) { overflow: hidden; }
 .path-row { height: 128px; }
 .node { margin-top: 6px; }
 
-/* the unit header stays with you while you scroll its lessons */
+/* the unit header stays with you while you scroll its lessons — and only
+   its lessons: .unit-block is the sticky container, so the next unit's
+   banner pushes this one off instead of sliding over it */
+.unit-block { position: relative; }
 .unit-banner {
   position: sticky; top: 54px; z-index: 26;
   margin-top: 14px;
 }
-.unit-banner .u-prog {
-  display: flex; flex-direction: column; align-items: center; gap: 1px;
-  line-height: 1.1; min-width: 46px;
-}
-.unit-banner .u-prog b { font-size: 17px; font-weight: 800; }
-.unit-banner .u-prog span { font-size: 11px; font-weight: 700; opacity: .85; }
 
 /* the question stem is a heading now, so the choices own the card look */
 .q-kicker { color: var(--gray); }
@@ -3541,16 +3808,6 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
   padding-top: clamp(10px, 1.8vh, 22px);
   padding-bottom: 2px; border-top: 2px solid var(--line);
 }
-.ep-foot.done { border-top-color: transparent; background: var(--green-bg); border-radius: 16px; padding: 18px 16px 16px; }
-.ep-done { display: none; align-items: center; gap: 12px; margin-bottom: clamp(9px, 1.6vh, 16px); }
-.ep-foot.done .ep-done { display: flex; }
-.ep-done .tick {
-  flex: none; width: 44px; height: 44px; border-radius: 50%; background: #fff;
-  display: grid; place-items: center; color: var(--green-dk); font-weight: 900; font-size: 22px;
-}
-.ep-done .txt b { display: block; font-size: 19px; font-weight: 800; color: var(--green-dk); }
-.ep-done .txt span { font-size: 14px; font-weight: 600; color: #5F8B33; }
-.ep-foot.done .ep-ghost { display: none; }
 .ep-ghost {
   display: block; width: 100%; margin-top: clamp(6px, 1.2vh, 12px); padding: 6px;
   background: none; border: 0; cursor: pointer; font-family: inherit;
@@ -3767,49 +4024,66 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
   75%      { transform: translateX(5px); }
 }
 
-/* The generic modal slot. showModal's first argument was named `emoji` and every
-   caller passed "⭐"; it now takes any HTML, so one change upgrades every modal. */
-.modal .m-owl .mascot { height: 152px; margin: 0 auto; }
-
 :root[data-motion="reduced"] .mascot { animation: none !important; }
 
-/* ---------- قدّور beside the path (Duolingo's placement) ----------
-   Ambient, not a UI element: he stands ON the path's own ground, at z-index 0 so the
-   trail line and the nodes both pass in front of him, and pointer-events:none so he
-   can never eat a tap meant for a lesson. He is sized in rem-free px because the row
-   height that carries him is fixed at 128px. */
-.path-mascot {
-  position: absolute; z-index: 0; pointer-events: none;
-  inset-inline-start: 4px; bottom: -6px;
-  height: 196px;
-  animation: mascotBob 3.6s ease-in-out infinite;
+/* ---------- the win screen: قدّور replaces the flame ----------
+   Nothing behind him. The motion lives in winHeroPlay() (app.js, GSAP): a drop-in
+   with a hard landing, then hop, hop, sway, again — with a live shadow. These rules
+   only lay the two pieces out; he starts invisible so the drop, not the paint, is
+   the first thing seen (GSAP sets opacity 1 on the first frame; without GSAP the
+   reduced-motion rule below shows him still). */
+.qd-hero { overflow: visible; margin-bottom: 4px; }
+.qd-mascot { position: relative; z-index: 1; height: 100%; opacity: 0; will-change: transform; }
+.qd-shadow {
+  position: absolute; bottom: 3%; left: 50%; width: 44%; height: 7%;
+  margin-left: -22%; border-radius: 50%;
+  background: rgba(31, 31, 31, .16); filter: blur(1.5px);
+  opacity: 0; will-change: transform;
 }
-/* On a narrow phone the path column already fills the width; he would sit on top of
-   the node labels, so he steps out rather than crowding them. */
-@media (max-width: 400px) { .path-mascot { height: 158px; inset-inline-start: -14px; } }
-@media (max-width: 330px) { .path-mascot { display: none; } }
+@media (max-height: 700px) { .qd-hero { --wh: 196px !important; } }
+:root[data-motion="reduced"] .qd-mascot, :root[data-motion="reduced"] .qd-shadow { opacity: 1; }
+
+/* ---------- the mock exam home: steady before a hard thing ----------
+   He rises into the card and plants the stick with a small settle (mhReady), then
+   breathes (mhBreathe). Big on purpose: this card is the one screen a student
+   opens deliberately, so he can carry it. */
+.mh-hero {
+  position: relative; height: 232px; margin: -4px 0 8px;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.mh-spot {
+  position: absolute; bottom: 4px; width: 210px; height: 64px; border-radius: 50%;
+  background: radial-gradient(ellipse at center, rgba(28, 176, 246, .22), rgba(28, 176, 246, 0) 70%);
+  animation: fadeUp .5s .3s ease backwards;
+}
+.mh-mascot {
+  position: relative; height: 100%; transform-origin: 50% 100%;
+  animation: mhReady .75s cubic-bezier(.25, 1.35, .4, 1) .1s backwards,
+             mhBreathe 3.4s 1.2s ease-in-out infinite;
+}
+@keyframes mhReady {
+  0%   { transform: translateY(46px) scale(.88); opacity: 0; }
+  65%  { transform: translateY(-8px) scale(1.03, .98); opacity: 1; }
+  82%  { transform: translateY(2px) scale(.99, 1.01); }
+  100% { transform: none; opacity: 1; }
+}
+@keyframes mhBreathe {
+  0%, 100% { transform: scale(1, 1); }
+  50%      { transform: scale(1.012, 1.018) translateY(-1px); }
+}
+@media (max-height: 700px) { .mh-hero { height: 190px; } }
+:root[data-motion="reduced"] .mh-hero * { animation: none !important; opacity: 1; }
 
 /* ---------- "إليك ما ستحصل عليه" — first-run value screen ----------
-   Modelled on the Duolingo screen in assets/mascot/reference/duolingo: mascot and
-   speech bubble at the top, three icon/title/subtitle rows, one CTA at the bottom. */
+   Modelled on the Duolingo screen in assets/mascot/reference/duolingo: a headline at
+   the top, three icon/title/subtitle rows, one CTA at the bottom. */
 .iv-screen { display: flex; flex-direction: column; padding: 18px 20px calc(20px + env(safe-area-inset-bottom)); }
-.iv-top { display: flex; align-items: flex-end; justify-content: center; gap: 6px; margin: 8px 0 22px; }
-.iv-mascot { height: 184px; flex-shrink: 0; }
-.iv-bubble {
-  position: relative; align-self: center;
-  background: var(--snow); border: 2px solid var(--line); border-radius: 16px;
-  padding: 12px 15px; font-size: 17px; font-weight: 700; color: var(--ink);
-  max-width: 210px; line-height: 1.5;
+.iv-top { display: flex; justify-content: center; margin: 18px 0 20px; }
+.iv-title {
+  font-size: 22px; font-weight: 800; color: var(--ink); line-height: 1.4;
+  text-align: center; text-wrap: balance; max-width: 300px; margin: 0;
   animation: fadeUp .34s .1s ease backwards;
 }
-/* the tail points at قدّور, who stands on the inline-start side */
-.iv-bubble::after,
-.iv-bubble::before {
-  content: ""; position: absolute; top: 50%; margin-top: -9px;
-  border: 9px solid transparent; inset-inline-start: -18px;
-}
-.iv-bubble::before { border-inline-end-color: var(--line); }
-.iv-bubble::after  { border-inline-end-color: var(--snow); margin-inline-start: 3px; }
 
 .iv-rows { display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .iv-row {
@@ -3830,7 +4104,6 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 .iv-cta { margin-top: 18px; }
 
 @media (max-height: 660px) {
-  .iv-mascot { height: 140px; }
   .iv-row { padding: 11px 4px; }
   .iv-top { margin-bottom: 14px; }
 }
