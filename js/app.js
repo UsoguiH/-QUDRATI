@@ -1143,7 +1143,8 @@ A.openChest = function () {
   const veil = document.createElement("div");
   veil.className = "chest-veil";
   veil.innerHTML = `<div class="cv-stage">
-    <section class="cv-scr cv-chest on">
+    <section class="cv-scr cv-chest on" role="button" tabindex="0"
+      aria-label="صندوق اليوم — اضغط ثلاث مرات لفتحه">
       <h2 class="cv-ttl">صندوق اليوم</h2>
       <div class="cv-sparks"></div>
       <div class="cv-wrap">
@@ -1267,6 +1268,20 @@ A.openChest = function () {
   chest.addEventListener("pointerup", release);
   chest.addEventListener("pointercancel", release);
   chest.addEventListener("pointerleave", release);
+  /* The ceremony was three taps on a <section> and nothing else could reach it:
+     a student on a keyboard could open the chest screen and had no way to open
+     the chest. Enter or Space is a tap, and the third one opens it. Escape is
+     deliberately not a way out — the reward is claimed by the button, so the
+     trap holds until «المتابعة». */
+  chest.addEventListener("keydown", ev => {
+    if (ev.key !== "Enter" && ev.key !== " " && ev.key !== "Spacebar") return;
+    ev.preventDefault();
+    if (!CV || CV.open) return;
+    if (CV.taps < 3) { tap(); return; }
+    ttl.classList.add("hide");
+    openChest();
+  });
+  CV.untrap = trapOverlay(veil, () => {}, { noEsc: 1, label: "صندوق اليوم", focus: ".cv-chest" });
   requestAnimationFrame(loop);
 };
 
@@ -1280,6 +1295,9 @@ function cvReward(instant) {
     g.style.cssText = `left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;--r:${rot}deg;--o:${(0.05 + i * stagger).toFixed(3)}s`; g.innerHTML = dark ? CV_GEM_DARK : CV_GEM; pile.appendChild(g);
   });
   veil.querySelector(".cv-chest").classList.remove("on"); reward.classList.add("on");
+  /* the chest section is gone from the screen; the claim button is the dialog now */
+  const go = veil.querySelector(".cv-btn");
+  if (go) setTimeout(() => { try { go.focus(); } catch (e) { } }, 400);
   if (instant) { reward.classList.add("piled", "told"); num.textContent = toAr(from + n); return; }
   setTimeout(() => reward.classList.add("piled"), 60);
   const last = 0.05 + (art.length - 1) * stagger + 0.3;
@@ -1297,9 +1315,13 @@ function cvReward(instant) {
   setTimeout(() => { if (CV) Array.from(pile.querySelectorAll(".cv-gem")).forEach((g, i) => { g.classList.remove("pop"); g.style.transform = "scale(1) rotate(var(--r))"; g.style.setProperty("--o", (i * .02).toFixed(2) + "s"); g.classList.add("jig"); }); }, (last + 0.35) * 1000);
 }
 A.claimChest = function (gems) {
+  /* One payout, however many times the button is hit. «المتابعة» stays on
+     screen for the 380ms the veil takes to fade, and a double tap in that window
+     used to pay the chest twice — found by pressing Enter on it with a keyboard. */
+  if (!S.daily || S.daily.claimed) return;
   gainGems(gems); S.daily.claimed = true; save();
   const v = document.querySelector(".chest-veil");
-  if (CV) { CV.running = false; removeEventListener("resize", CV.fit); CV = null; }
+  if (CV) { CV.running = false; removeEventListener("resize", CV.fit); if (CV.untrap) CV.untrap(); CV = null; }
   if (v) { v.classList.add("out"); setTimeout(() => { v.remove(); render(); }, 380); }
   else render();
 };
@@ -1472,7 +1494,9 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
     </button>
     <button class="btn btn-white" style="color:${u.c};box-shadow:0 5px 0 ${u.pale}">ابدأ</button>
   </div>`;
-  veil.onclick = e => { if (e.target === veil) veil.remove(); };
+  let untrapPop = null;
+  const popClose = () => { if (untrapPop) { untrapPop(); untrapPop = null; } veil.remove(); };
+  veil.onclick = e => { if (e.target === veil) popClose(); };
   let boost = false;
   const bb = veil.querySelector("#lpBoost");
   if (bb) bb.onclick = () => {
@@ -1483,8 +1507,9 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
     if (cost) cost.innerHTML = boost ? `مفعّل ✓` : `${ico("gem", 13)} ${toAr(BOOST_COST)}`;
     if (boost) sndGood();
   };
-  veil.querySelector(".btn-white").onclick = () => { veil.remove(); A.startLesson(domKey, lesKey, boost); };
+  veil.querySelector(".btn-white").onclick = () => { popClose(); A.startLesson(domKey, lesKey, boost); };
   document.body.appendChild(veil);
+  untrapPop = trapOverlay(veil, popClose, { label: l.title, focus: ".btn-white" });
   const pop = veil.querySelector(".lesson-pop");
   /* Anchor the bubble to the node WITHOUT measuring the bubble itself.
      Its rect is not reliable right after insertion (it can read back
@@ -1736,8 +1761,11 @@ A.openBook = function (domKey, lesKey) {
   veil.onclick = e => { if (e.target === veil) A.closeBook(); };
   document.body.appendChild(veil);
   requestAnimationFrame(() => veil.classList.add("show"));
+  BK_UNTRAP = trapOverlay(veil, () => A.closeBook(), { label: "دفتر القوانين", focus: ".ms-close" });
 };
+let BK_UNTRAP = null;
 A.closeBook = function () {
+  if (BK_UNTRAP) { BK_UNTRAP(); BK_UNTRAP = null; }
   const v = document.querySelector(".book-veil"); if (!v) return;
   v.classList.remove("show"); setTimeout(() => v.remove(), 320);
 };
@@ -1773,6 +1801,7 @@ A.openUnitBook = function (domKey) {
   veil.onclick = e => { if (e.target === veil) A.closeBook(); };
   document.body.appendChild(veil);
   requestAnimationFrame(() => veil.classList.add("show"));
+  BK_UNTRAP = trapOverlay(veil, () => A.closeBook(), { label: "دفتر القوانين", focus: ".ms-close" });
 };
 
 /* Splits a lesson's method into numbered cards. The first clause of a step is
@@ -1858,9 +1887,14 @@ function questionBody(q, selIdx, lockHandlers, pickFn, method) {
       <div class="cmp-box"><div class="cmp-t">القيمة الثانية</div><div class="cmp-v">${q.value2}</div></div></div>`;
   /* .slot + .base is the reference's structure: the grey base stays put so the
      card has something to hop off, which is what makes the jump read. */
-  h += `<div class="choices">` + choices.map((c, i) =>
+  /* A radio group, not four unrelated buttons: a screen reader is told these are
+     one choice with four options and which one is taken, the group is a single
+     stop in the tab order, and the arrows move between them. */
+  h += `<div class="choices" role="radiogroup" aria-label="${isCmp ? "قارن بين القيمتين ثم اختر" : "اختر الإجابة الصحيحة"}">` + choices.map((c, i) =>
     `<div class="slot"><span class="base" aria-hidden="true"></span>
-     <button class="choice ${selIdx === i ? "sel" : ""}" data-ci="${i}" style="--d:${0.05 + i * 0.07}s" ${lockHandlers ? "" : `onclick="${pickFn || "A.pick"}(${i})"`}>
+     <button class="choice ${selIdx === i ? "sel" : ""}" data-ci="${i}" role="radio"
+       aria-checked="${selIdx === i}" tabindex="${(selIdx === null || selIdx === undefined) ? (i === 0 ? 0 : -1) : (selIdx === i ? 0 : -1)}"
+       style="--d:${0.05 + i * 0.07}s" ${lockHandlers ? "" : `onclick="${pickFn || "A.pick"}(${i})"`}>
        <span class="ch-shine" aria-hidden="true"></span>
        <i class="ch-spk k1" aria-hidden="true"></i><i class="ch-spk k2" aria-hidden="true"></i><i class="ch-spk k3" aria-hidden="true"></i>
        <span class="ch-letter">${LETTERS[i]}</span><span class="ch-txt">${c}</span><span class="ch-key" aria-hidden="true">${toAr(i + 1)}</span></button></div>`).join("") + `</div>`;
@@ -2588,11 +2622,19 @@ function timeUp() {
   save();
 }
 
+/* one checked radio, one tab stop — both live on the element the student picked */
+function paintRadios(i) {
+  document.querySelectorAll(".q-area .choices .choice").forEach((b, j) => {
+    b.setAttribute("aria-checked", j === i);
+    b.tabIndex = j === i ? 0 : -1;
+  });
+}
 A.pick = function (i) {
   if (SES.locked) return;
   const btn = document.querySelector(`.choice[data-ci="${i}"]`);
   SES.sel = i;
   document.querySelectorAll(".choice").forEach((b, j) => b.classList.toggle("sel", j === i));
+  paintRadios(i);
   const cb = document.getElementById("checkBtn"); if (cb) cb.disabled = false;
 };
 
@@ -2736,10 +2778,13 @@ A.showMethod = function () {
   veil.onclick = e => { if (e.target === veil) A.closeMethod(); };
   document.body.appendChild(veil);
   requestAnimationFrame(() => veil.classList.add("show"));
+  MS_UNTRAP = trapOverlay(veil, () => A.closeMethod(), { label: "كيف أحلّها؟", focus: ".ms-close" });
 };
+let MS_UNTRAP = null;
 A.closeMethod = function () {
-  const v = document.querySelector(".method-veil");
+  const v = document.querySelector(".method-veil:not(.book-veil)");
   if (!v) return;
+  if (MS_UNTRAP) { MS_UNTRAP(); MS_UNTRAP = null; }
   v.classList.remove("show");
   setTimeout(() => v.remove(), 280);
   if (SES && !SES.locked && SES.left > 0) startQTimer(true);   // resume, never reset
@@ -3166,6 +3211,7 @@ A.mockSelect = function (i) {
      counts sealed answers now - see endMockSection. */
   sec.answers[MOCK.qi] = i;
   document.querySelectorAll(".choice").forEach((b, j) => b.classList.toggle("sel", j === i));
+  paintRadios(i);
   const chip = document.querySelectorAll(".qn-chip")[MOCK.qi];
   if (chip) chip.classList.add("done");
   mockSave();
@@ -4417,15 +4463,67 @@ function backupSummary(s) {
 }
 const qLessons = n => arPlural(n, "درس واحد", "درسان", "دروس", "درساً");
 
+/* ---- overlays a keyboard can get into and out of --------------------------
+   Every sheet in this app is a div appended to the body. They announced
+   themselves to a screen reader (role=dialog, aria-modal) but nothing else was
+   true: Escape did nothing, Tab walked straight out of the sheet into the page
+   behind it, and when the sheet closed the focus was left on a node that had
+   been removed — which drops a keyboard user back at the top of the document.
+
+   One helper owns all of it now. It moves focus in, keeps Tab inside, closes on
+   Escape unless the overlay says otherwise (the chest ceremony holds a reward:
+   there is one way out of it and it is the button), and puts the focus back
+   where it was. When two sheets are open — the method sheet can open the
+   guidebook on top of itself — only the topmost one answers a key. */
+const OVERLAY_SEL = ".ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .modal-veil, .rankup-veil";
+const FOCUS_SEL = 'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+function trapOverlay(veil, close, opts) {
+  const o = opts || {};
+  const was = document.activeElement;
+  const box = veil.querySelector("[role=dialog]") || veil.firstElementChild;
+  if (box) {
+    box.setAttribute("role", "dialog");
+    box.setAttribute("aria-modal", "true");
+    if (o.label && !box.getAttribute("aria-label")) box.setAttribute("aria-label", o.label);
+    if (!box.hasAttribute("tabindex")) box.setAttribute("tabindex", "-1");
+  }
+  const stops = () => Array.from(veil.querySelectorAll(FOCUS_SEL)).filter(el => el.offsetParent !== null);
+  const topmost = () => {
+    const all = Array.from(document.querySelectorAll(OVERLAY_SEL));
+    return !all.length || all[all.length - 1] === veil;
+  };
+  requestAnimationFrame(() => {
+    const want = (o.focus && veil.querySelector(o.focus)) || stops()[0] || box || veil;
+    try { want.focus(); } catch (e) { }
+  });
+  const onKey = e => {
+    if (!topmost()) return;
+    if (e.key === "Escape" && !o.noEsc) { e.preventDefault(); e.stopPropagation(); close(); return; }
+    if (e.key !== "Tab") return;
+    const f = stops();
+    if (!f.length) { e.preventDefault(); return; }
+    const i = f.indexOf(document.activeElement);
+    if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+    else if (i < 0) { e.preventDefault(); f[0].focus(); }
+  };
+  document.addEventListener("keydown", onKey, true);
+  return function untrap() {
+    document.removeEventListener("keydown", onKey, true);
+    if (was && was.isConnected && was.focus) { try { was.focus(); } catch (e) { } }
+  };
+}
+
 function backupSheet(html, label) {
   const old = document.querySelector(".ask-veil"); if (old) old.remove();
   const veil = document.createElement("div");
   veil.className = "ask-veil";
   veil.innerHTML = `<div class="ask-sheet bk-sheet" role="dialog" aria-modal="true" aria-label="${label}">${html}</div>`;
-  const close = () => { veil.classList.remove("show"); setTimeout(() => veil.remove(), 240); };
+  const close = () => { untrap(); veil.classList.remove("show"); setTimeout(() => veil.remove(), 240); };
   veil.onclick = e => { if (e.target === veil) close(); };
   document.body.appendChild(veil);
   requestAnimationFrame(() => veil.classList.add("show"));
+  const untrap = trapOverlay(veil, close, { label: label });
   return { veil, close };
 }
 A.backupShow = function () {
@@ -4543,13 +4641,15 @@ function askConfirm(title, body, stayText, goText, onGo) {
     <button class="btn" id="askStay">${stayText}</button>
     <button class="ask-go" id="askGo">${goText}</button>
   </div>`;
-  const close = () => { veil.classList.remove("show"); setTimeout(() => veil.remove(), 240); };
+  const close = () => { untrap(); veil.classList.remove("show"); setTimeout(() => veil.remove(), 240); };
   veil.onclick = e => { if (e.target === veil) close(); };
   document.body.appendChild(veil);
   requestAnimationFrame(() => veil.classList.add("show"));
   veil.querySelector("#askStay").onclick = close;
   veil.querySelector("#askGo").onclick = () => { close(); onGo(); };
-  veil.querySelector("#askStay").focus();
+  /* the safe answer takes the focus: Enter on a confirmation must not be the
+     destructive one */
+  const untrap = trapOverlay(veil, close, { label: title, focus: "#askStay" });
 }
 
 /* `hero` is raw HTML, not text: the slot has always been injected unescaped, and it
@@ -5182,6 +5282,27 @@ function keyboardBlocked() {
   return !!document.querySelector(
     ".modal-veil, .chest-veil, .rankup-veil, .streak-veil, .lesson-pop-veil, .method-veil.show");
 }
+
+/* A radiogroup that does not answer its arrows is a lie told to a screen
+   reader. This one listener serves the lesson and the mock both, and routes
+   through the click the screen already wired — so the lesson records a pick and
+   the mock saves an answer, without either rule being written twice. */
+document.addEventListener("keydown", e => {
+  if (!/^Arrow(Up|Down|Left|Right)$/.test(e.key) || e.ctrlKey || e.metaKey || e.altKey) return;
+  const group = document.querySelector(".q-area .choices[role=radiogroup]");
+  if (!group || keyboardBlocked()) return;
+  if (SES && SES.locked) return;
+  const fb = document.getElementById("fb");
+  if (fb && fb.classList.contains("show")) return;
+  const opts = Array.from(group.querySelectorAll(".choice")).filter(b => !b.disabled);
+  if (!opts.length) return;
+  e.preventDefault();
+  const at = opts.findIndex(b => b.getAttribute("aria-checked") === "true");
+  const fwd = e.key === "ArrowDown" || e.key === "ArrowLeft";   // RTL: left is forward
+  const to = at < 0 ? (fwd ? 0 : opts.length - 1) : (at + (fwd ? 1 : -1) + opts.length) % opts.length;
+  opts[to].focus();
+  opts[to].click();
+});
 
 document.addEventListener("keydown", e => {
   // only while a question is actually on screen (not the win/fail cards)

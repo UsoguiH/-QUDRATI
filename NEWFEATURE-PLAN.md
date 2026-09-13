@@ -94,10 +94,16 @@ scratchpad drives a real Chrome and reports console errors).
   a student sees and risks everything they read)
 
 ### W8 — Reachable by everyone
-- [ ] Answer choices as a real radio group
-- [ ] Overlays as dialogs: focus moves in, Escape closes, focus returns
-- [ ] The chest ceremony reachable from the keyboard
-- [ ] Honour the OS reduced-motion setting, not only the app's own switch
+- [x] Answer choices are a radio group — one tab stop, `aria-checked` where the pick is,
+      and the arrows move it, in the lesson and the mock both
+- [x] Every sheet is a dialog that works: focus moves in, Tab stays in, Escape closes,
+      focus goes back where it was, and with two sheets open only the top one answers
+- [x] The chest ceremony is completable from the keyboard — which is how the double
+      payout on «المتابعة» was found
+- Resolved, not done: the OS reduced-motion setting stays **reported, not obeyed** — that
+  decision is written into app.js and has bitten this project twice (Windows reports
+  «reduce» far more often than anyone means it). What was missing was the sentence:
+  Settings now says the system is asking for less motion, and where the switch is
 
 ## Data defects found while writing the cards
 
