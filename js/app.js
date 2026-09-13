@@ -38,6 +38,8 @@ const MOCK_SECTIONS = 2;
 const MOCK_SECS = 25 * 60;   // per section, like the real thing
 const todayKey = () => { const d = new Date(); return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); };
 const fmtTime = s => toAr(String(Math.floor(Math.max(0, s) / 60)).padStart(2, "0")) + ":" + toAr(String(Math.max(0, s) % 60).padStart(2, "0"));
+/* the question pill reads like Duolingo's timed challenge: m:ss, no leading zero on the minute */
+const fmtClock = s => toAr(Math.floor(Math.max(0, s) / 60)) + ":" + toAr(String(Math.max(0, s) % 60).padStart(2, "0"));
 
 /* The authored key is badly lopsided — across the 475 MCQs, أ is correct
    40.4% of the time and د only 3.6%. Choices render in file order, so a
@@ -436,10 +438,7 @@ function renderSidebar() {
     { k: "mock",     icon: "nav-exam",   label: "اختبار تجريبي",   short: "تجريبي" },
     { k: "stats",    icon: "nav-stats",  label: "إحصائياتي",       short: "إحصائيات" },
     { k: "review",   icon: "target",     label: "مراجعة الأخطاء",  short: "الأخطاء" },
-    { k: "profile",  icon: "nav-more",   label: "ملفي الشخصي",     short: "ملفي" },
-    /* The two-way sheet is a phone affordance — it hangs off the bottom bar,
-       and there is no bottom bar here. Desktop has room to list both. */
-    { k: "settings", icon: "guide",      label: "الإعدادات",       short: "إعدادات" },
+    { k: "settings", icon: "nav-more",   label: "الإعدادات",       short: "إعدادات" },
   ];
   el.innerHTML = `
     <div class="sb-logo">
@@ -516,7 +515,7 @@ function renderAside() {
 }
 
 function render() {
-  ({ path: renderPath, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings, review: renderReview, profile: renderProfile })[view]();
+  ({ path: renderPath, league: renderLeague, mock: renderMockHome, stats: renderStats, settings: renderSettings, review: renderReview })[view]();
   flushRankUp();
   renderSidebar();
   renderAside();
@@ -534,7 +533,7 @@ const ico = (name, size) => `<img class="ic" src="assets/icons/${ICO_FILE[name] 
    `cls` carries the motion (pop / bob / bob-fast / shake) and the placement
    class. He is decorative in every placement — the screen always states its
    own meaning in text — so alt is empty and he is hidden from assistive tech. */
-const MASCOT_STATES = { celebrate: 1, strong: 1 };
+const MASCOT_STATES = { celebrate: 1, strong: 1, point: 1 };
 function mascot(state, cls) {
   if (!MASCOT_STATES[state]) return "";
   return `<img class="mascot ${cls || ""}" src="assets/mascot/qaddour-${state}.png" alt="" aria-hidden="true">`;
@@ -631,13 +630,10 @@ function chestTip(msg) {
 function bottomnav(active) {
   /* the labels were the state keys — "path", "league" — read aloud in Arabic */
   const items = [["path", "nav-home", "الدروس"], ["league", "nav-league", "المجلس"],
-    ["mock", "nav-exam", "اختبار تجريبي"], ["stats", "nav-stats", "إحصائياتي"], ["more", "nav-more", "المزيد"]];
+    ["mock", "nav-exam", "اختبار تجريبي"], ["stats", "nav-stats", "إحصائياتي"], ["settings", "nav-more", "الإعدادات"]];
   return `<nav class="bottomnav">` + items.map(([k, i, label]) => {
-    /* the last slot is a menu, not a destination, so it lights up for the
-       screens it can reach rather than for one of its own */
-    const act = k === "more" ? (active === "profile" || active === "settings") : (active === k);
-    const call = k === "more" ? "A.openMore()" : `A.go('${k}')`;
-    return `<button class="navbtn ${act ? "active" : ""}" onclick="${call}" aria-label="${label}"${act ? ' aria-current="page"' : ""}>${ico(i, 30)}</button>`;
+    const act = active === k;
+    return `<button class="navbtn ${act ? "active" : ""}" onclick="A.go('${k}')" aria-label="${label}"${act ? ' aria-current="page"' : ""}>${ico(i, 30)}</button>`;
   }).join("") + `</nav>`;
 }
 
@@ -1113,7 +1109,6 @@ function renderPath() {
       cur.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 }
-
 
 /* ---------------- LESSON SESSION ---------------- */
 let SES = null; // current session
@@ -2167,7 +2162,6 @@ function renderSession() {
   startQTimer();
 }
 
-/* 90-second countdown — horizontal capsule whose colored fill drains away */
 /* The clock is a deadline, not a tick count. An interval stops firing when
    the tab is backgrounded or a modal blocks the loop, so counting ticks let
    a student pause the exam by locking their phone. */
@@ -2176,7 +2170,7 @@ function startQTimer(resume) {
   if (!resume) SES.left = Q_SECS;
   SES.endsAt = Date.now() + SES.left * 1000;
   const w0 = document.getElementById("qtWrap");
-  if (w0) { w0.style.setProperty("--p", SES.left / Q_SECS * 100); w0.classList.remove("low", "crit", "paused"); }
+  if (w0) w0.classList.remove("low", "crit", "paused");
   SES.timer = setInterval(qTick, 250);
 }
 function qTick() {
@@ -2186,8 +2180,7 @@ function qTick() {
   if (left < SES.left && left <= 5 && left > 0) sndTick();
   SES.left = left;
   const n = document.getElementById("qtNum"), w = document.getElementById("qtWrap");
-  if (n) n.textContent = toAr(Math.max(0, left));
-  if (w) w.style.setProperty("--p", Math.max(0, left) / Q_SECS * 100);
+  if (n) n.textContent = fmtClock(left);
   if (w) { w.classList.toggle("low", left <= 15 && left > 5); w.classList.toggle("crit", left <= 5); }
   if (left <= 0) { clearInterval(SES.timer); SES.timer = null; timeUp(); }
 }
@@ -2200,16 +2193,15 @@ function stopQTimer() {
   if (w) w.classList.add("paused");
 }
 
-/* ---------------- question timer (Duolingo-style draining capsule) ---------------- */
+/* ---------------- question timer — Duolingo's timed-challenge pill ---------------- */
 const CLOCK_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 1.8"/></svg>`;
+/* The clock on the pill is TIMER_SVG, the same Figma clock the timed-out
+   sheet and the result cards show, hand spinning (.qt-hand). */
 function timerBar() {
-  return `<span class="qtimer" id="qtWrap" style="--p:100" title="الوقت المتبقي" aria-label="الوقت المتبقي">
-    <svg class="qt-ring" viewBox="0 0 44 44" width="44" height="44" aria-hidden="true">
-      <circle class="qt-track" cx="22" cy="22" r="19"/>
-      <circle class="qt-arc" cx="22" cy="22" r="19" pathLength="100"/>
-    </svg>
-    <b class="qt-num" id="qtNum">${toAr(Q_SECS)}</b>
+  return `<span class="qtimer" id="qtWrap" title="الوقت المتبقي" aria-label="الوقت المتبقي">
+    ${TIMER_SVG}
+    <b class="qt-num" id="qtNum">${fmtClock(Q_SECS)}</b>
   </span>`;
 }
 
@@ -3864,31 +3856,6 @@ A.resetAll = function () {
     "خلّه مثل ما هو", "احذف كل شيء", () => { localStorage.removeItem("qudratState"); location.reload(); });
 };
 
-const DISCLAIMER_HTML = `تطبيق «قدراتي» أداة تدريب <b>مستقلة</b> وغير تابعة لهيئة تقويم التعليم والتدريب (قياس) وغير معتمدة منها.<br><br>
-جميع الأسئلة في التطبيق أسئلة تدريبية <b>أصلية</b> أُلِّفت بأسلوب الاختبار الرسمي ومستوياته، ولا تمثل أسئلة الاختبار الفعلية.<br><br>
-للتسجيل في الاختبار الرسمي والاطلاع على النماذج الرسمية، تفضل بزيارة موقع الهيئة.`;
-
-/* document/clipboard icon for the disclaimer modal (provided artwork) */
-const DISCLAIMER_ICON = `<svg class="disc-icon" width="66" height="66" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-<g clip-path="url(#clip0_9001_129)">
-<path d="M23.1994 32.4619H16.8005C16.2799 32.4619 15.8579 32.8839 15.8579 33.4045V35.3427C15.8579 35.8633 16.2799 36.2853 16.8005 36.2853H23.1994C23.7199 36.2853 24.1419 35.8633 24.1419 35.3427V33.4045C24.1419 32.8839 23.7199 32.4619 23.1994 32.4619Z" fill="#9069CD"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M1.88509 3.78711H38.1149C39.156 3.78711 40 4.63109 40 5.6722V33.4449C40 34.486 39.156 35.33 38.1149 35.33H1.88509C0.843984 35.33 0 34.486 0 33.4449V5.6722C0 4.63109 0.843984 3.78711 1.88509 3.78711Z" fill="#9069CD"/>
-<path d="M22.4895 30.3115H17.5107C16.9901 30.3115 16.5681 30.7335 16.5681 31.2541V32.4755C16.5681 32.996 16.9901 33.418 17.5107 33.418H22.4895C23.01 33.418 23.432 32.996 23.432 32.4755V31.2541C23.432 30.7335 23.01 30.3115 22.4895 30.3115Z" fill="#D2E4E8"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M2.60352 26.0107H37.6331V31.2812C37.6331 31.8017 37.2111 32.2237 36.6906 32.2237H20.1188H14.6741H3.54606C3.02551 32.2237 2.60352 31.8017 2.60352 31.2812V26.0107Z" fill="#D2E4E8"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M37.6331 28.8776H23.4172C21.5953 28.8776 20.1183 30.3545 20.1183 32.1765C20.1183 30.3545 18.6413 28.8776 16.8194 28.8776H2.60352V5.92399C2.60352 5.40343 3.02551 4.98145 3.54606 4.98145H16.8194C18.6413 4.98145 20.1183 6.45841 20.1183 8.28034C20.1183 6.45841 21.5953 4.98145 23.4172 4.98145H36.6906C37.2111 4.98145 37.6331 5.40343 37.6331 5.92399V28.8776Z" fill="white"/>
-<path d="M17.0446 7.37134H5.20398C4.81356 7.37134 4.49707 7.68783 4.49707 8.07825V8.81508C4.49707 9.20549 4.81356 9.52199 5.20398 9.52199H17.0446C17.435 9.52199 17.7515 9.20549 17.7515 8.81508V8.07825C17.7515 7.68783 17.435 7.37134 17.0446 7.37134Z" fill="#D2E4E8"/>
-<path d="M17.0446 17.1689H5.20398C4.81356 17.1689 4.49707 17.4854 4.49707 17.8759V18.6127C4.49707 19.0031 4.81356 19.3196 5.20398 19.3196H17.0446C17.435 19.3196 17.7515 19.0031 17.7515 18.6127V17.8759C17.7515 17.4854 17.435 17.1689 17.0446 17.1689Z" fill="#D2E4E8"/>
-<path d="M14.441 12.3894H5.20398C4.81356 12.3894 4.49707 12.7059 4.49707 13.0963V13.8331C4.49707 14.2236 4.81356 14.5401 5.20398 14.5401H14.441C14.8315 14.5401 15.148 14.2236 15.148 13.8331V13.0963C15.148 12.7059 14.8315 12.3894 14.441 12.3894Z" fill="#D2E4E8"/>
-<path d="M14.441 21.9482H5.20398C4.81356 21.9482 4.49707 22.2647 4.49707 22.6552V23.392C4.49707 23.7824 4.81356 24.0989 5.20398 24.0989H14.441C14.8315 24.0989 15.148 23.7824 15.148 23.392V22.6552C15.148 22.2647 14.8315 21.9482 14.441 21.9482Z" fill="#D2E4E8"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M8.28088 2.83105H13.731C14.1214 2.83105 14.4379 3.14755 14.4379 3.53796V20.7491C14.4379 21.1395 14.1214 21.456 13.731 21.456C13.6018 21.456 13.4752 21.4206 13.3647 21.3537L11.2672 20.0832C11.0353 19.9428 10.7436 19.9473 10.5162 20.0948L8.66566 21.2955C8.33814 21.508 7.90036 21.4147 7.68786 21.0872C7.61353 20.9727 7.57397 20.839 7.57397 20.7025V3.53796C7.57397 3.14755 7.89047 2.83105 8.28088 2.83105Z" fill="#FF4B4B"/>
-<path d="M35.2695 7.37134H23.4288C23.0384 7.37134 22.7219 7.68783 22.7219 8.07825V8.81508C22.7219 9.20549 23.0384 9.52199 23.4288 9.52199H35.2695C35.6599 9.52199 35.9764 9.20549 35.9764 8.81508V8.07825C35.9764 7.68783 35.6599 7.37134 35.2695 7.37134Z" fill="#D2E4E8"/>
-<path d="M35.2695 17.1689H23.4288C23.0384 17.1689 22.7219 17.4854 22.7219 17.8759V18.6127C22.7219 19.0031 23.0384 19.3196 23.4288 19.3196H35.2695C35.6599 19.3196 35.9764 19.0031 35.9764 18.6127V17.8759C35.9764 17.4854 35.6599 17.1689 35.2695 17.1689Z" fill="#D2E4E8"/>
-<path d="M32.6659 12.3894H23.4288C23.0384 12.3894 22.7219 12.7059 22.7219 13.0963V13.8331C22.7219 14.2236 23.0384 14.5401 23.4288 14.5401H32.6659C33.0563 14.5401 33.3728 14.2236 33.3728 13.8331V13.0963C33.3728 12.7059 33.0563 12.3894 32.6659 12.3894Z" fill="#D2E4E8"/>
-<path d="M32.6659 21.9482H23.4288C23.0384 21.9482 22.7219 22.2647 22.7219 22.6552V23.392C22.7219 23.7824 23.0384 24.0989 23.4288 24.0989H32.6659C33.0563 24.0989 33.3728 23.7824 33.3728 23.392V22.6552C33.3728 22.2647 33.0563 21.9482 32.6659 21.9482Z" fill="#D2E4E8"/>
-</g>
-<defs><clipPath id="clip0_9001_129"><rect width="40" height="40" fill="white"/></clipPath></defs>
-</svg>`;
-
 /* Ask before something irreversible, in the app's own voice. The primary
    button is always the safe one — a native confirm() binds Enter to OK, which
    here was always the button that destroyed the lesson. */
@@ -3921,9 +3888,6 @@ function showModal(hero, title, bodyHtml, btnText, onclose) {
   document.body.appendChild(veil);
   veil.querySelector("#mOk").onclick = () => { veil.remove(); if (onclose) onclose(); };
 }
-A.showAbout = function () {
-  showModal("⭐", "حول تطبيق قدراتي", DISCLAIMER_HTML + `<br><a class="linkout" href="https://etec.gov.sa" target="_blank" rel="noopener">↗ الموقع الرسمي لهيئة تقويم التعليم والتدريب</a>`, "حسناً");
-};
 
 /* Start-screen hero: XP-coins trio (recreated from the Duolingo UI-kit
    frame: blue & green coins behind a big gold lightning coin, floating
@@ -4082,7 +4046,7 @@ const EP_JUMP = [
   [.82,0,1.08,.93,"linear"], [.89,-1.5,.99,1.01,"linear"], [.95,0,1.02,.98,"linear"], [1,0,1,1,"linear"]
 ];
 
-let EP = { sel: null, view: null, first: false, shown: 0, raf: 0, timer: 0, enter: false, from: "path" };
+let EP = { sel: null, view: null, first: false, shown: 0, raf: 0, timer: 0, enter: false, from: "path", saved: null };
 
 const epDay0  = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const epKey   = d => d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
@@ -4100,7 +4064,7 @@ function renderExamSetup(first) {
   EP.sel = S.exam ? epDay0(new Date(S.exam + "T00:00:00")) : null;
   if (EP.sel && EP.sel < today) EP.sel = null;
   EP.view = new Date((EP.sel || today).getFullYear(), (EP.sel || today).getMonth(), 1);
-  EP.shown = 0;
+  EP.shown = 0; EP.saved = null;
 
   $app.innerHTML = `<div class="screen screen-full"><div class="exam-pick">
     <h1>\u0645\u062a\u0649 \u0627\u062e\u062a\u0628\u0627\u0631\u0643\u061f</h1>
@@ -4190,11 +4154,28 @@ function epCountTo(target) {
   }, 580);                                   // 580ms is the impact frame
 }
 
+/* The footer follows one rule: the green «تم حفظ الموعد!» shows exactly while
+   the selected day is the one that was saved. A tap on the saved day keeps
+   it, a tap on another day asks to save again, a tap back restores it. It
+   used to be flipped on by the save and off by any tap on the calendar,
+   which left the button reading «متابعة» — with the leave-handler on it —
+   over an unsaved day, so the save looked lost and the next press walked
+   out without saving. */
+function epFootState() {
+  const foot = document.getElementById("epFoot"), btn = document.getElementById("epSave");
+  if (!foot || !btn) return;
+  const done = !!EP.sel && EP.saved === epKey(EP.sel);
+  foot.classList.toggle("done", done);
+  btn.textContent = done ? "متابعة" : "حفظ الموعد";
+  btn.onclick = done ? () => { EP.first ? go("path") : A.backFromExam(); } : () => A.saveExam();
+}
+
 function epCount() {
   const today = epDay0(new Date());
   const card = document.getElementById("epCount");
   const save = document.getElementById("epSave");
   if (!card) return;
+  epFootState();
   if (!EP.sel) {
     card.classList.add("empty");
     cancelAnimationFrame(EP.raf); clearTimeout(EP.timer); EP.shown = 0;
@@ -4365,7 +4346,32 @@ A.saveExam = function () {
   const d = EP.sel;
   S.exam = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   S.examAsked = true; save(); sndGood();
-  cancelAnimationFrame(EP.raf); clearTimeout(EP.timer);
+
+  /* confirm in place rather than snapping away: the count-up and the landing
+     have just finished selling the date, and cutting the screen at that exact
+     moment throws the payoff away */
+  const n = epDiff(epDay0(new Date()), d);
+  const sub = document.getElementById("epDoneSub");
+  if (sub) {
+    /* arPlural() RETURNS THE COUNT for 3 and up \u2014 "toAr(n) + ' ' + few" \u2014 so
+       prefixing it with toAr() again printed "\u0644\u0640 \u0664 \u0664 \u0623\u0633\u0627\u0628\u064a\u0639". It yields the
+       bare word for 1 and 2, which take their own forms and attach the lam
+       directly. Under a week the weeks figure is a rounding artefact, so that
+       range counts days instead. */
+    const weeks = Math.round(n / 7);
+    sub.textContent =
+      n <= 0 ? "\u0628\u0627\u0644\u062a\u0648\u0641\u064a\u0642 \u0627\u0644\u064a\u0648\u0645"
+      : n === 1 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u064a\u0648\u0645 \u0648\u0627\u062d\u062f"
+      : n === 2 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u064a\u0648\u0645\u064a\u0646"
+      : n < 7 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0640 " + toAr(n) + " \u0623\u064a\u0627\u0645"
+      : weeks === 1 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0623\u0633\u0628\u0648\u0639 \u0648\u0627\u062d\u062f"
+      : weeks === 2 ? "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0623\u0633\u0628\u0648\u0639\u064a\u0646"
+      : "\u062e\u0637\u0629 \u0645\u0630\u0627\u0643\u0631\u062a\u0643 \u062c\u0627\u0647\u0632\u0629 \u0644\u0640 " +
+        arPlural(weeks, "\u0623\u0633\u0628\u0648\u0639", "\u0623\u0633\u0628\u0648\u0639\u064a\u0646", "\u0623\u0633\u0627\u0628\u064a\u0639", "\u0623\u0633\u0628\u0648\u0639\u0627\u064b");
+    EP.saved = epKey(d);
+    epFootState();
+    return;
+  }
   EP.first ? go("path") : A.backFromExam();
 };
 
@@ -4407,31 +4413,6 @@ A.login = function () {
   afterLogin();
 };
 A.loginGuest = function () { S.user = { name: "ضيف", guest: true }; save(); afterLogin(); };
-A.logout = function () { S.user = null; save(); renderLogin(); };
-
-/* No longer gates anything — kept because A.showAbout reuses DISCLAIMER_HTML. */
-function showDisclaimerSheet(onAccept) {
-  const veil = document.createElement("div");
-  veil.className = "disc-veil";
-  veil.innerHTML = `<div class="disc-sheet">
-    <div class="ms-grip"></div>
-    <div class="ds-icon">${DISCLAIMER_ICON}</div>
-    <h2 class="ds-title">إخلاء مسؤولية</h2>
-    <div class="ds-body">${DISCLAIMER_HTML}</div>
-    <button class="btn ds-btn" id="discOk">فهمت، لنبدأ!</button>
-  </div>`;
-  document.body.appendChild(veil);
-  requestAnimationFrame(() => veil.classList.add("show"));
-  veil.querySelector("#discOk").onclick = () => {
-    veil.classList.remove("show");
-    setTimeout(() => { veil.remove(); onAccept(); }, 320);
-  };
-}
-
-/* The disclaimer used to be a non-dismissible sheet between the login screen
-   and the first lesson — a wall in front of someone who had not yet seen
-   anything worth agreeing to. The notice still ships; it lives in Settings
-   → حول التطبيق, where it can be read instead of dismissed. */
 /* ---------------- "إليك ما ستحصل عليه" (first run) ----------------
    Sells the outcome before asking for effort. It runs BEFORE the exam-date picker,
    because the picker asks the student to commit something and this is what earns
@@ -4446,7 +4427,10 @@ const INTRO_VALUE = [
 ];
 function renderIntroValue() {
   $app.innerHTML = `<div class="screen screen-full iv-screen">
-    <div class="iv-top"><h1 class="iv-title">إليك ما ستحصل عليه مع قدراتي!</h1></div>
+    <div class="iv-top">
+      <h1 class="iv-bubble">إليك ما ستحصل عليه مع قدراتي!</h1>
+      ${mascot("point", "iv-mascot pop")}
+    </div>
     <div class="iv-rows">` + INTRO_VALUE.map((r, i) => `
       <div class="iv-row iv-${r.c}" style="--d:${(0.18 + i * 0.12).toFixed(2)}s">
         <span class="iv-ic">${ico(r.ic, 26)}</span>
@@ -4503,20 +4487,20 @@ document.addEventListener("keydown", e => {
   }
 });
 
-
 /* ============================================================
-   PROFILE
+   SETTINGS — the fifth tab
    ------------------------------------------------------------
-   Not a settings list with a name on top. This is the screen a
-   student opens to answer one question: am I on track? Who they
-   are, how long the streak is, what this week looked like, how
-   far each unit has come, how many days are left.
-
-   Settings is a pop-up launched from here, not a sibling screen,
-   because settings is something you dip into and leave — the
-   profile is somewhere you stay.
+   One screen that reads like a phone's own settings: who you
+   are on top, then short grouped lists — the track, the exam
+   date, two switches, the disclaimer — and the reset at the
+   bottom in red. Only what the game actually uses is here: the
+   daily goal was a control wired to nothing (the chest counts
+   DAILY_GOAL), «تبديل المستخدم» only re-asked the name, and the
+   stats tab already owns the numbers, so the profile page that
+   repeated them under a gear is gone with the two-way menu that
+   led to it.
    ============================================================ */
-const PROF_WK = ["\u062d", "\u0646", "\u062b", "\u0631", "\u062e", "\u062c", "\u0633"];
+let SET_EDIT = false;
 
 /* todayKey() emits an unpadded y-m-d, which fmtExamDate cannot parse. */
 function fmtDayKey(k) {
@@ -4524,344 +4508,101 @@ function fmtDayKey(k) {
   return a.length === 3 ? toAr(+a[2]) + " / " + toAr(+a[1]) + " / " + toAr(+a[0]) : "";
 }
 
-function unitMastery() {
-  return domains().map(d => {
-    let done = 0;
-    d.lessons.forEach(l => { if (lessonProg(d.key + "." + l.key).stars > 0) done++; });
-    return { title: d.title, color: d.color, done, total: d.lessons.length,
-             pct: d.lessons.length ? Math.round(done / d.lessons.length * 100) : 0 };
-  });
-}
-
-function overallAccuracy() {
-  let r = 0, w = 0;
-  for (const k in S.qstats) { r += S.qstats[k].r || 0; w += S.qstats[k].w || 0; }
-  return (r + w) ? Math.round(r / (r + w) * 100) : null;
-}
-
-/* The last seven days, oldest first — so in RTL the week reads from the right
-   and today lands at the left, where the eye finishes. Reads S.days — the days
-   actually practised — rather than deducing them from the streak, because a
-   day you practised on after the streak broke is still a day you practised. */
-function streakWeek() {
-  const out = [], today = new Date(); today.setHours(0, 0, 0, 0);
-  const days = S.days || {};
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date(today.getTime() - i * 864e5);
-    const key = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
-    out.push({ dow: PROF_WK[d.getDay()], n: days[key] || 0, on: !!days[key], today: i === 0 });
-  }
-  return out;
-}
-
-/* The three lessons the student is measurably worst at, each one tappable.
-   The profile was otherwise a wall of numbers with no next move on it: you
-   could read "\u0627\u0644\u062f\u0642\u0629 \u0666\u0667\u066a" and have nowhere to go with it. Hidden until
-   there is enough history to rank honestly. */
-function weakCard() {
-  const weak = weakLessons(3);
-  if (!weak.length) return "";
-  return `<div class="pf-card">
-    <div class="pf-head"><h3>\u0623\u0636\u0639\u0641 \u0645\u0648\u0627\u0636\u064a\u0639\u0643</h3>
-      <span class="pf-goal pf-static">\u0627\u0628\u062f\u0623 \u0645\u0646 \u0647\u0646\u0627</span></div>
-    <div class="pf-weak">` + weak.map(l => `
-      <button class="pf-w" onclick="A.startLesson('${l.dom}','${l.key}')">
-        <span class="pf-w-acc pm-${l.color === "yellow" ? "gold" : l.color}">${toAr(l.acc)}\u066a</span>
-        <span class="pf-w-tx">${l.title}</span>
-        <span class="pf-w-go">\u062a\u062f\u0631\u0651\u0628</span>
-      </button>`).join("") + `</div>
-  </div>`;
-}
-
-function renderProfile() {
-  const t = LEAGUE_TIERS[tierIndex()];
-  const name = (S.user && S.user.name) || "\u0636\u064a\u0641";
-  const guest = !S.user || S.user.guest;
-  const flat = allLessons();
-  let doneN = 0; flat.forEach(x => { if (lessonProg(x.key).stars > 0) doneN++; });
-  const acc = overallAccuracy(), days = examDaysLeft();
-  const nextT = LEAGUE_TIERS[tierIndex() + 1];
-  const tierPct = nextT
-    ? Math.max(0, Math.min(100, Math.round((S.totalXp - t.min) / (nextT.min - t.min) * 100))) : 100;
-
-  $app.innerHTML = statbar() + `<div class="screen"><div class="page pf">
-
-    <div class="pf-hero">
-      <div class="pf-av"><span>${esc(name.trim().charAt(0) || "\u0642")}</span></div>
-      <div class="pf-id">
-        <h1>${esc(name)}</h1>
-        <p>${S.joined ? "\u0628\u062f\u0623 \u0645\u0639\u0646\u0627 " + fmtDayKey(S.joined) : "\u0639\u0636\u0648 \u062c\u062f\u064a\u062f"}</p>
-      </div>
-      <button class="pf-gear" onclick="A.gotoSettings()" aria-label="\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a">${GEAR_SVG}</button>
-    </div>
-
-    ${guest ? `<button class="pf-claim" onclick="A.gotoSettings('name')">
-      <span class="pf-cl-ic">${ico("guide", 20)}</span>
-      <span class="pf-cl-tx"><b>\u0627\u062d\u0641\u0638 \u062a\u0642\u062f\u0651\u0645\u0643</b><span>\u0623\u0636\u0641 \u0627\u0633\u0645\u0643 \u0639\u0634\u0627\u0646 \u0645\u0627 \u062a\u0636\u064a\u0639 \u062f\u0631\u0648\u0633\u0643</span></span>
-      <span class="pf-go">\u2190</span></button>` : ""}
-
-    <button class="pf-rank" onclick="A.go('league')">
-      ${rankImg(t.key, 54)}
-      <span class="pf-rank-tx">
-        <b>\u0627\u0644\u0645\u0633\u062a\u0648\u0649 ${t.name}</b>
-        <span class="pf-rank-bar"><i style="width:${tierPct}%"></i></span>
-        <small>${nextT ? toAr(Math.max(0, nextT.min - S.totalXp)) + " \u0646\u0642\u0637\u0629 \u0644\u0644\u0645\u0633\u062a\u0648\u0649 " + nextT.name : "\u0623\u0639\u0644\u0649 \u0645\u0633\u062a\u0648\u0649 \u2014 \u0623\u062d\u0633\u0646\u062a"}</small>
-      </span>
-      <span class="pf-go">\u2190</span>
-    </button>
-
-    <div class="pf-grid">
-      <div class="pf-tile"><span class="pf-t-ic">${ico("streak", 26)}</span><b>${toAr(S.streak.count)}</b><span>\u064a\u0648\u0645 \u0645\u062a\u062a\u0627\u0644\u064d</span></div>
-      <div class="pf-tile"><span class="pf-t-ic">${ico("gem", 26)}</span><b>${toAr(S.xp)}</b><span>\u062c\u0648\u0647\u0631\u0629</span></div>
-      <div class="pf-tile"><span class="pf-t-ic">${ico("star-gold", 26)}</span><b>${toAr(doneN)}</b><span>\u062f\u0631\u0633\u0627\u064b \u0645\u0643\u062a\u0645\u0644\u0627\u064b</span></div>
-      <div class="pf-tile"><span class="pf-t-ic">${ico("target", 26)}</span><b>${acc === null ? "\u2014" : toAr(acc) + "\u066a"}</b><span>\u0627\u0644\u062f\u0642\u0629</span></div>
-    </div>
-
-    <div class="pf-card">
-      <div class="pf-head"><h3>\u0623\u0633\u0628\u0648\u0639\u0643</h3>
-        <button class="pf-goal" onclick="A.gotoSettings('goal')">${ico("target", 15)} \u0647\u062f\u0641\u0643 ${toAr(S.goal)} \u064a\u0648\u0645\u064a\u0627\u064b</button></div>
-      <div class="pf-week">` + streakWeek().map(d => `
-        <div class="pf-day${d.on ? " on" : ""}${d.today ? " now" : ""}">
-          <span class="pf-dot">${d.on ? CHECK_BADGE : ""}</span><span class="pf-dow">${d.dow}</span>
-        </div>`).join("") + `</div>
-      <p class="pf-wk-note">${(() => {
-        const act = streakWeek().filter(x => x.on).length;
-        return act
-          ? "\u062f\u0631\u0651\u0628\u062a " + arPlural(act, "\u064a\u0648\u0645\u0627\u064b \u0648\u0627\u062d\u062f\u0627\u064b", "\u064a\u0648\u0645\u064a\u0646", "\u0623\u064a\u0627\u0645", "\u064a\u0648\u0645\u0627\u064b") + " \u0647\u0630\u0627 \u0627\u0644\u0623\u0633\u0628\u0648\u0639"
-          : "\u0645\u0627 \u062f\u0631\u0651\u0628\u062a \u0647\u0630\u0627 \u0627\u0644\u0623\u0633\u0628\u0648\u0639 \u2014 \u0627\u0628\u062f\u0623 \u0627\u0644\u064a\u0648\u0645";
-      })()}</p>
-    </div>
-
-    ${days !== null ? `<button class="pf-exam" onclick="A.examSetup()">
-      <span class="pf-ex-n">${toAr(days)}</span>
-      <span class="pf-ex-t"><b>\u064a\u0648\u0645\u0627\u064b \u0639\u0644\u0649 \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631</b><span>${fmtExamDate(S.exam)}</span></span>
-      <span class="pf-go">\u2190</span></button>`
-      : `<button class="pf-exam pf-exam-empty" onclick="A.examSetup()">
-      <span class="pf-ex-t"><b>\u062d\u062f\u0651\u062f \u0645\u0648\u0639\u062f \u0627\u062e\u062a\u0628\u0627\u0631\u0643</b><span>\u0639\u0634\u0627\u0646 \u0646\u062a\u0627\u0628\u0639 \u062c\u0627\u0647\u0632\u064a\u062a\u0643</span></span>
-      <span class="pf-go">\u2190</span></button>`}
-
-    ${weakCard()}
-
-    <div class="pf-card">
-      <div class="pf-head"><h3>\u0625\u062a\u0642\u0627\u0646\u0643 \u062d\u0633\u0628 \u0627\u0644\u0648\u062d\u062f\u0629</h3></div>
-      <div class="pf-mast">` + unitMastery().map(m => `
-        <div>
-          <div class="pf-m-top"><span>${m.title}</span><b>${toAr(m.done)}/${toAr(m.total)}</b></div>
-          <div class="pf-m-bar pm-${m.color === "yellow" ? "gold" : m.color}"><i style="width:${m.pct}%"></i></div>
-        </div>`).join("") + `</div>
-    </div>
-
-    <button class="pf-line" onclick="A.go('review')"><span>${ico("target", 18)} \u0645\u0631\u0627\u062c\u0639\u0629 \u0627\u0644\u0623\u062e\u0637\u0627\u0621</span><span class="pf-go">\u2190</span></button>
-    <button class="pf-line" onclick="A.gotoSettings()"><span>${GEAR_SVG} \u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a</span><span class="pf-go">\u2190</span></button>
-
-  </div></div>` + bottomnav("profile");
-}
-
-const GEAR_SVG = `<svg class="ic" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-  <path d="M12 15.4a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8Z" stroke="currentColor" stroke-width="2"/>
-  <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06a2 2 0 1 1-2.84 2.84l-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.11A1.7 1.7 0 0 0 8.9 19.3a1.7 1.7 0 0 0-1.88.34l-.06.06a2 2 0 1 1-2.84-2.84l.06-.06A1.7 1.7 0 0 0 4.52 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.11A1.7 1.7 0 0 0 4.7 8.9a1.7 1.7 0 0 0-.34-1.88l-.06-.06a2 2 0 1 1 2.84-2.84l.06.06A1.7 1.7 0 0 0 9 4.52a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.11A1.7 1.7 0 0 0 15 4.7a1.7 1.7 0 0 0 1.88-.34l.06-.06a2 2 0 1 1 2.84 2.84l-.06.06A1.7 1.7 0 0 0 19.4 9v.03a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.11a1.7 1.7 0 0 0-1.49 1.03Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
-
-/* ============================================================
-   SETTINGS — a pop-up, the way Duolingo does it
-   ------------------------------------------------------------
-   Blur the app behind it, spring the card in, and put things a
-   student can actually use on it: the daily goal, the exam date,
-   the track, and their name — not just two toggles and a reset.
-   `focus` scrolls one group into view and flashes it, so the
-   profile can deep-link straight at the row it is talking about.
-   ============================================================ */
-const SET_GOALS = [5, 10, 15, 20];
-
-/* ============================================================
-   SETTINGS — a screen, not a sheet
-   ------------------------------------------------------------
-   It was a pop-up for a while. Wrong shape: this is nine controls
-   deep, it is somewhere you stop and read, and a sheet that tall
-   ends up scrolling inside a scrolling page. The two-way menu is
-   the sheet; what it opens is a destination.
-
-   SET_FOCUS lets the profile deep-link at one group — tapping
-   "\u0647\u062f\u0641\u0643 \u0661\u0660 \u064a\u0648\u0645\u064a\u0627\u064b" should land on the goal, not on the top
-   of a list with the goal somewhere in it.
-   ============================================================ */
-let SET_FOCUS = null;
-A.gotoSettings = function (focus) { SET_FOCUS = focus || null; go("settings"); };
-
 function renderSettings() {
   const guest = !S.user || S.user.guest;
+  const name = guest ? "" : ((S.user && S.user.name) || "");
   const days = examDaysLeft();
+  const chev = `<span class="set-chev" aria-hidden="true">${CHEV_SVG}</span>`;
+  const seg = (on, call, label) =>
+    `<button type="button" class="${on ? "on" : ""}" role="radio" aria-checked="${on}" onclick="${call}">${label}</button>`;
+  const examVal = days === null ? "غير محدّد"
+    : days < 0 ? "انتهى" : days === 0 ? "اليوم"
+    : days === 1 ? "غداً" : "باقٍ " + toAr(days) + (days <= 10 ? " أيام" : " يوماً");
 
   $app.innerHTML = statbar() + `<div class="screen"><div class="page set-page">
-    <h1>\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a</h1>
-    <div class="sub">\u062e\u0635\u0651\u0635 \u062a\u062c\u0631\u0628\u0629 \u062a\u062f\u0631\u064a\u0628\u0643</div>
+    <h1>الإعدادات</h1>
 
-    <div class="set-grp" data-g="name">
-      <div class="set-lab">\u0627\u0633\u0645\u0643</div>
-      <div class="set-name">
-        <input id="setName" class="login-input" type="text" maxlength="20"
-          placeholder="\u0645\u0627 \u0627\u0633\u0645\u0643\u061f" autocomplete="off"
-          value="${guest ? "" : esc((S.user && S.user.name) || "")}"
-          onkeydown="if(event.key==='Enter')A.setSaveName()">
-        <button class="btn set-save" onclick="A.setSaveName()">\u062d\u0641\u0638</button>
+    <div class="set-me${SET_EDIT ? " editing" : ""}">
+      <div class="set-av" aria-hidden="true"><span>${esc(name.trim().charAt(0) || "ق")}</span></div>
+      ${SET_EDIT ? `
+      <div class="set-me-edit">
+        <input id="setName" class="login-input" type="text" maxlength="20" placeholder="ما اسمك؟"
+          autocomplete="off" value="${esc(name)}"
+          onkeydown="if(event.key==='Enter')A.setSaveName();if(event.key==='Escape')A.setEditName(false)">
+        <div class="set-me-btns">
+          <button type="button" class="btn" onclick="A.setSaveName()">حفظ</button>
+          <button type="button" class="btn btn-ghost" onclick="A.setEditName(false)">إلغاء</button>
+        </div>
+      </div>` : `
+      <div class="set-me-tx">
+        <b>${guest ? "ضيف" : esc(name)}</b>
+        <span>${guest ? "أضف اسمك ليظهر في التطبيق" : (S.joined ? "بدأ معنا " + fmtDayKey(S.joined) : "عضو جديد")}</span>
       </div>
-      ${guest ? `<p class="set-hint">\u062a\u0642\u062f\u0651\u0645\u0643 \u0645\u062d\u0641\u0648\u0638 \u0639\u0644\u0649 \u0647\u0630\u0627 \u0627\u0644\u0645\u062a\u0635\u0641\u062d \u0641\u0642\u0637.</p>` : ""}
+      <button type="button" class="set-edit" onclick="A.setEditName(true)">${guest ? "أضف اسمك" : "تعديل"}</button>`}
     </div>
 
-    <div class="set-grp" data-g="goal">
-      <div class="set-lab">\u0627\u0644\u0647\u062f\u0641 \u0627\u0644\u064a\u0648\u0645\u064a</div>
-      <div class="set-seg">` + SET_GOALS.map(g =>
-        `<button class="${S.goal === g ? "on" : ""}" onclick="A.setGoal(${g})">${toAr(g)}</button>`).join("") + `</div>
-      <p class="set-hint">\u0639\u062f\u062f \u0627\u0644\u0623\u0633\u0626\u0644\u0629 \u0627\u0644\u0644\u064a \u062a\u0628\u064a \u062a\u062d\u0644\u0651\u0647\u0627 \u0643\u0644 \u064a\u0648\u0645.</p>
-    </div>
-
-    <div class="set-grp" data-g="track">
-      <div class="set-lab">\u0645\u0633\u0627\u0631\u0643</div>
-      <div class="set-seg set-seg2">
-        <button class="${S.track === "sci" ? "on" : ""}" onclick="A.setTrackM('sci')">\u0639\u0644\u0645\u064a</button>
-        <button class="${S.track === "lit" ? "on" : ""}" onclick="A.setTrackM('lit')">\u0623\u062f\u0628\u064a / \u0646\u0638\u0631\u064a</button>
+    <div class="set-lab">التدريب</div>
+    <div class="set-list">
+      <div class="set-item">
+        <span class="set-item-tx">المسار</span>
+        <div class="set-seg" role="radiogroup" aria-label="المسار">
+          ${seg(S.track === "sci", "A.setTrackM('sci')", "علمي")}
+          ${seg(S.track === "lit", "A.setTrackM('lit')", "أدبي / نظري")}
+        </div>
       </div>
-    </div>
-
-    <div class="set-grp" data-g="exam">
-      <div class="set-lab">\u0645\u0648\u0639\u062f \u0627\u0644\u0627\u062e\u062a\u0628\u0627\u0631</div>
-      <button class="set-row" onclick="A.examSetup()">
-        <span class="set-row-ic">${ico("timer", 20)}</span>
-        <span class="set-row-tx"><b>${days !== null ? "\u0628\u0627\u0642\u064d " + toAr(days) + " \u064a\u0648\u0645\u0627\u064b" : "\u063a\u064a\u0631 \u0645\u062d\u062f\u0651\u062f \u0628\u0639\u062f"}</b>
-          <span>${S.exam ? fmtExamDate(S.exam) : "\u0627\u062e\u062a\u0631 \u064a\u0648\u0645 \u0627\u062e\u062a\u0628\u0627\u0631\u0643 \u0645\u0646 \u0627\u0644\u062a\u0642\u0648\u064a\u0645"}</span></span>
-        <span class="pf-go">\u2190</span>
+      <button type="button" class="set-item set-link" onclick="A.examSetup()">
+        <span class="set-item-tx">موعد الاختبار</span>
+        <span class="set-val">${examVal}</span>${chev}
       </button>
     </div>
 
-    <div class="set-grp">
-      <div class="set-tog">
-        <span><b>\u0627\u0644\u0623\u0635\u0648\u0627\u062a</b><span>\u0645\u0624\u062b\u0631\u0627\u062a \u0639\u0646\u062f \u0627\u0644\u0625\u062c\u0627\u0628\u0629</span></span>
-        <button class="toggle ${S.sound ? "on" : ""}" onclick="A.setSound(this)" aria-label="\u0627\u0644\u0623\u0635\u0648\u0627\u062a"></button>
+    <div class="set-lab">التفضيلات</div>
+    <div class="set-list">
+      <div class="set-item">
+        <span class="set-item-tx" id="setSoundLab">الأصوات</span>
+        <button type="button" class="toggle ${S.sound ? "on" : ""}" role="switch" aria-checked="${!!S.sound}"
+          aria-labelledby="setSoundLab" onclick="A.setSound(this)"></button>
       </div>
-      <div class="set-tog">
-        <span><b>\u0627\u0644\u062d\u0631\u0643\u0629 \u0627\u0644\u0643\u0627\u0645\u0644\u0629</b><span>${
-          motionReduced() ? "\u0645\u062e\u0641\u0651\u0641\u0629 \u2014 \u0628\u062f\u0648\u0646 \u0642\u0641\u0632\u0629 \u0648\u0644\u0627 \u0628\u0631\u0642"
-            : (osPrefersReduce() ? "\u0646\u0638\u0627\u0645\u0643 \u064a\u0642\u0644\u0651\u0644 \u0627\u0644\u062d\u0631\u0643\u0629 \u2014 \u0644\u0643\u0646\u0651\u0647\u0627 \u0645\u0641\u0639\u0651\u0644\u0629 \u0647\u0646\u0627"
-              : "\u0642\u0641\u0632\u0629 \u0627\u0644\u0625\u062c\u0627\u0628\u0629 \u0648\u0627\u0644\u0628\u0631\u0642")}</span></span>
-        <button class="toggle ${motionReduced() ? "" : "on"}" onclick="A.setMotion(this)" aria-label="\u0627\u0644\u062d\u0631\u0643\u0629"></button>
+      <div class="set-item">
+        <span class="set-item-tx" id="setMotionLab">الحركات</span>
+        <button type="button" class="toggle ${motionReduced() ? "" : "on"}" role="switch" aria-checked="${!motionReduced()}"
+          aria-labelledby="setMotionLab" onclick="A.setMotion(this)"></button>
       </div>
     </div>
 
-    <div class="set-grp">
-      <button class="set-row" onclick="A.showAbout()">
-        <span class="set-row-ic">${ico("book", 20)}</span>
-        <span class="set-row-tx"><b>\u062d\u0648\u0644 \u0627\u0644\u062a\u0637\u0628\u064a\u0642</b><span>\u0625\u062e\u0644\u0627\u0621 \u0645\u0633\u0624\u0648\u0644\u064a\u0629 \u0648\u0645\u0639\u0644\u0648\u0645\u0627\u062a</span></span>
-        <span class="pf-go">\u2190</span>
-      </button>
-      <a class="set-row" href="https://etec.gov.sa" target="_blank" rel="noopener">
-        <span class="set-row-ic">${ico("guide", 20)}</span>
-        <span class="set-row-tx"><b>\u0645\u0646\u0635\u0629 \u0642\u064a\u0627\u0633 \u0627\u0644\u0631\u0633\u0645\u064a\u0629</b><span>etec.gov.sa</span></span>
-        <span class="pf-go">\u2197</span>
-      </a>
-    </div>
-
-    <div class="set-grp set-danger">
-      ${guest ? "" : `<button class="set-row" onclick="A.logout()">
-        <span class="set-row-tx"><b>\u062a\u0628\u062f\u064a\u0644 \u0627\u0644\u0645\u0633\u062a\u062e\u062f\u0645</b></span><span class="pf-go">\u2190</span></button>`}
-      <button class="set-row set-red" onclick="A.resetAll()">
-        <span class="set-row-tx"><b>\u0625\u0639\u0627\u062f\u0629 \u062a\u0639\u064a\u064a\u0646 \u0627\u0644\u062a\u0642\u062f\u0651\u0645</b><span>\u062d\u0630\u0641 \u0643\u0644 \u0627\u0644\u0646\u0642\u0627\u0637 \u0648\u0627\u0644\u0625\u0646\u062c\u0627\u0632\u0627\u062a</span></span>
-        <span class="pf-go">\u2190</span></button>
-    </div>
+    <button type="button" class="set-reset" onclick="A.resetAll()">إعادة تعيين التقدّم</button>
+    <p class="set-foot">قدراتي أداة تدريب مستقلة، غير تابعة لهيئة تقويم التعليم والتدريب (قياس)</p>
 
   </div></div>` + bottomnav("settings");
 
-  if (SET_FOCUS) {
-    const g = document.querySelector('[data-g="' + SET_FOCUS + '"]');
-    const want = SET_FOCUS; SET_FOCUS = null;
-    if (g) requestAnimationFrame(() => {
-      g.scrollIntoView({ block: "center", behavior: "smooth" });
-      g.classList.add("flash");
-      if (want === "name") { const i = document.getElementById("setName"); if (i) i.focus(); }
-    });
-  }
+  if (SET_EDIT) { const i = document.getElementById("setName"); if (i) { i.focus(); i.select(); } }
 }
 
-A.setGoal = function (g) {
-  S.goal = g; save();
-  document.querySelectorAll('[data-g="goal"] .set-seg button').forEach((b, i) =>
-    b.classList.toggle("on", SET_GOALS[i] === g));
-};
-A.setTrackM = function (t) {
-  S.track = t; save();
-  document.querySelectorAll('[data-g="track"] .set-seg button').forEach((b, i) =>
-    b.classList.toggle("on", (i === 0 ? "sci" : "lit") === t));
-};
-A.setSound = function (btn) { S.sound = !S.sound; save(); btn.classList.toggle("on", S.sound); };
-A.setMotion = function (btn) {
-  S.motion = motionReduced() ? "full" : "reduced";
-  motionApply(); save();
-  btn.classList.toggle("on", !motionReduced());
-  render();                               // the hint line under it has to follow
-};
+A.setEditName = function (on) { SET_EDIT = !!on; render(); };
 A.setSaveName = function () {
   const inp = document.getElementById("setName");
   const name = (inp.value || "").trim();
   if (!name) { inp.classList.remove("err"); void inp.offsetWidth; inp.classList.add("err"); inp.focus(); return; }
   S.user = { name: name.slice(0, 20), guest: false };
-  save(); sndGood(); toast("\u062a\u0645 \u062d\u0641\u0638 \u0627\u0633\u0645\u0643 \u2713");
+  SET_EDIT = false; save(); sndGood(); toast("تم حفظ اسمك ✓");
   render();
 };
-
-
-/* ============================================================
-   THE MORE MENU
-   ------------------------------------------------------------
-   The last nav slot used to jump straight to the profile, which
-   left settings a level further in. It offers the choice instead:
-   two destinations, the app blurred behind them, the card rising
-   from the bar it was launched from.
-   ============================================================ */
-A.openMore = function () {
-  if (document.querySelector(".more-veil")) return;
-  const veil = document.createElement("div");
-  veil.className = "more-veil";
-  veil.innerHTML = '<div class="more-card" role="dialog" aria-modal="true" aria-label="\u0627\u0644\u0645\u0632\u064a\u062f">' +
-    '<div class="more-grip" aria-hidden="true"></div>' +
-    '<button class="more-pick" onclick="A.moreGo(\'profile\')">' +
-      '<span class="more-ic mi-green">' + ico("nav-stats", 26) + '</span>' +
-      '<span class="more-tx"><b>\u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0634\u062e\u0635\u064a</b>' +
-      '<span>\u062a\u0642\u062f\u0651\u0645\u0643\u060c \u0633\u0644\u0633\u0644\u062a\u0643\u060c \u0648\u0625\u062a\u0642\u0627\u0646\u0643</span></span>' +
-      '<span class="pf-go">\u2190</span></button>' +
-    '<button class="more-pick" onclick="A.moreGo(\'settings\')">' +
-      '<span class="more-ic mi-blue">' + GEAR_SVG + '</span>' +
-      '<span class="more-tx"><b>\u0627\u0644\u0625\u0639\u062f\u0627\u062f\u0627\u062a</b>' +
-      '<span>\u0627\u0644\u0647\u062f\u0641\u060c \u0627\u0644\u0645\u0633\u0627\u0631\u060c \u0648\u0645\u0648\u0639\u062f \u0627\u062e\u062a\u0628\u0627\u0631\u0643</span></span>' +
-      '<span class="pf-go">\u2190</span></button>' +
-  '</div>';
-  veil.onclick = e => { if (e.target === veil) A.closeMore(); };
-  document.body.appendChild(veil);
-  requestAnimationFrame(() => veil.classList.add("show"));
-};
-A.closeMore = function (then) {
-  const v = document.querySelector(".more-veil");
-  if (!v) { if (then) then(); return; }
-  v.classList.remove("show");
-  setTimeout(() => { v.remove(); if (then) then(); }, 220);
-};
-A.moreGo = function (what) {
-  A.closeMore(() => {
-    if (what !== "settings") { go("profile"); return; }
-    go("settings");
+A.setTrackM = function (t) {
+  S.track = t; save();
+  document.querySelectorAll(".set-seg button").forEach((b, i) => {
+    const on = (i === 0 ? "sci" : "lit") === t;
+    b.classList.toggle("on", on); b.setAttribute("aria-checked", on);
   });
 };
-
-/* Weakest lessons by the student's own accuracy. Four attempts is the floor:
-   below that a single slip reads as 0% and the list becomes noise, not advice. */
-function weakLessons(n) {
-  const out = [];
-  domains().forEach(d => d.lessons.forEach(l => {
-    let r = 0, w = 0;
-    l.questions.forEach(q => { const st = S.qstats[q.id]; if (st) { r += st.r || 0; w += st.w || 0; } });
-    if (r + w >= 4) out.push({ dom: d.key, key: l.key, title: l.title,
-                               color: d.color, acc: Math.round(r / (r + w) * 100) });
-  }));
-  return out.sort((a, b) => a.acc - b.acc).slice(0, n);
-}
+A.setSound = function (btn) {
+  S.sound = !S.sound; save();
+  btn.classList.toggle("on", S.sound); btn.setAttribute("aria-checked", S.sound);
+};
+A.setMotion = function (btn) {
+  S.motion = motionReduced() ? "full" : "reduced";
+  motionApply(); save();
+  btn.classList.toggle("on", !motionReduced()); btn.setAttribute("aria-checked", !motionReduced());
+};
 
 /* ---------------- boot ---------------- */
 function boot() {

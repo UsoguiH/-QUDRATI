@@ -9,6 +9,7 @@ else, I don't like them."* What survives: `celebrate` as the win screen's hero i
 of the streak flame, and `strong` as the mock exam home's hero. Both big. This document
 is now history; `assets/mascot/README.md` is current.
 
+
 ---
 
 ## What Duolingo actually does — the six rules we're copying

@@ -15,7 +15,7 @@
   --gold: #FFC800;         --gold-dk: #E6A000;
   --gold-shine: #FFE700;   --gold-soft: #FBE56D;    --brown: #AA572A;
   --red: #FF4B4B;          --red-soft: #FFB2B2;
-  --orange: #FF9600;
+  --orange: #FF9600;       --orange-bg: #FFEFD6;    --gold-bg: #FFF4BF;
   --ink: #4B4B4B;          --gray: #777777;         --gray-icon: #AFAFAF;
   --gray-shadow: #B7B7B7;  --line: #E5E5E5;         --divider: #D9D9D9;
   --disabled: #D9D9D9;     --snow: #FFFFFF;
@@ -469,10 +469,10 @@ svg.ic { display: block; }
 @keyframes pulse { 50% { opacity: .45; } }
 
 /* ============================================================
-   Question timer — the SAME Duolingo progress bar we use up top
-   (16px track, r64, inset shine line) but draining for time:
-   blue → orange (≤15s) → red panic (≤5s). (.qt-svg / .qt-hand below
-   still style the TIMER_SVG on the win/fail result cards — keep them.)
+   Question timer — Duolingo's timed-challenge pill: a tinted
+   capsule, the Figma clock with its hand spinning, and m:ss.
+   Green at rest, yellow at ≤15s, red at ≤5s. (.qt-svg / .qt-hand
+   below also style TIMER_SVG on the sheets and result cards.)
    ============================================================ */
 .qt-svg .qt-face { fill: var(--blue-light); transition: fill .3s; }
 /* the same ticking clock as the result card, on the exam countdown */
@@ -485,40 +485,29 @@ svg.ic { display: block; }
   animation: spinSlow 5s linear infinite;
 }
 .qtimer {
-  position: relative; width: 44px; height: 44px; flex-shrink: 0;
-  display: grid; place-items: center;
-  color: var(--blue);
+  position: relative; flex-shrink: 0;
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 30px; padding: 0 10px 0 7px; border-radius: 999px;
+  /* clock on the left, digits on the right, as on Duolingo's own RTL screen */
+  direction: ltr;
+  background: var(--green-bg); color: var(--green-dk);
   animation: fadeUp .4s ease backwards;
-  transition: color .3s ease;
+  transition: background .3s ease, color .3s ease;
 }
-/* a tinted disc under the digits so the ring reads as light, not as a slab */
-.qtimer::before {
-  content: ''; position: absolute; inset: 5px; border-radius: 50%;
-  background: currentColor; opacity: .11;
-}
-.qt-ring {
-  position: absolute; inset: 0; overflow: visible;
-  /* the arc starts at twelve and drains leftward, with the reading direction */
-  transform: rotate(90deg) scaleX(-1);
-}
-.qt-ring circle { fill: none; stroke-width: 4; stroke-linecap: round; }
-.qt-track { stroke: var(--line); }
-.qt-arc {
-  stroke: currentColor;
-  /* pathLength=100 on the element makes the dash maths plain percentages */
-  stroke-dasharray: 100;
-  stroke-dashoffset: calc(100 - var(--p, 100));
-  transition: stroke-dashoffset 1s linear, stroke .3s ease;
-}
+.qtimer .qt-svg { width: 22px; height: 22px; }
+/* the dial takes the pill's tint, so only the ring, the pin and the hand show */
+.qtimer .qt-svg .qt-face { fill: none; }
 .qt-num {
-  position: relative;
-  font-weight: 800; font-size: 15px; color: currentColor;
-  font-variant-numeric: tabular-nums; line-height: 1;
+  font-weight: 800; font-size: 17px; line-height: 1; color: currentColor;
+  font-variant-numeric: tabular-nums;
+  /* the widest reading sets the width, so the pill never breathes with the digits */
+  min-width: 34px; text-align: center; padding-top: 2px;
 }
-.qtimer.low  { color: var(--orange); }
-.qtimer.crit { color: var(--red); }
+.qtimer.low  { background: var(--gold-bg); color: var(--gold-dk); }
+.qtimer.crit { background: var(--red-bg); color: var(--red); }
 .qtimer.crit .qt-num { animation: numPop 1s ease infinite; }
 .qtimer.paused { opacity: .5; }
+.qtimer.paused .qt-hand { animation-play-state: paused; }
 @keyframes numPop { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.28); } }
 
 /* ============================================================
@@ -1118,6 +1107,99 @@ button.dom-stat:active { transform: scale(.99); }
   padding: 36px 24px calc(36px + env(safe-area-inset-bottom));
 }
 
+/* ============================================================
+   The pre-rendered page in index.html — what crawlers and
+   no-JavaScript readers get. Its first screen is a splash cut
+   from the start screen's own pieces (.login-title / .login-sub /
+   .login-badges), so the second before the app boots reads as
+   loading; «عن قدراتي» follows under the fold. The app replaces
+   all of it on boot and never shows any of it.
+   ============================================================ */
+.landing { display: flex; flex-direction: column; align-items: center; }
+.landing-hero {
+  min-height: 100dvh; width: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  padding: 36px 24px calc(36px + env(safe-area-inset-bottom));
+}
+.landing-icon { width: 96px; height: 96px; border-radius: 22px; margin-bottom: 14px; animation: fadeUp .4s ease backwards; }
+.landing-hero .login-badges { margin-bottom: 0; }
+/* three dots breathing in turn: the only sign the app is still on its way */
+.landing-loading { display: flex; gap: 7px; margin: 30px 0 0; }
+.landing-loading i { width: 9px; height: 9px; border-radius: 50%; background: var(--green); opacity: .3; animation: landDot 1.1s ease-in-out infinite; }
+.landing-loading i:nth-child(2) { animation-delay: .18s; }
+.landing-loading i:nth-child(3) { animation-delay: .36s; }
+@keyframes landDot { 50% { opacity: 1; transform: translateY(-4px); } }
+.landing-noscript { color: var(--red); font-weight: 700; margin: 12px 0 0; }
+.about {
+  width: 100%; max-width: 430px; margin: 0 auto;
+  padding: 8px 24px calc(36px + env(safe-area-inset-bottom));
+  text-align: start; color: var(--ink);
+}
+.landing .about { border-top: 2px solid var(--line); padding-top: 18px; }
+.about h2 { font-size: 19px; color: var(--ink); margin: 26px 0 8px; }
+.about p, .about li { font-size: 15px; font-weight: 500; line-height: 1.9; color: var(--ink); margin: 0; }
+.about-list { padding-inline-start: 22px; margin: 0; }
+.about-list li { margin-bottom: 4px; }
+.about-list li::marker { color: var(--green); }
+.faq details { border-top: 2px solid var(--line); padding: 10px 0; }
+.faq details:last-child { border-bottom: 2px solid var(--line); }
+.faq summary {
+  cursor: pointer; list-style: none; font-weight: 700; font-size: 15.5px; color: var(--ink);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.faq summary::-webkit-details-marker { display: none; }
+/* the chevron: a bordered corner, turned down when closed and up when open */
+.faq summary::after {
+  content: ''; width: 9px; height: 9px; flex-shrink: 0; margin-bottom: 4px;
+  border-right: 2.5px solid var(--gray-icon); border-bottom: 2.5px solid var(--gray-icon);
+  transform: rotate(45deg); transition: transform .2s ease, margin .2s ease;
+}
+.faq details[open] summary::after { transform: rotate(-135deg); margin-bottom: -4px; }
+.faq details p { padding-top: 6px; }
+.about-links { margin-top: 18px; font-weight: 700; }
+.about-links a { color: var(--blue); text-decoration: none; }
+.about-en { margin-top: 14px; font-size: 13px; font-weight: 500; }
+
+/* ---------- the guide page (qudrat-kami.html): one article column ---------- */
+.guide-body { background: var(--snow); }
+.guide { max-width: 640px; margin: 0 auto; padding: 22px 22px calc(40px + env(safe-area-inset-bottom)); color: var(--ink); }
+.guide-crumb { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 26px; }
+.guide-crumb a { display: inline-flex; align-items: center; gap: 6px; color: var(--green-dk); text-decoration: none; }
+.guide-crumb img { border-radius: 6px; }
+.guide h1 { font-size: 28px; line-height: 1.5; color: var(--ink); text-wrap: balance; }
+.guide .guide-lead { font-size: 17px; font-weight: 600; line-height: 1.9; margin: 12px 0 0; }
+.guide h2 { font-size: 21px; margin: 34px 0 10px; }
+.guide p, .guide li { font-size: 16px; font-weight: 500; line-height: 1.95; margin: 0; }
+.guide p + p { margin-top: 10px; }
+.guide a { color: var(--blue); }
+.guide-list { margin: 0; padding-inline-start: 24px; }
+.guide-list li { margin-bottom: 6px; }
+.guide-list li::marker { color: var(--green); font-weight: 800; }
+.guide-table-wrap { overflow-x: auto; margin: 4px 0 12px; }
+.guide-table { width: 100%; border-collapse: collapse; font-size: 16px; font-weight: 600; text-align: center; }
+.guide-table th, .guide-table td { border: 2px solid var(--line); padding: 10px 12px; }
+.guide-table th { background: var(--green-bg); color: var(--green-dk); font-weight: 800; }
+.guide-table td:first-child { text-align: start; font-weight: 700; }
+.guide .faq summary { font-size: 16px; }
+.guide-cta {
+  margin-top: 36px; padding: 24px 22px 22px; text-align: center;
+  background: var(--green-bg); border-radius: 18px;
+}
+.guide-cta img { border-radius: 16px; }
+.guide-cta h2 { margin: 10px 0 6px; color: var(--green-dk); }
+.guide-cta p { margin-bottom: 18px; }
+.guide-btn { display: block; max-width: 300px; margin: 0 auto; line-height: 43px; text-decoration: none; color: #fff; }
+.guide .guide-note { margin-top: 26px; font-size: 13.5px; color: var(--ink); }
+/* the methods page: a table of contents, then one card per lesson */
+.methods-toc ul { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.methods-toc a { display: inline-block; background: var(--green-bg); color: var(--green-dk); font-weight: 800; text-decoration: none; border-radius: 999px; padding: 6px 14px 4px; font-size: 14.5px; }
+.methods-toc span { font-size: 13px; color: var(--ink); font-weight: 600; }
+.methods-unit h2 { margin-top: 40px; padding-bottom: 8px; border-bottom: 2px solid var(--line); }
+.method { margin-top: 22px; }
+.method h3 { display: flex; align-items: center; gap: 8px; font-size: 18px; margin: 0 0 8px; }
+.method-ico { font-size: 22px; line-height: 1; }
+.guide .method-tip { margin-top: 8px; padding: 10px 14px; background: var(--blue-light); border-radius: 12px; font-size: 15px; }
+
 /* --- XP-coins hero (UI-kit frame): coins rain in, gold one slams
    down, then everything floats, the bolt zaps, sparks twinkle --- */
 .coins-hero { position: relative; width: 296px; height: 188px; margin: 0 auto 10px; }
@@ -1630,7 +1712,6 @@ button.dom-stat:active { transform: scale(.99); }
 
 .dt-month { flex: 1.5; }
 
-
 /* --- shared Duolingo bar: 16px r64 track, solid fill, 5px r6 inset
    shine stripe (exact anatomy from the Figma Progress Bar set),
    fill grows 0 → value on appear --- */
@@ -1962,7 +2043,7 @@ button.dom-stat:active { transform: scale(.99); }
 .frac { unicode-bidi: isolate; }
 .mock-timer .mk-clock { display: flex; width: 19px; height: 19px; }
 .mock-timer .mk-clock svg { width: 100%; height: 100%; }
-.mock-timer.low  { background: #FFEFD6; color: var(--orange); }
+.mock-timer.low  { background: var(--orange-bg); color: var(--orange); }
 .mock-timer.crit { background: var(--red-bg); color: var(--red-dk2); animation: numPop 1s ease infinite; }
 .mock-count { font-weight: 800; font-size: 15px; color: var(--gray); white-space: nowrap; }
 .mock-result .result-cards { width: 100%; }
@@ -2092,44 +2173,6 @@ button.dom-stat:active { transform: scale(.99); }
 /* green "أحسنت" check in lesson feedback */
 .fb-ok { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
 .fb-ok svg { width: 18px; height: 18px; color: #fff; }
-
-/* disclaimer modal icon — simple, smooth fade + scale in */
-.modal .m-owl .disc-icon {
-  display: block; margin: 0 auto;
-  animation: discIn .4s ease-out backwards;
-}
-@keyframes discIn {
-  from { opacity: 0; transform: scale(.85); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
-/* ============================================================
-   Disclaimer bottom sheet (slides up after login)
-   ============================================================ */
-.disc-veil {
-  position: fixed; inset: 0; z-index: 200;
-  display: flex; align-items: flex-end; justify-content: center;
-  background: rgba(20,12,0,0); transition: background .3s ease;
-}
-.disc-veil.show { background: rgba(20,12,0,.5); }
-.disc-sheet {
-  width: 100%; max-width: 430px; background: #fff;
-  border-radius: 24px 24px 0 0; text-align: center;
-  padding: 10px 22px calc(22px + env(safe-area-inset-bottom));
-  transform: translateY(100%); transition: transform .34s cubic-bezier(.25,1.05,.4,1);
-  max-height: 88vh; overflow-y: auto; box-shadow: 0 -10px 34px rgba(0,0,0,.2);
-}
-.disc-veil.show .disc-sheet { transform: translateY(0); }
-.disc-sheet .ms-grip { width: 44px; height: 5px; border-radius: 3px; background: var(--line); margin: 4px auto 16px; }
-.ds-icon { margin-bottom: 6px; }
-.ds-icon .disc-icon { width: 72px; height: 72px; animation: discIn .45s .15s ease-out backwards; }
-.ds-title { font-size: 22px; color: var(--ink); margin: 4px 0 14px; }
-.ds-body {
-  text-align: right; font-size: 15px; line-height: 1.95;
-  color: var(--gray); font-weight: 500; margin-bottom: 20px;
-}
-.ds-body b { color: var(--ink); font-weight: 800; }
-.ds-btn { background: var(--green); box-shadow: 0 4px 0 var(--green-lip); }
 
 /* ============================================================
    الدوري الأسبوعي (weekly league) — Duolingo-style leaderboard
@@ -3191,396 +3234,84 @@ body:has(.screen-session) { overflow: hidden; }
   .path-row { height: 134px; }
 }
 
-
 /* ============================================================
-   PROFILE + SETTINGS POP-UP
+   SETTINGS
    ------------------------------------------------------------
-   Same vocabulary as everything else: white card, 2px --line
-   border with a heavier bottom edge for the lip, generous radius.
-   Every colour is a token; the only literals are alpha overlays.
+   Reads like a phone's own settings: the student on top, then
+   short grouped lists — one bordered card per group, rows parted
+   by a hairline rather than each row wearing its own lipped
+   card. Same tokens as everything else; the reset is the only
+   red on the page.
    ============================================================ */
-.pf { display: flex; flex-direction: column; gap: 14px; }
+.set-page { display: flex; flex-direction: column; gap: 10px; }
+.set-page h1 { margin-bottom: 6px; }
 
-.pf-hero { display: flex; align-items: center; gap: 14px; padding: 4px 2px 2px; }
-.pf-av {
-  width: 68px; height: 68px; flex: none; border-radius: 22px;
-  display: grid; place-items: center;
-  background: var(--green); box-shadow: 0 4px 0 var(--green-lip);
-  color: var(--snow); font-size: 30px; font-weight: 800;
+.set-me {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 10px;
+  padding: 14px 16px; border: 2px solid var(--line); border-radius: 18px; background: var(--snow);
 }
-.pf-av span { transform: translateY(-2px); }
-.pf-id { flex: 1; min-width: 0; }
-.pf-id h1 {
-  font-size: 25px; font-weight: 800; color: var(--ink);
-  margin: 0 0 2px; line-height: 1.3; overflow-wrap: anywhere;
+.set-av {
+  width: 58px; height: 58px; flex: none; border-radius: 18px;
+  display: grid; place-items: center; background: var(--green); color: #fff;
+  font-size: 27px; font-weight: 800; box-shadow: 0 4px 0 var(--green-dk);
 }
-.pf-id p { font-size: 13.5px; font-weight: 600; color: var(--gray); margin: 0; }
-.pf-gear {
-  width: 44px; height: 44px; flex: none; border: 0; border-radius: 14px;
-  background: var(--line); color: var(--gray); cursor: pointer;
-  display: grid; place-items: center;
-  transition: background-color .14s, color .14s, transform .3s;
+.set-av span { transform: translateY(-2px); }
+.set-me-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.set-me-tx b {
+  font-size: 19px; font-weight: 800; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.pf-gear:hover { background: var(--divider); color: var(--ink); transform: rotate(35deg); }
-
-.pf-rank, .pf-exam, .pf-line, .pf-claim {
-  display: flex; align-items: center; gap: 13px; width: 100%;
-  background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px;
-  border-radius: 16px; padding: 14px 16px; cursor: pointer; text-align: right;
-  font-family: inherit; transition: background-color .14s, transform .06s;
-}
-.pf-rank:hover, .pf-exam:hover, .pf-line:hover { background: var(--line); }
-.pf-rank:active, .pf-exam:active, .pf-line:active, .pf-claim:active {
-  transform: translateY(2px); border-bottom-width: 2px;
-}
-.pf-claim { background: #FFF8E1; border-color: var(--gold); }
-.pf-claim:hover { background: #FFF3CC; }
-.pf-cl-ic {
-  width: 42px; height: 42px; flex: none; border-radius: 13px;
-  display: grid; place-items: center; background: var(--gold);
-}
-.pf-cl-tx { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.pf-cl-tx b { font-size: 15.5px; font-weight: 800; color: var(--brown); }
-.pf-cl-tx span { font-size: 12.5px; font-weight: 600; color: var(--gold-dk); }
-
-.pf-rank img { flex: none; }
-.pf-rank-tx { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.pf-rank-tx b { font-size: 16.5px; font-weight: 800; color: var(--ink); }
-.pf-rank-tx small { font-size: 12.5px; font-weight: 600; color: var(--gray); }
-.pf-rank-bar { display: block; height: 9px; border-radius: 64px; background: var(--line); overflow: hidden; }
-.pf-rank-bar > i { display: block; height: 100%; border-radius: 64px; background: var(--gold); }
-.pf-go { flex: none; color: var(--gray-icon); font-size: 20px; line-height: 1; }
-
-.pf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.pf-tile {
-  display: flex; flex-direction: column; align-items: center; gap: 1px;
-  background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px;
-  border-radius: 16px; padding: 15px 8px 12px;
-}
-.pf-t-ic { height: 28px; display: grid; place-items: center; margin-bottom: 3px; }
-.pf-tile b {
-  font-size: 24px; font-weight: 800; color: var(--ink); line-height: 1.15;
-  font-variant-numeric: tabular-nums;
-}
-.pf-tile > span:last-child { font-size: 12.5px; font-weight: 700; color: var(--gray); text-align: center; }
-
-.pf-card {
-  background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px;
-  border-radius: 18px; padding: 16px;
-  display: flex; flex-direction: column; gap: 12px;
-}
-.pf-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.pf-head h3 { font-size: 16.5px; font-weight: 800; color: var(--ink); margin: 0; }
-.pf-goal {
-  display: inline-flex; align-items: center; gap: 6px; border: 0; cursor: pointer;
-  font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--gray);
-  background: var(--line); border-radius: 999px; padding: 6px 11px 5px;
-  transition: background-color .14s, color .14s;
-}
-.pf-goal:hover { background: var(--divider); color: var(--ink); }
-
-.pf-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-.pf-day { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.pf-dot {
-  width: 100%; aspect-ratio: 1; max-width: 40px; border-radius: 50%;
-  display: grid; place-items: center;
-  background: var(--line); color: var(--snow); border: 2px solid transparent;
-}
-.pf-dot svg { width: 55%; height: 55%; }
-.pf-day.on .pf-dot { background: var(--orange); }
-.pf-day.now .pf-dot { border-color: var(--blue); }
-.pf-dow { font-size: 12px; font-weight: 700; color: var(--gray); }
-.pf-day.on .pf-dow { color: var(--ink); }
-
-.pf-exam .pf-ex-n {
-  width: 56px; height: 56px; flex: none; border-radius: 17px;
-  display: grid; place-items: center;
-  background: var(--blue-light); color: var(--blue-dk);
-  font-size: 23px; font-weight: 800; font-variant-numeric: tabular-nums;
-}
-.pf-ex-t { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.pf-ex-t b { font-size: 16px; font-weight: 800; color: var(--ink); }
-.pf-ex-t span { font-size: 13px; font-weight: 600; color: var(--gray); }
-
-.pf-mast { display: flex; flex-direction: column; gap: 13px; }
-.pf-m-top {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
-  font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 6px;
-}
-.pf-m-top b { font-size: 13px; color: var(--gray); font-variant-numeric: tabular-nums; }
-.pf-m-bar { height: 12px; border-radius: 64px; background: var(--line); overflow: hidden; }
-.pf-m-bar > i {
-  display: block; height: 100%; border-radius: 64px; background: var(--green);
-  transition: width .5s cubic-bezier(.3,1.3,.5,1);
-}
-/* pm- prefix, not u- : .u-gold and friends already exist for the unit banners
-   and carry their own background plus a box-shadow lip, which bled through the
-   empty part of the track. */
-.pf-m-bar.pm-green > i  { background: var(--green); }
-.pf-m-bar.pm-gold > i   { background: var(--gold); }
-.pf-m-bar.pm-purple > i { background: var(--purple); }
-.pf-m-bar.pm-blue > i   { background: var(--blue); }
-
-.pf-line { padding: 13px 16px; }
-.pf-line > span:first-child {
-  flex: 1; display: inline-flex; align-items: center; gap: 10px;
-  font-size: 15px; font-weight: 700; color: var(--ink);
-}
-
-/* ---------------- the settings pop-up ---------------- */
-.set-veil {
-  position: fixed; inset: 0; z-index: 340;
-  display: flex; align-items: center; justify-content: center;
-  padding: 20px;
-  background: rgba(20, 22, 31, 0);
-  -webkit-backdrop-filter: blur(0px); backdrop-filter: blur(0px);
-  opacity: 0;
-  transition: opacity .22s ease, background-color .28s ease,
-              backdrop-filter .28s ease, -webkit-backdrop-filter .28s ease;
-}
-/* the blur is animated in, not switched on — a hard cut to blurred reads as a
-   screenshot swap rather than a sheet arriving over the app */
-.set-veil.show {
-  opacity: 1; background: var(--scrim);
-  -webkit-backdrop-filter: blur(9px); backdrop-filter: blur(9px);
-}
-.set-card {
-  width: 100%; max-width: 460px; max-height: min(86dvh, 760px);
-  display: flex; flex-direction: column;
-  background: var(--snow); border-radius: 24px;
-  box-shadow: 0 24px 60px rgba(0,0,0,.28), 0 4px 0 var(--divider);
-  transform: scale(.88) translateY(14px); opacity: 0;
-  transition: transform .34s cubic-bezier(.3,1.55,.45,1), opacity .2s ease;
-  overflow: hidden;
-}
-.set-veil.show .set-card { transform: scale(1) translateY(0); opacity: 1; }
-
-.set-top {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 18px 20px 14px; border-bottom: 2px solid var(--line); flex: none;
-}
-.set-top h2 { font-size: 21px; font-weight: 800; color: var(--ink); margin: 0; }
-.set-x {
-  width: 36px; height: 36px; flex: none; border: 0; border-radius: 12px;
-  background: none; color: var(--gray-icon); cursor: pointer;
-  display: grid; place-items: center; transition: background-color .14s, color .14s;
-}
-.set-x:hover { background: var(--line); color: var(--ink); }
-
-.set-body {
-  overflow-y: auto; padding: 16px 20px 22px;
-  display: flex; flex-direction: column; gap: 20px;
-}
-.set-grp { display: flex; flex-direction: column; gap: 9px; border-radius: 14px; }
-.set-grp.flash { animation: setFlash 1.5s ease; }
-@keyframes setFlash {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(28,176,246,0); }
-  18%, 62% { box-shadow: 0 0 0 5px rgba(28,176,246,.20); }
-}
-.set-lab {
-  display: flex; align-items: center; gap: 7px;
-  font-size: 12.5px; font-weight: 800; color: var(--gray-icon);
-}
-.set-hint { font-size: 12.5px; font-weight: 600; color: var(--gray); margin: 0; line-height: 1.6; }
-
-.set-name { display: flex; gap: 9px; }
-.set-name .login-input { flex: 1; margin: 0; }
-.set-save { width: auto !important; flex: none; padding: 0 20px; height: 52px; }
-
-.set-seg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.set-seg.set-seg2 { grid-template-columns: repeat(2, 1fr); }
-.set-seg button {
-  border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 14px;
-  background: var(--snow); cursor: pointer; padding: 12px 6px 10px;
-  font-family: inherit; font-size: 15px; font-weight: 800; color: var(--ink);
-  transition: border-color .14s, background-color .14s, color .14s, transform .06s;
-}
-.set-seg button:hover { background: var(--line); }
-.set-seg button:active { transform: translateY(2px); border-bottom-width: 2px; }
-.set-seg button.on {
-  border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk);
-}
-
-.set-row {
-  display: flex; align-items: center; gap: 12px; width: 100%;
-  border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 15px;
-  background: var(--snow); cursor: pointer; padding: 12px 14px; text-align: right;
-  font-family: inherit; text-decoration: none;
+.set-me-tx span { font-size: 13px; font-weight: 600; color: var(--gray); }
+.set-edit {
+  flex: none; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 12px;
+  background: var(--snow); color: var(--blue); cursor: pointer;
+  font-family: inherit; font-size: 13.5px; font-weight: 800; padding: 8px 14px 6px;
   transition: background-color .14s, transform .06s;
 }
-.set-row:hover { background: var(--line); }
-.set-row:active { transform: translateY(2px); border-bottom-width: 2px; }
-.set-row + .set-row { margin-top: 9px; }
-.set-row-ic {
-  width: 40px; height: 40px; flex: none; border-radius: 12px;
-  display: grid; place-items: center; background: var(--line);
-}
-.set-row-tx { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.set-row-tx b { font-size: 15px; font-weight: 800; color: var(--ink); }
-.set-row-tx span { font-size: 12.5px; font-weight: 600; color: var(--gray); }
-.set-red { border-color: var(--red-soft); }
-.set-red:hover { background: var(--red-bg); }
-.set-red .set-row-tx b { color: var(--red-dk2); }
+.set-edit:hover { background: var(--line); }
+.set-edit:active { transform: translateY(2px); border-bottom-width: 2px; }
+.set-me.editing { align-items: flex-start; }
+.set-me-edit { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.set-me-edit .login-input { margin: 0; animation: none; }   /* the login delay has no place here */
+.set-me-btns { display: flex; gap: 8px; }
+.set-me-btns .btn { height: 46px; font-size: 15px; }
 
-.set-tog {
-  display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 15px;
-  padding: 12px 14px;
+.set-lab { padding: 8px 4px 0; font-size: 13px; font-weight: 800; color: var(--gray-icon); }
+.set-list { border: 2px solid var(--line); border-radius: 16px; background: var(--snow); overflow: hidden; }
+.set-item {
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 58px;
+  padding: 10px 16px; border: 0; background: none; text-align: right;
+  font-family: inherit; color: var(--ink);
 }
-.set-tog + .set-tog { margin-top: 9px; }
-.set-tog > span { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.set-tog b { font-size: 15px; font-weight: 800; color: var(--ink); }
-.set-tog > span > span { font-size: 12.5px; font-weight: 600; color: var(--gray); line-height: 1.5; }
+.set-item + .set-item { border-top: 2px solid var(--line); }
+.set-item-tx { flex: 1; min-width: 0; font-size: 16px; font-weight: 700; color: var(--ink); }
+.set-link { cursor: pointer; transition: background-color .14s; }
+.set-link:hover { background: var(--line); }
+.set-link:active { background: var(--divider); }
+.set-val { font-size: 14.5px; font-weight: 700; color: var(--gray); white-space: nowrap; }
+.set-chev { flex: none; width: 22px; height: 22px; color: var(--gray-icon); }
 
-@media (max-width: 420px) {
-  .set-veil { padding: 0; align-items: flex-end; }
-  .set-card {
-    max-width: none; max-height: 92dvh;
-    border-radius: 24px 24px 0 0;
-    transform: translateY(100%) scale(1);
-  }
-  .set-veil.show .set-card { transform: translateY(0) scale(1); }
-  .set-body { padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+.set-seg { display: flex; gap: 4px; padding: 3px; border-radius: 12px; background: var(--line); }
+.set-seg button {
+  border: 0; border-radius: 9px; background: none; cursor: pointer; padding: 7px 12px 5px;
+  font-family: inherit; font-size: 13.5px; font-weight: 800; color: var(--gray); white-space: nowrap;
+  transition: background-color .14s, color .14s, box-shadow .14s;
 }
-@media (min-width: 768px) { .pf-grid { grid-template-columns: repeat(4, 1fr); } }
+.set-seg button.on { background: var(--snow); color: var(--blue-dk); box-shadow: 0 2px 0 var(--divider); }
 
-/* The app gates motion on its own saved setting, never on the raw media query
-   — Windows reports "reduce" far more often than anyone intends, and gating
-   here would silently kill the pop on every desktop that has animations off. */
-:root[data-motion="reduced"] .set-veil,
-:root[data-motion="reduced"] .set-card { transition-duration: .01ms; }
-:root[data-motion="reduced"] .set-grp.flash { animation: none; }
+.set-reset {
+  margin-top: 12px; width: 100%; padding: 14px 16px 12px; border-radius: 16px;
+  border: 2px solid var(--red-soft); border-bottom-width: 4px; background: var(--snow);
+  color: var(--red-dk2); cursor: pointer; font-family: inherit; font-size: 15.5px; font-weight: 800;
+  transition: background-color .14s, transform .06s;
+}
+.set-reset:hover { background: var(--red-bg); }
+.set-reset:active { transform: translateY(2px); border-bottom-width: 2px; }
+/* the one line of the old disclaimer that has to stay somewhere a student
+   can read it */
+.set-foot { margin: 8px 6px 0; text-align: center; font-size: 12.5px; font-weight: 600; color: var(--gray); line-height: 1.7; }
 
-
-/* ============================================================
-   THE MORE MENU
-   ------------------------------------------------------------
-   Rises from the nav bar it was launched from, so the motion
-   points back at the button that opened it. Same blur treatment
-   as the settings sheet, at a lighter weight — this is a fork in
-   the road, not a place you stay.
-   ============================================================ */
-.more-veil {
-  position: fixed; inset: 0; z-index: 330;
-  display: flex; align-items: flex-end; justify-content: center;
-  padding: 0;
-  background: rgba(20, 22, 31, 0);
-  -webkit-backdrop-filter: blur(0px); backdrop-filter: blur(0px);
-  opacity: 0;
-  transition: opacity .2s ease, background-color .26s ease,
-              backdrop-filter .26s ease, -webkit-backdrop-filter .26s ease;
-}
-.more-veil.show {
-  opacity: 1; background: rgba(40, 40, 48, .42);
-  -webkit-backdrop-filter: blur(2.5px) saturate(.72);
-          backdrop-filter: blur(2.5px) saturate(.72);
-}
-/* One surface with the tab bar, not a card floating above it: the sheet runs
-   to the bottom edge and reserves the bar's height, so the bar reads as the
-   sheet's own last row rather than something behind it. Only the top corners
-   curve, for the same reason. */
-.more-card {
-  width: 100%; max-width: var(--col-max, 430px); margin: 0;
-  background: var(--snow);
-  border-radius: 22px 22px 0 0;
-  padding: 8px 0 calc(var(--nav-h, 80px) + env(safe-area-inset-bottom, 0px));
-  box-shadow: 0 -10px 34px rgba(0,0,0,.16);
-  display: flex; flex-direction: column;
-  transform: translateY(100%); opacity: 1;
-  transition: transform .34s cubic-bezier(.32,1.28,.44,1);
-}
-.more-veil.show .more-card { transform: translateY(0); }
-.more-grip {
-  width: 42px; height: 5px; border-radius: 99px; background: var(--line);
-  margin: 2px auto 8px; flex: none;
-}
-/* flat rows divided by a hairline — no borders, no lips, no chevrons. This is
-   a list of destinations, and every extra edge on it competes with the app
-   showing through behind. */
-.more-pick {
-  display: flex; align-items: center; gap: 16px; width: 100%;
-  background: none; border: 0; border-top: 1px solid var(--line);
-  padding: 17px 22px; cursor: pointer; text-align: right;
-  font-family: inherit; transition: background-color .13s;
-}
-.more-pick:hover { background: var(--line); }
-.more-pick:active { background: var(--divider); }
-.more-ic {
-  width: 34px; height: 34px; flex: none; border-radius: 10px;
-  display: grid; place-items: center;
-}
-.more-ic.mi-green { background: var(--green-bg); color: var(--green-dk); }
-.more-ic.mi-blue  { background: var(--blue-light); color: var(--blue-dk); }
-.more-tx { flex: 1; min-width: 0; }
-.more-tx b { font-size: 17px; font-weight: 700; color: var(--ink); }
-.more-tx > span { display: none; }
-.more-pick .pf-go { display: none; }
-
-/* while the menu is up the bar belongs to it, so it loses its own divider */
-body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
-
-/* ---- profile: the week's tally, and the weak-topic list ---- */
-.pf-wk-note {
-  margin: 2px 0 0; font-size: 13px; font-weight: 700; color: var(--gray); text-align: center;
-}
-.pf-goal.pf-static { cursor: default; }
-.pf-goal.pf-static:hover { background: var(--line); color: var(--gray); }
-
-.pf-weak { display: flex; flex-direction: column; gap: 9px; }
-.pf-w {
-  display: flex; align-items: center; gap: 12px; width: 100%;
-  background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px;
-  border-radius: 15px; padding: 11px 13px; cursor: pointer; text-align: right;
-  font-family: inherit; transition: background-color .14s, transform .06s;
-}
-.pf-w:hover { background: var(--line); }
-.pf-w:active { transform: translateY(2px); border-bottom-width: 2px; }
-.pf-w-acc {
-  flex: none; min-width: 52px; padding: 7px 8px 5px; border-radius: 11px;
-  font-size: 14.5px; font-weight: 800; text-align: center; color: var(--snow);
-  font-variant-numeric: tabular-nums; background: var(--gray-icon);
-}
-.pf-w-acc.pm-green  { background: var(--green); }
-.pf-w-acc.pm-gold   { background: var(--gold); color: var(--brown); }
-.pf-w-acc.pm-purple { background: var(--purple); }
-.pf-w-acc.pm-blue   { background: var(--blue); }
-.pf-w-tx {
-  flex: 1; min-width: 0; font-size: 14.5px; font-weight: 700; color: var(--ink);
-  line-height: 1.4;
-}
-.pf-w-go {
-  flex: none; font-size: 13px; font-weight: 800; color: var(--green-dk);
-  background: var(--green-bg); border-radius: 999px; padding: 6px 12px 4px;
-}
-
-
-/* ---- settings, now a screen ---- */
-.set-page { display: flex; flex-direction: column; gap: 22px; }
-.set-page h1 { margin-bottom: 2px; }
-.set-page .sub { margin-bottom: 2px; }
-.set-page .set-grp { gap: 10px; }
-.set-page .set-lab { font-size: 13px; }
-@media (min-width: 768px) {
-  .set-page .set-seg { max-width: 420px; }
-  .set-page .set-name { max-width: 480px; }
-}
-
-/* The more-sheet is anchored to the bottom bar, which only exists on phones.
-   Above the breakpoint there is no bar to sit on, so it becomes an ordinary
-   centred card rather than a panel hugging an edge with nothing under it. */
-@media (min-width: 768px) {
-  .more-veil { align-items: center; padding: 24px; }
-  .more-card {
-    border-radius: 22px; padding-bottom: 8px;
-    max-width: 420px; transform: translateY(18px) scale(.97); opacity: 0;
-    box-shadow: 0 24px 60px rgba(0,0,0,.28);
-    transition: transform .3s cubic-bezier(.3,1.45,.45,1), opacity .18s ease;
-  }
-  .more-veil.show .more-card { transform: translateY(0) scale(1); opacity: 1; }
-  .more-pick:first-of-type { border-top: 0; }
-  .more-grip { display: none; }
-}
-
+@media (min-width: 768px) { .set-page { max-width: 560px; } }
 
 /* ============================================================
    EXAM DATE — calendar picker
@@ -3869,7 +3600,6 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 .exam-pick.ep-enter .ep-dow,
 .exam-pick.ep-enter .ep-legend { animation: epInFoot .4s ease .26s both; }
 
-
 /* ============================================================
    EXAM COUNTDOWN CARD
    ------------------------------------------------------------
@@ -4078,12 +3808,28 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
    Modelled on the Duolingo screen in assets/mascot/reference/duolingo: a headline at
    the top, three icon/title/subtitle rows, one CTA at the bottom. */
 .iv-screen { display: flex; flex-direction: column; padding: 18px 20px calc(20px + env(safe-area-inset-bottom)); }
-.iv-top { display: flex; justify-content: center; margin: 18px 0 20px; }
-.iv-title {
-  font-size: 22px; font-weight: 800; color: var(--ink); line-height: 1.4;
-  text-align: center; text-wrap: balance; max-width: 300px; margin: 0;
+.iv-top { display: flex; align-items: flex-start; justify-content: center; gap: 8px; margin: 8px 0 22px; }
+.iv-mascot { height: 184px; flex-shrink: 0; }
+/* the bubble hangs at his head, not his chest: he is the taller of the two,
+   so it sits at the top of the row with a margin that lands the tail on
+   the line of his glasses */
+.iv-bubble {
+  position: relative; align-self: flex-start; margin: 22px 0 0;
+  background: var(--snow); border: 2px solid var(--line); border-radius: 16px;
+  padding: 12px 15px; font-size: 17px; font-weight: 700; color: var(--ink);
+  max-width: 210px; line-height: 1.5;
   animation: fadeUp .34s .1s ease backwards;
 }
+/* the tail points at قدّور. The bubble comes first in the row, so in RTL he
+   stands at its inline-END (the left); the tail used to hang off the other
+   side and point at nothing */
+.iv-bubble::after,
+.iv-bubble::before {
+  content: ""; position: absolute; top: 50%; margin-top: -9px;
+  border: 9px solid transparent; inset-inline-end: -18px;
+}
+.iv-bubble::before { border-inline-start-color: var(--line); }
+.iv-bubble::after  { border-inline-start-color: var(--snow); margin-inline-end: 3px; }
 
 .iv-rows { display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .iv-row {
@@ -4104,6 +3850,8 @@ body:has(.more-veil.show) .bottomnav { border-top-color: transparent; }
 .iv-cta { margin-top: 18px; }
 
 @media (max-height: 660px) {
+  .iv-mascot { height: 140px; }
+  .iv-bubble { margin-top: 12px; }
   .iv-row { padding: 11px 4px; }
   .iv-top { margin-bottom: 14px; }
 }
