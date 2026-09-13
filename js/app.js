@@ -1367,6 +1367,7 @@ function renderPath() {
   $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${dueCard()}${html}<div class="path-tail"></div></div>` + floatingQuest() + bottomnav("path");
   requestAnimationFrame(() => {
     drawTrails();
+    pathReveal();
     const cur = document.querySelector('.path-row .bob');
     if (!cur) return;
     /* Only chase the node when it is genuinely out of reach. Centring it
@@ -1376,6 +1377,25 @@ function renderPath() {
     if (r.top > window.innerHeight * 0.72 || r.bottom < 80)
       cur.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
+}
+
+/* A node the student has not scrolled to yet rises in when they reach it. Once
+   each, never the bobbing one (it owns its own animation), and not at all when
+   motion is reduced or the browser has no observer to hang it on. */
+function pathReveal() {
+  if (motionReduced() || !("IntersectionObserver" in window)) return;
+  const below = Array.from(document.querySelectorAll(".node-col"))
+    .filter(c => !c.classList.contains("bob") && c.getBoundingClientRect().top > innerHeight * 0.9);
+  if (!below.length) return;
+  const io = new IntersectionObserver((ents, obs) => {
+    ents.forEach(e => {
+      if (!e.isIntersecting) return;
+      e.target.classList.remove("veil");
+      e.target.classList.add("rise");
+      obs.unobserve(e.target);
+    });
+  }, { rootMargin: "0px 0px -6% 0px" });
+  below.forEach(c => { c.classList.add("veil"); io.observe(c); });
 }
 
 /* ---------------- LESSON SESSION ---------------- */
@@ -2571,7 +2591,6 @@ function timeUp() {
 A.pick = function (i) {
   if (SES.locked) return;
   const btn = document.querySelector(`.choice[data-ci="${i}"]`);
-  if (btn && btn.classList.contains("eliminated")) return; // can't pick a removed choice
   SES.sel = i;
   document.querySelectorAll(".choice").forEach((b, j) => b.classList.toggle("sel", j === i));
   const cb = document.getElementById("checkBtn"); if (cb) cb.disabled = false;
@@ -2948,8 +2967,6 @@ function flameHero(size) {
         <path class="fh-inner" d="${FLAME_INNER}" fill="#FFC800"/>
       </svg>
     </div>
-    <span class="wh-spark s1">✦</span><span class="wh-spark s2">✦</span>
-    <span class="wh-spark s3">✦</span><span class="wh-spark s4">✦</span>
   </div>`;
 }
 function countUp(el, to, suffix) {
@@ -4249,6 +4266,18 @@ function renderReview() {
 }
 
 /* ---------------- STATS ---------------- */
+/* Four bars at «—» and a week with no days in it is a broken dashboard, not a
+   stats page. Until the first question is answered, the page says so and points
+   at the one thing worth doing. */
+function statsEmpty() {
+  return `<div class="card stats-empty">
+    <span class="se-ico">${ico("target", 30)}</span>
+    <b>لا أرقام بعد</b>
+    <p>أجب عن أول سؤال، وستجد هنا دقتك في كل مجال وأسبوعك كاملاً.</p>
+    <button class="btn" onclick="A.go('path')">ابدأ أول درس</button>
+  </div>`;
+}
+
 function renderStats() {
   const flat = allLessons();
   const doneN = flat.filter(x => lessonProg(x.key).stars > 0).length;
@@ -4279,11 +4308,11 @@ function renderStats() {
     </button>`; })()}
     ${(() => { const mc = mistakeList().length; return `<button class="card mistakes-card ${mc ? "" : "clean"}" onclick="A.go('review')">
       <span class="mc-ico">${mc ? "✕" : CHECK_BADGE}</span>
-      <div class="mc-txt"><b>مراجعة الأخطاء</b><span>${mc ? qCount(mc) + " بحاجة لمراجعة" : "لا أخطاء — أحسنت!"}</span></div>
+      <div class="mc-txt"><b>مراجعة الأخطاء</b><span>${mc ? qCount(mc) + " بحاجة لمراجعة" : (r + w) ? "لا أخطاء — أحسنت!" : "ستظهر أخطاءك هنا لتراجعها"}</span></div>
       <span class="mc-go">${mc ? "راجع ←" : "✓"}</span>
     </button>`; })()}
     ${weekCard()}
-    <div class="card"><h3>الدقة حسب المجال</h3>${domBars}</div>
+    ${(r + w) ? `<div class="card"><h3>الدقة حسب المجال</h3>${domBars}</div>` : statsEmpty()}
   </div></div>` + bottomnav("stats");
 }
 
@@ -5176,7 +5205,7 @@ document.addEventListener("keydown", e => {
   const n = "١٢٣٤".indexOf(e.key) + 1 || parseInt(e.key, 10);
   if (n >= 1 && n <= 4) {
     const btn = document.querySelector(`.choice[data-ci="${n - 1}"]`);
-    if (btn && !btn.disabled && !btn.classList.contains("eliminated")) { e.preventDefault(); A.pick(n - 1); }
+    if (btn && !btn.disabled) { e.preventDefault(); A.pick(n - 1); }
   }
 });
 
@@ -5272,6 +5301,9 @@ function renderSettings() {
           aria-labelledby="setMotionLab" onclick="A.setMotion(this)"></button>
       </div>
     </div>
+    ${osPrefersReduce() && !motionReduced()
+      ? `<p class="set-hint">نظامك يطلب تقليل الحركة، واللعبة ما زالت بحركتها الكاملة — أوقفها من هنا إن أردت.</p>`
+      : ""}
 
     <div class="set-lab">تقدّمك</div>
     <div class="set-list">

@@ -77,9 +77,21 @@ scratchpad drives a real Chrome and reports console errors).
 - [x] Tell the student when they are offline — a note that says what still works
 
 ### W7 — Delight
-- [ ] The motion pass from the design audit, screen by screen
-- [ ] Empty states everywhere one is missing
-- [ ] Desktop layouts for the session, the mock and the celebrations
+- [x] The motion pass: the path reveals node by node as you scroll; a press answers on
+      the mock chips, the solution link and the settings rows; a mouse gets hover where
+      there was none; the power-up FAB, the ring, the glow and the four twinkles are gone
+      with the ninety lines of stylesheet behind them, and `flakeSpin` — used, never
+      written — went with them
+- [x] Empty states: stats says «لا أرقام بعد» and points at the first lesson instead of
+      drawing four bars at «—», and it no longer congratulates a student for having no
+      mistakes before they have answered anything
+- [x] Desktop: the teaching card centres in the space it has — it was sitting under the
+      header with five hundred pixels of nothing below it. The question, the mock and the
+      celebrations were already centred; measured, not assumed
+- Not done, deliberately: **directional screen transitions** (the six views are tabs, and
+  tabs crossfade — the one real hierarchy, path → lesson, already animates) and the
+  **nine-step type scale** (retrofitting every `font-size` in 3,900 lines changes nothing
+  a student sees and risks everything they read)
 
 ### W8 — Reachable by everyone
 - [ ] Answer choices as a real radio group

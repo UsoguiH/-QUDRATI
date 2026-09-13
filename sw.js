@@ -27,7 +27,7 @@
    The dev harnesses are never served from a cache, neither the page nor
    anything it loads: they exist to show the file on disk right now. */
 
-const VERSION = "52";
+const VERSION = "53";
 const SHELL = "qudrati-shell-" + VERSION;
 const RUNTIME = "qudrati-runtime-" + VERSION;
 
@@ -130,8 +130,10 @@ self.addEventListener("fetch", e => {
   }
 
   /* a harness loads the working copy of the very files the shell has pinned, so
-     nothing it asks for may come from a cache */
-  if (DEV_PAGE.test(req.referrer || "")) return;
+     nothing it asks for may come from a cache — and neither may anything loaded
+     by a page opened with ?dev=1, which is the same request with the app's own
+     URL on it */
+  if (DEV_PAGE.test(req.referrer || "") || /[?&]dev=1(&|$)/.test(req.referrer || "")) return;
 
   e.respondWith((async () => {
     const shell = await caches.open(SHELL);
