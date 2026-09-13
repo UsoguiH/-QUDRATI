@@ -38,15 +38,15 @@ scratchpad drives a real Chrome and reports console errors).
 - [x] Say plainly that the league rivals are pace-setters, not people
 - [x] «خبرة» instead of the bare `XP` token; `A.debug*` only on the dev harnesses
 
-### W2 — The loop feels alive
-- [ ] The progress bar fills on every correct answer and gives ground on a miss, and its
+### W2 — The loop feels alive ✅
+- [x] The progress bar fills on every correct answer and gives ground on a miss, and its
       denominator counts the retries it is hiding
-- [ ] «سؤال ٣ من ٨» in the session
-- [ ] Praise that varies: the run, the halfway mark, the last question
-- [ ] The stars you just earned, on the win screen, popping in
-- [ ] The clock pauses when the phone is put down instead of costing a heart
-- [ ] A missed question cannot loop forever in review
-- [ ] One tap from the win screen into the questions you got wrong
+- [x] «سؤال ٣ من ٨» in the session
+- [x] Praise that varies: the run, the halfway mark, the last question
+- [x] The stars you just earned, on the win screen, popping in
+- [x] The clock pauses when the phone is put down instead of costing a heart
+- [x] A missed question cannot loop forever in review
+- [x] One tap from the win screen into the questions you got wrong
 
 ### W3 — The full learning guide
 - [x] Teaching cards for the remaining 23 lessons, validated — **26 of 26 lessons now teach**:
@@ -107,19 +107,34 @@ scratchpad drives a real Chrome and reports console errors).
 
 ## Data defects found while writing the cards
 
-The four question files are generated, so each of these is fixed in
-`qudrat-lessons-duolingo.md` and re-imported with `python tools/import_curriculum.py`.
-None of them blocks a lesson; all of them are visible to a careful student.
+Writing a card means reading a lesson's rules and its ten solutions next to each other,
+which is the first time anything in this project has done that. Six things came out of it.
+Two were real and are fixed. Two turned out to be deliberate and are staying. Two are open,
+for reasons given below.
 
-| Where | What |
+The four question files are generated, so a fix goes into `qudrat-lessons-duolingo.md` and
+is re-imported with `python tools/import_curriculum.py`, never typed into `js/data/`.
+
+**Fixed** (commit «Fix two curriculum defects the teaching cards exposed»)
+
+| Where | What was wrong |
 |---|---|
-| `proportion-07` | The printed solution crosses the rows: `٨ × س × ٩ = ٥ × ٢٤٠ × ٦` gives ١٠٠, not the ٢٢٥ it states. The key is right, the working is not. |
-| `ratios.mean` rule 6 | One sign for two opposite cases: a removed value must be added back, which is what `mean-08`'s own solution does. |
-| `geometry.parallel` rule 4 | The name carries a Latin «M» («التوازي بحرف M»), and rule names reach the guidebook. |
-| `skills.fastest` rule 5 / `skills.equations` rule 4 | The same rule declared in two lessons. |
-| `equations-10`, `simplify-05`, `angles-10`, `square-09`, `shaded-05` | Solved by a move the lesson never declares, or describing a figure that is not drawn. |
-| Every lesson | Single-difficulty: `difficulty` always equals the lesson's `stars`, so no lesson can ramp easy-to-hard inside a session, and only two of the twenty-six are easy. |
+| `proportion-07` | The printed solution crossed the rows: `٨ × س × ٩ = ٥ × ٢٤٠ × ٦` gives ١٠٠, not the ٢٢٥ the same solution then states. Work is proportional to workers × days, so those two go on one side: `٨ × ٦ × س = ٥ × ٩ × ٢٤٠` ⟵ ٢٢٥, which is the key. A rate check follows it. |
+| `ratios.mean` rule 6 | One sign for two opposite cases. A value that left the group is added back; a value that joined is taken off. As printed the rule contradicted `mean-08`'s own solution and the card's own plain-words chip. Both signs are now spelled out, in the source and in the card. |
 
+**Deliberate, not defects**
+
+| Where | Why it stays |
+|---|---|
+| `geometry.parallel` rule 4, «القاطع المكسور (التوازي بحرف M)» | The Latin letter is the shape, not text: the broken transversal draws an M between the parallels, and that is the name the textbook and every teacher use. The house rule bans Latin **digits** in what a student reads, so that a number is never read in two scripts. A shape called by its shape breaks nothing, and renaming it would leave a student unable to match the lesson to the name they were taught. |
+| «تساوي البسطين/المقامين», declared in three lessons (`skills.fastest` rule 5, `skills.equations` rule 4, `skills.keylaws` rule 15) | Lessons are entered independently and a rule is only useful where it is needed. Declaring it once and cross-referencing would make two of the three lessons depend on a lesson the student may not have played. The repetition is the curriculum's, and it is the right call. |
+
+**Open**
+
+| Where | Why it is still open |
+|---|---|
+| `equations-10`, `simplify-05`, `angles-10`, `square-09`, `shaded-05` | Each is solved by a move its lesson never declares, or its stem describes a figure that is not drawn. All five have correct keys and correct arithmetic, so nothing is wrong on screen; what is missing is a rule or a picture. Fixing one means either writing a new rule into the lesson (which changes the rule count the importer reconciles, and the card grouping built on it) or drawing a figure for a question that never had one. Both are curriculum edits, not app work, and each needs its own check against the source book. Left for a content pass. |
+| Every lesson: one difficulty | `difficulty` always equals the lesson's own ★ rating, so no session can ramp easy-to-hard inside a lesson, and only two of the twenty-six lessons are easy. Ramping would mean re-rating all ٢٥٥ questions one at a time — a judgement call per question, not a transformation — and `tools/validate.js` enforces difficulty ordering within a lesson, so a partial pass fails the validator. It is real, it is worth doing, and it is a pass of its own rather than a line in this one. |
 ## Rules this work keeps
 
 - No npm, no bundler, no build step, no server. Static files only.
