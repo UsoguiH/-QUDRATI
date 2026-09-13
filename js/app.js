@@ -5125,10 +5125,13 @@ A.pickTrack = function (t) {
 };
 
 /* A strong student three weeks from the exam should not have to grind lesson one.
-   Offered once, and never nagged: either answer is remembered. */
+   Offered once, and never nagged: either answer is remembered.
+
+   قدّور is not here. He has three placements — the value screen, the win
+   screen, the mock home — and a fourth would make him decoration. */
 function renderPlaceOffer() {
   $app.innerHTML = `<div class="screen screen-full tp-screen">
-    ${mascot("point", "po-mascot pop")}
+    <span class="po-badge pop">${ico("target", 54)}</span>
     <h1 class="login-title">تعرف الأساسيات؟</h1>
     <p class="login-sub">${qCount(PLACE_PER_UNIT * DOMAIN_ORDER.length)} بدون قلوب ولا وقت — نتخطّى بها ما تتقنه ونبدأ من حيث تحتاج فعلاً</p>
     <div class="login-form">

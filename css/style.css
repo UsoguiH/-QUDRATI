@@ -1873,8 +1873,12 @@ button.dom-stat:active { transform: scale(.99); }
 .tp-tx span { display: block; font-size: 13px; font-weight: 600; color: var(--gray); margin-top: 2px; line-height: 1.45; }
 .tp-chev { color: var(--gray-icon); flex-shrink: 0; transform: scaleX(-1); }
 .tp-chev svg { width: 20px; height: 20px; display: block; }
-.po-mascot { height: 168px; margin-bottom: 6px; }
-@media (max-height: 700px) { .po-mascot { height: 124px; } }
+.po-badge {
+  display: flex; width: 108px; height: 108px; border-radius: 50%; margin-bottom: 14px;
+  background: var(--blue-light); align-items: center; justify-content: center;
+}
+.po-badge.pop { animation: mascotPop .42s cubic-bezier(.3,1.6,.5,1) backwards; }
+@media (max-height: 700px) { .po-badge { width: 84px; height: 84px; margin-bottom: 10px; } }
 
 /* --- the placement result: one row per unit, with what it scored --- */
 .place-list { width: 100%; max-width: 340px; margin: 6px auto 2px; }
