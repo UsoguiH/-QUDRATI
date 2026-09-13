@@ -61,7 +61,7 @@ assets/sounds/          — correct.mp3
 - **Streak**: daily streak with Rive flame animation
 - **Stars**: 1–3 per lesson
 - **Wrong-answer queue**: incorrect questions are replayed at session end
-- **Daily quest**: 10 questions → chest reward (50 gems). The chest is navy with gold trims (`CHEST_PAINT` in app.js; `chestSVG()` draws the small icon on the path and the quest card). Opening it (`A.openChest`) plays a frame-measured clone of Duolingo's chest ceremony on a fixed 480×1044 stage scaled to the phone (`.chest-veil > .cv-stage`): three taps, each with a leap and a comet arc, the third opens it, light pours out, a white wash, then the 50-gem pyramid and the counter ticking up; «المتابعة» claims. Sound cues are synthesized on the app's audio context and gated by `S.sound`; reduced motion jumps straight to the reward. `chest-animation.html` at the root is the standalone playground it was ported from (rare/epic/legendary tiers and 18 colourways live only there).
+- **Daily quest**: 10 questions → chest reward (50 gems). The chest is navy with gold trims (`CHEST_PAINT` in app.js; `chestSVG()` draws the small icon on the path and the quest card). Opening it (`A.openChest`) plays a frame-measured clone of Duolingo's chest ceremony on a fixed 480×1044 stage scaled to the phone (`.chest-veil > .cv-stage`): three taps, each with a leap and a comet arc, the third opens it, light pours out, a white wash, then the 50-gem pyramid and the counter ticking up; «المتابعة» claims. Sound cues are synthesized on the app's audio context and gated by `S.sound`; reduced motion jumps straight to the reward. The tenth answer of the day drops a white quest card from the top of the lesson (`A.questBanner`: the chest, «اكتمل تمرين اليوم!», the day's bar filling its last step) — never a toast; tapping the chest early on the path answers in a speech bubble (`chestTip`). `chest-animation.html` at the root is the standalone playground it was ported from (rare/epic/legendary tiers and 18 colourways live only there).
 - **League**: ghost leaderboard opponents
 - **Mock exam**: 2 sections × 25 min, free navigation + flagging (mirrors real GAT computerized format)
 - **Power-ups**: freeze timer (ice), 50/50 choice elimination — gooey FAB animation
@@ -145,6 +145,7 @@ Open `preview.html#<screen>` to jump directly to any screen (bypasses disclaimer
 | `#league` | league screen |
 | `#review` | mistakes review |
 | `#chest` | open daily chest |
+| `#questbanner` | the quest-complete card dropping over a lesson |
 | `#rankup` | rank-up celebration |
 | `<hash>cap` | any hash with `cap` appended freezes every animation for a screenshot (`#donecap`, `#mockdonecap`); `#rankcapN` keeps its own meaning |
 

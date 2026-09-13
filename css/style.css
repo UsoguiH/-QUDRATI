@@ -1842,6 +1842,33 @@ button.dom-stat:active { transform: scale(.99); }
 @keyframes chestTipFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 :root[data-motion="reduced"] .chest-tip { animation: none; }
 
+/* the quest card: white with the grey line and a lip, dropping in from the top of the lesson when the
+   tenth answer completes the day; the chest bounces once the bar has filled */
+.quest-banner {
+  position: fixed; top: calc(12px + env(safe-area-inset-top)); left: 12px; right: 12px; z-index: 70;
+  display: flex; justify-content: center; pointer-events: none;
+  animation: qbIn .55s cubic-bezier(.3,1.4,.5,1);
+}
+.quest-banner.out { animation: qbOut .38s ease-in forwards; }
+@keyframes qbIn { from { transform: translateY(-150%); } }
+@keyframes qbOut { to { transform: translateY(-150%); opacity: 0; } }
+.qb-card {
+  width: 100%; max-width: 406px; background: #fff; border: 2px solid var(--line); border-radius: 16px;
+  box-shadow: 0 4px 0 var(--line); padding: 12px 14px; display: flex; align-items: center; gap: 12px; direction: rtl;
+}
+.qb-chest { width: 54px; height: 50px; flex-shrink: 0; overflow: visible; }
+.qb-chest .ch-glow { opacity: 0; }
+.quest-banner.full .qb-chest { animation: chestBounce .9s cubic-bezier(.3,1.6,.4,1) 2; }
+.qb-txt { flex: 1; min-width: 0; text-align: right; }
+.qb-txt b { display: block; font-size: 16px; font-weight: 800; color: var(--ink); line-height: 1.25; }
+.qb-txt span { display: block; font-size: 13px; font-weight: 700; color: var(--gray); margin-top: 2px; }
+.qb-bar { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.qb-bar .duo-bar { flex: 1; height: 14px; }
+.qb-bar .duo-bar > i { animation: none; transition: width .55s cubic-bezier(.3,1,.4,1); }
+.qb-bar em { font-style: normal; font-size: 13px; font-weight: 800; color: var(--gold-dk); min-width: 36px; text-align: left; }
+:root[data-motion="reduced"] .quest-banner, :root[data-motion="reduced"] .qb-chest { animation: none; }
+:root[data-motion="reduced"] .qb-bar .duo-bar > i { transition: none; }
+
 /* ============================================================
    Mock exam (محاكاة الاختبار)
    ============================================================ */
@@ -2593,6 +2620,7 @@ button.dom-stat:active { transform: scale(.99); }
 }
 .feedback.show { transform: translateY(0); }
 .toast         { left: calc(50% + var(--col-off)); }
+.quest-banner  { left: calc(12px + var(--col-off)); right: calc(12px - var(--col-off)); }
 
 /* the win/review result screens re-flow their action bar inline as a
    static block - it must opt out of the column centring entirely */

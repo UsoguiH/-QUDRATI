@@ -104,9 +104,10 @@
         A.startLesson("numbers", d.lessons[0].key); A.beginQuestions();
         setTimeout(function () { A.fxDemo(h === "fx" ? null : h); }, 700);
       }
-      else if (h === "lesson") {
+      else if (h === "lesson" || h === "questbanner") {
         const d = window.QBANK.numbers;
         A.startLesson("numbers", d.lessons[0].key); A.beginQuestions();
+        if (h === "questbanner") setTimeout(A.questBanner, 400);
       } else if (h === "pop") {
         const node = document.querySelector(".node:not(.node-locked):not(.node-done)");
         if (node) node.click();

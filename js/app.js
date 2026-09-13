@@ -407,8 +407,7 @@ function dailyTick() {
   }
   if (S.daily.n >= DAILY_GOAL) return;
   S.daily.n++;
-  if (S.daily.n === DAILY_GOAL)
-    setTimeout(() => toast(`🎁 اكتمل تمرين اليوم! صندوقك بانتظارك في الرئيسية`, "quest"), 1200);
+  if (S.daily.n === DAILY_GOAL) setTimeout(A.questBanner, 1200);
 }
 
 /* Arabic counted nouns: 1 singular, 2 dual, 3-10 plural, 11+ singular accusative */
@@ -599,6 +598,23 @@ A.chestTap = function () {
 };
 /* the chest answers in a speech bubble over itself, the path's white node tip with its tail on the
    chest; it pops in, floats, and leaves after a moment. Off the path there is no chest to point at. */
+/* the tenth answer of the day: a white quest card drops in from the top of the lesson — the chest, the
+   title, and the day's bar filling its last step as the count turns over — then lifts away. */
+let questBannerT = 0;
+A.questBanner = function () {
+  document.querySelectorAll(".quest-banner").forEach(e => e.remove());
+  const el = document.createElement("div"); el.className = "quest-banner"; el.setAttribute("role", "status");
+  el.innerHTML = `<div class="qb-card">
+    ${chestSVG("qb-chest")}
+    <div class="qb-txt"><b>اكتمل تمرين اليوم!</b><span>صندوقك بانتظارك في الرئيسية</span>
+      <div class="qb-bar"><div class="duo-bar"><i style="width:${Math.round((DAILY_GOAL - 1) / DAILY_GOAL * 100)}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft)"></i></div><em>${toAr(DAILY_GOAL - 1)}/${toAr(DAILY_GOAL)}</em></div>
+    </div></div>`;
+  document.body.appendChild(el);
+  const fill = () => { el.querySelector(".duo-bar > i").style.width = "100%"; el.querySelector(".qb-bar em").textContent = `${toAr(DAILY_GOAL)}/${toAr(DAILY_GOAL)}`; el.classList.add("full"); };
+  if (motionReduced()) fill(); else setTimeout(fill, 650);
+  clearTimeout(questBannerT);
+  questBannerT = setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 420); }, 3600);
+};
 let chestTipT = 0;
 function chestTip(msg) {
   const host = document.querySelector(".chest-float");
