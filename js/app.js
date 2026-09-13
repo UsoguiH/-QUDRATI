@@ -620,7 +620,8 @@ function chestTip(msg) {
   const host = document.querySelector(".chest-float");
   if (!host) { toast(msg.replace(/<[^>]+>/g, "")); return; }
   host.querySelectorAll(".chest-tip").forEach(e => e.remove());
-  const tip = document.createElement("span"); tip.className = "chest-tip"; tip.setAttribute("role", "status"); tip.innerHTML = msg;
+  const tip = document.createElement("span"); tip.className = "chest-tip"; tip.setAttribute("role", "status");
+  tip.innerHTML = msg + '<svg class="ct-tail" viewBox="0 0 26 15" aria-hidden="true"><path d="M1 0H25L13 12Z" fill="#fff"/><path d="M1 0L13 12L25 0" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   host.appendChild(tip);
   clearTimeout(chestTipT);
   chestTipT = setTimeout(() => { tip.classList.add("out"); setTimeout(() => tip.remove(), 240); }, 2600);
