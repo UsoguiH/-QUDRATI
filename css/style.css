@@ -1704,6 +1704,18 @@ button.dom-stat:active { transform: scale(.99); }
    rows. */
 .qn-chip { transition: background .15s, border-color .15s, color .15s, transform .06s; }
 .qn-chip:active { transform: translateY(2px) scale(.94); }
+/* Two separate actions that read as one sentence: the toggles carry no
+   horizontal padding, so on the review card «أظهر الإجابة» and «اعرض الحل»
+   ran together under one unbroken underline. They get a row of their own, a
+   gap, a hairline between them, and the colour the rest of the app gives a
+   link — and both panels now open under the pair instead of between them. */
+.ri-acts { display: flex; align-items: center; gap: 19px; margin-top: 2px; }
+.ri-acts .fb-solution-toggle { color: var(--blue-dk); font-size: 14.5px; }
+.ri-acts .fb-solution-toggle + .fb-solution-toggle { position: relative; }
+.ri-acts .fb-solution-toggle + .fb-solution-toggle::before {
+  content: ""; position: absolute; inset-inline-start: -10px; top: 50%;
+  width: 2px; height: 13px; margin-top: -7px; border-radius: 2px; background: var(--line);
+}
 .fb-solution-toggle { transition: opacity .12s; }
 .fb-solution-toggle:active { opacity: .55; }
 .set-item.set-link:active { background: var(--surface-hover); }

@@ -48,10 +48,12 @@ scratchpad drives a real Chrome and reports console errors).
 - [x] A missed question cannot loop forever in review
 - [x] One tap from the win screen into the questions you got wrong
 
-### W3 — The full learning guide
+### W3 — The full learning guide ✅
 - [x] Teaching cards for the remaining 23 lessons, validated — **26 of 26 lessons now teach**:
       120 chunks, 273 rules on cards, 120 checks, and the other 130 rules routed to the guidebook
-- [ ] Teaching figures where a lesson is visual (geometry first)
+- [x] Teaching figures where a lesson is visual: 61 figures, every rule that a
+      student's pen would answer with a drawing — the nine geometry lessons and
+      the three that already had them
 - [x] Every lesson's untaught rules routed to the guidebook
 
 ### W4 — Learn smart

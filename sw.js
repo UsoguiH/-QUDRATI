@@ -27,7 +27,7 @@
    The dev harnesses are never served from a cache, neither the page nor
    anything it loads: they exist to show the file on disk right now. */
 
-const VERSION = "60";
+const VERSION = "63";
 const SHELL = "qudrati-shell-" + VERSION;
 const RUNTIME = "qudrati-runtime-" + VERSION;
 

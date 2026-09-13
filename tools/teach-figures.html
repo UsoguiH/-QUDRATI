@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>أشكال بطاقات الشرح — معاينة</title>
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  /* Every card figure beside the rule it belongs to, in the .tc-fig box the
+     teaching card itself uses, so a drawing can be checked without playing
+     eight questions to reach it. Grouped by lesson, in curriculum order. */
+  body { background: #F7F7F7; padding: 16px 14px 40px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { font-size: 13px; font-weight: 600; color: var(--gray); margin-bottom: 16px; }
+  h2 { font-size: 15px; margin: 22px 0 10px; color: var(--blue-dk); }
+  .fig-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; }
+  .fig-card { background: #fff; border: 2px solid var(--line); border-radius: 16px; padding: 13px 14px; box-shadow: 0 2px 0 var(--line); }
+  .fig-id { font-size: 11.5px; font-weight: 800; color: var(--gray-icon); letter-spacing: .3px; }
+  .fig-ttl { font-size: 15.5px; font-weight: 800; color: var(--ink); margin: 2px 0 8px; }
+  .fig-eg { font-size: 12.5px; font-weight: 700; color: var(--blue-dk); background: var(--blue-light); border-radius: 10px; padding: 6px 9px; margin-top: 9px; line-height: 1.6; }
+  .fig-miss { border-color: var(--red-soft); }
+  .fig-miss .fig-id { color: var(--red-dk2); }
+  .tc-fig { margin: 0; }
+</style>
+</head>
+<body>
+<h1>أشكال بطاقات الشرح</h1>
+<div class="sub" id="count"></div>
+<div id="out"></div>
+<script src="../js/data/skills.js"></script>
+<script src="../js/data/numbers.js"></script>
+<script src="../js/data/ratios.js"></script>
+<script src="../js/data/geometry.js"></script>
+<script src="../js/data/teach.js"></script>
+<script src="../js/data/teach-figures.js"></script>
+<script>
+  const FIG = window.QTEACH_FIG || {};
+  const order = Object.keys(window.QTEACH || {});
+  let html = "", drawn = 0, rules = 0;
+  for (const key of order) {
+    const T = window.QTEACH[key];
+    const steps = [];
+    T.chunks.forEach(c => c.steps.forEach(s => { if (s.type === "rule") steps.push(s); }));
+    rules += steps.length;
+    const cards = steps.map(s => {
+      const svg = FIG[key + ":" + s.n];
+      if (svg) drawn++;
+      if (!svg && !location.hash.includes("all")) return "";
+      return `<div class="fig-card${svg ? "" : " fig-miss"}">
+        <div class="fig-id">${key} · قانون ${s.n}${svg ? "" : " — لا شكل"}</div>
+        <div class="fig-ttl">${s.title}</div>
+        ${svg ? `<div class="tc-fig">${svg}</div>` : ""}
+        <div class="fig-eg">${s.example}</div>
+      </div>`;
+    }).join("");
+    if (cards.trim()) html += `<h2>${key}</h2><div class="fig-grid">${cards}</div>`;
+  }
+  document.getElementById("out").innerHTML = html;
+  document.getElementById("count").textContent =
+    drawn + " شكلاً من " + rules + " قانوناً على البطاقات — أضف #all لعرض القوانين بلا أشكال";
+</script>
+</body>
+</html>

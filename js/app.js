@@ -4323,9 +4323,11 @@ function renderReview() {
       <div class="ri-tag" style="color:${u.s}">${esc(x.rec.domTitle)} · ${esc(x.rec.lesTitle)}</div>
       <div class="ri-q">${q.stem || "قارن بين القيمتين"}</div>
       ${isCmp && q.value1 ? `<div class="ri-row" style="color:var(--gray)">القيمة الأولى: ${q.value1} — القيمة الثانية: ${q.value2}</div>` : ""}
-      <button class="fb-solution-toggle" onclick="A.toggleEl('rvAns${i}')">أظهر الإجابة</button>
+      <div class="ri-acts">
+        <button class="fb-solution-toggle" onclick="A.toggleEl('rvAns${i}')">أظهر الإجابة</button>
+        <button class="fb-solution-toggle" onclick="A.toggleEl('rvSol${i}')">اعرض الحل</button>
+      </div>
       <div class="ri-row" id="rvAns${i}" style="display:none;color:var(--green-dk)">✓ الإجابة الصحيحة: ${ch[q.answer]}</div>
-      <button class="fb-solution-toggle" onclick="A.toggleEl('rvSol${i}')">اعرض الحل</button>
       <div class="fb-solution" id="rvSol${i}" style="display:none">${formatExplain(q.solution)}</div>
     </div>`;
   }).join("");
