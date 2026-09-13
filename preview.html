@@ -19,6 +19,18 @@
     d.textContent = "JS ERROR: " + msg + "\n" + (src || "").split("/").pop() + ":" + line + ":" + col;
     (document.body || document.documentElement).appendChild(d);
   };
+  /* This harness overwrites the real save, so it may only run where development
+     happens: a local server, a file:// open, the LAN address the dev server prints,
+     or an explicit ?dev=1. Anywhere else it is a stray link and we hand the visitor
+     the actual app instead of wiping their progress. */
+  var DEV_HOST = (function () {
+    var h = location.hostname;
+    return h === "" || h === "localhost" || h === "127.0.0.1" || h === "[::1]" || h === "::1"
+      || /^192\.168\./.test(h) || /^10\./.test(h) || /^172\.(1[6-9]|2\d|3[01])\./.test(h)
+      || /\.local$/.test(h) || /[?&]dev=1(&|$)/.test(location.search);
+  })();
+  if (!DEV_HOST) location.replace("index.html" + location.hash);
+  if (DEV_HOST) {
   var examIn43 = new Date(Date.now() + 43 * 864e5);
   var tdy = new Date(), todayK = tdy.getFullYear() + "-" + (tdy.getMonth() + 1) + "-" + tdy.getDate();
   var lwk = Math.floor((new Date(new Date().setHours(0, 0, 0, 0)) - new Date(2026, 0, 4)) / (7 * 864e5));
@@ -38,6 +50,7 @@
     exam: ["#exam", "#noexam"].includes(location.hash) ? null
       : examIn43.getFullYear() + "-" + String(examIn43.getMonth() + 1).padStart(2, "0") + "-" + String(examIn43.getDate()).padStart(2, "0")
   }));
+  }
 </script>
 </head>
 <body>

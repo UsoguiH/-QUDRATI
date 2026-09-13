@@ -12,6 +12,11 @@ vm.createContext(ctx);
 for (const f of fs.readdirSync(dataDir).filter(f => f.endsWith(".js"))) {
   vm.runInContext(fs.readFileSync(path.join(dataDir, f), "utf8"), ctx, { filename: f });
 }
+/* Any file paths given as arguments are loaded on top of js/data, so a lesson's cards
+   can be validated while they are still a draft outside the shipped file:
+   node tools/validate_teach.js drafts/skills.fastest.js */
+for (const f of process.argv.slice(2)) vm.runInContext(fs.readFileSync(f, "utf8"), ctx, { filename: path.basename(f) });
+const ONLY = process.env.TEACH_ONLY ? new Set(process.env.TEACH_ONLY.split(",")) : null;
 const QBANK = ctx.window.QBANK || {}, QTEACH = ctx.window.QTEACH || {}, fig = ctx.window.QTEACH_FIG || {};
 const figUsed = new Set();
 
@@ -23,6 +28,7 @@ const OPTIONAL = ["plain", "hook"];   // plain = the rule in words for the card 
 const MAX_STEPS = 4, MAX_RULES = 3;
 
 for (const [key, t] of Object.entries(QTEACH)) {
+  if (ONLY && !ONLY.has(key)) continue;   // TEACH_ONLY=skills.fastest narrows the report
   const [dk, lk] = key.split(".");
   const les = QBANK[dk] && QBANK[dk].lessons.find(l => l.key === lk);
   if (!les) { bad(`${key}: no such lesson`); continue; }
@@ -86,6 +92,7 @@ for (const [key, t] of Object.entries(QTEACH)) {
   console.log(`${key}: ${t.chunks.length} chunks · ${taught.length} rules taught · ${more.length} in guidebook · ${checks} checks · ${seenQ.size}/${qids.size} questions mapped`);
 }
 for (const k of Object.keys(fig)) {
+  if (ONLY && !ONLY.has(k.split(":")[0])) continue;
   if (!figUsed.has(k)) bad(`figure ${k} is not attached to any taught rule`);
   if (!/^<svg[\s>]/.test(String(fig[k]).trim())) bad(`figure ${k} is not an <svg>`);
   if (/[0-9]/.test(String(fig[k]).replace(/<[^>]+>/g, ""))) bad(`figure ${k}: Latin digit in a label`);

@@ -1789,6 +1789,35 @@ button.dom-stat:active { transform: scale(.99); }
   box-shadow: 0 3px 0 var(--green-lip);
 }
 
+/* --- the progress-backup sheet: the standard bottom sheet with a code field --- */
+.bk-sheet .bk-code {
+  width: 100%; box-sizing: border-box; margin: 4px 0 10px;
+  font: 600 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--ink); background: #F7F7F7;
+  border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px;
+  resize: none; word-break: break-all; -webkit-user-select: all; user-select: all;
+}
+.bk-sheet .bk-code:focus { outline: none; border-color: var(--blue-border); background: var(--snow); }
+.bk-sheet .bk-sum { font-size: 13px; font-weight: 700; color: var(--gray); margin: 0 0 12px; }
+.bk-sheet .bk-msg { font-size: 13.5px; font-weight: 700; min-height: 18px; margin: 0 0 10px; }
+.bk-sheet .bk-msg.bad { color: var(--red); }
+.bk-sheet .bk-msg.ok { color: var(--green-lip); }
+.bk-sheet .btn.bk-done { background: var(--green); box-shadow: 0 5px 0 var(--green-lip); }
+
+/* --- the held mock exam, offered back on the mock home --- */
+.mock-resume {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: start;
+  background: var(--blue-light); border: 2px solid var(--blue-border); border-radius: 16px;
+  box-shadow: 0 4px 0 var(--blue-border); padding: 13px 15px; margin: 0 0 14px;
+  cursor: pointer; animation: springIn .42s cubic-bezier(.3,1.5,.5,1);
+}
+.mock-resume:active { transform: translateY(4px); box-shadow: 0 0 0 var(--blue-border); }
+.mock-resume .mr-tx { flex: 1; display: block; }
+.mock-resume b { display: block; font-size: 15.5px; font-weight: 800; color: var(--blue-dk); }
+.mock-resume .mr-tx span { display: block; font-size: 13px; font-weight: 700; color: var(--ink); margin-top: 2px; }
+.mock-resume .mr-go { color: var(--blue-dk); flex-shrink: 0; transform: scaleX(-1); }
+.mock-resume .mr-go svg { width: 20px; height: 20px; display: block; }
+
 /* --- the ceremony overlay: a 480×1044 stage scaled to the viewport, so the
    measured hop, comet and open land the same on every phone --- */
 .chest-veil {

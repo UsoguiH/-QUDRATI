@@ -4,5 +4,15 @@ Allow: /
 # dev tooling and the repo's notes are deployed with the site; nothing to index there
 Disallow: /tools/
 Disallow: /*.md$
+# Dev harnesses. preview.html seeds a demo save, so it must never be a
+# search result a student lands on.
+Disallow: /preview.html
+Disallow: /mobile.html
+Disallow: /chest-animation.html
+Disallow: /chest-animation-tiers.html
+Disallow: /chest-animation-clashroyale.html
+Disallow: /mascot-lab.html
+Disallow: /exam-date-picker.html
+Disallow: /quiz-two-bolts.html
 
 Sitemap: https://qudrati.xyz/sitemap.xml

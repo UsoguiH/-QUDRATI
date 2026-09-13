@@ -122,8 +122,26 @@ function flushRankUp() {
   S.tierSeen = ru.to; save();
   showRankUp(ru.to);
 }
+/* The save's schema version. `S.v` was written from the first day and never read,
+   so a breaking change had no way to fix old saves in place. Every step that has
+   to reshape a save adds a case here and bumps SCHEMA; migrate() also runs on an
+   imported backup, so a code from an older build is upgraded rather than refused. */
+const SCHEMA = 2;
+function migrate(s) {
+  const from = +s.v || 1;
+  if (from >= SCHEMA) { s.v = SCHEMA; return s; }
+  /* v1 -> v2: the daily goal became the student's own (it shipped as dead state
+     fixed at ten), and `league` held a cache of fabricated rivals that is now
+     rebuilt from the week number on every draw. */
+  if (from < 2) {
+    if (typeof s.goal !== "number" || s.goal < 1) s.goal = 10;
+    delete s.league;
+  }
+  s.v = SCHEMA;
+  return s;
+}
 let S;
-try { S = Object.assign({}, DEFAULT_STATE, JSON.parse(localStorage.getItem("qudratState") || "{}")); }
+try { S = migrate(Object.assign({}, DEFAULT_STATE, JSON.parse(localStorage.getItem("qudratState") || "{}"))); }
 catch (e) { S = Object.assign({}, DEFAULT_STATE); }
 /* migrate pre-rank-system saves: seed lifetime XP from current gems, and mark
    the current tier as already-seen so we don't fire a celebration on load */
@@ -2586,13 +2604,62 @@ function countUp(el, to, suffix) {
 let MOCK = null;
 let MOCK_REVIEW = []; // last finished mock, for the result answer grid
 
+/* A mock is fifty minutes of a student's evening. It used to live only in memory,
+   so a pulled-down notification shade, an OS update or a stray refresh threw the
+   whole attempt away. Every answer, flag and section boundary is written to its own
+   key — the exam is not progress, so it stays out of qudratState — and the home
+   screen offers it back. The clock is stored as the seconds that were left, not as
+   a deadline: a crash should not also cost the student time. */
+const MOCK_KEY = "qudratMock";
+function mockLeft(sec) { return sec.endsAt ? Math.max(0, Math.round((sec.endsAt - Date.now()) / 1000)) : sec.left; }
+function mockSave() {
+  if (!MOCK) return;
+  try {
+    localStorage.setItem(MOCK_KEY, JSON.stringify({
+      v: 1, at: Date.now(), track: S.track, si: MOCK.si, qi: MOCK.qi,
+      sections: MOCK.sections.map((sec, i) => ({
+        items: sec.items, answers: sec.answers, flags: sec.flags,
+        left: i === MOCK.si ? mockLeft(sec) : sec.left
+      }))
+    }));
+  } catch (e) { /* a full or blocked store must not break the exam */ }
+}
+function mockClear() { try { localStorage.removeItem(MOCK_KEY); } catch (e) { } }
+function mockSaved() {
+  try {
+    const o = JSON.parse(localStorage.getItem(MOCK_KEY) || "null");
+    if (!o || o.v !== 1 || !Array.isArray(o.sections) || !o.sections.length) return null;
+    if (Date.now() - (o.at || 0) > 864e5) { mockClear(); return null; }   // a day old is abandoned
+    if (o.track !== S.track) { mockClear(); return null; }                // the track changed under it
+    const sec = o.sections[o.si];
+    if (!sec || !Array.isArray(sec.items) || !sec.items.length) { mockClear(); return null; }
+    if (o.sections.every((x, i) => i < o.si) && o.si >= o.sections.length) { mockClear(); return null; }
+    return o;
+  } catch (e) { return null; }
+}
+A.mockResume = function () {
+  const o = mockSaved();
+  if (!o) { render(); return; }
+  MOCK = { sections: o.sections, si: o.si, qi: Math.max(0, Math.min(o.qi || 0, o.sections[o.si].items.length - 1)), timer: null };
+  MOCK.sections.forEach(sec => { sec.endsAt = 0; });
+  startMockSection(true);
+};
+
 function renderMockHome() {
   const mocks = S.mocks || [];
   const best = mocks.reduce((b, m) => Math.max(b, Math.round(m.score / m.total * 100)), 0);
   const last = mocks[mocks.length - 1];
-  const estOf = m => Math.round(35 + 65 * m.score / m.total);
+  /* One prediction, one formula. This tile used to recompute its own linear guess,
+     so the same attempt read as two different scores here and on the result screen. */
+  const estOf = m => Math.round(m.est != null ? m.est : estScore(m.score / m.total));
+  const held = mockSaved();
   $app.innerHTML = statbar() + `<div class="screen"><div class="page">
     <h1>محاكاة الاختبار</h1><div class="sub">جرّب جو الاختبار الحقيقي وقس مستواك</div>
+    ${held ? `<button type="button" class="mock-resume" onclick="A.mockResume()">
+      <span class="mr-tx"><b>لديك اختبار لم يكتمل</b>
+        <span>القسم ${toAr(held.si + 1)} · باقٍ ${fmtClock(held.sections[held.si].left)} — أكمل من حيث توقفت</span></span>
+      <span class="mr-go" aria-hidden="true">${CHEV_SVG}</span>
+    </button>` : ""}
     <div class="mock-hero-card">
       <div class="mh-hero"><span class="mh-spot"></span>${mascot("strong", "mh-mascot")}</div>
       <div class="mh-rules">
@@ -2601,7 +2668,7 @@ function renderMockHome() {
         <div class="mh-rule">${ico("target", 20)} تنقّل وعلّم الأسئلة داخل القسم — ولا رجوع بعد إنهائه</div>
         <div class="mh-rule"><span class="mh-x">✕</span> بدون حاسبة وبدون مساعدات — مثل المحوسب تماماً</div>
       </div>
-      <button class="btn" onclick="A.startMock()">ابدأ المحاكاة</button>
+      <button class="btn" onclick="A.startMock()">${held ? "ابدأ محاكاة جديدة" : "ابدأ المحاكاة"}</button>
     </div>
     ${mocks.length ? `<div class="tiles">
       <div class="tile">${ico("star-gold", 26)}<div><div class="t-v">${toAr(best)}٪</div><div class="t-l">أفضل نتيجة</div></div></div>
@@ -2633,18 +2700,20 @@ A.startMock = function () {
     });
   }
   if (!sections[0].items.length) { showModal("⭐", "لا توجد أسئلة", "بنك الأسئلة غير متاح.", "حسناً"); return; }
+  mockClear();                       // a new attempt replaces any held one
   MOCK = { sections, si: 0, qi: 0, timer: null };
   startMockSection();
 };
 
 /* each section runs on its own 25-minute clock, like the computerized exam */
-function startMockSection() {
-  MOCK.qi = 0;
+function startMockSection(resuming) {
+  if (!resuming) MOCK.qi = 0;
   renderMockQ();
   clearInterval(MOCK.timer);
   /* a deadline, so backgrounding the tab cannot buy extra exam time */
   MOCK.sections[MOCK.si].endsAt = Date.now() + MOCK.sections[MOCK.si].left * 1000;
   MOCK.timer = setInterval(mockTick, 250);
+  mockSave();
 }
 
 function mockTick() {
@@ -2708,7 +2777,7 @@ A.mockSelect = function (i) {
   document.querySelectorAll(".choice").forEach((b, j) => b.classList.toggle("sel", j === i));
   const chip = document.querySelectorAll(".qn-chip")[MOCK.qi];
   if (chip) chip.classList.add("done");
-  save();
+  mockSave();
 };
 
 A.mockGo = function (i) {
@@ -2717,12 +2786,14 @@ A.mockGo = function (i) {
   if (i < 0 || i >= sec.items.length) return;
   MOCK.qi = i;
   renderMockQ();
+  mockSave();
 };
 
 A.mockFlag = function () {
   const sec = MOCK.sections[MOCK.si];
   sec.flags[MOCK.qi] = !sec.flags[MOCK.qi];
   renderMockQ();
+  mockSave();
 };
 
 A.mockEndSection = function () {
@@ -2754,6 +2825,7 @@ function endMockSection(timedOut) {
   save();
   if (MOCK.si < MOCK.sections.length - 1) {
     MOCK.si++;
+    MOCK.qi = 0; mockSave();
     $app.innerHTML = `<div class="screen screen-full exam-setup">
       <div class="es-hero"><img class="ic" src="assets/icons/nav-exam-192.png" width="96" height="96" alt=""></div>
       <h1 class="login-title">انتهى القسم ${toAr(MOCK.si)}</h1>
@@ -2769,7 +2841,7 @@ A.mockNextSection = function () { startMockSection(); };
 
 A.quitMock = function () {
   askConfirm("تبي توقف المحاكاة؟", "النتيجة ما راح تُحسب.", "أكمل المحاكاة", "أوقف المحاكاة", () => {
-    clearInterval(MOCK.timer); MOCK = null; go("mock");
+    clearInterval(MOCK.timer); MOCK = null; mockClear(); go("mock");
   });
 };
 
@@ -2788,6 +2860,7 @@ function estScore(p) {
 
 function finishMock(timedOut) {
   clearInterval(MOCK.timer);
+  mockClear();
   /* it used to award nothing at all, so two replay sessions in twelve minutes
      out-earned the single most exam-relevant thing in the product. Scaling
      with the score keeps it from being farmable by clicking through. */
@@ -3024,7 +3097,7 @@ function lbRows(entries) {
       ${cell}${avatarFor(e.name, e.you)}
       <span class="lb-name">${esc(e.name)}${e.you ? " <b>(أنت)</b>" : ""}</span>
       ${gain > 0 ? `<span class="lb-gain">+${toAr(gain)}</span>` : ""}
-      <span class="lb-xp">${toAr(e.xp)} <i>XP</i></span>
+      <span class="lb-xp">${toAr(e.xp)} <i>خبرة</i></span>
     </div>`;
   }).join("");
   LB_PREV = now;
@@ -3089,7 +3162,7 @@ function renderLeague() {
     </div>
     <div class="lb-list">${rows}</div>
     <div class="lb-foot">${lbFoot(entries)}</div>
-    <div class="lb-note">يتجدّد المجلس كل اثنين مع منافسين جدد</div>
+    <div class="lb-note">منافسون افتراضيون يضبطون إيقاعك، لا أشخاص حقيقيون — ويتجدّدون كل اثنين</div>
   </div></div>` + bottomnav("league");
   clearInterval(LB_TIMER);
   LB_TIMER = setInterval(lbTick, 22000);
@@ -3859,6 +3932,110 @@ A.resetAll = function () {
 /* Ask before something irreversible, in the app's own voice. The primary
    button is always the safe one — a native confirm() binds Enter to OK, which
    here was always the button that destroyed the lesson. */
+/* ---------------- a backup a student can carry -------------------------------
+   There is no server and there will not be one, so the honest answer to "what
+   happens when I clear my browser or change my phone" is a code the student
+   keeps. It is the whole save, versioned, base64 of UTF-8 so it survives being
+   pasted through any chat app, with a short tag so a wrong paste is refused
+   instead of half-applied. */
+const BACKUP_TAG = "QUDRATI";
+function b64enc(str) {
+  const b = new TextEncoder().encode(str);
+  let out = "";
+  for (let i = 0; i < b.length; i += 0x8000) out += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000));
+  return btoa(out);
+}
+function b64dec(s) {
+  const bin = atob(s), b = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(b);
+}
+function backupCode() {
+  return BACKUP_TAG + "-" + SCHEMA + "." + b64enc(JSON.stringify({ t: BACKUP_TAG, v: SCHEMA, at: Date.now(), s: S })).replace(/=+$/, "");
+}
+function backupRead(code) {
+  const raw = String(code || "").replace(/\s+/g, "");
+  const dot = raw.indexOf(".");
+  if (dot < 0 || raw.slice(0, dot).indexOf(BACKUP_TAG) !== 0) return null;
+  try {
+    let body = raw.slice(dot + 1);
+    while (body.length % 4) body += "=";
+    const o = JSON.parse(b64dec(body));
+    if (!o || o.t !== BACKUP_TAG || !o.s || typeof o.s !== "object" || Array.isArray(o.s)) return null;
+    return o;
+  } catch (e) { return null; }
+}
+/* what the student is about to overwrite their progress with, in their own terms */
+function backupSummary(s) {
+  const lessons = Object.keys(s.lessons || {}).length;
+  const stars = Object.values(s.lessons || {}).reduce((a, l) => a + (l.stars || 0), 0);
+  const day = s.streak && s.streak.count || 0;
+  return [
+    qLessons(lessons),
+    arPlural(stars, "نجمة واحدة", "نجمتان", "نجوم", "نجمة"),
+    toAr(s.xp || 0) + " جوهرة",
+    day ? "سلسلة " + arPlural(day, "يوم واحد", "يومان", "أيام", "يوماً") : "بلا سلسلة",
+    (s.mocks || []).length ? toAr((s.mocks || []).length) + " محاكاة" : "بلا محاكاة"
+  ].join(" · ");
+}
+const qLessons = n => arPlural(n, "درس واحد", "درسان", "دروس", "درساً");
+
+function backupSheet(html, label) {
+  const old = document.querySelector(".ask-veil"); if (old) old.remove();
+  const veil = document.createElement("div");
+  veil.className = "ask-veil";
+  veil.innerHTML = `<div class="ask-sheet bk-sheet" role="dialog" aria-modal="true" aria-label="${label}">${html}</div>`;
+  const close = () => { veil.classList.remove("show"); setTimeout(() => veil.remove(), 240); };
+  veil.onclick = e => { if (e.target === veil) close(); };
+  document.body.appendChild(veil);
+  requestAnimationFrame(() => veil.classList.add("show"));
+  return { veil, close };
+}
+A.backupShow = function () {
+  const code = backupCode();
+  const { veil, close } = backupSheet(`<h2>نسخة من تقدّمك</h2>
+    <p>احفظ هذا الرمز في ملاحظاتك أو أرسله لنفسك. يعيد تقدّمك كما هو على أي جهاز.</p>
+    <textarea class="bk-code" id="bkCode" readonly rows="4" spellcheck="false" dir="ltr"></textarea>
+    <div class="bk-sum">${backupSummary(S)}</div>
+    <button class="btn" id="bkCopy">انسخ الرمز</button>
+    <button class="ask-go" id="bkClose">إغلاق</button>`, "نسخة من تقدّمك");
+  const ta = veil.querySelector("#bkCode");
+  ta.value = code;
+  veil.querySelector("#bkClose").onclick = close;
+  veil.querySelector("#bkCopy").onclick = function () {
+    const done = () => { this.textContent = "تم النسخ ✓"; this.classList.add("bk-done"); };
+    /* the clipboard API is blocked on a plain http:// page and inside some webviews,
+       so fall back to selecting the field and letting the student copy it */
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(done, () => { ta.select(); this.textContent = "انسخ يدوياً من الحقل"; });
+    } else { ta.select(); try { document.execCommand("copy"); done(); } catch (e) { this.textContent = "انسخ يدوياً من الحقل"; } }
+  };
+};
+A.restoreShow = function () {
+  const { veil, close } = backupSheet(`<h2>استعادة التقدّم</h2>
+    <p>الصق الرمز الذي حفظته. سيحلّ محل تقدّمك على هذا الجهاز.</p>
+    <textarea class="bk-code" id="bkIn" rows="4" spellcheck="false" dir="ltr" placeholder="QUDRATI-…"></textarea>
+    <div class="bk-msg" id="bkMsg" role="status"></div>
+    <button class="btn" id="bkGo">استعد</button>
+    <button class="ask-go" id="bkCancel">إلغاء</button>`, "استعادة التقدّم");
+  veil.querySelector("#bkCancel").onclick = close;
+  veil.querySelector("#bkGo").onclick = () => {
+    const msg = veil.querySelector("#bkMsg");
+    const o = backupRead(veil.querySelector("#bkIn").value);
+    if (!o) { msg.className = "bk-msg bad"; msg.textContent = "هذا الرمز غير صالح — تأكد أنك نسخته كاملاً"; return; }
+    const s = migrate(Object.assign({}, DEFAULT_STATE, o.s));
+    msg.className = "bk-msg ok";
+    msg.textContent = backupSummary(s);
+    close();
+    askConfirm("نستعيد هذه النسخة؟", backupSummary(s) + " — تقدّمك الحالي على هذا الجهاز سيُستبدل.",
+      "لا، رجوع", "نعم، استعد", () => {
+        try { localStorage.setItem("qudratState", JSON.stringify(s)); } catch (e) { }
+        mockClear();
+        location.reload();
+      });
+  };
+};
+
 function askConfirm(title, body, stayText, goText, onGo) {
   const old = document.querySelector(".ask-veil"); if (old) old.remove();
   const veil = document.createElement("div");
@@ -4570,6 +4747,17 @@ function renderSettings() {
       </div>
     </div>
 
+    <div class="set-lab">تقدّمك</div>
+    <div class="set-list">
+      <button type="button" class="set-item set-link" onclick="A.backupShow()">
+        <span class="set-item-tx">نسخة احتياطية</span>
+        <span class="set-val">رمز تحفظه</span>${chev}
+      </button>
+      <button type="button" class="set-item set-link" onclick="A.restoreShow()">
+        <span class="set-item-tx">استعادة من رمز</span>${chev}
+      </button>
+    </div>
+
     <button type="button" class="set-reset" onclick="A.resetAll()">إعادة تعيين التقدّم</button>
     <p class="set-foot">قدراتي أداة تدريب مستقلة، غير تابعة لهيئة تقويم التعليم والتدريب (قياس)</p>
 
@@ -4610,5 +4798,12 @@ function boot() {
   if (!S.user) renderLogin();
   else afterLogin();
 }
+/* The dev harnesses drive the app through A.debug* and A.fxDemo. On the live
+   page they are a console cheat menu — free gems, a forced rank-up — so they
+   only exist where development happens. */
+const DEV = /(^|\/)(preview|mobile|chest-animation|chest-animation-tiers|chest-animation-clashroyale|mascot-lab|exam-date-picker|quiz-two-bolts)\.html$/.test(location.pathname)
+  || /[?&]dev=1(&|$)/.test(location.search);
+if (!DEV) for (const k of Object.keys(A)) if (k.indexOf("debug") === 0 || k === "fxDemo") delete A[k];
+
 boot();
 })();
