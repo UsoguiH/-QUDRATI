@@ -59,7 +59,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, introSeen: false, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], league: null, mistakes: {}, teach: {} };
+const DEFAULT_STATE = { v: 1, disclaimer: false, introSeen: false, trackAsked: false, placeAsked: false, placed: null, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], league: null, mistakes: {}, teach: {} };
 /* The rivals. A student who suspects the board is padded looks at the names
    first, and a column of two dozen tidy Arabic first names is the one
    arrangement that never occurs on a real sign-up sheet. These are drawn in
@@ -136,6 +136,10 @@ function migrate(s) {
   if (from < 2) {
     if (typeof s.goal !== "number" || s.goal < 1) s.goal = 10;
     delete s.league;
+    /* a save from before the track and the placement were asked for has already
+       been playing on the default track: treat both as answered rather than
+       interrupting a student mid-course with an onboarding screen */
+    if (Object.keys(s.lessons || {}).length || s.examAsked) { s.trackAsked = true; s.placeAsked = true; }
   }
   s.v = SCHEMA;
   return s;
@@ -714,16 +718,157 @@ function examTone(days) {
   return "far";
 }
 
-/* Told, not hunted for: when the schedule says something is ripe, the path says so
-   once, at the top, and disappears again when the student is clear. */
+/* One row above the path, and only when it has something to say: what the schedule
+   says is ripe, or — once a student has enough history to aim at — practice drawn from
+   the domains they are weakest in. A beginner sees neither and just walks the path. */
 function dueCard() {
   const n = dueCount();
-  if (!n) return "";
-  return `<button type="button" class="due-card" onclick="A.startReview()">
+  if (n) return `<button type="button" class="due-card" onclick="A.startReview()">
     <span class="due-ico">${ico("target", 22)}</span>
     <span class="due-tx"><b>مراجعة اليوم</b><span>${qCount(n)} بانتظار المراجعة</span></span>
     <span class="due-go">راجع</span>
   </button>`;
+  if (Object.keys(S.qstats || {}).length < 16) return "";
+  const w = weakestDomain();
+  if (!w) return "";
+  return `<button type="button" class="due-card due-mix" onclick="A.startMix()">
+    <span class="due-ico">${ico("lightning", 22)}</span>
+    <span class="due-tx"><b>تدريب مخصص</b><span>${toAr(MIX_N)} أسئلة، أكثرها من ${esc(w.title)}</span></span>
+    <span class="due-go">ابدأ</span>
+  </button>`;
+}
+
+/* ---- practice aimed where it is needed ------------------------------------
+   Every lesson is a single difficulty, so there is nothing to adapt *inside* one.
+   What can adapt is which questions a student meets: first-try accuracy per domain
+   is already in qstats, so the mix leans on the domain they are weakest in, tops up
+   with anything they have never seen, and keeps a slot or two for what is due. */
+const MIX_N = 10;
+function domAccuracy() {
+  const out = {};
+  domains().forEach(d => {
+    let r = 0, w = 0, seen = 0, total = 0, open = 0;
+    d.lessons.forEach(l => {
+      if (lessonProg(d.key + "." + l.key).stars) open++;
+      trackFilter(l.questions).forEach(q => {
+        total++;
+        const s = S.qstats[q.id];
+        if (s) { seen++; r += s.r || 0; w += s.w || 0; }
+      });
+    });
+    out[d.key] = { key: d.key, title: d.title, seen, total, open, acc: (r + w) ? r / (r + w) : null };
+  });
+  return out;
+}
+/* Only a domain the student has actually opened can be practised, so only those are
+   candidates — naming الهندسة as the weak spot while the mix cannot draw a single
+   geometry question from it would be a lie the student can check. */
+function weakestDomain() {
+  const a = Object.values(domAccuracy()).filter(x => x.total && x.open);
+  if (!a.length) return null;
+  a.sort((x, y) => (x.acc === null ? -1 : y.acc === null ? 1 : x.acc - y.acc) || (x.seen / x.total - y.seen / y.total));
+  return a[0];
+}
+A.startMix = function () {
+  const acc = domAccuracy();
+  const weights = {};
+  Object.values(acc).forEach(x => { weights[x.key] = x.acc === null ? 1 : Math.max(0.12, 1 - x.acc); });
+  const pool = [];
+  domains().forEach(d => d.lessons.forEach(l => {
+    if (!lessonProg(d.key + "." + l.key).stars) return;       // only what has been unlocked by playing
+    trackFilter(l.questions).forEach(q => pool.push({ q, dom: d.key }));
+  }));
+  if (pool.length < 4) { toast("أكمل درساً أو درسين ثم جرّب التدريب المخصص"); return; }
+  const score = x => {
+    const s = S.qstats[x.q.id] || { r: 0, w: 0 };
+    const unseen = !(s.r || s.w) ? 0.6 : 0;                   // never met beats met-and-passed
+    const missed = Math.min(0.5, (s.w || 0) * 0.25);
+    return weights[x.dom] + unseen + missed + Math.random() * 0.25;
+  };
+  const chosen = pool.sort((a, b) => score(b) - score(a)).slice(0, MIX_N * 3);
+  const seen = {}, take = [];
+  shuffle(chosen).forEach(x => {                              // no two questions from one lesson in a row
+    if (take.length >= MIX_N) return;
+    take.push(x.q); seen[x.q.id] = 1;
+  });
+  const due = mistakeList().filter(x => x.due && !seen[x.id]).slice(0, 3).map(x => x.rec.q);
+  const qs = due.concat(take).slice(0, MIX_N).sort((a, b) => (a.difficulty || 2) - (b.difficulty || 2)).map(shuffleChoices);
+  SES = { mode: "mix", domKey: null, lesKey: null, key: null, title: "تدريب مخصص", method: "",
+    queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null,
+    locked: false, xp: 0, gems: 0, replay: true, xpBoost: false, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
+  renderSession();
+};
+
+/* ---- placement ------------------------------------------------------------
+   Everyone used to start at lesson one of unit one. A student three weeks from the
+   exam who already knows the basics had to grind through them or leave. Twelve
+   questions, three from each unit, no hearts and no clock: get two of three in a
+   unit and its lessons are marked as tested out, up to the first unit that stops
+   you — mastery is sequential, so passing unit three while failing unit one places
+   nothing. Tested-out lessons carry one star and can be replayed for the other two. */
+const PLACE_PER_UNIT = 3, PLACE_PASS = 2;
+A.startPlacement = function () {
+  const items = [];
+  domains().forEach(d => {
+    const pool = [];
+    d.lessons.forEach(l => trackFilter(l.questions).forEach(q => pool.push(q)));
+    /* the middle and hard end of each unit: an easy question proves nothing */
+    const hard = shuffle(pool.filter(q => (q.difficulty || 2) >= 2));
+    (hard.length >= PLACE_PER_UNIT ? hard : shuffle(pool)).slice(0, PLACE_PER_UNIT)
+      .forEach(q => items.push({ q: shuffleChoices(q), dom: d.key }));
+  });
+  if (items.length < 4) { toast("بنك الأسئلة غير متاح"); return; }
+  SES = { mode: "place", domKey: null, lesKey: null, key: null, title: "تحديد المستوى", method: "",
+    queue: items.map(x => x.q), place: items, total: items.length, idx: 0, done: 0, firstTry: {}, retried: {},
+    sel: null, locked: false, xp: 0, gems: 0, replay: true, xpBoost: false, hearts: 999,
+    notime: true, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
+  renderSession();
+};
+function placementComplete() {
+  const by = {};
+  (SES.place || []).forEach(x => {
+    by[x.dom] = by[x.dom] || { n: 0, r: 0 };
+    by[x.dom].n++;
+    if (SES.firstTry[x.q.id]) by[x.dom].r++;
+  });
+  const placed = [];
+  let stopped = null;
+  for (const d of domains()) {
+    const b = by[d.key] || { n: 0, r: 0 };
+    if (b.r >= PLACE_PASS) {
+      placed.push(d);
+      d.lessons.forEach(l => {
+        const key = d.key + "." + l.key, p = S.lessons[key] = S.lessons[key] || { stars: 0, plays: 0 };
+        if (!p.stars) { p.stars = 1; p.placed = true; }
+      });
+    } else { stopped = d; break; }
+  }
+  S.placed = todayKey();
+  save();
+  const nLes = placed.reduce((a, d) => a + d.lessons.length, 0);
+  $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
+    ${winHero()}
+    <h1 class="win-title">${!placed.length ? "نبدأ من البداية" : stopped ? "حدّدنا مستواك!" : "أتقنت كل الوحدات!"}</h1>
+    <p class="win-sub">${!placed.length ? "لا مشكلة — سنبني الأساس خطوة بخطوة"
+      : stopped ? `تخطّيت ${qLessons(nLes)} — تبدأ من ${esc(stopped.title)}`
+      : `تخطّيت ${qLessons(nLes)} — محاكاة الاختبار هي خطوتك التالية`}</p>
+    <div class="place-list">
+      ${domains().map(d => {
+        const b = by[d.key] || { n: 0, r: 0 };
+        const ok = placed.indexOf(d) >= 0;
+        return `<div class="place-row ${ok ? "ok" : ""}">
+          <span class="pl-ic">${ok ? CHECK_BADGE : "•"}</span>
+          <span class="pl-tx">${esc(d.title)}</span>
+          <span class="pl-sc">${toAr(b.r)}/${toAr(b.n)}</span>
+        </div>`;
+      }).join("")}
+    </div>
+    <div class="action-bar win-action" style="position:relative;right:auto;transform:none;max-width:340px;padding:0;background:none">
+      <button class="btn" onclick="A.go('${stopped || !placed.length ? "path" : "mock"}')">${stopped || !placed.length ? "يلا نبدأ" : "إلى المحاكاة"}</button>
+    </div>
+  </div></div>`;
+  winHeroPlay();
+  SES = null;
 }
 
 function countdownCard() {
@@ -2240,8 +2385,8 @@ function renderSession() {
           <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="تقدمك في الدرس"><i style="width:${pct}%"></i><i class="prog-cool" style="width:${pct}%"></i></div>
           <div class="fx-tag" id="fxTag" aria-hidden="true"></div>
         </div>
-        ${timerBar()}
-        ${SES.mode === "review"
+        ${SES.notime ? "" : timerBar()}
+        ${NO_FAIL[SES.mode]
           ? `<span class="sess-hearts sess-review">${ico("target", 22)} ${toAr(SES.done)}/${toAr(SES.total)}</span>`
           : `<span class="sess-hearts" id="sesHearts" aria-label="القلوب المتبقية: ${toAr(SES.hearts)}">${ico("heart", 22)} ${toAr(SES.hearts)}</span>`}
       </div>
@@ -2260,6 +2405,7 @@ function renderSession() {
    a student pause the exam by locking their phone. */
 function startQTimer(resume) {
   clearInterval(SES.timer);
+  if (SES.notime) { SES.timer = null; return; }        // placement is untimed on purpose
   if (!resume) SES.left = Q_SECS;
   SES.endsAt = Date.now() + SES.left * 1000;
   const w0 = document.getElementById("qtWrap");
@@ -2330,6 +2476,9 @@ function loseHeart() {
    quitting. Park it after two attempts and let the session end. */
 function requeue(q) {
   SES.retried[q.id] = (SES.retried[q.id] || 0) + 1;
+  /* placement is an assessment, not practice: one pass, twelve questions, no
+     second chances — re-queueing turned it into a loop that could not end */
+  if (SES.mode === "place") return;
   if (SES.retried[q.id] < (SES.mode === "review" ? 2 : 3)) SES.queue.push(q);
 }
 
@@ -2539,16 +2688,46 @@ A.debugTiers  = function () { return LEAGUE_TIERS; };              // dev harnes
 A.debugTick   = function () { lbTick(); return LB_TIMER; };        // dev harness only
 A.debugSetXp  = function (n) { S.totalXp = n; save(); };            // dev harness only
 
+const NO_FAIL = { review: 1, place: 1 };          // 999 hearts: there is nothing to fail
 A.next = function () {
   if (!SES) return;                    // a stray Enter after the win screen
-  if (SES.mode !== "review" && SES.hearts <= 0) { sessionFailed(); return; }
+  if (!NO_FAIL[SES.mode] && SES.hearts <= 0) { sessionFailed(); return; }
   SES.idx++; SES.sel = null; SES.locked = false;
   if (SES.done >= SES.total || SES.idx >= SES.queue.length) {
-    SES.mode === "review" ? reviewComplete() : lessonComplete();
+    SES.mode === "place" ? placementComplete()
+      : SES.mode === "review" ? reviewComplete()
+      : SES.mode === "mix" ? mixComplete()
+      : lessonComplete();
     return;
   }
   renderSession();
 };
+
+/* the mix is practice, so it pays like a replay and ends on what it found */
+function mixComplete() {
+  stopQTimer();
+  const ft = Object.values(SES.firstTry), right = ft.filter(Boolean).length;
+  const acc = ft.length ? Math.round(right / ft.length * 100) : 0;
+  const xpWon = SES.xp;
+  gainXP(xpWon); gainGems(SES.gems); bumpStreak(); save(); sndWin();
+  LAST_MISSES = Object.keys(SES.firstTry).filter(k => SES.firstTry[k] === false);
+  $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
+    ${winHero()}
+    <h1 class="win-title">تدريب مكتمل!</h1>
+    <p class="win-sub">${toAr(right)} من ${toAr(ft.length)} من أول محاولة</p>
+    <div class="result-cards">
+      <div class="rcard rc-gold"><div class="rc-t">الخبرة</div><div class="rc-v">${ico("lightning", 20)} <span id="cv-xp">٠</span></div></div>
+      <div class="rcard rc-green"><div class="rc-t">الدقة</div><div class="rc-v">${ico("target", 22)} ${toAr(acc)}٪</div></div>
+    </div>
+    <div class="action-bar win-action" style="position:relative;right:auto;transform:none;max-width:340px;padding:0;background:none">
+      <button class="btn" onclick="A.go('path')">متابعة</button>
+      ${LAST_MISSES.length ? `<button class="btn btn-white win-again" onclick="A.reviewMissed()">راجع أخطاء التدريب</button>` : ""}
+    </div>
+  </div></div>`;
+  winHeroPlay();
+  setTimeout(() => { const x = document.getElementById("cv-xp"); if (x) countUp(x, xpWon); }, 700);
+  SES = null;
+}
 
 A.quitSession = function () {
   askConfirm("تبي توقف الدرس؟", "تقدمك في هذا الدرس ما راح ينحفظ.", "أكمل الدرس", "أوقف الدرس", () => {
@@ -4691,10 +4870,10 @@ A.saveExam = function () {
     epFootState();
     return;
   }
-  EP.first ? go("path") : A.backFromExam();
+  EP.first ? afterLogin() : A.backFromExam();
 };
 
-A.skipExam = function () { S.examAsked = true; save(); go("path"); };
+A.skipExam = function () { S.examAsked = true; save(); afterLogin(); };
 /* "رجوع" from Settings used to call skipExam, which lands on the path — the
    one place the student was not coming back from */
 A.backFromExam = function () { go(EP.from || "path"); };
@@ -4766,9 +4945,54 @@ A.introReplay = function () { renderIntroValue(); };   // preview.html#intro
 function afterLogin() {
   S.joined = S.joined || todayKey();
   if (!S.introSeen) { renderIntroValue(); return; }
+  if (!S.trackAsked) { renderTrackPick(); return; }
   if (!S.examAsked && !S.exam) { renderExamSetup(true); return; }
+  if (!S.placeAsked && !Object.keys(S.lessons || {}).length) { renderPlaceOffer(); return; }
   save(); render();
 }
+
+/* The track decided which half of the bank a student ever sees, and it was chosen
+   for them: everyone started as علمي, so a literary student trained on a load they
+   will not sit until they happened to open Settings. Ask once, plainly, with what
+   each one means. */
+function renderTrackPick() {
+  const opt = (t, name, sub, ic) => `<button type="button" class="tp-opt" onclick="A.pickTrack('${t}')">
+    <span class="tp-ic">${ico(ic, 30)}</span>
+    <span class="tp-tx"><b>${name}</b><span>${sub}</span></span>
+    <span class="tp-chev">${CHEV_SVG}</span>
+  </button>`;
+  $app.innerHTML = `<div class="screen screen-full tp-screen">
+    <h1 class="login-title">أي مسار تدرس؟</h1>
+    <p class="login-sub">يحدّد نوع الأسئلة التي تتدرّب عليها — ويمكن تغييره من الإعدادات</p>
+    <div class="tp-list">
+      ${opt("sci", "علمي", "الحمل الكمي الكامل، بكل أسئلة الهندسة والجذور والأسس", "target")}
+      ${opt("lit", "أدبي / نظري", "حمل كمي أخف، بدون الأسئلة المخصّصة للمسار العلمي", "book")}
+    </div>
+  </div>`;
+  window.scrollTo(0, 0);
+}
+A.pickTrack = function (t) {
+  S.track = t === "lit" ? "lit" : "sci";
+  S.trackAsked = true; save(); sndGood();
+  afterLogin();
+};
+
+/* A strong student three weeks from the exam should not have to grind lesson one.
+   Offered once, and never nagged: either answer is remembered. */
+function renderPlaceOffer() {
+  $app.innerHTML = `<div class="screen screen-full tp-screen">
+    ${mascot("point", "po-mascot pop")}
+    <h1 class="login-title">تعرف الأساسيات؟</h1>
+    <p class="login-sub">${qCount(PLACE_PER_UNIT * DOMAIN_ORDER.length)} بدون قلوب ولا وقت — نتخطّى بها ما تتقنه ونبدأ من حيث تحتاج فعلاً</p>
+    <div class="login-form">
+      <button class="btn" onclick="A.placeGo()">حدّد مستواي</button>
+      <button class="login-skip" onclick="A.placeSkip()">أبدأ من الدرس الأول</button>
+    </div>
+  </div>`;
+  window.scrollTo(0, 0);
+}
+A.placeGo = function () { S.placeAsked = true; save(); A.startPlacement(); };
+A.placeSkip = function () { S.placeAsked = true; save(); render(); };
 
 /* ---------------- keyboard (web) ----------------
    A lesson is answerable without a mouse: 1-4 picks a choice,
@@ -4873,6 +5097,10 @@ function renderSettings() {
         <span class="set-item-tx">موعد الاختبار</span>
         <span class="set-val">${examVal}</span>${chev}
       </button>
+      <button type="button" class="set-item set-link" onclick="A.placeAgain()">
+        <span class="set-item-tx">تحديد المستوى</span>
+        <span class="set-val">${S.placed ? "أُجري " + fmtDayKey(S.placed) : "لم يُجرَ"}</span>${chev}
+      </button>
     </div>
 
     <div class="set-lab">التفضيلات</div>
@@ -4907,6 +5135,13 @@ function renderSettings() {
 
   if (SET_EDIT) { const i = document.getElementById("setName"); if (i) { i.focus(); i.select(); } }
 }
+
+/* Re-running it can only place lessons the student has not already cleared — it
+   never takes a star away — so the confirmation says exactly that. */
+A.placeAgain = function () {
+  askConfirm("نحدّد مستواك؟", `${qCount(PLACE_PER_UNIT * DOMAIN_ORDER.length)} بدون قلوب ولا وقت. ما أتقنته يُفتح لك، ولا يتغيّر شيء مما أنجزته.`,
+    "لا، رجوع", "ابدأ", () => A.startPlacement());
+};
 
 A.setEditName = function (on) { SET_EDIT = !!on; render(); };
 A.setSaveName = function () {

@@ -1803,6 +1803,40 @@ button.dom-stat:active { transform: scale(.99); }
 .due-tx span { display: block; font-size: 13px; font-weight: 700; color: var(--gray); margin-top: 1px; }
 .due-go { font-size: 14px; font-weight: 800; color: var(--blue); flex-shrink: 0; }
 
+/* --- the two first-run choices: the track, and whether to test out --- */
+.tp-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px 20px calc(28px + env(safe-area-inset-bottom)); }
+.tp-list { width: 100%; max-width: 380px; margin-top: 22px; }
+.tp-opt {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: start;
+  background: var(--snow); border: 2px solid var(--line); border-radius: 16px;
+  box-shadow: 0 4px 0 var(--line); padding: 14px 15px; margin-bottom: 14px; cursor: pointer;
+  animation: fadeUp .4s var(--d, .12s) cubic-bezier(.25,1.1,.4,1) backwards;
+}
+.tp-opt:nth-child(2) { --d: .2s; }
+.tp-opt:active { transform: translateY(4px); box-shadow: 0 0 0 var(--line); }
+.tp-ic { display: flex; width: 46px; height: 46px; border-radius: 13px; background: var(--blue-light); align-items: center; justify-content: center; flex-shrink: 0; }
+.tp-tx { flex: 1; display: block; }
+.tp-tx b { display: block; font-size: 17px; font-weight: 800; color: var(--ink); }
+.tp-tx span { display: block; font-size: 13px; font-weight: 600; color: var(--gray); margin-top: 2px; line-height: 1.45; }
+.tp-chev { color: var(--gray-icon); flex-shrink: 0; transform: scaleX(-1); }
+.tp-chev svg { width: 20px; height: 20px; display: block; }
+.po-mascot { height: 168px; margin-bottom: 6px; }
+@media (max-height: 700px) { .po-mascot { height: 124px; } }
+
+/* --- the placement result: one row per unit, with what it scored --- */
+.place-list { width: 100%; max-width: 340px; margin: 6px auto 2px; }
+.place-row {
+  display: flex; align-items: center; gap: 10px; padding: 10px 13px; margin-bottom: 8px;
+  background: var(--snow); border: 2px solid var(--line); border-radius: 14px;
+  animation: fadeUp .36s var(--d, .1s) cubic-bezier(.25,1.1,.4,1) backwards;
+}
+.place-row.ok { border-color: var(--green); background: var(--green-bg); }
+.place-row .pl-ic { width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; color: var(--green-lip); font-weight: 800; flex-shrink: 0; }
+.place-row .pl-ic svg { width: 16px; height: 16px; }
+.place-row .pl-tx { flex: 1; font-size: 14.5px; font-weight: 700; color: var(--ink); text-align: start; }
+.place-row .pl-sc { font-size: 14px; font-weight: 800; color: var(--gray); }
+.place-row.ok .pl-sc { color: var(--green-lip); }
+
 /* --- a lesson last practised a fortnight ago: its stars dim and it asks for a pass --- */
 .node-col.stale .node-stars { opacity: .4; }
 .node-col.stale .node-refresh {

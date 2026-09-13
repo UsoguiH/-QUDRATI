@@ -58,11 +58,11 @@ scratchpad drives a real Chrome and reports console errors).
 - [x] Spaced repetition: a due date per missed question, and «مراجعة اليوم» on the path
 - [x] Review without the cap of 12, ordered by what is due and how often it was missed
 - [x] Skill decay: a lesson last practised weeks ago says so on the path
-- [ ] A placement test at the start, so a strong student does not grind lesson 1
-- [ ] A daily mix drawn from the domains the student is weakest in
+- [x] A placement test at the start, so a strong student does not grind lesson 1
+- [x] A daily mix drawn from the domains the student is weakest in
 
 ### W5 — Pacing and retention
-- [ ] Choose علمي or أدبي on the first run instead of defaulting silently
+- [x] Choose علمي or أدبي on the first run instead of defaulting silently
 - [ ] The daily goal the student sets (`S.goal`), driving the quest
 - [ ] A study plan off the exam date, and a weekly summary from `S.days`
 - [ ] The streak-at-risk nudge when the day is nearly over
