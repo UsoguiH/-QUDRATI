@@ -49,9 +49,10 @@ scratchpad drives a real Chrome and reports console errors).
 - [ ] One tap from the win screen into the questions you got wrong
 
 ### W3 — The full learning guide
-- [ ] Teaching cards for the remaining 23 lessons, validated
+- [x] Teaching cards for the remaining 23 lessons, validated — **26 of 26 lessons now teach**:
+      120 chunks, 273 rules on cards, 120 checks, and the other 130 rules routed to the guidebook
 - [ ] Teaching figures where a lesson is visual (geometry first)
-- [ ] Every lesson's untaught rules routed to the guidebook
+- [x] Every lesson's untaught rules routed to the guidebook
 
 ### W4 — Learn smart
 - [ ] Spaced repetition: a due date per missed question, and «مراجعة اليوم» on the path
@@ -83,6 +84,21 @@ scratchpad drives a real Chrome and reports console errors).
 - [ ] Overlays as dialogs: focus moves in, Escape closes, focus returns
 - [ ] The chest ceremony reachable from the keyboard
 - [ ] Honour the OS reduced-motion setting, not only the app's own switch
+
+## Data defects found while writing the cards
+
+The four question files are generated, so each of these is fixed in
+`qudrat-lessons-duolingo.md` and re-imported with `python tools/import_curriculum.py`.
+None of them blocks a lesson; all of them are visible to a careful student.
+
+| Where | What |
+|---|---|
+| `proportion-07` | The printed solution crosses the rows: `٨ × س × ٩ = ٥ × ٢٤٠ × ٦` gives ١٠٠, not the ٢٢٥ it states. The key is right, the working is not. |
+| `ratios.mean` rule 6 | One sign for two opposite cases: a removed value must be added back, which is what `mean-08`'s own solution does. |
+| `geometry.parallel` rule 4 | The name carries a Latin «M» («التوازي بحرف M»), and rule names reach the guidebook. |
+| `skills.fastest` rule 5 / `skills.equations` rule 4 | The same rule declared in two lessons. |
+| `equations-10`, `simplify-05`, `angles-10`, `square-09`, `shaded-05` | Solved by a move the lesson never declares, or describing a figure that is not drawn. |
+| Every lesson | Single-difficulty: `difficulty` always equals the lesson's `stars`, so no lesson can ramp easy-to-hard inside a session, and only two of the twenty-six are easy. |
 
 ## Rules this work keeps
 
