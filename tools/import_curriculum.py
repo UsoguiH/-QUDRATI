@@ -44,7 +44,7 @@ R = {
     "lesson": re.compile(r"^### (🟢|🔵|🟣|🟡) الدرس ([٠-٩]+) — (.+)$"),
     "lesmeta": re.compile(r"^> \*\*الوحدة:\*\* U(\d) · \*\*التصنيف:\*\* (.+?) · \*\*الصعوبة:\*\* (★+)(☆*) · \*\*XP:\*\* (\d+) · \*\*صفحات الكتاب:\*\* (\d+)(?:–(\d+))?$"),
     "goal": re.compile(r"^\*\*🎯 الهدف:\*\* (.+)$"),
-    "q": re.compile(r"^\*\*([٠-٩]+)\)\*\*\s*(.*)$"),
+    "q": re.compile(r"^\*\*([٠-٩]+)\)\*\*\s*(?:(★{1,3})\s+)?(.*)$"),
     "choices": re.compile(r"^- \*\*أ\)\*\*\s+(.+?)\s{2,}\*\*ب\)\*\*\s+(.+?)\s{2,}\*\*ج\)\*\*\s+(.+?)\s{2,}\*\*د\)\*\*\s+(.+)$"),
     "answer": re.compile(r"^\*\*الإجابة: (أ|ب|جـ|ج|د)\*\*$"),
     "cmpline": re.compile(r"^القيمة الأولى: (.+?)\s+\|\s+القيمة الثانية: (.+)$"),
@@ -241,7 +241,8 @@ class Parser:
         m = R["q"].match(self.line()); qline = self.i; self.i += 1
         n = ar_int(m.group(1))
         if n != len(les["questions"]) + 1: self.err(f"question {n} out of order")
-        q = {"n": n, "line": qline + 1, "stem": [m.group(2).strip()] if m.group(2).strip() else [],
+        q = {"n": n, "line": qline + 1, "stem": [m.group(3).strip()] if m.group(3).strip() else [],
+             "stars": len(m.group(2)) if m.group(2) else None,
              "fence": None, "table": None, "choices": None, "answer": None, "solution": [], "solFence": []}
         while True:
             l = self.line()
@@ -313,7 +314,7 @@ def build_question(les, q, used_figures, stats):
     is_cmp = choices in (CMP_APP, CMP_ALT)
     stem_lines = list(q["stem"])
     out = {"id": f"{les['key']}-{q['n']:02d}", "format": "comparison" if is_cmp else "mcq",
-           "difficulty": les["stars"], "track": "both"}
+           "difficulty": q["stars"] or les["stars"], "track": "both"}
     figure = FIGURES.get(figure_key(les, q))
     if is_cmp:
         v1 = v2 = None
@@ -373,6 +374,7 @@ def build_question(les, q, used_figures, stats):
     for raw in [out["stem"], out.get("value1"), out.get("value2")] + out.get("choices", []):
         if raw and re.search(r"[*`]", raw): raise Fail(f"{tag}: markdown left in a raw field: {raw}")
     stats["answers"][q["answer"]] += 1
+    if q["stars"]: stats["rated"] += 1
     return out
 
 def table_html(rows, tag):
@@ -413,7 +415,7 @@ def main():
     check_only = "--check" in sys.argv
     with open(SRC, encoding="utf-8") as f: text = f.read()
     p = Parser(text).run()
-    stats = {"cmp": 0, "figures": 0, "answers": [0, 0, 0, 0], "stemSketch": [], "solSketch": [], "warn": list(p.warnings), "missing": []}
+    stats = {"cmp": 0, "figures": 0, "answers": [0, 0, 0, 0], "stemSketch": [], "solSketch": [], "warn": list(p.warnings), "missing": [], "rated": 0}
     used = set()
     domains, report = [], []
     for d in p.domains:
@@ -454,7 +456,7 @@ def main():
             lines.append(f"| {l['title']} | `{l['key']}` | {l['stars']} | {l['xp']} | {len(l['rules'])} | {len(qs)} | "
                          f"{sum(q['format'] == 'comparison' for q in qs)} | {sum(1 for q in qs if q['figure'])} |")
     a = stats["answers"]
-    lines += ["", f"Answers: أ {a[0]} · ب {a[1]} · ج {a[2]} · د {a[3]} — comparison questions: {stats['cmp']} — figures: {stats['figures']}", ""]
+    lines += ["", f"Answers: أ {a[0]} · ب {a[1]} · ج {a[2]} · د {a[3]} — comparison questions: {stats['cmp']} — figures: {stats['figures']} — questions rated individually: {stats['rated']}", ""]
     if stats["stemSketch"]:
         lines += ["Stems that carried an ASCII sketch in the file (drawn as SVG):", ""] + [f"- `{k}` — {t}" for k, t in stats["stemSketch"]] + [""]
     if stats["solSketch"]:
