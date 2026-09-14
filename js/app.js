@@ -1378,7 +1378,7 @@ function renderPath() {
         </svg>` : "";
       // exact Figma "Level" colors per state: gold done / unit-color open / gray locked
       const nc = done ? ["#FFC800", "#E6A000", "#FFE700"] : open ? [u.c, u.s, u.h] : ["#D2D2D2", "#ADADAD", "transparent"];
-      html += `<div class="path-row"><div class="node-col${current ? " bob" : ""}${stale ? " stale" : ""}" style="right:${x}px">
+      html += `<div class="path-row${current ? " row-tip" : ""}"><div class="node-col${current ? " bob" : ""}${stale ? " stale" : ""}" style="right:${x}px">
         ${ring}
         ${stale ? `<span class="node-refresh" title="حان وقت المراجعة" aria-hidden="true">${REFRESH_SVG}</span>` : ""}
         <button class="node ${cls}" style="--node-c:${nc[0]};--node-s:${nc[1]};--node-h:${nc[2]};--d:${(gi % 10) * 0.06}s"
@@ -2684,6 +2684,9 @@ A.pick = function (i) {
    something else. */
 function praiseFor() {
   const n = SES.queue.length, at = SES.idx + 1;
+  /* the first question anyone ever gets right deserves better than the fifth
+     entry in a rotation */
+  if (SES.safe && SES.done === 1) return "أول وحدة صح — يلا كمّل!";
   if (at >= n && SES.done >= SES.total) return "أنهيتها!";
   if (SES.run >= 5) return "لا شيء يوقفك!";
   if (SES.run === 3) return "ثلاث على التوالي!";

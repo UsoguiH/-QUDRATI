@@ -362,6 +362,7 @@ svg.ic { display: block; }
    ============================================================ */
 .path { display: flex; flex-direction: column; align-items: center; padding: 38px 0 6px; position: relative; }
 .path-row { position: relative; height: 142px; width: 100%; display: flex; justify-content: center; }
+.path-row.row-tip { margin-top: 54px; }
 /* room under the last node so its start bubble can always scroll it up into view */
 .path-tail { height: 200px; }
 .node-col { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
