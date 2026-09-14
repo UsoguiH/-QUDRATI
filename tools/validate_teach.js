@@ -21,6 +21,10 @@ const QBANK = ctx.window.QBANK || {}, QTEACH = ctx.window.QTEACH || {}, fig = ct
 const figUsed = new Set();
 
 let failed = false;
+/* Difficulty steps a student cannot climb, collected across every lesson and listed at the
+   end. This is a worklist, not a failure, while the per-question ratings are still being
+   authored lesson by lesson; it becomes a failure once the list is empty. */
+const cliffs = [];
 const bad = msg => { console.log("FAIL " + msg); failed = true; };
 const words = s => String(s).trim().split(/\s+/).filter(Boolean).length;
 const CAPS = { title: 6, say: 24, example: 28, q: 20, why: 20, chunk: 4, plain: 16, hook: 9 };
@@ -81,6 +85,27 @@ for (const [key, t] of Object.entries(QTEACH)) {
     });
   });
   for (const id of qids) if (!seenQ.has(id)) bad(`${key}: question ${id} belongs to no chunk`);
+  /* The ramp. A student meets a chunk's questions sorted by difficulty (pickLessonQuestions
+     sorts on it, teachArrange re-sorts by chunk, and a stable sort keeps the order inside
+     each chunk), so a jump of more than one step there is a cliff the student falls off.
+     A lesson whose questions are still unrated all share the lesson's star rating and
+     report nothing. */
+  const byId = new Map(les.questions.map(q => [q.id, q]));
+  const lesMin = Math.min(...les.questions.map(q => q.difficulty));
+  t.chunks.forEach((c, ci) => {
+    const ds = (c.q || []).map(id => byId.get(id)).filter(Boolean)
+      .map(q => q.difficulty).sort((a, b) => a - b);
+    for (let i = 1; i < ds.length; i++) {
+      if (ds[i] - ds[i - 1] > 1)
+        cliffs.push(`${key} chunk ${ci + 1} (${c.title}): ${"★".repeat(ds[i - 1])} then ${"★".repeat(ds[i])}`);
+    }
+    /* A lesson's first chunk should open on the gentlest question the lesson owns. If an
+       easier one is sitting in a later chunk the student meets a harder opener than they
+       needed to, which argues for moving the question or reordering the chunks. An unrated
+       lesson has one difficulty throughout and reports nothing. */
+    if (ci === 0 && ds.length && ds[0] > lesMin)
+      cliffs.push(`${key} chunk 1 (${c.title}): opens on ${"★".repeat(ds[0])} while the lesson owns a ${"★".repeat(lesMin)}`);
+  });
   const more = Array.isArray(t.more) ? t.more : [];
   const all = taught.concat(more);
   for (const n of rules.keys()) {
@@ -98,5 +123,9 @@ for (const k of Object.keys(fig)) {
   if (/[0-9]/.test(String(fig[k]).replace(/<[^>]+>/g, ""))) bad(`figure ${k}: Latin digit in a label`);
 }
 if (Object.keys(fig).length) console.log(`figures: ${Object.keys(fig).length}`);
+if (cliffs.length) console.log(`
+difficulty cliffs still to bridge (${cliffs.length}):
+  ` + cliffs.join(`
+  `));
 console.log(failed ? "RESULT: FAILED" : "RESULT: OK");
 process.exit(failed ? 1 : 0);

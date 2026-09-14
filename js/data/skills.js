@@ -110,7 +110,7 @@ window.QBANK.skills = {
         {
           "id": "bigsum-01",
           "format": "mcq",
-          "difficulty": 1,
+          "difficulty": 3,
           "track": "both",
           "stem": "أوجد ناتج المقدار: ٨ + ٢ × (٧ − ٤)² ÷ ٦",
           "choices": [
@@ -142,7 +142,7 @@ window.QBANK.skills = {
         {
           "id": "bigsum-03",
           "format": "mcq",
-          "difficulty": 1,
+          "difficulty": 2,
           "track": "both",
           "stem": "ما قيمة: ٩٧٠ + ٣٠ + ٨٥٠ + ١٥٠ + ٦٤٠ + ٣٦٠ ؟",
           "choices": [
@@ -174,7 +174,7 @@ window.QBANK.skills = {
         {
           "id": "bigsum-05",
           "format": "mcq",
-          "difficulty": 1,
+          "difficulty": 2,
           "track": "both",
           "stem": "أوجد ناتج: ٢ + ٤ + ٦ + ......... + ٤٠",
           "choices": [
@@ -190,7 +190,7 @@ window.QBANK.skills = {
         {
           "id": "bigsum-06",
           "format": "mcq",
-          "difficulty": 1,
+          "difficulty": 2,
           "track": "both",
           "stem": "أوجد ناتج: ١ + ٣ + ٥ + ......... + ٤١",
           "choices": [
@@ -206,7 +206,7 @@ window.QBANK.skills = {
         {
           "id": "bigsum-07",
           "format": "mcq",
-          "difficulty": 1,
+          "difficulty": 3,
           "track": "both",
           "stem": "ما ناتج: ١٥ + ٣٠ + ٤٥ + ......... + ١٥٠ ؟",
           "choices": [
@@ -222,7 +222,7 @@ window.QBANK.skills = {
         {
           "id": "bigsum-08",
           "format": "mcq",
-          "difficulty": 1,
+          "difficulty": 2,
           "track": "both",
           "stem": "ما الرقم في خانة الآحاد لناتج: ٤٨٧ × ٦٥٢ × ٩٣٥ ؟",
           "choices": [
@@ -238,7 +238,7 @@ window.QBANK.skills = {
         {
           "id": "bigsum-09",
           "format": "comparison",
-          "difficulty": 1,
+          "difficulty": 3,
           "track": "both",
           "stem": "قارن بين القيمتين:",
           "value1": "١٢٥ × ٧٦",
@@ -250,7 +250,7 @@ window.QBANK.skills = {
         {
           "id": "bigsum-10",
           "format": "mcq",
-          "difficulty": 1,
+          "difficulty": 3,
           "track": "both",
           "stem": "أوجد ناتج: (١ + ٣ + ٥ + ......... + ٩٩) − (٢ + ٤ + ٦ + ......... + ١٠٠)",
           "choices": [

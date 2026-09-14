@@ -23,14 +23,13 @@ for (const [dk, d] of Object.entries(QBANK)) {
   for (const l of d.lessons) {
     if (!l.key || !l.title || !Array.isArray(l.questions)) { console.log(`BAD LESSON ${dk}.${l && l.key}`); failed = true; continue; }
     const diffs = [0, 0, 0, 0];
-    let mcq = 0, cmp = 0, ordered = true, last = 0;
+    let mcq = 0, cmp = 0;
     for (const q of l.questions) {
       total++;
       const tag = `${dk}.${l.key}.${q.id}`;
       if (!q.id) { console.log(`NO ID in ${dk}.${l.key}`); failed = true; }
       if (ids.has(q.id)) { console.log(`DUP ID ${tag}`); failed = true; } ids.add(q.id);
       if (![1, 2, 3].includes(q.difficulty)) { console.log(`BAD DIFF ${tag}`); failed = true; } else diffs[q.difficulty]++;
-      if (q.difficulty < last) ordered = false; last = Math.max(last, q.difficulty || 0);
       if (!["both", "sci", "lit"].includes(q.track)) { console.log(`BAD TRACK ${tag}: ${q.track}`); failed = true; }
       if (typeof q.answer !== "number" || q.answer < 0 || q.answer > 3) { console.log(`BAD ANSWER ${tag}: ${q.answer}`); failed = true; }
       if (!q.solution || q.solution.length < 10) { console.log(`WEAK SOLUTION ${tag}`); failed = true; }
@@ -70,7 +69,7 @@ for (const [dk, d] of Object.entries(QBANK)) {
        literary students, so tagging must never starve a lesson on that side */
     const litCount = l.questions.filter(q => q.track !== "sci").length;
     if (litCount < 8) { console.log(`LIT TRACK STARVED ${dk}.${l.key}: only ${litCount} questions`); failed = true; }
-    console.log(`${dk}.${l.key}: ${l.questions.length} q (E${diffs[1]}/M${diffs[2]}/H${diffs[3]}) mcq=${mcq} cmp=${cmp} ordered=${ordered ? "yes" : "NO"}`);
+    console.log(`${dk}.${l.key}: ${l.questions.length} q (E${diffs[1]}/M${diffs[2]}/H${diffs[3]}) mcq=${mcq} cmp=${cmp}`);
   }
   console.log(`== ${dk}: ${total} questions, ${figures} figures, cmp answers dist=[${cmpDist}]\n`);
 }
