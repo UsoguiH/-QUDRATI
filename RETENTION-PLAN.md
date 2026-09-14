@@ -110,6 +110,29 @@ validator fight.
       everything wrong reached ten through the retries and did. Quick checks now count
 - [x] The first correct answer ever has its own line rather than the fifth of a rotation
 
+### R6 — Make the first lesson small enough to understand
+
+The owner, after seeing the above: «i want it to be very easy at start, even a stupid one can
+understand the first lesson — the learning, even for me a smart one, is a little bit hard.»
+
+He was right, and the question order was only half of it. Lesson one **opened on its hardest
+card**: «ترتيب العمليات» names four levels of precedence at once, «الأسس» included, and it was
+the first thing anyone read; «العدد المكرر» — ٧ + ٧ + ٧ ← ٧ × ٣, which anybody gets on sight —
+sat behind it. And the lesson teaches **ten rules**, eight of them in a first session, four of
+those formulas to memorise.
+
+- [x] The first chunk split in two, easiest first: «اجمع المكرر» then «رتّب العمليات», so the
+      first card, the first check and the first question are all the easy one
+- [x] A first check nobody can fail: «كم يساوي ٥ + ٥ + ٥ + ٥ ؟»
+- [x] `FIRST_CHUNKS` caps the first lesson ever played at two chunks — two rules, two questions,
+      a win in about three minutes. Verified: the second play serves the rest, missed questions
+      first, with their cards; lesson two is full length with hearts and a clock
+- [ ] The same read applied to lessons 2 and 3, which have not been re-checked for this
+
+**One consequence, stated plainly:** the first lesson is marked complete and given its star after
+two questions, and the day's goal reaches ٥ rather than ١٠ — so the chest now opens during lesson
+two rather than lesson one. Both are the price of a three-minute first win.
+
 ### R5 — The comeback
 - [x] On day one the streak screen says «ارجع بكرة وتصير سلسلتك يومين — درس واحد يكفي», and
       the chest they can now reach is waiting on the path behind it

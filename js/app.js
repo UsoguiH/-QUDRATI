@@ -772,6 +772,7 @@ function dueCard() {
    is already in qstats, so the mix leans on the domain they are weakest in, tops up
    with anything they have never seen, and keeps a slot or two for what is due. */
 const MIX_N = 10;
+const FIRST_CHUNKS = 2;   // teaching chunks the very first lesson ever played serves
 function domAccuracy() {
   const out = {};
   domains().forEach(d => {
@@ -1469,7 +1470,7 @@ window.addEventListener("resize", () => {
   trailT = setTimeout(drawTrails, 160);
 });
 
-function pickLessonQuestions(lesson, key) {
+function pickLessonQuestions(lesson, key, first) {
   const qs = trackFilter(lesson.questions);
   const stat = q => { const s = S.qstats[q.id] || { r: 0, w: 0 }; return s.r - s.w; };
   // least-mastered first; in a taught lesson whole chunks come before half
@@ -1479,7 +1480,15 @@ function pickLessonQuestions(lesson, key) {
   if (T) T.chunks.forEach((c, i) => c.q.forEach(id => { chunkOf[id] = i; }));
   const at = q => chunkOf[q.id] === undefined ? 99 : chunkOf[q.id];
   const chosen = qs.slice().sort((a, b) => stat(a) - stat(b) || at(a) - at(b) || a.difficulty - b.difficulty).slice(0, 8);
-  return chosen.sort((a, b) => a.difficulty - b.difficulty).map(shuffleChoices);
+  /* The first lesson anyone plays stops after two chunks: two rules, two
+     questions, a win in about three minutes. Eight questions drag eight rules
+     behind them, four of them formulas to memorise, and that is a wall to meet
+     before you have won anything. The rest of the lesson is served on the next
+     play — the sort above puts what has not been answered first, so it comes
+     back in order and nothing is skipped. */
+  const opening = first ? chosen.filter(q => at(q) < FIRST_CHUNKS) : [];
+  const served = opening.length ? opening : chosen;
+  return served.sort((a, b) => a.difficulty - b.difficulty).map(shuffleChoices);
 }
 
 A.go = function (v) { if (v === "review") reviewFrom = view; go(v); };
@@ -1565,7 +1574,10 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
 A.startLesson = function (domKey, lesKey, boost) {
   const d = window.QBANK[domKey], l = d.lessons.find(x => x.key === lesKey);
   const key = domKey + "." + lesKey;
-  const qs = pickLessonQuestions(l, key);
+  /* decided before the questions are picked: the first lesson anyone ever plays
+     is both shorter and unloseable */
+  const safe = !Object.values(S.lessons).some(p => p.plays > 0);
+  const qs = pickLessonQuestions(l, key, safe);
   if (!qs.length) { showModal("⭐", "لا توجد أسئلة", "لا توجد أسئلة متاحة لهذا الدرس في مسارك الحالي.", "حسناً"); return; }
   const prev = S.lessons[key];
   const replay = !!(prev && prev.stars > 0);            // already cleared → farm mode (+2/+2)
@@ -1575,7 +1587,6 @@ A.startLesson = function (domKey, lesKey, boost) {
      heart lost on a wrong answer, no fail screen. Hearts arrive in lesson two,
      once there is a win behind them. A unit unlocked by the placement test has
      plays 0 too, so a strong student gets the same gentle first play. */
-  const safe = !Object.values(S.lessons).some(p => p.plays > 0);
   let xpBoost = false;
   if (boost && S.xp >= BOOST_COST) { S.xp -= BOOST_COST; xpBoost = true; save(); }  // pay for 2× rank XP up front
   SES = { mode: "lesson", domKey, lesKey, key, title: l.title, method: l.method || "", queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null, locked: false, xp: 0, gems: 0, replay, xpBoost, safe, notime: safe, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };

@@ -67,7 +67,8 @@ assets/sounds/          — correct.mp3
 - **Questions**: 255 original questions — MCQ (`format:"mcq"`) and comparison (`format:"comparison"`, 35 of them). Difficulty is **per question**: a question line in the markdown may carry a star marker between its number and its stem (`**٨)** ★★ ما قيمة …`), and falls back to the lesson's ★ rating when it has none, so the ramp can be authored lesson by lesson. The app serves a lesson's questions easiest-first inside each teaching chunk
 - **Tracks**: `"sci"` (scientific) and `"lit"` (literary — lighter quant load, excludes `track:"sci"` questions). **The mechanism works but no question uses it yet**: the importer writes `track:"both"` for all 255, so `trackFilter` is a no-op in both directions. The track is set from Settings; it was cut from the first run because a screen that says «يحدّد نوع الأسئلة التي تتدرّب عليها» while changing nothing is an ask that gives nothing. Put it back the day a question carries a track
 - **Hearts**: 5 per level; losing all resets the level. Review, the mix and the placement test run without hearts or a timer (`NO_FAIL` + `notime`), and the header shows a question count there instead of «٩٩٩».
-  **The first lesson anyone ever plays runs the same way** (`SES.safe`, set in `A.startLesson` when no lesson has `plays > 0`): no hearts, no clock, no fail screen — a student who loses their first lesson does not come back. Hearts arrive in lesson two. Because it cannot be failed it cannot end honestly either, so under 50% the win screen says «خلّصت درسك الأول» and makes «راجع أخطاء الدرس» the green button
+  **The first lesson anyone ever plays runs the same way** (`SES.safe`, set in `A.startLesson` when no lesson has `plays > 0`): no hearts, no clock, no fail screen — a student who loses their first lesson does not come back. Hearts arrive in lesson two.
+  It is also **short**: `FIRST_CHUNKS` (2) caps it at the first two teaching chunks, so it teaches two rules and serves two questions and wins in about three minutes. Eight questions drag eight rules behind them, four of them formulas to memorise, and that was a wall to meet before winning anything. Nothing is skipped — `pickLessonQuestions` sorts least-mastered first, so the next play serves what was not answered, with its cards. Because it cannot be failed it cannot end honestly either, so under 50% the win screen says «خلّصت درسك الأول» and makes «راجع أخطاء الدرس» the green button
 - **Timer**: 60 seconds per question (matches real GAT pace) — shown as a Duolingo-style pill (tinted capsule, the Figma clock with its hand spinning, m:ss); green at rest, yellow at ≤15s, red at ≤5s
 - **Gems** (`S.xp`): spendable currency — revive (50), 2× boost (50)
 - **Rank XP** (`S.totalXp`): lifetime total, never decremented; drives the 5 rank tiers (bronze → silver → gold → diamond → champion)
@@ -206,6 +207,7 @@ const DAILY_GOAL     = 10;   // the default daily quest; S.goal is the student's
 const GOALS          = [5, 10, 20];
 const SRS_GAP        = 2;    // days between the first and second correct answer
 const MIX_N          = 10;   // questions in the daily mix
+const FIRST_CHUNKS   = 2;    // teaching chunks the very first lesson ever played serves
 const PLACE_PER_UNIT = 3;    // placement questions per unit
 const PLACE_PASS     = 2;    // how many of them pass the unit
 const MOCK_SECS      = 25*60; // 25 min per mock section
