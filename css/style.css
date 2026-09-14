@@ -1728,7 +1728,7 @@ button.dom-stat:active { transform: scale(.99); }
   .node:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 9px 0 var(--node-s, var(--purple-dk)); }
   .qn-chip:hover:not(.cur) { border-color: var(--blue-border); }
   .set-item.set-link:hover, .due-card:hover, .ec2:hover, .dom-stat:hover,
-  .rank-card:hover, .mistakes-card:hover, .rp-opt:hover, .tp-opt:hover { background: var(--surface-hover); }
+  .rank-card:hover, .mistakes-card:hover, .rp-opt:hover { background: var(--surface-hover); }
   .fb-solution-toggle:hover { opacity: .8; }
 }
 
@@ -1821,21 +1821,6 @@ button.dom-stat:active { transform: scale(.99); }
 
 /* --- the two first-run choices: the track, and whether to test out --- */
 .tp-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px 20px calc(28px + env(safe-area-inset-bottom)); }
-.tp-list { width: 100%; max-width: 380px; margin-top: 22px; }
-.tp-opt {
-  display: flex; align-items: center; gap: 12px; width: 100%; text-align: start;
-  background: var(--snow); border: 2px solid var(--line); border-radius: 16px;
-  box-shadow: 0 4px 0 var(--line); padding: 14px 15px; margin-bottom: 14px; cursor: pointer;
-  animation: fadeUp .4s var(--d, .12s) cubic-bezier(.25,1.1,.4,1) backwards;
-}
-.tp-opt:nth-child(2) { --d: .2s; }
-.tp-opt:active { transform: translateY(4px); box-shadow: 0 0 0 var(--line); }
-.tp-ic { display: flex; width: 46px; height: 46px; border-radius: 13px; background: var(--blue-light); align-items: center; justify-content: center; flex-shrink: 0; }
-.tp-tx { flex: 1; display: block; }
-.tp-tx b { display: block; font-size: 17px; font-weight: 800; color: var(--ink); }
-.tp-tx span { display: block; font-size: 13px; font-weight: 600; color: var(--gray); margin-top: 2px; line-height: 1.45; }
-.tp-chev { color: var(--gray-icon); flex-shrink: 0; }
-.tp-chev svg { width: 20px; height: 20px; display: block; }
 .po-badge {
   display: flex; width: 108px; height: 108px; border-radius: 50%; margin-bottom: 14px;
   background: var(--blue-light); align-items: center; justify-content: center;

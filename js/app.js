@@ -823,7 +823,7 @@ A.startMix = function () {
   const qs = due.concat(take).slice(0, MIX_N).sort((a, b) => (a.difficulty || 2) - (b.difficulty || 2)).map(shuffleChoices);
   SES = { mode: "mix", domKey: null, lesKey: null, key: null, title: "تدريب مخصص", method: "",
     queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null,
-    locked: false, xp: 0, gems: 0, replay: true, xpBoost: false, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
+    locked: false, xp: 0, gems: 0, replay: true, xpBoost: false, hearts: LEVEL_HEARTS, notime: true, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
   renderSession();
 };
 
@@ -3030,7 +3030,7 @@ A.reviewMissed = function () {
   if (!qs.length) { A.winContinue(); return; }
   SES = { mode: "review", domKey: null, lesKey: null, key: null, title: "مراجعة الدرس", method: "",
     queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null,
-    locked: false, xp: 0, gems: 0, replay: false, xpBoost: false, hearts: 999, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
+    locked: false, xp: 0, gems: 0, replay: false, xpBoost: false, hearts: 999, notime: true, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
   renderSession();
 };
 
@@ -4192,8 +4192,12 @@ function streakDayLabel(c) {
 }
 A.winContinue = function () {
   winHeroStop();
-  if (pendingStreak > 0) { const c = pendingStreak; pendingStreak = 0; showStreakCelebration(c, () => A.go("path")); }
-  else A.go("path");
+  const next = () => {
+    if (!S.placeAsked && Object.keys(S.lessons || {}).length === 1) { renderPlaceOffer(); return; }
+    A.go("path");
+  };
+  if (pendingStreak > 0) { const c = pendingStreak; pendingStreak = 0; showStreakCelebration(c, next); }
+  else next();
 };
 function showStreakCelebration(count, onDone) {
   const todayIdx = new Date().getDay();
@@ -4297,7 +4301,7 @@ A.startReview = function (allOfThem) {
   const qs = pick.slice(0, 15).map(x => shuffleChoices(x.rec.q));
   SES = { mode: "review", domKey: null, lesKey: null, key: null, title: "مراجعة الأخطاء", method: "",
     queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null,
-    locked: false, xp: 0, gems: 0, replay: false, xpBoost: false, hearts: 999, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
+    locked: false, xp: 0, gems: 0, replay: false, xpBoost: false, hearts: 999, notime: true, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
   renderSession();
 };
 
@@ -5235,7 +5239,7 @@ function renderLogin() {
 A.login = function () {
   const inp = document.getElementById("loginName");
   const name = (inp.value || "").trim();
-  if (!name) { inp.classList.remove("err"); void inp.offsetWidth; inp.classList.add("err"); inp.focus(); return; }
+  if (!name) { A.loginGuest(); return; }
   S.user = { name: name.slice(0, 20), guest: false }; save(); sndGood();
   afterLogin();
 };
@@ -5276,37 +5280,8 @@ A.introReplay = function () { renderIntroValue(); };   // preview.html#intro
 function afterLogin() {
   S.joined = S.joined || todayKey();
   if (!S.introSeen) { renderIntroValue(); return; }
-  if (!S.trackAsked) { renderTrackPick(); return; }
-  if (!S.examAsked && !S.exam) { renderExamSetup(true); return; }
-  if (!S.placeAsked && !Object.keys(S.lessons || {}).length) { renderPlaceOffer(); return; }
   save(); render();
 }
-
-/* The track decided which half of the bank a student ever sees, and it was chosen
-   for them: everyone started as علمي, so a literary student trained on a load they
-   will not sit until they happened to open Settings. Ask once, plainly, with what
-   each one means. */
-function renderTrackPick() {
-  const opt = (t, name, sub, ic) => `<button type="button" class="tp-opt" onclick="A.pickTrack('${t}')">
-    <span class="tp-ic">${ico(ic, 30)}</span>
-    <span class="tp-tx"><b>${name}</b><span>${sub}</span></span>
-    <span class="tp-chev">${CHEV_SVG}</span>
-  </button>`;
-  $app.innerHTML = `<div class="screen screen-full tp-screen">
-    <h1 class="login-title">أي مسار تدرس؟</h1>
-    <p class="login-sub">يحدّد نوع الأسئلة التي تتدرّب عليها — ويمكن تغييره من الإعدادات</p>
-    <div class="tp-list">
-      ${opt("sci", "علمي", "الحمل الكمي الكامل، بكل أسئلة الهندسة والجذور والأسس", "target")}
-      ${opt("lit", "أدبي / نظري", "حمل كمي أخف، بدون الأسئلة المخصّصة للمسار العلمي", "book")}
-    </div>
-  </div>`;
-  window.scrollTo(0, 0);
-}
-A.pickTrack = function (t) {
-  S.track = t === "lit" ? "lit" : "sci";
-  S.trackAsked = true; save(); sndGood();
-  afterLogin();
-};
 
 /* A strong student three weeks from the exam should not have to grind lesson one.
    Offered once, and never nagged: either answer is remembered.
@@ -5316,11 +5291,11 @@ A.pickTrack = function (t) {
 function renderPlaceOffer() {
   $app.innerHTML = `<div class="screen screen-full tp-screen">
     <span class="po-badge pop">${ico("target", 54)}</span>
-    <h1 class="login-title">تعرف الأساسيات؟</h1>
-    <p class="login-sub">${qCount(PLACE_PER_UNIT * DOMAIN_ORDER.length)} بدون قلوب ولا وقت — نتخطّى بها ما تتقنه ونبدأ من حيث تحتاج فعلاً</p>
+    <h1 class="login-title">تبي نتخطّى اللي تعرفه؟</h1>
+    <p class="login-sub">${qCount(PLACE_PER_UNIT * DOMAIN_ORDER.length)} بدون قلوب ولا وقت — كل وحدة تتقنها نفتحها لك، وتبدأ من حيث تحتاج فعلاً</p>
     <div class="login-form">
-      <button class="btn" onclick="A.placeGo()">حدّد مستواي</button>
-      <button class="login-skip" onclick="A.placeSkip()">أبدأ من الدرس الأول</button>
+      <button class="btn" onclick="A.placeSkip()">أكمل بالترتيب</button>
+      <button class="login-skip" onclick="A.placeGo()">حدّد مستواي</button>
     </div>
   </div>`;
   window.scrollTo(0, 0);
