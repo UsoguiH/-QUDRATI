@@ -1569,7 +1569,7 @@ A.startLesson = function (domKey, lesKey, boost) {
   const safe = !Object.values(S.lessons).some(p => p.plays > 0);
   let xpBoost = false;
   if (boost && S.xp >= BOOST_COST) { S.xp -= BOOST_COST; xpBoost = true; save(); }  // pay for 2× rank XP up front
-  SES = { mode: "lesson", domKey, lesKey, key, title: l.title, method: l.method || "", queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null, locked: false, xp: 0, gems: 0, replay, xpBoost, safe, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
+  SES = { mode: "lesson", domKey, lesKey, key, title: l.title, method: l.method || "", queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null, locked: false, xp: 0, gems: 0, replay, xpBoost, safe, notime: safe, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
   /* Every lesson ships a written intro — the rule, the method, the common
      mistake — and none of it had ever rendered, because each question also
      carries its own method and "q.method || SES.method" always took the
@@ -2543,6 +2543,7 @@ function renderSession() {
    a student pause the exam by locking their phone. */
 function startQTimer(resume) {
   clearInterval(SES.timer);
+  if (!resume) SES.qStart = Date.now();
   if (SES.notime) { SES.timer = null; return; }        // placement is untimed on purpose
   if (!resume) SES.left = Q_SECS;
   SES.endsAt = Date.now() + SES.left * 1000;
@@ -2645,8 +2646,7 @@ function timeUp() {
   fb.className = "feedback bad show";
   fb.innerHTML = `<div class="fb-head"><span class="fb-x fb-clock">${TIMER_SVG}</span> انتهى الوقت!</div>
     <div class="fb-correct">الإجابة الصحيحة: ${correctTxt}</div>
-    <button class="fb-solution-toggle" onclick="A.toggleSol()">اعرض الحل</button>
-    <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
+    <div class="fb-solution" id="sol">${formatExplain(q.solution)}</div>
     <button class="btn btn-red" onclick="A.next()">متابعة</button>`;
   save();
 }
@@ -2685,7 +2685,10 @@ A.check = function () {
   if (!SES || SES.sel === null || SES.locked) return;
   SES.locked = true;
   stopQTimer();
-  SES.tSpent += Q_SECS - SES.left; SES.tAnswered++;
+  SES.tSpent += SES.notime
+    ? Math.min(Q_SECS, Math.round((Date.now() - (SES.qStart || Date.now())) / 1000))
+    : Q_SECS - SES.left;
+  SES.tAnswered++;
   const q = SES.queue[SES.idx];
   const correct = SES.sel === q.answer;
   const qs = S.qstats[q.id] = S.qstats[q.id] || { r: 0, w: 0 };
@@ -2742,8 +2745,11 @@ A.check = function () {
     /* the heart counter lives in the opposite corner from where the eye is, so
        the cost has to be stated here, and the last heart has to be a warning */
     const hLeft = SES.hearts;
+    const noFailLine = { place: "تحديد المستوى", review: "مراجعة", mix: "تدريب" }[SES.mode];
     const heartLine = SES.safe
       ? `<div class="fb-hearts">${ico("target", 15)} درسك الأول — جرّب براحتك، ما فيه خسارة</div>`
+      : noFailLine
+      ? `<div class="fb-hearts">${ico("target", 15)} ${noFailLine} — ما فيه قلوب ولا خسارة</div>`
       : hLeft === 0
       ? `<div class="fb-hearts out">${ico("heart", 15)} لم يتبقَّ لك قلوب</div>`
       : hLeft === 1
@@ -2840,7 +2846,7 @@ A.debugTiers  = function () { return LEAGUE_TIERS; };              // dev harnes
 A.debugTick   = function () { lbTick(); return LB_TIMER; };        // dev harness only
 A.debugSetXp  = function (n) { S.totalXp = n; save(); };            // dev harness only
 
-const NO_FAIL = { review: 1, place: 1 };          // 999 hearts: there is nothing to fail
+const NO_FAIL = { review: 1, place: 1, mix: 1 };  // 999 hearts: there is nothing to fail
 A.next = function () {
   if (!SES) return;                    // a stray Enter after the win screen
   if (!NO_FAIL[SES.mode] && !SES.safe && SES.hearts <= 0) { sessionFailed(); return; }
@@ -2978,13 +2984,19 @@ function lessonComplete() {
      many out of three for anyone listening to it rather than looking. */
   LAST_MISSES = Object.keys(SES.firstTry).filter(k => SES.firstTry[k] === false);
   const missCount = LAST_MISSES.length;
+  /* The first lesson cannot be failed, which means it can no longer tell a
+     struggling student the truth by ending the session. So the win screen says
+     it instead: the star and قدّور stay, because the student really did answer
+     every question, but the line stops calling it a clean finish and the review
+     button becomes the thing to do next rather than an afterthought. */
+  const struggled = SES.safe && acc < 50 && missCount;
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
     ${winHero()}
     <div class="win-stars" role="img" aria-label="نجومك في هذا الدرس: ${toAr(stars)} من ${toAr(3)}">
       ${[1, 2, 3].map(i => `<span class="wstar${i <= stars ? " on" : ""}" style="--d:${(.55 + i * .2).toFixed(2)}s">${WIN_STAR}</span>`).join("")}
     </div>
-    <h1 class="win-title">أكملت الدرس!</h1>
-    <p class="win-sub">سلسلة ${dayWord}</p>
+    <h1 class="win-title">${struggled ? "خلّصت درسك الأول" : "أكملت الدرس!"}</h1>
+    <p class="win-sub">${struggled ? "الأول دايماً أصعب — راجع اللي فاتك وارجع له، بيصير أسهل" : `سلسلة ${dayWord}`}</p>
     <div class="win-gems">${ico("gem", 20)} +${toAr(gemsWon)} جوهرة${boosted ? ` · ⚡ الخبرة ×٢` : ""}</div>
     <div class="result-cards">
       <div class="rcard rc-gold"><div class="rc-t">الخبرة</div><div class="rc-v">${ico("lightning", 20)} <span id="cv-xp">٠</span></div></div>
@@ -2993,8 +3005,11 @@ function lessonComplete() {
     </div>
     ${SES.teach ? `<div class="tc-coach win-coach">${BULB_SVG}<span>${TEACH_COACH.win}</span></div>` : ""}
     <div class="action-bar win-action" style="position:relative;right:auto;transform:none;max-width:340px;padding:0;background:none">
-      <button class="btn" onclick="A.winContinue()">متابعة</button>
-      ${missCount ? `<button class="btn btn-white win-again" onclick="A.reviewMissed()">راجع أخطاء الدرس</button>` : ""}
+      ${struggled
+        ? `<button class="btn" onclick="A.reviewMissed()">راجع أخطاء الدرس</button>
+           <button class="btn btn-white win-again" onclick="A.winContinue()">متابعة</button>`
+        : `<button class="btn" onclick="A.winContinue()">متابعة</button>
+           ${missCount ? `<button class="btn btn-white win-again" onclick="A.reviewMissed()">راجع أخطاء الدرس</button>` : ""}`}
     </div>
   </div></div>`;
   winHeroPlay();
