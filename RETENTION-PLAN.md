@@ -76,14 +76,23 @@ validator fight.
       chunks and lists every step wider than one star as a cliff
 - [x] Lesson one rated, and verified in a real browser: a new save's first question is now
       `٤٥ + ٤٥ + ٤٥ + ٤٥ + ٤٥ + ٤٥`, not `٨ + ٢ × (٧ − ٤)² ÷ ٦`
-- [ ] Lessons 2–3 rated, then the rest
-- [ ] The one cliff left: `skills.bigsum` chunk 1 goes ★ then ★★★, because the only question
-      exercising «ترتيب العمليات» is the five-operation one. A bridge needs a new question,
-      which changes the lesson's count and the chunk's share of the eight a session serves —
-      held for the ramp audit's recommendation
+- [x] The cliff in `skills.bigsum` bridged — and the audit found it was not only a size jump:
+      the chunk rehearsed one rule and graded another. Chunks now teach a rule, rehearse it,
+      teach the next and rehearse that
+- [x] The same mismatch fixed in lessons 2 and 3, and lesson 3's counting chunk split so the
+      combinations rule has its own rehearsal
+- [x] The comparison format rehearsed before it is graded. It is 35 of 255 questions, reaches
+      a student as question four of lesson three, and had no rehearsal anywhere — its fourth
+      option «المعطيات غير كافية» appeared nowhere in the teaching layer at all
+- [x] The cliff check now fails the build rather than listing, so a future rating that
+      introduces a cliff has to be bridged before it ships
+- [ ] Lessons 4–26 rated (245 questions). Rate against the app's whole scale, not the lesson's:
+      `difficulty` also drives the XP and gem payout per question (`[0,6,10,16]` / `[0,3,5,8]`),
+      so rating a lesson's hardest question ★★★ inside a ★ lesson inflates what it pays
 
 ### R3 — The unlosable opening
-- [ ] The first lesson of a new save cannot be failed
+- [x] The first lesson of a new save cannot be failed — no hearts in the header, no heart lost,
+      no fail screen; verified by answering twenty questions wrong on a fresh save
 - [ ] Time to the first celebration measured and cut
 
 ### R4 — Every beat answered

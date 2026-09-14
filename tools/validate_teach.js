@@ -75,7 +75,7 @@ for (const [key, t] of Object.entries(QTEACH)) {
         if (s.hook !== undefined && (typeof s.hook !== "string" || !s.hook || words(s.hook) > CAPS.hook || s.hook === s.title)) bad(`${st}: hook missing, > ${CAPS.hook} words, or same as the title`);
         if (fig[`${key}:${s.n}`]) figUsed.add(`${key}:${s.n}`);
       } else {
-        if (!Array.isArray(s.choices) || s.choices.length < 2 || s.choices.length > 3) bad(`${st}: need 2–3 choices`);
+        if (!Array.isArray(s.choices) || s.choices.length < 2 || s.choices.length > 4) bad(`${st}: need 2–4 choices`);
         else if (new Set(s.choices).size !== s.choices.length) bad(`${st}: duplicate choices`);
         if (typeof s.answer !== "number" || !s.choices || s.answer < 0 || s.answer >= s.choices.length) bad(`${st}: bad answer index`);
         if (words(s.q) > CAPS.q) bad(`${st}: q > ${CAPS.q} words`);
