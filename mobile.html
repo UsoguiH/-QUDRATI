@@ -169,8 +169,9 @@
   <div class="grp">
     <label for="tgt">المصدر</label>
     <select id="tgt">
-      <option value="index">التطبيق الحقيقي</option>
-      <option value="preview" selected>شاشة محددة (بيانات تجريبية)</option>
+      <option value="fresh" selected>طالب جديد (من الصفر)</option>
+      <option value="index">التطبيق الحقيقي (حفظك الحالي)</option>
+      <option value="preview">شاشة محددة (بيانات تجريبية)</option>
     </select>
   </div>
 
@@ -274,10 +275,15 @@
     // the query string goes before the hash so a re-pick of the same screen
     // still reloads and the harness re-runs its seeding
     var bust = "?t=" + Date.now();
-    return tgt.value === "index" ? "index.html" + bust : "preview.html" + bust + "#" + scr.value;
+    return tgt.value === "preview" ? "preview.html" + bust + "#" + scr.value : "index.html" + bust;
   }
   function load() {
-    $("scrGrp").style.display = tgt.value === "index" ? "none" : "";
+    $("scrGrp").style.display = tgt.value === "preview" ? "" : "none";
+    /* «طالب جديد» is the only way to see the first run: the seeded preview sets
+       introSeen and a played lesson, so it starts past the whole opening, and
+       the real app keeps whatever save this browser already has. The frame is
+       same-origin, so clearing here clears what it will read. */
+    if (tgt.value === "fresh") { try { localStorage.removeItem("qudratState"); } catch (e) {} }
     frame.src = src();
     fit();
   }
