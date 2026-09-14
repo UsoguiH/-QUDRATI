@@ -636,7 +636,10 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
    the button under it — so it fits the space the action bar already reserves
    and nothing has to scroll out from under it while the card is jumping. */
 .fb-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.fb-row .fb-head { flex: 1; min-width: 0; }
 .fb-row .fb-solution-toggle { white-space: nowrap; padding: 6px 0; }
+.fb-gain { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; font-size: 15px; font-weight: 800; color: var(--green-dk); background: rgba(255,255,255,.75); border-radius: 999px; padding: 3px 9px; }
+.fb-gain svg { display: block; }
 .feedback.good { padding-top: 14px; }
 .fb-solution {
   background: rgba(255,255,255,.75); border-radius: 12px; padding: 10px 12px;
@@ -2602,6 +2605,7 @@ button.dom-stat:active { transform: scale(.99); }
 .sk-days .check svg { width: 100% !important; height: 100% !important; }
 .sk-foot { margin-top: 36px; width: 100%; opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s cubic-bezier(.2,.7,.3,1); }
 .sk-foot.show { opacity: 1; transform: none; }
+.sk-next { color: var(--gray); font-size: 15px; font-weight: 700; line-height: 1.5; text-align: center; margin-bottom: 16px; }
 .sk-btn { width: 100%; }
 
 /* ============================================================

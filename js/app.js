@@ -465,10 +465,19 @@ function dailyTick() {
         .sort((a, b) => a[1] - b[1]).slice(0, keys.length - 63)
         .forEach(pair => delete S.days[pair[0]]);
   }
+  questBump();
+}
+function questBump() {
   if (S.daily.n >= dailyGoal()) return;
   S.daily.n++;
   if (S.daily.n === dailyGoal()) setTimeout(A.questBanner, 1200);
 }
+/* A quick check is a question the student answered, and counting it is what
+   puts the chest inside the first session at all: the goal is ten and a lesson
+   serves eight, so a student who cleared lesson one perfectly ended the day on
+   ٨/١٠ and never saw the ceremony — while a student who got everything wrong
+   reached ten through the retries and did. */
+function questTick() { dailyReset(); questBump(); }
 
 /* Arabic counted nouns: 1 singular, 2 dual, 3-10 plural, 11+ singular accusative */
 function arPlural(n, one, two, few, many) {
@@ -1698,6 +1707,7 @@ A.teachPick = function (i) {
   const rec = teachRecord(), ns = SES.teach.T.chunks[cur.ci].steps.filter(s => s.type === "rule").map(s => s.n);
   if (cur.revealed) { rec.missed = rec.missed.filter(n => !ns.includes(n)); playCorrect(); }
   else ns.forEach(n => { if (!rec.missed.includes(n)) rec.missed.push(n); });
+  questTick();
   save();
   renderTeach();
   teachFx(document.querySelector(`.tc-choices .choice[data-ci="${i}"]`), cur.revealed);
@@ -1728,6 +1738,7 @@ A.teachNext = function () {
   save();
   t.seen += cur.steps.length;           // banked, so the bar does not step back
   t.first = false; t.cur = null;
+  sndGood();                            // the chunk is finished; it was silent
   renderSession();
 };
 A.teachBack = function () {
@@ -2720,14 +2731,17 @@ A.check = function () {
        ones. Pay per question, by difficulty, and decay only what this player
        has personally already got right. */
     const seenBefore = (S.qstats[q.id] || {}).r > 0;
-    if (seenBefore || SES.retried[q.id]) { SES.xp += 3; SES.gems += 2; }
-    else { const d = q.difficulty || 2; SES.xp += [0, 6, 10, 16][d] || 10; SES.gems += [0, 3, 5, 8][d] || 5; }
+    const d = q.difficulty || 2;
+    const gemGain = seenBefore || SES.retried[q.id] ? 2 : ([0, 3, 5, 8][d] || 5);
+    SES.xp += seenBefore || SES.retried[q.id] ? 3 : ([0, 6, 10, 16][d] || 10);
+    SES.gems += gemGain;
     paintProg(SES.idx + 1);              // the bar moves with the answer, not with the next screen
     fb.className = "feedback good show has-crest";
     fb.innerHTML = `<svg class="fb-crest" viewBox="0 0 380 90" preserveAspectRatio="none" aria-hidden="true">
         <path class="fb-crest-fill"></path>
         <path class="fb-crest-line" fill="none" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"></path>
       </svg><div class="fb-row"><div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> ${praiseFor()}</div>
+        <span class="fb-gain">${ico("gem", 15)} +${toAr(gemGain)}</span>
         <button class="fb-solution-toggle" onclick="A.toggleSol()">اعرض الحل</button></div>
       <div class="fb-solution" id="sol" style="display:none">${formatExplain(q.solution)}</div>
       <button class="btn" onclick="A.next()">متابعة</button>`;
@@ -4212,7 +4226,7 @@ function showStreakCelebration(count, onDone) {
     <div class="sk-num" aria-hidden="true"><div class="skn-roll" id="sknRoll"><b>${toAr(Math.max(0, count - 1))}</b><b>${toAr(count)}</b></div></div>
     <div class="sk-sub" id="skSub">${streakDayLabel(count)}</div>
     <div class="sk-cal" id="skCal"><div class="sk-days">${days}</div></div>
-    <div class="sk-foot" id="skFoot"><button class="btn sk-btn" onclick="A.closeStreak()">متابعة</button></div>
+    <div class="sk-foot" id="skFoot">${count === 1 ? `<div class="sk-next">ارجع بكرة وتصير سلسلتك يومين — درس واحد يكفي</div>` : ""}<button class="btn sk-btn" onclick="A.closeStreak()">متابعة</button></div>
   </div>`;
   document.body.appendChild(veil);
   requestAnimationFrame(() => veil.classList.add("show"));
