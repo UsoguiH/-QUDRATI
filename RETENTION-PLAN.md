@@ -92,14 +92,45 @@ validator fight.
 
 ### R3 — The unlosable opening
 - [x] The first lesson of a new save cannot be failed — no hearts in the header, no heart lost,
-      no fail screen; verified by answering twenty questions wrong on a fresh save
-- [ ] Time to the first celebration measured and cut
+      no fail screen; verified by answering twenty questions wrong on a fresh save. It is
+      untimed too, so a slow reader is no longer scored wrong on a question they never answered
+- [x] Because it cannot end honestly by failing, the win screen does it: under 50% it reads
+      «خلّصت درسك الأول» and «راجع أخطاء الدرس» becomes the green button
+- [x] Time to the first celebration measured and cut. Eleven screens and about 2:23, four of
+      them asking and none giving; now disclaimer, name, value screen, path. The placement
+      test — twelve questions from the medium-and-hard end of all four units with no teaching
+      card behind any of them — moved from screen five to after the first win, and its green
+      button became the gentle answer
 
 ### R4 — Every beat answered
-- [ ] The silent moments in the loop found and given their beat, within the no-confetti rule
+- [x] The gems a lesson banks are visible as they are earned, not only on the win screen
+- [x] Finishing a chunk makes a sound; it was silent
+- [x] The chest is reachable in session one. The goal is ten and a lesson serves eight, so a
+      perfect first lesson ended on ٨/١٠ and never saw the ceremony — while a student who got
+      everything wrong reached ten through the retries and did. Quick checks now count
+- [x] The first correct answer ever has its own line rather than the fifth of a rotation
 
 ### R5 — The comeback
-- [ ] The student leaves session one knowing what is waiting tomorrow, and that it is small
+- [x] On day one the streak screen says «ارجع بكرة وتصير سلسلتك يومين — درس واحد يكفي», and
+      the chest they can now reach is waiting on the path behind it
+
+## Defects found on the way, and fixed
+
+- The daily mix could fail: five hearts, a mode missing from `NO_FAIL`, and `sessionFailed`
+  reading a `domKey` that is null there — it threw on the retry button
+- «باقٍ لك ٩٩٨ من القلوب» in every heartless mode
+- Review and the daily mix ran a countdown, which `CLAUDE.md` has always said they do not
+- A timeout hid the solution behind a toggle while a wrong guess showed it open
+- The «ابدأ» bubble sat on top of the finished lesson's title on the path
+- `preview.html#fb` and `#fbgood` could not open at all: every lesson teaches cards now, so
+  `renderSession()` opened one instead of a question
+
+## Still open
+
+- 245 questions to rate. Rate against the app's whole scale, not the lesson's: `difficulty`
+  also drives the XP and gem payout per question
+- The track is still a no-op — all 255 questions are `track:"both"`. Either tag them, or the
+  literary track stays a Settings row that changes nothing
 
 ## Rules this work keeps
 

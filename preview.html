@@ -147,6 +147,9 @@
         A.introReplay();   // the seed already cleared introSeen for #intro
       } else if (h === "fb" || h === "fbgood") {
         const d = window.QBANK.numbers;
+        /* every lesson teaches cards now, so renderSession() opens one instead
+           of a question and neither feedback sheet was reachable */
+        A.debugTeachAll("numbers." + d.lessons[0].key);
         A.startLesson("numbers", d.lessons[0].key); A.beginQuestions();
         /* pick DELIBERATELY: choices are shuffled per serve, so index 0 landed on the
            good sheet or the bad one at random and neither screen was reachable on demand */

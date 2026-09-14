@@ -2862,6 +2862,18 @@ A.debugWeek   = function (n) { return leagueWeek(n || Date.now()); }; // dev har
 A.debugTiers  = function () { return LEAGUE_TIERS; };              // dev harness only
 A.debugTick   = function () { lbTick(); return LB_TIMER; };        // dev harness only
 A.debugSetXp  = function (n) { S.totalXp = n; save(); };            // dev harness only
+/* Every lesson teaches cards now, so renderSession() opens one instead of a
+   question and preview.html#fb could not reach the feedback sheet at all.
+   Mark a lesson's rules taught so the harness lands on the questions. */
+A.debugTeachAll = function (key) {                                  // dev harness only
+  const T = window.QTEACH && window.QTEACH[key]; if (!T) return;
+  S.teach = S.teach || {};
+  const rec = S.teach[key] = S.teach[key] || { missed: [], taught: [] };
+  T.chunks.forEach(c => c.steps.forEach(st => {
+    if (st.type === "rule" && !rec.taught.includes(st.n)) rec.taught.push(st.n);
+  }));
+  save();
+};
 
 const NO_FAIL = { review: 1, place: 1, mix: 1 };  // 999 hearts: there is nothing to fail
 A.next = function () {
