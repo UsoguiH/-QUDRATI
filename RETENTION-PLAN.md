@@ -68,11 +68,19 @@ validator fight.
 - [ ] Rank every jump in the app, and name every cliff in lessons 1–3
 
 ### R2 — A ramp with no cliffs
-- [ ] Per-question difficulty authored in `qudrat-lessons-duolingo.md`, read by the importer,
-      falling back to the lesson stars where absent so it can land lesson by lesson
-- [ ] Lessons 1–3 rated first, then the rest
-- [ ] A bridging step where the gap between a quick check and its first question is still too
-      wide after reordering
+- [x] Per-question difficulty authored in `qudrat-lessons-duolingo.md`, read by the importer,
+      falling back to the lesson stars where absent so it can land lesson by lesson — a star
+      marker between the number and the stem, `**٨)** ★★ …`
+- [x] The ramp check moved to where it can be true: `tools/validate.js` was measuring file
+      order, which is not the order the app serves; `tools/validate_teach.js` now knows the
+      chunks and lists every step wider than one star as a cliff
+- [x] Lesson one rated, and verified in a real browser: a new save's first question is now
+      `٤٥ + ٤٥ + ٤٥ + ٤٥ + ٤٥ + ٤٥`, not `٨ + ٢ × (٧ − ٤)² ÷ ٦`
+- [ ] Lessons 2–3 rated, then the rest
+- [ ] The one cliff left: `skills.bigsum` chunk 1 goes ★ then ★★★, because the only question
+      exercising «ترتيب العمليات» is the five-operation one. A bridge needs a new question,
+      which changes the lesson's count and the chunk's share of the eight a session serves —
+      held for the ramp audit's recommendation
 
 ### R3 — The unlosable opening
 - [ ] The first lesson of a new save cannot be failed

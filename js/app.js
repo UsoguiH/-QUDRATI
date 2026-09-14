@@ -1560,9 +1560,16 @@ A.startLesson = function (domKey, lesKey, boost) {
   if (!qs.length) { showModal("⭐", "لا توجد أسئلة", "لا توجد أسئلة متاحة لهذا الدرس في مسارك الحالي.", "حسناً"); return; }
   const prev = S.lessons[key];
   const replay = !!(prev && prev.stars > 0);            // already cleared → farm mode (+2/+2)
+  /* A student who loses their first lesson does not come back, and there is
+     nothing to learn from running out of hearts three minutes in. The first
+     lesson anyone ever plays runs without them: no hearts in the header, no
+     heart lost on a wrong answer, no fail screen. Hearts arrive in lesson two,
+     once there is a win behind them. A unit unlocked by the placement test has
+     plays 0 too, so a strong student gets the same gentle first play. */
+  const safe = !Object.values(S.lessons).some(p => p.plays > 0);
   let xpBoost = false;
   if (boost && S.xp >= BOOST_COST) { S.xp -= BOOST_COST; xpBoost = true; save(); }  // pay for 2× rank XP up front
-  SES = { mode: "lesson", domKey, lesKey, key, title: l.title, method: l.method || "", queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null, locked: false, xp: 0, gems: 0, replay, xpBoost, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
+  SES = { mode: "lesson", domKey, lesKey, key, title: l.title, method: l.method || "", queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null, locked: false, xp: 0, gems: 0, replay, xpBoost, safe, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
   /* Every lesson ships a written intro — the rule, the method, the common
      mistake — and none of it had ever rendered, because each question also
      carries its own method and "q.method || SES.method" always took the
@@ -2517,7 +2524,7 @@ function renderSession() {
           <div class="fx-tag" id="fxTag" aria-hidden="true"></div>
         </div>
         ${SES.notime ? "" : timerBar()}
-        ${NO_FAIL[SES.mode]
+        ${NO_FAIL[SES.mode] || SES.safe
           ? `<span class="sess-hearts sess-review">${ico("target", 22)} ${toAr(SES.done)}/${toAr(SES.total)}</span>`
           : `<span class="sess-hearts" id="sesHearts" aria-label="القلوب المتبقية: ${toAr(SES.hearts)}">${ico("heart", 22)} ${toAr(SES.hearts)}</span>`}
       </div>
@@ -2592,6 +2599,7 @@ function toast(msg, kind) {
 }
 
 function loseHeart() {
+  if (SES.safe) return;                  // the first lesson ever played costs nothing
   SES.hearts = Math.max(0, SES.hearts - 1);
   const el = document.getElementById("sesHearts");
   if (el) {
@@ -2734,7 +2742,9 @@ A.check = function () {
     /* the heart counter lives in the opposite corner from where the eye is, so
        the cost has to be stated here, and the last heart has to be a warning */
     const hLeft = SES.hearts;
-    const heartLine = hLeft === 0
+    const heartLine = SES.safe
+      ? `<div class="fb-hearts">${ico("target", 15)} درسك الأول — جرّب براحتك، ما فيه خسارة</div>`
+      : hLeft === 0
       ? `<div class="fb-hearts out">${ico("heart", 15)} لم يتبقَّ لك قلوب</div>`
       : hLeft === 1
         ? `<div class="fb-hearts warn">${ico("heart", 15)} باقٍ لك قلب واحد — ركّز</div>`
@@ -2833,7 +2843,7 @@ A.debugSetXp  = function (n) { S.totalXp = n; save(); };            // dev harne
 const NO_FAIL = { review: 1, place: 1 };          // 999 hearts: there is nothing to fail
 A.next = function () {
   if (!SES) return;                    // a stray Enter after the win screen
-  if (!NO_FAIL[SES.mode] && SES.hearts <= 0) { sessionFailed(); return; }
+  if (!NO_FAIL[SES.mode] && !SES.safe && SES.hearts <= 0) { sessionFailed(); return; }
   SES.idx++; SES.sel = null; SES.locked = false;
   if (SES.done >= SES.total || SES.idx >= SES.queue.length) {
     SES.mode === "place" ? placementComplete()

@@ -22,8 +22,9 @@ const figUsed = new Set();
 
 let failed = false;
 /* Difficulty steps a student cannot climb, collected across every lesson and listed at the
-   end. This is a worklist, not a failure, while the per-question ratings are still being
-   authored lesson by lesson; it becomes a failure once the list is empty. */
+   end. A lesson whose questions are all still unrated shares one difficulty and reports
+   nothing, so this bites only on lessons that have been rated — which is where it is wanted:
+   a rating that introduces a cliff has to be bridged before it ships. */
 const cliffs = [];
 const bad = msg => { console.log("FAIL " + msg); failed = true; };
 const words = s => String(s).trim().split(/\s+/).filter(Boolean).length;
@@ -123,9 +124,12 @@ for (const k of Object.keys(fig)) {
   if (/[0-9]/.test(String(fig[k]).replace(/<[^>]+>/g, ""))) bad(`figure ${k}: Latin digit in a label`);
 }
 if (Object.keys(fig).length) console.log(`figures: ${Object.keys(fig).length}`);
-if (cliffs.length) console.log(`
-difficulty cliffs still to bridge (${cliffs.length}):
+if (cliffs.length) {
+  failed = true;
+  console.log(`
+FAIL difficulty cliffs a student cannot climb (${cliffs.length}) — bridge or re-rate:
   ` + cliffs.join(`
   `));
+}
 console.log(failed ? "RESULT: FAILED" : "RESULT: OK");
 process.exit(failed ? 1 : 0);
