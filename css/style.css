@@ -312,13 +312,14 @@ svg.ic { display: block; }
 :root[data-motion="reduced"] .bk-bulb { animation: none; }
 :root[data-motion="reduced"] .teach-bar > i { transition: none; }
 
-/* stars under a cleared node — they were stored and never drawn */
-.node-stars { display: flex; gap: 4px; margin-top: 8px; }
-.node-stars .ns {
-  width: 9px; height: 9px; border-radius: 50%;
-  background: var(--line); display: block;
-}
-.node-stars .ns.on { background: var(--gold); box-shadow: 0 1px 0 var(--gold-dk); }
+/* stars under a cleared node, drawn as stars — as dots they read as a coin's
+   change, and they sat on the title */
+.node-stars { display: flex; gap: 3px; margin-top: 12px; }
+.node-stars .ns { width: 15px; height: 15px; display: block; color: var(--line); overflow: visible; }
+.node-stars .ns path { fill: currentColor; }
+.node-stars .ns.on { color: var(--gold); filter: drop-shadow(0 1.5px 0 var(--gold-dk)); }
+.node-stars .ns:nth-child(2) { transform: translateY(-2px); }
+.node-stars + .node-label { margin-top: 8px; }
 
 /* ---------- Screens ---------- */
 .screen { flex: 1; display: flex; flex-direction: column; padding-bottom: calc(var(--nav-h) + 16px); animation: fadeIn .25s ease; }

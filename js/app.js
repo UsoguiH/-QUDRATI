@@ -503,7 +503,7 @@ function renderSidebar() {
   if (!el) return;
   const NAV = [
     { k: "path",     icon: "nav-home",   label: "الدروس",          short: "الدروس" },
-    { k: "league",   icon: "nav-league", label: "المجلس",          short: "المجلس" },
+    { k: "league",   icon: "nav-league", label: "الدوري",           short: "الدوري" },
     { k: "mock",     icon: "nav-exam",   label: "اختبار تجريبي",   short: "تجريبي" },
     { k: "stats",    icon: "nav-stats",  label: "إحصائياتي",       short: "إحصائيات" },
     { k: "review",   icon: "target",     label: "مراجعة الأخطاء",  short: "الأخطاء" },
@@ -699,7 +699,7 @@ function chestTip(msg) {
 }
 function bottomnav(active) {
   /* the labels were the state keys — "path", "league" — read aloud in Arabic */
-  const items = [["path", "nav-home", "الدروس"], ["league", "nav-league", "المجلس"],
+  const items = [["path", "nav-home", "الدروس"], ["league", "nav-league", "الدوري"],
     ["mock", "nav-exam", "اختبار تجريبي"], ["stats", "nav-stats", "إحصائياتي"], ["settings", "nav-more", "الإعدادات"]];
   return `<nav class="bottomnav">` + items.map(([k, i, label]) => {
     const act = active === k;
@@ -1677,7 +1677,7 @@ function renderPath() {
           ${nodeIcon}
         </button>
         ${done ? '<span class="node-stars" aria-hidden="true">' + [1, 2, 3].map(sn =>
-          '<i class="ns' + (sn <= p.stars ? ' on' : '') + '"></i>').join('') + '</span>' : ''}
+          '<svg class="ns' + (sn <= p.stars ? ' on' : '') + '" viewBox="5 4 30 30">' + LESSON_ICON_STAR + '</svg>').join('') + '</span>' : ''}
         <span class="node-label${done ? ' nl-done' : open ? '' : ' nl-locked'}">${l.title}</span>
       </div></div>`;
       gi++;
@@ -1956,6 +1956,7 @@ function nodeFlipLoop(delay) {
 }
 A.debugPathPay = function (gold) {
   const key = "skills.bigsum", L = learnSet(key), rec = S.learn[key] = learnRec(key);
+  S.lessons = {};                                    // the node it plays on is the first: nothing done after it
   if (gold) {
     rec.done = L.lessons.map(x => x.id);
     S.lessons[key] = { stars: 2, plays: L.lessons.length, last: todayKey() };
@@ -6886,7 +6887,6 @@ function renderWelcome() {
     </div>
     <div class="wl-cta">
       <button class="btn" onclick="A.obStart()">ابدأ الآن</button>
-      <button class="btn btn-ghost" onclick="A.restoreShow()">عندي نسخة احتياطية</button>
     </div>
   </div>`;
   window.scrollTo(0, 0);

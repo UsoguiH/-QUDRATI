@@ -48,7 +48,7 @@
     streak: { count: 12, last: null },
     /* #warm is the first lesson anyone ever plays, and the app decides that by
        "no lesson has been played" — so that hash seeds a save with none. */
-    lessons: ["#warm", "#warmdone"].includes(location.hash) || location.hash.indexOf("#learn") === 0 || location.hash.indexOf("#place") === 0 || location.hash.indexOf("#ob-") === 0 || location.hash === "#welcome" || location.hash === "#level" ? {} : { "numbers.fractions": { stars: 3, plays: 1 } },
+    lessons: ["#warm", "#warmdone"].includes(location.hash) || location.hash.indexOf("#learn") === 0 || location.hash.indexOf("#place") === 0 || location.hash.indexOf("#ob-") === 0 || location.hash === "#welcome" || location.hash === "#level" ? {} : { "skills.bigsum": { stars: 3, plays: 1 }, "skills.keylaws": { stars: 2, plays: 1 } },
     /* a believable fortnight for the stats week card and its pie: four days
        practised this week, three the week before */
     days: (function () { var o = {}, m = new Date(new Date().setHours(0, 0, 0, 0));
