@@ -1772,10 +1772,11 @@ button.dom-stat:active { transform: scale(.99); }
 
 /* A mouse is not a finger: it hovers, and until now nothing moved under it.
    Only where there is a real pointer — a touch screen reports hover as sticky
-   and would leave a button lit after the tap. */
+   and would leave a button lit after the tap. A node is still hovered while
+   the mouse presses it, so its lift stands aside for the press. */
 @media (hover: hover) and (pointer: fine) {
   .btn:not(:disabled):hover { filter: brightness(1.04); }
-  .node:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 9px 0 var(--node-s, var(--purple-dk)); }
+  .node:not(:disabled):not(:active):hover { transform: translateY(-2px); box-shadow: 0 9px 0 var(--node-s, var(--purple-dk)); }
   .qn-chip:hover:not(.cur) { border-color: var(--blue-border); }
   .set-item.set-link:hover, .due-card:hover, .ec2:hover, .dom-stat:hover,
   .rank-card:hover, .mistakes-card:hover, .rp-opt:hover { background: var(--surface-hover); }
@@ -3036,7 +3037,7 @@ body:has(.screen-session) { overflow: hidden; }
   .btn:not(:disabled):hover        { filter: brightness(1.06); }
   .choice:not(:disabled):hover     { border-color: var(--blue-border); background: #F6FCFF; }
   .choice.sel:not(:disabled):hover { background: var(--blue-light); }
-  .node:not(:disabled):hover       { transform: translateY(-2px); }
+  .node:not(:disabled):not(:active):hover { transform: translateY(-2px); }
   .navbtn:hover                    { background: var(--line); }
   .x-btn:hover                     { opacity: .6; }
   .card[onclick]:hover,
