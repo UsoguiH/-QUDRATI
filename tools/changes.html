@@ -75,7 +75,7 @@
 <body>
 <header>
   <h1>Every change, in order</h1>
-  <p>Two goals from 2026-10-21, four from 2026-10-22 and seven from 2026-10-23. Press <b>Play</b> beside a change to open that screen as it is now; scripted ones tap, type and pick by themselves. Two screens run at a time.</p>
+  <p>Two goals from 2026-10-21, four from 2026-10-22 and eight from 2026-10-23. Press <b>Play</b> beside a change to open that screen as it is now; scripted ones tap, type and pick by themselves. Two screens run at a time.</p>
   <div class="legend"><span class="tag t-live">Live now</span><span class="tag t-old">Replaced later (the frame shows what replaced it)</span><span class="tag t-new">This goal</span></div>
 </header>
 
@@ -558,7 +558,7 @@ const PARTS = [
   { h: "Goal 13: press & open is Duolingo's, and every unit banner spans the path",
     p: "Your words: «the last thing is [Press & open] — do it correctly like Duolingo please, and fix this problem where the blue lesson bar is not complete».",
     items: [
-      { t: "Press & open, measured off Duolingo's file", s: "new", hash: "pop",
+      { t: "Press & open, measured off Duolingo's file", s: "live", hash: "pop",
         what: ["I played Duolingo's node at a tenth of its speed again, pressed it, released it, opened its card and closed it, and measured the coin and its ring in every frame.",
                "The press: the face drops its whole lip in one frame (ours eased over 80ms) and comes back on the release with Duolingo's two-step settle.",
                "The ring now breathes as Duolingo's does: out and in every two seconds, slow to leave each end, fading as it pulls in (it used to pulse on a 1.8s ease).",
@@ -567,13 +567,33 @@ const PARTS = [
                "The lab's card was wrong too: it started the ring in a state that never breathes or tightens. It now shows the real thing."],
         why: "«do it correctly like Duolingo».",
         code: "A.nodePress, nodeRelease, ringSelect, ringResume, RING_SEL, ringIdle, sfxPlay, assets/sounds/node-press.wav · node-release.wav · node-close.wav" },
-      { t: "Every unit banner spans the path", s: "new", hash: "path",
+      { t: "Every unit banner spans the path", s: "live", hash: "path",
         what: ["The banner became a button when it started opening the unit's rules, and a button is only as wide as its text, so units with short names (أساسيات القدرات) came out narrow. It now spans the path on every unit, on the phone and on the desktop."],
         why: "Image 53.",
         code: ".unit-banner width" },
-      { t: "Bookkeeping", s: "new",
+      { t: "Bookkeeping", s: "live",
         what: ["The current lesson's title moved down 6px so the ring clears it at its widest breath. sw.js and index.html bumped to 82. CLAUDE.md updated."],
         noframe: "No screen — files and notes" }
+    ] },
+  { h: "Goal 14: «الدوري», one button to start, real stars, and the league climb",
+    p: "Your words: «change this name to something better», «fix this, it's like I'm winning», «in Brilliant … an animation of you gaining a better ranking at the leaderboard — apply it and make it magnificent», and «remove عندي نسخة احتياطية from the start screen».",
+    items: [
+      { t: "The league climb after a lesson", s: "new", hash: "climb",
+        what: ["When a lesson's XP lifts you past rivals, «متابعة» on the win screen opens the climb before «تقدّمك اليوم».",
+               "Your row's XP counts up, the row lifts off the board and rises past each rival in turn: each drops a place under you with a bump, the big gold number above ticks over on a note a step higher, and the window follows you.",
+               "It lands with a squash and a shine, then «تقدّمت ٥ مراكز!» (or «تصدّرت الدوري!») and how much XP is left to pass the next rival. A tap anywhere jumps to the end.",
+               "It is measured, not made up: the same rivals at the same moment, before and after the lesson. A lesson that moves you nowhere skips it, and a new tier keeps its own rank-up celebration."],
+        why: "Brilliant's leaderboard moment, «make it magnificent» — with our rule of light and weight, no confetti.",
+        code: "A.winOn, A.winClimb, climbPlay, WIN.climb",
+        extra: [{ label: "To the top", hash: "climbtop" }] },
+      { t: "«المجلس» is now «الدوري»", s: "new", hash: "league",
+        what: ["Duolingo's Arabic word for its leagues, and the right name for a ladder from bronze to the champions."], why: "Image 54." },
+      { t: "Done nodes: real stars, nothing out of order", s: "new", hash: "path",
+        what: ["The stars under a done node were small dots on the title and read like a coin's change; they are stars now, with room under them. The preview had «الكسور» won in the middle of locked lessons, a leftover seed; it now finishes the first two lessons in order."],
+        why: "Image 55." },
+      { t: "One button on the welcome screen", s: "new", hash: "welcome",
+        what: ["«عندي نسخة احتياطية» is gone; «ابدأ الآن» is the only thing to do. A backup is still restored from Settings."],
+        why: "«remove عندي نسخة احتياطية from the real start screen»." }
     ] }
 ];
 

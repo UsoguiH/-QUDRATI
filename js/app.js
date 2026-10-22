@@ -1954,6 +1954,17 @@ function nodeFlipLoop(delay) {
     flipT = setTimeout(go, 6000);
   }, delay || 1800);
 }
+A.debugClimb = function (n) {                        // dev harness only: a lesson that lifts you n places
+  const at = Date.now(), lb = leagueStandings(at), from = lb.findIndex(e => e.you) + 1, ti = tierIndex();
+  for (let k = Math.min(n || 5, from - 1); k > 0; k--) {
+    const gain = lb[from - 1 - k].xp - (S.totalXp || 0) + 5, after = (S.totalXp || 0) + gain;
+    if (tierIndexFor(after) !== ti) continue;
+    S.totalXp = after;
+    WIN = { climb: { from, to: leagueStandings(at).findIndex(e => e.you) + 1, list: lb, xp1: after }, goal: dailyGoal(), qd0: 3, qd1: 6, gems: 0 };
+    A.winClimb();
+    return;
+  }
+};
 A.debugPathPay = function (gold) {
   const key = "skills.bigsum", L = learnSet(key), rec = S.learn[key] = learnRec(key);
   S.lessons = {};                                    // the node it plays on is the first: nothing done after it
@@ -4170,7 +4181,12 @@ function lessonComplete() {
   p.last = todayKey();               // so the path can say when a lesson is going stale
   PATH_PAY = SES.replay || (learn && learn.done === wasDone) ? null : { key: SES.key, was: wasDone, gold: !wasStars && p.stars > 0 };
   const rankGain = SES.xp * (SES.xpBoost ? 2 : 1);   // 2× boost doubles RANK XP only (gems unaffected)
+  const lbAt = Date.now(), lb0 = leagueStandings(lbAt), ti0 = tierIndex();
   gainXP(rankGain); gainGems(SES.gems);
+  /* the same rivals at the same instant, after: a move up plays the climb
+     (a new tier is the rank-up's moment instead, and a new cohort) */
+  const r0 = lb0.findIndex(e => e.you) + 1, r1 = leagueStandings(lbAt).findIndex(e => e.you) + 1;
+  const climb = tierIndex() === ti0 && r1 < r0 ? { from: r0, to: r1, list: lb0, xp1: S.totalXp } : null;
   const streakUp = bumpStreak(); save(); sndWin();
   pendingStreak = streakUp ? S.streak.count : 0;   // show the fire-streak celebration after this win screen
   const xpWon = rankGain, gemsWon = SES.gems, boosted = SES.xpBoost, tTot = SES.tSpent;
@@ -4206,7 +4222,7 @@ function lessonComplete() {
   const accTag = acc === 100 ? "مذهل" : acc >= 90 ? "رائع" : acc >= 60 ? "جيد" : "الدقة";
   const timeTag = tTot < 90 ? "خاطف" : tTot < 180 ? "سريع" : tTot < 300 ? "منجز" : "ملتزم";
   const goal = dailyGoal(), qd1 = Math.min(goal, (S.daily && S.daily.n) || 0), qd0 = Math.max(0, qd1 - (SES.qd || 0));
-  WIN = { learn, title: SES.title, gems: gemsWon, boosted, goal, qd0, qd1, struggled, missCount,
+  WIN = { learn, title: SES.title, gems: gemsWon, boosted, goal, qd0, qd1, struggled, missCount, climb,
     nxt: learn && LAST_LEARN.next >= 0 ? { t: LAST_LEARN.nextTitle, m: LAST_LEARN.mins } : null };
   const stat = (c, label, icon, id, extra) => `<div class="wst wst-${c}${extra || ""}">
       <div class="wst-pop">
@@ -4233,8 +4249,8 @@ function lessonComplete() {
     <div class="action-bar win-action wn-cta">
       ${struggled
         ? `<button class="btn" onclick="A.reviewMissed()">راجع أخطاء الدرس</button>
-           <button class="btn btn-white win-again" onclick="A.winMore()">متابعة</button>`
-        : `<button class="btn" onclick="A.winMore()">متابعة</button>
+           <button class="btn btn-white win-again" onclick="A.winOn()">متابعة</button>`
+        : `<button class="btn" onclick="A.winOn()">متابعة</button>
            ${missCount ? `<button class="btn btn-white win-again" onclick="A.reviewMissed()">راجع أخطاء الدرس</button>` : ""}`}
     </div>
   </div></div>`;
@@ -4522,7 +4538,136 @@ function winPlay(v) {
    day's goal filling, the gems — each landing on its own beat: a wait, a
    swell to 1.06 while it lights up, and a settle. A bar's fill takes longer the
    further it has to go, so a big jump reads as big. */
+/* The league climb (Brilliant's: a lesson that lifts you past rivals plays the
+   overtaking itself). lessonComplete ranks you against the same rivals at the
+   same instant before and after the lesson's XP; when you moved up, this
+   screen sits between the win and «تقدّمك اليوم». Your row's XP counts up, it
+   lifts off the board, and it rises past each rival in turn: each one drops a
+   place under you with a bump, your number ticks over on a note a step higher,
+   and the window follows you. It lands with a squash and a shine, then the
+   headline and the gap to the next rival. Weight and light only — no confetti.
+   A tap anywhere jumps to the end. */
+const CLIMB_ROW = 62;
+const rankCell = r => r <= 3 ? MEDAL(r) : `<span class="lb-rank">${toAr(r)}</span>`;
+let climbRaf = 0, climbT = [];
+function climbStop() { cancelAnimationFrame(climbRaf); climbT.forEach(clearTimeout); climbT = []; }
+A.winOn = function () { if (WIN && WIN.climb) A.winClimb(); else A.winMore(); };
+A.winClimb = function () {
+  wstStop(); wvStop(); winHeroStop(); climbStop();
+  const C = WIN && WIN.climb;
+  if (!C) { A.winMore(); return; }
+  WIN.climb = null;                                  // once per win
+  const tier = LEAGUE_TIERS[tierIndex()], n = C.from - C.to;
+  const head = C.to === 1 ? "تصدّرت الدوري!" : `تقدّمت ${arPlural(n, "مركزاً واحداً", "مركزين", "مراكز", "مركزاً")}!`;
+  const above = C.to > 1 ? C.list.filter(e => !e.you)[C.to - 2] : null;
+  const sub = above ? `باقي <b>${toAr(above.xp - C.xp1 + 1)}</b> خبرة وتتخطّى ${esc(above.name)}` : "أنت في الصدارة — حافظ عليها!";
+  $app.innerHTML = `<div class="screen screen-full"><div class="complete cl" id="comp">
+    <div class="cl-kick">${rankImg(tier.key, 30)}<span>الدوري — المستوى ${tier.name}</span></div>
+    <div class="cl-rank"><span>مركزك</span><b id="clRank">${toAr(C.from)}</b></div>
+    <h1 class="cl-title" id="clHead">${head}</h1>
+    <div class="cl-sub" id="clSub">${sub}</div>
+    <div class="cl-win" id="clWin"><div class="cl-list" id="clList">${C.list.map((e, i) => `<div class="lb-row cl-row${e.you ? " me" : ""}" style="top:${i * CLIMB_ROW}px">
+        <span class="cl-rk">${rankCell(i + 1)}</span>${avatarFor(e.name, e.you)}
+        <span class="lb-name">${esc(e.name)}${e.you && e.named ? " <b>(أنت)</b>" : ""}</span>
+        ${e.you ? `<span class="cl-gain" id="clGain">+${toAr(C.xp1 - e.xp)}</span>` : ""}
+        <span class="lb-xp"><span${e.you ? ` id="clXp"` : ""}>${toAr(e.xp)}</span> <i>خبرة</i></span>
+        ${e.you ? `<span class="cl-shine"><i></i></span>` : ""}
+      </div>`).join("")}</div></div>
+    <div class="action-bar win-action wn-cta cl-cta" id="clCta"><button class="btn" onclick="A.winMore()">متابعة</button></div>
+  </div></div>`;
+  climbPlay(C);
+};
+function climbPlay(C) {
+  const win = document.getElementById("clWin"), box = document.getElementById("clList");
+  if (!win || !box) return;
+  const rows = [...box.children], me = rows[C.from - 1], H = CLIMB_ROW, n = C.from - C.to;
+  const winH = win.clientHeight, floor = Math.min(0, winH - rows.length * H);
+  const follow = y => { box.style.transform = `translateY(${Math.max(floor, Math.min(0, winH / 2 - H / 2 - y)).toFixed(1)}px)`; };
+  const rankOf = (row, r) => { row.querySelector(".cl-rk").innerHTML = rankCell(r); };
+  const xpEl = document.getElementById("clXp");
+  follow((C.from - 1) * H);
+  /* the rows nearest you come in first, the rest are already there */
+  rows.forEach((r, i) => { const d = Math.abs(i - (C.from - 1)); r.style.animationDelay = (d < 4 ? d * .06 : 0) + "s"; });
+  let done = false;
+  const passed = new Set();
+  const pass = j => {                                  // you overtake the rival in before-place j (0-based)
+    if (passed.has(j)) return;
+    passed.add(j);
+    rows[j].style.top = (j + 1) * H + "px";
+    rankOf(rows[j], j + 2);
+    rankOf(me, j + 1);
+    const big = document.getElementById("clRank");
+    if (big) big.textContent = toAr(j + 1);
+    if (!done) {
+      rows[j].animate([{ opacity: 1 }, { opacity: .4, offset: .3 }, { opacity: 1 }], { duration: 480 });
+      if (big) big.animate([{ transform: "scale(1.25) translateY(-4px)" }, { transform: "none" }], { duration: 300, easing: "cubic-bezier(.3,1.6,.5,1)" });
+      const k = passed.size;
+      beep([[523 * Math.pow(2, Math.min(k, 12) / 12) * 1.5, .07]]);
+      buzz(6);
+      const rk = me.querySelector(".cl-rk");
+      rk.animate([{ transform: "scale(1.45)" }, { transform: "scale(1)" }], { duration: 260, easing: "cubic-bezier(.3,1.6,.5,1)" });
+    }
+  };
+  const land = () => {
+    me.style.top = (C.to - 1) * H + "px";
+    me.classList.remove("up");
+    for (let j = C.to - 1; j < C.from - 1; j++) pass(j);
+    follow((C.to - 1) * H);
+    if (xpEl) xpEl.textContent = toAr(C.xp1);
+    document.getElementById("clHead").classList.add("go");
+    document.getElementById("clSub").classList.add("go");
+    document.getElementById("clCta").classList.add("go");
+    document.getElementById("clGain").classList.add("go");
+  };
+  const end = () => { if (done) return; done = true; climbStop(); land(); };
+  const host = document.getElementById("comp");
+  host.addEventListener("pointerdown", e => { if (!e.target.closest("button")) end(); });
+  if (motionReduced()) { end(); return; }
+  const at = (ms, f) => climbT.push(setTimeout(f, ms));
+  /* 1. your XP climbs on your row */
+  at(450, () => {
+    document.getElementById("clGain").classList.add("go");
+    const x0 = C.list[C.from - 1].xp, t0 = performance.now();
+    (function tick(now) {
+      if (done || !xpEl) return;
+      const p = Math.min(1, (now - t0) / 650);
+      xpEl.textContent = toAr(Math.round(x0 + (C.xp1 - x0) * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) requestAnimationFrame(tick);
+    })(t0);
+  });
+  /* 2. the row lifts off the board */
+  at(1150, () => {
+    me.classList.add("up");
+    me.animate([{ transform: "scale(1)" }, { transform: "scale(.97, .9)", offset: .35 }, { transform: "scale(1.06)" }],
+      { duration: 260, easing: "cubic-bezier(.3,1.4,.5,1)", fill: "forwards" });
+    beep([[392, .06], [523, .08]]);
+  });
+  /* 3. and rises past them, slow off the mark, quick in the middle, easing in */
+  const T = Math.max(800, Math.min(2600, 520 + n * 240));
+  at(1500, () => {
+    const t0 = performance.now(), y0 = (C.from - 1) * H;
+    (function step(now) {
+      if (done) return;
+      const p = Math.min(1, (now - t0) / T), e = p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+      const pos = (C.from - 1) - n * e;
+      me.style.top = (pos * H).toFixed(1) + "px";
+      follow(pos * H);
+      for (let j = C.from - 2; j >= C.to - 1; j--) if (pos < j + .5) pass(j);
+      if (p < 1) { climbRaf = requestAnimationFrame(step); return; }
+      /* 4. it lands */
+      me.getAnimations().forEach(a => a.cancel());
+      me.animate([{ transform: "scale(1.06)" }, { transform: "scale(1.08, .86)", offset: .3 }, { transform: "scale(.98, 1.04)", offset: .65 }, { transform: "scale(1)" }],
+        { duration: 420, easing: "ease-out" });
+      me.classList.add("shine");
+      beep(C.to <= 3 ? [[659, .09], [784, .09], [1047, .1], [1319, .26]] : [[784, .09], [1047, .2]]);
+      buzz(18);
+      done = true;
+      land();
+    })(t0);
+  });
+}
 A.winMore = function () {
+  climbStop();
   wstStop(); wvStop();
   winHeroStop();
   const W = WIN; if (!W) { A.winContinue(); return; }
@@ -5970,7 +6115,7 @@ function reviewComplete() {
       <div class="rcard rc-green"><div class="rc-t">صُحّحت</div><div class="rc-v">${ico("target", 22)} ${toAr(solved)}</div></div>
     </div>
     <div class="action-bar win-action" style="position:relative;right:auto;transform:none;max-width:340px;padding:0;background:none">
-      ${fromWin ? `<button class="btn" onclick="A.winMore()">متابعة</button>`
+      ${fromWin ? `<button class="btn" onclick="A.winOn()">متابعة</button>`
         : remaining ? `<button class="btn" onclick="A.startReview()">واصل المراجعة</button>
       <button class="btn btn-ghost" onclick="A.go('review')">رجوع</button>`
         : `<button class="btn" onclick="A.go('path')">متابعة</button>`}

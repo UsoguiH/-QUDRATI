@@ -44,7 +44,7 @@
        through every step (a saved name skips hello, the taste, the journey and
        the name card — which made the new first run look unchanged) */
     user: location.hash === "#login" || location.hash === "#welcome" || location.hash === "#level" || location.hash.indexOf("#ob-") === 0 ? null : { name: "سارة", guest: false },
-    xp: 527, totalXp: location.hash.indexOf("#earncross") === 0 ? 1190 : 850, tierSeen: 1,
+    xp: 527, totalXp: location.hash.indexOf("#earncross") === 0 ? 1190 : location.hash.indexOf("#climb") === 0 ? 380 : 850, tierSeen: 1,
     streak: { count: 12, last: null },
     /* #warm is the first lesson anyone ever plays, and the app decides that by
        "no lesson has been played" — so that hash seeds a save with none. */
@@ -136,6 +136,9 @@
         const d = window.QBANK.numbers;
         A.startLesson("numbers", d.lessons[0].key); A.beginQuestions();
         if (h === "questbanner") setTimeout(A.questBanner, 400);
+      } else if (h === "climb" || h === "climbtop") {
+        /* the league climb after a win: five places up (#climb), or to the top (#climbtop) */
+        A.debugClimb(h === "climbtop" ? 40 : 5);
       } else if (h === "pathpay" || h === "pathgold") {
         /* back on the path after a short lesson: the node jumps, flips and
            lands in its sparkles (#pathpay), or comes out of the flip gold as
