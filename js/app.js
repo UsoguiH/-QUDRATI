@@ -68,7 +68,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, introSeen: false, trackAsked: false, placeAsked: false, placed: null, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], league: null, mistakes: {}, teach: {}, reports: {} };
+const DEFAULT_STATE = { v: 1, disclaimer: false, introSeen: false, trackAsked: false, placeAsked: false, placed: null, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], league: null, mistakes: {}, teach: {}, learn: {}, reports: {} };
 /* The rivals. A student who suspects the board is padded looks at the names
    first, and a column of two dozen tidy Arabic first names is the one
    arrangement that never occurs on a real sign-up sheet. These are drawn in
@@ -165,7 +165,7 @@ if (S.tierSeen == null) S.tierSeen = tierIndex();
    used to blank the whole app with no way back to Settings. Coerce the
    containers before anything reads them. */
 (function repair() {
-  const shape = { streak: { count: 0, last: null }, lessons: {}, qstats: {}, mistakes: {}, mocks: [], days: {}, reports: {} };
+  const shape = { streak: { count: 0, last: null }, lessons: {}, qstats: {}, mistakes: {}, mocks: [], days: {}, reports: {}, learn: {} };
   for (const k in shape) {
     const want = shape[k], got = S[k];
     const ok = Array.isArray(want) ? Array.isArray(got) : (got && typeof got === "object");
@@ -470,6 +470,7 @@ function dailyTick() {
 function questBump() {
   if (S.daily.n >= dailyGoal()) return;
   S.daily.n++;
+  if (SES) SES.qd = (SES.qd || 0) + 1;   // the progress screen fills the day's bar from where this lesson found it
   if (S.daily.n === dailyGoal()) setTimeout(A.questBanner, 1200);
 }
 /* A quick check is a question the student answered, and counting it is what
@@ -601,7 +602,7 @@ const ico = (name, size) => `<img class="ic" src="assets/icons/${ICO_FILE[name] 
    `cls` carries the motion (pop / bob / bob-fast / shake) and the placement
    class. He is decorative in every placement — the screen always states its
    own meaning in text — so alt is empty and he is hidden from assistive tech. */
-const MASCOT_STATES = { celebrate: 1, strong: 1, point: 1 };
+const MASCOT_STATES = { celebrate: 1, strong: 1, point: 1, wave: 1, encourage: 1, cheer: 1, teach: 1 };
 function mascot(state, cls) {
   if (!MASCOT_STATES[state]) return "";
   return `<img class="mascot ${cls || ""}" src="assets/mascot/qaddour-${state}.png" alt="" aria-hidden="true">`;
@@ -614,14 +615,14 @@ function mascot(state, cls) {
    (fxAddJump): stretch on the fall, squash on impact, a back-out settle — driven by
    GSAP so every beat has its own ease. A live shadow under him grows as he comes down
    and spreads on impact; the painted one was cut off the PNG for exactly this. */
-function winHero() {
-  return `<div class="win-hero qd-hero" style="--wh:236px">
+function winHero(size) {
+  return `<div class="win-hero qd-hero" style="--wh:${size || 236}px">
     <span class="qd-shadow"></span>
     ${mascot("celebrate", "qd-mascot")}
   </div>`;
 }
 let qdTl = null;
-function winHeroStop() { if (qdTl) { qdTl.kill(); qdTl = null; } }
+function winHeroStop() { if (qdTl) { qdTl.kill(); qdTl = null; } if (wnTl) { wnTl.kill(); wnTl = null; } }
 function winHeroPlay() {
   winHeroStop();
   const el = document.querySelector(".qd-mascot"), sh = document.querySelector(".qd-shadow");
@@ -672,6 +673,7 @@ A.chestTap = function () {
 let questBannerT = 0;
 A.questBanner = function () {
   document.querySelectorAll(".quest-banner").forEach(e => e.remove());
+  if (document.querySelector(".wn, .wp")) return;   // the lesson already ended: its progress screen tells it
   const el = document.createElement("div"); el.className = "quest-banner"; el.setAttribute("role", "status");
   el.innerHTML = `<div class="qb-card">
     ${chestSVG("qb-chest")}
@@ -837,76 +839,313 @@ A.startMix = function () {
   renderSession();
 };
 
-/* ---- placement ------------------------------------------------------------
-   Everyone used to start at lesson one of unit one. A student three weeks from the
-   exam who already knows the basics had to grind through them or leave. Twelve
-   questions, three from each unit, no hearts and no clock: get two of three in a
-   unit and its lessons are marked as tested out, up to the first unit that stops
-   you — mastery is sequential, so passing unit three while failing unit one places
-   nothing. Tested-out lessons carry one star and can be replayed for the other two. */
-const PLACE_PER_UNIT = 3, PLACE_PASS = 2;
+/* ---- the level test ---------------------------------------------------------
+   A student three weeks from the exam who already knows the basics should not
+   have to grind them. The old test could not be trusted to tell: it asked one
+   random question per probed lesson (so the difficulty was luck), it stopped at
+   the first unit missed (so a student weak in unit 1 and strong in geometry was
+   never asked about geometry), and a pure guesser skipped lessons 30% of the time.
+
+   Now every unit is asked, and placed on its own. Each unit is cut in two
+   blocks of consecutive lessons — A, its lower half, and B, its harder upper
+   half — and each block has two fixed slots (which lessons, which format), so
+   every student meets the same test at the same difficulty, and the full run
+   mirrors the exam's quantitative section: about two thirds arithmetic, a
+   quarter geometry, one algebra item, and three comparisons (ETEC's own share).
+   B is skipped only when both A answers of that unit were wrong — the unit
+   stops, never the test. 8 to 16 questions, no hearts, no clock, no verdict.
+
+   A unit is skipped whole at 3 of 4 right; its block A alone at both A right
+   and both B wrong. Placements count only when the run is at least half right
+   overall, or the unit was 4 of 4 — the guesser now skips anything 4% of the
+   time, and a student strong in one domain alone still gets it.
+   «ما أعرف» counts as a miss here and writes nothing to the stats. */
+const PLACE_BLUEPRINT = {
+  skills:   { a: 4, slots: [{ b: "A", ls: ["bigsum"] }, { b: "A", ls: ["probstats", "keylaws"] },
+                            { b: "B", ls: ["equations"], cmp: 1, cat: "alg" }, { b: "B", ls: ["cycles", "simplify", "lcmgcd"] }],
+              /* the theoretical exam has no algebra: its comparison comes from block A instead */
+              lit:   [{ b: "A", ls: ["bigsum"] }, { b: "A", ls: ["fastest"], cmp: 1 },
+                      { b: "B", ls: ["cycles", "simplify"] }, { b: "B", ls: ["lcmgcd", "simplify", "cycles"] }] },
+  numbers:  { a: 2, slots: [{ b: "A", ls: ["fractions"] }, { b: "A", ls: ["fractions", "decimals"], cmp: 1 },
+                            { b: "B", ls: ["roots", "powers"] }, { b: "B", ls: ["speed"] }] },
+  ratios:   { a: 2, slots: [{ b: "A", ls: ["percent"] }, { b: "A", ls: ["profit"] },
+                            { b: "B", ls: ["proportion"] }, { b: "B", ls: ["mean"] }] },
+  geometry: { a: 4, slots: [{ b: "A", ls: ["angles", "triangle"] }, { b: "A", ls: ["rectangle", "square"] },
+                            { b: "B", ls: ["quads", "shaded", "circle", "solids"], cmp: 1 }, { b: "B", ls: ["circle", "shaded", "solids"] }] }
+};
+const PLACE_GATE = .5;
+/* one question for a slot: its format, a lesson this unit has not used yet,
+   medium-or-harder where the lesson has it, and never seen before if possible */
+function placePick(d, slot, used) {
+  const seen = id => { const s = S.qstats[id]; return s ? (s.r || 0) + (s.w || 0) : 0; };
+  const fmt = q => slot.cmp ? q.format === "comparison" : q.format !== "comparison";
+  let pool = [];
+  slot.ls.forEach(k => {
+    const l = d.lessons.find(x => x.key === k);
+    if (l && !used[k]) trackFilter(l.questions).filter(fmt).forEach(q => pool.push({ q, k }));
+  });
+  if (!pool.length) slot.ls.forEach(k => { const l = d.lessons.find(x => x.key === k); if (l) l.questions.forEach(q => pool.push({ q, k })); });
+  if (!pool.length) return null;
+  const hard = pool.filter(x => (x.q.difficulty || 2) >= 2);
+  if (hard.length) pool = hard;
+  /* a slot that spans lessons of different ratings takes the lowest one, so its
+     difficulty is the slot's and not the luck of which lesson came up */
+  const lo = Math.min(...pool.map(x => x.q.difficulty || 2));
+  pool = pool.filter(x => (x.q.difficulty || 2) === lo);
+  const least = Math.min(...pool.map(x => seen(x.q.id)));
+  const pick = shuffle(pool.filter(x => seen(x.q.id) === least))[0];
+  used[pick.k] = 1;
+  return pick;
+}
 A.startPlacement = function () {
   const items = [];
   domains().forEach(d => {
-    const pool = [];
-    d.lessons.forEach(l => trackFilter(l.questions).forEach(q => pool.push(q)));
-    /* the middle and hard end of each unit: an easy question proves nothing */
-    const hard = shuffle(pool.filter(q => (q.difficulty || 2) >= 2));
-    (hard.length >= PLACE_PER_UNIT ? hard : shuffle(pool)).slice(0, PLACE_PER_UNIT)
-      .forEach(q => items.push({ q: shuffleChoices(q), dom: d.key }));
+    const bp = PLACE_BLUEPRINT[d.key]; if (!bp) return;
+    const used = {};
+    (S.track === "lit" && bp.lit ? bp.lit : bp.slots).forEach(slot => {
+      const p = placePick(d, slot, used);
+      if (p) items.push({ q: p.q.format === "comparison" ? p.q : shuffleChoices(p.q), dom: d.key, b: slot.b, les: p.k,
+        cat: slot.cat || (d.key === "geometry" ? "geo" : "ar") });
+    });
   });
   if (items.length < 4) { toast("بنك الأسئلة غير متاح"); return; }
   SES = { mode: "place", domKey: null, lesKey: null, key: null, title: "تحديد المستوى", method: "",
-    queue: items.map(x => x.q), place: items, total: items.length, idx: 0, done: 0, firstTry: {}, retried: {},
-    sel: null, locked: false, xp: 0, gems: 0, replay: true, xpBoost: false, hearts: 999,
-    notime: true, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
+    queue: items.map(x => x.q), place: items, plLog: {}, total: items.length, idx: 0, done: 0,
+    firstTry: {}, retried: {}, sel: null, locked: false, xp: 0, gems: 0, replay: true, xpBoost: false,
+    hearts: 999, notime: true, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
   renderSession();
 };
-function placementComplete() {
-  const by = {};
-  (SES.place || []).forEach(x => {
-    by[x.dom] = by[x.dom] || { n: 0, r: 0 };
-    by[x.dom].n++;
-    if (SES.firstTry[x.q.id]) by[x.dom].r++;
+const PLACE_CAT = { ar: "حساب", geo: "هندسة", alg: "جبر" };
+/* the four units, with how far into each the test has got */
+function placeUnits() {
+  return domains().filter(d => SES.place.some(x => x.dom === d.key)).map(d => {
+    const mine = SES.place.filter(x => x.dom === d.key);
+    return { d, n: mine.length, ans: mine.filter(x => SES.plLog[x.q.id]).length };
   });
-  const placed = [];
-  let stopped = null;
-  for (const d of domains()) {
-    const b = by[d.key] || { n: 0, r: 0 };
-    if (b.r >= PLACE_PASS) {
-      placed.push(d);
-      d.lessons.forEach(l => {
-        const key = d.key + "." + l.key, p = S.lessons[key] = S.lessons[key] || { stars: 0, plays: 0 };
-        if (!p.stars) { p.stars = 1; p.placed = true; }
-      });
-    } else { stopped = d; break; }
-  }
-  S.placed = todayKey();
+}
+function renderPlace() {
+  const it = SES.place[SES.idx];
+  const units = placeUnits(), cur = units.findIndex(u => u.d.key === it.dom);
+  /* four segments, one per unit, never «سؤال ٣ من ١٦»: the count is not known in
+     advance, and a unit whose upper half is skipped simply fills */
+  const segs = units.map((u, k) => {
+    const w = k < cur ? 100 : k === cur ? Math.round(u.ans / u.n * 100) : 0;
+    return `<span class="pl-seg${k < cur ? " done" : ""}"><i data-w="${w}" style="width:${k === cur ? SES.plFill || 0 : w}%"></i></span>`;
+  }).join("");
+  $app.innerHTML = `<div class="screen screen-full screen-session screen-place">
+      <div class="session-top">
+        <button class="x-btn" onclick="A.plQuit()" aria-label="إيقاف الاختبار">${X_SVG}</button>
+        <div class="pl-segs" role="progressbar" aria-label="الوحدة ${toAr(cur + 1)} من ${toAr(units.length)}">${segs}</div>
+      </div>
+      <div class="pl-unit"><span class="pl-tag pl-${it.cat}">${PLACE_CAT[it.cat]}</span><b>الوحدة ${toAr(cur + 1)}</b><span>${esc(units[cur].d.title)}</span></div>
+      <div class="q-area pl-q">${questionBody(it.q, SES.sel, false, null, null)}</div>
+      <div class="action-bar pl-actions">
+        <button class="btn btn-ghost" onclick="A.plSkip()">ما أعرف</button>
+        <button class="btn" id="checkBtn" onclick="A.check()" ${SES.sel === null ? "disabled" : ""}>التالي</button>
+      </div>
+      <div class="storm" id="storm" aria-hidden="true"></div>
+    </div>`;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const seg = document.querySelectorAll(".pl-seg > i")[cur]; if (seg) seg.style.width = seg.dataset.w + "%";
+    if (SES && SES.mode === "place") SES.plFill = +(seg && seg.dataset.w || 0);
+  }));
+  fxBindPress();
+  SES.qStart = Date.now();
+}
+function plAnswer(skip, instant) {
+  if (!SES || SES.mode !== "place" || SES.locked || (!skip && SES.sel === null)) return;
+  SES.locked = true;
+  const it = SES.place[SES.idx], q = it.q, ok = !skip && SES.sel === q.answer;
+  SES.firstTry[q.id] = ok;
+  SES.plLog[q.id] = { ok, skip: !!skip, t: Math.min(180, Math.round((Date.now() - (SES.qStart || Date.now())) / 1000)) };
+  /* a «ما أعرف» is not an answer: it places nothing and teaches the stats nothing */
+  if (!skip) { const qs = S.qstats[q.id] = S.qstats[q.id] || { r: 0, w: 0 }; ok ? qs.r++ : qs.w++; }
+  SES.done++;
+  const blockA = SES.place.filter(x => x.dom === it.dom && x.b === "A");
+  if (it.b === "A" && blockA.every(x => SES.plLog[x.q.id] && !SES.plLog[x.q.id].ok))
+    SES.place = SES.place.filter((x, j) => j <= SES.idx || x.dom !== it.dom);
+  SES.queue = SES.place.map(x => x.q); SES.total = SES.place.length;
   save();
-  const nLes = placed.reduce((a, d) => a + d.lessons.length, 0);
-  $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
-    ${winHero()}
-    <h1 class="win-title">${!placed.length ? "نبدأ من البداية" : stopped ? "حدّدنا مستواك!" : "أتقنت كل الوحدات!"}</h1>
-    <p class="win-sub">${!placed.length ? "لا مشكلة — سنبني الأساس خطوة بخطوة"
-      : stopped ? `تخطّيت ${qLessons(nLes)} — تبدأ من ${esc(stopped.title)}`
-      : `تخطّيت ${qLessons(nLes)} — محاكاة الاختبار هي خطوتك التالية`}</p>
-    <div class="place-list">
-      ${domains().map(d => {
-        const b = by[d.key] || { n: 0, r: 0 };
-        const ok = placed.indexOf(d) >= 0;
-        return `<div class="place-row ${ok ? "ok" : ""}">
-          <span class="pl-ic">${ok ? CHECK_BADGE : "•"}</span>
-          <span class="pl-tx">${esc(d.title)}</span>
-          <span class="pl-sc">${toAr(b.r)}/${toAr(b.n)}</span>
+  const go = () => {
+    if (!SES || SES.mode !== "place") return;
+    SES.idx++; SES.sel = null; SES.locked = false;
+    if (SES.idx < SES.place.length && SES.place[SES.idx].dom !== it.dom) SES.plFill = 0;
+    SES.idx >= SES.place.length ? placementComplete() : renderPlace();
+  };
+  if (instant) { go(); return; }
+  sndTap();
+  document.querySelectorAll(".screen-place .choice, .pl-actions .btn").forEach(b => { b.disabled = true; });
+  /* every answer lands with the lesson's jump — here on whatever was picked, so
+     it says «taken», never «right» (the test gives no verdict) */
+  const card = document.querySelector(".screen-place .choice.sel");
+  let wait = skip ? 140 : 340;
+  if (card && window.gsap && !fxReduced()) {
+    const J = FX_JUMP;
+    fxAddJump(gsap.timeline(), card, 0);
+    wait = Math.round((J.launch + J.rise + J.hang + J.fall + J.impact + J.settle) * 1000) + 80;
+  }
+  setTimeout(go, wait);
+}
+A.plSkip = function () { plAnswer(true); };
+A.plQuit = function () {
+  askConfirm("توقف الاختبار؟", "نحسب لك اللي جاوبته — والباقي تبدأه من أوله.", "أكمل الاختبار", "أوقف وشوف نتيجتي", () => {
+    if (!SES || SES.mode !== "place") { go("path"); return; }
+    SES.place = SES.place.filter(x => SES.plLog[x.q.id]);
+    placementComplete();
+  });
+};
+A.debugPlace = function (i) { if (!SES || SES.mode !== "place") return "none"; SES.sel = i; plAnswer(false, true); return "ok"; };
+
+/* A level a student can read — never a predicted exam score, which sixteen
+   questions cannot honestly give. It counts the lessons the test let them skip. */
+const PLACE_LEVELS = [
+  { name: "مبتدئ", line: "نبني الأساس معك خطوة خطوة — وبتشوف الفرق بسرعة" },
+  { name: "أساسي", line: "عندك أساس — تخطّينا اللي تعرفه" },
+  { name: "متوسط", line: "مستواك طيب — نكمّل من حيث تحتاج" },
+  { name: "متقدم", line: "قوي! باقي لك القليل" },
+  { name: "ممتاز", line: "أتقنت كل الوحدات — المحاكاة خطوتك الجاية" }
+];
+const placeLevel = n => n >= 24 ? 4 : n >= 16 ? 3 : n >= 8 ? 2 : n >= 1 ? 1 : 0;
+/* The five levels as a gauge: the needle swings further and the arc fills
+   greener at each one, so the scale reads at a glance. (The user turned down
+   signal bars — they read as wifi — and then a growing plant as unclear.) */
+const LV_FILL = [.1, .3, .5, .72, 1];
+const LV_TONE = ["red", "orange", "gold", "lime", "green"];      // red to green, a step apart each
+function levelIcon(i, size) {
+  i = Math.max(0, Math.min(4, i));
+  const f = LV_FILL[i];
+  return `<svg class="lv" viewBox="0 0 48 34" width="${size || 46}" height="${Math.round((size || 46) * 34 / 48)}" aria-hidden="true" style="--f:${(f * 100).toFixed(0)};--a:${Math.round(f * 180)}deg;--tone:var(--${LV_TONE[i]})">
+    <path class="lv-track" d="M6 28A18 18 0 0 1 42 28"/>
+    <path class="lv-arc" d="M6 28A18 18 0 0 1 42 28" pathLength="100"/>
+    <line class="lv-needle" x1="24" y1="28" x2="10" y2="28"/>
+    <circle class="lv-hub" cx="24" cy="28" r="4"/>
+  </svg>`;
+}
+function placementComplete() {
+  const log = SES.plLog, items = SES.place;
+  const asked = items.filter(x => log[x.q.id]);
+  const right = asked.filter(x => log[x.q.id].ok).length;
+  const gate = asked.length && right / asked.length >= PLACE_GATE;
+  const place = (d, l) => {
+    const key = d.key + "." + l.key, p = S.lessons[key] = S.lessons[key] || { stars: 0, plays: 0 };
+    if (!p.stars) { p.stars = 1; p.placed = true; }
+  };
+  const units = domains().map(d => {
+    const bp = PLACE_BLUEPRINT[d.key] || { a: 0 };
+    const mine = items.filter(x => x.dom === d.key);
+    const A = mine.filter(x => x.b === "A" && log[x.q.id] && log[x.q.id].ok).length;
+    const B = mine.filter(x => x.b === "B" && log[x.q.id] && log[x.q.id].ok).length;
+    let res = A + B >= 3 ? "full" : A === 2 ? "half" : "none";
+    if (!gate && A + B < 4) res = "none";
+    if (res === "full") d.lessons.forEach(l => place(d, l));
+    if (res === "half") d.lessons.slice(0, bp.a).forEach(l => place(d, l));
+    return { d, res, a: bp.a, dots: mine.map(x => log[x.q.id] ? (log[x.q.id].ok ? "ok" : "no") : "off") };
+  });
+  /* the path starts at the first lesson without a star, wherever the test left gaps */
+  const flat = allLessons(), start = flat.find(x => !lessonProg(x.key).stars);
+  const nPlaced = flat.filter(x => lessonProg(x.key).placed && !lessonProg(x.key).plays).length;
+  const before = start ? flat.slice(0, flat.indexOf(start)).some(x => lessonProg(x.key).placed && !lessonProg(x.key).plays) : false;
+  const cats = {};
+  asked.forEach(x => { const c = cats[x.cat] = cats[x.cat] || { r: 0, n: 0 }; c.n++; if (log[x.q.id].ok) c.r++; });
+  const times = asked.filter(x => log[x.q.id].ok).map(x => log[x.q.id].t).sort((a, b) => a - b);
+  const med = times.length ? times[Math.floor(times.length / 2)] : 0;
+  S.placed = todayKey();
+  S.placeAsked = true;
+  S.placeLog = { at: todayKey(), right, n: asked.length, med, units: units.map(u => ({ dom: u.d.key, res: u.res })) };
+  save();
+  const lvI = placeLevel(flat.filter(x => lessonProg(x.key).stars).length), lv = PLACE_LEVELS[lvI];
+  const behind = start ? flat.indexOf(start) : flat.length;
+  const uNo = start ? domains().findIndex(d => d.key === start.dom.key) + 1 : 0;
+  /* Duolingo announces the placement in the character's bubble — «you should
+     start with Section 3!» — and so does he */
+  const say = !start ? "أتقنت *كل الوحدات*! المحاكاة خطوتك الجاية."
+    : nPlaced && start.dom.lessons.indexOf(start.les) === 0 && uNo > 1 ? `بتبدأ من *الوحدة ${toAr(uNo)}*! تخطّينا ${qLessons(nPlaced)} تعرفها.`
+    : nPlaced ? `تخطّينا ${qLessons(nPlaced)}، وبتبدأ من *«${start.les.title}»*!`
+    : behind ? `تكمل من *«${start.les.title}»*!`
+    : "نبدأ من *أول درس* — أفضل مكان لك، وبنمشي بسرعة.";
+  PLACE_START = start ? { key: start.key, nudge: before } : null;
+  const pace = !med || right < 2 ? "" : med <= 62 ? `وقتك قرابة ${toAr(med)} ثانية للسؤال — وفي الاختبار عندك دقيقة تقريباً. ممتاز!`
+    : med <= 90 ? `وقتك قرابة ${toAr(med)} ثانية للسؤال — والاختبار يعطيك دقيقة. الحيل بتسرّعك.`
+    : "الدقة أولاً — والسرعة نبنيها بالتدريب والحيل.";
+  const catLine = ["ar", "geo", "alg"].filter(c => cats[c]).map(c => `${PLACE_CAT[c]} ${toAr(cats[c].r)} من ${toAr(cats[c].n)}`).join("، ");
+  $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene place-scene" id="comp">
+    <h1 class="obt-bubble ob-say pl-say">${sayHtml(say)}</h1>
+    ${winHero(138)}
+    <div class="pl-badge">${levelIcon(lvI, 30)}<span>مستواك: <b>${lv.name}</b></span></div>
+    <div class="pl-units">
+      ${units.map((u, k) => {
+        const here = start && start.dom.key === u.d.key;
+        const all = u.d.lessons.every(l => lessonProg(u.d.key + "." + l.key).stars);
+        const st = u.res === "full" || all ? "ok" : here ? "here" : u.res === "half" ? "part" : "later";
+        const sub = u.res === "full" ? "تخطّيتها كلها" : all ? "مكتملة"
+          : u.res === "half" ? (here ? `تخطّيت أول ${qLessons(u.a)} — تكمل من «${esc(start.les.title)}»` : `تخطّيت أول ${qLessons(u.a)}`)
+          : here ? `تبدأ من «${esc(start.les.title)}»` : "من أولها";
+        return `<div class="pl-urow ${st}" style="--d:${(0.55 + k * 0.1).toFixed(2)}s">
+          <span class="pl-uic">${st === "ok" ? CHECK_BADGE : toAr(k + 1)}</span>
+          <span class="pl-utx"><b>${esc(u.d.title)}</b><span>${sub}</span></span>
+          <span class="pl-dots" aria-label="${toAr(u.dots.filter(x => x === "ok").length)} صح">${u.dots.map(x => `<i class="${x}"></i>`).join("")}</span>
         </div>`;
       }).join("")}
     </div>
-    <div class="action-bar win-action" style="position:relative;right:auto;transform:none;max-width:340px;padding:0;background:none">
-      <button class="btn" onclick="A.go('${stopped || !placed.length ? "path" : "mock"}')">${stopped || !placed.length ? "يلا نبدأ" : "إلى المحاكاة"}</button>
+    <div class="pl-facts">
+      <p>${right ? `<b>${catLine}</b>` : "ولا يهمك — الدروس تبدأ معك من الصفر، خطوة خطوة."}</p>
+      ${pace ? `<p>${pace}</p>` : ""}
+      <p class="pl-honest">اختبار قصير يحدّد من وين تبدأ — ما يتنبأ بدرجتك في القدرات.</p>
+    </div>
+    <div class="action-bar win-action pl-cta">
+      <button class="btn" onclick="${start ? "A.placeGoLesson()" : "A.go('mock')"}">${start ? "يلا نبدأ" : "إلى المحاكاة"}</button>
     </div>
   </div></div>`;
   winHeroPlay();
+  sayPlay(650);
   SES = null;
+}
+let PLACE_START = null;
+A.placeGoLesson = function () {
+  if (!PLACE_START) { go("path"); return; }
+  S.placeNudge = PLACE_START.nudge ? { key: PLACE_START.key } : null;
+  save();
+  const [d, l] = PLACE_START.key.split(".");
+  PLACE_START = null;
+  A.startLesson(d, l);
+};
+
+/* Duolingo's exit ramp, read from its «Is this lesson too hard?» sheet: a
+   student the test placed past lessons, who then struggles in the first one,
+   is offered a step back — one block at a time, never all the way at once.
+   Asked once per lesson: after four graded answers under half right, or when
+   they reach for the X. */
+function placeNudgeDue() {
+  const n = S.placeNudge;
+  if (!n || !SES || SES.nudged || SES.key !== n.key) return false;
+  const ft = Object.values(SES.firstTry || {});
+  return ft.length >= 4 && ft.filter(Boolean).length / ft.length < .5;
+}
+function placeNudge() {
+  SES.nudged = true;
+  askConfirm("الدرس صعب عليك؟", "نقدر ننقلك لدرس أقرب لمستواك — وترجع لهنا بعدين.", "أكمل الدرس", "جرّب درس أسهل", placeStepDown);
+}
+/* The test can leave gaps, so «one step back» is by path order: the block of
+   placed, never-played lessons nearest before the lesson they are stuck in. */
+function placeStepDown() {
+  const key = S.placeNudge && S.placeNudge.key; if (!key) return;
+  const flat = allLessons(), at = flat.findIndex(x => x.key === key);
+  const fresh = x => { const p = S.lessons[x.key]; return p && p.placed && !p.plays; };
+  const prev = flat.slice(0, Math.max(0, at)).reverse().find(fresh);
+  if (prev) {
+    const d = prev.dom, a = (PLACE_BLUEPRINT[d.key] || { a: 0 }).a, inA = d.lessons.indexOf(prev.les) < a;
+    d.lessons.forEach((l, i) => {
+      const k = d.key + "." + l.key, p = S.lessons[k];
+      if (p && p.placed && !p.plays && (inA ? i < a : i >= a)) delete S.lessons[k];
+    });
+  }
+  const start = flat.find(x => !lessonProg(x.key).stars) || flat[0];
+  S.placeNudge = flat.slice(0, flat.indexOf(start)).some(fresh) ? { key: start.key } : null;
+  save();
+  stopQTimer(); SES = null;
+  OB = null;
+  obFrame(obTop("teach", `تمام! نجرّب شي أسهل: *«${start.les.title}»*.`),
+    `<button class="btn" onclick="A.startLesson('${start.dom.key}','${start.les.key}')">يلا نبدأ</button>`, 100, "A.go('path')", "ob-splash", false);
 }
 
 /* What the date actually asks of them, in one clause: the lessons still unopened
@@ -1337,6 +1576,51 @@ A.claimChest = function (gems) {
 };
 
 /* ---------------- PATH (home) ---------------- */
+/* A finished lesson is paid out on the path, not only on the win screen
+   (2026-10-23, the user: «every time he finishes a single lesson»): set in
+   lessonComplete, played once by pathPay when the path is next drawn */
+let PATH_PAY = null;
+/* Every lesson has its own sign in its node, where the path used to draw the
+   same star 26 times (2026-10-23: «change stars to something else, and each
+   level something different»). Drawn on a 40-unit square in the star's own
+   weight: round caps, round joins, one colour (currentColor) — white on an
+   open node, the star-done brown on a finished one. .s strokes, .f fills. */
+const LESSON_ICON = {
+  /* مهارات وقوانين */
+  bigsum: `<path class="s" d="M12 6v12M6 12h12M24 12h11M24 27l10 10M34 27l-10 10M6 32h12"/><circle class="f" cx="12" cy="26.5" r="2.4"/><circle class="f" cx="12" cy="37.5" r="2.4"/>`,
+  keylaws: `<circle class="s" cx="13" cy="20" r="7"/><path class="s" d="M20 20h16M30 20v7M35 20v5"/>`,
+  probstats: `<rect class="s" x="6" y="6" width="28" height="28" rx="7"/><circle class="f" cx="14" cy="14" r="3"/><circle class="f" cx="20" cy="20" r="3"/><circle class="f" cx="26" cy="26" r="3"/>`,
+  fastest: `<path class="f j" d="M23 3 8 23h11l-3 14 16-21H21z"/>`,
+  cycles: `<path class="s" d="M32 18a12 12 0 0 0-22-5M8 22a12 12 0 0 0 22 5"/><path class="s" d="M9 5v8h8M31 35v-8h-8"/>`,
+  simplify: `<circle class="s" cx="11" cy="29" r="5"/><circle class="s" cx="29" cy="29" r="5"/><path class="s" d="M14.5 25 30 5M25.5 25 10 5"/>`,
+  equations: `<path class="s" d="M20 6v28M12 34h16M7 11h26"/><path class="s j" d="M7 11 3 22h8zM33 11l-4 11h8z"/>`,
+  lcmgcd: `<circle class="s" cx="15" cy="20" r="10"/><circle class="s" cx="25" cy="20" r="10"/>`,
+  /* أساسيات */
+  decimals: `<rect class="s" x="4" y="10" width="13" height="20" rx="4"/><rect class="s" x="23" y="10" width="13" height="20" rx="4"/><circle class="f" cx="20" cy="31" r="2.8"/>`,
+  fractions: `<circle class="s" cx="20" cy="20" r="15"/><path class="f" d="M20 20V5a15 15 0 0 1 15 15z"/><path class="s" d="M20 5v30M5 20h30"/>`,
+  roots: `<path class="s" d="M3 22h5l6 12L22 6h15"/>`,
+  powers: `<rect class="s" x="5" y="15" width="20" height="20" rx="4"/><rect class="f" x="26" y="4" width="10" height="10" rx="3"/>`,
+  speed: `<circle class="s" cx="20" cy="23" r="13"/><path class="s" d="M20 23v-7M16 4h8M20 4v6"/>`,
+  /* النسب */
+  percent: `<circle class="s" cx="11" cy="11" r="5"/><circle class="s" cx="29" cy="29" r="5"/><path class="s" d="M31 7 9 33"/>`,
+  profit: `<path class="s j" d="M21 5h12a2 2 0 0 1 2 2v12L18 36 4 22z"/><circle class="f" cx="28" cy="12" r="3"/>`,
+  proportion: `<path class="s" d="M12 34V8M5 15l7-7 7 7M28 6v26M21 25l7 7 7-7"/>`,
+  mean: `<path class="s" d="M8 34V22M16 34V12M24 34V18M32 34V8M4 20h32"/>`,
+  /* الهندسة */
+  angles: `<path class="s" d="M6 33h29M6 33 30 9"/><path class="s" d="M19 33a13 13 0 0 0-4-9"/>`,
+  triangle: `<path class="s j" d="M20 6 35 33H5z"/>`,
+  rectangle: `<rect class="s" x="3" y="10" width="34" height="20" rx="3"/>`,
+  square: `<rect class="s" x="7" y="7" width="26" height="26" rx="3"/><path class="s" d="M7 26h7v7"/>`,
+  quads: `<path class="s j" d="M13 9h23l-9 22H4z"/>`,
+  shaded: `<rect class="s" x="5" y="5" width="30" height="30" rx="4"/><circle class="f" cx="20" cy="20" r="9"/>`,
+  circle: `<circle class="s" cx="20" cy="20" r="15"/><path class="s" d="M20 20l10.6-10.6"/><circle class="f" cx="20" cy="20" r="3.2"/>`,
+  parallel: `<path class="s" d="M7 33 19 7M21 33 33 7"/>`,
+  solids: `<path class="s j" d="M20 4 35 12v16L20 36 5 28V12z"/><path class="s j" d="M5 12l15 8 15-8M20 20v16"/>`
+};
+const LESSON_ICON_STAR = `<path class="f" d="M18.27 6.05c1.06-2.36 4.4-2.36 5.47 0l2.22 4.91c.44.99 1.39 1.66 2.47 1.75l5.33.47c2.66.24 3.71 3.57 1.66 5.29l-3.8 3.18a3.2 3.2 0 0 0-1 2.99l1.15 4.85c.6 2.55-2.12 4.59-4.4 3.3l-4.89-2.76a3.2 3.2 0 0 0-2.95 0l-4.89 2.76c-2.28 1.29-5-.75-4.4-3.3l1.15-4.85a3.2 3.2 0 0 0-1-2.99l-3.8-3.18c-2.05-1.72-1-5.05 1.66-5.29l5.33-.47a3.2 3.2 0 0 0 2.47-1.75z"/>`;
+function lessonIcon(lesKey) {
+  return `<svg class="node-ic" viewBox="0 0 40 40" aria-hidden="true">${LESSON_ICON[lesKey] || LESSON_ICON_STAR}</svg>`;
+}
 function renderPath() {
   const ds = domains();
   if (!ds.length) {
@@ -1353,10 +1637,12 @@ function renderPath() {
     const uDone = d.lessons.filter(l => lessonProg(d.key + "." + l.key).stars > 0).length;
     /* each unit is its own block so its sticky banner is pushed away by the
        next one, instead of every banner stacking at the top as you scroll */
-    html += `<section class="unit-block"><div class="unit-banner u-${d.color === "yellow" ? "gold" : d.color}" data-unit="${d.key}">
-      <div class="u-txt"><div class="u-kicker">القسم ${toAr(1)}، الوحدة ${toAr(di + 1)} · ${toAr(uDone)}/${toAr(d.lessons.length)} دروس</div><h2>${d.title}</h2></div>
-      <button class="u-book" onclick="A.openUnitBook('${d.key}')" aria-label="قوانين الوحدة"><img src="assets/icons/guide.svg" width="22" height="22" alt=""><span>القوانين</span></button>
-    </div><div class="path">`;
+    /* the live site's banner (asked back on 2026-10-23): the unit's count on
+       the far side of a divider; the whole banner opens the unit's rules */
+    html += `<section class="unit-block"><button class="unit-banner u-${d.color === "yellow" ? "gold" : d.color}" data-unit="${d.key}" onclick="A.openUnitBook('${d.key}')" aria-label="${esc(d.title)} — قوانين الوحدة">
+      <span class="u-txt"><span class="u-kicker">القسم ${toAr(1)}، الوحدة ${toAr(di + 1)}</span><h2>${d.title}</h2></span>
+      <span class="u-side"><span class="u-divider"></span><span class="u-prog"><b>${toAr(uDone)}/${toAr(d.lessons.length)}</b><span>دروس</span></span></span>
+    </button><div class="path">`;
     d.lessons.forEach((l, li) => {
       const key = d.key + "." + l.key, p = lessonProg(key);
       const done = p.stars > 0, open = gi <= firstOpenIdx, current = gi === firstOpenIdx;
@@ -1368,24 +1654,26 @@ function renderPath() {
       const stale = ago !== null && ago >= 14 && !current;
       const cls = done ? "node-done" : open ? "" : "node-locked";
       const x = offsets[gi % offsets.length];
-      // every node is a star: gold star-done when completed, the white star otherwise
-      /* star-done.svg is #AA572A, and that is the point: the completed node's
-         own face is gold (#FFC800 below), so the darker star is what reads
-         against it. star-gold here put a gold star on a gold coin. */
-      const nodeIcon = done ? ico("star-done", 40) : ico("star", 40);
+      /* the lesson's own sign (LESSON_ICON): white on its face, the star-done
+         brown on a gold node so it reads against the gold */
+      const nodeIcon = lessonIcon(l.key);
+      /* a node taught in short lessons fills its ring one lesson at a time */
+      const LS = current && learnSet(key);
+      const frac = LS ? learnRec(key).done.length / LS.lessons.length : 0;
       const ring = current ? `<svg class="node-ring" viewBox="0 0 89 84" fill="none">
-          <ellipse cx="44.5" cy="42" rx="41.5" ry="39" stroke="#E5E5E5" stroke-width="6"/>
-          <path d="M 44.5 3 A 41.5 39 0 0 1 81.5 25" stroke="${u.c}" stroke-width="6" stroke-linecap="round"/>
+          <ellipse class="ring-track" cx="44.5" cy="42" rx="41.5" ry="39" stroke="#E5E5E5" stroke-width="6"/>
+          ${LS ? (frac > 0 ? `<ellipse class="ring-fill ring-arc" cx="44.5" cy="42" rx="41.5" ry="39" stroke="${u.c}" stroke-width="6" stroke-linecap="round" pathLength="100" stroke-dasharray="${(frac * 100).toFixed(1)} 100" transform="rotate(-90 44.5 42)"/>` : "")
+            : `<path class="ring-arc" d="M 44.5 3 A 41.5 39 0 0 1 81.5 25" stroke="${u.c}" stroke-width="6" stroke-linecap="round"/>`}
         </svg>` : "";
       // exact Figma "Level" colors per state: gold done / unit-color open / gray locked
       const nc = done ? ["#FFC800", "#E6A000", "#FFE700"] : open ? [u.c, u.s, u.h] : ["#D2D2D2", "#ADADAD", "transparent"];
-      html += `<div class="path-row${current ? " row-tip" : ""}"><div class="node-col${current ? " bob" : ""}${stale ? " stale" : ""}" style="right:${x}px">
+      html += `<div class="path-row${current ? " row-tip" : ""}"><div class="node-col${current ? " bob" : ""}${stale ? " stale" : ""}" style="right:${x}px" data-key="${key}"${LS ? ` data-n="${LS.lessons.length}"` : ""}>
         ${ring}
         ${stale ? `<span class="node-refresh" title="حان وقت المراجعة" aria-hidden="true">${REFRESH_SVG}</span>` : ""}
-        <button class="node ${cls}" style="--node-c:${nc[0]};--node-s:${nc[1]};--node-h:${nc[2]};--d:${(gi % 10) * 0.06}s"
+        <button class="node ${cls}" style="--node-c:${nc[0]};--node-s:${nc[1]};--node-h:${nc[2]};--d:${(gi % 10) * 0.06}s" data-open="${u.c}|${u.s}|${u.h}"
           aria-label="${l.title} — ${done ? "مكتمل، " + arPlural(p.stars, "نجمة واحدة", "نجمتان", "نجوم", "نجمة") : current ? "الدرس الحالي" : "مقفل"}"
-          ${open ? `onclick="A.nodeTap(event,'${d.key}','${l.key}',${li})"` : "disabled"}>
-          ${current ? `<span class="node-tip" style="color:${u.c}">ابدأ</span>` : ""}
+          ${open ? `onpointerdown="A.nodePress()" onclick="A.nodeTap(event,'${d.key}','${l.key}',${li})"` : "disabled"}>
+          ${current ? `<span class="node-tip" style="color:${u.c}">${frac > 0 ? "كمّل" : "ابدأ"}</span>` : ""}
           ${nodeIcon}
         </button>
         ${done ? '<span class="node-stars" aria-hidden="true">' + [1, 2, 3].map(sn =>
@@ -1400,6 +1688,8 @@ function renderPath() {
   requestAnimationFrame(() => {
     drawTrails();
     pathReveal();
+    if (PATH_PAY) pathPay(); else nodeFlipLoop();
+    ["press", "release", "close"].forEach(sfxLoad);
     const cur = document.querySelector('.path-row .bob');
     if (!cur) return;
     /* Only chase the node when it is genuinely out of reach. Centring it
@@ -1429,6 +1719,254 @@ function pathReveal() {
   }, { rootMargin: "0px 0px -6% 0px" });
   below.forEach(c => { c.classList.add("veil"); io.observe(c); });
 }
+
+/* Duolingo's three node beats, timed frame by frame from its node_and_ring_119.riv
+   (tools/pills.html plays the originals). */
+/* «a lesson done» is Duolingo's node_complete, copied off its file at a tenth
+   of the speed, one row per 17ms frame where anything changes. Units are
+   Duolingo's own pixels (its coin is 148 wide, a 120 face on a 16 lip, at rest
+   with its face's top at 163), scaled onto ours when played:
+   [ms, face top, face height, lip (below the face; above it when negative),
+     width, paint] — paint 0 is the colours it took off with, 1 the coin seen
+   from underneath, edge-on, in its new colours, 2 the new colours */
+const PAY_COIN = [
+  [0, 163, 120, 16, 148, 0], [17, 167, 115, 15, 150, 0], [51, 169, 113, 15, 150, 0], [102, 169, 113, 15, 150, 0],
+  [119, 167, 115, 15, 150, 0], [136, 134, 144, 19, 148, 0], [153, 120, 135, 18, 130, 0], [170, 119, 136, 18, 134, 0],
+  [187, 119, 136, 18, 132, 0], [204, 121, 132, 18, 136, 0], [221, 123, 129, 17, 143, 0], [238, 125, 126, 17, 146, 0],
+  [255, 126, 124, 16, 148, 0], [408, 126, 123, 16, 148, 0], [442, 127, 122, 16, 148, 0], [476, 128, 121, 14, 148, 0],
+  [493, 128, 123, 8, 148, 0], [510, 130, 124, 3, 148, 0], [527, 131, 124, 1, 148, 0], [561, 135, 124, 0, 148, 0],
+  [578, 141, 118, -3, 148, 0], [595, 152, 108, -8, 148, 0], [612, 165, 93, -12, 148, 0], [629, 198, 47, -18, 148, 0],
+  [646, 193, 76, -3, 148, 0], [662, 193, 76, -3, 148, 0],
+  [663, 205, 48, -18, 148, 1], [688, 205, 48, -18, 148, 1],
+  [689, 158, 70, 16, 148, 2], [697, 149, 82, 16, 148, 2], [714, 137, 99, 16, 148, 2], [731, 133, 105, 16, 148, 2],
+  [748, 131, 108, 16, 148, 2], [765, 130, 110, 16, 148, 2], [799, 128, 113, 16, 148, 2], [833, 127, 114, 16, 148, 2],
+  [867, 125, 116, 16, 148, 2], [901, 124, 117, 16, 148, 2], [935, 123, 118, 16, 148, 2], [986, 122, 118, 16, 148, 2],
+  [1037, 121, 119, 16, 148, 2], [1088, 120, 120, 16, 148, 2], [1207, 119, 121, 16, 148, 2], [1224, 119, 122, 16, 146, 2],
+  [1241, 119, 124, 16, 144, 2], [1258, 118, 132, 16, 136, 2], [1275, 125, 137, 16, 130, 2], [1292, 169, 114, 15, 148, 2],
+  [1462, 170, 114, 15, 148, 2], [1479, 168, 116, 15, 148, 2], [1496, 162, 121, 16, 148, 2], [1547, 162, 121, 16, 148, 2],
+  [1564, 163, 120, 16, 148, 2]
+];
+const PAY_MS = 1564;
+/* the icon comes back out of the flip small and grows into the face */
+const PAY_ICON = [[0, 1, 1], [662, 1, 1], [663, 0, 1], [688, 0, 1], [689, 1, .6], [714, 1, .6], [731, 1, .62], [748, 1, .8],
+  [765, 1, .87], [782, 1, .9], [799, 1, .94], [833, 1, .96], [867, 1, .98], [901, 1, 1], [PAY_MS, 1, 1]];
+/* the shadow it leaves on the path: its own lower ellipse, shrinking as it rises */
+const PAY_GHOST = [[0, 1], [136, 1], [153, .97], [170, .93], [187, .9], [204, .88], [221, .85], [238, .83], [255, .82],
+  [289, .8], [323, .78], [425, .77], [561, .75], [595, .73], [629, .72], [646, .7], [663, .67], [680, .7], [714, .72],
+  [731, .73], [765, .75], [867, .77], [1156, .78], [1224, .8], [1258, .82], [1275, .85], [1292, 1], [PAY_MS, 1]];
+/* its three diamonds: they slide out from behind it, change colour with it in
+   the flip and shrink away — [ms, x, y, across] in Duolingo's pixels; the
+   first is the pale one */
+const PAY_DIAS = [
+  { pale: true, aspect: .85, path: [[0, -40, 175, 0], [170, -62, 150, 22], [221, -74, 139, 24], [272, -80, 132, 25], [340, -84, 127, 26], [408, -86, 125, 26],
+    [510, -87, 123, 25], [595, -87, 123, 22], [663, -87, 123, 21], [731, -87, 123, 19], [782, -86, 123, 18], [816, -86, 122, 16], [850, -86, 122, 15],
+    [867, -86, 122, 14], [901, -86, 122, 12], [935, -86, 122, 10], [969, -86, 122, 8], [1003, -86, 122, 6], [1020, -86, 122, 4], [1054, -86, 122, 0]] },
+  { path: [[0, 40, 190, 0], [153, 62, 168, 15], [204, 76, 157, 15], [255, 83, 147, 15], [289, 85, 144, 15], [340, 88, 141, 15], [408, 90, 138, 15],
+    [442, 91, 137, 15], [493, 91, 137, 13], [510, 92, 137, 13], [561, 92, 136, 12], [612, 92, 136, 11], [663, 92, 136, 10], [714, 92, 136, 9],
+    [765, 92, 135, 8], [799, 93, 136, 7], [833, 92, 135, 6], [867, 93, 136, 5], [901, 92, 135, 4], [918, 93, 136, 3], [952, 92, 135, 2], [969, 92, 135, 0]] },
+  { path: [[0, -40, 195, 0], [170, -66, 182, 15], [238, -82, 171, 15], [255, -85, 169, 15], [289, -90, 164, 15], [340, -95, 161, 15], [408, -98, 158, 15],
+    [442, -99, 157, 15], [459, -100, 156, 14], [510, -100, 156, 13], [612, -102, 155, 13], [629, -102, 155, 12], [680, -102, 154, 12], [697, -102, 154, 11],
+    [748, -102, 154, 10], [765, -102, 154, 9], [816, -102, 154, 9], [833, -103, 154, 8], [867, -102, 154, 7], [884, -102, 154, 7], [901, -103, 154, 6],
+    [935, -102, 154, 5], [969, -103, 154, 4], [1003, -102, 154, 3], [1020, -103, 154, 2], [1037, -103, 154, 0]] }
+];
+const DIA_SVG = `<svg viewBox="-12 -12 24 24"><path d="M0-9.5L9.5 0 0 9.5-9.5 0Z" fill="currentColor" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/></svg>`;
+/* Duolingo's own path sounds, each decoded once into a buffer the way the
+   correct-answer clip is, so a press is heard on the frame it lands: the
+   press and release of a node, the card closing, and node_complete (it starts
+   on the take-off, swells through the flip and lands with the coin). The
+   clicks are WAV: an mp3 frame is longer than the click itself */
+const SFX_SRC = { done: "assets/sounds/node-complete.mp3", press: "assets/sounds/node-press.wav",
+  release: "assets/sounds/node-release.wav", close: "assets/sounds/node-close.wav" };
+const SFX_BUF = {}, SFX_P = {};
+function sfxLoad(k) {
+  if (SFX_P[k] || !window.fetch) return;
+  const ac = audioCtx();
+  if (!ac) return;
+  SFX_P[k] = fetch(SFX_SRC[k]).then(r => r.arrayBuffer())
+    .then(ab => new Promise((res, rej) => ac.decodeAudioData(ab, res, rej)))
+    .then(b => { SFX_BUF[k] = b; })
+    .catch(() => { delete SFX_P[k]; });
+}
+function sfxPlay(k, gain, fallback) {
+  if (!S.sound) return;
+  const ac = audioCtx();
+  if (SFX_BUF[k] && ac) {
+    try {
+      const src = ac.createBufferSource(), g = ac.createGain();
+      src.buffer = SFX_BUF[k]; g.gain.value = gain || 1;
+      src.connect(g); g.connect(ac.destination); src.start();
+      return;
+    } catch (e) { /* the fallback below */ }
+  }
+  sfxLoad(k);
+  if (fallback) fallback();
+}
+/* any CSS colour as [r, g, b] */
+function rgbOf(c) {
+  const x = (rgbOf.ctx = rgbOf.ctx || document.createElement("canvas").getContext("2d"));
+  x.fillStyle = "#000"; x.fillStyle = c;
+  const h = x.fillStyle;
+  if (h[0] === "#") return [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  return (h.match(/\d+(\.\d+)?/g) || [0, 0, 0]).slice(0, 3).map(Number);
+}
+const toWhite = (c, f) => "rgb(" + rgbOf(c).map(v => Math.round(v + (255 - v) * f)).join(",") + ")";
+/* «a lesson done» (Duolingo's node complete): the coin squats, springs off its
+   own shadow tall and narrow, hangs among three diamonds, tips over towards
+   you until you see it edge-on from underneath, comes back up the right way —
+   gold, if that was the node's last lesson — and drops onto its shadow; then
+   the ring fills the segment just earned */
+function pathPay() {
+  const pay = PATH_PAY; PATH_PAY = null;
+  const col = document.querySelector('.node-col[data-key="' + pay.key + '"]');
+  if (!col || motionReduced()) { nodeFlipLoop(); return; }
+  const btn = col.querySelector(".node"), ring = col.querySelector(".ring-fill"), n = +col.dataset.n || 0;
+  const ic = btn.querySelector(".node-ic");
+  const toDash = ring && ring.getAttribute("stroke-dasharray");
+  if (ring && n) { ring.setAttribute("stroke-dasharray", (pay.was / n * 100).toFixed(1) + " 100"); if (!pay.was) ring.style.opacity = 0; }
+  const keep = btn.getAttribute("style");
+  if (pay.gold) {
+    const [c, sh, h] = (btn.dataset.open || "").split("|");
+    btn.classList.remove("node-done");
+    btn.style.setProperty("--node-c", c); btn.style.setProperty("--node-s", sh); btn.style.setProperty("--node-h", h);
+  }
+  sfxLoad("done");
+  clearTimeout(flipT); payRun = true;                // no star flip mid-jump, whoever asks for one
+  const r = col.getBoundingClientRect();
+  if (r.top < 90 || r.bottom > innerHeight - 110) col.scrollIntoView({ block: "center", behavior: "smooth" });
+  setTimeout(() => {
+    const cs = getComputedStyle(btn), root = getComputedStyle(document.documentElement);
+    const c0 = cs.backgroundColor, s0 = (cs.boxShadow.match(/rgba?\([^)]*\)|#\w+/) || [c0])[0];
+    const c1 = pay.gold ? root.getPropertyValue("--gold").trim() : c0, s1 = pay.gold ? root.getPropertyValue("--gold-dk").trim() : s0;
+    const k = 58 / 120, kx = 71 / 148, top0 = btn.offsetTop, at = t => t / PAY_MS, lin = { easing: "linear" };
+    const tip = btn.querySelector(".node-tip");      // the tooltip stands aside while the coin flips
+    if (tip) tip.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, fill: "forwards" });
+    const ghost = document.createElement("span");
+    ghost.className = "node-ghost";
+    ghost.style.top = top0 + 7 + "px";
+    col.insertBefore(ghost, btn);
+    const dias = PAY_DIAS.map(d => {
+      const el = document.createElement("span"), big = Math.max(...d.path.map(p => p[3])) * k;
+      el.className = "node-dia";
+      el.style.cssText = `width:${(big * (d.aspect || 1)).toFixed(1)}px;height:${big.toFixed(1)}px;margin:${(-big / 2).toFixed(1)}px 0 0 ${(-big * (d.aspect || 1) / 2).toFixed(1)}px`;
+      el.innerHTML = DIA_SVG;
+      col.insertBefore(el, btn);
+      const tint = c => d.pale ? toWhite(c, .5) : c;
+      el.animate(d.path.map(([t, x, y, s]) => ({ offset: at(t), ...lin,
+        transform: `translate(${(x * kx).toFixed(2)}px,${((y - 163) * k + top0).toFixed(2)}px) scale(${(s / Math.max(...d.path.map(p => p[3]))).toFixed(3)})`,
+        color: tint(t < 663 ? c0 : c1) })), { duration: PAY_MS, fill: "forwards" });
+      return el;
+    });
+    btn.style.transformOrigin = "50% 0";
+    btn.animate(PAY_COIN.map(([t, top, h, lip, w, p]) => {
+      const sy = h / 120;
+      return { offset: at(t), ...lin,
+        transform: `translateY(${((top - 163) * k).toFixed(2)}px) scale(${(w / 148).toFixed(3)},${sy.toFixed(3)})`,
+        background: p === 1 ? s1 : p ? c1 : c0,
+        boxShadow: `0 ${(lip * 7 / 16 / sy).toFixed(2)}px 0 ${p === 1 ? toWhite(c1, .15) : p ? s1 : s0}` };
+    }), { duration: PAY_MS });
+    if (ic) ic.animate(PAY_ICON.map(([t, o, s]) => ({ offset: at(t), ...lin, opacity: o, transform: `scale(${s})` })), { duration: PAY_MS });
+    try { btn.animate([{ opacity: 1 }, { opacity: 1, offset: at(662) }, { opacity: 0, offset: at(663) }, { opacity: 0, offset: at(688) }, { opacity: 1, offset: at(689) }, { opacity: 1 }],
+      { duration: PAY_MS, pseudoElement: "::before" }); } catch (e) { /* the shine stays */ }
+    ghost.animate(PAY_GHOST.map(([t, s]) => ({ offset: at(t), ...lin, transform: `scale(${s})` })), { duration: PAY_MS });
+    setTimeout(() => sfxPlay("done", .8, () => beep(pay.gold ? [[784, .08], [1047, .1], [1319, .22]] : [[784, .08], [1047, .16]])), 136);
+    setTimeout(() => { if (pay.gold) { btn.setAttribute("style", keep); btn.style.transformOrigin = "50% 0"; btn.classList.add("node-done"); } }, 688);
+    setTimeout(() => {
+      if (ring && toDash) {
+        ring.style.opacity = "";
+        ring.animate([{ strokeDasharray: ring.getAttribute("stroke-dasharray") }, { strokeDasharray: toDash }], { duration: 520, easing: "cubic-bezier(.3,1.3,.5,1)" });
+        ring.setAttribute("stroke-dasharray", toDash);
+      }
+    }, 1292);
+    setTimeout(() => {
+      ghost.remove(); dias.forEach(x => x.remove());
+      btn.style.transformOrigin = "";
+      if (tip) { tip.getAnimations().forEach(x => x.cancel()); tip.animate([{ opacity: 0, scale: .6 }, { opacity: 1, scale: 1.1, offset: .6 }, { opacity: 1, scale: 1 }], { duration: 320, easing: "ease-out" }); }
+      payRun = false;
+      nodeFlipLoop(2400);
+    }, PAY_MS);
+  }, 650);
+}
+/* press & open (Duolingo's node press and node select, measured off its file
+   at a tenth of the speed). The face drops the whole lip in one frame on the
+   press (.node:active) and comes back on the release with a two-step settle,
+   a third of a pixel up and a sixth down. Its ring breathes on a two-second
+   loop (ringIdle); opening the card pulls it in behind the coin and fades it,
+   then lets it out a little to wait there; closing the card picks the
+   breathing up from that same pulled-in size. The ring's sizes are Duolingo's
+   measured against its coin, so ours keep the same relation to ours */
+const RING_SEL = [[0, null], [22, 1.115, 1.104], [55, 1.044, 1.024], [89, .973, .945], [124, .929, .899], [157, .907, .865],
+  [192, .896, .854], [227, .885, .842], [259, .885, .848], [294, .896, .854], [329, .907, .865], [395, .929, .888],
+  [464, .94, .91], [532, .956, .927], [600, .962, .933], [667, .967, .939], [702, .973, .945]];
+A.nodePress = function () { sfxPlay("press"); buzz(8); };
+function nodeRelease(btn) {
+  sfxPlay("release");
+  if (motionReduced()) return;
+  btn.animate([{ transform: "translateY(-.29px)" }, { transform: "translateY(-.29px)", offset: .37 },
+    { transform: "translateY(.14px)", offset: .371 }, { transform: "translateY(.14px)", offset: .99 }, { transform: "none" }], { duration: 133 });
+}
+function ringSelect(col) {
+  const ring = col.querySelector(".node-ring");
+  col.classList.add("sel");
+  if (!ring || motionReduced()) return;
+  const from = getComputedStyle(ring).transform, ms = 702;
+  const parts = [...ring.querySelectorAll(".ring-track, .ring-arc")].map(x => [x, getComputedStyle(x).opacity]);
+  ring.style.animation = "none";
+  ring.animate(RING_SEL.map(([t, w, h]) => ({ offset: t / ms, transform: w ? `scale(${w},${h})` : from === "none" ? "none" : from })), { duration: ms, easing: "linear", fill: "forwards" });
+  parts.forEach(([x, o]) => {
+    x.style.animation = "none";
+    const low = x.classList.contains("ring-track") ? .73 : .6;
+    x.animate([{ opacity: o }, { opacity: x.classList.contains("ring-track") ? low : .57, offset: .27 }, { opacity: low }], { duration: ms, easing: "ease-out", fill: "forwards" });
+  });
+}
+function ringResume(col) {
+  col.classList.remove("sel");
+  const ring = col.querySelector(".node-ring");
+  if (!ring) return;
+  [ring, ...ring.querySelectorAll(".ring-track, .ring-arc")].forEach(x => {
+    x.getAnimations().forEach(an => { if (!an.animationName) an.cancel(); });
+    x.style.animation = "";
+    x.style.animationDelay = "-1s";                  // the breathing picks up pulled in
+  });
+}
+/* the star flip (Duolingo's star_flip on the current node): every few seconds
+   the icon lifts out of the coin over its own shadow and turns once, while
+   the ring stretches and shrinks */
+let flipT = 0, payRun = false;
+function nodeFlip(ic) {
+  const ring = ic.closest(".node-col").querySelector(".node-ring");
+  const P = "perspective(160px) ", sh = c => `drop-shadow(0 ${c}px 0 rgba(0,0,0,.2))`;
+  ic.animate([
+    { transform: P + "translateY(0) rotateY(0deg)", filter: sh(0) },
+    { transform: P + "translateY(-7px) rotateY(0deg)", filter: sh(7), offset: .18 },
+    { transform: P + "translateY(-7px) rotateY(360deg)", filter: sh(7), offset: .78 },
+    { transform: P + "translateY(0) rotateY(360deg)", filter: sh(0) }
+  ], { duration: 760, easing: "cubic-bezier(.4,0,.3,1)" });
+  if (ring) ring.animate([{ transform: "scale(1)" }, { transform: "scale(1.07)", offset: .35 }, { transform: "scale(.95)", offset: .7 }, { transform: "scale(1)" }],
+    { duration: 760, easing: "ease-in-out", composite: "add" });         // on top of the breathing
+}
+function nodeFlipLoop(delay) {
+  clearTimeout(flipT);
+  if (motionReduced() || payRun) return;           // pathPay restarts it when it lands
+  flipT = setTimeout(function go() {
+    const ic = document.querySelector(".path-row .bob .node-ic");
+    if (!ic) return;                                   // off the path: the loop ends
+    if (!document.querySelector(".lesson-pop-veil")) nodeFlip(ic);
+    flipT = setTimeout(go, 6000);
+  }, delay || 1800);
+}
+A.debugPathPay = function (gold) {
+  const key = "skills.bigsum", L = learnSet(key), rec = S.learn[key] = learnRec(key);
+  if (gold) {
+    rec.done = L.lessons.map(x => x.id);
+    S.lessons[key] = { stars: 2, plays: L.lessons.length, last: todayKey() };
+    PATH_PAY = { key, was: L.lessons.length - 1, gold: true };
+  } else {
+    rec.done = L.lessons.slice(0, 3).map(x => x.id);
+    S.lessons[key] = { stars: 0, plays: 3 };
+    PATH_PAY = { key, was: 2, gold: false };
+  }
+  A.go("path");
+};
 
 /* ---------------- LESSON SESSION ---------------- */
 let SES = null; // current session
@@ -1485,8 +2023,22 @@ function pickLessonQuestions(lesson, key, first) {
      behind them, four of them formulas to memorise, and that is a wall to meet
      before you have won anything. The rest of the lesson is served on the next
      play — the sort above puts what has not been answered first, so it comes
-     back in order and nothing is skipped. */
-  const opening = first ? chosen.filter(q => at(q) < FIRST_CHUNKS) : [];
+     back in order and nothing is skipped.
+     It takes the two GENTLEST chunks, not the first two. Lesson order is the
+     curriculum's order, not a ramp: skills.bigsum opens on repeated addition
+     (★) and its second chunk is ٨ + ٢ × (٧ − ٤)² ÷ ٦ (★★), brackets and an
+     exponent and a division in the first three minutes anyone spends here.
+     Ranking the chunks by their hardest question puts that one back where it
+     belongs — the second play, once there is a win behind it. */
+  let opening = [];
+  if (first) {
+    const hardest = {};
+    chosen.forEach(q => { const c = at(q); if (c !== 99) hardest[c] = Math.max(hardest[c] || 0, q.difficulty); });
+    const gentlest = Object.keys(hardest).map(Number)
+      .sort((a, b) => hardest[a] - hardest[b] || a - b)
+      .slice(0, FIRST_CHUNKS);
+    opening = chosen.filter(q => gentlest.indexOf(at(q)) >= 0);
+  }
   const served = opening.length ? opening : chosen;
   return served.sort((a, b) => a.difficulty - b.difficulty).map(shuffleChoices);
 }
@@ -1498,22 +2050,35 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   const d = window.QBANK[domKey], l = d.lessons.find(x => x.key === lesKey);
   const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
   const old = document.querySelector(".lesson-pop-veil"); if (old) old.remove();
+  document.querySelectorAll(".node-col.sel").forEach(ringResume);
   const btn = ev.currentTarget;
+  nodeRelease(btn);
   const r = btn.getBoundingClientRect();
   const veil = document.createElement("div");
   veil.className = "lesson-pop-veil";
   const canBoost = S.xp >= BOOST_COST;
+  /* a node in short lessons says which one is next and how far along the node is */
+  const LS = learnSet(domKey + "." + lesKey), done = lessonProg(domKey + "." + lesKey).stars > 0;
+  const at = LS && !done ? Math.max(0, learnAt(domKey + "." + lesKey)) : -1;
   veil.innerHTML = `<div class="lesson-pop" style="--pop-c:${u.c};top:${Math.min(r.bottom + 14, window.innerHeight - 190)}px">
     <h3>${l.title}</h3>
+    ${at >= 0 ? `<div class="lp-sub">الدرس ${toAr(at + 1)} من ${toAr(LS.lessons.length)}، ${esc(LS.lessons[at].title)}</div>` : LS ? `<div class="lp-sub">تدريب بوقت — مثل الاختبار</div>` : ""}
     <button class="lp-boost ${canBoost ? "" : "cant"}" id="lpBoost" aria-label="ضاعف خبرة هذا الدرس مقابل ${toAr(BOOST_COST)} جوهرة">
       <span class="lpb-ico"><img src="assets/icons/lightning.svg" width="20" height="20" alt=""></span>
       <span class="lpb-label">ضاعف الخبرة <span dir="ltr">×٢</span></span>
       <span class="lpb-cost">${ico("gem", 13)} ${toAr(BOOST_COST)}</span>
     </button>
-    <button class="btn btn-white" style="color:${u.c};box-shadow:0 5px 0 ${u.pale}">ابدأ</button>
+    <button class="btn btn-white" style="color:${u.c};box-shadow:0 5px 0 ${u.pale}">${at > 0 ? "كمّل" : LS && done ? "تدرّب" : "ابدأ"}</button>
   </div>`;
   let untrapPop = null;
-  const popClose = () => { if (untrapPop) { untrapPop(); untrapPop = null; } veil.remove(); };
+  const selCol = btn.closest(".node-col");
+  if (selCol) ringSelect(selCol);
+  const popClose = start => {
+    if (untrapPop) { untrapPop(); untrapPop = null; }
+    veil.remove();
+    if (selCol) ringResume(selCol);
+    if (start !== true) sfxPlay("close");
+  };
   veil.onclick = e => { if (e.target === veil) popClose(); };
   let boost = false;
   const bb = veil.querySelector("#lpBoost");
@@ -1525,7 +2090,7 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
     if (cost) cost.innerHTML = boost ? `مفعّل ✓` : `${ico("gem", 13)} ${toAr(BOOST_COST)}`;
     if (boost) sndGood();
   };
-  veil.querySelector(".btn-white").onclick = () => { popClose(); A.startLesson(domKey, lesKey, boost); };
+  veil.querySelector(".btn-white").onclick = () => { popClose(true); A.startLesson(domKey, lesKey, boost); };
   document.body.appendChild(veil);
   untrapPop = trapOverlay(veil, popClose, { label: l.title, focus: ".btn-white" });
   const pop = veil.querySelector(".lesson-pop");
@@ -1574,6 +2139,7 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
 A.startLesson = function (domKey, lesKey, boost) {
   const d = window.QBANK[domKey], l = d.lessons.find(x => x.key === lesKey);
   const key = domKey + "." + lesKey;
+  if (learnSet(key) && !lessonProg(key).stars) { A.startLearn(domKey, lesKey, null, boost); return; }
   /* decided before the questions are picked: the first lesson anyone ever plays
      is both shorter and unloseable */
   const safe = !Object.values(S.lessons).some(p => p.plays > 0);
@@ -1595,6 +2161,9 @@ A.startLesson = function (domKey, lesKey, boost) {
      carries its own method and "q.method || SES.method" always took the
      question's. Teach first on a lesson you have not cleared. */
   const T = window.QTEACH && window.QTEACH[key];
+  /* a node taught by short lessons replays as timed exam practice: the
+     teaching already happened, and cards would only teach it twice */
+  if (learnSet(key)) { SES.safe = false; SES.notime = false; renderSession(); return; }
   if (T) { teachArrange(T); renderSession(); return; }              // cards for any chunk not yet taught, then its questions
   if (!replay && l.method) { renderLessonIntro(d, l); return; }     // lessons without cards yet
   renderSession();
@@ -1626,7 +2195,7 @@ function teachArrange(T) {
   SES.queue.forEach(q => { const ci = chunkOf[q.id]; if (ci !== undefined && need.indexOf(ci) < 0) need.push(ci); });
   const live = need.filter(ci => T.chunks[ci].steps.some(s => s.type === "rule" && !rec.taught.includes(s.n)));
   SES.teach.steps = live.reduce((n, ci) => n + T.chunks[ci].steps.length, 0)
-    + (SES.teach.first && live.length ? 1 : 0);     // the one-off «قبل ما نبدأ» card
+    + (SES.teach.first && live.length ? 1 : 0);     // the one-off lead card: «قبل ما نبدأ», or the warm-up on a first lesson
 }
 function teachGate() {
   const t = SES.teach;
@@ -1637,12 +2206,22 @@ function teachGate() {
   t.shown[ci] = true;
   const rec = S.teach[SES.key] || { taught: [] };   // a chunk taught on an earlier play is not taught again
   if (!t.T.chunks[ci].steps.some(s => s.type === "rule" && !rec.taught.includes(s.n))) return false;
-  const steps = (t.first ? [{ type: "title" }] : []).concat(t.T.chunks[ci].steps);
+  /* The lead card, one either way, so the bar's count below stays exact. The
+     first lesson anyone plays leads with the warm-up question instead of the
+     plan: a new student's first act in the app should be answering something,
+     not reading what they are about to be taught. */
+  const lead = !t.first ? []
+    : SES.safe && t.T.open ? [Object.assign({ type: "warm" }, t.T.open)]
+    : [{ type: "title" }];
+  const steps = lead.concat(t.T.chunks[ci].steps);
   t.cur = { ci, steps, i: 0, picked: null, revealed: false };
   return true;
 }
 const TEACH_COACH = {
   title: "نتعلّم شوي ونحلّ شوي — ما نحفظ كل شيء مرة وحدة.",
+  warm: "براسك، بدون ورقة. ما فيه قلوب ولا وقت هنا.",
+  warmGood: "هذي نقطة البداية — والباقي كله اختصارات لها.",
+  warmBad: "ولا يهمك، هذا سؤال قبل الشرح مو بعده.",
   rule: ["اقرأ المثال مرة بصوتك — يثبت أسرع.", "غطِّ الصيغة بإصبعك وحاول تتذكرها قبل ما تكمل."],
   check: "جرّب قبل ما تشوف الحل — الغلط هنا مجاني.",
   good: "تذكّرته بنفسك، فراح يثبت أطول.",
@@ -1674,7 +2253,7 @@ function renderTeach() {
        book's letter formula stays exact in the guidebook, where it is reference */
     const fig = window.QTEACH_FIG && window.QTEACH_FIG[SES.key + ":" + step.n];
     body = `<div class="teach-card">
-      <div class="tc-kicker">${esc(chunk.title)} · قانون ${toAr(k)} من ${toAr(rules.length)}</div>
+      <div class="tc-kicker">${esc(chunk.title)}، قانون ${toAr(k)} من ${toAr(rules.length)}</div>
       <div class="tc-head"><span class="li-num">${toAr(k)}</span><h2 class="tc-title">${esc(step.title)}</h2></div>
       <p class="tc-say">${esc(step.say)}</p>
       ${fig ? `<div class="tc-fig">${fig}</div>` : ""}
@@ -1685,15 +2264,25 @@ function renderTeach() {
     coach = TEACH_COACH.rule[(k - 1) % 2];
     btn = `<button class="btn" onclick="A.teachNext()">${goLabel}</button>`;
   } else {
+    /* The warm-up and the quick check are the same card underneath — a question
+       with no hearts and no clock. The warm-up only wears a different hat: it
+       comes before any teaching, so it says so, and its verdict is written for
+       a student who has not been told anything yet. */
+    const warm = step.type === "warm";
     const p = cur.picked, ok = p === step.answer;
     const cls = i => p === null ? "" : i === step.answer ? (cur.revealed ? "correct" : "") : i === p ? "wrong" : "dim";
-    body = `<div class="tc-practice">تمرين سريع · بدون قلوب ولا وقت</div>
-      <div class="tc-q">${esc(step.q)}</div>
+    const verdict = warm ? (ok ? step.good : step.bad) : step.why;
+    body = `${warm
+      ? `<div class="tc-warm-lead"><div class="tc-kicker">أول سؤال</div><h1 class="tc-warm-h">جاوب قبل أي شرح</h1></div>`
+      : `<div class="tc-practice">تمرين سريع — بدون قلوب ولا وقت</div>`}
+      <div class="tc-q${warm ? " tc-q-warm" : ""}">${esc(step.q)}</div>
       <div class="choices tc-choices${p === null ? "" : " answered"}">${step.choices.map((c, i) =>
         `<div class="slot"><span class="base" aria-hidden="true"></span><button class="choice ${cls(i)}" data-ci="${i}" style="--d:${0.05 + i * 0.07}s" onclick="A.teachPick(${i})" ${p === null ? "" : "disabled"}><span class="ch-shine" aria-hidden="true"></span><i class="ch-spk k1" aria-hidden="true"></i><i class="ch-spk k2" aria-hidden="true"></i><i class="ch-spk k3" aria-hidden="true"></i><span class="ch-letter">${LETTERS[i]}</span><span class="ch-txt">${esc(c)}</span></button></div>`).join("")}</div>
-      ${p === null ? "" : `<div class="tc-why ${ok ? "good" : "bad"}">${ok ? "✓ بالضبط — " : ""}${esc(step.why)}</div>`}`;
-    coach = p === null ? TEACH_COACH.check : ok ? TEACH_COACH.good : TEACH_COACH.bad;
-    btn = p === null ? `<button class="btn" disabled>${goLabel}</button>` : `<button class="btn" onclick="A.teachNext()">${goLabel}</button>`;
+      ${p === null ? "" : `<div class="tc-why ${ok ? "good" : "bad"}">${ok ? (warm ? "✓ صح — " : "✓ بالضبط — ") : ""}${esc(verdict)}</div>`}`;
+    coach = warm ? (p === null ? TEACH_COACH.warm : ok ? TEACH_COACH.warmGood : TEACH_COACH.warmBad)
+          : p === null ? TEACH_COACH.check : ok ? TEACH_COACH.good : TEACH_COACH.bad;
+    const label = warm ? "وريني الأسرع" : goLabel;
+    btn = p === null ? `<button class="btn" disabled>${label}</button>` : `<button class="btn" onclick="A.teachNext()">${label}</button>`;
   }
   const canBack = cur.i > 0;
   $app.innerHTML = `<div class="screen screen-full screen-teach" style="--li-c:${u.c};--li-s:${u.s};--li-h:${u.h}">
@@ -1713,11 +2302,17 @@ function teachRecord() { return S.teach[SES.key] = S.teach[SES.key] || { taught:
    per rule so the guidebook can float it to the top. */
 A.teachPick = function (i) {
   const cur = SES && SES.teach && SES.teach.cur; if (!cur) return;
-  const step = cur.steps[cur.i]; if (step.type !== "check" || cur.picked !== null) return;
+  const step = cur.steps[cur.i];
+  if ((step.type !== "check" && step.type !== "warm") || cur.picked !== null) return;
   cur.picked = i; cur.revealed = i === step.answer;
-  const rec = teachRecord(), ns = SES.teach.T.chunks[cur.ci].steps.filter(s => s.type === "rule").map(s => s.n);
-  if (cur.revealed) { rec.missed = rec.missed.filter(n => !ns.includes(n)); playCorrect(); }
-  else ns.forEach(n => { if (!rec.missed.includes(n)) rec.missed.push(n); });
+  /* The warm-up is asked before the rules exist, so missing it says nothing
+     about them — only a check writes the per-rule miss the guidebook reads. */
+  if (step.type === "check") {
+    const rec = teachRecord(), ns = SES.teach.T.chunks[cur.ci].steps.filter(s => s.type === "rule").map(s => s.n);
+    if (cur.revealed) rec.missed = rec.missed.filter(n => !ns.includes(n));
+    else ns.forEach(n => { if (!rec.missed.includes(n)) rec.missed.push(n); });
+  }
+  if (cur.revealed) playCorrect();
   questTick();
   save();
   renderTeach();
@@ -1792,7 +2387,7 @@ A.openBook = function (domKey, lesKey) {
   veil.innerHTML = `<div class="method-sheet book-sheet" style="--li-c:${u.c};--li-s:${u.s}">
     <div class="ms-grip"></div>
     <div class="ms-head"><span class="ms-bulb bk-bulb"><img src="assets/icons/book.svg" width="22" height="22" alt=""></span><h3>دفتر القوانين</h3></div>
-    <div class="ms-sub">${esc(l.title)} · ${countAr(l.rules.length, N_RULES)}</div>
+    <div class="ms-sub">${esc(l.title)}، ${countAr(l.rules.length, N_RULES)}</div>
     ${firstOpen ? `<div class="tc-coach bk-coach">${BULB_SVG}<span>${TEACH_COACH.book}</span></div>` : ""}
     ${l.figure ? `<div class="li-fig">${l.figure}</div>` : ""}
     <div class="ms-body bk-body">${rows}${tips}</div>
@@ -1824,7 +2419,7 @@ A.openUnitBook = function (domKey) {
     if (!l.rules) return;
     const rec = (S.teach || {})[domKey + "." + l.key] || { taught: [], missed: [] };
     total += l.rules.length;
-    rows += `<div class="bk-les"><span>الدرس ${toAr(li + 1)} · ${esc(l.title)}</span><span class="bk-les-c">${countAr(l.rules.length, N_RULES)}</span></div>`;
+    rows += `<div class="bk-les"><span>الدرس ${toAr(li + 1)}، ${esc(l.title)}</span><span class="bk-les-c">${countAr(l.rules.length, N_RULES)}</span></div>`;
     l.rules.forEach(r => rows += bookRow(r, rec.missed.includes(r.n) ? "miss" : rec.taught.includes(r.n) ? "done" : ""));
   });
   const old = document.querySelector(".book-veil"); if (old) old.remove();
@@ -1833,7 +2428,7 @@ A.openUnitBook = function (domKey) {
   veil.innerHTML = `<div class="method-sheet book-sheet" style="--li-c:${u.c};--li-s:${u.s}">
     <div class="ms-grip"></div>
     <div class="ms-head"><span class="ms-bulb bk-bulb"><img src="assets/icons/book.svg" width="22" height="22" alt=""></span><h3>القوانين</h3></div>
-    <div class="ms-sub">${esc(d.title)} · ${countAr(total, N_RULES)} في ${toAr(d.lessons.length)} دروس</div>
+    <div class="ms-sub">${esc(d.title)}، ${countAr(total, N_RULES)} في ${toAr(d.lessons.length)} دروس</div>
     ${firstOpen ? `<div class="tc-coach bk-coach">${BULB_SVG}<span>${TEACH_COACH.book}</span></div>` : ""}
     <div class="ms-body bk-body">${rows}</div>
     <button class="btn ms-close" onclick="A.closeBook()">رجوع</button>
@@ -2389,7 +2984,7 @@ function fxAddStrike(tl, TH, at, run) {
    GSAP owns the transform, so this has to go through GSAP too. */
 function fxBindPress() {
   if (!window.gsap) return;
-  document.querySelectorAll(".screen-session .choice").forEach(c => {
+  document.querySelectorAll(".screen-session .choice, .screen-learn .ln-pr, .screen-learn .ln-tile, .screen-learn .ln-key").forEach(c => {
     gsap.set(c, { y: 0, scaleX: 1, scaleY: 1 });
     const dn = () => { if (!SES.locked) gsap.to(c, { y: 4, scaleY: .96, duration: .06, overwrite: "auto" }); };
     const up = () => { if (!SES.locked) gsap.to(c, { y: 0, scaleY: 1, duration: .09, ease: "power2.out", overwrite: "auto" }); };
@@ -2511,6 +3106,12 @@ function brokenHeartHero() {
    the thing that takes progress away, so the cards count as steps toward the one
    denominator: the bar crosses the boundary without a seam. */
 function sesPct(resolved) {
+  /* a short lesson's bar counts the lesson as it was dealt: a miss queues the
+     item again at the end, but the bar holds its ground instead of dropping */
+  if (SES.mode === "learn") {
+    const at = Math.min(SES.base, SES.got + (resolved === undefined ? 0 : resolved - SES.idx));
+    return Math.round(Math.min(1, at / Math.max(1, SES.base)) * 100);
+  }
   const t = SES.teach;
   const at = (t ? t.seen + (t.cur ? t.cur.i + 1 : 0) : 0)
     + (resolved === undefined ? SES.idx : resolved);
@@ -2533,7 +3134,509 @@ function sesCountLine(resolved) {
   return "سؤال " + toAr(at) + " من " + toAr(SES.queue.length);
 }
 
+/* ============================================================
+   SHORT LESSONS — js/data/learn.js
+   ------------------------------------------------------------
+   A path node used to be a whole chapter of the book: thirteen
+   rules read off cards, then eight timed exam questions, about
+   fifteen minutes before anything was won. Where a node has a
+   learn set it is four to six short lessons instead, about three
+   minutes each, one idea each, taught by doing:
+     اكتشف — a guess, then the trick unfolding in big numbers
+     جرّب  — the trick's one step, filled in from tiles
+     ثبّت  — quick reps in several shapes, new numbers every play
+     تحدَّ — one real question from the bank
+   Nothing is timed while learning; a finished node replays as
+   timed exam practice. An item may be a function of LRNG, so a
+   replay — or a missed item coming back at the end — arrives
+   with new numbers instead of an answer to remember.
+   ============================================================ */
+function learnSet(key) { return window.QLEARN && window.QLEARN[key]; }
+function learnRec(key) {
+  const r = (S.learn || {})[key];
+  return r && Array.isArray(r.done) ? r : { done: [], acc: {} };
+}
+/* the first short lesson of the node not finished yet, or -1 once all are */
+function learnAt(key) {
+  const L = learnSet(key); if (!L) return -1;
+  const done = learnRec(key).done;
+  return L.lessons.findIndex(x => done.indexOf(x.id) < 0);
+}
+const arN = n => (n < 0 ? "−" : "") + toAr(String(Math.abs(n)).replace(".", "٫"));
+/* what a generator item is handed: integers, picks, Arabic numerals, and
+   choices built from an answer and its likely wrong neighbours */
+const LRNG = {
+  int: (a, b) => a + Math.floor(Math.random() * (b - a + 1)),
+  pick: a => a[Math.floor(Math.random() * a.length)],
+  shuffle: a => shuffle(a),
+  ar: arN,
+  opts(ans, wrong, n) {
+    const fmt = v => typeof v === "number" ? arN(v) : String(v);
+    const out = [fmt(ans)];
+    wrong.map(fmt).forEach(w => { if (out.indexOf(w) < 0 && out.length < (n || 3)) out.push(w); });
+    return out;
+  }
+};
+function learnGraded(it) { return it.t !== "see" && !it.free; }
+function learnMake(src, tag) {
+  const it = Object.assign({}, typeof src === "function" ? src(LRNG) : src);
+  it.src = src; it.ui = {};
+  if (tag) it.tag = tag;
+  if (it.t === "bank") { const hit = questionById(it.id); it.q = hit ? shuffleChoices(hit.q) : null; }
+  if (it.t === "pick") it._ch = it.keep ? it.ch.slice() : shuffle(it.ch);
+  if (it.t === "fill") { it._tiles = shuffle(it.tiles.map((x, i) => i)); it.ui.slots = []; }
+  if (it.t === "order") {
+    let o = shuffle(it.tiles.map((x, i) => i));
+    for (let n = 0; n < 6 && o.every((k, j) => it.tiles[k] === it.tiles[j]); n++) o = shuffle(o);
+    it._tiles = o; it.ui.seq = [];
+  }
+  if (it.t === "pairs") {
+    it._r = shuffle(it.p.map((x, i) => i)); it._l = shuffle(it.p.map((x, i) => i));
+    it.ui.matched = []; it.ui.pick = null; it.ui.miss = 0;
+  }
+  if (it.t === "type") it.ui.val = "";
+  return it;
+}
+/* a long line steps its type down instead of wrapping mid-expression */
+function learnFs(s) { const n = String(s || "").replace(/\*/g, "").length; return n > 30 ? " fs-s" : n > 21 ? " fs-m" : ""; }
+/* *x* marks the one number or word the eye should land on */
+function learnFmt(s) { return esc(s == null ? "" : s).replace(/\*([^*]+)\*/g, '<b class="ln-hl">$1</b>'); }
+
+let LAST_LEARN = null;
+A.startLearn = function (domKey, lesKey, li, boost) {
+  const key = domKey + "." + lesKey, L = learnSet(key);
+  if (!L) { A.startLesson(domKey, lesKey, boost); return; }
+  if (li === undefined || li === null || li < 0 || li >= L.lessons.length) li = Math.max(0, learnAt(key));
+  const les = L.lessons[li];
+  const queue = les.items.map(src => learnMake(src));
+  /* One item from the lesson before opens this one: recalling it a day — or
+     ten minutes — later is what makes it stay, and it is a free first win. */
+  const prev = li > 0 ? L.lessons[li - 1] : null;
+  if (prev) {
+    const pool = prev.items.map(src => learnMake(src, "تذكّر من الدرس السابق"))
+      .filter(it => learnGraded(it) && it.t !== "bank" && it.t !== "pairs");
+    const rc = pool.filter(it => it.recall);
+    const pickOne = (rc.length ? rc : pool)[Math.floor(Math.random() * (rc.length || pool.length))];
+    if (pickOne) queue.unshift(pickOne);
+  }
+  queue.forEach((it, i) => { it.uid = "i" + i; });
+  let xpBoost = false;
+  if (boost && S.xp >= BOOST_COST) { S.xp -= BOOST_COST; xpBoost = true; save(); }
+  /* nothing is lost until the first node is finished: a new student meets the
+     stakes once they have won something, not in their first fifteen minutes */
+  const safe = !Object.values(S.lessons).some(p => p.stars > 0);
+  SES = { mode: "learn", domKey, lesKey, key, li, lid: les.id, title: les.title, method: "",
+    queue, total: queue.filter(learnGraded).length, idx: 0, done: 0, firstTry: {}, retried: {},
+    sel: null, locked: false, xp: 0, gems: 0, replay: learnRec(key).done.indexOf(les.id) >= 0,
+    xpBoost, safe, notime: true, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0, run: 0,
+    base: queue.length, got: 0 };
+  renderSession();
+};
+
+function learnReady(it) {
+  if (it.t === "fill") return it.ui.slots.length === it.a.length && it.ui.slots.every(k => k !== undefined);
+  if (it.t === "order") return it.ui.seq.length === it.tiles.length;
+  if (it.t === "type") return it.ui.val.length > 0;
+  if (it.t === "pick" || it.t === "tf" || it.t === "bank") return SES.sel !== null;
+  return false;
+}
+function learnTag(it) {
+  const tag = it.again ? "خطأ سابق — جرّبه مرة ثانية" : it.tag
+    || (it.t === "bank" ? "سؤال قدرات" : it.free ? "خمّن بسرعة" : "");
+  if (!tag) return "";
+  const cls = it.again ? " again" : it.t === "bank" ? " exam" : it.tag ? " recall" : "";
+  return `<div class="ln-tag${cls}">${it.t === "bank" ? ico("star", 14) : ""}${esc(tag)}</div>`;
+}
+function learnChoices(items, cls) {
+  return `<div class="choices ln-choices${cls}" role="radiogroup" aria-label="اختر الإجابة">` + items.map((c, i) =>
+    `<div class="slot"><span class="base" aria-hidden="true"></span>
+     <button class="choice" data-ci="${i}" role="radio" aria-checked="false" tabindex="${i ? -1 : 0}"
+       style="--d:${0.05 + i * 0.07}s" onclick="A.pick(${i})">
+       <span class="ch-shine" aria-hidden="true"></span>
+       <i class="ch-spk k1" aria-hidden="true"></i><i class="ch-spk k2" aria-hidden="true"></i><i class="ch-spk k3" aria-hidden="true"></i>
+       ${c}</button></div>`).join("") + `</div>`;
+}
+/* A chain of steps (a = b = c, or a ← b ← c) wraps mid-step on a phone and the
+   right-to-left run scrambles it, so a long chain stacks one step a line, the
+   way a worked solution is written. Blanks are numbered across the lines. */
+function learnSteps(src) {
+  const parts = String(src).split(/ (?=[=←] )/);
+  return parts.length > 1 && String(src).replace(/\*/g, "").length > 22 ? parts : [src];
+}
+/* What each blank should hold. A fill with anyOrder: k takes its first k
+   answers in any order (٦ × ٥ × ٤ is ٤ × ٥ × ٦), so those blanks are matched
+   against what the student placed before the leftovers are handed out. */
+function learnFillWant(it) {
+  const k = it.anyOrder || 0;
+  if (!k) return it.a;
+  const pool = it.a.slice(0, k), want = [];
+  for (let j = 0; j < k; j++) {
+    const v = it.tiles[it.ui.slots[j]], at = pool.indexOf(v);
+    if (at >= 0) { want[j] = v; pool.splice(at, 1); }
+  }
+  for (let j = 0; j < k; j++) if (want[j] === undefined) want[j] = pool.shift();
+  return want.concat(it.a.slice(k));
+}
+function learnFillEq(it, verdict) {
+  let k = 0;
+  const want = verdict ? learnFillWant(it) : null;
+  const blank = () => {
+    const j = k++, tile = it.ui.slots[j];
+    const st = verdict ? (it.tiles[tile] === want[j] ? " right" : " wrong") : "";
+    return tile === undefined
+      ? `<button class="ln-blank" aria-label="فراغ"></button>`
+      : `<button class="ln-blank filled${st}" onclick="A.lUnfill(${j})">${esc(it.tiles[tile])}</button>`;
+  };
+  const lines = learnSteps(it.eq).map(line => learnFmt(line).split("_").map((part, i, all) => i === all.length - 1 ? part : part + blank()).join(""));
+  return lines.length > 1 ? lines.map(l => `<div class="ln-step">${l}</div>`).join("") : lines[0];
+}
+function learnBody(it) {
+  const q = it.q && it.t !== "bank" ? `<div class="ln-q">${learnFmt(it.q)}</div>` : "";
+  const big = it.cmp ? `<div class="cmp-wrap">
+      <div class="cmp-box"><div class="cmp-t">القيمة الأولى</div><div class="cmp-v">${learnFmt(it.cmp[0])}</div></div>
+      <div class="cmp-box"><div class="cmp-t">القيمة الثانية</div><div class="cmp-v">${learnFmt(it.cmp[1])}</div></div></div>`
+    : it.big ? `<div class="ln-big${learnFs(it.big)}">${learnFmt(it.big)}</div>` : "";
+  /* "@skills.keylaws:9" borrows a card figure from teach-figures.js */
+  const svgFig = it.fig && it.fig[0] === "@" ? (window.QTEACH_FIG || {})[it.fig.slice(1)] : it.fig;
+  const fig = svgFig ? `<div class="q-figure ln-fig">${svgFig}</div>` : "";
+  switch (it.t) {
+    case "see": {
+      const rows = (it.rows || []).map((r, i) => {
+        const m = /^([~!·])\s*/.exec(r), kind = m ? { "~": "slow", "!": "win", "·": "note" }[m[1]] : "";
+        return `<div class="ln-row ${kind}${kind === "note" ? "" : learnFs(r)}" style="--d:${(0.2 + i * 0.5).toFixed(2)}s">${learnFmt(m ? r.slice(m[0].length) : r)}</div>`;
+      }).join("");
+      const n = (it.rows || []).length;
+      return `<div class="ln-see">
+        <div class="ln-kick">${esc(it.kick || "الفكرة")}</div>
+        ${it.h ? `<h1 class="ln-h">${learnFmt(it.h)}</h1>` : ""}
+        ${fig}<div class="ln-rows">${rows}</div>
+        ${it.rule ? `<div class="ln-rule" style="--d:${(0.3 + n * 0.5).toFixed(2)}s"><span class="ln-rule-ic">${BULB_SVG}</span><span class="ln-rule-body"><span class="ln-rule-tag">القاعدة</span><span class="ln-rule-tx">${learnFmt(it.rule)}</span></span></div>` : ""}
+      </div>`;
+    }
+    case "pick": {
+      const short = it._ch.every(c => String(c).length <= 7);
+      const cls = short ? ` ch-grid n${it._ch.length}` : "";
+      return q + big + fig + learnChoices(it._ch.map(c => `<span class="ch-txt">${learnFmt(c)}</span>`), cls);
+    }
+    case "tf":
+      return q.replace("ln-q", "ln-q ln-q-tf") + big + fig + learnChoices([
+        `<span class="tf-ico ok">✓</span><span class="ch-txt">صح</span>`,
+        `<span class="tf-ico no">✕</span><span class="ch-txt">خطأ</span>`], " ch-grid n2 ln-tf");
+    case "fill":
+      return q + fig + `<div class="ln-eq${learnSteps(it.eq).length > 1 ? " stacked" : learnFs(it.eq) + (it.eq.split("_").length > 4 ? " tight" : "")}" id="lnEq">${learnFillEq(it)}</div>
+        <div class="ln-tiles" id="lnTiles">${it._tiles.map(k =>
+          `<button class="ln-tile" data-k="${k}" onclick="A.lTile(${k})">${esc(it.tiles[k])}</button>`).join("")}</div>`;
+    case "order":
+      return q + big + fig + `<div class="ln-line" id="lnLine"></div>
+        <div class="ln-tiles" id="lnTiles">${it._tiles.map(k =>
+          `<button class="ln-tile" data-k="${k}" onclick="A.lTile(${k})">${learnFmt(it.tiles[k])}</button>`).join("")}</div>`;
+    case "type": {
+      const keys = ["١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩", (it.keys || [])[0] || "", "٠", "⌫"];
+      return q + big + fig + `<div class="ln-input" id="lnIn" dir="ltr" aria-live="polite"><span class="ln-caret"></span></div>
+        ${it.unit ? `<div class="ln-unit">${esc(it.unit)}</div>` : ""}
+        <div class="ln-pad" dir="ltr">${keys.map(k => k
+          ? `<button class="ln-key${k === "⌫" ? " del" : ""}" onclick="A.lKey('${k}')" aria-label="${k === "⌫" ? "امسح" : k}">${k}</button>`
+          : `<span></span>`).join("")}</div>`;
+    }
+    case "pairs": {
+      const col = (side, order) => order.map(k =>
+        `<button class="ln-pr${learnFs(it.p[k][side === "a" ? 0 : 1]).replace("fs-m", "fs-s")}" data-side="${side}" data-k="${k}" onclick="A.lPair('${side}',${k})">${learnFmt(it.p[k][side === "a" ? 0 : 1])}</button>`).join("");
+      return q + `<div class="ln-pairs"><div class="ln-col">${col("a", it._r)}</div><div class="ln-col">${col("b", it._l)}</div></div>`;
+    }
+    case "bank":
+      return it.q ? questionBody(it.q, SES.sel, false, null, null) : `<div class="ln-q">هذا السؤال غير متاح.</div>`;
+  }
+  return "";
+}
+function renderLearn() {
+  const it = SES.queue[SES.idx];
+  const d = window.QBANK[SES.domKey], u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
+  const pct = sesPct();
+  const btn = it.t === "see"
+    ? `<button class="btn" onclick="A.next()">${esc(it.go || "فهمت")}</button>`
+    : `<button class="btn" id="checkBtn" onclick="A.check()" ${learnReady(it) ? "" : "disabled"}>تحقق</button>`;
+  $app.innerHTML = `
+    <div class="screen screen-full screen-session screen-learn" style="--li-c:${u.c};--li-s:${u.s};--li-h:${u.h}">
+      <div class="session-top">
+        <button class="x-btn" onclick="A.quitSession()" aria-label="إنهاء الدرس">${X_SVG}</button>
+        <div class="prog-wrap">
+          <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="تقدمك في الدرس"><i style="width:${pct}%"></i><i class="prog-cool" style="width:${pct}%"></i></div>
+          <div class="fx-tag" id="fxTag" aria-hidden="true"></div>
+        </div>
+        ${SES.safe
+          ? `<span class="sess-hearts sess-review" aria-label="بدون قلوب">${ico("heart", 22)} ∞</span>`
+          : `<span class="sess-hearts" id="sesHearts" aria-label="القلوب المتبقية: ${toAr(SES.hearts)}">${ico("heart", 22)} ${toAr(SES.hearts)}</span>`}
+      </div>
+      <div class="q-area ln-area lt-${it.t}">${learnTag(it)}${learnBody(it)}</div>
+      <div class="action-bar">${it.t === "pairs" ? `<button class="btn" disabled>وصّل الأزواج</button>` : btn}</div>
+      <div class="feedback" id="fb" role="status" aria-live="assertive"></div>
+      <div class="storm" id="storm" aria-hidden="true"></div>
+    </div>`;
+  fxBindPress();
+  fxPaintBar(SES.run);
+  SES.qStart = Date.now();
+}
+function learnPaint() {
+  const it = SES.queue[SES.idx];
+  if (it.t === "fill") {
+    const eq = document.getElementById("lnEq"); if (eq) eq.innerHTML = learnFillEq(it);
+    document.querySelectorAll("#lnTiles .ln-tile").forEach(b => b.classList.toggle("used", it.ui.slots.indexOf(+b.dataset.k) >= 0));
+  }
+  if (it.t === "order") {
+    const line = document.getElementById("lnLine");
+    if (line) line.innerHTML = it.ui.seq.map((k, j) => `<button class="ln-tile in" onclick="A.lUnfill(${j})">${learnFmt(it.tiles[k])}</button>`).join("");
+    document.querySelectorAll("#lnTiles .ln-tile").forEach(b => b.classList.toggle("used", it.ui.seq.indexOf(+b.dataset.k) >= 0));
+  }
+  if (it.t === "type") {
+    const box = document.getElementById("lnIn");
+    if (box) box.innerHTML = it.ui.val ? esc(it.ui.val) : `<span class="ln-caret"></span>`;
+  }
+  const cb = document.getElementById("checkBtn"); if (cb) cb.disabled = !learnReady(it);
+}
+A.lTile = function (k) {
+  const it = SES && SES.queue[SES.idx]; if (!it || SES.locked) return;
+  if (it.t === "fill") {
+    if (it.ui.slots.indexOf(k) >= 0) return;
+    let j = 0; while (it.ui.slots[j] !== undefined) j++;
+    if (j >= it.a.length) return;
+    it.ui.slots[j] = k;
+  } else if (it.t === "order") {
+    if (it.ui.seq.indexOf(k) >= 0) return;
+    it.ui.seq.push(k);
+  } else return;
+  sndTap();
+  learnPaint();
+};
+A.lUnfill = function (j) {
+  const it = SES && SES.queue[SES.idx]; if (!it || SES.locked) return;
+  if (it.t === "fill") it.ui.slots[j] = undefined;
+  else if (it.t === "order") it.ui.seq.splice(j, 1);
+  learnPaint();
+};
+A.lKey = function (k) {
+  const it = SES && SES.queue[SES.idx]; if (!it || it.t !== "type" || SES.locked) return;
+  if (k === "⌫") it.ui.val = it.ui.val.slice(0, -1);
+  else if (it.ui.val.length < 9) it.ui.val += k;
+  sndTap();
+  learnPaint();
+};
+/* Match pairs answers itself: a right pair locks green and goes quiet, a wrong
+   one flashes red and lets go. The item is right first time only if nothing
+   was mismatched — a mismatch costs no heart, it only costs the clean run.
+
+   Both tiles of a right pair take the answer card's own jump (fxAddJump: the
+   stretch, the hang, the squash, the back-out settle), land back on their base
+   and grey out where they stand, the way Duolingo's board does. The LAST pair
+   stays lit and the full win — strike, tag and all — plays on it. A wrong pair
+   sinks into its base and shakes, the miss grammar of fxAddFail without its
+   sheet. */
+/* fxAddJump's beats at a third of its height: the answer card is the width of
+   the column, a pair tile is half that and sits two pixels from its neighbour,
+   and the full jump landed it on the tile above */
+function pairHop(tl, el, at) {
+  const J = FX_JUMP;
+  tl.to(el, { keyframes: [
+    { y: -5, scaleX: FXA(.947), scaleY: FXA(1.056), duration: J.launch, ease: "power2.out" },
+    { y: -9, scaleX: 1, scaleY: 1, duration: J.rise, ease: "power2.out" },
+    { y: -9, duration: J.hang },
+    { y: -2, scaleX: FXA(.980), scaleY: FXA(1.070), duration: J.fall, ease: "power2.in" },
+    { y: 1, scaleX: FXA(1.024), scaleY: FXA(.926), duration: J.impact, ease: "power2.in" },
+    { y: 0, scaleX: 1, scaleY: 1, duration: J.settle, ease: "back.out(2.6)" }] }, at);
+}
+function pairFx(els, ok) {
+  if (!fxOn() || !window.gsap || fxReduced()) return;
+  const tl = gsap.timeline();
+  els.forEach(el => {
+    if (ok) { pairHop(tl, el, 0); return; }
+    tl.to(el, { keyframes: [
+      { y: FXP(5), scaleX: FXA(1.02), scaleY: FXA(.95), duration: .07, ease: "power2.in" },
+      { y: 0, scaleX: 1, scaleY: 1, duration: .10, ease: "power2.out" }] }, 0)
+      .to(el, { keyframes: [{ x: -8, duration: .05 }, { x: 8, duration: .07 }, { x: -5, duration: .06 },
+        { x: 3, duration: .06 }, { x: 0, duration: .06 }] }, .02);
+  });
+}
+A.lPair = function (side, k) {
+  const it = SES && SES.queue[SES.idx]; if (!it || it.t !== "pairs" || SES.locked) return;
+  if (it.ui.matched.indexOf(k + side) >= 0) return;
+  const el = s => document.querySelector(`.ln-pr[data-side="${s.side}"][data-k="${s.k}"]`);
+  const p = it.ui.pick;
+  if (!p || p.side === side) {
+    if (p) el(p).classList.remove("sel");
+    it.ui.pick = { side, k };
+    el(it.ui.pick).classList.add("sel");
+    sndTap();
+    return;
+  }
+  const a = side === "a" ? k : p.k, b = side === "b" ? k : p.k;
+  const A1 = el({ side: "a", k: a }), B1 = el({ side: "b", k: b });
+  it.ui.pick = null;
+  [A1, B1].forEach(x => x.classList.remove("sel"));
+  if (it.p[a][1] === it.p[b][1]) {
+    it.ui.matched.push(a + "a", b + "b");
+    [A1, B1].forEach(x => { x.classList.add("ok"); x.disabled = true; });
+    if (it.ui.matched.length === it.p.length * 2) {
+      SES.locked = true;
+      /* the whole board takes the win jump (and the strike rides on it), the
+         last pair hops on top of it */
+      pairFx([A1, B1], true);
+      setTimeout(() => learnResolve(it, it.ui.miss === 0, "", document.querySelector(".ln-pairs") || B1, true), 260);
+    } else {
+      sndGood();
+      pairFx([A1, B1], true);
+      setTimeout(() => [A1, B1].forEach(x => x.classList.add("gone")), 560);
+    }
+  } else {
+    it.ui.miss++;
+    sndBad();
+    [A1, B1].forEach(x => { x.classList.remove("bad"); void x.offsetWidth; x.classList.add("bad"); });
+    pairFx([A1, B1], false);
+    setTimeout(() => [A1, B1].forEach(x => x.classList.remove("bad")), 520);
+  }
+};
+const sndTap = () => beep([[520, .04]]);
+
+function learnCheck() {
+  const it = SES.queue[SES.idx];
+  if (SES.locked || !learnReady(it)) return;
+  SES.locked = true;
+  const choices = Array.from(document.querySelectorAll(".ln-area .choice"));
+  let ok = false, shown = "", card = null, why = it.why;
+  if (it.t === "pick" || it.t === "tf" || it.t === "bank") {
+    const right = it.t === "pick" ? it._ch.indexOf(it.a) : it.t === "tf" ? (it.a ? 0 : 1) : it.q.answer;
+    ok = SES.sel === right;
+    shown = it.t === "pick" ? it.a : it.t === "tf" ? (it.a ? "صح" : "خطأ")
+      : LETTERS[right] + " — " + (it.q.format === "comparison" ? CMP_CHOICES[right] : it.q.choices[right]);
+    if (it.t === "pick" && why && typeof why === "object") why = why[it._ch[SES.sel]] || why._ || "";
+    choices.forEach((b, j) => {
+      b.disabled = true;
+      b.classList.remove("sel");
+      if (j === right) b.classList.add("correct");
+      else if (j === SES.sel) b.classList.add("wrong");
+      else b.classList.add("dim");
+    });
+    card = choices[ok ? right : SES.sel];
+  } else if (it.t === "fill") {
+    ok = learnFillWant(it).every((x, j) => it.tiles[it.ui.slots[j]] === x);
+    const eq = document.getElementById("lnEq");
+    eq.innerHTML = learnFillEq(it, true);
+    shown = it.eq.replace(/\*/g, "").split("_").map((part, j, all) => j === all.length - 1 ? part : part + it.a[j]).join("");
+    card = eq;
+  } else if (it.t === "type") {
+    const want = [].concat(it.a);
+    ok = want.indexOf(it.ui.val) >= 0;
+    shown = want[0] + (it.unit ? " " + it.unit : "");
+    card = document.getElementById("lnIn");
+    card.classList.add(ok ? "right" : "wrong");
+  } else if (it.t === "order") {
+    ok = it.ui.seq.every((k, j) => it.tiles[k] === it.tiles[j]);
+    shown = it.tiles.join(" ← ").replace(/\*/g, "");
+    card = document.getElementById("lnLine");
+    card.classList.add(ok ? "right" : "wrong");
+  }
+  document.querySelectorAll(".ln-tile, .ln-key, .ln-blank").forEach(b => { b.disabled = true; });
+  learnResolve(it, ok, shown, card, false, why);
+}
+function learnRequeue(it) {
+  SES.retried[it.uid] = (SES.retried[it.uid] || 0) + 1;
+  if (SES.retried[it.uid] >= 3) { SES.got++; return; }     // let go of for this lesson, so the bar can still fill
+  const again = learnMake(it.src, it.tag);
+  again.uid = it.uid; again.again = true;
+  SES.queue.push(again);
+}
+function learnResolve(it, ok, shown, card, pairs, why) {
+  SES.locked = true;
+  SES.tSpent += Math.min(120, Math.round((Date.now() - (SES.qStart || Date.now())) / 1000));
+  const graded = learnGraded(it);
+  if (graded) { SES.tAnswered++; dailyTick(); }
+  const first = graded && !(it.uid in SES.firstTry);
+  if (first) SES.firstTry[it.uid] = ok;
+  if (it.t === "bank" && it.q) {
+    const qs = S.qstats[it.q.id] = S.qstats[it.q.id] || { r: 0, w: 0 };
+    ok ? qs.r++ : qs.w++;
+    noteAnswer(it.q, ok);
+  }
+  const fb = document.getElementById("fb");
+  SES.lastOk = !!(ok || pairs);
+  if (ok || pairs) {
+    playCorrect();
+    let gain = 0;
+    if (graded) {
+      SES.run = (SES.run || 0) + 1; SES.done++;
+      const d = it.t === "bank" ? (it.q.difficulty || 2) : 0;
+      gain = !first || SES.replay ? 1 : d ? [0, 3, 5, 8][d] : 2;
+      SES.gems += gain;
+      SES.xp += !first || SES.replay ? 2 : d ? [0, 6, 10, 16][d] : 5;
+    }
+    paintProg(SES.idx + 1);
+    const head = pairs ? (ok ? "وصّلتها كلها!" : "وصّلتها — في المرة الجاية بدون غلط") : it.free ? (it.head || "صح!") : praiseFor();
+    fb.className = "feedback good show has-crest";
+    fb.innerHTML = `<svg class="fb-crest" viewBox="0 0 380 90" preserveAspectRatio="none" aria-hidden="true">
+        <path class="fb-crest-fill"></path>
+        <path class="fb-crest-line" fill="none" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"></path>
+      </svg><div class="fb-row"><div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> ${head}</div>
+        ${gain ? `<span class="fb-gain">${ico("gem", 15)} +${toAr(gain)}</span>` : ""}</div>
+      ${it.ok ? `<div class="ln-fb-note">${learnFmt(it.ok)}</div>` : ""}
+      <button class="btn" onclick="A.next()">متابعة</button>`;
+    answerFx(card, SES.run);
+  } else {
+    sndBad();
+    if (graded) { SES.run = 0; learnRequeue(it); paintProg(); loseHeart(); }
+    const hLeft = SES.hearts;
+    const heartLine = !graded || SES.safe ? ""
+      : hLeft === 0 ? `<div class="fb-hearts out">${ico("heart", 15)} لم يتبقَّ لك قلوب</div>`
+      : hLeft === 1 ? `<div class="fb-hearts warn">${ico("heart", 15)} باقٍ لك قلب واحد — ركّز</div>` : "";
+    const sol = it.t === "bank" && it.q ? `<div class="fb-solution" id="sol">${formatExplain(it.q.solution)}</div>` : "";
+    fb.className = "feedback bad show";
+    fb.innerHTML = `<div class="fb-head"><span class="fb-x">✕</span> ${it.free ? "الغلط هنا مجاني" : "ليست صحيحة"}</div>
+      ${heartLine}
+      <div class="fb-correct">الصحيح: <b>${learnFmt(shown)}</b></div>
+      ${why ? `<div class="ln-why">${learnFmt(why)}</div>` : ""}
+      ${sol}
+      ${graded && !it.again && SES.retried[it.uid] < 3 ? `<div class="ln-back">${typeof it.src === "function" ? "بيرجع لك آخر الدرس بأرقام جديدة" : "بيرجع لك آخر الدرس"}</div>` : ""}
+      <button class="btn btn-red" onclick="A.next()">${graded && hLeft === 0 && !SES.safe ? "شوف النتيجة" : "فهمت"}</button>`;
+    answerFxFail(card);
+  }
+  setTimeout(() => (window.requestIdleCallback || (f => f()))(warmStreak), 1400);
+  save();
+}
+
+/* Recording a finished short lesson. The node only earns its stars — which is
+   what opens the next node on the path — once every short lesson in it is done;
+   until then its ring fills one lesson at a time. */
+function learnFinish(acc) {
+  const L = learnSet(SES.key);
+  const rec = S.learn[SES.key] = learnRec(SES.key);
+  rec.acc = rec.acc || {};
+  if (rec.done.indexOf(SES.lid) < 0) rec.done.push(SES.lid);
+  rec.acc[SES.lid] = Math.max(rec.acc[SES.lid] || 0, acc);
+  const n = L.lessons.length, k = L.lessons.findIndex(x => x.id === SES.lid);
+  const nodeDone = L.lessons.every(x => rec.done.indexOf(x.id) >= 0);
+  const next = learnAt(SES.key);
+  let nodeStars = 0;
+  if (nodeDone) {
+    const avg = L.lessons.reduce((s, x) => s + (rec.acc[x.id] || 0), 0) / n;
+    nodeStars = avg >= 95 ? 3 : avg >= 75 ? 2 : 1;
+  }
+  LAST_LEARN = { domKey: SES.domKey, lesKey: SES.lesKey, next: nodeDone ? -1 : next,
+    nextTitle: nodeDone || next < 0 ? "" : L.lessons[next].title,
+    /* about twenty seconds an item, a real question counted twice, plus the recall */
+    mins: nodeDone || next < 0 ? 0 : Math.max(2, Math.round(L.lessons[next].items.reduce((n, x) => n + (x.t === "bank" ? 2 : 1), 1) * 20 / 60)) };
+  return { n, k, nodeDone, nodeStars, done: rec.done.length };
+}
+/* «الدرس التالي» from the win screen: the same hand-offs متابعة makes (the
+   streak flame first), then straight into the next three minutes */
+A.winNext = function () {
+  wstStop(); wvStop();
+  winHeroStop(); WIN = null;
+  const L = LAST_LEARN;
+  const go = () => L && L.next >= 0 ? A.startLearn(L.domKey, L.lesKey, L.next) : A.go("path");
+  if (pendingStreak > 0) { const c = pendingStreak; pendingStreak = 0; showStreakCelebration(c, go); }
+  else go();
+};
+
 function renderSession() {
+  if (SES.mode === "learn") { renderLearn(); return; }
+  if (SES.mode === "place") { renderPlace(); return; }
   if (SES.teach && teachGate()) { renderTeach(); return; }
   const q = SES.queue[SES.idx];
   const pct = sesPct();
@@ -2697,7 +3800,7 @@ function praiseFor() {
   const n = SES.queue.length, at = SES.idx + 1;
   /* the first question anyone ever gets right deserves better than the fifth
      entry in a rotation */
-  if (SES.safe && SES.done === 1) return "أول وحدة صح — يلا كمّل!";
+  if (SES.safe && SES.done === 1 && !SES.li) return "أول وحدة صح — يلا كمّل!";
   if (at >= n && SES.done >= SES.total) return "أنهيتها!";
   if (SES.run >= 5) return "لا شيء يوقفك!";
   if (SES.run === 3) return "ثلاث على التوالي!";
@@ -2707,6 +3810,8 @@ function praiseFor() {
 }
 
 A.check = function () {
+  if (SES && SES.mode === "learn") { learnCheck(); return; }
+  if (SES && SES.mode === "place") { plAnswer(false); return; }
   if (!SES || SES.sel === null || SES.locked) return;
   SES.locked = true;
   stopQTimer();
@@ -2856,6 +3961,39 @@ A.closeMethod = function () {
 };
 
 A.debugCurrent = function () { return SES && SES.queue[SES.idx]; }; // dev harness (preview.html) only
+/* dev harness only: answer the short lesson's current item, right or wrong, the way a tap would */
+A.debugLearnAnswer = function (right) {
+  const it = SES && SES.queue[SES.idx]; if (!it) return "none";
+  if (it.t === "see") { A.next(); return "see"; }
+  if (it.t === "pairs") {
+    if (!right) { A.lPair("a", 0); A.lPair("b", it.p.length > 1 ? 1 : 0); }
+    it.p.forEach((x, k) => { A.lPair("a", k); A.lPair("b", k); });
+    return "pairs";
+  }
+  if (it.t === "pick") A.pick(right ? it._ch.indexOf(it.a) : (it._ch.indexOf(it.a) + 1) % it._ch.length);
+  if (it.t === "tf") A.pick(it.a === right ? 0 : 1);
+  if (it.t === "bank") A.pick(right ? it.q.answer : (it.q.answer + 1) % (it.q.format === "comparison" ? 4 : it.q.choices.length));
+  if (it.t === "fill") {
+    it.a.forEach(x => {
+      const k = it.tiles.findIndex((t, i) => (right ? t === x : t !== x) && it.ui.slots.indexOf(i) < 0);
+      A.lTile(k >= 0 ? k : it.tiles.findIndex((t, i) => it.ui.slots.indexOf(i) < 0));
+    });
+  }
+  if (it.t === "order") { const seq = it.tiles.map((x, j) => j); if (!right) seq.reverse(); seq.forEach(k => A.lTile(k)); }
+  if (it.t === "type") Array.from(right ? [].concat(it.a)[0] : "٩٩٩").forEach(c => A.lKey(c));
+  A.check();
+  return it.t;
+};
+A.debugLearnFinish = function (miss) {
+  let n = 0, m = miss || 0;
+  if (SES) SES.tSpent = 154;   // a real lesson's time, so the preview's time card reads like one
+  while (SES && SES.mode === "learn" && n++ < 80) {
+    const it = SES.queue[SES.idx];
+    if (it.t === "pairs") learnResolve(it, true, "", null, true);
+    else if (it.t !== "see") A.debugLearnAnswer(!(it.t !== "free" && m > 0 && m--));
+    A.next();
+  }
+};
 A.debugRun = function () { return SES ? (SES.run || 0) : 0; };                    // dev harness only
 A.debugRankUp = function (i) { showRankUp(i); };                    // dev harness only
 A.debugPool = function () {                                         // dev harness only
@@ -2890,7 +4028,14 @@ const NO_FAIL = { review: 1, place: 1, mix: 1 };  // 999 hearts: there is nothin
 A.next = function () {
   if (!SES) return;                    // a stray Enter after the win screen
   if (!NO_FAIL[SES.mode] && !SES.safe && SES.hearts <= 0) { sessionFailed(); return; }
+  if (placeNudgeDue()) placeNudge();   // offered over the next question, never in its way
+  if (SES.mode === "learn") {
+    const was = SES.queue[SES.idx];
+    if (was && (was.t === "see" || was.free || SES.lastOk)) SES.got++;
+    SES.lastOk = false;
+  }
   SES.idx++; SES.sel = null; SES.locked = false;
+  if (SES.mode === "learn") { SES.idx >= SES.queue.length ? lessonComplete() : renderSession(); return; }
   if (SES.done >= SES.total || SES.idx >= SES.queue.length) {
     SES.mode === "place" ? placementComplete()
       : SES.mode === "review" ? reviewComplete()
@@ -2928,6 +4073,7 @@ function mixComplete() {
 }
 
 A.quitSession = function () {
+  if (S.placeNudge && SES && SES.key === S.placeNudge.key && !SES.nudged) { placeNudge(); return; }
   askConfirm("تبي توقف الدرس؟", "تقدمك في هذا الدرس ما راح ينحفظ.", "أكمل الدرس", "أوقف الدرس", () => {
     stopQTimer();
     if (SES && SES.xpBoost) { gainGems(BOOST_COST); save(); }   // the boost was never spent
@@ -2937,12 +4083,12 @@ A.quitSession = function () {
 
 A.retryLevel = function (domKey, lesKey) { A.startLesson(domKey, lesKey); };
 
-function countUpTime(el, to) {
-  const t0 = performance.now(), dur = 1200;
+function countUpTime(el, to, ms) {
+  const t0 = performance.now(), dur = ms || 1200;
   (function f(t) {
     const p = Math.min(1, Math.max(0, (t - t0) / dur)), eased = 1 - Math.pow(1 - p, 3);
     const v = Math.round(to * eased);
-    el.textContent = fmtTime(v);   // mm:ss, so it always reads as a clock
+    el.textContent = fmtClock(v);   // m:ss — «٠٠:٠٠» read as a row of dots, the Arabic zero is one
     if (p < 1) requestAnimationFrame(f);
   })(t0);
 }
@@ -3004,81 +4150,499 @@ A.quitFailed = function () { SES = null; A.go("path"); };
    round every corner by half its width - the Duolingo star is chunky, not
    a blob. Drawn at 44x44 with room for the 5px rim. */
 function lessonComplete() {
+  if (S.placeNudge && SES && SES.key === S.placeNudge.key) S.placeNudge = null;   // they got through it
   stopQTimer();
   const ft = Object.values(SES.firstTry);
   const acc = ft.length ? Math.round(ft.filter(Boolean).length / ft.length * 100) : 0;
   const stars = acc === 100 ? 3 : acc >= 75 ? 2 : 1;
   const perfect = acc === 100;
-  if (perfect && !SES.replay) { SES.xp += 20; SES.gems += 25; }   // perfect bonus only on a fresh clear
+  const wasDone = SES.mode === "learn" ? learnRec(SES.key).done.length : 0, wasStars = (S.lessons[SES.key] || {}).stars || 0;
+  const learn = SES.mode === "learn" ? learnFinish(acc) : null;
+  /* a short lesson is a third of the old one, and so is its bonus; finishing a
+     whole node is the moment that pays */
+  if (perfect && !SES.replay) { SES.xp += learn ? 10 : 20; SES.gems += learn ? 10 : 25; }   // perfect bonus only on a fresh clear
+  if (learn && learn.nodeDone && !SES.replay) { SES.xp += 20; SES.gems += 20; }
   const p = S.lessons[SES.key] = S.lessons[SES.key] || { stars: 0, plays: 0 };
-  p.plays++; p.stars = Math.max(p.stars, stars);
+  p.plays++;
+  if (!learn) p.stars = Math.max(p.stars, stars);
+  else if (learn.nodeDone) p.stars = Math.max(p.stars, learn.nodeStars);
   p.last = todayKey();               // so the path can say when a lesson is going stale
+  PATH_PAY = SES.replay || (learn && learn.done === wasDone) ? null : { key: SES.key, was: wasDone, gold: !wasStars && p.stars > 0 };
   const rankGain = SES.xp * (SES.xpBoost ? 2 : 1);   // 2× boost doubles RANK XP only (gems unaffected)
   gainXP(rankGain); gainGems(SES.gems);
   const streakUp = bumpStreak(); save(); sndWin();
   pendingStreak = streakUp ? S.streak.count : 0;   // show the fire-streak celebration after this win screen
   const xpWon = rankGain, gemsWon = SES.gems, boosted = SES.xpBoost, tTot = SES.tSpent;
-  const dayWord = S.streak.count === 1 ? "يوم واحد" : S.streak.count === 2 ? "يومان" : S.streak.count <= 10 ? toAr(S.streak.count) + " أيام" : toAr(S.streak.count) + " يوماً";
-  /* The stars are the path's own currency and the screen that awards them never showed
-     them. Three of them land one after another, gold for earned, and the row says how
-     many out of three for anyone listening to it rather than looking. */
-  LAST_MISSES = Object.keys(SES.firstTry).filter(k => SES.firstTry[k] === false);
+  LAST_MISSES = learn
+    ? SES.queue.filter(it => it.t === "bank" && it.q && SES.firstTry[it.uid] === false).map(it => it.q.id).filter((id, i, a) => a.indexOf(id) === i)
+    : Object.keys(SES.firstTry).filter(k => SES.firstTry[k] === false);
   const missCount = LAST_MISSES.length;
   /* The first lesson cannot be failed, which means it can no longer tell a
      struggling student the truth by ending the session. So the win screen says
      it instead: the star and قدّور stay, because the student really did answer
      every question, but the line stops calling it a clean finish and the review
      button becomes the thing to do next rather than an afterthought. */
-  const struggled = SES.safe && acc < 50 && missCount;
-  $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
-    ${winHero()}
-    <div class="win-stars" role="img" aria-label="نجومك في هذا الدرس: ${toAr(stars)} من ${toAr(3)}">
-      ${[1, 2, 3].map(i => `<span class="wstar${i <= stars ? " on" : ""}" style="--d:${(.55 + i * .2).toFixed(2)}s">${WIN_STAR}</span>`).join("")}
+  const struggled = SES.safe && acc < 50 && missCount && !(learn && learn.k > 0);
+  const hardLearn = learn && learn.k > 0 && acc < 50;
+  /* Duolingo's lesson-complete grammar, read from its own files: a headline
+     that names what the run was — the first lesson makes you «a learner», a
+     clean run is «perfect», a quick one «fast» — drawn from small pools so it
+     does not repeat, the character's line under it, and stat labels that only
+     ever flatter: a poor result falls back to the plain word. */
+  const firstEver = Object.values(S.lessons).reduce((n, x) => n + (x.plays || 0), 0) === 1;
+  const pickOne = a => a[Math.floor(Math.random() * a.length)];
+  const mins = Math.max(1, Math.ceil(tTot / 60));
+  const [head, say] = learn && learn.nodeDone ? ["ختمت المرحلة!", `«${SES.title}» آخر درس فيها — والمرحلة التالية *انفتحت*!`]
+    : struggled ? ["خلّصت درسك الأول", "الأول دايماً أصعب — راجع اللي فاتك وارجع له، بيصير أسهل."]
+    : hardLearn ? ["أكملت الدرس!", "هذا كان أصعب — أول سؤال في الدرس الجاي بيرجّعك له."]
+    : firstEver ? ["أنت متعلّم حقيقي!", "أول درس وخلّصته — *بداية قوية*!"]
+    : perfect ? pickOne([["درس بلا أخطاء!", "خذ تحيّة — ولا *غلطة وحدة*!"], ["ولا غلطة!", "صفر أخطاء؟ لو أنت *آلة حاسبة* اعترف!"],
+        ["كامل!", "هالعقل لازم *يندرس*!"]])
+    : tTot > 0 && tTot < 120 ? pickOne([["سريع جداً!", `أقل من *${toAr(mins)} ${mins === 1 ? "دقيقة" : mins === 2 ? "دقيقتين" : "دقائق"}*؟ تسافر عبر الزمن؟`],
+        ["خلّصت؟!", "بهالسرعة؟ *هذا المستوى*!"]])
+    : [pickOne(["أحسنت!", "تقدّم ممتاز!", "سوّيتها!", "شغل نظيف!"]),
+       pickOne(["مهاراتك في الكمي *تتحسّن*.", "كل درس يقرّبك من *هدفك*.", "التقدّم *لابق* عليك."])];
+  const accTag = acc === 100 ? "مذهل" : acc >= 90 ? "رائع" : acc >= 60 ? "جيد" : "الدقة";
+  const timeTag = tTot < 90 ? "خاطف" : tTot < 180 ? "سريع" : tTot < 300 ? "منجز" : "ملتزم";
+  const goal = dailyGoal(), qd1 = Math.min(goal, (S.daily && S.daily.n) || 0), qd0 = Math.max(0, qd1 - (SES.qd || 0));
+  WIN = { learn, title: SES.title, gems: gemsWon, boosted, goal, qd0, qd1, struggled, missCount,
+    nxt: learn && LAST_LEARN.next >= 0 ? { t: LAST_LEARN.nextTitle, m: LAST_LEARN.mins } : null };
+  const stat = (c, label, icon, id, extra) => `<div class="wst wst-${c}${extra || ""}">
+      <div class="wst-pop">
+        <span class="wst-bg"></span><span class="wst-t"><span>${label}</span></span>
+        <span class="wst-v"><span class="wst-in">${icon}<b id="${id}">٠</b></span></span>
+        <span class="wst-shine"><i></i></span>
+      </div>
+      ${[1, 2, 3].map(i => `<i class="wst-gl wst-g${i}">${WST_GLINT}</i>`).join("")}
+    </div>`;
+  $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene wn" id="comp">
+    <div class="wv">
+      <div class="wv-hero" aria-hidden="true"><span class="wv-shadow"></span>
+        <div class="wv-man">${mascot("celebrate", "wv-qd")}<div class="wv-lot" id="wvCrown">${WV_CROWN}</div></div></div>
+      <h1 class="wn-title wv-title">${head}</h1>
     </div>
-    <h1 class="win-title">${struggled ? "خلّصت درسك الأول" : "أكملت الدرس!"}</h1>
-    <p class="win-sub">${struggled ? "الأول دايماً أصعب — راجع اللي فاتك وارجع له، بيصير أسهل" : `سلسلة ${dayWord}`}</p>
-    <div class="win-gems">${ico("gem", 20)} +${toAr(gemsWon)} جوهرة${boosted ? ` · ⚡ الخبرة ×٢` : ""}</div>
-    <div class="result-cards">
-      <div class="rcard rc-gold"><div class="rc-t">الخبرة</div><div class="rc-v">${ico("lightning", 20)} <span id="cv-xp">٠</span></div></div>
-      <div class="rcard rc-blue rc-time"><div class="rc-t">الوقت</div><div class="rc-v">${TIMER_SVG} <span id="cv-time">${fmtTime(0)}</span></div></div>
-      <div class="rcard rc-green"><div class="rc-t">الدقة</div><div class="rc-v">${ico("target", 22)} <span id="cv-acc">٠</span></div></div>
-    </div>
-    ${SES.teach ? `<div class="tc-coach win-coach">${BULB_SVG}<span>${TEACH_COACH.win}</span></div>` : ""}
-    <div class="action-bar win-action" style="position:relative;right:auto;transform:none;max-width:340px;padding:0;background:none">
+    <div class="wn-say ob-say">${sayHtml(say)}</div>
+    <div class="wst-wrap">
+    <canvas id="wstRive" class="wst-rive" width="750" height="268" aria-hidden="true"></canvas>
+    <div class="wst-row">
+      ${stat(xpWon ? "gold" : "gray", "مجموع الخبرة", ico("lightning", 22), "cv-xp")}
+      ${stat("green", accTag, ico("target", 22), "cv-acc", perfect ? " hi" : "")}
+      ${stat("blue", timeTag, TIMER_SVG, "cv-time", tTot > 0 && tTot < 120 ? " hi" : "")}
+    </div></div>
+    <div class="action-bar win-action wn-cta">
       ${struggled
         ? `<button class="btn" onclick="A.reviewMissed()">راجع أخطاء الدرس</button>
-           <button class="btn btn-white win-again" onclick="A.winContinue()">متابعة</button>`
-        : `<button class="btn" onclick="A.winContinue()">متابعة</button>
+           <button class="btn btn-white win-again" onclick="A.winMore()">متابعة</button>`
+        : `<button class="btn" onclick="A.winMore()">متابعة</button>
            ${missCount ? `<button class="btn btn-white win-again" onclick="A.reviewMissed()">راجع أخطاء الدرس</button>` : ""}`}
     </div>
   </div></div>`;
-  winHeroPlay();
-  /* one tick per star as it lands, so the row is heard as well as seen */
-  if (!motionReduced()) for (let i = 1; i <= stars; i++) setTimeout(() => cvSnd.tick(), (.55 + i * .2) * 1000 + 120);
-  setTimeout(() => {
-    const xpEl = document.getElementById("cv-xp"), accEl = document.getElementById("cv-acc"), tEl = document.getElementById("cv-time");
-    if (xpEl) countUp(xpEl, xpWon); if (accEl) countUp(accEl, acc, "٪"); if (tEl) countUpTime(tEl, tTot);
-  }, 700);
+  wstLoad({ xp: xpWon, acc, t: tTot, perfect, accTag, timeTag });
+  winPlay({ xp: xpWon, acc, t: tTot, perfect });
   SES = null;
+}
+
+/* The win screen, fourth version (2026-10-22: the user called the racing band
+   broken and asked for Duolingo's own animation, 100%). Every moving part is
+   Duolingo's, read from its files, and nothing is its character:
+   1. Duolingo's floating crown (floating_crown.json, assets/fx/crown.json)
+      comes in the way its lesson-complete hero does (lesson_complete_main_29:
+      in by 383ms held big, shrinks 1.05 → .65 over 800–1150ms with an
+      ease-in-out (1, 0, .27, 1) and rises), landing on its own shadow with a
+      hit; then it bobs and its shine crosses it, on its own loop.
+   2. The title in Duolingo's gold: on at 33ms, .85 → 1 and +32px → 0 over
+      33–967ms (ease .06, .19, 0, 1); squashes to .8 at 1017 and springs back
+      by 1167.
+   3. The subtitle types itself out under it.
+   4. Duolingo's stat cards from its own file at 1.53s (stats_trig), 0 / .6 /
+      1.267s apart (wstFire), or their HTML copy when the file is not ready.
+   5. The button fades in last, 500ms, and only then takes a tap.
+   A tap anywhere else jumps to the end. No confetti, no particles. */
+/* then he keeps hopping for joy, a small jump every couple of seconds, the
+   crown riding on his head; killed with the screen (wvStop) */
+function wvJoy() {
+  const man = document.querySelector(".wv-man"), shadow = document.querySelector(".wv-shadow");
+  if (!man || !window.gsap || motionReduced()) return;
+  if (wvIdle) wvIdle.kill();
+  wvIdle = gsap.timeline({ repeat: -1, repeatDelay: 1.6 })
+    .to(man, { scaleX: 1.1, scaleY: .88, duration: .12, ease: "power1.out" })
+    .to(man, { scaleX: .94, scaleY: 1.08, y: -26, duration: .22, ease: "power2.out" })
+    .to(shadow, { scaleX: .75, opacity: .7, duration: .22, ease: "power2.out" }, "<")
+    .to(man, { scaleX: 1, scaleY: 1, y: 0, duration: .22, ease: "power2.in" })
+    .to(shadow, { scaleX: 1, opacity: 1, duration: .22, ease: "power2.in" }, "<")
+    .to(man, { keyframes: [{ scaleX: 1.08, scaleY: .92, duration: .06 }, { scaleX: 1, scaleY: 1, duration: .3, ease: "elastic.out(1, .45)" }] });
+}
+/* the crown drawn flat for the moment before the animation file arrives, and
+   for reduced motion: Duolingo's crown silhouette in its two golds */
+const WV_CROWN = `<svg class="wv-still" viewBox="0 0 250 219" aria-hidden="true"><path fill="#FFC800" d="M28 70l52 40 45-62 45 62 52-40-20 118a14 14 0 0 1-14 12H62a14 14 0 0 1-14-12z" stroke="#FFC800" stroke-width="16" stroke-linejoin="round"/><path fill="#FFDE00" d="M70 120l20-16 6 62a6 6 0 0 1-6 6H80a8 8 0 0 1-8-7z"/></svg>`;
+let wvLot = null, wvIdle = null;
+function wvCrownLoad() {
+  if (wvLot) { try { wvLot.destroy(); } catch (e) {} wvLot = null; }
+  const box = document.getElementById("wvCrown");
+  if (!box || motionReduced()) return;
+  loadStreakLibs().then(() => fetch("assets/fx/crown.json")).then(r => r.json()).then(data => {
+    const el = document.getElementById("wvCrown");
+    if (!el || wvLot) return;
+    const still = el.querySelector(".wv-still");
+    wvLot = lottie.loadAnimation({ container: el, renderer: "svg", loop: true, autoplay: false, animationData: data,
+      rendererSettings: { preserveAspectRatio: "xMidYMid meet" } });
+    wvLot.addEventListener("DOMLoaded", () => { if (still) still.remove(); wvLot.playSegments([50, 250], true); });
+  }).catch(() => {});
+}
+function wvStop() {
+  if (wvLot) { try { wvLot.destroy(); } catch (e) {} wvLot = null; }
+  if (wvIdle) { wvIdle.kill(); wvIdle = null; }
+  if (wgRv) { try { wgRv.cleanup(); } catch (e) {} wgRv = null; }
+}
+/* «تقدّمك اليوم»'s gems are Duolingo's gem reveal (gems_reveal_v14.riv,
+   assets/fx/gems.riv): a pile drops onto the card, cracks the floor and spills
+   two stones — small, medium or large by what the lesson paid. It is loaded as
+   the screen opens and fired by wpPlay; the gem glyph stays for reduced motion
+   and until the file is ready. */
+let wgRv = null;
+function wgLoad() {
+  const c = document.getElementById("wpGemRv");
+  if (!c || fxReduced()) return;
+  loadStreakLibs().then(() => {
+    if (!document.getElementById("wpGemRv") || wgRv) return;
+    const rv = wgRv = new rive.Rive({ src: "assets/fx/gems.riv", canvas: c, artboard: "gems_artboard", stateMachines: "gems", autoplay: true,
+      onLoad: () => { if (wgRv === rv) rv.ready = true; } });
+  }).catch(() => {});
+}
+/* true when the pile will play: the caller then counts on the landing */
+function wgFire(n) {
+  if (!wgRv || !wgRv.ready) return false;
+  const ins = wgRv.stateMachineInputs("gems") || [], t = ins.find(x => x.name === (n >= 30 ? "lg" : n >= 15 ? "med" : "sm") + "_anim_trig");
+  if (!t) return false;
+  document.getElementById("wpGemRv").parentElement.classList.add("rv");
+  t.fire();
+  return true;
+}
+/* Duolingo's four-point glint */
+const WST_GLINT = `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 0c.9 5.4 4.6 9.1 10 10-5.4.9-9.1 4.6-10 10-.9-5.4-4.6-9.1-10-10 5.4-.9 9.1-4.6 10-10z"/></svg>`;
+let WIN = null, wnTl = null, wpTl = null;
+/* the reward plays in full, but a tap on the screen jumps it to its end — by
+   the thirtieth lesson nobody should have to wait eight seconds for a button */
+function winSkippable(tl) {
+  const host = document.getElementById("comp");
+  if (!host || !tl) return;
+  host.addEventListener("pointerdown", e => {
+    if (e.target.closest("button")) return;
+    if (tl.progress() < 1) tl.progress(1);
+  });
+}
+/* Duolingo's stat cards are played from Duolingo's own file (2026-10-21: the
+   user asked for its animation 100%, not a copy of it): stat_component_72_lc_
+   refresh.riv, the compiled artboard its lesson-complete screen fires with
+   flurry_start_trig, set up the way its app sets it (rk00 / tk00): right_left
+   for RTL, XP in A, accuracy in B with the percent sign first (symbol 3, what
+   an Arabic phone gets), time in C as minutes and seconds, shine on a perfect
+   run and on a fast one, the labels through the file's own view model. The
+   file names its font without carrying it, so it is handed ours
+   (assets/fonts/stat-font.ttf: Baloo Bhaijaan 2 at 800, cut to Arabic, its
+   0–9 and % drawn as ٠–٩ and ٪ so the file's own digit ticker rolls in Eastern
+   Arabic). Nested events do not reach the page, so the hit on each card is
+   played on the file's own beats (+.167s into cards at 0 / .6 / 1.267s). The
+   HTML cards (statCardIn) stay underneath for screen readers, and play
+   instead whenever the file is not ready — offline, or reduced motion. */
+let wstRv = null;
+const WST_AT = [0, .6, 1.267];
+function wstStop() {
+  if (wstRv) { try { wstRv.cleanup(); } catch (e) {} wstRv = null; }
+}
+function wstLoad(v) {
+  wstStop();
+  if (motionReduced() || !document.getElementById("wstRive")) return;
+  loadStreakLibs().then(() => {
+    const cv = document.getElementById("wstRive");
+    if (!cv || wstRv) return;
+    const rv = wstRv = new rive.Rive({
+      src: "assets/streak/stats.riv", canvas: cv, autoplay: true, autoBind: true,
+      artboard: "lesson_stats_compiled_artboard", stateMachines: "stat_compile_statemachine",
+      layout: new rive.Layout({ fit: rive.Fit.Contain }),
+      assetLoader: asset => {
+        if (!asset.isFont) return false;
+        fetch("assets/fonts/stat-font.ttf").then(r => r.arrayBuffer()).then(b => rive.decodeFont(new Uint8Array(b)))
+          .then(f => { asset.setFont(f); if (f.unref) f.unref(); rv.fontOk = true; }).catch(() => {});
+        return true;
+      },
+      onLoad: () => {
+        if (wstRv !== rv) return;
+        try {
+          rv.resizeDrawingSurfaceToCanvas();
+          const vm = rv.viewModelInstance, label = { A: "مجموع الخبرة", B: v.accTag, C: v.timeTag };
+          "ABC".split("").forEach(k => { const s = vm.viewModel("stats_component_" + k + "_db_vm").string("run_main_db_str"); s.value = label[k]; });
+          const ins = rv.stateMachineInputs("stat_compile_statemachine"), set = (n, x) => { const i = ins.find(j => j.name === n); if (i) i.value = x; };
+          set("right_left_bool", true); set("buckets_num", 3); set("dark_mode_bool", false);
+          const t = Math.max(0, Math.round(v.t || 0));
+          /* each card defaults to Duolingo's combo border (a light running round
+             the edge); off a combo session it reads as a break in the border */
+          ["A", "B", "C"].forEach(k => rv.setBooleanStateAtPath("combo_animated_gradient_bool", false, k + "_stat_box"));
+          rv.setNumberStateAtPath("main_num", v.xp, "A_stat_box");
+          rv.setNumberStateAtPath("main_num", v.acc, "B_stat_box");
+          rv.setNumberStateAtPath("symbol_type_num", 3, "B_stat_box");
+          rv.setBooleanStateAtPath("shine_bool", !!v.perfect, "B_stat_box");
+          rv.setNumberStateAtPath("main_num", Math.floor(t / 60), "C_stat_box");
+          rv.setNumberStateAtPath("sec_num", t % 60, "C_stat_box");
+          rv.setBooleanStateAtPath("shine_bool", t > 0 && t < 120, "C_stat_box");
+          rv.ins = ins; rv.ready = true;
+        } catch (e) { wstStop(); }
+      }
+    });
+  }).catch(() => {});
+}
+/* fire the file's cards; false when it is not ready and the HTML cards must play */
+function wstFire(skip) {
+  const rv = wstRv;
+  if (!rv || !rv.ready || !rv.fontOk) return false;
+  const wrap = document.querySelector(".wst-wrap");
+  if (wrap) wrap.classList.add("rive-on");
+  const i = n => rv.ins.find(j => j.name === n);
+  if (skip && i("anim_off_bool")) i("anim_off_bool").value = true;
+  if (!rv.fired) { rv.fired = true; i("flurry_start_trig").fire(); }
+  if (!skip) {
+    const hz = [196, 247, 294];
+    WST_AT.forEach((a, k) => setTimeout(() => {
+      if (wstRv !== rv) return;
+      cvTone(hz[k], hz[k] * .55, .16, "triangle", .22); cvHiss(.08, .05, 0, 3000, 1200); buzz(18);
+      setTimeout(() => buzz([10, 50, 10, 50, 10, 50, 10]), 250);
+    }, (a + .167) * 1000));
+  }
+  return true;
+}
+/* one of Duolingo's stat cards, on the timeline at t0 (bucket_animation_3) */
+function statCardIn(tl, c, t0, k, count) {
+  const pop = c.querySelector(".wst-pop"), body = c.querySelector(".wst-v"), inner = c.querySelector(".wst-in"),
+        bg = c.querySelector(".wst-bg"), lab = c.querySelector(".wst-t > span"), gl = Array.from(c.querySelectorAll(".wst-gl"));
+  const hitHz = [196, 247, 294][k] || 247;
+  gsap.set(pop, { scale: .8, "--hb": 0 });
+  gsap.set(body, { width: "64%", height: 40, "--ha": 0 });
+  gsap.set(inner, { scale: .75 });
+  gsap.set(bg, { opacity: 0, y: 26, scaleX: .7 });
+  gsap.set(lab, { opacity: 0, scaleX: .86 });
+  gsap.set(gl, { opacity: 0, scale: .2, x: 0, y: 0 });
+  /* where each glint flies to: off the top corner (two) and the bottom one */
+  const out = [{ x: 16, y: -16 }, { x: 22, y: 2 }, { x: -16, y: 16 }];
+  tl.set(c, { opacity: 1 }, t0)
+    .to(pop, { keyframes: [
+      { scale: 1.156, duration: .033, ease: "none" },
+      { scale: 1.25, duration: .084, ease: "power2.in" },
+      { scale: .97, duration: .2, ease: "power2.out" },
+      { scale: 1, duration: .05, ease: "none" }] }, t0)
+    .to(body, { width: "calc(100% - 4px)", height: 66, duration: .35, ease: "expo.out" }, t0)
+    .to(body, { "--ha": 1, duration: .12, ease: "power1.out" }, t0 + .05)
+    .to(inner, { keyframes: [{ scale: 1.25, duration: .117, ease: "power3.out" }, { scale: 1, duration: .2, ease: "power2.inOut" }] }, t0)
+    .call(() => { cvTone(hitHz, hitHz * .55, .16, "triangle", .22); cvHiss(.08, .05, 0, 3000, 1200); buzz(18); }, null, t0 + .167)
+    /* the card opens: the strip rises from behind the body inside the halo */
+    .to(bg, { opacity: 1, y: 0, scaleX: 1, duration: .266, ease: "expo.out" }, t0 + .317)
+    .to(body, { "--ha": 0, duration: .2, ease: "power1.out" }, t0 + .317)
+    .to(pop, { "--hb": 1, duration: .2, ease: "power1.out" }, t0 + .317)
+    .to(pop, { "--hb": 0, duration: .4, ease: "power1.in" }, t0 + .75)
+    .to(lab, { keyframes: [{ opacity: 1, scaleX: 1.08, duration: .1, ease: "power2.out" }, { scaleX: .98, duration: .07 }, { scaleX: 1, duration: .07 }] }, t0 + .317)
+    .call(() => count(), null, t0 + (c.classList.contains("wst-green") ? .9 : .417));
+  gl.forEach((g, i) => {
+    tl.to(g, { opacity: 1, scale: .8 + (i === 0 ? .25 : 0), x: out[i].x, y: out[i].y, rotation: 90, duration: .55, ease: "back.out(2.4)" }, t0 + .317 + i * .04)
+      .to(g, { scale: .5, opacity: 0, duration: .18, ease: "power1.in" }, t0 + .82 + i * .04);
+  });
+  if (c.classList.contains("hi")) tl.fromTo(c.querySelector(".wst-shine i"), { x: 0, xPercent: -140 }, { x: 0, xPercent: 140, duration: 1.1, ease: "power2.inOut" }, t0 + 1);
+}
+function winPlay(v) {
+  if (wnTl) { wnTl.kill(); wnTl = null; }
+  const q = c => document.querySelector(c), qa = c => Array.from(document.querySelectorAll(c));
+  const host = q("#comp"), crown = q(".wv-hero"), shadow = q(".wv-shadow"), title = q(".wv-title"),
+        cards = qa(".wst"), cta = q(".wn-cta");
+  const counts = () => {
+    const x = document.getElementById("cv-xp"), a = document.getElementById("cv-acc"), t = document.getElementById("cv-time");
+    return [() => x && countUp(x, v.xp, "", 450), () => a && countUp(a, v.acc, "٪", 450), () => t && countUpTime(t, v.t, 450)];
+  };
+  wvCrownLoad();
+  if (!window.gsap || motionReduced() || !crown) {
+    sayPlay(0); counts().forEach(f => f());
+    return;
+  }
+  const lot = q(".wv-lot"), man = q(".wv-man");
+  gsap.set(man, { scaleX: .2, scaleY: .2, y: 0, opacity: 0, transformOrigin: "50% 100%" });
+  gsap.set(lot, { y: -150, opacity: 0, rotation: -24, transformOrigin: "50% 100%" });
+  gsap.set(shadow, { scaleX: .3, opacity: 0 });
+  gsap.set(title, { opacity: 0, scale: .85, y: 32 });
+  gsap.set(cards, { opacity: 0 });
+  gsap.set(cta, { opacity: 0, pointerEvents: "none" });
+  const duoTitle = "expo.out";
+  const tl = wnTl = gsap.timeline();
+  winSkippable(tl);
+  /* 1. قدّور leaps for joy (2026-10-22: the user wanted him back, and not
+     dropping from the sky): he pops up crouched on his shadow, springs into
+     the air stretched, hangs at the top, lands with a squash and a thump.
+     Nothing stands behind him (2026-10-22: the user called the gold sunburst
+     «very very very bad») — the white page is Duolingo's own */
+  tl.to(shadow, { scaleX: 1, opacity: 1, duration: .2, ease: "power2.out" }, .05)
+    .to(man, { opacity: 1, scaleX: 1.26, scaleY: .62, duration: .2, ease: "back.out(2.2)" }, .05)
+    .call(() => { cvTone(330, 0, .1, "triangle", .1); buzz(10); }, null, .05)
+    .call(() => cvHiss(.3, .07, 0, 500, 3800), null, .3)
+    .to(man, { scaleX: .86, scaleY: 1.18, y: -74, duration: .3, ease: "power2.out" }, .3)
+    .to(shadow, { scaleX: .55, opacity: .55, duration: .3, ease: "power2.out" }, .3)
+    .to(man, { scaleX: 1, scaleY: 1, y: -88, duration: .2, ease: "sine.out" }, .6)
+    .to(man, { y: 0, duration: .26, ease: "power2.in" }, .8)
+    .to(shadow, { scaleX: 1, opacity: 1, duration: .26, ease: "power2.in" }, .8)
+    .call(() => { cvTone(150, 60, .3, "sine", .32); cvTone(988, 0, .5, "triangle", .1, .02); cvTone(1319, 0, .4, "sine", .05, .06); buzz([30, 30, 20]); }, null, 1.06)
+    .to(man, { keyframes: [{ scaleX: 1.2, scaleY: .8, duration: .08, ease: "power1.out" }, { scaleX: 1, scaleY: 1, duration: .5, ease: "elastic.out(1.1, .4)" }] }, 1.06)
+    .to(shadow, { keyframes: [{ scaleX: 1.2, duration: .08 }, { scaleX: 1, duration: .45, ease: "elastic.out(1.1, .4)" }] }, 1.06);
+  /* 2. Duolingo's crown drops onto his head and clinks; he dips under it */
+  tl.to(lot, { y: 0, opacity: 1, rotation: 0, duration: .3, ease: "power2.in" }, 1.3)
+    .call(() => { cvTone(1568, 0, .25, "triangle", .08); cvTone(2093, 0, .35, "sine", .05, .05); buzz(15); }, null, 1.6)
+    .to(lot, { keyframes: [{ scaleY: .82, scaleX: 1.12, duration: .06 }, { scaleY: 1, scaleX: 1, rotation: 8, duration: .14 }, { rotation: -5, duration: .14 }, { rotation: 0, duration: .3, ease: "elastic.out(1, .4)" }] }, 1.6)
+    .to(man, { keyframes: [{ scaleY: .94, scaleX: 1.04, duration: .07 }, { scaleY: 1, scaleX: 1, duration: .35, ease: "elastic.out(1.1, .4)" }] }, 1.6)
+    .call(wvJoy, null, 2.6);
+  /* 2. the title: on at 33ms, grows and rises into place, then squashes and springs */
+  tl.set(title, { opacity: 1 }, .53)
+    .to(title, { scale: 1, y: 0, duration: .934, ease: duoTitle }, .53)
+    .to(title, { scaleY: .8, scaleX: 1.06, duration: .217, ease: "power2.in" }, 1.06)
+    .to(title, { scaleY: 1, scaleX: 1, duration: .15, ease: "back.out(3)" }, 1.277);
+  /* 3. his line */
+  const t = 1.45;
+  tl.call(() => sayPlay(0), null, t);
+  /* 4. Duolingo's three cards (A at 0, B at .6, C at 1.267): from its own file
+     when that is ready, else the HTML copy of them */
+  const T0 = 1.85, AT = WST_AT, run = counts();
+  tl.call(() => {
+    if (wstFire(tl.progress() === 1)) { run.forEach(f => f()); return; }   // the hidden HTML copy keeps the numbers for screen readers
+    const ft = gsap.timeline();
+    cards.forEach((c, k) => statCardIn(ft, c, AT[k], k, () => { run[k](); buzz([10, 50, 10, 50, 10, 50, 10]); }));
+    if (tl.progress() === 1) ft.progress(1);
+  }, null, T0);
+  /* 5. the button last, 500ms, and only then can it be pressed */
+  const end = T0 + AT[Math.max(0, cards.length - 1)] + 1.0;
+  tl.to(cta, { opacity: 1, duration: .5, ease: "none" }, end)
+    .set(cta, { pointerEvents: "auto" }, end + .1);
+}
+
+/* Duolingo's second screen after a lesson is the quests: what the lesson did to
+   the day. Ours has up to three cards — the lesson ticked off in its stage, the
+   day's goal filling, the gems — each landing on its own beat: a wait, a
+   swell to 1.06 while it lights up, and a settle. A bar's fill takes longer the
+   further it has to go, so a big jump reads as big. */
+A.winMore = function () {
+  wstStop(); wvStop();
+  winHeroStop();
+  const W = WIN; if (!W) { A.winContinue(); return; }
+  const L = W.learn, done = W.qd1 >= W.goal, justDone = done && W.qd0 < W.goal;
+  const pct = n => Math.round(n / W.goal * 100);
+  const nxt = W.nxt ? `التالي: «${esc(W.nxt.t)}» — ${W.nxt.m <= 2 ? "دقيقتين" : `${toAr(W.nxt.m)} دقائق`}` : "";
+  $app.innerHTML = `<div class="screen screen-full"><div class="complete wp" id="comp">
+    <h1 class="wp-title">تقدّمك اليوم</h1>
+    <div class="wp-list">
+      ${L ? `<div class="wp-card wn-task${L.nodeDone ? " all" : ""}">
+        <span class="wn-check" aria-hidden="true"><svg viewBox="0 0 32 32"><circle class="wn-ring" cx="16" cy="16" r="14"/><path class="wn-tick" d="M9.5 16.5l4.5 4.5 8.5-9"/></svg></span>
+        <span class="wn-tx">
+          <b><span class="wn-name">${esc(W.title)}</span><span class="wn-count"><span id="wnN">${toAr(L.done - 1)}</span>/${toAr(L.n)}</span></b>
+          <span class="wn-bar" role="img" aria-label="أنهيت ${toAr(L.done)} من ${toAr(L.n)} دروس في هذه المرحلة">${Array.from({ length: L.n }, (x, i) =>
+            `<i class="${i < L.done && i !== L.k ? "on" : ""}${i === L.k ? " now" : ""}"><u></u></i>`).join("")}</span>
+          <span class="wn-next">${nxt || (L.nodeDone ? "المرحلة التالية انفتحت لك" : "")}</span>
+        </span>
+      </div>` : ""}
+      <div class="wp-card wp-quest${done && !justDone ? " full" : ""}">
+        ${chestSVG("wp-chest")}
+        <span class="wn-tx">
+          <b><span id="wpQt">${done && !justDone ? "هدف اليوم مكتمل" : "هدف اليوم"}</span><span class="wn-count" id="wpQ">${toAr(W.qd0)}/${toAr(W.goal)}</span></b>
+          <span class="wp-bar"><i style="width:${pct(W.qd0)}%" data-w="${pct(W.qd1)}"></i></span>
+          <span class="wn-next" id="wpQn">${done && !justDone ? "صندوقك بانتظارك في الرئيسية" : `باقي ${qCount(W.goal - W.qd0)} على صندوق اليوم`}</span>
+        </span>
+      </div>
+      ${W.gems ? `<div class="wp-card wp-gems">
+        <span class="wp-gem">${ico("gem", 34)}<canvas class="wp-gem-rv" id="wpGemRv" width="240" height="240" aria-hidden="true"></canvas></span>
+        <span class="wn-tx"><b><span>+<span id="wpG">٠</span> جوهرة</span></b><span class="wn-next">رصيدك ${toAr(S.xp)} جوهرة${W.boosted ? " — الخبرة ×٢" : ""}</span></span>
+      </div>` : ""}
+    </div>
+    <div class="action-bar win-action wn-cta">
+      ${W.nxt ? `<button class="btn" onclick="A.winNext()">الدرس التالي</button>
+                 <button class="btn btn-white win-again" onclick="A.winContinue()">المسار</button>`
+              : `<button class="btn" onclick="A.winContinue()">متابعة</button>`}
+    </div>
+  </div></div>`;
+  window.scrollTo(0, 0);
+  wgLoad();
+  wpPlay(W, justDone);
+};
+function wpPlay(W, justDone) {
+  const q = c => document.querySelector(c), cards = Array.from(document.querySelectorAll(".wp-card"));
+  const bar = q(".wp-bar > i"), cta = q(".wp .wn-cta"), gEl = document.getElementById("wpG"), qEl = document.getElementById("wpQ");
+  const task = q(".wp .wn-task");
+  const questWords = () => {
+    const t = document.getElementById("wpQt"), n = document.getElementById("wpQn");
+    if (justDone && t) { t.textContent = "اكتمل هدف اليوم!"; q(".wp-quest").classList.add("full"); }
+    if (n) n.textContent = W.qd1 >= W.goal ? "صندوقك بانتظارك في الرئيسية" : `باقي ${qCount(W.goal - W.qd1)} على صندوق اليوم`;
+  };
+  const fillQuest = () => { if (bar) bar.style.width = bar.dataset.w + "%"; if (qEl) qEl.textContent = `${toAr(W.qd1)}/${toAr(W.goal)}`; questWords(); };
+  if (!window.gsap || motionReduced()) {
+    if (task) { task.classList.add("done"); if (task.classList.contains("all")) task.classList.add("full"); const n = document.getElementById("wnN"); if (n) n.textContent = toAr(W.learn.done); }
+    fillQuest(); if (gEl) gEl.textContent = toAr(W.gems);
+    return;
+  }
+  gsap.set(cards, { opacity: 0, y: 26 });
+  gsap.set(cta, { opacity: 0, y: 12, pointerEvents: "none" });
+  if (wpTl) wpTl.kill();
+  const tl = wpTl = gsap.timeline({ delay: .25 });
+  winSkippable(tl);
+  tl.to(q(".wp-title"), { keyframes: [{ scale: 1.15, duration: .15, ease: "power2.out" }, { scale: 1, duration: .3, ease: "back.out(3)" }] }, 0);
+  let t = .3;
+  cards.forEach(c => {
+    tl.to(c, { opacity: 1, y: 0, duration: .35, ease: "back.out(1.8)" }, t);
+    const at = t + .517;
+    tl.to(c, { keyframes: [{ scale: 1.06, duration: .2, ease: "power2.out" }, { scale: 1.05, duration: .2 }, { scale: 1, duration: .4, ease: "power2.inOut" }] }, at);
+    if (c === task) {
+      const seg = c.querySelector(".wn-bar i.now u"), tick = c.querySelector(".wn-tick"), n = document.getElementById("wnN");
+      const len = tick.getTotalLength ? tick.getTotalLength() : 24;
+      gsap.set(tick, { strokeDasharray: len, strokeDashoffset: len });
+      if (seg) gsap.set(seg, { scaleX: 0 });
+      tl.call(() => { c.classList.add("done"); cvSnd.gems(); buzz(20); }, null, at)
+        .fromTo(c.querySelector(".wn-check"), { scale: .4 }, { scale: 1, duration: .5, ease: "elastic.out(1.2, .45)" }, at)
+        .to(tick, { strokeDashoffset: 0, duration: .26, ease: "power2.out" }, at + .07);
+      if (seg) tl.to(seg, { scaleX: 1, duration: .5, ease: "power2.inOut" }, at + .17);
+      tl.call(() => { if (n) { n.textContent = toAr(W.learn.done); gsap.fromTo(n.parentNode, { scale: 1.45 }, { scale: 1, duration: .45, ease: "back.out(3)" }); } }, null, at + .6);
+      if (c.classList.contains("all")) tl.call(() => c.classList.add("full"), null, at + .7);
+    } else if (c.classList.contains("wp-quest")) {
+      const jump = (W.qd1 - W.qd0) / W.goal, dur = jump < .25 ? .283 : jump < .5 ? .367 : jump < .75 ? .45 : .533;
+      gsap.set(bar, { width: bar.style.width });
+      tl.to(bar, { width: bar.dataset.w + "%", duration: dur, ease: "power1.in" }, at)
+        .call(() => {
+          if (qEl) { qEl.textContent = `${toAr(W.qd1)}/${toAr(W.goal)}`; gsap.fromTo(qEl, { scale: 1.45 }, { scale: 1, duration: .45, ease: "back.out(3)" }); }
+          questWords();
+          if (justDone) { cvSnd.gems(); buzz([20, 60, 40]); gsap.fromTo(c.querySelector(".wp-chest"), { y: 0 }, { keyframes: [{ y: -14, scaleY: 1.08, duration: .16, ease: "power2.out" }, { y: 0, scaleY: .9, duration: .14, ease: "power2.in" }, { scaleY: 1, duration: .3, ease: "back.out(3)" }] }); }
+          else { cvSnd.tick(); buzz(12); }
+        }, null, at + dur);
+    } else if (gEl) {
+      /* the pile is fired as the card arrives and lands about a second later
+         (Duolingo's file: shadow at .4s, the drop at .6s, the hit at 1s) */
+      const pay = () => { countUp(gEl, W.gems, "", 500); cvSnd.gems(); buzz([10, 50, 10, 50, 10]); };
+      tl.call(() => {
+        if (wgFire(W.gems)) gsap.delayedCall(1, () => { if (document.getElementById("wpGemRv")) pay(); });
+        else {
+          pay();
+          gsap.fromTo(c.querySelector(".wp-gem"), { rotation: 0 }, { keyframes: [{ rotation: -14, scale: 1.25, duration: .15 }, { rotation: 8, scale: .95, duration: .15 }, { rotation: 0, scale: 1, duration: .3, ease: "back.out(3)" }] });
+        }
+      }, null, at - .45);
+    }
+    t = at + .55;
+  });
+  tl.to(cta, { opacity: 1, y: 0, duration: .5, ease: "power2.out" }, t + .1)
+    .set(cta, { pointerEvents: "auto" }, t + .2);
 }
 
 /* Straight from the win screen into the questions that beat you, while they are still
    fresh. The ids are held here because SES is torn down as the screen is built. */
 let LAST_MISSES = [];
 A.reviewMissed = function () {
+  wstStop(); wvStop();
+  winHeroStop();
   const qs = LAST_MISSES.map(id => questionById(id)).filter(Boolean).map(x => shuffleChoices(x.q));
   if (!qs.length) { A.winContinue(); return; }
   SES = { mode: "review", domKey: null, lesKey: null, key: null, title: "مراجعة الدرس", method: "",
     queue: qs.slice(), total: qs.length, idx: 0, done: 0, firstTry: {}, retried: {}, sel: null,
-    locked: false, xp: 0, gems: 0, replay: false, xpBoost: false, hearts: 999, notime: true, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0 };
+    locked: false, xp: 0, gems: 0, replay: false, xpBoost: false, hearts: 999, notime: true, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0, fromWin: !!WIN };
   renderSession();
 };
 
-/* A chunky five-pointed star: the sharp path, then the same path stroked to round every
-   corner by half the stroke — the Duolingo star is fat, not spiky. */
-const WIN_STAR = `<svg viewBox="0 0 44 44" aria-hidden="true">
-  <path d="M22 4.2l5.6 12.1 13.2 1.4-9.9 8.9 2.8 13-11.7-6.6-11.7 6.6 2.8-13-9.9-8.9 13.2-1.4z"
-    stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+const arNum = t => +String(t).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
 
 /* Win-screen hero: the streak flame (exact paths from the Figma streak icon,
    assets/icons/streak.svg) drops in over rotating sunrays, then burns:
@@ -3100,8 +4664,8 @@ function flameHero(size) {
     </div>
   </div>`;
 }
-function countUp(el, to, suffix) {
-  const t0 = performance.now(), dur = 900;
+function countUp(el, to, suffix, ms) {
+  const t0 = performance.now(), dur = ms || 900;
   (function f(t) {
     const p = Math.min(1, Math.max(0, (t - t0) / dur)), eased = 1 - Math.pow(1 - p, 3);
     el.textContent = toAr(Math.round(to * eased)) + (suffix || "");
@@ -3171,7 +4735,7 @@ function renderMockHome() {
     <h1>محاكاة الاختبار</h1><div class="sub">جرّب جو الاختبار الحقيقي وقس مستواك</div>
     ${held ? `<button type="button" class="mock-resume" onclick="A.mockResume()">
       <span class="mr-tx"><b>لديك اختبار لم يكتمل</b>
-        <span>القسم ${toAr(held.si + 1)} · باقٍ ${fmtClock(held.sections[held.si].left)} — أكمل من حيث توقفت</span></span>
+        <span>القسم ${toAr(held.si + 1)} — باقٍ ${fmtClock(held.sections[held.si].left)} — أكمل من حيث توقفت</span></span>
       <span class="mr-go" aria-hidden="true">${CHEV_SVG}</span>
     </button>` : ""}
     <div class="mock-hero-card">
@@ -3309,6 +4873,12 @@ A.mockSelect = function (i) {
   sec.answers[MOCK.qi] = i;
   document.querySelectorAll(".choice").forEach((b, j) => b.classList.toggle("sel", j === i));
   paintRadios(i);
+  /* every answer jumps — here it says «taken», as in the level test: a mock gives no verdict */
+  const picked = document.querySelectorAll(".choice")[i];
+  if (picked && window.gsap && !fxReduced()) {
+    document.querySelectorAll(".choice").forEach(b => { if (b !== picked) gsap.to(b, { y: 0, scaleX: 1, scaleY: 1, duration: .2, ease: "power2.out", overwrite: true }); });
+    fxAddJump(gsap.timeline(), picked, 0);
+  }
   const chip = document.querySelectorAll(".qn-chip")[MOCK.qi];
   if (chip) chip.classList.add("done");
   mockSave();
@@ -3670,7 +5240,7 @@ function renderLeague() {
   const ladder = LEAGUE_TIERS.map((t, i) => {
     const cls = i < ti ? "done" : i === ti ? "cur" : "locked";
     return `<div class="lb-tier ${cls} lb-tier-${t.key}">
-      <div class="lb-tier-badge">${rankImg(t.key, 58)}${i > ti ? `<span class="lb-lock">${LOCK_SVG}</span>` : ""}${i === ti ? `<span class="lb-tier-glow"></span>` : ""}</div>
+      <div class="lb-tier-badge">${rankImg(t.key, 58)}${i > ti ? `<span class="lb-lock">${LOCK_SVG}</span>` : ""}${i === ti ? `<span class="lb-tier-glow"></span>${lbShine(t.key)}` : ""}</div>
       <span>${t.name}</span>
     </div>`;
   }).join("");
@@ -3703,6 +5273,13 @@ function renderLeague() {
   </div></div>` + bottomnav("league");
   clearInterval(LB_TIMER);
   LB_TIMER = setInterval(lbTick, 22000);
+}
+/* Your tier's badge shines: a band of light crosses it inside its own outline
+   (the PNG is its own mask), then two four-point glints twinkle where the light
+   left it, the way Duolingo's league trophy glints. CSS only; still under
+   reduced motion. */
+function lbShine(key) {
+  return `<span class="lb-shine" style="--src:url(assets/icons/ranks/rank-${key}.png)" aria-hidden="true"></span><i class="lb-glint" aria-hidden="true">${WST_GLINT}</i><i class="lb-glint lb-glint2" aria-hidden="true">${WST_GLINT}</i>`;
 }
 
 /* ============================================================
@@ -4231,9 +5808,10 @@ function streakDayLabel(c) {
   return word + " من الحماس";
 }
 A.winContinue = function () {
-  winHeroStop();
+  wstStop(); wvStop();
+  winHeroStop(); WIN = null;
   const next = () => {
-    if (!S.placeAsked && Object.keys(S.lessons || {}).length === 1) { renderPlaceOffer(); return; }
+    if (!S.placeAsked && Object.values(S.lessons || {}).filter(p => p.stars > 0).length === 1) { renderPlaceOffer(); return; }
     A.go("path");
   };
   if (pendingStreak > 0) { const c = pendingStreak; pendingStreak = 0; showStreakCelebration(c, next); }
@@ -4243,7 +5821,8 @@ function showStreakCelebration(count, onDone) {
   const todayIdx = new Date().getDay();
   const days = STREAK_WK.map((lbl, d) => {
     const checked = d <= todayIdx && (todayIdx - d) < count;     // today + prior streak days within this week
-    return `<div class="day"><span class="lbl">${lbl}</span><div class="dot ${checked ? "live" : ""}">${checked ? `<div class="check" data-check></div>` : ""}</div></div>`;
+    const today = d === todayIdx;
+    return `<div class="day"><span class="lbl">${lbl}</span><div class="dot ${checked ? "live" : ""}">${checked ? `<div class="check" data-check${today ? " data-today" : ""}></div>` : ""}${today && checked ? `<canvas class="sk-coin" id="skCoin" width="336" height="336" aria-hidden="true"></canvas>` : ""}</div></div>`;
   }).join("");
   const veil = document.createElement("div");
   veil.className = "streak-veil";
@@ -4287,8 +5866,11 @@ function showStreakCelebration(count, onDone) {
     setTimeout(() => {
       sub.classList.add("show");
       setTimeout(() => cal.classList.add("show"), 180);
-      const n = streakInst.checks.length;
-      streakInst.checks.forEach((a, i) => setTimeout(() => a.goToAndPlay(0, true), 760 + i * 170));
+      const n = streakInst.checks.length, ti = [...veil.querySelectorAll("[data-check]")].findIndex(el => el.hasAttribute("data-today"));
+      streakInst.checks.forEach((a, i) => setTimeout(() => {
+        if (i === ti && skCoinFlip(veil)) return;
+        a.goToAndPlay(0, true);
+      }, 760 + i * 170));
       setTimeout(() => foot.classList.add("show"), 760 + Math.max(0, n - 1) * 170 + 520);
     }, 1300);
   }
@@ -4304,6 +5886,17 @@ function showStreakCelebration(count, onDone) {
         streakInst.flameIns = ins; tryRun();
       }
     });
+    const coin = veil.querySelector("#skCoin");
+    if (coin && !motionReduced()) streakInst.coin = new rive.Rive({ src: "assets/fx/coin.riv", canvas: coin, artboard: "Coin", stateMachines: "coin_state_machine", autoplay: true,
+      onLoad: () => {
+        const ins = streakInst.coin && streakInst.coin.stateMachineInputs("coin_state_machine");
+        if (!ins) return;
+        const g = n => ins.find(i => i.name === n);
+        if (g("color_num")) g("color_num").value = 0;
+        if (g("icon_num")) g("icon_num").value = 0;
+        if (g("dark_mode_bool")) g("dark_mode_bool").value = false;
+        streakInst.coinIns = ins;
+      } });
     fetch("assets/streak/daycheck.json").then(r => r.json()).then(data => {
       streakInst.checks = [...veil.querySelectorAll("[data-check]")].map(el => lottie.loadAnimation({
         container: el, renderer: "svg", loop: false, autoplay: false,
@@ -4312,10 +5905,25 @@ function showStreakCelebration(count, onDone) {
     }).catch(() => {});
   }).catch(showAll);   /* runtime failed to load — the static text, days and button */
 }
+/* Today's day is Duolingo's calendar coin (calendar_streak_coinflip_012.riv,
+   assets/fx/coin.riv): instead of the check popping in, the day is tossed like
+   a coin, flips over and lands as the orange check. The days before it keep
+   their checks. False when the coin is not ready, and the check plays. */
+function skCoinFlip(veil) {
+  const ins = streakInst.coinIns, c = veil.querySelector("#skCoin");
+  const t = ins && ins.find(i => i.name === "flip_trig");
+  if (!t || !c) return false;
+  c.parentElement.classList.add("coin");
+  t.fire();
+  cvTone(660, 0, .12, "triangle", .08); cvTone(990, 0, .2, "triangle", .07, .55); cvTone(1320, 0, .3, "sine", .06, .62);
+  setTimeout(() => buzz(20), 600);
+  return true;
+}
 A.closeStreak = function () {
   const v = document.querySelector(".streak-veil"), done = streakInst.onDone;
   try {
     streakInst.flame && streakInst.flame.cleanup();
+    streakInst.coin && streakInst.coin.cleanup();
     streakInst.checks.forEach(a => a.destroy());
   } catch (e) {}
   streakInst = { flame: null, checks: [], onDone: null };
@@ -4347,9 +5955,11 @@ A.startReview = function (allOfThem) {
 
 function reviewComplete() {
   stopQTimer();
-  const solved = SES.done, xpWon = SES.xp;
+  const solved = SES.done, xpWon = SES.xp, fromWin = SES.fromWin && WIN;
   gainXP(xpWon); gainGems(SES.gems); bumpStreak(); save(); sndWin();
-  const remaining = mistakeList().length;
+  /* only what is due counts as waiting: a mistake just fixed is pushed out by
+     SRS_GAP, and counting it again sent the student round in a loop */
+  const remaining = mistakeList().filter(x => x.due).length;
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
     ${flameHero(160)}
     <h1 class="win-title">أحسنت!</h1>
@@ -4359,7 +5969,8 @@ function reviewComplete() {
       <div class="rcard rc-green"><div class="rc-t">صُحّحت</div><div class="rc-v">${ico("target", 22)} ${toAr(solved)}</div></div>
     </div>
     <div class="action-bar win-action" style="position:relative;right:auto;transform:none;max-width:340px;padding:0;background:none">
-      ${remaining ? `<button class="btn" onclick="A.startReview()">واصل المراجعة</button>
+      ${fromWin ? `<button class="btn" onclick="A.winMore()">متابعة</button>`
+        : remaining ? `<button class="btn" onclick="A.startReview()">واصل المراجعة</button>
       <button class="btn btn-ghost" onclick="A.go('review')">رجوع</button>`
         : `<button class="btn" onclick="A.go('path')">متابعة</button>`}
     </div>
@@ -4389,7 +6000,7 @@ function renderReview() {
     const ch = isCmp ? CMP_CHOICES : q.choices;
     const u = UNIT_COLORS[x.rec.color] || UNIT_COLORS.purple;
     return `<div class="review-item" style="--d:${(0.05 + i * 0.04).toFixed(2)}s">
-      <div class="ri-tag" style="color:${u.s}">${esc(x.rec.domTitle)} · ${esc(x.rec.lesTitle)}</div>
+      <div class="ri-tag" style="color:${u.s}">${esc(x.rec.domTitle)}، ${esc(x.rec.lesTitle)}</div>
       <div class="ri-q">${q.stem || "قارن بين القيمتين"}</div>
       ${isCmp && q.value1 ? `<div class="ri-row" style="color:var(--gray)">القيمة الأولى: ${q.value1} — القيمة الثانية: ${q.value2}</div>` : ""}
       <div class="ri-acts">
@@ -4475,8 +6086,8 @@ function weekCard() {
   const top = Math.max(4, ...week.map(x => x.n));
   const delta = now - prev;
   const line = !prev ? `${qCount(now)} هذا الأسبوع — بداية طيبة`
-    : delta > 0 ? `${qCount(now)} هذا الأسبوع · أكثر من الأسبوع الماضي بـ${qCount(delta)}`
-    : delta < 0 ? `${qCount(now)} هذا الأسبوع · أقل من الأسبوع الماضي بـ${qCount(-delta)}`
+    : delta > 0 ? `${qCount(now)} هذا الأسبوع، أكثر من الأسبوع الماضي بـ${qCount(delta)}`
+    : delta < 0 ? `${qCount(now)} هذا الأسبوع، أقل من الأسبوع الماضي بـ${qCount(-delta)}`
     : `${qCount(now)} هذا الأسبوع — نفس إيقاع الأسبوع الماضي`;
   return `<div class="card week-card">
     <h3>هذا الأسبوع</h3>
@@ -4556,7 +6167,7 @@ function backupSummary(s) {
     toAr(s.xp || 0) + " جوهرة",
     day ? "سلسلة " + arPlural(day, "يوم واحد", "يومان", "أيام", "يوماً") : "بلا سلسلة",
     (s.mocks || []).length ? toAr((s.mocks || []).length) + " محاكاة" : "بلا محاكاة"
-  ].join(" · ");
+  ].join("، ");
 }
 const qLessons = n => arPlural(n, "درس واحد", "درسان", "دروس", "درساً");
 
@@ -5251,88 +6862,673 @@ A.skipExam = function () { S.examAsked = true; save(); afterLogin(); };
    one place the student was not coming back from */
 A.backFromExam = function () { go(EP.from || "path"); };
 
-/* ---------------- login (local profile, no server) ---------------- */
+/* ---------------- the first run ----------------
+   Duolingo's shape, because it works on people who have not decided to stay
+   yet: a welcome that asks for nothing, then one question a screen under a
+   progress bar with a way back, then the fork — from the first lesson, or the
+   level test. Every answer is used: the level picks the recommended start, the
+   goal sets the daily quest, the name greets them. The name is asked fourth,
+   not first; asking who someone is before they have seen anything was the old
+   screen's mistake. */
 function bankSize() {
   let n = 0;
   DOMAIN_ORDER.forEach(k => { const d = (window.QBANK || {})[k]; if (d) d.lessons.forEach(l => n += l.questions.length); });
   return n;
 }
-function renderLogin() {
-  $app.innerHTML = `<div class="screen screen-full login-screen">
-    ${welcomeHero()}
-    <h1 class="login-title">قدراتي</h1>
-    <p class="login-sub">تدرّب على القسم الكمي — درساً بعد درس</p>
-    <div class="login-badges">
-      <span>${toAr(bankSize())} سؤال أصلي</span>
-      <span>مجاني بالكامل</span>
-      <span>بدون حساب</span>
+const BACK_SVG = `<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`;
+function renderWelcome() {
+  $app.innerHTML = `<div class="screen screen-full wl-screen">
+    <div class="wl-body">
+      ${welcomeHero()}
+      <h1 class="wl-title">قدراتي</h1>
+      <p class="wl-sub">تدرّب على القسم الكمي — درساً بعد درس</p>
+      <div class="login-badges wl-badges"><span>${toAr(bankSize())} سؤال أصلي</span><span>مجاني بالكامل</span><span>بدون حساب</span></div>
     </div>
-    <div class="login-form">
-      <input id="loginName" class="login-input" type="text" maxlength="20" placeholder="ما اسمك؟"
-        autocomplete="off" onkeydown="if(event.key==='Enter')A.login()">
-      <button class="btn" onclick="A.login()">ابدأ التعلّم</button>
-      <button class="login-skip" onclick="A.loginGuest()">المتابعة كضيف</button>
+    <div class="wl-cta">
+      <button class="btn" onclick="A.obStart()">ابدأ الآن</button>
+      <button class="btn btn-ghost" onclick="A.restoreShow()">عندي نسخة احتياطية</button>
     </div>
-  </div>`;
-  setTimeout(() => { const i = document.getElementById("loginName"); if (i) i.focus(); }, 450);
-}
-A.login = function () {
-  const inp = document.getElementById("loginName");
-  const name = (inp.value || "").trim();
-  if (!name) { A.loginGuest(); return; }
-  S.user = { name: name.slice(0, 20), guest: false }; save(); sndGood();
-  afterLogin();
-};
-A.loginGuest = function () { S.user = { name: "ضيف", guest: true }; save(); afterLogin(); };
-/* ---------------- "إليك ما ستحصل عليه" (first run) ----------------
-   Sells the outcome before asking for effort. It runs BEFORE the exam-date picker,
-   because the picker asks the student to commit something and this is what earns
-   that. Shown once ever — S.introSeen — so it never becomes a nag. */
-const INTRO_VALUE = [
-  { ic: "book",   c: "purple", t: "تدرّب على نمط الاختبار الحقيقي",
-    s: "أسئلة أصلية بصيغة قياس، ولكل سؤال حل مشروح خطوة بخطوة" },
-  { ic: "target", c: "blue",   t: "اعرف مستواك بالضبط",
-    s: "محاكاة كاملة للاختبار مع تقدير لدرجتك وأضعف أقسامك" },
-  { ic: "streak", c: "gold",   t: "خلِّ المذاكرة عادة",
-    s: "سلسلة يومية، وعدّاد يعدّ معك لموعد اختبارك" }
-];
-function renderIntroValue() {
-  $app.innerHTML = `<div class="screen screen-full iv-screen">
-    <div class="iv-body">
-    <div class="iv-top">
-      <h1 class="iv-bubble">إليك ما ستحصل عليه مع قدراتي!</h1>
-      ${mascot("point", "iv-mascot pop")}
-    </div>
-    <div class="iv-rows">` + INTRO_VALUE.map((r, i) => `
-      <div class="iv-row iv-${r.c}" style="--d:${(0.18 + i * 0.12).toFixed(2)}s">
-        <span class="iv-ic">${ico(r.ic, 26)}</span>
-        <span class="iv-tx"><b>${r.t}</b><span>${r.s}</span></span>
-      </div>`).join("") + `
-    </div>
-    </div>
-    <div class="login-form iv-cta"><button class="btn" onclick="A.introDone()">المتابعة</button></div>
   </div>`;
   window.scrollTo(0, 0);
 }
-A.introDone = function () { S.introSeen = true; save(); afterLogin(); };
-A.introReplay = function () { renderIntroValue(); };   // preview.html#intro
+function renderLogin() { renderWelcome(); }
+A.login = function () { A.obStart(); };
+A.loginGuest = function () { S.user = { name: "ضيف", guest: true }; save(); afterLogin(); };
+
+/* "إليك ما ستحصل عليه". Duolingo can afford one vague line here because
+   everyone already knows what Duolingo is; nobody knows us. So this screen says
+   plainly what the app is — the whole quantitative curriculum, a mock in the
+   exam's own format, a habit — with the real counts, and under it the promises
+   a student would otherwise have to take on faith, each of them true. */
+const INTRO_VALUE = [
+  { ic: "book",   c: "purple", t: () => `المنهج الكمي كامل في ${toAr(allLessons().length)} درساً`,
+    s: () => `${toAr(bankSize())} سؤالاً بحلولها` },
+  { ic: "target", c: "blue",   t: () => "اختبار تجريبي على نمط الاختبار الحقيقي",
+    s: () => "تعرف مستواك قبل يوم الاختبار" },
+  { ic: "streak", c: "gold",   t: () => "عادة يومية تمشي معك",
+    s: () => "هدف يومي وسلسلة أيام" }
+];
+const INTRO_PROMISE = ["مجاني بالكامل", "بدون حساب ولا إيميل", "تقدّمك محفوظ في جهازك"];
+/* Each answer carries قدّور's reaction to it, the way Duolingo's onboarding
+   answers do ("Okay, we'll start fresh!") — the bubble that asked the question
+   says it the moment the answer is picked. */
+const OB_LEVELS = [
+  { k: "new",   t: "جديد عليّ تماماً",          say: "تمام، نبدأ معك من الصفر!" },
+  { k: "basic", t: "أعرف شوية أساسيات",        say: "حلو! نبني على اللي تعرفه." },
+  { k: "some",  t: "أحل الأسئلة السهلة",        say: "ممتاز، عندك أساس طيب!" },
+  { k: "mid",   t: "أحل أغلب الأسئلة المتوسطة", say: "واو، مستواك حلو!" },
+  { k: "good",  t: "أحل حتى الصعبة",            say: "قوي! خلّنا نشوف وش تعرف." }
+];
+/* a short lesson grades about eight answers, so the goal reads in lessons.
+   قدّور answers a pick with encouragement only — never what it pays (the user,
+   2026-10-22: no chest or gem talk on this screen) */
+const OB_GOALS = {
+  5:  ["هادئ", "قرابة نص درس", "بداية حلوة! *خطوة صغيرة* كل يوم تفرق."],
+  10: ["معتاد", "قرابة درس كامل", "اختيار ذكي! *درس كل يوم* ويثبت معك."],
+  20: ["جدّي", "درسين كل يوم", "حماس! هذا *الجدّ* — درسين وتحس بالفرق!"]
+};
+const goalSay = g => OB_GOALS[g][2];
+/* the bigger the goal, the bigger the answer: one note, two, three rising, a
+   longer buzz, and the row's question tiles ripple, one after another, each
+   with its own rising tick (glWave) */
+function obGoalFx(v) {
+  const i = GOALS.indexOf(+v);
+  [523, 659, 784].slice(0, i + 1).forEach((f, k) => cvTone(f, 0, .28, "triangle", .1, k * .08));
+  buzz([[14], [14, 40, 14], [14, 40, 14, 40, 28]][i] || 12);
+  glWave(v);
+}
+/* «كم سؤال تبي تحل يومياً؟» (2026-10-22: the user turned down the button on
+   fire and the yellow behind it — «don't follow our design or fire»): every
+   row draws its goal as what it is, a grid of questions, one tile each, so 20
+   looks like four times 5 without a word. Picking a row runs a wave across its
+   tiles, each hopping in turn on a note a step higher; the other rows go
+   quiet. */
+function glTiles(g) {
+  return `<span class="gl-grid gl-g${g}" aria-hidden="true">${Array.from({ length: g }, (x, k) => `<i style="--k:${k}"></i>`).join("")}</span>`;
+}
+let glT = [];
+function glWave(v) {
+  glT.forEach(clearTimeout); glT = [];
+  const tiles = Array.from(document.querySelectorAll(`.gl-list .ob-opt[data-v="${v}"] .gl-grid i`));
+  if (!tiles.length || fxReduced()) return;
+  const step = tiles.length > 10 ? 26 : 40;
+  tiles.forEach((t, k) => {
+    glT.push(setTimeout(() => {
+      t.classList.remove("hop"); void t.offsetWidth; t.classList.add("hop");
+      if (k % (tiles.length > 10 ? 2 : 1) === 0) cvTone(660 + k * 28, 0, .06, "sine", .035);
+    }, 120 + k * step));
+  });
+}
+const OB_FORK_SAY = { scratch: "نبدأ من أول درس — وأول فوز خلال *٣ دقائق*!", find: "تمام! أسئلة قليلة ونعرف مكانك بالضبط." };
+/* Duolingo's onboarding has two layouts, and they mean different things. When
+   the character TALKS and there is nothing to pick (the hello, the journey line,
+   the lesson splash) he stands big in the middle under his bubble. When he ASKS,
+   he steps to the side, small, the question in his bubble and the answers below
+   it. «ask» marks the second kind; the journey line counts them. */
+const OB_STEPS = ["hello", "taste", "value", "journey", "level", "goal", "name", "start"];
+const OB_ASKS = { level: 1, goal: 1, name: 1, start: 1 };
+let OB = null;
+A.obStart = function () {
+  const known = !!S.user;          // a save that already has a name resumes at the questions
+  OB = { steps: OB_STEPS.filter(k => !(known && (k === "hello" || k === "taste" || k === "journey" || k === "name")) && !(k === "value" && S.introSeen)),
+    i: 0, dir: 1, pct: 0, level: S.level || null, goal: S.goal || DAILY_GOAL, name: "", start: null, taste: null };
+  renderOb();
+};
+function obRecommend() { return OB.level === "new" || OB.level === "basic" ? "scratch" : "find"; }
+
+/* The bubble's words appear one at a time after a beat, as Duolingo types its
+   bubbles out. Word by word, never letter by letter: an Arabic letter changes
+   shape as its neighbour arrives, and a half-typed word flickers. Every word is
+   in the layout from the start, so the bubble does not grow while he talks.
+   *…* marks the words he leans on. */
+function sayHtml(text) {
+  let bold = false;
+  return String(text).split(" ").map(w => {
+    /* the closing mark may sit before the punctuation: «*الوحدة ٣*!» */
+    const open = w.startsWith("*");
+    if (open) { bold = true; w = w.slice(1); }
+    const close = /\*[!.،؟:]*$/.test(w);
+    if (close) w = w.replace(/\*([!.،؟:]*)$/, "$1");
+    const h = `<span class="w${bold ? " hl" : ""}">${esc(w)}</span>`;
+    if (close) bold = false;
+    return h;
+  }).join(" ");
+}
+let SAY_T = null, SAY_D = null;
+const SAY_AT = 550, SAY_STEP = 75;   // the first word lands with the bubble; then one every 75ms
+function sayPlay(delay) {
+  clearTimeout(SAY_D); clearInterval(SAY_T);
+  const ws = Array.from(document.querySelectorAll(".ob-say .w"));
+  if (fxReduced()) { ws.forEach(w => w.classList.add("on")); return; }
+  let k = 0;
+  SAY_D = setTimeout(() => {
+    SAY_T = setInterval(() => { if (k >= ws.length) { clearInterval(SAY_T); return; } ws[k++].classList.add("on"); }, SAY_STEP);
+  }, delay == null ? SAY_AT : delay);
+}
+const buzz = ms => { try { if (navigator.vibrate && S.sound !== false) navigator.vibrate(ms); } catch (e) { } };
+/* he answers the pick: the bubble says his reaction and he gives a small hop —
+   Duolingo's Duo "writes down" the answer at this beat */
+function obReact(text) {
+  const say = document.querySelector(".ob-say");
+  if (say) { say.innerHTML = sayHtml(text); sayPlay(40); }
+  const duo = document.querySelector(".obs-duo");
+  if (duo && window.gsap && !fxReduced()) {
+    gsap.fromTo(duo, { y: 0, scaleX: 1, scaleY: 1 }, { keyframes: [
+      { y: -12, scaleX: .97, scaleY: 1.04, duration: .13, ease: "power2.out" },
+      { y: 0, scaleX: 1.04, scaleY: .95, duration: .12, ease: "power2.in" },
+      { scaleX: 1, scaleY: 1, duration: .2, ease: "back.out(3)" }] });
+  }
+}
+const obTop = (pose, text, more) => `<div class="obt">
+    <h1 class="obt-bubble ob-say">${sayHtml(text)}</h1>
+    ${mascot(pose, "obt-duo")}
+    ${more || ""}
+  </div>`;
+const obSide = (pose, text, sub) => `<div class="obs">
+    <div class="obs-say"><h1 class="obs-bubble ob-say">${sayHtml(text)}</h1>${sub ? `<p class="obs-sub">${sub}</p>` : ""}</div>
+    ${mascot(pose, "obs-duo")}
+  </div>`;
+function obOpt(field, v, inner, i) {
+  const on = String(OB[field]) === String(v);
+  return `<button class="ob-opt${on ? " sel" : ""}" role="radio" aria-checked="${on}" data-v="${v}" style="--d:calc(var(--se, .25s) + ${(i * 0.07).toFixed(2)}s)" onclick="A.obPick('${field}','${v}')">${inner}</button>`;
+}
+const obCta = v => `<button class="btn" id="obGo" onclick="A.obNext()" ${v == null ? "disabled" : ""}>المتابعة</button>`;
+const OB_GO = `<button class="btn" onclick="A.obNext()">المتابعة</button>`;
+const OB_VIEW = {
+  hello: () => ({ top: true, cta: OB_GO,
+    html: obTop("wave", "أهلاً! أنا *قدّور* — بعلّمك القسم الكمي بحيل تختصر عليك الوقت.") }),
+  journey: () => {
+    const n = OB.steps.filter(k => OB_ASKS[k]).length;
+    return { top: true, cta: OB_GO, html: obTop("cheer", `بس *${qCount(n)} سريعة* ونبدأ!`) };
+  },
+  value: () => ({ cta: OB_GO,
+    html: `<div class="iv-body">
+      <div class="iv-top"><h1 class="iv-bubble">وش هو قدراتي؟ إليك ما ستحصل عليه!</h1>${mascot("point", "iv-mascot pop")}</div>
+      <div class="iv-rows">${INTRO_VALUE.map((r, i) => `
+        <div class="iv-row iv-${r.c}" style="--d:${(0.18 + i * 0.12).toFixed(2)}s">
+          <span class="iv-ic">${ico(r.ic, 26)}</span>
+          <span class="iv-tx"><b>${r.t()}</b><span>${r.s()}</span></span>
+        </div>`).join("")}</div>
+      <div class="iv-promise">${INTRO_PROMISE.map((t, i) => `<span style="--d:${(0.6 + i * 0.1).toFixed(2)}s">${CHECK_BADGE}${t}</span>`).join("")}</div></div>` }),
+  /* «جرّب»: an app nobody has heard of has to show what it gives before it asks
+     for anything. One item in the exam's own comparison format, sized to look
+     like long multiplication — then the swap rule (lesson 14, rule 7) collapses
+     it with no arithmetic at all. Nothing here is written to the save. */
+  taste: () => {
+    const done = OB.taste != null;
+    return { cta: done ? OB_GO : `<button class="btn" id="obGo" disabled>اختر إجابة</button>`,
+      html: `${obSide(done ? "cheer" : "encourage", done ? tasteSay() : "سؤال بأسلوب *القدرات* — خمّن بدون ما تحسب:")}
+      <div class="ts${done ? " shown" : ""}">
+        <div class="ts-cmp">
+          <div class="cmp-box ts-box"><div class="cmp-t">القيمة الأولى</div><div class="cmp-v"><span class="ts-n">${toAr(done ? TASTE.b : TASTE.a)}</span><span class="ts-p">٪</span> من <span class="ts-n">${toAr(done ? TASTE.a : TASTE.b)}</span></div></div>
+          <span class="ts-eq" aria-hidden="true">=</span>
+          <div class="cmp-box ts-box"><div class="cmp-t">القيمة الثانية</div><div class="cmp-v">${toAr(TASTE.b)}٪ من ${toAr(TASTE.a)}</div></div>
+        </div>
+        <div class="ts-opts" role="radiogroup" aria-label="الإجابة">${CMP_CHOICES.map((c, i) =>
+          `<button class="ob-opt ts-opt${done && i === 2 ? " ok" : done && i === OB.taste ? " dim" : ""}" data-v="${i}" style="--d:calc(var(--se, .3s) + ${(i * 0.07).toFixed(2)}s)" ${done ? "disabled" : `onclick="A.obTaste(${i})"`}>${c}</button>`).join("")}</div>
+        <div class="ts-rule" aria-live="polite"><b>أ٪ من ب = ب٪ من أ</b><span>اقلب الرقمين — والقيمة نفسها بالضبط</span></div>
+        <p class="ts-more">ومثلها <b>حيل كثير</b> تختصر عليك الوقت — كلها هنا</p>
+      </div>` };
+  },
+  level: () => ({ cta: obCta(OB.level),
+    html: `${obSide("encourage", "كم تعرف عن القسم الكمي؟")}
+      <div class="ob-list" role="radiogroup" aria-label="مستواك">${OB_LEVELS.map((o, i) =>
+        obOpt("level", o.k, `${levelIcon(i)}<b class="ob-t">${o.t}</b>`, i)).join("")}</div>` }),
+  /* Duolingo's goal rows, kept plain (2026-10-21: the user found the gem boxes
+     and pace bars too busy): each draws its goal as a grid of question tiles
+     (glTiles), the tag as a chip, and the middle one carries «الأكثر اختياراً» (the user's
+     wording, 2026-10-22). A
+     bigger pick sounds and feels bigger (obGoalFx); قدّور answers with
+     encouragement only (goalSay). */
+  goal: () => ({ cta: obCta(OB.goal),
+    html: `${obSide("encourage", "كم سؤال تبي تحل يومياً؟")}
+      <div class="ob-list gl-list" role="radiogroup" aria-label="هدفك اليومي">${GOALS.map((g, i) =>
+        obOpt("goal", g, `${g === DAILY_GOAL ? `<span class="gl-badge">الأكثر اختياراً</span>` : ""}
+          ${glTiles(g)}
+          <span class="ob-tx"><b>${qCount(g)} يومياً</b><span>${OB_GOALS[g][1]}</span></span>
+          <span class="gl-tag">${OB_GOALS[g][0]}</span>`, i)).join("")}</div>
+      <p class="ob-note">تقدر تغيّره من الإعدادات وقت ما تبي</p>` }),
+  /* the name is written onto their badge as they type it, and «المتابعة» slaps
+     the «جاهز» sticker on right there (nameStamp) — the payoff lands on the
+     screen where they did the thing, not on a new one that plays by itself */
+  name: () => {
+    const nm = OB.name.trim();
+    return { cta: OB.stamped ? OB_GO : `<button class="btn" id="obGo" onclick="A.obNext()">المتابعة</button><button class="login-skip" id="obSkip" onclick="A.obSkipName()">تخطَّ</button>`,
+      html: `<div class="nm${OB.stamped ? " stamped" : ""}">
+        ${obSide(OB.stamped ? "cheer" : "encourage", OB.stamped ? `أهلاً يا *${nm}*! بطاقتك جاهزة.` : "وش نناديك؟", OB.stamped ? "" : "اختياري — ويبقى في جهازك بس")}
+        ${nameCard(nm)}
+        <input id="obName" class="login-input ob-input" type="text" maxlength="20" placeholder="اكتب اسمك" autocomplete="off" enterkeyhint="done"
+          value="${esc(OB.name)}" oninput="A.obName(this.value)" onkeydown="if(event.key==='Enter')A.obNext()">
+      </div>` };
+  },
+  start: () => {
+    const rec = obRecommend();
+    if (!OB.start) OB.start = rec;
+    const fork = (k, ic, c, t, sub, i) => {
+      const on = OB.start === k;
+      return `<button class="ob-fork${on ? " sel" : ""}" role="radio" aria-checked="${on}" data-v="${k}" style="--d:calc(var(--se, .3s) + ${(i * 0.1).toFixed(2)}s)" onclick="A.obPick('start','${k}')">
+        ${rec === k ? `<span class="ob-rec">مقترح لك</span>` : ""}
+        <span class="ob-art ob-${c}">${ico(ic, 46)}</span>
+        <span class="ob-tx"><b>${t}</b><span>${sub}</span></span>
+      </button>`;
+    };
+    return { cta: obCta(OB.start),
+      html: `${obSide("cheer", "يلا نلقى أفضل مكان تبدأ منه! وتقدر تغيّره بعدين.")}
+        <div class="ob-forks" role="radiogroup" aria-label="من وين تبدأ">
+          ${fork("scratch", "book", "purple", "ابدأ من الصفر", "أول درس في المنهج — وأول فوز خلال ٣ دقائق", 0)}
+          ${fork("find", "target", "blue", "حدّد مستواي", "أسئلة من الوحدات الأربع — نتخطّى اللي تعرفه، وين ما كان", 1)}
+        </div>` };
+  }
+};
+/* the bar is hidden while he only talks, as Duolingo's is on its intro screens */
+function obFrame(html, cta, pct, back, cls, bar) {
+  const from = OB ? OB.pct : 0;
+  $app.innerHTML = `<div class="screen screen-full ob-screen ${cls}">
+    <div class="ob-top">
+      <button class="ob-back${back ? "" : " off"}" onclick="${back || ""}" aria-label="رجوع" ${back ? "" : 'tabindex="-1"'}>${BACK_SVG}</button>
+      <div class="progress ob-prog${bar === false ? " off" : ""}" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="خطوات البداية"><i style="width:${from}%"></i></div>
+    </div>
+    <div class="ob-stage${OB && OB.dir < 0 ? " rev" : ""}">${html}</div>
+    <div class="ob-cta">${cta}</div>
+  </div>`;
+  if (OB && bar !== false) OB.pct = pct;
+  requestAnimationFrame(() => requestAnimationFrame(() => { const i = document.querySelector(".ob-prog > i"); if (i) i.style.width = pct + "%"; }));
+  window.scrollTo(0, 0);
+  /* Duolingo holds the answers until the character has finished talking, so the
+     question is read before anything can be tapped: the bubble pops at .3s, his
+     words start as it lands and run one every 75ms, and the answers follow. */
+  const words = document.querySelectorAll(".ob-say .w").length;
+  const stage = document.querySelector(".ob-stage");
+  if (stage && !fxReduced()) stage.style.setProperty("--se", (SAY_AT + words * SAY_STEP + 150) / 1000 + "s");
+  sayPlay();
+}
+/* haptics only when something arrives, never on a tap — Duolingo's own rule:
+   his hello, the journey line, the splash before the first lesson (a drum-roll) */
+const OB_BUZZ = { hello: [30, 140, 70], journey: [40, 200, 90], splash: [20, 40, 20, 40, 20, 40, 90] };
+function renderOb() {
+  const step = OB.steps[OB.i];
+  if (nmTl && step !== "name") { nmTl.kill(); nmTl = null; }
+  if (step !== "name") ncStop();
+  glT.forEach(clearTimeout); glT = [];
+  const v = OB_VIEW[step]();
+  /* the bar never fills on the last question: the student is not in yet */
+  const pct = Math.round((OB.i + 1) / (OB.steps.length + 1) * 100);
+  obFrame(v.html, v.cta, pct, OB.i > 0 || !S.user ? "A.obBack()" : "", "ob-" + step, !v.top);
+  if (OB_BUZZ[step]) setTimeout(() => buzz(OB_BUZZ[step]), 250);
+  if (step === "goal" && OB.goal != null) setTimeout(() => glWave(OB.goal), 700);
+  if (step === "name" && !OB.stamped) { ncEnter(); ncTilt(); setTimeout(() => { const n = document.getElementById("obName"); if (n) n.focus(); }, 380); }
+}
+/* The name card (2026-10-22: the user asked for the card of creativeocean's
+   CodePen «SVG Debit Card Animation 4», dyRWXPz, MIT like every public pen) —
+   its art and its motion, read from the pen and laid out for Arabic: the art is
+   mirrored so the chip and the title sit on the right, and the text slides out
+   of its clip boxes from the right. The card grows out of a turning mask, the
+   two colour waves flow across it for ever, two triangles orbit on dashed
+   coils that crawl, the orb bobs, the logo's two rings slide together, and a
+   star shines each time the gold wave comes round. The name is written onto it
+   as they type; «المتابعة» prints it again and shines it (nameStamp). The
+   orbit is done by hand (getPointAtLength) instead of shipping GSAP's
+   MotionPathPlugin. */
+function joinedDate() {
+  const a = (S.joined || todayKey()).split("-"), d = new Date(+a[0], +a[1] - 1, +a[2]);
+  return toAr(d.getDate()) + " " + AR_MONTHS[d.getMonth()] + " " + toAr(d.getFullYear());
+}
+const nameInitial = nm => Array.from(nm.trim())[0] || "";
+function nameCard(nm) {
+  const goal = OB.goal || dailyGoal();
+  return `<div class="nc-stage"><div class="nc-wrap">
+  <span class="nc-glare" aria-hidden="true"></span>
+  <svg class="nc" id="ncSvg" viewBox="0 0 600 368" direction="rtl" role="img" aria-label="بطاقة طالب قدراتي${nm ? " باسم " + esc(nm) : ""}">
+    <defs>
+      <mask id="ncChipMask">
+        <rect width="100%" height="100%" fill="#fff"/>
+        <path fill="none" stroke="#000" stroke-width="3" d="M98,133c0,0,4.3,0,7.2,0c2.8,0,3.8,2,3.8,4s-1,6-4,6H89 M109,176.2c0,0,3.5-2.7,3.5-8.7c0-4-4-10-9-10 s-15,0-15,0 M103.5,143.5V156 M136.8,133c0,0-7.3-0.5-7.1,5c0.1,2.6,1.8,5.5,6.3,5.5c5.3-0.1,14.9-0.5,14.9-0.5 M150.4,157.5 c0,0-10.1,0-15.1,0s-9.1,6-9.1,10c0,6,3.5,8.7,3.5,8.7 M135.3,143.5V156"/>
+      </mask>
+      <mask id="ncCardMask"><rect class="nc-mask" rx="22" ry="22" fill="#fff" width="600" height="368"/></mask>
+      <linearGradient id="ncBg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#3A1C85"/><stop offset=".55" stop-color="#5B2FC0"/><stop offset="1" stop-color="#7A4BE0"/>
+      </linearGradient>
+      <linearGradient id="ncGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE066"/><stop offset="1" stop-color="#FFB800"/></linearGradient>
+      <clipPath id="ncTxt">
+        <rect class="nc-box" x="330" y="30" width="235" height="48"/>
+        <rect class="nc-box" x="330" y="240" width="235" height="32"/>
+        <rect class="nc-box" x="150" y="282" width="415" height="54"/>
+        <rect class="nc-box" x="35" y="288" width="200" height="40"/>
+      </clipPath>
+      <clipPath id="ncOrbClip"><use href="#ncOrb1"/><use href="#ncOrb2"/></clipPath>
+    </defs>
+    <g mask="url(#ncCardMask)">
+      <rect fill="url(#ncBg)" width="100%" height="100%"/>
+      <g transform="translate(600 0) scale(-1 1)">
+        <g fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2" stroke-dasharray="6 2 4 2.5 4 3 3.5 3">
+          <path class="nc-coil" d="M306.1,671.4C62.6,602.5-79.4,350.4-10.9,108.3s295.2-372.5,538.7-303.6"/>
+          <path class="nc-coil" id="ncMidC" d="M352.7,333.4c-79.2-30.9-137.8-142.9-100.6-235.7S386.5-16.5,449.6-11.7"/>
+          <path class="nc-coil" id="ncInnerC" d="M404.4,221c-39.6-7.4-65.7-45.6-58.3-85.2s41.6-63.7,81.2-56.3"/>
+        </g>
+        <polygon class="nc-tri" id="ncTri1" fill="#58CC02" points="0,47 0,0 44,22"/>
+        <polygon class="nc-tri" id="ncTri2" fill="#58CC02" points="0,47 0,0 44,22"/>
+        <g fill="#6E44D6"><circle id="ncOrb1" cx="123" cy="410" r="105"/><circle id="ncOrb2" cx="540" cy="45" r="134"/></g>
+        <path id="ncWave2" fill="#FFC800" d="M-941,1510c89-58,147-115,211-201s142-153,210-195s144-42,208-86s69-130,70-173s5-129,38-193 c0,0,17.5-27.5,30.9-40.1C-159.6,609.4-137,593-137,593c89-58,147-115,211-201s142-153,210-195s144-42,208-86s69-130,70-173 s5-129,38-193v1765H-941z"/>
+        <path id="ncWave1" fill="#1CB0F6" d="M1551.5-1044.5c0,0-63,27-131,91s-122,185-186,244s-163,152.7-206,263.3s-90,162.7-128,189.7c0,0-14,10-26,16 c-16,8-24,11-24,11s-63,27-131,91s-122,185-186,244s-163,152.7-206,263.3c-9,23.2-18.2,43.9-27.5,62.3c56.5,0,1255.5-0.1,1255.5-0.1 L1551.5-1044.5z"/>
+        <g clip-path="url(#ncOrbClip)"><use href="#ncWave2" fill="#FFE27A"/><use href="#ncWave1" fill="#84D8FF"/></g>
+        <path id="ncStar" fill="#fff" d="M397,17.6c3-3,6.1-9.1,6.1-9.1s0.8,3.8,4.5,7.6c6.1,6.1,9.1,6.1,9.1,6.1s-3,1.5-7.6,6.1 s-6.1,9.1-6.1,9.1s-2.3-5.3-6.1-9.1s-8.3-5.3-8.3-5.3S394,20.6,397,17.6z"/>
+        <g><circle class="nc-logo" fill="#fff" cx="503" cy="67" r="25"/><circle class="nc-logo" fill="none" stroke="#fff" stroke-width="4.5" cx="533" cy="67" r="22.5"/></g>
+        <g fill="#fff" stroke-linecap="round">
+          <path fill="none" stroke="#fff" stroke-width="2.4" d="M42.5,146.5c2,2,2,6.3,0,8.2 M57,163.7c5.1-5.9,5.1-19.8,0-26.3 M52.1,160.7c4.4-4.5,4.9-15.2,0-20.2 M47.8,157.2c2.9-3,2.9-10,0-13.2"/>
+          <rect mask="url(#ncChipMask)" fill="url(#ncGold)" rx="5" ry="5" x="89" y="125" width="61" height="50.2"/>
+        </g>
+      </g>
+      <g fill="#fff" clip-path="url(#ncTxt)" class="nc-txt">
+        <text class="nc-t" x="555" y="66" text-anchor="start" font-size="34">قدراتي</text>
+        <text class="nc-t nc-sub" x="555" y="264" text-anchor="start" font-size="21">بطاقة طالب</text>
+        <text class="nc-t nc-name${nm ? "" : " empty"}" id="scName" x="555" y="324" text-anchor="start" font-size="${nm.length > 11 ? 34 : 46}">${nm ? esc(nm) : "اسمك هنا"}</text>
+        <text class="nc-t" x="45" y="318" text-anchor="end" font-size="26">${toAr(goal)} يومياً</text>
+      </g>
+    </g>
+  </svg></div></div>`;
+}
+/* the card leans toward the finger (or the pointer) and a glare follows it,
+   the way a real card catches the light; it eases back when let go */
+function ncTilt() {
+  const wrap = document.querySelector(".nc-wrap");
+  if (!wrap || !window.gsap || motionReduced() || wrap.dataset.tilt) return;
+  wrap.dataset.tilt = 1;
+  const glare = wrap.querySelector(".nc-glare");
+  const move = e => {
+    const r = wrap.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+    gsap.to(wrap, { rotationY: x * 16, rotationX: -y * 12, duration: .3, ease: "power2.out", transformPerspective: 700 });
+    if (glare) gsap.to(glare, { opacity: .55, "--gx": (x + .5) * 100 + "%", "--gy": (y + .5) * 100 + "%", duration: .3 });
+  };
+  const leave = () => {
+    gsap.to(wrap, { rotationY: 0, rotationX: 0, duration: .8, ease: "elastic.out(1, .5)" });
+    if (glare) gsap.to(glare, { opacity: 0, duration: .4 });
+  };
+  wrap.addEventListener("pointermove", move);
+  wrap.addEventListener("pointerdown", move);
+  wrap.addEventListener("pointerleave", leave);
+  wrap.addEventListener("pointerup", leave);
+  wrap.addEventListener("pointercancel", leave);
+}
+/* the pen's timeline, kept in nmCardTl so it can stop when the step changes */
+let ncTl = null, ncLoops = [];
+function ncStop() { if (ncTl) { ncTl.kill(); ncTl = null; } ncLoops.forEach(t => t.kill()); ncLoops = []; }
+/* a triangle riding a path with its nose along it (MotionPathPlugin's align +
+   autoRotate, by hand) */
+function ncOrbit(tri, path, from, to, dur, delay, repeatDelay) {
+  const L = path.getTotalLength(), o = { p: from };
+  const place = () => {
+    const at = Math.max(0, Math.min(1, o.p)) * L, a = path.getPointAtLength(at), b = path.getPointAtLength(Math.min(L, at + 1)), c = path.getPointAtLength(Math.max(0, at - 1));
+    const ang = Math.atan2(b.y - c.y, b.x - c.x) * 180 / Math.PI + (to < from ? 180 : 0);
+    tri.setAttribute("transform", `translate(${a.x.toFixed(1)} ${a.y.toFixed(1)}) rotate(${ang.toFixed(1)}) translate(-22 -23.5)`);
+  };
+  place();
+  return gsap.to(o, { p: to, duration: dur, delay, repeat: -1, repeatDelay, ease: "none", onUpdate: place });
+}
+function ncEnter() {
+  ncStop();
+  const svg = document.getElementById("ncSvg");
+  if (!svg || !window.gsap || fxReduced()) return;
+  const q = c => svg.querySelector(c), qa = c => Array.from(svg.querySelectorAll(c));
+  const star = q("#ncStar"), w1 = q("#ncWave1"), w2 = q("#ncWave2");
+  const starShine = gsap.timeline({ paused: true })
+    .set(star, { scale: 0, transformOrigin: "50% 50%", x: 2, y: 10 })
+    .to(star, { scale: 1, repeat: 1, yoyo: true, yoyoEase: true, duration: .4, ease: "power4" }, 0)
+    .fromTo(star, { rotate: -20 }, { rotate: 120, duration: .8, ease: "none" }, 0);
+  ncLoops.push(starShine);
+  gsap.set(q("#ncTri2"), { scale: .5 });
+  const tl = ncTl = gsap.timeline()
+    .from(q(".nc-mask"), { scale: 0, rotation: -20, duration: 2, transformOrigin: "50% 50%", ease: "expo.inOut" }, 0)
+    .from(qa(".nc-coil"), { attr: { "stroke-dashoffset": i => i === 1 ? -28 : 28 }, ease: "none", duration: 1, repeat: -1 }, 1)
+    .fromTo(q("#ncOrb1"), { y: 160 }, { y: -20, ease: "circ", repeat: -1, yoyo: true, duration: 1 }, .8)
+    .from(qa(".nc-logo"), { x: i => [18, -10][i], duration: 1.2, ease: "expo.inOut" }, .9)
+    .from(qa(".nc-t"), { x: 40, duration: 1.1, ease: "expo.inOut", stagger: .2 }, 1)
+    .from(qa(".nc-box"), { scaleX: 0, transformOrigin: "100% 0", duration: 1.1, ease: "expo.inOut", stagger: .2 }, 1)
+    .fromTo(w1, { x: 0, y: 0 }, { duration: 5, x: -701, y: 815, repeat: -1, ease: "none" }, 0)
+    .fromTo(w2, { x: 0, y: 0 }, { duration: 6, x: 804, y: -917, repeat: -1, ease: "none", onRepeat: () => starShine.play(0) }, 0);
+  ncLoops.push(ncOrbit(q("#ncTri1"), q("#ncMidC"), 1, 0, 6, .5, 1), ncOrbit(q("#ncTri2"), q("#ncInnerC"), 0, 1, 5, 1.5, 1));
+  NC.shine = starShine;
+}
+const NC = { shine: null };
+/* every keystroke lands on the card: the name rewrites and steps in from the
+   right edge of its box, the size drops for a long name */
+A.obName = function (v) {
+  v = String(v).replace(/[*<>]/g, "");
+  const grew = v.length > OB.name.length;
+  OB.name = v;
+  const nm = v.trim(), el = document.getElementById("scName"), svg = document.getElementById("ncSvg");
+  if (!el || !svg) return;
+  el.textContent = nm || "اسمك هنا";
+  el.setAttribute("font-size", nm.length > 11 ? 34 : 46);
+  el.classList.toggle("empty", !nm);
+  svg.setAttribute("aria-label", "بطاقة طالب قدراتي" + (nm ? " باسم " + nm : ""));
+  if (window.gsap && !fxReduced() && nm) gsap.fromTo(el, { x: grew ? 10 : -6 }, { x: 0, duration: .35, ease: "expo.out", overwrite: true });
+};
+/* «المتابعة» with a name: the field and the skip step out and the card rides to
+   the middle of the screen; the name's box closes and opens again, printing it
+   (the pen's own text reveal), the logo's rings slide apart and back together,
+   the star shines, قدّور jumps and says their name. Then the button. */
+let nmTl = null;
+function nameStamp() {
+  OB.stamped = true;
+  const q = c => document.querySelector(c);
+  const nm = OB.name.trim(), wrap = q(".nm"), svg = document.getElementById("ncSvg"), card = q(".nc-wrap"),
+        input = document.getElementById("obName"), cta = q(".ob-cta");
+  if (input) input.blur();
+  const greet = () => {
+    const say = q(".ob-say");
+    if (say) { say.innerHTML = sayHtml(`أهلاً يا *${nm}*! بطاقتك جاهزة.`); sayPlay(60); }
+    const sub = q(".obs-sub"); if (sub) sub.remove();
+    const duo = q(".obs-duo"); if (duo) duo.src = "assets/mascot/qaddour-cheer.png";
+  };
+  const done = () => {
+    if (!cta) return;
+    cta.innerHTML = OB_GO; cta.style.pointerEvents = "";
+    if (window.gsap && !fxReduced()) gsap.fromTo(cta, { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: .35, ease: "back.out(2)" });
+  };
+  if (!wrap || !svg || !window.gsap || fxReduced()) { if (wrap) wrap.classList.add("stamped"); greet(); done(); return; }
+  if (nmTl) nmTl.kill();
+  const before = card.getBoundingClientRect();
+  if (cta) cta.style.pointerEvents = "none";   // a nervous double-tap must not skip the payoff
+  gsap.to([input, cta], { opacity: 0, y: 14, duration: .18, ease: "power2.in" });
+  const box = svg.querySelectorAll(".nc-box")[2], name = document.getElementById("scName"), logo = svg.querySelectorAll(".nc-logo");
+  const tl = nmTl = gsap.timeline();
+  tl.call(() => {
+    wrap.classList.add("stamped");
+    const after = card.getBoundingClientRect();
+    gsap.fromTo(card, { y: before.top - after.top }, { y: 0, duration: .6, ease: "expo.inOut" });
+  }, null, .2)
+    .to(box, { scaleX: 0, transformOrigin: "100% 0", duration: .45, ease: "expo.in" }, .35)
+    .set(name, { x: 40 }, .8)
+    .to(box, { scaleX: 1, transformOrigin: "100% 0", duration: 1, ease: "expo.inOut" }, .8)
+    .to(name, { x: 0, duration: 1, ease: "expo.inOut" }, .8)
+    .to(logo, { x: i => [18, -10][i], duration: .45, ease: "expo.in" }, .35)
+    .to(logo, { x: 0, duration: 1, ease: "expo.inOut" }, .8)
+    .fromTo(card, { scale: 1 }, { keyframes: [{ scale: 1.05, duration: .25, ease: "power2.out" }, { scale: 1, duration: .5, ease: "elastic.out(1.1, .4)" }] }, 1.35)
+    .call(() => {
+      cvTone(784, 0, .5, "triangle", .12); cvTone(1175, 0, .4, "sine", .06, .06); buzz(28);
+      if (NC.shine) NC.shine.play(0);
+      greet();
+    }, null, 1.35);
+  const duo = q(".obs-duo");
+  if (duo) tl.to(duo, { keyframes: [
+      { y: 0, scaleX: 1.08, scaleY: .9, duration: .09 },
+      { y: -30, scaleX: .94, scaleY: 1.07, duration: .22, ease: "power2.out" },
+      { y: -30, duration: .06 },
+      { y: 0, scaleX: 1, scaleY: 1, duration: .18, ease: "power2.in" },
+      { scaleX: 1.08, scaleY: .92, duration: .06 },
+      { scaleX: 1, scaleY: 1, duration: .3, ease: "back.out(3)" }] }, 1.4);
+  tl.call(done, null, 2);
+}
+/* An answer to a question in the first run (the taste item) lands with the
+   lesson's own jump (fxAddJump) — the same launch, hang, fall, squash and
+   settle a right answer gets. Choices that are not answers (level, goal, the
+   fork) do not jump: they select, as Duolingo's do (the user, 2026-10-22). */
+let obJumpTl = null;
+function obJump(card) {
+  if (!card || !window.gsap) return;
+  if (obJumpTl) obJumpTl.progress(1).kill();
+  document.querySelectorAll(".ob-opt, .ob-fork").forEach(b => { if (b !== card) gsap.to(b, { y: 0, scaleX: 1, scaleY: 1, duration: .2, ease: "power2.out" }); });
+  const tl = obJumpTl = gsap.timeline();
+  if (fxReduced()) { tl.fromTo(card, { scale: .97 }, { scale: 1, y: FXP(-7), duration: .18, ease: "power2.out" }); return; }
+  fxAddJump(tl, card, 0);
+}
+A.obPick = function (field, v) {
+  OB[field] = field === "goal" ? +v : v;
+  if (field === "goal") obGoalFx(v); else { sndTap(); buzz(12); }
+  document.querySelectorAll(".ob-opt, .ob-fork").forEach(b => {
+    const on = b.dataset.v === String(v);
+    b.classList.toggle("sel", on); b.setAttribute("aria-checked", on);
+  });
+  obReact(field === "level" ? OB_LEVELS.find(o => o.k === v).say : field === "goal" ? goalSay(+v) : OB_FORK_SAY[v]);
+  const go = document.getElementById("obGo"); if (go) go.disabled = false;
+};
+const TASTE = { a: 47, b: 83 };
+function ruleCount() {
+  let n = 0;
+  domains().forEach(d => d.lessons.forEach(l => { n += (l.rules || []).length; }));
+  return n;
+}
+const tasteSay = () => OB.taste === 2 ? "صح! وبدون ولا عملية حسابية — هذي حيلة *التبديل*."
+  : "هذي تطيّح ناس كثير! السر إنك *تقلب الرقمين* — نفس القيمة بالضبط.";
+/* The answer is taken, and then the trick is shown rather than told: the two
+   numbers of the first value lift, cross over each other and land swapped, the
+   first value now reads exactly as the second, an «=» slams down between them
+   and both jump together. Right or wrong, nobody is marked red here. */
+A.obTaste = function (i) {
+  if (!OB || OB.taste != null || !document.querySelector(".ts")) return;
+  OB.taste = i;
+  sndTap(); buzz(12);
+  const opts = document.querySelectorAll(".ts-opt");
+  opts.forEach(b => { b.disabled = true; b.classList.toggle("sel", +b.dataset.v === i); });
+  obJump(Array.from(opts).find(b => +b.dataset.v === i));
+  const ns = Array.from(document.querySelectorAll(".ts-n")), boxes = document.querySelectorAll(".ts-box"),
+        eq = document.querySelector(".ts-eq"), wrap = document.querySelector(".ts"), go = document.getElementById("obGo");
+  const finish = () => {
+    opts.forEach(b => { const v = +b.dataset.v; b.classList.remove("sel"); b.classList.toggle("ok", v === 2); b.classList.toggle("dim", v === i && v !== 2); });
+    obJump(Array.from(opts).find(b => +b.dataset.v === 2));   // the answer lands with the lesson's jump, as every answer does
+    wrap.classList.add("shown");
+    obReact(tasteSay());
+    const duo = document.querySelector(".obs-duo"); if (duo) duo.src = "assets/mascot/qaddour-cheer.png";
+    if (go) { go.disabled = false; go.textContent = "المتابعة"; go.setAttribute("onclick", "A.obNext()"); }
+  };
+  if (!window.gsap || fxReduced() || ns.length < 2) {
+    if (ns.length === 2) { ns[0].textContent = toAr(TASTE.b); ns[1].textContent = toAr(TASTE.a); }
+    sndGood(); finish(); return;
+  }
+  const r0 = ns.map(n => n.getBoundingClientRect());
+  ns[0].textContent = toAr(TASTE.b); ns[1].textContent = toAr(TASTE.a);
+  const r1 = ns.map(n => n.getBoundingClientRect());
+  /* each number starts where the other one ends up, so the swap is a crossing */
+  const tl = gsap.timeline({ delay: .35 });
+  ns.forEach((n, k) => {
+    const dx = r0[1 - k].left - r1[k].left, lift = k ? 26 : -30;
+    gsap.set(n, { x: dx });
+    tl.to(n, { keyframes: [
+        { y: lift * .25, scaleX: 1.12, scaleY: .88, duration: .12, ease: "power2.out" },
+        { x: dx * .5, y: lift, scaleX: .94, scaleY: 1.08, rotation: k ? -10 : 10, duration: .2, ease: "power2.out" },
+        { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0, duration: .22, ease: "power2.in" },
+        { scaleX: 1.18, scaleY: .84, duration: .06 },
+        { scaleX: 1, scaleY: 1, duration: .3, ease: "back.out(3)" }] }, 0);
+  });
+  tl.call(() => { cvHiss(.3, .06, 0, 1200, 3800); }, null, .1)
+    .call(() => { cvSnd.tick(); buzz(10); }, null, .54)
+    .call(() => { boxes.forEach(b => b.classList.add("same")); }, null, .62)
+    .fromTo(eq, { scale: 3.4, rotation: -30, opacity: 0 }, { scale: 1, rotation: 0, opacity: 1, duration: .22, ease: "power4.in" }, .78)
+    .call(() => { cvTone(170, 60, .22, "sine", .3); cvTone(900, 400, .08, "triangle", .06); buzz(28); }, null, 1)
+    .fromTo(eq, { scale: 1.25 }, { scale: 1, duration: .45, ease: "elastic.out(1.2, .4)" }, 1);
+  boxes.forEach((b, k) => tl.to(b, { keyframes: [
+      { y: 4, scaleX: 1.04, scaleY: .94, duration: .07, ease: "power1.out" },
+      { y: -16, scaleX: .97, scaleY: 1.04, duration: .18, ease: "power2.out" },
+      { y: 0, scaleX: 1, scaleY: 1, duration: .16, ease: "power2.in" },
+      { scaleX: 1.03, scaleY: .96, duration: .05 },
+      { scaleX: 1, scaleY: 1, duration: .25, ease: "back.out(3)" }] }, 1.02 + k * .06));
+  tl.call(() => { sndGood(); finish(); }, null, 1.25);
+};
+A.obNext = function () {
+  const step = OB.steps[OB.i];
+  if (step === "level" && !OB.level) return;
+  if (step === "start") { if (OB.start) obFinish(); return; }
+  if (step === "value") S.introSeen = true;
+  if (step === "level") S.level = OB.level;
+  if (step === "goal") S.goal = OB.goal;
+  if (step === "name") {
+    const n = (OB.name || "").trim();
+    S.user = n ? { name: n.slice(0, 20), guest: false } : { name: "ضيف", guest: true };
+    if (n && !OB.stamped) { S.joined = S.joined || todayKey(); save(); nameStamp(); return; }
+  }
+  S.joined = S.joined || todayKey();
+  save(); buzz(8);
+  OB.i++; OB.dir = 1; renderOb();
+};
+A.obSkipName = function () { OB.name = ""; OB.stamped = false; A.obNext(); };
+A.obBack = function () {
+  if (!OB || OB.i === 0) { OB = null; renderWelcome(); return; }
+  OB.i--; OB.dir = -1;
+  if (OB.steps[OB.i] === "name") OB.stamped = false;   // back to the name means they want to change it
+  renderOb();
+};
+function obFirstLesson() {
+  const first = allLessons()[0];
+  OB = null;
+  A.startLesson(first.dom.key, first.les.key);
+}
+function obFinish() {
+  if (!S.user) S.user = { name: "ضيف", guest: true };
+  S.placeAsked = true;
+  save();
+  renderObSplash(OB.start);
+}
+/* the splash before the first thing they play: he stands big and says what
+   comes next — Duolingo's «Okay! Here's your first 2 minute lesson.» */
+function renderObSplash(kind) {
+  if (OB) OB.dir = 1;
+  const back = OB ? "A.placeIntroBack()" : "A.go('path')";
+  if (kind === "find") {
+    obFrame(obTop("teach", "خلّنا نشوف وين مستواك!", `<div class="obt-chips"><span>كل الوحدات الأربع</span><span>قرابة ١٠ دقائق</span><span>بدون قلوب ولا وقت</span><span>«ما أعرف» أصدق من التخمين</span></div>`),
+      `<button class="btn" onclick="A.placeBegin()">ابدأ الاختبار</button><button class="login-skip" onclick="A.placeScratch()">ابدأ من الصفر بدالها</button>`,
+      100, back, "ob-splash", false);
+    return;
+  }
+  obFrame(obTop("teach", "تمام! هذا أول درس لك — *٣ دقائق* بس."),
+    `<button class="btn" onclick="A.placeScratch()">يلا نبدأ</button>`, 100, back, "ob-splash", false);
+  setTimeout(() => buzz(OB_BUZZ.splash), 300);
+}
+function renderPlaceIntro() { renderObSplash("find"); }
+A.placeIntroBack = function () { if (!OB) { go("path"); return; } OB.dir = -1; renderOb(); };
+A.placeBegin = function () { OB = null; S.placeAsked = true; save(); A.startPlacement(); };
+A.placeScratch = function () { S.placeAsked = true; save(); obFirstLesson(); };
 
 function afterLogin() {
   S.joined = S.joined || todayKey();
-  if (!S.introSeen) { renderIntroValue(); return; }
+  if (!S.placeAsked && !Object.keys(S.lessons || {}).length) { A.obStart(); return; }
   save(); render();
 }
+/* dev harness: open the first run on one step (preview.html#ob-goal …) */
+A.obReplay = function (step) {
+  A.obStart();
+  OB.steps = OB_STEPS.slice();
+  if (step === "splash" || step === "pintro") { OB.i = OB.steps.indexOf("start"); OB.start = step === "pintro" ? "find" : "scratch"; renderObSplash(OB.start); return; }
+  const hi = step === "hi";
+  if (hi) { OB.name = (S.user && !S.user.guest && S.user.name) || "سارة"; step = "name"; }
+  OB.i = Math.max(0, OB.steps.indexOf(step || "level"));
+  renderOb();
+  if (hi) setTimeout(() => A.obNext(), 900);
+};
+A.introReplay = function () { A.obReplay("value"); };
+A.levelReplay = function () { A.obReplay("level"); };
+A.welcomeReplay = function () { OB = null; renderWelcome(); };
+A.placeIntroReplay = function () { A.obReplay("pintro"); };
 
 /* A strong student three weeks from the exam should not have to grind lesson one.
    Offered once, and never nagged: either answer is remembered.
 
-   قدّور is not here. He has three placements — the value screen, the win
-   screen, the mock home — and a fourth would make him decoration. */
+   قدّور is not here: he talks in the first run and the level test, celebrates
+   wins and stands on the mock home, and anywhere else he is decoration. */
 function renderPlaceOffer() {
   $app.innerHTML = `<div class="screen screen-full tp-screen">
     <span class="po-badge pop">${ico("target", 54)}</span>
     <h1 class="login-title">تبي نتخطّى اللي تعرفه؟</h1>
-    <p class="login-sub">${qCount(PLACE_PER_UNIT * DOMAIN_ORDER.length)} بدون قلوب ولا وقت — كل وحدة تتقنها نفتحها لك، وتبدأ من حيث تحتاج فعلاً</p>
+    <p class="login-sub">من ٨ إلى ١٦ سؤالاً بدون قلوب ولا وقت — كل وحدة تتقنها نفتحها لك، وتبدأ من حيث تحتاج فعلاً</p>
     <div class="login-form">
       <button class="btn" onclick="A.placeSkip()">أكمل بالترتيب</button>
       <button class="login-skip" onclick="A.placeGo()">حدّد مستواي</button>
@@ -5388,8 +7584,16 @@ document.addEventListener("keydown", e => {
     if (document.activeElement && document.activeElement.tagName === "BUTTON") return;
     e.preventDefault();
     if (answered) { const b = fb.querySelector(".btn"); if (b) b.click(); }
+    else if (SES.mode === "learn" && !SES.locked) SES.queue[SES.idx].t === "see" ? A.next() : A.check();
     else if (SES.sel !== null && !SES.locked) A.check();
     return;
+  }
+  /* the keypad answers the keyboard too, in either set of digits */
+  const lit = SES.mode === "learn" && SES.queue[SES.idx];
+  if (lit && lit.t === "type" && !answered && !SES.locked) {
+    const dg = "0123456789".indexOf(e.key) >= 0 ? AR_DIGITS["0123456789".indexOf(e.key)] : AR_DIGITS.indexOf(e.key) >= 0 ? e.key : null;
+    if (dg) { e.preventDefault(); A.lKey(dg); return; }
+    if (e.key === "Backspace") { e.preventDefault(); A.lKey("⌫"); return; }
   }
 
   if (answered || SES.locked || e.key.length !== 1) return;
@@ -5526,7 +7730,7 @@ function renderSettings() {
 /* Re-running it can only place lessons the student has not already cleared — it
    never takes a star away — so the confirmation says exactly that. */
 A.placeAgain = function () {
-  askConfirm("نحدّد مستواك؟", `${qCount(PLACE_PER_UNIT * DOMAIN_ORDER.length)} بدون قلوب ولا وقت. ما أتقنته يُفتح لك، ولا يتغيّر شيء مما أنجزته.`,
+  askConfirm("نحدّد مستواك؟", "من ٨ إلى ١٦ سؤالاً بدون قلوب ولا وقت. ما أتقنته يُفتح لك، ولا يتغيّر شيء مما أنجزته.",
     "لا، رجوع", "ابدأ", () => A.startPlacement());
 };
 
@@ -5548,7 +7752,7 @@ A.setGoal = function (g) {
     const on = GOALS[i] === g;
     b.classList.toggle("on", on); b.setAttribute("aria-checked", on);
   });
-  toast(`${qCount(g)} يومياً · صندوق ${toAr(chestGems())} جوهرة`);
+  toast(`${qCount(g)} يومياً، صندوق ${toAr(chestGems())} جوهرة`);
 };
 A.setTrackM = function (t) {
   S.track = t; save();
@@ -5604,7 +7808,7 @@ A.installApp = function () {
 /* ---------------- boot ---------------- */
 function boot() {
   initCorrectVoice(); // preload the correct-answer clip so the first play is instant
-  if (!S.user) renderLogin();
+  if (!S.user) renderWelcome();
   else afterLogin();
 }
 /* The dev harnesses drive the app through A.debug* and A.fxDemo. On the live

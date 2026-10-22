@@ -1,0 +1,1157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Path Node Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  /* dev page (2026-10-23): the path node («الحبة») to discuss — every animation
+     Duolingo's node has, played from their own node_and_ring_119.riv, then four
+     node shapes of our own. Serve with tools/serve.js and open /tools/pills.html */
+  :root {
+    --bg: #F7F7F7; --card: #FFFFFF; --ink: #3C3C3C; --mute: #777777; --line: #E5E5E5;
+    --stage: #FFFFFF; --chip: #F0F0F0;
+    --green: #58CC02; --green-dk: #58A700; --green-lip: #478700; --green-bg: #D7FFB8;
+    --gold: #FFC800; --gold-dk: #E6A000; --gold-lip: #C98A00; --gold-bg: #FFF4BF; --brown: #AA572A;
+    --lock: #E5E5E5; --lock-dk: #D2D2D2; --lock-lip: #B7B7B7; --lock-ic: #AFAFAF;
+    --blue: #1CB0F6; --blue-dk: #1899D6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #131F24; --card: #1B2B32; --ink: #F1F7FB; --mute: #9AA9B1; --line: #37464F; --chip: #26363D;
+    }
+  }
+  :root[data-theme="dark"] { --bg: #131F24; --card: #1B2B32; --ink: #F1F7FB; --mute: #9AA9B1; --line: #37464F; --chip: #26363D; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Baloo Bhaijaan 2', 'Segoe UI', sans-serif; line-height: 1.5; }
+  main, header { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+  header { padding-top: 32px; }
+  h1 { font-size: 30px; margin: 0; font-weight: 800; }
+  .lede { color: var(--mute); margin: 4px 0 0; max-width: 760px; }
+  nav.jump { display: flex; gap: 8px; margin: 18px 0 8px; flex-wrap: wrap; }
+  nav.jump a { text-decoration: none; color: var(--ink); background: var(--card); border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 14px; padding: 6px 14px; font-weight: 700; }
+  section { margin: 36px 0 56px; }
+  h2 { font-size: 24px; margin: 0 0 2px; font-weight: 800; }
+  h2 small { font-size: 15px; color: var(--mute); font-weight: 700; margin-inline-start: 8px; }
+  .sub { color: var(--mute); margin: 0 0 18px; max-width: 820px; }
+  code { overflow-wrap: anywhere; font-family: ui-monospace, Consolas, monospace; font-size: 12px; background: var(--chip); border-radius: 6px; padding: 1px 6px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 14px; }
+  .card { background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 12px 12px 14px; display: flex; flex-direction: column; }
+  .stage { background: var(--stage); border-radius: 12px; height: 230px; display: grid; place-items: center; position: relative; overflow: hidden; cursor: pointer; }
+  .stage canvas { width: 168px; height: 231px; display: block; }
+  .stage .lot { position: absolute; inset: 0; margin: auto; width: 210px; height: 210px; pointer-events: none; }
+  .card h3 { margin: 10px 2px 0; font-size: 18px; font-weight: 800; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+  .card h3 .ar { font-size: 17px; color: var(--mute); font-weight: 700; direction: rtl; }
+  .card p { margin: 2px 2px 8px; font-size: 14px; color: var(--mute); flex: 1; }
+  .card .ins { margin: 0 2px 10px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .play { font: inherit; font-weight: 800; font-size: 15px; border: 0; border-radius: 14px; padding: 8px 12px; color: #fff; background: var(--blue); box-shadow: 0 4px 0 var(--blue-dk); cursor: pointer; letter-spacing: .3px; }
+  .play:active { transform: translateY(4px); box-shadow: none; }
+  .play.ghost { background: var(--card); color: var(--blue); box-shadow: 0 4px 0 var(--line); border: 2px solid var(--line); }
+
+  .strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+  .strip .cell { background: var(--card); border: 2px solid var(--line); border-radius: 14px; text-align: center; padding: 4px 4px 6px; font-size: 13px; font-weight: 700; color: var(--mute); }
+  .strip canvas { width: 88px; height: 121px; display: block; margin: 0 auto; }
+  h4 { margin: 22px 0 8px; font-size: 17px; }
+
+  /* ---- our shapes ---- */
+  .concepts { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 16px; }
+  .concept { background: var(--card); border: 2px solid var(--line); border-radius: 20px; padding: 14px; }
+  .concept h3 { margin: 0; font-size: 22px; font-weight: 800; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .concept h3 .ar { direction: rtl; font-size: 22px; color: var(--green-dk); }
+  .concept .idea { color: var(--mute); margin: 2px 0 12px; font-size: 14.5px; }
+  .path { background: var(--stage); border-radius: 14px; height: 420px; position: relative; overflow: hidden; }
+  .path .slot { position: absolute; left: 50%; width: 120px; height: 120px; margin-left: -60px; }
+  .path .slot:nth-child(1) { top: 14px;  transform: translateX(-62px); }
+  .path .slot:nth-child(2) { top: 150px; transform: translateX(30px); }
+  .path .slot:nth-child(3) { top: 286px; transform: translateX(-30px); }
+  .path svg.nd { width: 120px; height: 120px; overflow: visible; display: block; cursor: pointer; }
+  .tipb { position: absolute; left: 50%; top: -34px; z-index: 1; transform: translateX(-50%); background: #fff; color: var(--green); border: 2px solid var(--line); border-radius: 12px; padding: 0 12px; font-weight: 800; font-size: 15px; white-space: nowrap; animation: tipBob 2s ease-in-out infinite; direction: rtl; }
+  .tipb::after { content: ""; position: absolute; left: 50%; bottom: -8px; width: 12px; height: 12px; margin-left: -6px; background: #fff; border: 2px solid var(--line); border-top: 0; border-left: 0; transform: rotate(45deg); }
+  @keyframes tipBob { 50% { transform: translate(-50%, -6px); } }
+  .ctrl { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 12px; }
+  .npop { position: absolute; top: 116px; left: 50%; transform: translateX(-50%); width: 190px; z-index: 3; direction: rtl; text-align: center;
+    background: var(--green); color: #fff; border-radius: 16px; padding: 10px 12px 12px; box-shadow: 0 4px 0 var(--green-dk); }
+  .npop::before { content: ""; position: absolute; top: -7px; left: 50%; width: 14px; height: 14px; margin-left: -7px; background: inherit; border-radius: 3px; transform: rotate(45deg); }
+  .npop.up { top: auto; bottom: 112px; }
+  .npop.up::before { top: auto; bottom: -7px; }
+  .npop b { display: block; font-size: 15px; line-height: 1.3; }
+  .npop small { display: block; font-size: 12.5px; opacity: .92; font-weight: 700; margin-top: 2px; }
+  .npop span { display: block; margin-top: 8px; background: #fff; color: var(--green); border-radius: 12px; padding: 4px 0; font-weight: 800; box-shadow: 0 3px 0 rgba(0,0,0,.15); }
+  .npop.done { background: var(--gold); color: var(--brown); box-shadow: 0 4px 0 var(--gold-dk); }
+  .npop.done span { color: var(--brown); }
+
+  /* part 0: the picks, each on a phone */
+  .pick { background: var(--card); border: 2px solid var(--line); border-radius: 22px; padding: 16px; margin-bottom: 18px; }
+  .pick.rec { border: 3px solid var(--green); }
+  .pk-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .pk-tag { font-size: 13px; font-weight: 800; color: var(--mute); background: var(--chip); border-radius: 99px; padding: 2px 12px; }
+  .pk-rec { font-size: 13px; font-weight: 800; color: #fff; background: var(--green); border-radius: 99px; padding: 2px 12px; }
+  .pick h3 { margin: 6px 0 12px; font-size: 26px; font-weight: 800; display: flex; gap: 12px; align-items: baseline; }
+  .pick h3 .ar { color: var(--green-dk); }
+  .pk-grid { display: grid; grid-template-columns: 360px 1fr; gap: 28px; align-items: start; }
+  .pk-txt { font-size: 15.5px; }
+  .pk-mean { font-size: 17px; margin: 0 0 14px; }
+  .pk-txt h4 { margin: 0 0 6px; }
+  .pk-txt ul { margin: 0 0 14px; padding: 0; list-style: none; }
+  .pk-txt li { padding: 6px 0 6px 20px; position: relative; border-bottom: 1px solid var(--line); }
+  .pk-txt li::before { content: ""; position: absolute; left: 2px; top: 15px; width: 9px; height: 9px; border-radius: 3px; background: var(--green); }
+  .pk-cost { margin: 6px 0 0; color: var(--mute); }
+  .pk-cost b { color: var(--ink); }
+  .pick .ctrl { grid-template-columns: repeat(3, 1fr); max-width: 360px; margin-inline: auto; }
+  .phone { width: min(360px, 100%); height: 940px; margin: 0 auto; border: 10px solid #1F2B31; border-radius: 46px; background: #fff; overflow: hidden; position: relative; direction: rtl; color: #4B4B4B; }
+  .ph-bar { height: 54px; display: flex; justify-content: space-around; align-items: center; border-bottom: 2px solid #E5E5E5; font-weight: 800; font-size: 16px; }
+  .ph-st { display: flex; align-items: center; gap: 6px; color: #FF9600; }
+  .ph-rank { color: #4B4B4B; } .ph-gem { color: #1CB0F6; }
+  .ph-banner { margin: 14px 14px 0; background: #58CC02; color: #fff; border-radius: 16px; box-shadow: 0 4px 0 #58A700; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .ph-banner small { display: block; opacity: .85; font-size: 13px; font-weight: 700; }
+  .ph-banner b { display: block; font-size: 17px; line-height: 1.3; }
+  .ph-cnt { flex: none; border-inline-start: 2px solid rgba(0,0,0,.18); padding-inline-start: 12px; text-align: center; font-size: 12px; font-weight: 700; display: flex; flex-direction: column; }
+  .ph-cnt b { font-size: 18px; }
+  .ph-path { position: relative; height: 800px; }
+  .ph-path .slot { position: absolute; left: 50%; width: 96px; height: 96px; margin-left: -48px; }
+  .ph-path svg.nd { width: 96px; height: 96px; overflow: visible; display: block; cursor: pointer; }
+  .ph-path .npop { top: 100px; }
+  .ph-path .npop.up { top: auto; bottom: 100px; }
+  .ph-lbl { position: absolute; top: 94px; left: 50%; transform: translateX(-50%); width: 160px; text-align: center; font-size: 12.5px; font-weight: 800; line-height: 1.25; }
+  .ph-lbl.lk { color: #AFAFAF; }
+  .ctrl .play { font-size: 14px; padding: 8px 4px; white-space: nowrap; }
+  .why { margin: 12px 0 0; padding: 0; list-style: none; font-size: 14px; }
+  .why li { padding: 3px 0 3px 18px; position: relative; }
+  .why li::before { content: ""; position: absolute; left: 2px; top: 11px; width: 8px; height: 8px; border-radius: 3px; background: var(--green); }
+  .tiles { perspective: 600px; }
+  .note { background: var(--card); border: 2px solid var(--line); border-radius: 16px; padding: 14px 16px; margin-top: 18px; font-size: 15px; }
+
+  /* the lesson glyphs (the same ones the path now draws) */
+  .ic .s { fill: none; stroke: currentColor; stroke-width: 4.2; stroke-linecap: round; stroke-linejoin: round; }
+  .ic .f { fill: currentColor; }
+  .ic .j { stroke: currentColor; stroke-width: 3; stroke-linejoin: round; }
+  .ic.halo .s, .ic.halo .j { stroke-width: 11; }
+  .ic.halo .f { stroke: currentColor; stroke-width: 7; stroke-linejoin: round; }
+  .wave { animation: wave 1.6s linear infinite; }
+  @keyframes wave { to { transform: translateX(-30px); } }
+  .ideas { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+  .ideas li { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 10px 12px; font-size: 14px; }
+  .ideas b { display: block; font-size: 16px; }
+  .ideas b span { color: var(--green-dk); margin-left: 8px; }
+  @media (max-width: 520px) {
+    .concepts { grid-template-columns: 1fr; }
+    .ctrl { grid-template-columns: repeat(3, 1fr); }
+    .ctrl .play { font-size: 13px; }
+    .pk-grid { grid-template-columns: 1fr; }
+    .pick { padding: 12px; }
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .card, .concept { min-width: 0; }
+    .stage { height: 190px; } .stage canvas { width: 138px; height: 190px; }
+    .card h3 { flex-direction: column; gap: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) { .tipb, .wave { animation: none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Path Node Lab</h1>
+  <p class="lede">The lesson node («الحبة» on the path) for discussion. Part 0 puts three picks on the real first unit. Part 1 plays every animation Duolingo's node has, from <b>their own file</b> (<code>node_and_ring_119.riv</code>) with the inputs their app sets. Part 2 shows ten node shapes of our own, each built on a maths idea, so the path says «كمي» before anyone reads a word. Tap any stage or button. Sound on.</p>
+  <nav class="jump"><a href="#top3">0 — Three picks, on the real path</a><a href="#duo">1 — Duolingo's node, every animation</a><a href="#ours">2 — Ten shapes for Qudrati</a><a href="#more">3 — Eight more, built</a></nav>
+</header>
+<main>
+
+<section id="top3">
+  <h2>0 — Three picks, on the real path <small>chosen as product decisions, not decoration</small></h2>
+  <p class="sub">Each phone is unit 1 as it is today: its real lessons and their real short-lesson counts (8, 7, 6, 6, 6), two finished, the third under way. Every shape plays the same three moments: <b>press</b> opens the lesson card, <b>a lesson</b> pops the node and throws sparkles every single time (an 8-lesson node pays out 8 times), <b>flip</b> turns the glyph on its axis. Tap the node itself, too.</p>
+  <div id="picks"></div>
+  <div class="note"><b>My recommendation: the answer bubble.</b> It is the only one of the three that says «GAT» and not just «maths», which is what makes a student who has never heard of us trust the app at first sight. It costs no more than the others, and a half-shaded bubble is the strongest reason to come back tomorrow. If you want the least risk, the fraction is the fallback: it changes the least for students already using the app.</div>
+</section>
+
+<section id="duo">
+  <h2>1 — Duolingo's node <small>played from their file, frame for frame</small></h2>
+  <p class="sub">One Rive file draws the node, its icon, the ring of lessons around it and every transition between them; the app only flips inputs. Each card restarts the file in the starting state and flips the same inputs at the same moments.</p>
+  <div class="grid" id="duoGrid"></div>
+
+  <h4>The icon inside the node (<code>from_icon_num</code> / <code>to_icon_num</code>, with <code>icon_anim_bool</code> on)</h4>
+  <div class="strip" id="iconStrip"></div>
+  <h4>The colours (<code>color_num</code>: one per character's unit; 0 is locked)</h4>
+  <div class="strip" id="colorStrip"></div>
+  <div class="note"><b>What this shows about their system:</b> the node never changes shape. Every state (locked, current, done, legendary, skipped) is the same 3D coin with a new colour or icon, and every event is a squash, a hop, a flip or a ring segment filling. The ring around the current node is the lesson count: one segment per lesson, and finishing a lesson fills the next segment. The node only jumps and changes when the last segment fills.</div>
+</section>
+
+<section id="ours">
+  <h2>2 — Ten shapes for Qudrati <small>not a coin: a maths object</small></h2>
+  <p class="sub">The same three moments in each: press, finish a short lesson, finish the node (the next one opens). The colours and glyphs are the app's own. Each shape carries the node's lesson count in the shape itself, so nothing has to be added around it. Tap a node to press it.</p>
+  <div class="concepts" id="concepts"></div>
+  <h2 id="more" style="margin-top:40px">3 — Eight more ideas, built <small>the same three moments on each</small></h2>
+  <p class="sub">The balance, the puzzle, the honeycomb, the ruler, the calculator key, the gem, the graph and the star polygon. Each has press &amp; open, a pop with sparkles for every lesson, the flip, and the whole node finishing into gold.</p>
+  <div class="concepts" id="concepts2"></div>
+  <div class="note"><b>To choose:</b> say which shape (or which parts of two shapes) and I'll build it into the path, with the press, the lesson-done fill and the node-done jump wired to the real lesson flow.</div>
+</section>
+</main>
+
+<script src="https://unpkg.com/@rive-app/canvas@2.31.2"></script>
+<script src="../assets/streak/lottie.min.js"></script>
+<script>
+(() => {
+"use strict";
+const RING = "node highlight ring";
+const SND = { press: new Audio("pills/press.ogg"), release: new Audio("pills/release.ogg"), complete: new Audio("pills/complete.ogg") };
+function snd(k, v) { try { const a = SND[k].cloneNode(); a.volume = v || .7; a.play().catch(() => {}); } catch (e) {} }
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ======================= PART 1: Duolingo's file ======================= */
+let BUF = null;
+const bufP = fetch("pills/node.riv").then(r => r.arrayBuffer()).then(b => (BUF = b));
+
+/* one live node: restartable, inputs by name; ring_* inputs go to the nested ring */
+function duoNode(canvas, init, ring) {
+  let r = null, I = {};
+  function set(k, v) {
+    if (!r) return;
+    if (k.startsWith("ring_")) {
+      if (v === "fire") r.fireStateAtPath(k, RING);
+      else if (typeof v === "boolean") r.setBooleanStateAtPath(k, v, RING);
+      else r.setNumberStateAtPath(k, v, RING);
+    } else if (I[k]) { if (v === "fire") I[k].fire(); else I[k].value = v; }
+  }
+  function start(steps) {
+    if (r) { try { r.cleanup(); } catch (e) {} r = null; }
+    const timers = [];
+    r = new rive.Rive({
+      buffer: BUF.slice(0), canvas, artboard: "node", stateMachines: "node_statemachine", autoplay: true, autoBind: true,
+      onLoad: () => {
+        I = {}; r.stateMachineInputs("node_statemachine").forEach(i => (I[i.name] = i));
+        for (const k in init) set(k, init[k]);
+        if (ring) for (const k in ring) set(k, ring[k]);
+        (steps || []).forEach(([t, k, v]) => timers.push(setTimeout(() => (typeof k === "function" ? k() : set(k, v)), t)));
+      }
+    });
+    return timers;
+  }
+  return { start, set };
+}
+
+const ST = { color_num: 1, from_icon_num: 3, to_icon_num: 3 };
+const RG = (cur, n) => ({ ring_starting_state_num: 2, ring_total_lessons_num: n || 4, ring_current_lesson_num: cur, ring_color_num: 1 });
+const sound = k => [0, () => snd(k)];
+const at = (t, k) => [t, () => snd(k)];
+
+const DUO = [
+  { t: "Locked", ar: "مقفل", p: "Grey coin, grey lock. A tap only presses it; the app answers with a tooltip.",
+    ins: ["color_num 0", "icon 34"], init: { color_num: 0, from_icon_num: 34, to_icon_num: 34 },
+    steps: [[300, "is_tapped_bool", true], at(300, "press"), [480, "is_tapped_bool", false]] },
+  { t: "Current lesson", ar: "الدرس الحالي", p: "Coloured coin inside the ring of lessons. One segment per lesson, done ones filled. The ring breathes in and out.",
+    ins: ["isactive_bool", "ringon_bool", "ring_total_lessons_num", "ring_current_lesson_num"],
+    init: { ...ST, isactive_bool: true, ringon_bool: true }, ring: { ...RG(1), ring_starting_state_num: 0 } },
+  { t: "Press & open", ar: "الضغط", p: "The coin drops its whole lip in one frame and comes back with a tiny settle; as the lesson card opens the ring pulls in behind the coin and fades, then waits a little looser until the card closes.",
+    ins: ["is_tapped_bool", "is_clicked_bool", "ring_node_selected_bool", "ring_starting_state_num 0"],
+    init: { ...ST, isactive_bool: true, ringon_bool: true }, ring: { ...RG(1), ring_starting_state_num: 0 },
+    steps: [[250, "is_tapped_bool", true], at(250, "press"), [430, "is_tapped_bool", false], at(430, "release"), [430, "is_clicked_bool", true], [430, "ring_node_selected_bool", true],
+            [2300, "is_clicked_bool", false], [2300, "ring_node_selected_bool", false]] },
+  { t: "A lesson done", ar: "انتهى درس", p: "Back on the path after one lesson: the ring settles and the next segment fills, with a few sparks off its end.",
+    ins: ["ring_return_to_path_trig", "ring_lesson_complete_trig"],
+    init: { ...ST, isactive_bool: true, ringon_bool: true }, ring: RG(1),
+    steps: [[300, "ring_return_to_path_trig", "fire"], [800, "ring_lesson_complete_trig", "fire"]] },
+  { t: "Node complete", ar: "اكتمل الدرس", p: "The last segment fills, the ring lets go, and the coin jumps and lands with its check.",
+    ins: ["ring_lesson_complete_trig", "iscompleted_bool", "to_icon_num 5", "node_complete_trig"],
+    init: { ...ST, isactive_bool: true, ringon_bool: true }, ring: RG(3),
+    steps: [[300, "ring_lesson_complete_trig", "fire"], [1300, "iscompleted_bool", true], [1300, "to_icon_num", 5], [1300, "node_complete_trig", "fire"], at(1300, "complete")] },
+  { t: "Next one opens", ar: "فتح التالي", p: "The node after it spins on the spot and comes out of the spin in colour.",
+    ins: ["unit complete_node_unlock_trig", "color_num", "from_icon_num"],
+    init: { color_num: 0, from_icon_num: 34, to_icon_num: 3 },
+    steps: [[500, "color_num", 1], [500, "from_icon_num", 3], [500, "isactive_bool", true], [500, "unit complete_node_unlock_trig", "fire"]] },
+  { t: "Done, no ring", ar: "إكمال مباشر", p: "A node finished without the ring (a practice, a jump): grey to colour with a pop and sparkles.",
+    ins: ["iscompleted_bool", "node_complete_trig"],
+    init: { ...ST, isactive_bool: true }, steps: [[500, "iscompleted_bool", true], [500, "isactive_bool", false], [500, "node_complete_trig", "fire"], at(500, "complete")] },
+  { t: "Legendary", ar: "أسطوري", p: "A done node earned again under pressure: the coin flips over and comes back gold, with the sparkle loop.",
+    ins: ["islegendary_bool", "legendary_trig", "+ legendary_skill_sparkles.json"],
+    init: { ...ST, iscompleted_bool: true }, steps: [[500, "islegendary_bool", true], [500, "legendary_trig", "fire"]], lottie: "pills/legendary-sparkles.json" },
+  { t: "Unit trophy", ar: "كأس الوحدة", p: "The unit's last node is a trophy. Passing it, the trophy drops onto its plinth and lands.",
+    ins: ["icon 15", "trophy_on_bool", "complete_trophy_trig"],
+    init: { ...ST, from_icon_num: 15, to_icon_num: 15, trophy_on_bool: true, isactive_bool: true },
+    steps: [[500, "iscompleted_bool", true], [500, "complete_trophy_trig", "fire"], at(500, "complete")] },
+  { t: "Skipped ahead", ar: "تخطّاه", p: "When a placement or jump test passes a node, it turns white with a coloured icon: done, but not played.",
+    ins: ["to_skipped_trig"], init: { ...ST, isactive_bool: true }, steps: [[500, "to_skipped_trig", "fire"]] },
+  { t: "Star flip", ar: "قلب النجمة", p: "The icon turns on its axis inside the coin while the ring stretches and shrinks.",
+    ins: ["star_flip_mode_num", "star_flip_extend_trig", "star_flip_contract_trig"],
+    init: { ...ST, isactive_bool: true, ringon_bool: true, star_flip_mode_num: 1 }, ring: RG(1),
+    steps: [[400, "star_flip_extend_trig", "fire"], [1500, "star_flip_contract_trig", "fire"]] },
+  { t: "XP boost", ar: "مضاعفة النقاط", p: "While a 2× boost runs, purple bubbles rise around the ring.",
+    ins: ["xp_boost_bool", "ring_xp_boost_bool"],
+    init: { ...ST, isactive_bool: true, ringon_bool: true, xp_boost_bool: true }, ring: { ...RG(1), ring_xp_boost_bool: true } },
+  { t: "Unit test", ar: "اختبار الوحدة", p: "The jump-ahead node: the arrows run forward again and again.",
+    ins: ["icon 1", "arrows_anim_bool"], init: { ...ST, from_icon_num: 1, to_icon_num: 1, isactive_bool: true, arrows_anim_bool: true, icon_anim_bool: true } },
+  { t: "Dark mode", ar: "الوضع الداكن", p: "The same current node on the dark path: the ring track and the coin's shading switch.",
+    ins: ["dark_mode_bool", "ring_dark_mode_bool"], dark: true,
+    init: { ...ST, isactive_bool: true, ringon_bool: true, dark_mode_bool: true }, ring: { ...RG(2), ring_dark_mode_bool: true } }
+];
+
+function card(d) {
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = `<div class="stage"${d.dark ? ' style="background:#131F24"' : ""}><canvas width="336" height="462"></canvas></div>
+    <h3><span>${d.t}</span><span class="ar">${d.ar}</span></h3><p>${d.p}</p>
+    <div class="ins">${d.ins.map(x => `<code>${x}</code>`).join("")}</div>
+    <button class="play">${d.steps ? "▶ Play again" : "↺ Restart"}</button>`;
+  const cv = el.querySelector("canvas");
+  const node = duoNode(cv, d.init, d.ring);
+  let timers = [], anim = null;
+  if (d.lottie && window.lottie) {
+    const box = document.createElement("div"); box.className = "lot"; el.querySelector(".stage").appendChild(box);
+    anim = lottie.loadAnimation({ container: box, renderer: "svg", loop: true, autoplay: false, path: d.lottie });
+  }
+  function play() {
+    timers.forEach(clearTimeout);
+    if (anim) { anim.stop(); timers.push(setTimeout(() => !reduced && anim.play(), 900)); }
+    timers = timers.concat(node.start(d.steps));
+  }
+  el.querySelector(".play").onclick = play;
+  el.querySelector(".stage").onclick = play;
+  el._play = play;
+  return el;
+}
+
+function cell(label, init, dark) {
+  const el = document.createElement("div");
+  el.className = "cell";
+  el.innerHTML = `<canvas width="176" height="242"${dark ? ' style="background:#131F24;border-radius:10px"' : ""}></canvas>${label}`;
+  const node = duoNode(el.querySelector("canvas"), init);
+  el._play = () => node.start();
+  el.onclick = el._play;
+  return el;
+}
+
+bufP.then(() => {
+  const grid = document.getElementById("duoGrid");
+  const cards = DUO.map(card); cards.forEach(c => grid.appendChild(c));
+  const icons = [[1, "Unit test"], [2, "Story"], [3, "Star"], [4, "Practice"], [5, "Check"], [7, "Listening"], [9, "Review"], [15, "Trophy"], [34, "Lock"]];
+  const is = document.getElementById("iconStrip");
+  const iconCells = icons.map(([n, l]) => cell(`${n} ${l}`, { color_num: n === 34 ? 0 : 1, from_icon_num: n, to_icon_num: n, isactive_bool: n !== 34, icon_anim_bool: true, arrows_anim_bool: n === 1 }));
+  iconCells.forEach(c => is.appendChild(c));
+  const cs = document.getElementById("colorStrip");
+  const colorCells = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(n => cell(n === 0 ? "0 locked" : n === 10 ? "10 legendary" : String(n), { color_num: n, from_icon_num: n === 0 ? 34 : 3, to_icon_num: n === 0 ? 34 : 3, isactive_bool: n !== 0 }));
+  colorCells.forEach(c => cs.appendChild(c));
+  /* start each node only when it scrolls into view: forty live files at once is too many */
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting && !e.target._on) { e.target._on = 1; e.target._play(); } }), { rootMargin: "100px" });
+  cards.concat(iconCells, colorCells).forEach(c => io.observe(c));
+});
+
+/* ======================= PART 2: our shapes ======================= */
+const ICON = {
+  bigsum: `<path class="s" d="M12 6v12M6 12h12M24 12h11M24 27l10 10M34 27l-10 10M6 32h12"/><circle class="f" cx="12" cy="26.5" r="2.4"/><circle class="f" cx="12" cy="37.5" r="2.4"/>`,
+  percent: `<circle class="s" cx="11" cy="11" r="5"/><circle class="s" cx="29" cy="29" r="5"/><path class="s" d="M31 7 9 33"/>`,
+  triangle: `<path class="s j" d="M20 6 35 33H5z"/>`,
+  keylaws: `<circle class="s" cx="13" cy="20" r="7"/><path class="s" d="M20 20h16M30 20v7M35 20v5"/>`,
+  probstats: `<rect class="s" x="6" y="6" width="28" height="28" rx="7"/><circle class="f" cx="14" cy="14" r="3"/><circle class="f" cx="20" cy="20" r="3"/><circle class="f" cx="26" cy="26" r="3"/>`,
+  fastest: `<path class="f j" d="M23 3 8 23h11l-3 14 16-21H21z"/>`,
+  fractions: `<path class="f j" d="M20 20V6a14 14 0 1 1-14 14z"/><path class="s" d="M24 2.5a16 16 0 0 1 13.5 13.5H24z"/>`,
+  cycles: `<path class="s" d="M32 18a12 12 0 0 0-22-5M8 22a12 12 0 0 0 22 5"/><path class="s" d="M9 5v8h8M31 35v-8h-8"/>`,
+  solids: `<path class="s j" d="M20 4 35 12v16L20 36 5 28V12z"/><path class="s j" d="M5 12l15 8 15-8M20 20v16"/>`
+};
+const PAL = {
+  done:   { face: "#FFC800", lip: "#E6A000", deep: "#C98A00", tint: "#FFE58A", ic: "#AA572A" },
+  cur:    { face: "#58CC02", lip: "#58A700", deep: "#478700", tint: "#D7FFB8", ic: "#FFFFFF" },
+  locked: { face: "#E5E5E5", lip: "#B7B7B7", deep: "#CFCFCF", tint: "#EFEFEF", ic: "#AFAFAF" }
+};
+const gRaw = (key, x, y, s, col) => `<g transform="translate(${x} ${y}) scale(${s / 40})" class="ic" style="color:${col}">${ICON[key]}</g>`;
+const FLIP = 'class="flip" style="transform-box:fill-box;transform-origin:center"';
+const glyph = (key, x, y, s, col) => `<g ${FLIP}>${gRaw(key, x, y, s, col)}</g>`;
+const ease = { out: "cubic-bezier(.2,.9,.3,1)", spring: "cubic-bezier(.3,1.6,.5,1)", inout: "cubic-bezier(.6,0,.4,1)" };
+const A = (el, kf, o) => (el && !reduced ? el.animate(kf, typeof o === "number" ? { duration: o, easing: ease.out } : o) : { finished: Promise.resolve() });
+const wait = ms => new Promise(r => setTimeout(r, reduced ? 0 : ms));
+/* the shared jump: crouch, rise, land, settle (the lessons' own grammar) */
+function hop(el, h) {
+  return A(el, [
+    { transform: "translateY(0) scale(1,1)" },
+    { transform: "translateY(4px) scale(1.08,.86)", offset: .16 },
+    { transform: `translateY(-${h}px) scale(.94,1.08)`, offset: .48 },
+    { transform: "translateY(2px) scale(1.1,.88)", offset: .78 },
+    { transform: "translateY(0) scale(1,1)" }
+  ], { duration: 620, easing: "ease-out" }).finished;
+}
+
+/* ---------- 1. المضلّع: the node is a polygon with one side per lesson ---------- */
+function polyPts(n, r, cx, cy) {
+  const p = [];
+  for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + (i * 2 * Math.PI) / n; p.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); }
+  return p;
+}
+const POLY = {
+  ar: "المضلّع", en: "The polygon",
+  idea: "Every node is a regular polygon with as many sides as it has short lessons: six lessons make a hexagon, eight an octagon. Each finished lesson lights one side.",
+  why: ["The shape alone says how long the node is", "Lessons fill as sides, like a figure on the exam", "Finishing closes the polygon and turns it gold"],
+  draw(n, st) {
+    const P = PAL[st.s], N = n.n, k = st.k;
+    const face = polyPts(N, 36, 60, 58).map(p => p.join(",")).join(" ");
+    const lip = polyPts(N, 36, 60, 65).map(p => p.join(",")).join(" ");
+    let ring = "";
+    if (st.s === "cur") {
+      const V = polyPts(N, 52, 60, 60);
+      for (let i = 0; i < N; i++) {
+        const a = V[i], b = V[(i + 1) % N], dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy), g = 5 / L;
+        const x1 = a[0] + dx * g, y1 = a[1] + dy * g, x2 = b[0] - dx * g, y2 = b[1] - dy * g;
+        ring += `<line class="side${i === k - 1 && st.fresh ? " new" : ""}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${i < k ? P.face : "#E5E5E5"}" stroke-width="8" stroke-linecap="round" pathLength="1"/>`;
+      }
+      ring = `<g class="ring" style="transform-origin:60px 60px">${ring}</g>`;
+    }
+    return `${ring}<g class="body" style="transform-origin:60px 100px">
+      <polygon points="${lip}" fill="${P.lip}" stroke="${P.lip}" stroke-width="12" stroke-linejoin="round"/>
+      <g class="face"><polygon points="${face}" fill="${P.face}" stroke="${P.face}" stroke-width="12" stroke-linejoin="round"/>
+      <polygon points="${polyPts(N, 30, 60, 54).map(p => p.join(",")).join(" ")}" fill="#fff" opacity=".18"/>
+      ${glyph(n.icon, 41, 39, 38, P.ic)}</g></g>`;
+  },
+  breathe(svg) { const r = svg.querySelector(".ring"); return r && A(r, [{ transform: "scale(1)" }, { transform: "scale(1.035)" }, { transform: "scale(1)" }], { duration: 2000, iterations: Infinity, easing: "ease-in-out" }); },
+  async step(svg) { const s = svg.querySelector(".side.new"); if (s) { s.style.strokeDasharray = "1"; A(s, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], 460); } await wait(420); },
+  async finish(svg) { await A(svg.querySelector(".ring"), [{ transform: "scale(1)", opacity: 1 }, { transform: "scale(.72)", opacity: 0 }], { duration: 320, easing: "ease-in", fill: "forwards" }).finished; },
+  async unlock(svg, n) { await A(svg.querySelector(".body"), [{ transform: `rotate(${-360 / n.n}deg) scale(.9)` }, { transform: "rotate(6deg) scale(1.04)", offset: .7 }, { transform: "rotate(0) scale(1)" }], { duration: 640, easing: "ease-out" }).finished; }
+};
+
+/* ---------- 2. الكسر: the node is a fraction circle, a slice per lesson ---------- */
+const PIE = {
+  ar: "الكسر", en: "The fraction",
+  idea: "The node is a circle cut into slices, one per short lesson, around the lesson's glyph. Each finished lesson fills its slice; when the last slice fills, the cuts close and the fraction becomes one whole.",
+  why: ["Progress reads as a fraction: 3 of 6 is ½", "The path's main shape is still a circle, so it stays easy to tap", "Done = one whole circle, nothing else added"],
+  draw(n, st) {
+    const P = PAL[st.s], N = n.n, k = st.s === "done" ? N : st.s === "locked" ? 0 : st.k;
+    const C = 2 * Math.PI * 31, gap = st.s === "done" ? 0 : 2.4, seg = C / N;
+    let sl = "";
+    for (let i = 0; i < N; i++) {
+      const on = i < k;
+      sl += `<circle class="sl${on && i === k - 1 && st.fresh ? " new" : ""}" cx="60" cy="56" r="31" fill="none" stroke="${on ? P.face : P.tint}" stroke-width="20"
+        stroke-dasharray="${seg - gap} ${C}" stroke-dashoffset="${-(i * seg + gap / 2)}" transform="rotate(-90 60 56)"/>`;
+    }
+    return `<g class="body" style="transform-origin:60px 100px">
+      <circle cx="60" cy="63" r="41" fill="${P.lip}"/>
+      <g class="face"><circle cx="60" cy="56" r="41" fill="${st.s === "locked" ? P.face : "#fff"}"/>${sl}
+      <circle cx="60" cy="56" r="19.5" fill="#fff"/>
+      ${glyph(n.icon, 47, 43, 26, st.s === "cur" ? PAL.cur.face : st.s === "done" ? PAL.done.lip : P.ic)}</g></g>`;
+  },
+  breathe(svg) { return A(svg.querySelector(".face"), [{ transform: "scale(1)" }, { transform: "scale(1.03)" }, { transform: "scale(1)" }], { duration: 2000, iterations: Infinity, easing: "ease-in-out" }); },
+  async step(svg) {
+    const s = svg.querySelector(".sl.new");
+    if (s) { const d = s.getAttribute("stroke-dasharray").split(" "); A(s, [{ strokeDasharray: `0 ${d[1]}` }, { strokeDasharray: d.join(" ") }], 520); }
+    await wait(480);
+  },
+  async finish(svg) { await A(svg.querySelector(".face"), [{ transform: "rotate(0)" }, { transform: "rotate(-30deg)" }], { duration: 300, easing: "ease-in" }).finished; },
+  async unlock(svg) {
+    const s = [...svg.querySelectorAll(".sl")];
+    s.forEach((x, i) => A(x, [{ opacity: 0, transform: "scale(.8)" }, { opacity: 1, transform: "scale(1)" }], { duration: 300, delay: i * 60, easing: ease.spring, fill: "backwards" }));
+    await hop(svg.querySelector(".body"), 8);
+  }
+};
+
+/* ---------- 3. البلاطة: a square answer tile that flips over ---------- */
+const TILE = {
+  ar: "البلاطة", en: "The tile",
+  idea: "A chunky square tile, the same as the answer tiles in the lessons, with a row of dots along its bottom edge, one per lesson. Finishing the node flips the tile over to its gold side.",
+  why: ["The path looks like the lessons it opens", "Pressing it feels like the answer buttons", "The flip is new: nothing on the path flips today"],
+  draw(n, st) {
+    const P = PAL[st.s], N = n.n, k = st.s === "done" ? N : st.s === "locked" ? 0 : st.k;
+    let dots = "";
+    if (st.s === "cur") {
+      const w = 7, g = 4, tot = N * w + (N - 1) * g, x0 = 60 - tot / 2;
+      for (let i = 0; i < N; i++) dots += `<rect class="dot${i === k - 1 && st.fresh ? " new" : ""}" x="${x0 + i * (w + g)}" y="76" width="${w}" height="${w}" rx="3.5" fill="${i < k ? "#fff" : "rgba(0,0,0,.18)"}" style="transform-origin:${x0 + i * (w + g) + w / 2}px 79.5px"/>`;
+    }
+    return `<g class="body" style="transform-origin:60px 100px">
+      <rect x="20" y="24" width="80" height="78" rx="24" fill="${P.lip}"/>
+      <g class="face" style="transform-origin:60px 55px"><rect x="20" y="16" width="80" height="78" rx="24" fill="${P.face}"/>
+      <rect x="27" y="21" width="66" height="22" rx="11" fill="#fff" opacity=".2"/>
+      ${glyph(n.icon, 41, st.s === "cur" ? 30 : 36, 38, P.ic)}${dots}</g></g>`;
+  },
+  breathe(svg) { return A(svg.querySelector(".body"), [{ transform: "rotate(0)" }, { transform: "rotate(-3deg)" }, { transform: "rotate(0)" }, { transform: "rotate(3deg)" }, { transform: "rotate(0)" }], { duration: 3200, iterations: Infinity, easing: "ease-in-out" }); },
+  async step(svg) { const d = svg.querySelector(".dot.new"); if (d) A(d, [{ transform: "scale(0)" }, { transform: "scale(1.6)", offset: .6 }, { transform: "scale(1)" }], { duration: 420, easing: "ease-out" }); await wait(380); },
+  async finish(svg) { await A(svg.querySelector(".body"), [{ transform: "scaleX(1)" }, { transform: "scaleX(0)" }], { duration: 220, easing: "ease-in", fill: "forwards" }).finished; },
+  after(svg) { return A(svg.querySelector(".body"), [{ transform: "scaleX(0)" }, { transform: "scaleX(1.08)", offset: .7 }, { transform: "scaleX(1)" }], { duration: 360, easing: "ease-out" }).finished; },
+  async unlock(svg) { await A(svg.querySelector(".body"), [{ transform: "translateY(-46px) scale(.9)", opacity: 0 }, { transform: "translateY(3px) scale(1.1,.86)", opacity: 1, offset: .6 }, { transform: "translateY(0) scale(1)" }], { duration: 560, easing: "ease-in" }).finished; }
+};
+
+/* ---------- 4. المكعب: a solid that builds up a layer per lesson ---------- */
+const ISO = { x: 30, y: 17.3 };
+function cubePolys(h, cx, by) {
+  const F = [cx, by + ISO.y], R = [cx + ISO.x, by], K = [cx, by - ISO.y], L = [cx - ISO.x, by];
+  const up = p => [p[0], p[1] - h];
+  const pts = a => a.map(p => p.join(",")).join(" ");
+  return { left: pts([L, F, up(F), up(L)]), right: pts([F, R, up(R), up(F)]), top: pts([up(L), up(F), up(R), up(K)]), topC: [cx, by - h] };
+}
+const CUBE = {
+  flipSel: ".body",
+  ar: "المكعب", en: "The solid",
+  idea: "The node is a cube that is built one layer per lesson. A new node is a flat tile with its full cube drawn as a ghost; every lesson stacks a layer, and the last one completes the solid and turns it gold.",
+  why: ["Every lesson visibly adds something", "It is a «مجسّم», straight out of the geometry unit", "A half-built cube on the path says: come back and finish it"],
+  draw(n, st) {
+    const P = PAL[st.s], full = 40, frac = st.s === "done" ? 1 : st.s === "locked" ? 0 : st.k / n.n;
+    const h = st.h != null ? st.h : Math.max(7, full * frac), by = 82;
+    const c = cubePolys(h, 60, by), g = cubePolys(full, 60, by);
+    const ghost = st.s === "cur" ? `<g class="ghost" fill="none" stroke="#D9D9D9" stroke-width="2.5" stroke-dasharray="4 5" stroke-linejoin="round"><polygon points="${g.left}"/><polygon points="${g.right}"/><polygon points="${g.top}"/></g>` : "";
+    /* the glyph lies on the top face: x along the right-down edge, y along the left-down edge */
+    const m = .86, t = c.topC;
+    const icon = `<g transform="matrix(${.866 * m} ${.5 * m} ${-.866 * m} ${.5 * m} ${t[0]} ${t[1] - 20 * m})" class="ic" style="color:${st.s === "cur" ? "#fff" : P.ic}">${ICON[n.icon]}</g>`;
+    return `${ghost}<g class="body" style="transform-origin:60px 100px">
+      <polygon points="${c.left}" fill="${P.lip}" stroke="${P.lip}" stroke-width="5" stroke-linejoin="round"/>
+      <polygon points="${c.right}" fill="${P.deep}" stroke="${P.deep}" stroke-width="5" stroke-linejoin="round"/>
+      <g class="face"><polygon points="${c.top}" fill="${P.face}" stroke="${P.face}" stroke-width="5" stroke-linejoin="round"/>${icon}</g></g>`;
+  },
+  breathe(svg) { const g = svg.querySelector(".ghost"); return g && A(g, [{ opacity: 1 }, { opacity: .35 }, { opacity: 1 }], { duration: 2000, iterations: Infinity, easing: "ease-in-out" }); },
+  async step(svg, n, st, redraw) {
+    const from = Math.max(7, 40 * (st.k - 1) / n.n), to = Math.max(7, 40 * st.k / n.n);
+    if (!reduced) {
+      const t0 = performance.now(), D = 520;
+      await new Promise(res => { const f = now => { const p = Math.min(1, (now - t0) / D), e = 1 + 2.2 * Math.pow(p - 1, 3) + 1.2 * Math.pow(p - 1, 2); redraw({ ...st, h: from + (to - from) * e }); p < 1 ? requestAnimationFrame(f) : res(); }; requestAnimationFrame(f); });
+    }
+    redraw(st);
+  },
+  async finish(svg) { await hop(svg.querySelector(".body"), 14); },
+  async unlock(svg) { await A(svg.querySelector(".body"), [{ transform: "translateY(-40px)", opacity: 0 }, { transform: "translateY(2px) scale(1.08,.9)", opacity: 1, offset: .65 }, { transform: "translateY(0) scale(1)" }], { duration: 540, easing: "ease-in" }).finished; }
+};
+
+/* ---------- shared bits for the shapes below ---------- */
+let UID = 0;
+const uid = () => "q" + (++UID);
+/* a glyph drawn twice: a white outline under it, so it reads on any fill */
+const halo = (key, x, y, s, col, ring) => `<g ${FLIP}><g transform="translate(${x} ${y}) scale(${s / 40})" class="ic halo" style="color:${ring || "#fff"}">${ICON[key]}</g>${gRaw(key, x, y, s, col)}</g>`;
+const backOut = p => 1 + 2.2 * Math.pow(p - 1, 3) + 1.2 * Math.pow(p - 1, 2);
+function tween(D, f) {
+  if (reduced) { f(1); return Promise.resolve(); }
+  const t0 = performance.now();
+  return new Promise(res => { const tick = now => { const p = Math.min(1, (now - t0) / D); f(backOut(p)); p < 1 ? requestAnimationFrame(tick) : res(); }; requestAnimationFrame(tick); });
+}
+const dropIn = el => A(el, [{ transform: "translateY(-46px) scale(.9)", opacity: 0 }, { transform: "translateY(3px) scale(1.1,.86)", opacity: 1, offset: .6 }, { transform: "translateY(0) scale(1)" }], { duration: 560, easing: "ease-in" }).finished;
+const frac = (n, st) => st.f != null ? st.f : st.s === "done" ? 1 : st.s === "locked" ? 0 : st.k / n.n;
+
+/* ---------- 5. فقاعة الإجابة: the bubble you shade on the answer sheet ---------- */
+const BUBBLE = {
+  ar: "فقاعة الإجابة", en: "The answer bubble",
+  idea: "The node is the circle you shade on the exam's answer sheet. Each finished lesson shades one more band of it with pencil strokes, from the bottom up; the last band fills it, and a shaded bubble means «answered».",
+  why: ["Every student has shaded hundreds of these on paper", "How dark the bubble is reads from across the path", "It is the exam itself, not a game object"],
+  draw(n, st) {
+    const P = PAL[st.s], N = n.n, k = st.s === "done" ? N : st.s === "locked" ? 0 : st.k, id = uid();
+    const top = 25, bot = 91, bh = (bot - top) / N;
+    let bands = "";
+    for (let i = 0; i < k; i++) {
+      const yc = bot - bh * (i + .5), a = bh * .26;
+      let d = `M18 ${yc}`;
+      for (let x = 18; x < 102; x += 7) d += ` L${x + 3.5} ${yc - a} L${x + 7} ${yc + a}`;
+      bands += `<path class="band${i === k - 1 && st.fresh ? " new" : ""}" d="${d}" fill="none" stroke="${st.s === "done" ? PAL.done.face : PAL.cur.face}" stroke-width="${bh * .6 + 2}" stroke-linejoin="round" stroke-linecap="round" pathLength="1"/>`;
+    }
+    return `<defs><clipPath id="${id}"><circle cx="60" cy="58" r="33"/></clipPath></defs>
+      <g class="body" style="transform-origin:60px 100px">
+      <circle cx="60" cy="65" r="41" fill="${P.lip}"/>
+      <g class="face"><circle cx="60" cy="58" r="41" fill="${P.face}"/>
+      <circle cx="60" cy="58" r="33" fill="#fff"/>
+      <g clip-path="url(#${id})">${bands}</g>
+      ${halo(n.icon, 44, 42, 32, st.s === "cur" ? PAL.cur.deep : P.ic)}</g></g>`;
+  },
+  breathe(svg) { return A(svg.querySelector(".face"), [{ transform: "scale(1)" }, { transform: "scale(1.03)" }, { transform: "scale(1)" }], { duration: 2000, iterations: Infinity, easing: "ease-in-out" }); },
+  async step(svg) {
+    const b = svg.querySelector(".band.new");
+    if (b) { b.style.strokeDasharray = "1"; A(b, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 560, easing: "ease-in-out" }); }
+    await wait(560);
+  },
+  async finish(svg) { await A(svg.querySelector(".face"), [{ transform: "scale(1)" }, { transform: "scale(1.1,.9)" }], { duration: 160, easing: "ease-in", fill: "forwards" }).finished; },
+  unlock: svg => dropIn(svg.querySelector(".body"))
+};
+
+/* ---------- 6. النرد: a die that gains a pip per lesson ---------- */
+const PIPS = { TL: [38, 35], TM: [60, 35], TR: [82, 35], ML: [38, 57], C: [60, 57], MR: [82, 57], BL: [38, 79], BM: [60, 79], BR: [82, 79] };
+/* the fill order keeps every count a die face where it can: 1, 2, 3, 4, 5, 6 */
+function pipSlots(N) {
+  const ring = ["TL", "BR", "TR", "BL", "ML", "MR", "TM", "BM"];
+  return (N % 2 ? ["C"] : []).concat(ring).slice(0, N);
+}
+const DIE = {
+  ar: "النرد", en: "The die",
+  idea: "The node is a die. Its empty dots show how many lessons the node has; each finished lesson fills one, so 2, 4 and 6 lessons look like the die's own faces. Finishing it rolls the die over to gold.",
+  why: ["Counting dots is instant, no reading needed", "Straight out of the probability lesson", "The roll at the end is a real reward moment"],
+  draw(n, st) {
+    const P = PAL[st.s], k = st.s === "done" ? n.n : st.s === "locked" ? 0 : st.k;
+    const slots = pipSlots(n.n);
+    const dots = slots.map((s, i) => { const [x, y] = PIPS[s];
+      return i < k ? `<circle class="pip${i === k - 1 && st.fresh ? " new" : ""}" cx="${x}" cy="${y}" r="7.5" fill="${st.s === "done" ? PAL.done.ic : "#fff"}" style="transform-origin:${x}px ${y}px"/>`
+                   : `<circle cx="${x}" cy="${y}" r="4" fill="rgba(0,0,0,.16)"/>`; }).join("");
+    return `<g class="body" style="transform-origin:60px 57px">
+      <rect x="20" y="25" width="80" height="78" rx="22" fill="${P.lip}"/>
+      <g class="face"><rect x="20" y="17" width="80" height="78" rx="22" fill="${P.face}"/>
+      <path d="M32 21h56" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".25"/>${dots}</g></g>`;
+  },
+  async step(svg) {
+    const p = svg.querySelector(".pip.new");
+    if (p) A(p, [{ transform: "scale(0)" }, { transform: "scale(1.5)", offset: .6 }, { transform: "scale(1)" }], { duration: 420, easing: "ease-out" });
+    await A(svg.querySelector(".body"), [{ transform: "translateY(0) rotate(0)" }, { transform: "translateY(-14px) rotate(-14deg)", offset: .45 }, { transform: "translateY(2px) rotate(3deg) scale(1.06,.92)", offset: .8 }, { transform: "translateY(0) rotate(0)" }], { duration: 560, easing: "ease-out" }).finished;
+  },
+  async finish(svg) { await A(svg.querySelector(".body"), [{ transform: "translateY(0) rotate(0)" }, { transform: "translateY(-30px) rotate(180deg)", offset: .5 }, { transform: "translateY(0) rotate(360deg)" }], { duration: 640, easing: "ease-in-out" }).finished; },
+  after(svg) { return A(svg.querySelector(".body"), [{ transform: "scale(1.14,.84)" }, { transform: "scale(.96,1.05)", offset: .5 }, { transform: "scale(1)" }], { duration: 360, easing: "ease-out" }).finished; },
+  unlock(svg) { return A(svg.querySelector(".body"), [{ transform: "translateY(-40px) rotate(-90deg)", opacity: 0 }, { transform: "translateY(2px) rotate(6deg)", opacity: 1, offset: .65 }, { transform: "translateY(0) rotate(0)" }], { duration: 600, easing: "ease-in" }).finished; }
+};
+
+/* ---------- 7. الساعة: a stopwatch whose hand counts the lessons ---------- */
+function sector(f, r, cx, cy) {
+  if (f <= 0) return "";
+  if (f >= 1) return `<circle cx="${cx}" cy="${cy}" r="${r}"/>`;
+  const a = -Math.PI / 2 + f * 2 * Math.PI, x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
+  return `<path d="M${cx} ${cy}V${cy - r}A${r} ${r} 0 ${f > .5 ? 1 : 0} 1 ${x} ${y}Z"/>`;
+}
+const WATCH = {
+  ar: "الساعة", en: "The stopwatch",
+  idea: "The node is a stopwatch, the exam's minute a question. Its dial carries a tick per lesson, and the hand sweeps one tick on for each lesson finished, filling the dial behind it. The last one sweeps it full and the watch rings.",
+  why: ["Time is the exam's real enemy, and this says so", "The crown on top is a natural thing to press", "The ring at the end is a sound and a shake, no particles"],
+  draw(n, st) {
+    const P = PAL[st.s], N = n.n, f = frac(n, st), cx = 60, cy = 63;
+    let ticks = "";
+    for (let i = 0; i < N; i++) { const a = -Math.PI / 2 + i * 2 * Math.PI / N; ticks += `<line x1="${cx + 24 * Math.cos(a)}" y1="${cy + 24 * Math.sin(a)}" x2="${cx + 29 * Math.cos(a)}" y2="${cy + 29 * Math.sin(a)}"/>`; }
+    const ha = -Math.PI / 2 + f * 2 * Math.PI;
+    const hand = st.s === "locked" ? "" : `<line x1="${cx}" y1="${cy}" x2="${cx + 25 * Math.cos(ha)}" y2="${cy + 25 * Math.sin(ha)}" stroke="${st.s === "done" ? PAL.done.ic : PAL.cur.deep}" stroke-width="4.5" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="4.5" fill="${st.s === "done" ? PAL.done.ic : PAL.cur.deep}"/>`;
+    return `<g class="body" style="transform-origin:60px 63px">
+      <circle cx="${cx}" cy="${cy + 7}" r="39" fill="${P.lip}"/>
+      <g class="face"><rect x="52" y="10" width="16" height="11" rx="4" fill="${P.lip}"/><rect x="56" y="18" width="8" height="8" fill="${P.lip}"/>
+      <rect x="55" y="16" width="10" height="10" rx="3" fill="${P.face}" transform="rotate(45 ${cx} ${cy})"/>
+      <circle cx="${cx}" cy="${cy}" r="39" fill="${P.face}"/><circle cx="${cx}" cy="${cy}" r="31" fill="#fff"/>
+      <g fill="${st.s === "done" ? PAL.done.tint : PAL.cur.tint}">${sector(f, 31, cx, cy)}</g>
+      <g stroke="${st.s === "locked" ? "#D9D9D9" : P.lip}" stroke-width="3" stroke-linecap="round">${ticks}</g>${hand}</g></g>`;
+  },
+  breathe(svg) { return A(svg.querySelector(".face"), [{ transform: "scale(1)" }, { transform: "scale(1.03)" }, { transform: "scale(1)" }], { duration: 2000, iterations: Infinity, easing: "ease-in-out" }); },
+  async step(svg, n, st, redraw) {
+    const a = (st.k - 1) / n.n, b = st.k / n.n;
+    await tween(600, e => redraw({ ...st, f: a + (b - a) * e }));
+    redraw(st);
+    await A(svg.querySelector(".body"), [{ transform: "rotate(0)" }, { transform: "rotate(-5deg)" }, { transform: "rotate(4deg)" }, { transform: "rotate(0)" }], { duration: 300, easing: "ease-out" }).finished;
+  },
+  async finish(svg) { await A(svg.querySelector(".body"), [0, -9, 9, -8, 8, -5, 5, 0].map(r => ({ transform: `rotate(${r}deg)` })), { duration: 560, easing: "linear" }).finished; },
+  unlock: svg => dropIn(svg.querySelector(".body"))
+};
+
+/* ---------- 8. المعداد: an abacus, a bead slid across per lesson ---------- */
+const ABACUS = {
+  ar: "المعداد", en: "The abacus",
+  idea: "The node is a small abacus with a bead for every lesson on two rods. Each finished lesson slides one bead across to the right, the way Arabic counts; when every bead has crossed, the frame turns gold.",
+  why: ["Sliding a bead is the oldest way to count", "Progress is a row filling from the right, like an Arabic bar", "Each lesson makes a click you can hear and see"],
+  draw(n, st) {
+    const P = PAL[st.s], N = n.n, k = st.s === "done" ? N : st.s === "locked" ? 0 : st.k;
+    const rows = [Math.ceil(N / 2), Math.floor(N / 2)], ys = [44, 68], L0 = 32, R0 = 88, sp = 14;
+    let beads = "", L = 0;
+    rows.forEach((m, r) => {
+      const d = Math.max(0, Math.min(m, k - L));
+      for (let i = 0; i < m; i++) {
+        const done = i < d, x = done ? R0 - i * sp : L0 + (m - 1 - i) * sp;
+        const fresh = st.fresh && L + i === k - 1, ox = L0 + (m - 1 - i) * sp;
+        const col = st.s === "done" ? PAL.done.face : done ? PAL.cur.face : st.s === "locked" ? "#D9D9D9" : PAL.cur.tint;
+        beads += `<g${fresh ? ` class="bead new" data-dx="${ox - x}"` : ""}><circle cx="${x}" cy="${ys[r] + 2}" r="6.8" fill="${done || st.s === "done" ? (st.s === "done" ? PAL.done.lip : PAL.cur.lip) : "rgba(0,0,0,.12)"}"/><circle cx="${x}" cy="${ys[r]}" r="6.8" fill="${col}"/></g>`;
+      }
+      L += m;
+    });
+    return `<g class="body" style="transform-origin:60px 100px">
+      <rect x="14" y="27" width="92" height="70" rx="20" fill="${P.lip}"/>
+      <g class="face"><rect x="14" y="19" width="92" height="70" rx="20" fill="${P.face}"/>
+      <rect x="22" y="28" width="76" height="52" rx="12" fill="#fff"/>
+      <g stroke="#D9D9D9" stroke-width="3" stroke-linecap="round"><line x1="25" y1="${ys[0]}" x2="95" y2="${ys[0]}"/><line x1="25" y1="${ys[1]}" x2="95" y2="${ys[1]}"/></g>${beads}</g></g>`;
+  },
+  async step(svg) {
+    const b = svg.querySelector(".bead.new");
+    if (b) await A(b, [{ transform: `translateX(${b.dataset.dx}px)` }, { transform: "translateX(3px)", offset: .8 }, { transform: "translateX(0)" }], { duration: 420, easing: "ease-in" }).finished;
+  },
+  async finish(svg) { await hop(svg.querySelector(".body"), 12); },
+  unlock: svg => dropIn(svg.querySelector(".body"))
+};
+
+/* ---------- 9. التانغرام: a square built from the seven tangram pieces ---------- */
+const TAN = [
+  [[0, 0], [4, 0], [2, 2]], [[0, 0], [2, 2], [0, 4]], [[4, 2], [4, 4], [2, 4]], [[2, 2], [3, 1], [4, 2], [3, 3]],
+  [[4, 0], [4, 2], [3, 1]], [[0, 4], [1, 3], [3, 3], [2, 4]], [[2, 2], [3, 3], [1, 3]]
+];
+const TAN_CUR = ["#58CC02", "#89E219", "#4CB000", "#A5ED6E", "#6FD40F", "#58A700", "#7BDB27"];
+const TAN_DONE = ["#FFC800", "#FFDA45", "#F2B400", "#FFE58A", "#FFD21F", "#E6A000", "#FFCF2E"];
+const TANGRAM = {
+  ar: "التانغرام", en: "The tangram",
+  idea: "The node is a square made of the seven tangram pieces. A new node is an empty outline of them; every lesson sets pieces in place, and the last lesson completes the square and turns it gold.",
+  why: ["A real geometry puzzle: triangles, a square and a parallelogram making one square", "Every lesson visibly builds something", "A half-built square on the path pulls you back to finish it"],
+  draw(n, st) {
+    const P = PAL[st.s], N = n.n, k = st.s === "done" ? N : st.s === "locked" ? 0 : st.k;
+    const placed = Math.round(7 * k / N), before = st.fresh ? Math.round(7 * (k - 1) / N) : placed;
+    const pts = T => T.map(([x, y]) => `${22 + x * 19},${18 + y * 19}`).join(" ");
+    const pieces = TAN.map((T, i) => {
+      if (st.s === "locked") return `<polygon points="${pts(T)}" fill="#E5E5E5" stroke="#fff" stroke-width="2.5" stroke-linejoin="round"/>`;
+      if (i < placed) return `<polygon class="${i >= before ? "pc new" : "pc"}" points="${pts(T)}" fill="${(st.s === "done" ? TAN_DONE : TAN_CUR)[i]}" stroke="#fff" stroke-width="2.5" stroke-linejoin="round" style="transform-box:fill-box;transform-origin:center"/>`;
+      return `<polygon points="${pts(T)}" fill="#F4F4F4" stroke="#D9D9D9" stroke-width="2" stroke-dasharray="4 4" stroke-linejoin="round"/>`;
+    }).join("");
+    return `<g class="body" style="transform-origin:60px 100px">
+      <rect x="19" y="23" width="82" height="82" rx="12" fill="${st.s === "cur" ? "#E5E5E5" : P.lip}"/>
+      <g class="face"><rect x="19" y="15" width="82" height="82" rx="12" fill="#fff"/>${pieces}</g></g>`;
+  },
+  async step(svg) {
+    const ps = [...svg.querySelectorAll(".pc.new")];
+    await Promise.all(ps.map((p, i) => A(p, [{ transform: "translate(0,-34px) rotate(-40deg) scale(.6)", opacity: 0 }, { transform: "translate(0,2px) rotate(4deg) scale(1.06)", opacity: 1, offset: .75 }, { transform: "none" }], { duration: 520, delay: i * 120, easing: "ease-out", fill: "backwards" }).finished));
+  },
+  async finish(svg) { await A(svg.querySelector(".face"), [{ transform: "scale(1)" }, { transform: "scale(.92)" }], { duration: 160, easing: "ease-in", fill: "forwards" }).finished; },
+  unlock: svg => dropIn(svg.querySelector(".body"))
+};
+
+/* ---------- 10. الكبسولة: a capsule that fills up, lesson by lesson ---------- */
+const CAPSULE = {
+  ar: "الكبسولة", en: "The capsule",
+  idea: "The node is a wide capsule with a liquid level inside it, a wave rolling on top. Each finished lesson raises the level one step; the last fills it to the brim in gold. The lesson's glyph floats in the middle.",
+  why: ["How full it is reads at a glance", "The wave keeps the current node alive without anything around it", "Wide, so it is the easiest shape on the path to tap"],
+  draw(n, st) {
+    const P = PAL[st.s], f = frac(n, st), id = uid();
+    const lvl = 84 - f * 54, a = f > 0 && f < 1 ? 3 : 1.5;
+    let wave = `M-30 ${lvl}`;
+    for (let x = -30; x < 150; x += 30) wave += ` q7.5 ${-a} 15 0 t15 0`;
+    wave += ` V120 H-30Z`;
+    const liq = st.s === "locked" || f === 0 ? "" : `<g clip-path="url(#${id})"><path class="wave" d="${wave}" fill="${st.s === "done" ? PAL.done.face : PAL.cur.face}" style="animation-delay:-${((performance.now() / 1000) % 1.6).toFixed(2)}s"/></g>`;
+    return `<defs><clipPath id="${id}"><rect x="19" y="30" width="82" height="54" rx="27"/></clipPath></defs>
+      <g class="body" style="transform-origin:60px 100px">
+      <rect x="13" y="31" width="94" height="66" rx="33" fill="${P.lip}"/>
+      <g class="face"><rect x="13" y="24" width="94" height="66" rx="33" fill="${P.face}"/>
+      <rect x="19" y="30" width="82" height="54" rx="27" fill="#fff"/>${liq}
+      ${halo(n.icon, 45, 42, 30, st.s === "cur" ? PAL.cur.deep : P.ic)}</g></g>`;
+  },
+  async step(svg, n, st, redraw) {
+    const a = (st.k - 1) / n.n, b = st.k / n.n;
+    await tween(700, e => redraw({ ...st, f: a + (b - a) * e }));
+    redraw(st);
+    await A(svg.querySelector(".body"), [{ transform: "rotate(0)" }, { transform: "rotate(-5deg) translateY(-6px)" }, { transform: "rotate(3deg)" }, { transform: "rotate(0)" }], { duration: 420, easing: "ease-out" }).finished;
+  },
+  async finish(svg) { await hop(svg.querySelector(".body"), 12); },
+  unlock: svg => dropIn(svg.querySelector(".body"))
+};
+
+/* ================= part 3: the eight ideas, built ================= */
+const kOf = (n, st) => st.s === "done" ? n.n : st.s === "locked" ? 0 : st.k;
+const popNew = (svg, sel) => Promise.all([...svg.querySelectorAll(sel)].map((p, i) => A(p, [{ transform: "scale(0)", opacity: 0 }, { transform: "scale(1.25)", opacity: 1, offset: .6 }, { transform: "scale(1)", opacity: 1 }], { duration: 440, delay: i * 90, easing: "ease-out", fill: "backwards" }).finished));
+const drawNew = (svg, sel, D) => { const s = svg.querySelector(sel); if (!s) return Promise.resolve(); s.style.strokeDasharray = "1"; return A(s, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: D || 480, easing: "ease-in-out" }).finished; };
+const FB = 'style="transform-box:fill-box;transform-origin:center"';
+const coin = (P, inner) => `<g class="body" style="transform-origin:60px 100px"><circle cx="60" cy="65" r="41" fill="${P.lip}"/><g class="face"><circle cx="60" cy="58" r="41" fill="${P.face}"/>${inner}</g></g>`;
+
+/* ---------- 11. الميزان: a balance that levels out lesson by lesson ---------- */
+const BALANCE = {
+  ar: "الميزان", en: "The balance",
+  idea: "The node is a balance with a heavy weight on one pan. Each finished lesson drops a small weight onto the other pan and the beam swings closer to level; the last lesson balances it, the way the two sides of an equation do.",
+  why: ["Balancing both sides is what solving an equation means", "The tilt shows how much is left without a single number", "The swing gives every lesson a physical moment"],
+  draw(n, st) {
+    const P = PAL[st.s], N = n.n, k = kOf(n, st), f = frac(n, st);
+    const th = -15 * (1 - f) * Math.PI / 180, cx = 60, cy = 40, L = 27;
+    const rx = cx + L * Math.cos(th), ry = cy + L * Math.sin(th), lx = cx - L * Math.cos(th), ly = cy - L * Math.sin(th);
+    const ink = st.s === "locked" ? "#fff" : "#fff", wt = st.s === "done" ? PAL.done.ic : st.s === "locked" ? "#C4C4C4" : PAL.cur.deep;
+    const pan = (x, y, inner) => `<g stroke="${ink}" stroke-width="2.5" stroke-linecap="round"><line x1="${x}" y1="${y}" x2="${x - 9}" y2="${y + 15}"/><line x1="${x}" y1="${y}" x2="${x + 9}" y2="${y + 15}"/></g>${inner}<path d="M${x - 13} ${y + 15}h26a13 7 0 0 1-26 0z" fill="${ink}"/>`;
+    let small = "";
+    for (let j = 0; j < k; j++) {
+      const row = Math.floor(j / 4), col = j % 4;
+      small += `<rect class="wt${st.fresh && j === k - 1 ? " new" : ""}" x="${rx - 10 + col * 5.2}" y="${ry + 9.5 - row * 5.2}" width="4.4" height="4.4" rx="1.2" fill="${wt}" ${FB}/>`;
+    }
+    return coin(P, `<rect x="57.5" y="40" width="5" height="38" rx="2" fill="${ink}"/><rect x="43" y="77" width="34" height="8" rx="4" fill="${ink}"/>
+      <line x1="${lx}" y1="${ly}" x2="${rx}" y2="${ry}" stroke="${ink}" stroke-width="5" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="4.5" fill="${ink}"/>
+      ${pan(lx, ly, `<rect x="${lx - 8}" y="${ly + 3}" width="16" height="12" rx="3" fill="${wt}"/>`)}${pan(rx, ry, small)}`);
+  },
+  async step(svg, n, st, redraw) {
+    const w = svg.querySelector(".wt.new");
+    if (w) await A(w, [{ transform: "translateY(-26px)", opacity: 0 }, { transform: "translateY(1px)", opacity: 1, offset: .8 }, { transform: "none" }], { duration: 360, easing: "ease-in" }).finished;
+    const a = (st.k - 1) / n.n, b = st.k / n.n;
+    await tween(700, e => redraw({ ...st, f: a + (b - a) * e }));
+    redraw(st);
+  },
+  async finish(svg) { await hop(svg.querySelector(".body"), 12); },
+  unlock: svg => dropIn(svg.querySelector(".body"))
+};
+
+/* ---------- 12. قطعة اللغز: a jigsaw that reveals the lesson's picture ---------- */
+const PUZZLE = {
+  ar: "قطعة اللغز", en: "The puzzle",
+  idea: "The node is a small jigsaw with a piece for every lesson and the lesson's glyph faint on the empty board. Each finished lesson clicks a piece in and reveals that part of the picture; the last piece completes it.",
+  why: ["Each lesson is visibly a piece of a bigger whole", "The faint picture says what the node teaches before it starts", "An almost-finished puzzle is very hard to leave"],
+  draw(n, st) {
+    const P = PAL[st.s], N = n.n, k = kOf(n, st), clip = uid(), board = uid();
+    const c0 = Math.ceil(N / 2), c1 = N - c0, cells = [];
+    [c0, c1].forEach((cnt, r) => { const w = 80 / cnt; for (let c = 0; c < cnt; c++) cells.push({ x: 100 - (c + 1) * w, y: 18 + r * 38, w, h: 38, r, c, cnt }); });
+    const cols = st.s === "done" ? ["#FFC800", "#FFD21F"] : ["#58CC02", "#6FD40F"];
+    const piece = (p, i) => {
+      const fill = cols[(p.r + p.c) % 2];
+      let knobs = "";
+      if (p.c < p.cnt - 1) knobs += `<circle cx="${p.x}" cy="${p.y + p.h / 2}" r="5.5" fill="${fill}"/>`;
+      if (p.r === 0 && c1) knobs += `<circle cx="${p.x + p.w / 2}" cy="${p.y + p.h}" r="5.5" fill="${fill}"/>`;
+      return `<g class="pc${st.fresh && i === k - 1 ? " new" : ""}" ${FB}><rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" fill="${fill}" stroke="#fff" stroke-width="2"/>${knobs}</g>`;
+    };
+    const placed = cells.slice(0, k);
+    const empty = cells.slice(k).map(p => `<rect x="${p.x + 1}" y="${p.y + 1}" width="${p.w - 2}" height="${p.h - 2}" fill="none" stroke="#D9D9D9" stroke-width="1.6" stroke-dasharray="4 4"/>`).join("");
+    const holes = placed.map(p => `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}"/>`).join("");
+    const g = gRaw(n.icon, 37, 33, 46, st.s === "done" ? PAL.done.ic : "#fff");
+    return `<defs><clipPath id="${board}"><rect x="20" y="18" width="80" height="76" rx="13"/></clipPath><clipPath id="${clip}">${holes}</clipPath></defs>
+      <g class="body" style="transform-origin:60px 100px"><rect x="20" y="25" width="80" height="76" rx="13" fill="${st.s === "cur" ? "#D9D9D9" : P.lip}"/>
+      <g class="face"><rect x="20" y="18" width="80" height="76" rx="13" fill="${st.s === "locked" ? P.face : "#F4F4F4"}"/>
+      ${st.s === "locked" ? gRaw(n.icon, 37, 33, 46, "#C9C9C9") : gRaw(n.icon, 37, 33, 46, "#E3E3E3")}
+      <g clip-path="url(#${board})">${empty}${placed.map(piece).join("")}</g>
+      <g class="flip" ${FB}><g clip-path="url(#${clip})">${g}</g></g></g></g>`;
+  },
+  async step(svg) { await popNew(svg, ".pc.new"); },
+  async finish(svg) { await A(svg.querySelector(".face"), [{ transform: "scale(1)" }, { transform: "scale(.93)" }], { duration: 160, easing: "ease-in", fill: "forwards" }).finished; },
+  unlock: svg => dropIn(svg.querySelector(".body"))
+};
+
+/* ---------- 13. خلية النحل: a honeycomb, a cell of honey per lesson ---------- */
+const HEXC = [[70.4, 40], [80.8, 58], [70.4, 76], [49.6, 76], [39.2, 58], [49.6, 40], [60, 58], [60, 94]];
+const hexAt = (x, y, r) => [0, 1, 2, 3, 4, 5].map(i => { const a = -Math.PI / 2 + i * Math.PI / 3; return `${(x + r * Math.cos(a)).toFixed(1)},${(y + r * Math.sin(a)).toFixed(1)}`; }).join(" ");
+const HONEY = {
+  ar: "خلية النحل", en: "The honeycomb",
+  idea: "The node is a little honeycomb with a cell for every lesson: six make a ring, seven close it around a middle cell. Each finished lesson fills one cell with honey; the full comb is the finished node.",
+  why: ["Hexagons tile the plane: a real geometry fact on the path", "Honey filling up is an easy, warm picture of «saving up»", "The empty cells count down the lessons left"],
+  draw(n, st) {
+    const N = n.n, k = kOf(n, st), dy = N > 7 ? -9 : 0;
+    const cells = HEXC.slice(0, N).map(([x, y]) => [x, y + dy]);
+    const lock = st.s === "locked";
+    const lips = cells.map(([x, y]) => `<polygon points="${hexAt(x, y + 5, 11.8)}" fill="${lock ? "#CFCFCF" : "#E6A000"}" stroke="${lock ? "#CFCFCF" : "#E6A000"}" stroke-width="2" stroke-linejoin="round"/>`).join("");
+    const faces = cells.map(([x, y], i) => {
+      const on = i < k;
+      return `<polygon class="cell${on && st.fresh && i === k - 1 ? " new" : ""}" points="${hexAt(x, y, 11.8)}" fill="${lock ? "#E5E5E5" : on ? "#FFC800" : "#FFF4BF"}" stroke="#fff" stroke-width="2.4" stroke-linejoin="round" ${FB}/>${on && !lock ? `<path d="M${x - 5} ${y - 6}l4-2" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".6"/>` : ""}`;
+    }).join("");
+    return `<g class="body" style="transform-origin:60px 100px">${lips}<g class="face">${faces}</g></g>`;
+  },
+  async step(svg) { await popNew(svg, ".cell.new"); },
+  async finish(svg) { await hop(svg.querySelector(".body"), 12); },
+  unlock: svg => dropIn(svg.querySelector(".body"))
+};
+
+/* ---------- 14. المسطرة: a ruler a pencil draws along ---------- */
+const RULER = {
+  ar: "المسطرة", en: "The ruler",
+  idea: "The node is a chunky ruler marked ١ to N, one mark per lesson. A pencil draws a line along its edge from the right, and each finished lesson carries it to the next mark; the last one rules the whole length.",
+  why: ["A measured line is the clearest progress bar there is", "It reads from the right, the way Arabic does", "The numbers say exactly which lesson is next"],
+  draw(n, st) {
+    const P = PAL[st.s], N = n.n, f = frac(n, st), xr = 100, len = 80;
+    let ticks = "";
+    for (let i = 0; i <= N; i++) {
+      const x = xr - i * len / N;
+      ticks += `<line x1="${x}" y1="44" x2="${x}" y2="56" stroke="#fff" stroke-width="3" stroke-linecap="round"/>`;
+      if (i < N) ticks += `<line x1="${x - len / N / 2}" y1="44" x2="${x - len / N / 2}" y2="50" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".6"/>`;
+      if (i) ticks += `<text x="${x}" y="72" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" opacity="${st.s === "locked" ? 1 : i <= Math.round(f * N) ? 1 : .55}">${toAr(i)}</text>`;
+    }
+    const xe = xr - f * len, ink = st.s === "done" ? PAL.done.ic : PAL.cur.deep;
+    const line = st.s === "locked" || f === 0 ? "" : `<line x1="${xr}" y1="34" x2="${xe}" y2="34" stroke="${ink}" stroke-width="5" stroke-linecap="round"/>`;
+    const pencil = st.s !== "cur" ? "" : `<g transform="translate(${xe} 34) rotate(-32)"><polygon points="0,0 8,-4.2 8,4.2" fill="#F6D9A8"/><polygon points="0,0 3.2,-1.7 3.2,1.7" fill="#4B4B4B"/><rect x="8" y="-4.2" width="20" height="8.4" fill="#FFC800"/><rect x="8" y="-4.2" width="20" height="2.6" fill="#FFDA45"/><rect x="28" y="-4.2" width="6" height="8.4" rx="2" fill="#FF9EAE"/></g>`;
+    return `<g class="body" style="transform-origin:60px 100px"><rect x="10" y="48" width="100" height="38" rx="10" fill="${P.lip}"/>
+      <g class="face"><rect x="10" y="40" width="100" height="38" rx="10" fill="${P.face}"/>${ticks}</g>${line}${pencil}</g>`;
+  },
+  async step(svg, n, st, redraw) {
+    const a = (st.k - 1) / n.n, b = st.k / n.n;
+    await tween(700, e => redraw({ ...st, f: a + (b - a) * e }));
+    redraw(st);
+  },
+  async finish(svg) { await hop(svg.querySelector(".body"), 12); },
+  unlock: svg => dropIn(svg.querySelector(".body"))
+};
+
+/* ---------- 15. زر الحاسبة: a calculator key whose display lights up ---------- */
+const SEG = { a: [51, 31, 69, 31], b: [72, 34, 72, 45], c: [72, 51, 72, 62], d: [51, 65, 69, 65], e: [48, 51, 48, 62], f: [48, 34, 48, 45], g: [51, 48, 69, 48] };
+const CALC = {
+  ar: "زر الحاسبة", en: "The calculator key",
+  idea: "The node is a big calculator key with a small display. Each finished lesson lights one more segment of the digit on it (and its point, for an eight-lesson node); when every segment is lit the key reads a full «8» and turns gold.",
+  why: ["The one tool every student brings to maths, minus the exam ban", "Lighting segments is satisfying and easy to count", "The dark display stands out on the white path"],
+  draw(n, st) {
+    const P = PAL[st.s], N = n.n, k = kOf(n, st), S = N > 7 ? 8 : 7, lit = Math.round(S * k / N), prev = st.fresh ? Math.round(S * (k - 1) / N) : lit;
+    const lock = st.s === "locked", on = st.s === "done" ? "#FFE58A" : "#A5ED6E", off = lock ? "#C2C2C2" : "#33474F";
+    const segs = "abcdefg".split("").map((s, i) => { const [x1, y1, x2, y2] = SEG[s]; return `<line class="sg${i >= prev && i < lit ? " new" : ""}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${i < lit ? on : off}" stroke-width="5.5" stroke-linecap="round"/>`; }).join("");
+    const dot = S === 8 ? `<circle class="sg${7 >= prev && 7 < lit ? " new" : ""}" cx="80" cy="65" r="3.4" fill="${7 < lit ? on : off}"/>` : "";
+    return `<g class="body" style="transform-origin:60px 100px"><rect x="16" y="27" width="88" height="74" rx="18" fill="${P.lip}"/>
+      <g class="face"><rect x="16" y="19" width="88" height="74" rx="18" fill="${P.face}"/><path d="M30 23h60" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".25"/>
+      <rect x="32" y="25" width="56" height="48" rx="9" fill="${lock ? "#D6D6D6" : "#23343B"}"/>${segs}${dot}
+      <g stroke="#fff" stroke-width="3.2" stroke-linecap="round"><line x1="53" y1="80" x2="67" y2="80"/><line x1="53" y1="86" x2="67" y2="86"/></g></g></g>`;
+  },
+  async step(svg) {
+    await Promise.all([...svg.querySelectorAll(".sg.new")].map(s => A(s, [{ opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: .25, offset: .4 }, { opacity: 1, offset: .6 }, { opacity: .5, offset: .75 }, { opacity: 1 }], { duration: 520, easing: "linear" }).finished));
+  },
+  async finish(svg) { await hop(svg.querySelector(".body"), 12); },
+  unlock: svg => dropIn(svg.querySelector(".body"))
+};
+
+/* ---------- 16. الجوهرة: a gem whose facets catch the light ---------- */
+const GEMV = [[40, 26], [80, 26], [98, 46], [60, 98], [22, 46]];
+function perimPts(V, n) {
+  const seg = V.map((p, i) => { const q = V[(i + 1) % V.length]; return Math.hypot(q[0] - p[0], q[1] - p[1]); });
+  const tot = seg.reduce((a, b) => a + b, 0), out = [];
+  for (let j = 0; j <= n; j++) {
+    let d = tot * j / n, i = 0;
+    while (i < seg.length - 1 && d > seg[i]) { d -= seg[i]; i++; }
+    const p = V[i], q = V[(i + 1) % V.length], t = d / seg[i];
+    out.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]);
+  }
+  return out;
+}
+const GEM = {
+  ar: "الجوهرة", en: "The gem",
+  idea: "The node is a cut gem with a facet for every lesson. Each finished lesson cuts one facet into colour and it catches the light; when every facet is cut the gem turns to gold.",
+  why: ["Our currency is already gems: lessons literally make one", "Facets are polygons: geometry hiding in plain sight", "A half-cut gem is a beautiful thing to want to finish"],
+  draw(n, st) {
+    const N = n.n, k = kOf(n, st), c = [60, 48], pts = perimPts(GEMV, N);
+    const lit = st.s === "done" ? ["#FFC800", "#FFDA45", "#F2B400"] : ["#58CC02", "#89E219", "#6FD40F"];
+    const dim = st.s === "locked" ? ["#E5E5E5", "#EDEDED", "#DCDCDC"] : ["#EDEDED", "#F5F5F5", "#E4E4E4"];
+    let facets = "", glint = "";
+    for (let i = 0; i < N; i++) {
+      const pp = `${c.join(",")} ${pts[i].join(",")} ${pts[i + 1].join(",")}`, on = i < k;
+      facets += `<polygon points="${pp}" fill="${(on ? lit : dim)[i % 3]}" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>`;
+      if (on && st.fresh && i === k - 1) glint = `<polygon class="glint" points="${pp}" fill="#fff"/>`;
+    }
+    const edge = st.s === "done" ? "#E6A000" : st.s === "locked" ? "#CFCFCF" : k ? "#58A700" : "#D9D9D9";
+    return `<g class="body" style="transform-origin:60px 100px"><ellipse cx="60" cy="106" rx="28" ry="5" fill="rgba(0,0,0,.08)"/>
+      <g class="face"><polygon points="${GEMV.map(p => p.join(",")).join(" ")}" fill="none" stroke="${edge}" stroke-width="7" stroke-linejoin="round"/>${facets}${glint}
+      <path d="M44 31h12" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".8"/></g></g>`;
+  },
+  async step(svg) { const g = svg.querySelector(".glint"); if (g) await A(g, [{ opacity: 1 }, { opacity: 0 }], { duration: 560, easing: "ease-out", fill: "forwards" }).finished; },
+  async finish(svg) { await hop(svg.querySelector(".body"), 14); },
+  unlock: svg => dropIn(svg.querySelector(".body"))
+};
+
+/* ---------- 17. المنحنى: graph paper, a point plotted per lesson ---------- */
+const GRAPH = {
+  ar: "المنحنى", en: "The graph",
+  idea: "The node is a square of graph paper with a point for every lesson along a curve that climbs to the corner. Each finished lesson plots the next point and draws the line to it; the last point reaches the top.",
+  why: ["A rising line is the universal picture of getting better", "Reading graphs is on the exam itself (data interpretation)", "The empty points ahead show the climb that is left"],
+  draw(n, st) {
+    const P = PAL[st.s], N = n.n, k = kOf(n, st), lock = st.s === "locked";
+    const pts = Array.from({ length: N }, (_, i) => { const t = i / (N - 1); return [34 + 58 * t, 84 - 52 * Math.pow(t, 1.6)]; });
+    let grid = "";
+    for (let x = 30; x <= 94; x += 8) grid += `<line x1="${x}" y1="26" x2="${x}" y2="90"/>`;
+    for (let y = 26; y <= 90; y += 8) grid += `<line x1="26" y1="${y}" x2="94" y2="${y}"/>`;
+    const ink = st.s === "done" ? "#E6A000" : PAL.cur.face;
+    const path = pts.slice(0, k).map(p => p.join(",")).join(" ");
+    const fresh = st.fresh && k > 1 ? `<line class="seg new" x1="${pts[k - 2][0]}" y1="${pts[k - 2][1]}" x2="${pts[k - 1][0]}" y2="${pts[k - 1][1]}" stroke="${ink}" stroke-width="4.5" stroke-linecap="round" pathLength="1"/>` : "";
+    const done = st.fresh && k > 1 ? pts.slice(0, k - 1).map(p => p.join(",")).join(" ") : path;
+    const dots = pts.map((p, i) => i < k ? `<circle class="pt${st.fresh && i === k - 1 ? " new" : ""}" cx="${p[0]}" cy="${p[1]}" r="4.6" fill="${ink}" stroke="#fff" stroke-width="2" ${FB}/>` : `<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="#fff" stroke="${lock ? "#D6D6D6" : "#CFCFCF"}" stroke-width="2"/>`).join("");
+    return `<g class="body" style="transform-origin:60px 100px"><rect x="16" y="23" width="88" height="80" rx="14" fill="${P.lip}"/>
+      <g class="face"><rect x="16" y="16" width="88" height="80" rx="14" fill="${P.face}"/><rect x="22" y="22" width="76" height="68" rx="8" fill="#fff"/>
+      <g stroke="${lock ? "#EFEFEF" : "#DDF4FF"}" stroke-width="1.4">${grid}</g>
+      <path d="M28 26V88H94" fill="none" stroke="#AFAFAF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="${pts.map(p => p.join(",")).join(" ")}" fill="none" stroke="#EDEDED" stroke-width="2.5" stroke-dasharray="3 4"/>
+      ${k > 1 ? `<polyline points="${done}" fill="none" stroke="${ink}" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>` : ""}${fresh}${dots}</g></g>`;
+  },
+  async step(svg) { await drawNew(svg, ".seg.new", 420); await popNew(svg, ".pt.new"); },
+  async finish(svg) { await hop(svg.querySelector(".body"), 12); },
+  unlock: svg => dropIn(svg.querySelector(".body"))
+};
+
+/* ---------- 18. النجمة المضلّعة: a star polygon drawn edge by edge ---------- */
+function starEdges(N) {
+  const s = N >= 7 ? 3 : 2, seen = new Array(N).fill(false), out = [];
+  for (let st = 0; st < N; st++) {
+    if (seen[st]) continue;
+    let v = st;
+    do { seen[v] = true; out.push([v, (v + s) % N]); v = (v + s) % N; } while (v !== st);
+  }
+  return out;
+}
+const STAR = {
+  ar: "النجمة المضلّعة", en: "The star polygon",
+  idea: "The node is a circle with a point for every lesson. Each finished lesson draws one more straight edge between the points, skipping round the circle; the last edge closes a star polygon (two triangles for six lessons, a seven- or eight-pointed star for more).",
+  why: ["Still a star, the reward symbol everyone knows, but drawn with geometry", "Every node's star is different, set by how many lessons it has", "Each lesson adds one clean stroke: simple to read"],
+  draw(n, st) {
+    const P = PAL[st.s], N = n.n, k = kOf(n, st), R = 25, c = [60, 58];
+    const V = Array.from({ length: N }, (_, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / N; return [c[0] + R * Math.cos(a), c[1] + R * Math.sin(a)]; });
+    const E = starEdges(N), ink = st.s === "done" ? PAL.done.ic : PAL.cur.face, touched = new Set();
+    const edges = E.map(([a, b], i) => {
+      const on = i < k; if (on) { touched.add(a); touched.add(b); }
+      return `<line class="ed${on && st.fresh && i === k - 1 ? " new" : ""}" x1="${V[a][0]}" y1="${V[a][1]}" x2="${V[b][0]}" y2="${V[b][1]}" stroke="${on ? ink : "#EAEAEA"}" stroke-width="${on ? 4 : 2}" stroke-linecap="round" pathLength="1"/>`;
+    });
+    const pend = edges.filter((_, i) => i >= k).join(""), drawn = edges.filter((_, i) => i < k).join("");
+    /* the finished star is filled, one polygon per closed loop of edges */
+    const loops = [];
+    E.forEach(([a, b], i) => { if (!i || E[i - 1][1] !== a) loops.push([]); loops[loops.length - 1].push(V[a].join(",")); });
+    const fill = st.s === "done" ? loops.map(l => `<polygon points="${l.join(" ")}" fill="${PAL.done.tint}"/>`).join("") : "";
+    const dots = V.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="3.6" fill="${touched.has(i) ? (st.s === "done" ? PAL.done.ic : PAL.cur.deep) : "#D9D9D9"}"/>`).join("");
+    return coin(P, `<circle cx="60" cy="58" r="33" fill="#fff"/><g class="flip" ${FB}>${fill}${pend}${drawn}${dots}</g>`);
+  },
+  async step(svg) { await drawNew(svg, ".ed.new", 460); },
+  async finish(svg) { await hop(svg.querySelector(".body"), 12); },
+  unlock: svg => dropIn(svg.querySelector(".body"))
+};
+
+/* ---------- the three moments every shape shares ---------- */
+const toAr = n => String(n).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+const SVGNS = "http://www.w3.org/2000/svg";
+const SPK = "M0-1Q.16-.16 1 0Q.16.16 0 1Q-.16.16-1 0Q-.16-.16 0-1Z";
+const SPK_COL = { cur: ["#58CC02", "#89E219", "#58A700"], done: ["#FFC800", "#FFDA45", "#E6A000"] };
+/* four-point sparkles thrown out around the node (Duolingo's complete_sparkles) */
+function sparkles(svg, tone) {
+  if (reduced) return;
+  const g = document.createElementNS(SVGNS, "g"), cols = SPK_COL[tone];
+  svg.appendChild(g);
+  [[-62, -28, 9], [-46, -58, 6], [-4, -68, 8], [48, -54, 10], [66, -10, 6], [58, 32, 8], [-60, 28, 7], [4, 50, 5]].forEach(([dx, dy, z], j) => {
+    const p = document.createElementNS(SVGNS, "path");
+    p.setAttribute("d", SPK); p.setAttribute("fill", cols[j % cols.length]); g.appendChild(p);
+    A(p, [{ transform: `translate(${60 + dx * .6}px,${58 + dy * .6}px) scale(0) rotate(0deg)`, opacity: 1 },
+          { transform: `translate(${60 + dx}px,${58 + dy}px) scale(${z}) rotate(45deg)`, opacity: 1, offset: .45 },
+          { transform: `translate(${60 + dx * 1.12}px,${58 + dy * 1.12}px) scale(0) rotate(90deg)`, opacity: 0 }],
+      { duration: 720, delay: j * 40, easing: "ease-out", fill: "both" });
+  });
+  setTimeout(() => g.remove(), 1300);
+}
+/* one short lesson finished: the node squashes, pops up bigger, flashes and
+   throws sparkles — every lesson, so an 8-lesson node plays it 8 times */
+async function lessonFx(svg, tone) {
+  const body = svg.querySelector(".body"), face = svg.querySelector(".face");
+  snd("complete", .45);
+  const was = body.style.transformOrigin;
+  body.style.transformOrigin = "60px 60px";
+  A(face, [{ filter: "brightness(1)" }, { filter: "brightness(1.3)", offset: .35 }, { filter: "brightness(1)" }], { duration: 640, easing: "ease-out" });
+  setTimeout(() => sparkles(svg, tone), 140);
+  await A(body, [{ transform: "scale(1)" }, { transform: "scale(1.1,.86)", offset: .18 }, { transform: "scale(1.17)", offset: .46 }, { transform: "scale(.95)", offset: .74 }, { transform: "scale(1)" }], { duration: 640, easing: "ease-out" }).finished;
+  body.style.transformOrigin = was;
+}
+/* the star flip: the glyph turns on its axis while the shape stretches and shrinks */
+function flipFx(svg, C) {
+  let t = svg.querySelector(C.flipSel || ".flip");
+  if (!t) { t = svg.querySelector(".face"); t.style.transformBox = "view-box"; t.style.transformOrigin = "60px 60px"; }
+  const ring = svg.querySelector(".ring") || (t.classList.contains("body") ? null : svg.querySelector(".body"));
+  snd("release");
+  if (ring) A(ring, [{ transform: "scale(1)" }, { transform: "scale(1.1)", offset: .35 }, { transform: "scale(.94)", offset: .7 }, { transform: "scale(1)" }], { duration: 900, easing: "ease-in-out" });
+  return A(t, [{ transform: "scaleX(1)" }, { transform: "scaleX(0) scaleY(1.08)", offset: .25 }, { transform: "scaleX(-1)", offset: .5 }, { transform: "scaleX(0) scaleY(1.08)", offset: .75 }, { transform: "scaleX(1)" }], { duration: 900, easing: "ease-in-out" }).finished;
+}
+
+/* ---------- the engine: nodes on a path, wired to press / lesson / node / flip ---------- */
+function wire(root, C, NODES, init, slotHtml) {
+  const path = root.querySelector(".path, .ph-path");
+  let S, busy = false, loops = [], openT = 0, openI = -1;
+  function reset() { S = init.map(x => ({ ...x })); paint(); }
+  function paint() {
+    clearTimeout(openT); openI = -1;
+    loops.forEach(l => l && l.cancel && l.cancel()); loops = [];
+    path.innerHTML = NODES.map((n, i) => slotHtml(n, S[i], i, `<svg class="nd" viewBox="0 0 120 120">${C.draw(n, S[i])}</svg>`)).join("");
+    path.querySelectorAll("svg.nd").forEach((svg, i) => {
+      if (S[i].s === "cur" && C.breathe && !reduced) loops.push(C.breathe(svg));
+      svg.onclick = () => act.press(i);
+    });
+  }
+  const svgAt = i => path.querySelectorAll("svg.nd")[i];
+  const slotAt = i => path.querySelectorAll(".slot")[i];
+  const redrawAt = i => st => { svgAt(i).innerHTML = C.draw(NODES[i], st); };
+  async function press(i) {
+    const face = svgAt(i).querySelector(".face"); snd("press");
+    await A(face, [{ transform: "translateY(0)" }, { transform: "translateY(6px)" }], { duration: 90, easing: "ease-out", fill: "forwards" }).finished;
+    snd("release");
+    await A(face, [{ transform: "translateY(6px)" }, { transform: "translateY(-2px)", offset: .5 }, { transform: "translateY(0)" }], { duration: 260, easing: "ease-out" }).finished;
+    if (S[i].s !== "locked") openCard(i);
+  }
+  /* press & open: the node stays lifted (a ring, where the shape has one,
+     tightens) and its lesson card opens under it until it is let go */
+  function closeCard() {
+    clearTimeout(openT);
+    if (openI < 0) return;
+    const slot = slotAt(openI), svg = svgAt(openI);
+    openI = -1;
+    if (!slot) return;
+    slot.style.zIndex = "";
+    const body = svg.querySelector(".body"), ring = svg.querySelector(".ring"), pop = slot.querySelector(".npop");
+    A(body, [{ transform: "translateY(-4px) scale(1.06)" }, { transform: "none" }], { duration: 240, easing: "ease-out" });
+    body.style.transform = "";
+    if (ring) { A(ring, [{ transform: "scale(.92)" }, { transform: "scale(1)" }], 240); ring.style.transform = ""; }
+    if (pop) A(pop, [{ opacity: 1 }, { opacity: 0, transform: "translateX(-50%) translateY(-8px) scale(.9)" }], { duration: 180, easing: "ease-in", fill: "forwards" }).finished.then(() => pop.remove());
+  }
+  function openCard(i) {
+    closeCard();
+    const slot = slotAt(i), svg = svgAt(i), n = NODES[i], st = S[i];
+    const body = svg.querySelector(".body"), ring = svg.querySelector(".ring");
+    openI = i; slot.style.zIndex = 5;
+    A(body, [{ transform: "none" }, { transform: "translateY(-6px) scale(1.09)", offset: .55 }, { transform: "translateY(-4px) scale(1.06)" }], { duration: 300, easing: "ease-out" });
+    body.style.transform = "translateY(-4px) scale(1.06)";
+    if (ring) { A(ring, [{ transform: "scale(1)" }, { transform: "scale(.92)" }], { duration: 260, easing: ease.spring }); ring.style.transform = "scale(.92)"; }
+    const pop = document.createElement("div");
+    pop.className = "npop " + st.s + (i === NODES.length - 1 ? " up" : "");
+    pop.innerHTML = st.s === "done"
+      ? `${n.label ? `<b>${n.label}</b>` : "<b>أنهيت هذا الدرس</b>"}<small>${toAr(n.n)} دروس قصيرة — مكتمل</small><span>تدرّب مرة ثانية</span>`
+      : `${n.label ? `<b>${n.label}</b>` : ""}<small>الدرس ${toAr(st.k + 1)} من ${toAr(n.n)} — ٣ دقائق</small><span>${st.k ? "كمّل" : "ابدأ"}</span>`;
+    slot.appendChild(pop);
+    A(pop, [{ opacity: 0, transform: "translateX(-50%) translateY(-10px) scale(.85)" }, { opacity: 1, transform: "translateX(-50%) translateY(2px) scale(1.03)", offset: .7 }, { opacity: 1, transform: "translateX(-50%)" }], { duration: 300, easing: "ease-out" });
+    openT = setTimeout(closeCard, 3000);
+  }
+  const cur = () => S.findIndex(x => x.s === "cur");
+  async function step() {
+    closeCard();
+    const i = cur(); if (i < 0) return reset();
+    const n = NODES[i];
+    if (S[i].k >= n.n - 1) return node();
+    S[i] = { s: "cur", k: S[i].k + 1, fresh: true }; paint(); S[i].fresh = false;
+    await C.step(svgAt(i), n, { s: "cur", k: S[i].k }, redrawAt(i));
+    await lessonFx(svgAt(i), "cur");
+  }
+  async function node() {
+    closeCard();
+    const i = cur(); if (i < 0) return reset();
+    const n = NODES[i];
+    if (S[i].k < n.n) { S[i] = { s: "cur", k: n.n, fresh: true }; paint(); S[i].fresh = false; await C.step(svgAt(i), n, { s: "cur", k: n.n }, redrawAt(i)); await lessonFx(svgAt(i), "cur"); }
+    await C.finish(svgAt(i), n);
+    S[i] = { s: "done", k: n.n }; paint(); snd("complete");
+    if (C.after) await C.after(svgAt(i)); else await hop(svgAt(i).querySelector(".body"), 16);
+    sparkles(svgAt(i), "done");
+    await wait(300);
+    if (S[i + 1]) { S[i + 1] = { s: "cur", k: 0 }; paint(); await C.unlock(svgAt(i + 1), NODES[i + 1]); }
+  }
+  const run = f => async (...a) => { if (busy) return; busy = true; try { await f(...a); } finally { busy = false; } };
+  const act = {
+    press: run(i => press(i == null ? Math.max(0, cur()) : i)), step: run(step), node: run(node), reset: run(async () => reset()),
+    flip: run(async () => { closeCard(); const i = cur(); await flipFx(svgAt(i < 0 ? 0 : i), C); })
+  };
+  root.querySelectorAll(".ctrl .play").forEach(b => (b.onclick = () => act[b.dataset.a]()));
+  reset();
+}
+const CTRL = `<div class="ctrl"><button class="play" data-a="press">Press</button><button class="play" data-a="step">A lesson</button><button class="play" data-a="node">Whole node</button><button class="play" data-a="flip">Flip</button><button class="play ghost" data-a="reset">Reset</button></div>`;
+
+/* ---------- part 2: one card of three nodes per shape ---------- */
+function concept(C) {
+  const el = document.createElement("div");
+  el.className = "concept";
+  el.innerHTML = `<h3><span>${C.en}</span><span class="ar">${C.ar}</span></h3><p class="idea">${C.idea}</p>
+    <div class="path"></div>${CTRL}
+    <ul class="why">${C.why.map(w => `<li>${w}</li>`).join("")}</ul>`;
+  wire(el, C, [{ icon: "bigsum", n: 6 }, { icon: "percent", n: 7 }, { icon: "triangle", n: 8 }],
+    [{ s: "done", k: 6 }, { s: "cur", k: 2 }, { s: "locked", k: 0 }],
+    (n, st, i, svg) => `<div class="slot">${st.s === "cur" ? `<span class="tipb">${st.k ? "كمّل" : "ابدأ"}</span>` : ""}${svg}</div>`);
+  return el;
+}
+const box = document.getElementById("concepts");
+[POLY, PIE, TILE, CUBE, BUBBLE, DIE, WATCH, ABACUS, TANGRAM, CAPSULE].forEach(C => box.appendChild(concept(C)));
+const box2 = document.getElementById("concepts2");
+[BALANCE, PUZZLE, HONEY, RULER, CALC, GEM, GRAPH, STAR].forEach(C => box2.appendChild(concept(C)));
+
+/* ---------- part 0: the three picks, on the real first unit ---------- */
+const UNIT1 = [
+  { icon: "bigsum", n: 8, label: "جمع وطرح وضرب وقسمة الأعداد الكبيرة" },
+  { icon: "keylaws", n: 7, label: "قوانين هامة في القدرات" },
+  { icon: "probstats", n: 6, label: "الاحتمالات والإحصاء" },
+  { icon: "fastest", n: 6, label: "أسرع الطرق لحل سؤال القدرات" },
+  { icon: "cycles", n: 6, label: "الدوريات والأنماط" }
+];
+const PH_X = [0, 54, 74, 54, 0];
+const PICKS = [
+  { C: BUBBLE, tag: "Pick 1 — the brand move", rec: true,
+    mean: "Each node is a bubble on the GAT answer sheet. Every short lesson shades a little more of it, and a fully shaded bubble is a lesson you will get right on exam day.",
+    pays: ["<b>No learning curve.</b> Every Saudi student has shaded hundreds of these. That matters more for us than for Duolingo: nobody arrives already knowing our path.",
+           "<b>It says «قدرات», not «a game».</b> A screenshot of the home screen reads as the GAT app at a glance, and nothing about it looks copied from Duolingo.",
+           "<b>Pulls students back.</b> A half-shaded bubble looks unfinished, the strongest reason to open the app again tomorrow."],
+    cost: "Low: one SVG and CSS, no library, light on old Android phones.", risk: "Low. The lesson's glyph stays in the middle, so nodes stay easy to tell apart." },
+  { C: WATCH, tag: "Pick 2 — the promise move",
+    mean: "Our promise is speed: قدّور's first line is «بعلّمك القسم الكمي بحيل تختصر عليك الوقت». Each node is a stopwatch; every lesson moves the hand one tick, and a finished node rings.",
+    pays: ["<b>Sells the value every visit.</b> The home screen keeps repeating why Qudrati exists: tricks that save time.",
+           "<b>Speaks to the real fear.</b> About a minute a question is what students worry about, and what they pay tutors for.",
+           "<b>A built-in reward.</b> The ring at the end is a sound and a shake, a moment students want to hear again."],
+    cost: "Low: the hand sweep is a small redraw.", risk: "Medium. Every watch looks alike, so the name under each node does the work of telling lessons apart." },
+  { C: PIE, tag: "Pick 3 — the safe move",
+    mean: "The node is a fraction of its lessons: 3 of 6 reads as a half, and a finished node becomes one whole. It is maths, and it is exact progress.",
+    pays: ["<b>Lowest risk.</b> Still a round, thumb-sized button like today's, so nothing returning students learned breaks.",
+           "<b>Exact progress.</b> Students see how much of a node is left, and a visible finish line is what keeps people going through a long course.",
+           "<b>Maths identity for free.</b> No new object to explain."],
+    cost: "Lowest: one SVG donut.", risk: "Low, but also the least distinctive of the three." }
+];
+const pk = document.getElementById("picks");
+PICKS.forEach(P => {
+  const el = document.createElement("div");
+  el.className = "pick" + (P.rec ? " rec" : "");
+  el.innerHTML = `<div class="pk-head"><span class="pk-tag">${P.tag}</span>${P.rec ? '<span class="pk-rec">My recommendation</span>' : ""}</div>
+    <h3><span>${P.C.en}</span><span class="ar">${P.C.ar}</span></h3>
+    <div class="pk-grid">
+      <div><div class="phone"><div class="ph-bar"><span class="ph-st"><svg viewBox="0 0 20 24" width="17" height="20"><path d="M10 1c2 6 8 8 8 14a8 8 0 0 1-16 0c0-4 3-6 4-9 1 3 2 4 4 4-1-3-1-6 0-9z" fill="#FF9600"/></svg>${toAr(12)}</span><span class="ph-st ph-rank"><svg viewBox="0 0 20 22" width="17" height="19"><path d="M10 1l8 3v7c0 5-3.5 8.5-8 10C5.5 19.5 2 16 2 11V4z" fill="#DDE5EA" stroke="#9AA9B1" stroke-width="2" stroke-linejoin="round"/></svg>الفضي</span><span class="ph-st ph-gem"><svg viewBox="0 0 20 20" width="17" height="17"><path d="M5 2h10l4 5-9 11L1 7z" fill="#1CB0F6"/><path d="M5 2l5 5 5-5M1 7h18" stroke="#fff" stroke-width="1.4" fill="none" opacity=".55"/></svg>${toAr(527)}</span></div>
+        <div class="ph-banner"><span><small>القسم ١، الوحدة ١</small><b>مهارات وقوانين هامة في القدرات</b></span><span class="ph-cnt"><b>${toAr(2)}/${toAr(8)}</b>دروس</span></div>
+        <div class="ph-path"></div></div>${CTRL}</div>
+      <div class="pk-txt"><p class="pk-mean">${P.mean}</p><h4>What it does for Qudrati</h4><ul>${P.pays.map(x => `<li>${x}</li>`).join("")}</ul>
+        <p class="pk-cost"><b>Cost to build:</b> ${P.cost}</p><p class="pk-cost"><b>Risk:</b> ${P.risk}</p></div>
+    </div>`;
+  pk.appendChild(el);
+  wire(el, P.C, UNIT1, [{ s: "done", k: 8 }, { s: "done", k: 7 }, { s: "cur", k: 2 }, { s: "locked", k: 0 }, { s: "locked", k: 0 }],
+    (n, st, i, svg) => `<div class="slot" style="top:${40 + i * 156}px;transform:translateX(${PH_X[i]}px)">${st.s === "cur" ? `<span class="tipb">${st.k ? "كمّل" : "ابدأ"}</span>` : ""}${svg}<span class="ph-lbl${st.s === "locked" ? " lk" : ""}">${n.label}</span></div>`);
+});
+})();
+</script>
+</body>
+</html>

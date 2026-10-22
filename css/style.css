@@ -13,13 +13,16 @@
   --purple: #CE82FF;       --purple-dk: #A568CC;
   --purple-tint: #EDD1FF;  --purple-pale: #DBC3EB;  --purple-shine: #DAA0FF;
   --gold: #FFC800;         --gold-dk: #E6A000;
-  --gold-shine: #FFE700;   --gold-soft: #FBE56D;    --brown: #AA572A;
+  --gold-shine: #FFE700;   --gold-soft: #FBE56D;    --brown: #AA572A;    --brown-dk: #7A3B12;
+  --lime: #A5D92B;
   --red: #FF4B4B;          --red-soft: #FFB2B2;
-  --orange: #FF9600;       --orange-bg: #FFEFD6;    --gold-bg: #FFF4BF;
+  --orange: #FF9600;       --orange-dk: #E07800;    --orange-bg: #FFEFD6;    --gold-bg: #FFF4BF;
   --ink: #4B4B4B;          --gray: #777777;         --gray-icon: #AFAFAF;
   --gray-shadow: #B7B7B7;  --line: #E5E5E5;         --divider: #D9D9D9;
   --disabled: #D9D9D9;     --snow: #FFFFFF;       --surface-hover: #F7F7F7;
+  --node-ghost: #CFCFCF;   /* the shadow a jumping path node leaves (Duolingo's node_complete) */
   --green-lip: #478700;    /* exact lip under #58CC02 button (Figma) */
+  --green-pale: #A5ED6E;   --green-pale-lip: #79C83A;
   --green-bg: #D6FFB8;     --red-bg: #FFDFE0;       --red-dk2: #EA2B2B;
   --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
   --nav-h: 80px;
@@ -229,6 +232,15 @@ svg.ic { display: block; }
 }
 .tc-practice { margin-bottom: 14px; }
 .tc-q { font-size: 21px; font-weight: 700; color: var(--ink); line-height: 1.65; margin: 0 0 18px; padding: 2px 2px 0; }
+/* The warm-up: the first screen of the first lesson anyone plays. It is the
+   check's card with the heading the check does not need — nothing has been
+   taught yet, so the screen has to say why it is asking. The sum itself is set
+   big and centred, because it is the whole screen and it is meant to look
+   easy. */
+.tc-warm-lead { text-align: center; margin-bottom: 18px; animation: fadeUp .35s ease backwards; }
+.tc-warm-lead .tc-kicker { margin-bottom: 6px; }
+.tc-warm-h { font-size: 23px; font-weight: 700; color: var(--ink); margin: 0; line-height: 1.3; text-wrap: balance; }
+.tc-q-warm { font-size: 34px; font-weight: 800; text-align: center; letter-spacing: 1px; margin: 0 0 22px; }
 .tc-choices { display: flex; flex-direction: column; gap: 10px; }
 
 /* ---- the check's option card: the session's, verbatim ---- */
@@ -316,43 +328,46 @@ svg.ic { display: block; }
 /* ============================================================
    Section header — Figma: 398x79, face #CE82FF r13 on
    #A568CC lip (4px), title 21px white, kicker 16px #EDD1FF
-   uppercase, vertical divider + white icon on the far side
+   uppercase, vertical divider + the unit's count on the far side
+   (the live site's banner, asked back on 2026-10-23); the whole
+   banner opens the unit's rules
    ============================================================ */
-.unit-banner {
-  margin: 14px 16px 8px; padding: 12px 18px;
+.unit-banner { /* a button shrinks to its text: every unit's banner spans the path */
+  width: calc(100% - 32px); margin: 14px 16px 8px; padding: 12px 18px;
   border-radius: 13px; color: #fff; position: relative;
   display: flex; align-items: center; gap: 14px;
-  min-height: 75px;
+  min-height: 75px; border: 0; font-family: var(--font); text-align: start; cursor: pointer;
 }
-.unit-banner .u-txt { flex: 1; }
+.unit-banner:active { transform: translateY(4px); box-shadow: none; }
+.unit-banner .u-txt { flex: 1; display: block; }
+.unit-banner .u-kicker { display: block; }
 .unit-banner .u-kicker {
   font-size: 16px; font-weight: 700; text-transform: uppercase;
   letter-spacing: .3px; opacity: .95;
 }
 .unit-banner h2 { font-size: 21px; font-weight: 700; line-height: 1.15; }
-/* the unit's book button: white 2px border with a white lip on the tinted
-   face, the way the reference's guidebook button sits on its banner */
-.unit-banner .u-book {
-  flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px;
-  padding: 9px 12px 8px; border-radius: 12px;
-  background: rgba(255,255,255,.18); border: 2px solid #fff; box-shadow: 0 2px 0 #fff;
-  color: #fff; font-family: var(--font); font-size: 15px; font-weight: 800; line-height: 1;
-  cursor: pointer; -webkit-tap-highlight-color: transparent;
-  transition: transform .08s, box-shadow .08s, background .15s;
+.unit-banner .u-side {
+  display: flex; align-items: center; gap: 14px; align-self: stretch;
 }
-/* the guidebook glyph, knocked out white and mirrored: the rings sit on the
-   reading edge, as the reference draws it in RTL */
-.unit-banner .u-book img { width: 22px; height: 22px; filter: brightness(0) invert(1); transform: scaleX(-1); }
-.unit-banner .u-book:active { transform: translateY(2px); box-shadow: none; }
-.unit-banner .u-book:focus-visible { outline-color: #fff; }
+.unit-banner .u-divider { width: 2px; align-self: stretch; margin: -2px 0; }
+.unit-banner .u-prog {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  line-height: 1.1; min-width: 46px;
+}
+.unit-banner .u-prog b { font-size: 17px; font-weight: 800; }
+.unit-banner .u-prog span { font-size: 11px; font-weight: 700; opacity: .85; }
 .u-purple { background: var(--purple); box-shadow: 0 4px 0 var(--purple-dk); }
 .u-purple .u-kicker { color: var(--purple-tint); }
+.u-purple .u-divider { background: var(--purple-dk); }
 .u-green  { background: var(--green);  box-shadow: 0 4px 0 var(--green-dk); }
 .u-green .u-kicker { color: #C8F0A8; }
+.u-green .u-divider { background: var(--green-dk); }
 .u-blue   { background: var(--blue);   box-shadow: 0 4px 0 var(--blue-dk); }
 .u-blue .u-kicker { color: var(--blue-light); }
+.u-blue .u-divider { background: var(--blue-dk); }
 .u-gold { background: var(--gold); box-shadow: 0 4px 0 var(--gold-dk); }
 .u-gold .u-kicker { color: #FFF1C1; }
+.u-gold .u-divider { background: var(--gold-dk); }
 
 /* ============================================================
    Level path — Figma "Level": 71x58 ellipse face on same-size
@@ -375,7 +390,6 @@ svg.ic { display: block; }
   background: var(--node-c, var(--purple));
   box-shadow: 0 7px 0 var(--node-s, var(--purple-dk));
   display: flex; align-items: center; justify-content: center;
-  transition: transform .08s, box-shadow .08s;
 }
 .node::before { /* inner dome shine */
   content: ''; position: absolute; top: 3px; left: 6.5px;
@@ -385,6 +399,13 @@ svg.ic { display: block; }
 .node > * { position: relative; }
 .node:active:not(:disabled) { transform: translateY(7px); box-shadow: 0 0 0 var(--node-s, var(--purple-dk)); }
 .node-done   { --node-c: var(--gold); --node-s: var(--gold-dk); --node-h: var(--gold-shine); }
+/* each lesson's own sign (lessonIcon): white on an open node, the star-done
+   brown on a finished one, so it reads against the gold */
+.node-ic { width: 38px; height: 38px; color: var(--snow); overflow: visible; }
+.node-ic .s { fill: none; stroke: currentColor; stroke-width: 4.2; stroke-linecap: round; stroke-linejoin: round; }
+.node-ic .f { fill: currentColor; }
+.node-ic .j { stroke: currentColor; stroke-width: 3; stroke-linejoin: round; }
+.node-done .node-ic { color: var(--brown); }
 .node-locked { --node-c: var(--line); --node-s: var(--gray-shadow); --node-h: transparent; cursor: default; }
 /* Lesson title under each node. Readability over compactness: no opacity
    fade (it muddied the text), a wider box so Arabic titles break at a word
@@ -406,8 +427,9 @@ svg.ic { display: block; }
 .node-label.nl-locked { color: var(--gray); font-weight: 700; }
 /* The lesson you are on gets the most weight on the page. It also carries the
    86px progress ring, which hangs ~10px below the node's lip and was cutting
-   into the label, so its title needs to start lower than the others. */
-.node-col.bob .node-label { font-size: 14px; color: var(--ink); margin-top: 23px; }
+   into the label, so its title needs to start lower than the others — 29px
+   clears the ring at its widest breath. */
+.node-col.bob .node-label { font-size: 14px; color: var(--ink); margin-top: 29px; }
 .node-ring { /* progress ring around current level; node face+lip spans y 10-75, ring height 84 → top 0 centers it */
   position: absolute; top: 0; left: 50%; margin-left: -44.5px;
   width: 89px; height: 84px; pointer-events: none;
@@ -1329,9 +1351,20 @@ button.dom-stat:active { transform: scale(.99); }
   0%, 60%  { background-position: -150% 0; }
   90%, 100%{ background-position: 150% 0; }
 }
-@keyframes ringPulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50%      { transform: scale(1.05); opacity: .85; }
+/* Duolingo's ring breathing (idle loop multi lesson): out to 1.02 of its own
+   size and in to .86 x .82 every two seconds, slow to leave each end, fading
+   as it pulls in — sizes measured against its coin and carried onto ours */
+@keyframes ringIdle {
+  0%, 100% { transform: scale(1.131, 1.121); animation-timing-function: cubic-bezier(.8, 0, .85, 1); }
+  50%      { transform: scale(.972, .944); animation-timing-function: cubic-bezier(.15, 0, .2, 1); }
+}
+@keyframes ringDimTrack {
+  0%, 100% { opacity: 1; animation-timing-function: cubic-bezier(.8, 0, .85, 1); }
+  50%      { opacity: .73; animation-timing-function: cubic-bezier(.15, 0, .2, 1); }
+}
+@keyframes ringDimArc {
+  0%, 100% { opacity: 1; animation-timing-function: cubic-bezier(.8, 0, .85, 1); }
+  50%      { opacity: .6; animation-timing-function: cubic-bezier(.15, 0, .2, 1); }
 }
 @keyframes spinSlow { to { transform: rotate(360deg); } }
 @keyframes glowPulse {
@@ -1367,7 +1400,9 @@ button.dom-stat:active { transform: scale(.99); }
 .unit-banner { animation: bannerIn .45s cubic-bezier(.3,1.4,.5,1) backwards; }
 .node { animation: springIn .5s cubic-bezier(.3,1.6,.5,1) backwards; animation-delay: var(--d, 0s); }
 .path-row .bob { animation: nodeBob 1.8s .8s ease-in-out infinite; }
-.node-ring { animation: ringPulse 1.8s ease-in-out infinite; }
+.node-ring { animation: ringIdle 2s infinite; }
+.node-ring .ring-track { animation: ringDimTrack 2s infinite; }
+.node-ring .ring-arc { animation: ringDimArc 2s infinite; }
 .node-done::after { /* gold coin shine sweep */
   content: ''; position: absolute; inset: 0; border-radius: 50%;
   background: linear-gradient(115deg, transparent 32%, rgba(255,255,255,.55) 50%, transparent 68%) no-repeat;
@@ -1375,6 +1410,16 @@ button.dom-stat:active { transform: scale(.99); }
   animation: coinShine 3.2s ease-in-out infinite;
 }
 .node:not(:disabled):hover { filter: brightness(1.05); }
+/* Duolingo's press: the face drops the whole lip in one frame while held
+   (the settle on release and the ring's select are pathPay's neighbours in app.js) */
+/* «a lesson done»: the shadow the coin jumps off (its own lower ellipse, in
+   Duolingo's grey) and its three diamonds — both slid in under the coin */
+.node-ghost {
+  position: absolute; left: 50%; width: 71px; height: 58px; margin-left: -35.5px;
+  border-radius: 50%; background: var(--node-ghost); pointer-events: none;
+}
+.node-dia { position: absolute; top: 0; left: 50%; pointer-events: none; transform: scale(0); }
+.node-dia svg { display: block; width: 100%; height: 100%; }
 
 /* --- bottom nav --- */
 .navbtn img { transition: transform .12s; height: 28px; width: auto; }
@@ -1679,9 +1724,10 @@ button.dom-stat:active { transform: scale(.99); }
 
 /* --- «مراجعة اليوم»: the one card that says the schedule has something ripe --- */
 .due-card {
-  display: flex; align-items: center; gap: 11px; width: 100%; text-align: start;
+  /* the countdown card's box (.ec2): inset by the same 16px gutters */
+  display: flex; align-items: center; gap: 11px; width: calc(100% - 32px); text-align: start;
   background: var(--snow); border: 2px solid var(--line); border-radius: 16px;
-  box-shadow: 0 4px 0 var(--line); padding: 11px 14px; margin: 0 0 14px;
+  box-shadow: 0 4px 0 var(--line); padding: 11px 14px; margin: 0 16px 14px;
   cursor: pointer; animation: fadeUp .38s .06s cubic-bezier(.25,1.1,.4,1) backwards;
 }
 .due-card:active { transform: translateY(4px); box-shadow: 0 0 0 var(--line); }
@@ -2339,6 +2385,18 @@ button.dom-stat:active { transform: scale(.99); }
 .lb-tier-diamond .lb-tier-glow { background: radial-gradient(closest-side, rgba(120,200,245,.6), transparent 72%); }
 .lb-tier-champion .lb-tier-glow { background: radial-gradient(closest-side, rgba(168,120,232,.6), transparent 72%); }
 .lb-tier-bronze  .lb-tier-glow { background: radial-gradient(closest-side, rgba(196,127,65,.55), transparent 72%); }
+/* your tier's shine (lbShine): the light band is masked by the badge's own PNG */
+.lb-shine { position: absolute; inset: 0; pointer-events: none;
+  -webkit-mask: var(--src) center / contain no-repeat; mask: var(--src) center / contain no-repeat;
+  background: linear-gradient(115deg, transparent 34%, rgba(255,255,255,.55) 42%, #fff 47%, #fff 53%, rgba(255,255,255,.55) 58%, transparent 66%) 160% 0 / 300% 100% no-repeat;
+  animation: lbShine 3.4s cubic-bezier(.45, 0, .25, 1) .6s infinite; }
+@keyframes lbShine { 0% { background-position: 160% 0; } 38%, 100% { background-position: -60% 0; } }
+.lb-glint { position: absolute; width: 24px; height: 24px; left: 2%; top: 0; pointer-events: none; z-index: 2;
+  transform: scale(0); animation: lbGlint 3.4s ease-out .6s infinite; filter: drop-shadow(0 0 1.5px rgba(60,80,110,.45)) drop-shadow(0 0 5px rgba(255,255,255,.95)); }
+.lb-glint svg { width: 100%; height: 100%; display: block; fill: #fff; }
+.lb-glint2 { width: 15px; height: 15px; left: auto; top: auto; right: 4%; bottom: 22%; animation-delay: .78s; }
+@keyframes lbGlint { 0%, 30% { transform: scale(0) rotate(0); } 38% { transform: scale(1.15) rotate(45deg); } 46% { transform: scale(.9) rotate(70deg); } 56%, 100% { transform: scale(0) rotate(90deg); } }
+:root[data-motion="reduced"] .lb-shine, :root[data-motion="reduced"] .lb-glint { animation: none; }
 
 /* progress to next tier */
 .lb-title-silver { color: #8597A8; } .lb-title-diamond { color: #3FA7E0; } .lb-title-champion { color: #9069CD; } .lb-title-bronze { color: #B5793F; }
@@ -2604,6 +2662,11 @@ button.dom-stat:active { transform: scale(.99); }
    grey dot's centre, so the orange grows out of the grey rather than under it. */
 .sk-days .check { position: absolute; left: 50%; top: 50%; width: 46px; height: 60px; transform: translate(-53%,-72%); pointer-events: none; }
 .sk-days .check svg { width: 100% !important; height: 100% !important; }
+/* today's coin (skCoinFlip): the canvas is five times the dot, centred on it,
+   so the coin lands exactly on the dot after its toss; hidden until thrown */
+.sk-days .sk-coin { position: absolute; left: 50%; top: 50%; width: 168px; height: 168px; transform: translate(-50%, -50%); pointer-events: none; visibility: hidden; z-index: 2; }
+.sk-days .dot.coin .sk-coin { visibility: visible; }
+.sk-days .dot.coin .check { display: none; }
 .sk-foot { margin-top: 36px; width: 100%; opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s cubic-bezier(.2,.7,.3,1); }
 .sk-foot.show { opacity: 1; transform: none; }
 .sk-next { color: var(--gray); font-size: 15px; font-weight: 700; line-height: 1.5; text-align: center; margin-bottom: 16px; }
@@ -3146,7 +3209,7 @@ body:has(.screen-session) { overflow: hidden; }
   .page { width: 100%; max-width: var(--page-max); margin-inline: auto; }
   /* these sit above the path, so they take the PATH width, not the page
      width - otherwise the yellow card is visibly wider than the banner. */
-  .ec2 {
+  .ec2, .due-card {
     width: calc(100% - 32px); max-width: var(--path-max); margin-inline: auto;
   }
 
@@ -3972,6 +4035,14 @@ body:has(.screen-session) { overflow: hidden; }
   animation: fadeUp .38s var(--d, .2s) ease backwards;
 }
 .iv-row + .iv-row { border-top: 2px solid var(--line); }
+.iv-promise { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 8px; margin-top: 14px; }
+.iv-promise span {
+  display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px 5px 12px; border-radius: 999px;
+  background: var(--green-bg); color: var(--green-dk); font-size: 13.5px; font-weight: 800;
+  animation: titleIn .4s var(--d) cubic-bezier(.3,1.5,.5,1) backwards;
+}
+.iv-promise svg { width: 14px; height: 14px; }
+:root[data-motion="reduced"] .iv-promise span { animation: none; }
 .iv-ic {
   width: 46px; height: 46px; border-radius: 13px; flex-shrink: 0;
   display: inline-flex; align-items: center; justify-content: center;
@@ -3990,3 +4061,687 @@ body:has(.screen-session) { overflow: hidden; }
   .iv-row { padding: 11px 4px; }
   .iv-top { margin-bottom: 14px; }
 }
+
+/* ============================================================
+   SHORT LESSONS (js/data/learn.js) — the exercise shapes.
+   One idea a screen: a reveal, a choice, a tile to place, a
+   keypad, pairs to match, steps to order. The option card is
+   the session's own (.screen-session .choice), so the jump and
+   the miss land on these exactly as they do on a question.
+   ============================================================ */
+.ln-area { display: flex; flex-direction: column; padding-top: 14px; }
+.ln-area.lt-see { justify-content: center; }
+.ln-area > .ln-tag { align-self: flex-start; }
+.ln-tag {
+  display: inline-flex; align-items: center; gap: 6px; margin: 0 0 10px;
+  padding: 4px 11px 3px; border-radius: 999px;
+  font-size: 13px; font-weight: 800; letter-spacing: .2px;
+  background: var(--purple-tint); color: var(--purple-dk);
+  animation: fadeUp .3s ease backwards;
+}
+.ln-tag.exam { background: var(--gold-bg); color: #8A6D00; }
+.ln-tag.again { background: var(--orange-bg); color: #C76F00; }
+.ln-tag.recall { background: var(--blue-light); color: var(--blue-dk); }
+.ln-tag img { display: block; }
+.ln-q { font-size: 22px; font-weight: 700; line-height: 1.5; color: var(--ink); margin: 0 0 14px; text-wrap: pretty; }
+.ln-hl { font-weight: 800; color: var(--blue-dk); background: var(--blue-light); border-radius: 8px; padding: 0 6px; }
+.ln-big {
+  font-size: 28px; font-weight: 800; line-height: 1.5; text-align: center; color: var(--ink);
+  background: #fff; border: 2px solid var(--line); border-radius: 16px; box-shadow: 0 2px 0 var(--line);
+  padding: 16px 12px; margin: 0 0 18px; letter-spacing: .5px; text-wrap: balance;
+}
+.ln-fig { margin: 0 0 14px; }
+.ln-big.fs-m, .ln-eq.fs-m { font-size: 23px; }
+.ln-big.fs-s, .ln-eq.fs-s { font-size: 19px; letter-spacing: 0; }
+.ln-row.fs-m { font-size: 22px; }
+.ln-row.fs-s { font-size: 18px; }
+.ln-row.win.fs-m { font-size: 24px; }
+.ln-pr.fs-s { font-size: 16px; }
+
+/* the reveal: the slow way, then the trick, row by row */
+.ln-see { text-align: center; }
+.ln-kick { font-size: 13.5px; font-weight: 800; color: var(--li-c, var(--green)); margin-bottom: 6px; animation: fadeUp .3s ease backwards; }
+.ln-h { font-size: 25px; font-weight: 700; color: var(--ink); line-height: 1.35; margin: 0 0 18px; text-wrap: balance; animation: fadeUp .35s .05s ease backwards; }
+.ln-rows { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.ln-row {
+  font-size: 26px; font-weight: 800; line-height: 1.45; color: var(--ink);
+  animation: fadeUp .45s var(--d, 0s) cubic-bezier(.3,1.3,.5,1) backwards; text-wrap: balance;
+}
+.ln-row.slow { font-size: 19px; font-weight: 700; color: var(--gray-icon); }
+.ln-row.note { font-size: 16px; font-weight: 700; color: var(--gray); line-height: 1.6; }
+.ln-row.win {
+  font-size: 30px; color: var(--green-dk); background: var(--green-bg);
+  border-radius: 16px; padding: 6px 18px;
+}
+/* the rule the card lands on (2026-10-23: «make it the WHOLE yellow thing»):
+   one gold card on its own darker lip with a shine along its top, the bulb in
+   a white badge at its start, «القاعدة» over the rule in dark brown. It springs
+   in after the last row, then the bulb wobbles and lights */
+.ln-rule {
+  position: relative; display: flex; align-items: center; gap: 14px;
+  margin: 30px auto 0; max-width: 390px; padding: 20px 18px 18px; text-align: start;
+  background: var(--gold); border-radius: 22px; box-shadow: 0 6px 0 var(--gold-dk);
+  animation: ruleIn .55s var(--d, 0s) cubic-bezier(.3, 1.6, .5, 1) backwards;
+}
+.ln-rule::before {
+  content: ""; position: absolute; top: 8px; inset-inline: 22px; height: 6px;
+  border-radius: 6px; background: var(--snow); opacity: .35;
+}
+@keyframes ruleIn { 0% { opacity: 0; transform: translateY(14px) scale(.9); } 60% { opacity: 1; } 100% { transform: none; } }
+.ln-rule-ic {
+  flex: none; display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%;
+  background: var(--snow); box-shadow: 0 4px 0 var(--gold-dk);
+  animation: bulbWob .6s calc(var(--d, 0s) + .45s) ease-out backwards;
+}
+.ln-rule-ic svg { width: 30px; height: 30px; color: var(--brown); overflow: visible; }
+.ln-rule-ic svg path { fill: var(--gold-shine); animation: bulbOn .35s calc(var(--d, 0s) + .55s) ease-out backwards; }
+@keyframes bulbWob { 0% { transform: scale(.6) rotate(-20deg); } 45% { transform: scale(1.12) rotate(10deg); } 75% { transform: scale(.96) rotate(-4deg); } 100% { transform: none; } }
+@keyframes bulbOn { from { fill: transparent; } }
+.ln-rule-body { display: block; min-width: 0; }
+.ln-rule-tag { display: block; font-size: 14px; font-weight: 800; line-height: 1.2; color: var(--brown); }
+.ln-rule-tx { display: block; margin-top: 2px; font-size: 21px; line-height: 1.55; font-weight: 800; color: var(--brown-dk); text-wrap: balance; }
+.ln-rule .ln-hl { background: var(--snow); color: var(--brown-dk); }
+
+/* short answers sit in a grid: numbers are read at a glance, not down a list */
+.ln-choices.ch-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
+.ln-choices.ch-grid.n3 { grid-template-columns: repeat(3, 1fr); }
+.screen-session .ln-choices.ch-grid .choice { justify-content: center; text-align: center; font-size: 25px; font-weight: 700; min-height: 68px; }
+.screen-session .ln-choices .choice .ch-txt { line-height: 1.4; }
+.screen-session .ln-tf .choice { flex-direction: column; gap: 4px; min-height: 92px; font-size: 21px; }
+.tf-ico {
+  width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 19px; font-weight: 800; color: #fff;
+}
+.tf-ico.ok { background: var(--green); }
+.tf-ico.no { background: var(--red); }
+.ln-q-tf { margin-bottom: 10px; }
+
+/* fill the step: blanks in the line, tiles under it */
+.ln-eq {
+  font-size: 28px; font-weight: 800; line-height: 2.1; text-align: center; color: var(--ink);
+  background: #fff; border: 2px solid var(--line); border-radius: 16px; box-shadow: 0 2px 0 var(--line);
+  padding: 14px 10px; text-wrap: balance;
+}
+.ln-eq.stacked { font-size: 24px; line-height: 1.9; padding: 10px 14px; }
+.ln-eq.stacked .ln-step + .ln-step { border-top: 1px dashed var(--line); }
+.ln-eq.stacked .ln-blank { height: 44px; min-width: 56px; font-size: 22px; }
+/* four blanks on one line: narrower boxes so «_ × _ × _ = _» never breaks after an operator */
+.ln-eq.tight { font-size: 24px; padding-inline: 6px; }
+.ln-eq.tight .ln-blank { min-width: 46px; margin: 0 2px; padding: 0 6px; font-size: 22px; }
+.ln-blank {
+  display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;
+  min-width: 62px; height: 50px; margin: 0 4px; padding: 0 10px;
+  border: 2px dashed var(--gray-icon); border-radius: 12px; background: #F7F7F7;
+  font: inherit; font-size: 24px; color: var(--blue-dk);
+}
+.ln-blank.filled { border-style: solid; border-color: var(--blue-border); background: var(--blue-light); animation: tilePop .18s ease; }
+.ln-blank.right { border-color: var(--green); background: var(--green-bg); color: var(--green-dk); }
+.ln-blank.wrong { border-color: var(--red); background: var(--red-bg); color: var(--red-dk2); }
+.ln-blank:disabled { cursor: default; }
+.ln-tiles { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 24px; }
+.ln-tile {
+  min-width: 58px; padding: 8px 16px; border-radius: 13px;
+  background: #fff; border: 2px solid var(--line); border-bottom-width: 4px;
+  font: inherit; font-size: 22px; font-weight: 700; color: var(--ink);
+  transition: transform .06s;
+}
+.ln-tile:active { transform: translateY(2px); border-bottom-width: 2px; }
+.ln-tile.used { background: var(--line); color: transparent; border-color: var(--line); pointer-events: none; }
+.ln-tile.used .ln-hl { background: transparent; color: transparent; }
+.ln-tile:disabled { cursor: default; }
+@keyframes tilePop { 0% { transform: scale(.85); } 70% { transform: scale(1.06); } 100% { transform: none; } }
+
+/* order the steps: they land on a ruled line */
+.ln-line {
+  display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; min-height: 124px;
+  padding: 8px 2px; border-radius: 4px;
+  background: repeating-linear-gradient(to bottom, transparent 0, transparent 59px, var(--line) 59px, var(--line) 61px);
+}
+.ln-line .ln-tile { animation: tilePop .18s ease; font-size: 18px; }
+.lt-order .ln-tiles .ln-tile { font-size: 18px; }
+.ln-line.right .ln-tile { border-color: var(--green); color: var(--green-dk); background: var(--green-bg); }
+.ln-line.wrong .ln-tile { border-color: var(--red); color: var(--red-dk2); background: var(--red-bg); }
+
+/* type it: an Arabic keypad, because recalling a number beats recognising one */
+.ln-input {
+  height: 66px; display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--blue-border); border-radius: 16px; background: #fff;
+  font-size: 34px; font-weight: 800; color: var(--ink); letter-spacing: 2px;
+}
+.ln-input.right { border-color: var(--green); background: var(--green-bg); color: var(--green-dk); }
+.ln-input.wrong { border-color: var(--red); background: var(--red-bg); color: var(--red-dk2); }
+.ln-caret { width: 3px; height: 34px; border-radius: 2px; background: var(--blue); animation: caretBlink 1s steps(1) infinite; }
+@keyframes caretBlink { 50% { opacity: 0; } }
+.ln-unit { text-align: center; font-size: 15px; font-weight: 700; color: var(--gray); margin-top: 6px; }
+.ln-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+.ln-pad > span { display: block; }
+.ln-key {
+  height: 52px; border-radius: 13px; background: #fff;
+  border: 2px solid var(--line); border-bottom-width: 4px;
+  font: inherit; font-size: 25px; font-weight: 700; color: var(--ink);
+}
+.ln-key:active { transform: translateY(2px); border-bottom-width: 2px; }
+.ln-key.del { color: var(--gray); font-size: 21px; }
+.ln-key:disabled { opacity: .5; }
+
+/* match pairs */
+.ln-pairs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ln-col { display: flex; flex-direction: column; gap: 10px; }
+.ln-pr {
+  min-height: 60px; padding: 8px 10px; border-radius: 15px;
+  background: #fff; border: 2px solid var(--line); border-bottom-width: 4px;
+  font: inherit; font-size: 20px; font-weight: 700; color: var(--ink); line-height: 1.35;
+  transition: background-color .12s, border-color .12s, color .12s, opacity .3s;
+}
+.ln-pr.sel { background: var(--blue-light); border-color: var(--blue-border); color: var(--blue-dk); }
+.ln-pr.ok { background: var(--green-bg); border-color: var(--green); color: var(--green-dk); }
+.ln-pr.bad { background: var(--red-bg); border-color: var(--red); color: var(--red-dk2); }
+.ln-pr.gone { background: #fff; border-color: var(--line); color: var(--line); }
+.ln-pr.gone .ln-hl { background: transparent; color: var(--line); }
+
+/* the sheet's teaching lines */
+.ln-fb-note { font-size: 15.5px; font-weight: 700; color: var(--green-dk); line-height: 1.6; margin: -4px 0 4px; }
+.ln-why {
+  background: rgba(255,255,255,.78); border-radius: 12px; padding: 10px 12px; margin: 8px 0 4px;
+  font-size: 15.5px; font-weight: 700; color: var(--ink); line-height: 1.65;
+}
+.feedback .fb-correct b { font-weight: 800; }
+.ln-back { font-size: 13px; font-weight: 700; color: var(--red-dk2); opacity: .8; margin: 4px 0 0; }
+
+/* the node's lessons on the win screen, and on the start bubble */
+.win-steps { display: flex; justify-content: center; gap: 6px; margin: 4px 0 14px; }
+.win-steps i { width: 30px; height: 9px; border-radius: 99px; background: var(--line); animation: fadeUp .3s var(--d, 0s) ease backwards; }
+.win-steps i.on { background: var(--gold); }
+.win-steps i.now { animation: fadeUp .3s var(--d, 0s) ease backwards, stepPop .5s calc(var(--d, 0s) + .3s) ease; }
+@keyframes stepPop { 50% { transform: scaleY(1.6) scaleX(1.15); } }
+.lp-sub { color: #fff; opacity: .92; font-size: 14px; font-weight: 700; margin: 2px 2px 10px; }
+
+:root[data-motion="reduced"] .node-dia, :root[data-motion="reduced"] .node-ghost { display: none; }
+:root[data-motion="reduced"] .node-ring, :root[data-motion="reduced"] .node-ring * { animation: none; }
+:root[data-motion="reduced"] .ln-row, :root[data-motion="reduced"] .ln-rule, :root[data-motion="reduced"] .ln-h,
+:root[data-motion="reduced"] .ln-rule-ic, :root[data-motion="reduced"] .ln-rule-ic svg path,
+:root[data-motion="reduced"] .ln-kick, :root[data-motion="reduced"] .ln-tag, :root[data-motion="reduced"] .ln-blank.filled,
+:root[data-motion="reduced"] .ln-line .ln-tile, :root[data-motion="reduced"] .win-steps i,
+:root[data-motion="reduced"] .ln-pr.bad, :root[data-motion="reduced"] .ln-caret { animation: none; }
+
+/* «كم تعرف عن القسم الكمي؟» — three cards, one pick, then المتابعة */
+.lv-screen { justify-content: flex-start; padding-top: 56px; }
+.lv-title { font-size: 26px; font-weight: 700; color: var(--ink); line-height: 1.35; margin: 0 0 22px; text-wrap: balance; animation: fadeUp .35s ease backwards; }
+.lv-list { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 12px; margin-bottom: auto; }
+.lv-card {
+  display: flex; align-items: center; gap: 14px; width: 100%; text-align: right;
+  padding: 14px 16px; border-radius: 16px; background: #fff;
+  border: 2px solid var(--line); border-bottom-width: 4px;
+  font: inherit; color: var(--ink);
+  animation: fadeUp .4s var(--d, 0s) ease backwards;
+  transition: background-color .12s, border-color .12s;
+}
+.lv-card:active { transform: translateY(2px); border-bottom-width: 2px; }
+.lv-card.sel { background: var(--blue-light); border-color: var(--blue-border); }
+.lv-ic { width: 46px; height: 46px; border-radius: 13px; background: #F7F7F7; display: grid; place-items: center; flex-shrink: 0; }
+.lv-card.sel .lv-ic { background: #fff; }
+.lv-tx { display: flex; flex-direction: column; gap: 2px; }
+.lv-tx b { font-size: 18px; font-weight: 700; }
+.lv-tx span { font-size: 14px; font-weight: 600; color: var(--gray); line-height: 1.5; }
+.lv-card.sel .lv-tx b { color: var(--blue-dk); }
+.lv-cta { margin-top: 24px; }
+
+/* the level the check found */
+.pl-level {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 2px;
+  margin: 2px 0 4px; animation: fadeUp .4s .3s ease backwards;
+}
+.pl-level span { font-size: 14px; font-weight: 700; color: var(--gray); }
+.pl-level b { font-size: 34px; font-weight: 800; color: var(--gold-dk); line-height: 1.2; }
+.place-row.skip { opacity: .55; }
+.pl-start { font-size: 15.5px; font-weight: 700; color: var(--ink); margin: 10px 0 14px; text-align: center; }
+:root[data-motion="reduced"] .lv-title, :root[data-motion="reduced"] .lv-card, :root[data-motion="reduced"] .pl-level { animation: none; }
+
+/* ============================================================
+   The first run — Duolingo's shape: a welcome that asks for nothing, then one
+   question a screen under a green progress bar with a back arrow, the options
+   fading up one after another, each screen sliding in from the side it is
+   going to (from the left going forward, in RTL; from the right going back).
+   ============================================================ */
+.wl-screen { display: flex; flex-direction: column; padding: 24px 22px calc(22px + env(safe-area-inset-bottom)); }
+.wl-body { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.wl-title { font-size: 40px; font-weight: 800; color: var(--green); line-height: 1.2; animation: titleIn .5s .45s cubic-bezier(.3,1.5,.5,1) backwards; }
+.wl-sub { font-size: 18px; font-weight: 700; color: var(--gray); line-height: 1.6; margin: 6px 0 16px; max-width: 300px; text-wrap: balance; animation: fadeUp .4s .6s ease backwards; }
+.wl-badges { margin-bottom: 0; animation-delay: .7s; }
+.wl-cta { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 420px; margin: 0 auto; animation: fadeUp .4s .8s ease backwards; }
+.wl-cta .btn { height: 50px; font-size: 17px; }
+
+.ob-screen { display: flex; flex-direction: column; padding: 0 20px calc(20px + env(safe-area-inset-bottom)); }
+.ob-top { display: flex; align-items: center; gap: 10px; height: 60px; flex-shrink: 0; }
+.ob-back { border: 0; background: none; color: var(--gray-icon); min-width: 44px; min-height: 44px; display: grid; place-items: center; margin-inline-start: -10px; border-radius: 12px; }
+.ob-back:active { background: var(--surface-hover); }
+.ob-back.off { visibility: hidden; }
+.ob-prog.off { visibility: hidden; }
+.ob-prog { --bar-fill: var(--green); --bar-shine: rgba(255,255,255,.32); }
+.ob-prog > i { transition: width .5s cubic-bezier(.3,1.4,.5,1); }
+.ob-stage { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-top: 14px; animation: obIn .34s cubic-bezier(.2,.9,.3,1) backwards; }
+.ob-stage.rev { animation-name: obBack; }
+@keyframes obIn   { from { opacity: 0; transform: translateX(-36px); } }
+@keyframes obBack { from { opacity: 0; transform: translateX(36px); } }
+.ob-title { font-size: 25px; font-weight: 800; color: var(--ink); line-height: 1.4; margin: 0 0 18px; text-wrap: balance; }
+.ob-sub { font-size: 15px; font-weight: 600; color: var(--gray); margin: -10px 0 18px; }
+.ob-note { font-size: 14px; font-weight: 600; color: var(--gray); text-align: center; margin-top: 14px; animation: fadeUp .4s calc(var(--se, .2s) + .25s) ease backwards; }
+.ob-list { display: flex; flex-direction: column; gap: 10px; }
+.ob-opt {
+  display: flex; align-items: center; gap: 14px; width: 100%; text-align: start;
+  min-height: 58px; padding: 12px 16px; border-radius: 16px; background: var(--snow);
+  border: 2px solid var(--line); border-bottom-width: 4px; font: inherit; color: var(--ink);
+  animation: fadeUp .38s var(--d, 0s) ease backwards;
+  transition: background-color .12s, border-color .12s;
+}
+.ob-opt .ob-t { font-size: 17px; font-weight: 700; }
+.ob-opt.sel, .ob-fork.sel { background: var(--blue-light); border-color: var(--blue-border); }
+.ob-opt.sel .ob-t, .ob-opt.sel .ob-tx b, .ob-fork.sel .ob-tx b { color: var(--blue-dk); }
+.lv { flex-shrink: 0; overflow: visible; }
+.lv-track, .lv-arc { fill: none; stroke-width: 7; stroke-linecap: round; }
+.lv-track { stroke: var(--line); }
+.lv-arc { stroke: var(--tone); stroke-dasharray: calc(var(--f) * 1px) 200px; }
+.lv-needle { stroke: var(--ink); stroke-width: 3.6; stroke-linecap: round; transform-origin: 24px 28px; transform: rotate(var(--a)); }
+.lv-hub { fill: var(--ink); }
+.ob-opt.sel .lv-needle { animation: lvSwing .6s cubic-bezier(.3,1.5,.5,1); }
+.ob-opt.sel .lv-arc { animation: lvFill .5s ease-out; }
+@keyframes lvSwing { from { transform: rotate(0deg); } }
+@keyframes lvFill { from { stroke-dasharray: 0 200px; } }
+.ob-tx { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.ob-tx b { font-size: 17px; font-weight: 800; }
+.ob-tx span { font-size: 14px; font-weight: 600; color: var(--gray); line-height: 1.5; }
+.ob-tag { font-size: 14px; font-weight: 800; color: var(--gray); flex-shrink: 0; }
+.ob-opt.sel .ob-tag { color: var(--blue-dk); }
+.ob-input { width: 100%; font-size: 20px; height: 58px; animation: fadeUp .38s .1s ease backwards; }
+.ob-forks { display: flex; flex-direction: column; gap: 14px; }
+.ob-fork {
+  position: relative; display: flex; align-items: center; gap: 16px; width: 100%; text-align: start;
+  padding: 20px 16px; border-radius: 18px; background: var(--snow);
+  border: 2px solid var(--line); border-bottom-width: 5px; font: inherit; color: var(--ink);
+  animation: fadeUp .4s var(--d, 0s) ease backwards;
+  transition: background-color .12s, border-color .12s;
+}
+.ob-art { width: 76px; height: 76px; border-radius: 20px; display: grid; place-items: center; flex-shrink: 0; }
+.ob-purple { background: var(--purple-tint); }
+.ob-blue { background: var(--blue-light); }
+.ob-fork.sel .ob-art { background: var(--snow); }
+.ob-fork .ob-tx b { font-size: 19px; }
+.ob-rec {
+  position: absolute; top: -12px; inset-inline-start: 16px;
+  padding: 2px 10px; border-radius: 999px; background: var(--green); color: #fff;
+  font-size: 12.5px; font-weight: 800; letter-spacing: .3px;
+}
+.ob-cta { display: flex; flex-direction: column; gap: 6px; padding-top: 14px; flex-shrink: 0; }
+.ob-cta .btn { height: 50px; font-size: 17px; }
+.ob-value .ob-stage { padding-top: 0; }
+.iv-red .iv-ic { background: var(--red-bg); }
+.pi-rows { margin-top: 4px; }
+.ob-opt:active, .ob-fork:active { transform: translateY(2px); border-bottom-width: 2px; }
+
+/* «جرّب»: one comparison item, then the swap rule shown on the numbers themselves */
+.ts { display: flex; flex-direction: column; }
+.ts-cmp { position: relative; display: flex; gap: 12px; margin: 2px 0 16px; animation: fadeUp .38s var(--se, .15s) ease backwards; }
+.ts-box { padding: 14px 8px; transition: border-color .2s, background-color .2s, box-shadow .2s; will-change: transform; }
+.ts-box .cmp-v { font-size: 23px; font-weight: 800; color: var(--ink); white-space: nowrap; }
+.ts-n, .ts-p { display: inline-block; }
+.ts-n { will-change: transform; }
+.ts-box.same, .ts.shown .ts-box { border-color: var(--green); background: var(--green-bg); box-shadow: 0 2px 0 var(--green); }
+.ts-box.same .cmp-t, .ts.shown .ts-box .cmp-t { color: var(--green-dk); }
+.ts-eq {
+  position: absolute; left: 50%; top: 50%; width: 38px; height: 38px; margin: -19px 0 0 -19px; z-index: 2;
+  display: grid; place-items: center; border-radius: 50%; background: var(--green); color: var(--snow);
+  font-size: 26px; font-weight: 800; line-height: 1; box-shadow: 0 3px 0 var(--green-lip); opacity: 0;
+}
+.ts.shown .ts-eq { opacity: 1; }
+.ts-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ts-opt { min-height: 54px; padding: 10px 12px; justify-content: center; text-align: center; font-size: 15.5px; font-weight: 700; line-height: 1.35; }
+.ts-opt:disabled { color: var(--ink); }
+.ts-opt.ok { background: var(--green-bg); border-color: var(--green); color: var(--green-dk); }
+.ts-opt.dim { opacity: .5; }
+.ts-rule, .ts-more { display: none; }
+.ts.shown .ts-rule {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: 16px; padding: 12px 14px;
+  border-radius: 16px; background: var(--gold-bg); text-align: center;
+  animation: titleIn .45s cubic-bezier(.3,1.5,.5,1) backwards;
+}
+.ts-rule b { font-size: 21px; font-weight: 800; color: var(--gold-dk); direction: rtl; }
+.ts-rule span { font-size: 14px; font-weight: 700; color: var(--ink); }
+.ts.shown .ts-more { display: block; margin-top: 12px; text-align: center; font-size: 14.5px; font-weight: 700; color: var(--gray); animation: fadeUp .4s .25s ease backwards; }
+.ts-more b { color: var(--ink); }
+:root[data-motion="reduced"] .ts-cmp, :root[data-motion="reduced"] .ts-rule, :root[data-motion="reduced"] .ts-more { animation: none; }
+
+/* ---------- the level test ---------- */
+.pl-segs { flex: 1; display: flex; gap: 6px; }
+.pl-seg { flex: 1; height: 14px; border-radius: 64px; background: var(--line); overflow: hidden; }
+.pl-seg > i { display: block; height: 100%; border-radius: 64px; background: var(--blue); transition: width .5s cubic-bezier(.3,1.4,.5,1); }
+.pl-seg.done > i { background: var(--green); }
+.pl-unit { display: flex; align-items: center; gap: 8px; padding: 0 18px; margin-top: 2px; font-size: 14px; font-weight: 700; color: var(--gray); }
+.pl-unit b { color: var(--blue-dk); }
+.pl-unit > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* the exam's own name for what is being asked: حساب / هندسة / جبر */
+.pl-tag { flex-shrink: 0; padding: 2px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 800; }
+.pl-ar  { background: var(--blue-light); color: var(--blue-dk); }
+.pl-geo { background: var(--gold-bg); color: var(--gold-dk); }
+.pl-alg { background: var(--purple-tint); color: var(--purple-dk); }
+.screen-place .q-area { animation: obIn .32s cubic-bezier(.2,.9,.3,1) backwards; }
+.pl-actions { display: flex; gap: 12px; }
+.pl-actions .btn { flex: 1; }
+/* «ما أعرف» is the teach cards' secondary button: white face, line border and lip, grey label */
+.screen-place .action-bar .btn.btn-ghost, .screen-place .action-bar .btn.btn-ghost:not(:disabled) {
+  flex: 0 0 38%; background: var(--snow); color: var(--gray);
+  border: 2px solid var(--line); border-bottom-width: 4px;
+}
+
+/* ---------- the level test's result ---------- */
+.pl-head { font-size: 26px; font-weight: 800; color: var(--ink); text-align: center; line-height: 1.35; margin: 4px 0 8px; text-wrap: balance; animation: titleIn .5s .3s cubic-bezier(.3,1.5,.5,1) backwards; }
+.pl-badge {
+  display: inline-flex; align-items: center; gap: 10px; padding: 7px 16px; border-radius: 999px;
+  background: var(--blue-light); color: var(--blue-dk); font-size: 15px; font-weight: 700;
+  animation: fadeUp .4s .45s ease backwards;
+}
+.pl-badge b { font-weight: 800; }
+.pl-units { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 8px; margin: 12px auto 18px; }
+.pl-urow {
+  display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 14px;
+  border: 2px solid var(--line); background: var(--snow); animation: fadeUp .38s var(--d) ease backwards;
+}
+.pl-uic { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; flex-shrink: 0; font-weight: 800; background: var(--line); color: var(--gray); }
+.pl-uic svg { width: 18px; height: 18px; }
+.pl-utx { display: flex; flex-direction: column; text-align: start; min-width: 0; }
+.pl-utx b { font-size: 15px; font-weight: 800; color: var(--ink); }
+.pl-utx span { font-size: 13px; font-weight: 600; color: var(--gray); }
+.pl-urow.ok .pl-uic { background: var(--green); color: #fff; }
+.pl-urow.here { border-color: var(--blue-border); background: var(--blue-light); }
+.pl-urow.here .pl-uic { background: var(--blue); color: #fff; }
+.pl-urow.here .pl-utx span { color: var(--blue-dk); font-weight: 700; }
+.pl-urow.later { opacity: .6; }
+.pl-urow.part .pl-uic { background: var(--green-bg); color: var(--green-dk); }
+.pl-utx { flex: 1; }
+.pl-dots { display: flex; gap: 4px; flex-shrink: 0; }
+.pl-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.pl-dots i.ok { background: var(--green); }
+.pl-dots i.no { background: var(--divider); }
+.pl-facts { width: 100%; max-width: 360px; margin: 0 auto 6px; display: flex; flex-direction: column; gap: 4px; text-align: center; animation: fadeUp .4s 1s ease backwards; }
+.pl-facts p { margin: 0; font-size: 14px; font-weight: 700; color: var(--gray); line-height: 1.55; text-wrap: balance; }
+.pl-facts b { color: var(--ink); font-weight: 800; }
+.pl-facts .pl-honest { font-size: 12.5px; font-weight: 600; }
+
+:root[data-motion="reduced"] .ob-opt.sel .lv-needle, :root[data-motion="reduced"] .ob-opt.sel .lv-arc, :root[data-motion="reduced"] .wl-title, :root[data-motion="reduced"] .wl-sub,
+:root[data-motion="reduced"] .wl-cta, :root[data-motion="reduced"] .ob-stage, :root[data-motion="reduced"] .ob-opt,
+:root[data-motion="reduced"] .ob-fork, :root[data-motion="reduced"] .ob-note, :root[data-motion="reduced"] .ob-input,
+:root[data-motion="reduced"] .screen-place .q-area, :root[data-motion="reduced"] .pl-head, :root[data-motion="reduced"] .pl-badge,
+:root[data-motion="reduced"] .pl-urow { animation: none; }
+
+/* ---------- قدّور in the first run: Duolingo's two layouts ----------
+   TOP — he talks, nothing to pick: big, centred, his bubble above him with the
+   tail pointing down. SIDE — he asks: small, at the bubble's inline-end (the
+   left in RTL, where his open hand and pointer face the bubble — he is never
+   mirrored, the book's Arabic would reverse), the answers under the pair. */
+.obt { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding-bottom: 8px; }
+.obt-bubble {
+  position: relative; margin: 0 0 20px; max-width: 330px;
+  background: var(--snow); border: 2px solid var(--line); border-radius: 18px;
+  padding: 14px 20px; font-size: 21px; font-weight: 800; color: var(--ink); line-height: 1.6; text-wrap: balance;
+  transform-origin: 50% 100%; animation: bubPop .25s .3s cubic-bezier(.4,0,.2,1) backwards;
+}
+.obt-bubble::before, .obt-bubble::after {
+  content: ""; position: absolute; top: 100%; left: 50%; margin-left: -11px;
+  border: 11px solid transparent;
+}
+.obt-bubble::before { border-top-color: var(--line); }
+.obt-bubble::after  { border-top-color: var(--snow); margin-top: -3px; }
+.obt-duo {
+  height: 232px; transform-origin: 50% 100%;
+  animation: obDuoIn .55s .08s cubic-bezier(.3,1.5,.5,1) backwards, obBreathe 3.4s .8s ease-in-out infinite;
+}
+@keyframes obDuoIn { from { opacity: 0; transform: translateY(34px) scale(.82); } }
+@keyframes obBreathe { 50% { transform: scale(1.012, 1.02) translateY(-2px); } }
+.obt-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; margin-top: 18px; animation: fadeUp .4s .5s ease backwards; }
+.obt-chips span { padding: 5px 12px; border-radius: 999px; background: var(--blue-light); color: var(--blue-dk); font-size: 14px; font-weight: 700; }
+
+.obs { display: flex; align-items: flex-end; gap: 4px; margin-bottom: 16px; }
+.obs-say { flex: 1; min-width: 0; padding-bottom: 26px; }
+.obs-bubble {
+  position: relative; margin: 0;
+  background: var(--snow); border: 2px solid var(--line); border-radius: 16px;
+  padding: 12px 15px; font-size: 19px; font-weight: 800; color: var(--ink); line-height: 1.55; text-wrap: balance;
+  transform-origin: 0% 80%; animation: bubPop .25s .3s cubic-bezier(.4,0,.2,1) backwards;
+}
+.obs-bubble::before, .obs-bubble::after {
+  content: ""; position: absolute; bottom: 14px; inset-inline-end: -19px;
+  border: 9px solid transparent;
+}
+.obs-bubble::before { border-inline-start-color: var(--line); }
+.obs-bubble::after  { border-inline-start-color: var(--snow); margin-inline-end: 3px; }
+/* the bubble pops out of its own tail, as Duolingo's does */
+@keyframes bubPop { from { opacity: 0; transform: scale(.1); } }
+.obs-sub { font-size: 14px; font-weight: 600; color: var(--gray); margin: 8px 4px 0; }
+.obs-duo { height: 124px; flex-shrink: 0; transform-origin: 50% 100%; animation: obDuoIn .45s cubic-bezier(.3,1.5,.5,1) backwards; }
+
+/* «وش نناديك؟»: the card of creativeocean's «SVG Debit Card Animation 4»
+   (nameCard), mirrored for Arabic; the name is written on it as they type and
+   printed again on «المتابعة» (nameStamp) */
+.nm { flex: 1; display: flex; flex-direction: column; }
+.nm .obs { margin-bottom: 10px; }
+.ob-screen.ob-name { overflow-x: clip; }
+.nc-stage { position: relative; display: flex; justify-content: center; padding: 6px 0 22px; }
+.nm.stamped .nc-stage { flex: 1; align-items: center; padding-bottom: 40px; }
+.nm.stamped .ob-input { display: none; }
+.nc-wrap { position: relative; width: 100%; max-width: 380px; filter: drop-shadow(0 12px 20px rgba(58, 28, 133, .32)); will-change: transform; touch-action: pan-y; }
+/* the light the card catches as it tilts (ncTilt) */
+.nc-glare { position: absolute; inset: 0; z-index: 1; border-radius: 3.7% / 6%; pointer-events: none; opacity: 0;
+  background: radial-gradient(circle at var(--gx, 50%) var(--gy, 30%), rgba(255, 255, 255, .6), transparent 48%); }
+.nc .nc-sub { opacity: .78; }
+.nc { display: block; width: 100%; height: auto; overflow: visible; }
+.nc text { font-family: var(--font); font-weight: 800; }
+.nc .nc-name.empty { opacity: .5; }
+.ob-say .w { opacity: 0; transition: opacity .18s ease; }
+.ob-say .w.on { opacity: 1; }
+.ob-say .hl { color: var(--blue-dk); }
+/* .complete h1 is the win screen's gold title; his bubble is not a title */
+.complete h1.pl-say { margin: 4px 0 2px; font-size: 19px; color: var(--ink); letter-spacing: 0; }
+.place-scene .pl-say + * { margin-top: 6px; }
+.complete.place-scene { justify-content: flex-start; overflow-y: auto; padding-top: 18px; }
+.place-scene .pl-units { gap: 6px; margin: 10px auto 12px; }
+.place-scene .pl-urow { padding: 8px 12px; }
+/* the button stays in reach under the unit list, as it does on every win screen */
+.place-scene .action-bar.pl-cta {
+  position: sticky; bottom: 0; max-width: 360px; margin-top: auto;
+  padding: 12px 0 calc(14px + env(safe-area-inset-bottom)); background: var(--snow);
+}
+
+:root[data-motion="reduced"] .obt-duo, :root[data-motion="reduced"] .obs-duo, :root[data-motion="reduced"] .obt-bubble,
+:root[data-motion="reduced"] .obs-bubble, :root[data-motion="reduced"] .obt-chips { animation: none; }
+:root[data-motion="reduced"] .ob-say .w { opacity: 1; transition: none; }
+
+/* ---------- the win screen (lessonComplete): stars thrown by قدّور, the
+   lesson ticked off like a task, the stats that flatter ---------- */
+.wn { justify-content: flex-start; padding: 18px 16px 0; overflow: hidden; }
+.wn-top { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; }
+.wn .qd-hero { margin-bottom: 0; }
+.wn .win-stars { gap: 14px; margin: 4px 0 8px; position: relative; }
+.wn .wstar { width: 54px; height: 54px; transform: none; animation: none; will-change: transform; }
+.wn .wstar:nth-child(2) { margin-top: -12px; }
+.wn .wstar svg path { fill: var(--line); stroke: var(--line); transition: fill .08s, stroke .08s; }
+.wn .wstar.on svg path { fill: var(--gold); stroke: var(--gold); }
+.wn .wstar.on { filter: drop-shadow(0 4px 0 var(--gold-dk)); }
+.wstar-fly { position: absolute; left: 0; top: 0; width: 54px; height: 54px; z-index: 5; pointer-events: none; filter: drop-shadow(0 4px 0 var(--gold-dk)); }
+.wstar-fly svg { display: block; width: 100%; height: 100%; }
+.wstar-fly svg path { fill: var(--gold); stroke: var(--gold); }
+.win-stars { --star-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Cpath d='M22 4.2l5.6 12.1 13.2 1.4-9.9 8.9 2.8 13-11.7-6.6-11.7 6.6 2.8-13-9.9-8.9 13.2-1.4z' stroke='%23000' stroke-width='5' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+/* a clean run: one light sweep across the three, masked to the stars */
+.win-stars.shine .wstar.on { position: relative; }
+.win-stars.shine .wstar.on::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.85) 50%, transparent 65%);
+  background-size: 300% 100%; background-position: 120% 0;
+  -webkit-mask: var(--star-mask) center / contain no-repeat; mask: var(--star-mask) center / contain no-repeat;
+  animation: wnShine .9s ease-out forwards;
+}
+@keyframes wnShine { to { background-position: -40% 0; } }
+.wn-say { font-size: 19px; font-weight: 700; color: var(--gray); margin: 0 0 22px; line-height: 1.5; max-width: 330px; text-wrap: balance; }
+
+.wn-task {
+  display: flex; align-items: center; gap: 12px; width: 100%; max-width: 360px; margin: 0 0 14px;
+  padding: 12px 14px; border-radius: 16px; border: 2px solid var(--line); border-bottom-width: 4px; background: var(--snow);
+  text-align: start; transition: border-color .25s, background-color .25s;
+}
+.wn-task.done { border-color: var(--green); background: var(--green-bg); }
+.wn-check { width: 38px; height: 38px; flex-shrink: 0; }
+.wn-check svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.wn-ring { fill: var(--snow); stroke: var(--line); stroke-width: 3; transition: fill .2s, stroke .2s; }
+.wn-task.done .wn-ring { fill: var(--green); stroke: var(--green); }
+.wn-tick { fill: none; stroke: var(--snow); stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; }
+.wn-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.wn-tx > b { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 16px; font-weight: 800; color: var(--ink); }
+.wn-task.done .wn-tx > b { color: var(--green-lip); }
+.wn-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wn-count { display: inline-block; flex-shrink: 0; font-size: 14px; color: var(--gray); font-variant-numeric: tabular-nums; }
+.wn-task.done .wn-count { color: var(--green-lip); }
+.wn-bar { display: flex; gap: 4px; }
+.wn-bar i { position: relative; flex: 1; height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.wn-bar i.on { background: var(--gold); }
+.wn-bar i u { position: absolute; inset: 0; border-radius: inherit; background: var(--green); transform-origin: right center; transform: scaleX(0); }
+.wn-bar i.now u { transform: scaleX(1); }
+.wn-task.full .wn-bar i, .wn-task.full .wn-bar i.on { background: var(--green); }
+.wn-next { font-size: 13px; font-weight: 700; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wn-task.done .wn-next { color: var(--green-dk); }
+.wn .action-bar.wn-cta {
+  position: sticky; bottom: 0; width: 100%; max-width: 360px; margin-top: auto;
+  padding: 10px 0 calc(14px + env(safe-area-inset-bottom)); background: var(--snow);
+  display: flex; flex-direction: column; gap: 10px;
+}
+@media (max-height: 760px) { .wn .qd-hero { --wh: 160px !important; } .wn .wstar, .wstar-fly { width: 46px; height: 46px; } }
+:root[data-motion="reduced"] .win-stars.shine .wstar.on::after { animation: none; display: none; }
+
+/* ---------- the win screen's own pieces (winPlay, A.winMore) ----------
+   Duolingo's lesson-complete layout: a gold title, a grey line under it, then
+   three stat cards a colour each — a white label on its colour strip over a
+   white body with the number in the colour. The XP card turns grey at zero. */
+.wn .win-action .btn, .wp .win-action .btn { animation: none; }
+.wn .win-action .btn::after, .wp .win-action .btn::after { animation: none; display: none; }
+.complete h1.wn-title {
+  margin: 4px 0 8px; font-size: 32px; line-height: 1.15; letter-spacing: 0; color: var(--gold);
+  text-shadow: 0 2px 0 rgba(200, 140, 0, .25); will-change: transform;
+}
+
+/* «تقدّمك اليوم»: what the lesson did to the day, a card at a time */
+.wp { justify-content: flex-start; padding-top: 48px; }
+.complete h1.wp-title { font-size: 27px; color: var(--gold); margin: 0 0 22px; letter-spacing: 0; }
+.wp-list { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 14px; }
+.wp-card {
+  display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; text-align: start;
+  border-radius: 18px; border: 2px solid var(--line); border-bottom-width: 4px; background: var(--snow);
+  transition: border-color .25s, background-color .25s; will-change: transform;
+}
+.wp .wn-task { margin: 0; max-width: none; }
+.wp-chest { width: 46px; height: 46px; flex-shrink: 0; overflow: visible; }
+.wp-bar { display: block; height: 14px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.wp-bar > i { display: block; height: 100%; border-radius: inherit; background: var(--gold); box-shadow: inset 0 -3px 0 rgba(0,0,0,.08), inset 0 3px 0 rgba(255,255,255,.35); }
+.wp-quest.full { border-color: var(--gold); background: var(--gold-bg); }
+.wp-quest.full .wn-tx > b { color: var(--gold-dk); }
+.wp-gem { position: relative; width: 46px; height: 46px; display: grid; place-items: center; flex-shrink: 0; }
+/* Duolingo's gem pile (wgLoad): four times the slot, centred on it, so the
+   drop starts above the card */
+.wp-gem-rv { position: absolute; left: 50%; top: 50%; width: 176px; height: 176px; transform: translate(-50%, -54%); pointer-events: none; visibility: hidden; }
+.wp-gem.rv .wp-gem-rv { visibility: visible; }
+.wp-gem.rv > .ic { visibility: hidden; }
+.wp-gems .wn-tx > b { font-size: 19px; color: var(--blue-dk); }
+.wp .wn-cta { position: sticky; bottom: 0; width: 100%; max-width: 380px; margin-top: auto; padding: 12px 0 calc(14px + env(safe-area-inset-bottom)); background: var(--snow); display: flex; flex-direction: column; gap: 10px; }
+.wn { padding-top: 8px; }
+.wn .wst-row { margin-bottom: 0; }
+.wn .wn-cta { margin-top: auto; }
+
+/* «كم سؤال تبي تحل يومياً؟»: Duolingo's plain goal rows. Each draws its goal
+   as a grid of question tiles (glTiles), five to a row, so the 20 is visibly
+   four times the 5; the picked row's tiles turn blue and ripple (glWave) */
+.gl-list { gap: 14px; }
+.gl-list .ob-opt { position: relative; gap: 14px; min-height: 86px; padding: 14px 16px; }
+.gl-list .ob-tx span { font-size: 13.5px; }
+.gl-grid { flex-shrink: 0; width: 76px; display: grid; grid-template-columns: repeat(5, 12px); gap: 4px; justify-content: center; align-content: center; }
+.gl-grid i { width: 12px; height: 12px; border-radius: 4px; background: var(--gl-c, var(--disabled)); box-shadow: inset 0 -2px 0 var(--gl-s, var(--gray-shadow));
+  transition: background-color .2s calc(var(--k) * 12ms), box-shadow .2s calc(var(--k) * 12ms); }
+.gl-g5 { --gl-c: var(--green); --gl-s: var(--green-dk); }
+.gl-g10 { --gl-c: var(--gold); --gl-s: var(--gold-dk); }
+.gl-g20 { --gl-c: var(--orange); --gl-s: var(--orange-dk); }
+.gl-list .ob-opt.sel .gl-grid i { --gl-c: var(--blue); --gl-s: var(--blue-dk); }
+.gl-grid i.hop { animation: glHop .36s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes glHop { 0% { transform: translateY(0) scale(1); } 35% { transform: translateY(-6px) scale(1.15, .9); } 70% { transform: translateY(1px) scale(.95, 1.08); } 100% { transform: none; } }
+:root[data-motion="reduced"] .gl-grid i.hop { animation: none; }
+/* the tag is a chip: grey at rest, blue on the picked row */
+.gl-tag { flex-shrink: 0; font-size: 13px; font-weight: 800; color: var(--gray); background: var(--polar, #F7F7F7); border: 2px solid var(--line); border-radius: 99px; padding: 1px 10px; }
+.gl-list .ob-opt.sel .gl-tag { color: var(--blue-dk); background: var(--snow); border-color: var(--blue-border); }
+/* «الأكثر اختياراً»: a small pill centred on the middle row's top edge */
+.gl-list .ob-opt:nth-child(2) { margin-top: 6px; }
+.gl-badge { position: absolute; top: -12px; left: 50%; translate: -50% 0; white-space: nowrap; z-index: 2; font-size: 12px; font-weight: 800; color: var(--snow);
+  background: var(--gold-dk); border-radius: 99px; padding: 0 12px; line-height: 22px; box-shadow: 0 2px 0 var(--brown);
+  animation: glBadge .45s calc(var(--d, 0s) + .4s) cubic-bezier(.3, 1.6, .5, 1) backwards; }
+.gl-list .ob-opt.sel .gl-badge { background: var(--blue); box-shadow: 0 2px 0 var(--blue-dk); }
+@keyframes glBadge { from { transform: scale(0) rotate(-8deg); } }
+/* his reaction to a goal runs a line longer than the question: the bubble keeps
+   that room from the start, so the list never shifts under a jumping card */
+.ob-goal .obs-bubble { min-height: calc(3 * 1.55em + 28px); }
+
+/* ---------- the victory (winPlay): Duolingo's floating crown (its own Lottie)
+   lands on its shadow over Duolingo's gold title ---------- */
+.wv { position: relative; width: 100%; max-width: 390px; display: flex; flex-direction: column; align-items: center; margin-bottom: 6px; }
+/* قدّور's leap (winPlay, wvJoy): his shadow, and him with Duolingo's crown
+   riding on his head. Duolingo's frame: the hero is the top 45% of the screen,
+   straight under the status bar, on the plain white page */
+.wv-hero { position: relative; width: 100%; height: clamp(230px, 42vh, 360px); margin-bottom: 4px; }
+.wv-man { position: absolute; left: 50%; bottom: 10px; width: min(250px, 30vh); aspect-ratio: 1; transform-origin: 50% 100%; translate: -50% 0; z-index: 1; will-change: transform; }
+.wv-qd { width: 100%; height: 100%; }
+.wv-lot { position: absolute; left: 46%; top: -10%; width: 34%; height: 30%; translate: -50% 0; z-index: 1; will-change: transform; }
+.wv-lot svg { display: block; width: 100%; height: 100%; }
+.wv-shadow { position: absolute; left: 50%; bottom: 2px; width: 150px; height: 16px; margin-left: -75px; border-radius: 50%; background: rgba(0, 0, 0, .08); }
+.complete h1.wv-title {
+  margin: 0 0 6px; padding: 0 8px; font-size: 32px; line-height: 1.15; font-weight: 800; letter-spacing: 0;
+  color: var(--gold); text-shadow: none; will-change: transform;
+}
+.wn .wn-say { margin: 4px 0 34px; }
+
+
+/* Duolingo's stat cards (stat_component_72_lc_refresh.riv and the legacy
+   view_short_lesson_stat_card): three at 28% with 4% between, radius 16, the
+   white label on the colour strip, a white body 2px in, icon 24, value 21.
+   The body carries its own 2px outline so it reads as a pill before the strip
+   rises; --ha / --hb are the pale halo around the pill and then the card. */
+.wst-row { display: flex; justify-content: center; gap: 4%; width: 100%; max-width: 390px; margin: 0 auto; }
+/* Duolingo's own card file (wstLoad) draws over the row, which stays for
+   screen readers and as the fallback; the canvas is the compiled artboard's
+   375×134 at the row's width */
+.wst-wrap { position: relative; width: 100%; max-width: 390px; margin: 0 auto; }
+.wst-rive { position: absolute; left: 0; top: 50%; width: 100%; aspect-ratio: 375 / 134; transform: translateY(-50%); pointer-events: none; opacity: 0; }
+.wst-wrap.rive-on .wst-rive { opacity: 1; }
+.wst-wrap.rive-on .wst-row { opacity: 0; }
+.wst { position: relative; flex: 0 0 28%; height: 100px; }
+.wst-pop {
+  --hb: 0; position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  border-radius: 16px; box-shadow: 0 0 0 calc(8px * var(--hb)) var(--wt); will-change: transform;
+}
+.wst-bg { position: absolute; inset: 0; border-radius: 16px; background: var(--wc); }
+.wst-t {
+  position: relative; width: 100%; height: 30px; display: grid; place-items: center; color: var(--snow);
+  font-size: 13.5px; font-weight: 800; white-space: nowrap;
+}
+.wst-t > span { display: block; }
+.wst-v {
+  --ha: 0; position: relative; margin: 0 2px 2px; width: calc(100% - 4px); height: 66px; flex-shrink: 0; border-radius: 14px; background: var(--snow);
+  box-shadow: 0 0 0 2px var(--wc), 0 0 0 calc(2px + 8px * var(--ha)) var(--wt);
+  display: grid; place-items: center; color: var(--wc); font-size: 21px; font-weight: 800; font-variant-numeric: tabular-nums;
+}
+.wst-in { display: flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
+.wst-v .ic, .wst-v svg { width: 24px; height: 24px; flex-shrink: 0; }
+.wst-shine { position: absolute; inset: 0; border-radius: 16px; overflow: hidden; pointer-events: none; }
+.wst-shine i { position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.6) 50%, transparent 65%); transform: translateX(-140%); }
+.wst-gl { position: absolute; width: 19px; height: 19px; opacity: 0; pointer-events: none; color: var(--wg); }
+.wst-gl svg { display: block; width: 100%; height: 100%; fill: currentColor; }
+.wst-g1 { top: -6px; inset-inline-end: -4px; }
+.wst-g2 { top: 12px; inset-inline-end: -8px; width: 12px; height: 12px; }
+.wst-g3 { bottom: -6px; inset-inline-start: -4px; width: 15px; height: 15px; }
+.wst-gold  { --wc: var(--gold); --wt: #FFF3C4; --wg: #FFD43B; }
+.wst-gold .wst-v { color: var(--gold-dk); }
+.wst-green { --wc: var(--green); --wt: #D7FFB8; --wg: #8EE04E; }
+.wst-blue  { --wc: var(--blue);  --wt: #DDF4FF; --wg: #6CCBF8; }
+.wst-gray  { --wc: var(--gray-icon); --wt: #F0F0F0; --wg: #D0D0D0; }
+.wst-gray .wst-v .ic { filter: grayscale(1); }

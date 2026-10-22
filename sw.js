@@ -27,7 +27,7 @@
    The dev harnesses are never served from a cache, neither the page nor
    anything it loads: they exist to show the file on disk right now. */
 
-const VERSION = "69";
+const VERSION = "82";
 const SHELL = "qudrati-shell-" + VERSION;
 const RUNTIME = "qudrati-runtime-" + VERSION;
 
@@ -43,6 +43,7 @@ const CORE = [
   "js/data/geometry.js",
   "js/data/teach.js",
   "js/data/teach-figures.js",
+  "js/data/learn.js",
   "manifest.webmanifest",
   "favicon.ico",
   /* the interface's own glyphs: without these a lesson still works but reads as

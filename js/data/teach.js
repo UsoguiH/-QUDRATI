@@ -18,6 +18,19 @@
 window.QTEACH = window.QTEACH || {};
 
 window.QTEACH["skills.bigsum"] = {
+  /* The first thing a new student ever does in the app — before a single rule,
+     before a formula, before the word «قانون». It is small enough that everyone
+     gets it in their head, so the rule card behind it lands as a shortcut for
+     something they just did instead of a formula to memorise. Only the very
+     first lesson anyone plays shows it (SES.safe); every later play opens on
+     «قبل ما نبدأ» as before. */
+  open: {
+    q: "٧ + ٧ + ٧ = ؟",
+    choices: ["١٤", "٢١", "٢٨"],
+    answer: 1,
+    good: "وبدون ورقة ولا قانون. باقي شيء واحد: نخلّيها أسرع.",
+    bad: "٧ + ٧ = ١٤ ، وزد عليها ٧ تصير ٢١. ما شرحنا شيئاً بعد — عادي."
+  },
   chunks: [
     {
       title: "اجمع المكرر",
@@ -78,23 +91,6 @@ window.QTEACH["skills.bigsum"] = {
       steps: [
         {
           type: "rule",
-          n: 4,
-          title: "أخرج العدد المشترك",
-          say: "كل الأعداد تقبل القسمة على عدد مشترك؟ اقسمها عليه، اجمع النواتج، ثم اضرب فيه.",
-          formula: "أ×ك + ب×ك + جـ×ك = ك × (أ + ب + جـ)",
-          plain: "أخرج العدد المشترك خارج القوس، واجمع ما بقي بداخله",
-          example: "٤ + ٨ + ١٢ = ٤×١ + ٤×٢ + ٤×٣ = ٤ × (١ + ٢ + ٣) = ٤ × ٦ = ٢٤",
-          hook: "العدد المشترك يخرج، والباقي جمع صغير"
-        },
-        {
-          type: "check",
-          q: "ما ناتج ٦ + ١٢ + ١٨ ؟",
-          choices: ["١٨", "٣٦", "١٠٨"],
-          answer: 1,
-          why: "٦ × (١ + ٢ + ٣) = ٦ × ٦ = ٣٦ ، لا ١٨"
-        },
-        {
-          type: "rule",
           n: 3,
           title: "اجمعها أزواجاً",
           say: "لا تجمع بالترتيب. ابحث عن عددين يكملان بعضهما ١٠٠ أو ١٠٠٠. اجمع الأزواج.",
@@ -114,7 +110,7 @@ window.QTEACH["skills.bigsum"] = {
     },
     {
       title: "مجاميع جاهزة",
-      q: ["bigsum-04", "bigsum-05", "bigsum-07"],
+      q: ["bigsum-04", "bigsum-05"],
       steps: [
         {
           type: "rule",
@@ -142,6 +138,29 @@ window.QTEACH["skills.bigsum"] = {
           choices: ["٦٠", "٣٠", "٥٥"],
           answer: 1,
           why: "(١٠ × ١٢) ÷ ٤ = ١٢٠ ÷ ٤ = ٣٠ ، لا ٦٠"
+        }
+      ]
+    },
+    {
+      title: "أخرج المشترك",
+      q: ["bigsum-07"],
+      steps: [
+        {
+          type: "rule",
+          n: 4,
+          title: "أخرج العدد المشترك",
+          say: "كل الأعداد تقبل القسمة على عدد مشترك؟ اقسمها عليه، اجمع النواتج، ثم اضرب فيه.",
+          formula: "أ×ك + ب×ك + جـ×ك = ك × (أ + ب + جـ)",
+          plain: "أخرج العدد المشترك خارج القوس، واجمع ما بقي بداخله",
+          example: "٤ + ٨ + ١٢ = ٤×١ + ٤×٢ + ٤×٣ = ٤ × (١ + ٢ + ٣) = ٤ × ٦ = ٢٤",
+          hook: "العدد المشترك يخرج، والباقي جمع صغير"
+        },
+        {
+          type: "check",
+          q: "ما ناتج ٦ + ١٢ + ١٨ ؟",
+          choices: ["١٨", "٣٦", "١٠٨"],
+          answer: 1,
+          why: "٦ × (١ + ٢ + ٣) = ٦ × ٦ = ٣٦ ، لا ١٨"
         }
       ]
     },

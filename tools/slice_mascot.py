@@ -61,7 +61,7 @@ ROW_NAME = ["top", "middle", "bottom"]
 # Only these land in assets/mascot/. The sheets carry fourteen poses and the app uses
 # two (2026-09-09: the user cut every other placement); the rest still get cut and
 # reported by --check, they are just not written, so nothing unused ships.
-SHIP = {"celebrate", "strong"}
+SHIP = {"celebrate", "strong", "wave", "encourage", "cheer", "teach"}
 # Poses whose painted floor shadow is cut away, because the app draws a live one under
 # them (the win screen's shadow shrinks as he rises and spreads as he lands, which a
 # shadow glued to his feet cannot do). Only a shadow that floats clear of the feet is

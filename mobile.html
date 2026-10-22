@@ -212,6 +212,12 @@
     { n: "Galaxy Fold (مطوي)",   w: 280, h: 653 }
   ];
   var SCREENS = [
+    ["welcome", "جديد ١ — شاشة البداية"], ["ob-hello", "جديد ٢ — أهلاً أنا قدّور"], ["ob-journey", "جديد ٣ — ٤ أسئلة سريعة"],
+    ["ob-level", "جديد ٤ — مستواك (العدّاد)"], ["ob-goal", "جديد ٥ — هدفك اليومي"], ["ob-name", "جديد ٦ — اسمك"],
+    ["ob-hi", "جديد ٧ — بطاقة الطالب"], ["ob-value", "جديد ٨ — إليك ما ستحصل عليه"], ["ob-start", "جديد ٩ — من وين تبدأ"],
+    ["ob-splash", "جديد ١٠ — قبل أول درس"], ["ob-pintro", "جديد ١١ — قبل اختبار المستوى"], ["place", "جديد ١٢ — اختبار المستوى"],
+    ["placeweak", "جديد ١٣ — النتيجة: مبتدئ"], ["placemid", "جديد ١٤ — النتيجة: متوسط"], ["placegood", "جديد ١٥ — النتيجة: ممتاز"],
+    ["learnwin", "جديد ١٦ — شاشة الفوز الجديدة"],
     ["path", "المسار"], ["pop", "نافذة الدرس"], ["lesson", "داخل الدرس"],
     ["fb", "بعد إجابة خاطئة"], ["method", "كيف أحلّها"], ["done", "إكمال الدرس"],
     ["fail", "نفدت القلوب"], ["stats", "إحصائياتي"], ["settings", "الإعدادات"],
@@ -245,6 +251,7 @@
       scr.appendChild(extra);
     }
     scr.value = want;
+    tgt.value = "preview";   /* a hash names a preview screen, so open the frame on it */
   }
   window.addEventListener("hashchange", function () {
     var h = location.hash.replace("#", "");
@@ -275,7 +282,7 @@
     // the query string goes before the hash so a re-pick of the same screen
     // still reloads and the harness re-runs its seeding
     var bust = "?t=" + Date.now();
-    return tgt.value === "preview" ? "preview.html" + bust + "#" + scr.value : "index.html" + bust;
+    return tgt.value === "preview" ? "preview.html" + bust + "#" + scr.value : "index.html" + bust + "&dev=1";
   }
   function load() {
     $("scrGrp").style.display = tgt.value === "preview" ? "" : "none";

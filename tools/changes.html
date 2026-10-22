@@ -1,0 +1,662 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Qudrati Changes</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  /* dev page: every change of the 2026-10-21 sessions, in the order it was made,
+     each beside its live screen (preview.html in a phone frame, loaded on demand,
+     two at most so the machine is not asked for twenty apps at once) */
+  :root {
+    --bg: #F7F7F7; --card: #FFFFFF; --ink: #3C3C3C; --mute: #777777; --line: #E5E5E5;
+    --green: #58CC02; --green-bg: #D7FFB8; --blue: #1CB0F6; --blue-bg: #DDF4FF;
+    --gold: #FFC800; --gold-bg: #FFF4BF; --gray-bg: #F0F0F0; --orange: #FF9600;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #131F24; --card: #1B2B32; --ink: #F1F7FB; --mute: #9AA9B1; --line: #37464F;
+      --green-bg: #2B4A12; --blue-bg: #12384A; --gold-bg: #4A3B0A; --gray-bg: #26363D;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #131F24; --card: #1B2B32; --ink: #F1F7FB; --mute: #9AA9B1; --line: #37464F;
+    --green-bg: #2B4A12; --blue-bg: #12384A; --gold-bg: #4A3B0A; --gray-bg: #26363D;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Baloo Bhaijaan 2', 'Segoe UI', sans-serif; line-height: 1.5; }
+  header { max-width: 1040px; margin: 0 auto; padding: 32px 16px 8px; }
+  h1 { margin: 0 0 4px; font-size: 30px; }
+  header p { margin: 0; color: var(--mute); font-size: 16px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .part { max-width: 1040px; margin: 28px auto 0; padding: 0 16px; }
+  .part h2 { font-size: 21px; margin: 0 0 4px; }
+  .part > p { margin: 0 0 14px; color: var(--mute); }
+  .ch {
+    display: grid; grid-template-columns: 1fr 252px; gap: 20px; align-items: start;
+    background: var(--card); border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 18px;
+    padding: 18px; margin-bottom: 14px;
+  }
+  .ch-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .num { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--green); color: #fff; font-weight: 800; flex-shrink: 0; }
+  .ch h3 { margin: 0; font-size: 19px; }
+  .tag { font-size: 12.5px; font-weight: 800; padding: 1px 10px; border-radius: 99px; }
+  .t-live { background: var(--green-bg); color: #3E8B00; }
+  .t-old { background: var(--gray-bg); color: var(--mute); }
+  .t-new { background: var(--gold-bg); color: #9A6A00; }
+  :root[data-theme="dark"] .t-live, :root[data-theme="dark"] .t-new { color: var(--ink); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .t-live, :root:not([data-theme="light"]) .t-new { color: var(--ink); } }
+  .ch ul { margin: 6px 0 0; padding-inline-start: 20px; }
+  .ch li { margin: 2px 0; }
+  .why { margin: 10px 0 0; padding: 8px 12px; border-radius: 12px; background: var(--blue-bg); font-size: 14.5px; }
+  .why b { color: var(--blue); }
+  .code { font-family: Consolas, monospace; font-size: 13px; color: var(--mute); margin-top: 8px; word-break: break-word; }
+  .phone { width: 252px; }
+  .frame {
+    position: relative; width: 252px; height: 545px; border-radius: 30px; overflow: hidden;
+    border: 6px solid #22272B; background: #fff; display: grid; place-items: center;
+  }
+  .frame iframe { position: absolute; left: 0; top: 0; width: 390px; height: 844px; border: 0; transform: scale(.615); transform-origin: 0 0; }
+  .play { font: inherit; font-weight: 800; font-size: 16px; color: #fff; background: var(--green); border: 0; border-bottom: 4px solid #478700; border-radius: 14px; padding: 10px 18px; cursor: pointer; }
+  .play:active { transform: translateY(2px); border-bottom-width: 2px; }
+  .hint { color: var(--mute); font-size: 13px; text-align: center; margin-top: 6px; min-height: 20px; }
+  .row { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+  .mini { font: inherit; font-size: 13.5px; font-weight: 700; background: var(--card); color: var(--ink); border: 2px solid var(--line); border-radius: 12px; padding: 4px 12px; cursor: pointer; }
+  .noframe { height: 120px; border-radius: 18px; border: 2px dashed var(--line); display: grid; place-items: center; color: var(--mute); text-align: center; padding: 10px; font-size: 14px; }
+  footer { max-width: 1040px; margin: 24px auto 48px; padding: 0 16px; color: var(--mute); font-size: 14px; }
+  @media (max-width: 720px) {
+    .ch { grid-template-columns: 1fr; }
+    .phone { margin: 0 auto; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Every change, in order</h1>
+  <p>Two goals from 2026-10-21, four from 2026-10-22 and seven from 2026-10-23. Press <b>Play</b> beside a change to open that screen as it is now; scripted ones tap, type and pick by themselves. Two screens run at a time.</p>
+  <div class="legend"><span class="tag t-live">Live now</span><span class="tag t-old">Replaced later (the frame shows what replaced it)</span><span class="tag t-new">This goal</span></div>
+</header>
+
+<main id="list"></main>
+<footer>Not committed. sw.js and index.html are at version 75. Validators: validate.js, validate_teach.js, validate_learn.js all pass.</footer>
+
+<script>
+/* each change: what it was, why, where it lives, and how to show it */
+const PARTS = [
+  { h: "Goal 1: trust, an exciting first run, the name screen, the win screen, a fair level test",
+    p: "Your words: «not everyone knows our app or what it gives … make him feel excited and want to learn and most important thing trust us».",
+    items: [
+      { t: "«جرّب»: a real question before anything is asked", s: "live", hash: "ob-taste",
+        what: ["New first-run step after the hello: one comparison item in the exam's own format, «٤٧٪ من ٨٣» vs «٨٣٪ من ٤٧», asked as a guess.",
+               "Any answer plays the trick on the numbers: they lift, cross and land swapped, an «=» slams down, both tiles jump.",
+               "Nobody is marked red; the rule «أ٪ من ب = ب٪ من أ» appears under it."],
+        why: "An app nobody has heard of has to show what it gives before it asks for anything.",
+        code: "OB_VIEW.taste, A.obTaste, TASTE, tasteSay",
+        run: (w) => [[2600, () => w.A.obTaste(0)]], hint: "picks a wrong answer by itself" },
+      { t: "«وش هو قدراتي؟»: what the app is, with real numbers", s: "old", by: 12, hash: "ob-value",
+        what: ["Three rows: the curriculum in ٢٦ lessons, a mock in the exam's pattern, a daily habit.",
+               "Three true promises: مجاني بالكامل، بدون حساب ولا إيميل، تقدّمك محفوظ في جهازك."],
+        why: "Trust: every claim on it can be checked, no fake user counts or reviews.",
+        code: "INTRO_VALUE, INTRO_PROMISE" },
+      { t: "قدّور talks first, the answers wait for him", s: "live", hash: "ob-level",
+        what: ["His bubble pops out of its own tail and types itself word by word.",
+               "The answers animate in only after his last word lands (Duolingo's rule).",
+               "Haptics on arrivals only (hello, journey, splash)."],
+        why: "Read from Duolingo's decompiled onboarding.",
+        code: "obFrame --se, bubPop, SAY_AT / SAY_STEP, OB_BUZZ" },
+      { t: "Every first-run pick plays the lesson's jump", s: "old", by: 19, hash: "ob-level",
+        what: ["Level, goal, fork and the taste answer all use the same squash-and-jump as a right answer in a lesson."],
+        why: "Your ask: «make this UI screen have the exact jumping animation we have for all of them».",
+        code: "obJump → fxAddJump",
+        run: (w) => [[3400, () => w.A.obPick("level", "some")], [4600, () => w.A.obPick("level", "good")]], hint: "picks two levels by itself" },
+      { t: "Goal screen, first version: «more looks like more»", s: "old", by: 13, hash: "ob-goal",
+        what: ["Each goal showed a growing flame, a pace bar, its daily gems and the weeks to finish."],
+        why: "Your ask: «there is no reward for more». You later found it too complex." },
+      { t: "Name screen, first version: a green student card", s: "old", by: 14, hash: "ob-name",
+        what: ["The card filled in as you typed and a «جاهز» seal stamped it."],
+        why: "You later called it too bad." },
+      { t: "A fair level test", s: "live", hash: "place",
+        what: ["Every unit is asked and placed on its own; a weak unit 1 no longer hides a strong geometry.",
+               "Same fixed slots for everyone (which lessons, which format), medium or harder, the exam's mix of حساب / هندسة / جبر and comparisons.",
+               "8 to 16 questions, no hearts, no timer, no verdict after an answer; «ما أعرف» counts as a miss.",
+               "Placement needs at least half right overall (a pure guesser now skips lessons 4% of the time instead of 30%)."],
+        why: "Your ask: «the placement exam is not fair … know the level of him».",
+        code: "PLACE_BLUEPRINT, placePick, plAnswer, placementComplete, PLACE_GATE" },
+      { t: "Level test result", s: "live", hash: "placemid",
+        what: ["Where you start, a level gauge by lessons skipped, one row per unit with its answer dots, the pace against the exam's minute a question.",
+               "An honest footer: it does not predict your Qiyas score.",
+               "Stopping half way keeps what was answered."],
+        code: "placementComplete, S.placeLog, A.plQuit" },
+      { t: "Win screen, second version: navy crest with slammed stars", s: "old", by: 15, hash: "learnwin",
+        what: ["قدّور removed; a navy-and-gold plaque, a gold ribbon, three stars dropped and slammed into sockets."],
+        why: "You asked for Clash Royale dopamine; later you didn't like it and asked for no stars." },
+      { t: "«تقدّمك اليوم»: the second screen after a win", s: "live", hash: "learnmore",
+        what: ["The short lesson ticked off in its stage, the day's goal bar filling from where the lesson found it, the gems counting up — a card at a time.",
+               "«راجع أخطاء الدرس» comes back here instead of looping through reviews.",
+               "A tap anywhere skips the animation to its end."],
+        code: "A.winMore, wpPlay, SES.qd, winSkippable" }
+    ] },
+  { h: "Goal 2: a new win screen, Duolingo's stat cards, and the three screens you circled",
+    p: "Your words: «study duolingo files … recreate these screens in duolingo style exactly … clone exactly, the same animation not just UI».",
+    items: [
+      { t: "Studied Duolingo's own animation files", s: "live",
+        what: ["Rendered its stat cards, its lesson-complete redesign and its streak flames frame by frame in a private lab.",
+               "Read how its app configures them (which inputs, which numbers, RTL)."],
+        why: "So the clones below use Duolingo's real files, not guesses.", noframe: "Research only, nothing to show on screen" },
+      { t: "Value screen: shorter, independence line deleted", s: "live", hash: "ob-value",
+        what: ["Sub-lines cut to a few words: «٢٥٥ سؤالاً بحلولها»، «تعرف مستواك قبل يوم الاختبار»، «هدف يومي وسلسلة أيام».",
+               "«مبادرة مستقلة — غير تابعة لهيئة تقويم التعليم والتدريب (قياس)» removed."],
+        why: "Image 10: «minimize this text to be shorter and delete the last red thing»." },
+      { t: "Goal screen: simple rows, the last one is on fire", s: "live", hash: "ob-goal",
+        what: ["Plain Duolingo rows: a flame that grows, «N أسئلة يومياً» and a tag «هادئ / معتاد / جدّي». Gem boxes and pace bars gone.",
+               "The 20 option is a flat orange button with Duolingo's own streak flame (big.riv) in a white socket: an ember drops and bursts into flame, embers rise.",
+               "It ignites when the answers arrive and again when you pick it, with a whoosh.",
+               "My hand-drawn flame edge was replaced after you said it was bad."],
+        why: "Image 11: «not complex … the button itself is fire but in Duolingo style»; then «take from Duolingo exactly».",
+        code: "glFlameStart, glIgnite, obGoalFx",
+        run: (w) => [[3800, () => w.A.obPick("goal", "20")]], hint: "picks 20 by itself" },
+      { t: "Name screen: a badge on a lanyard that swings", s: "old", by: 20, hash: "ob-name",
+        what: ["The badge drops in on its purple strap and swings to rest — a real damped pendulum.",
+               "Every letter knocks it; the name pops; the first letter pops into a coloured avatar (Duolingo's avatar colours).",
+               "On «المتابعة» a gold «جاهز» rosette lifts off, slaps onto the corner, the badge swings hard, قدّور jumps and says your name."],
+        why: "Image 12: «too bad … make it more amazing UI and UX and animation».",
+        code: "nameBadge, nbStep, nbKick, nbEnter, nameStamp",
+        run: (w, d) => {
+          const nm = "سارة", out = [];
+          let s = "";
+          Array.from(nm).forEach((ch, i) => out.push([2200 + i * 380, () => { s += ch; const inp = d.getElementById("obName"); if (inp) inp.value = s; w.A.obName(s); }]));
+          out.push([2200 + nm.length * 380 + 900, () => w.A.obNext()]);
+          return out;
+        }, hint: "types «سارة» then presses continue" },
+      { t: "Win screen: the headline slams onto a racing band, no stars", s: "old", by: 21, hash: "learnwin",
+        what: ["A tilted gold band (green when not perfect) races across with speed streaks — how Duolingo's redesigned lesson-complete opens.",
+               "The headline, white and outlined like Clash Royale's lettering, is thrown in from huge and slams: squash, recoil, screen shake, a deep hit.",
+               "Stars removed as you asked. The button fades in last."],
+        why: "Your ask: «create new one that actually very good, inspire from Clash Royale and Duolingo»; then «in the winning screen remove the stars».",
+        code: "winPlay, .wv-band, .wv-title" },
+      { t: "Stat cards: Duolingo's real animation, from its own file", s: "live", hash: "learnwinmiss",
+        what: ["The cards play Duolingo's stat_component file itself (assets/streak/stats.riv): the pill pop, the colour strip rising, the halo, the glints, the XP bolts flying in, the rolling digits.",
+               "Set up the way Duolingo's app does it: RTL, ٪ first, time as minutes:seconds, shine on a perfect or fast run, our Arabic labels bound into it.",
+               "Our font is handed to it with its digits drawn as ٠–٩ so the ticker rolls in Arabic (assets/fonts/stat-font.ttf, OFL).",
+               "If the file can't load (offline, reduced motion) a measured HTML copy plays instead."],
+        why: "Image 13: «clone exactly from Duolingo, the same animation not just UI»; then «use the same animation exactly 100%».",
+        code: "wstLoad, wstFire, statCardIn (fallback)" },
+      { t: "Every answer jumps", s: "live", hash: "ob-taste",
+        what: ["The taste question: the right answer jumps when it is revealed.",
+               "The level test: the picked answer jumps (it says «taken», never «right»).",
+               "The mock exam: the picked answer jumps; the others settle back.",
+               "Written into CLAUDE.md as a standing rule."],
+        why: "Your ask: «add jumping animation for the answer … put it in claude.md, every answer should be jumping».",
+        code: "obJump, plAnswer, A.mockSelect",
+        run: (w) => [[2600, () => w.A.obTaste(1)]], hint: "answers the taste question; see also the two buttons below",
+        extra: [{ label: "Level test", hash: "place", run: (w) => [[1800, () => { const q = w.A.debugCurrent(); w.A.pick(q.answer); w.A.check(); }]] },
+                { label: "Mock exam", hash: "mocktest", run: (w) => [[1600, () => w.A.mockSelect(1)], [2600, () => w.A.mockSelect(2)]] }] },
+      { t: "Bookkeeping", s: "live",
+        what: ["CLAUDE.md: the first-run, goal, name and win-screen sections rewritten; the «every answer jumps» rule; new files in the file map.",
+               "Memory: «clone» means play Duolingo's own file; no stars on the win screen.",
+               "preview.html: #learnwinmiss (a win with two misses).",
+               "sw.js and index.html bumped to 73."],
+        noframe: "No screen — files and notes" }
+    ] },
+  { h: "Goal 3: the CodePen card, Duolingo's own win animation, jumps only on answers, more of Duolingo's files",
+    p: "Your words: «make the card like this … copy this code» — «the animation here is broken, take it exactly from Duolingo 100%» — «don't let it jump … jumping just in buttons that are a choice for a question» — «use different Rive animation and UI animation from Duolingo».",
+    items: [
+      { t: "No jump on choices that are not answers", s: "live", hash: "ob-level",
+        what: ["The level, goal and fork rows in the first run no longer jump when picked. They light up, قدّور reacts, and that is all.",
+               "Answers still jump: the taste question, lessons, teaching checks, the level test, the mock exam.",
+               "The rule in CLAUDE.md now reads «Every answer jumps — and only answers»."],
+        why: "Images 19 and 20: «don't let it jump, I meant jumping just in buttons that are a choice for a question».",
+        code: "A.obPick (obJump removed), CLAUDE.md rule",
+        run: (w) => [[3400, () => w.A.obPick("level", "some")], [4600, () => w.A.obPick("level", "good")]], hint: "picks two levels by itself: no jump" },
+      { t: "Name screen: the CodePen card", s: "old", by: 31, hash: "ob-name",
+        what: ["creativeocean's card (codepen dyRWXPz) ported: its SVG and its GSAP timeline, mirrored for right-to-left.",
+               "The card turns and scales in, the coils run, the orbs bob, the two waves roll across, the triangles orbit, the logo rings slide together, then «قدراتي», your name and your daily goal slide in through their boxes.",
+               "Every letter slides the name in again.",
+               "On «المتابعة» the card rides to the middle, the name box closes and reopens with the name printed, the rings part and close, a pulse, a chime, a shine; قدّور hops and greets you."],
+        why: "Image 17: «I don't like its UI, make the card like this, copy this code».",
+        code: "nameCard, ncEnter, ncOrbit, A.obName, nameStamp",
+        run: (w, d) => {
+          const nm = "سارة", out = [];
+          let s = "";
+          Array.from(nm).forEach((ch, i) => out.push([3200 + i * 380, () => { s += ch; const inp = d.getElementById("obName"); if (inp) inp.value = s; w.A.obName(s); }]));
+          out.push([3200 + nm.length * 380 + 1200, () => w.A.obNext()]);
+          return out;
+        }, hint: "types «سارة» then presses continue" },
+      { t: "Win screen: Duolingo's crown, Duolingo's timings", s: "old", by: 32, hash: "learnwin",
+        what: ["The band is gone. The hero is Duolingo's own floating crown (floating_crown.json), bobbing with its shine on a loop.",
+               "It comes in the way Duolingo's lesson-complete hero does: in big by .38s, held, then it shrinks and rises onto its shadow and lands with a squash and a hit.",
+               "The headline in Duolingo's gold grows and rises into place, squashes at .8s and springs back.",
+               "Then Duolingo's stat cards from their own file, then the button."],
+        why: "Image 18: «the animation here is broken, try to take it exactly from Duolingo 100%».",
+        code: "winPlay, wvCrownLoad, WV_CROWN (fallback), assets/fx/crown.json" },
+      { t: "Stat cards: the time digits no longer split", s: "old", by: 27, hash: "learnwinmiss",
+        what: ["The time read «٢:٣ ٤»: Duolingo's file spaces its digit slots for Latin digits.",
+               "The stat font's digits are now each 0.9 of the Latin width with the shapes condensed to fit, so ٢:٣٤، ٣٣، ١٢٨ and ٪١٠٠ sit evenly."],
+        why: "Seen in image 18.",
+        code: "assets/fonts/stat-font.ttf" },
+      { t: "League: Duolingo's league trophies", s: "old", by: 28, hash: "league",
+        what: ["The five tiers are Duolingo's own trophies (leaderboard_refresh_trophy_header.riv): bronze, silver, gold, diamond, and amethyst for the champion tier.",
+               "Your tier glints; locked tiers are grey with a keyhole, which is Duolingo's own locked look.",
+               "The old badges stay underneath until the trophies draw."],
+        why: "«use different Rive animation and UI animation from Duolingo on our app».",
+        code: "lbTrophies, LB_TROPHY, assets/fx/trophy.riv" },
+      { t: "«تقدّمك اليوم»: Duolingo's gem pile", s: "live", hash: "learnmore",
+        what: ["The gems card plays Duolingo's gem reveal (gems_reveal_v14.riv): a pile drops onto the card, cracks the floor and spills two stones. It is small, medium or large by what the lesson paid.",
+               "The count starts when the pile lands."],
+        why: "Same ask.",
+        code: "wgLoad, wgFire, assets/fx/gems.riv" },
+      { t: "Lessons: Duolingo's sparkles on a streak", s: "old", by: 29, hash: "learn3",
+        what: ["When a run of right answers turns the progress bar over («٣ على التوالي»), Duolingo's perfect-session sparkles play once around the bar: a glow rings it from the middle out and small dots spread off it."],
+        why: "Same ask.",
+        code: "fxBarSparkle in fxAddStrike, assets/fx/bar-sparkles.json",
+        run: (w) => [[1800, () => { (async () => {
+          const sl = ms => new Promise(r => setTimeout(r, ms));
+          for (let i = 0; i < 12; i++) {
+            const t = w.A.debugLearnAnswer(true);
+            if (t !== "see" && w.A.debugRun() >= 3) break;
+            await sl(t === "see" ? 700 : 1600); if (t !== "see") { w.A.next(); await sl(800); }
+          }
+        })(); }]], hint: "answers right three times by itself; watch the bar" },
+      { t: "Bookkeeping", s: "live",
+        what: ["CLAUDE.md: the name card, the win crown, the league trophies, the gem pile, the bar sparkles, the assets/fx folder and the font's digit fitting.",
+               "Memory: the CodePen card, the crown, jumps only on answers, and Duolingo files only when no character is drawn in them.",
+               "sw.js and index.html bumped to 74.",
+               "Shipping more of Duolingo's own files adds to the copyright risk the app already carries from stats.riv and big.riv."],
+        noframe: "No screen — files and notes" }
+    ] },
+  { h: "Goal 4: the cards fixed, our trophies back, a goal screen on fire, قدّور winning, a surprise",
+    p: "Your words: «fix stat cards, they are joint and text inside of numbers» — «return our trophies and I want the spark» — «delete the sparkles» — «قدّور not to tell about reward, make the last choice like it's on fire really» — «make the card suit us» — «add the character winning pose, not him falling down» — «surprise me» — «one Rive animation that doesn't feel from Duolingo».",
+    items: [
+      { t: "Stat cards: digits spaced, level with the icon, no broken border", s: "live", hash: "learnwinmiss",
+        what: ["The digits were glued together and sat high, running into the icon. The font's Arabic digits are refitted: a little smaller, spaced apart, and moved down to sit level with the icon; the colon and ٪ moved with them.",
+               "The white streak running round the green card's border was Duolingo's «combo» border, on by default in the file. It is switched off on all three cards."],
+        why: "Images 21 and 22: «their are joint, and text inside of numbers».",
+        code: "assets/fonts/stat-font.ttf, combo_animated_gradient_bool = false" },
+      { t: "League: our trophies back, with a shine", s: "live", hash: "league",
+        what: ["Our own rank badges are back on the ladder.",
+               "Your tier shines: a band of light crosses the badge inside its own outline, then two four-point glints twinkle."],
+        why: "Image 23: «return our trophies and I want the spark (لمعة)».",
+        code: "lbShine, .lb-shine, .lb-glint" },
+      { t: "Lessons: the bar sparkles are gone", s: "live",
+        what: ["Duolingo's sparkles around the lesson bar are removed, with their file."],
+        why: "«delete this — Lessons: Duolingo's sparkles on a streak».", noframe: "Removed — nothing to show" },
+      { t: "Goal screen: no reward talk, the last choice really on fire", s: "old", by: 37, hash: "ob-goal",
+        what: ["قدّور no longer mentions chests or gems: «بداية حلوة! خطوة صغيرة كل يوم تفرق.» / «اختيار ذكي! درس كل يوم ويثبت معك.» / «حماس! هذا الجدّ — يلا نشعلها!».",
+               "Every row has a line in lessons (قرابة نص درس / قرابة درس كامل / درسين كل يوم) and its tag as a chip.",
+               "The 20 button burns: seven of Duolingo's streak flames rise out of its top edge, it glows with heat, and it reignites when picked.",
+               "Its badge reads «الأكثر حماساً», not «الأكثر اختياراً»: we have no data on what students pick, so that would be an untrue claim. It is one string if you want it changed."],
+        why: "Images 24 and 25.",
+        code: "OB_GOALS, goalSay, GL_ROW, glRowStart, glIgnite, .gl-badge",
+        run: (w) => [[4200, () => w.A.obPick("goal", "20")]], hint: "picks 20 by itself" },
+      { t: "Name card: in our colours, and it tilts", s: "live", hash: "ob-name",
+        what: ["The CodePen card in Qudrati's colours: purple gradient (قدّور's book), gold and blue waves, green triangles, a gold chip, «بطاقة طالب» over the name.",
+               "It leans toward your finger with a glare that follows it, and springs back when you let go."],
+        why: "«make this UI better … make it suit us».",
+        code: "nameCard (ncBg, ncGold), ncTilt",
+        run: (w, d) => {
+          const nm = "سارة", out = [];
+          let s = "";
+          Array.from(nm).forEach((ch, i) => out.push([3200 + i * 380, () => { s += ch; const inp = d.getElementById("obName"); if (inp) inp.value = s; w.A.obName(s); }]));
+          out.push([3200 + nm.length * 380 + 1200, () => w.A.obNext()]);
+          return out;
+        }, hint: "types «سارة» then presses continue; drag on the card to tilt it" },
+      { t: "Win screen: قدّور leaps for joy, the crown lands on his head", s: "old", by: 38, hash: "learnwin",
+        what: ["He pops up crouched on his shadow, springs into the air stretched, hangs, and lands with a squash and a thump — no falling from the sky.",
+               "A soft gold sunburst opens behind him. Duolingo's crown drops onto his head and clinks.",
+               "Then he keeps hopping for joy every couple of seconds, the crown riding on his head."],
+        why: "Image 21: «add the character winning pose, but make it better animation, not him falling down».",
+        code: "winPlay, wvJoy, .wv-hero, .wv-rays" },
+      { t: "Surprise: the streak day is tossed like a coin", s: "live", hash: "path",
+        what: ["On the streak screen, today's day is Duolingo's calendar coin: instead of a check popping in, the day is tossed, flips over and lands as the orange check, with a rising chime.",
+               "Only Duolingo's newest streak calendar does this."],
+        why: "«surprise me with something unique that can only be found in Duolingo's files».",
+        code: "skCoinFlip, assets/fx/coin.riv",
+        run: (w) => [[1500, () => w.A.debugStreak(3)]], hint: "opens the streak screen by itself" },
+      { t: "Our-style Rive: the week as a pie", s: "old", by: 36, hash: "stats",
+        what: ["The stats page's «هذا الأسبوع» card has a pie of sevenths: one slice fills, with a rising note, for each day you practised this week (٤/٧).",
+               "It is Duolingo Math's fraction pie: a plain blue maths figure, nothing that looks like Duolingo."],
+        why: "«add one Rive animation that doesn't really feel from Duolingo, because we still have our style».",
+        code: "wkPie, assets/fx/pie.riv",
+        run: (w, d) => [[1400, () => { const c = d.querySelector(".week-card"); if (c) c.scrollIntoView({ block: "center" }); }]], hint: "scrolls to the week card" },
+      { t: "Bookkeeping", s: "live",
+        what: ["CLAUDE.md: stat font, combo border, league shine, goal screen, name card, win screen with قدّور, coin, pie, assets/fx list.",
+               "Memory: the verdicts of this goal, قدّور back on the win screen.",
+               "preview.html seeds a fortnight of practice so the week card shows.",
+               "sw.js and index.html bumped to 75. The Duolingo trophy and sparkles files were deleted; coin.riv and pie.riv were added."],
+        noframe: "No screen — files and notes" }
+    ] },
+  { h: "Goal 5: a week pie you can read, no fire, no sunburst, and a Duolingo home screen",
+    p: "Your words: «clear this» (the week pie) — «remove the yellow thing behind … don't follow our design or fire, do something you think is good» — «study the Duolingo main screen … redesign our main screen» — «I want the users to be addicted».",
+    items: [
+      { t: "Week pie: drawn, so it reads", s: "old", by: 45, hash: "stats",
+        what: ["Duolingo Math's Rive pie was a blot at that size: white slices on a white card.",
+               "Now seven slices: grey for a day you didn't practise, blue for a day you did, with white gaps between them and «٤/٧ أيام» beside it. The blue slices fill one after another, each with a rising note."],
+        why: "Your screenshot of the week card: «clear this».",
+        code: "wkPieSvg, wkPie",
+        run: (w, d) => [[1400, () => { const c = d.querySelector(".week-card"); if (c) c.scrollIntoView({ block: "center" }); }]], hint: "scrolls to the week card" },
+      { t: "Goal screen: each goal drawn as its questions", s: "old", by: 46, hash: "ob-goal",
+        what: ["The fire is gone: no flames behind the 20 option, no glow, no orange button.",
+               "All three rows look the same. Each shows its goal as a grid of question tiles (5, 10 and 20), so 20 visibly looks like four times 5.",
+               "Picking a row turns its tiles blue and runs a wave across them, each tile hopping on a slightly higher note. «الأكثر حماساً» is a small chip on the last row.",
+               "قدّور's line for 20 no longer talks about fire: «حماس! هذا الجدّ — درسين وتحس بالفرق!»."],
+        why: "Image 26: «remove the yellow thing behind … don't follow our design or fire».",
+        code: "glTiles, glWave, OB_GOALS",
+        run: (w) => [[3600, () => w.A.obPick("goal", "5")], [5200, () => w.A.obPick("goal", "20")]], hint: "picks 5, then 20" },
+      { t: "Win screen: no sunburst, Duolingo's frame", s: "live", hash: "learnwin",
+        what: ["The gold sunburst behind قدّور is gone.",
+               "The layout follows Duolingo's lesson-complete frame: the hero fills the top of the screen on plain white, قدّور is bigger, then the gold title, the line under it, more room before the stat cards, and the button at the bottom.",
+               "He still leaps, lands, gets the crown and keeps hopping."],
+        why: "«win screen is too bad … remove the yellow thing behind».",
+        code: "winPlay, .wv-hero" },
+      { t: "Home: Duolingo's top bar, with drawers", s: "old", by: 51, hash: "path",
+        what: ["Four counters across a white bar with a line under it: your rank badge, the streak, the days to your exam on a calendar, and the gems.",
+               "The streak stays grey until you've practised today, as Duolingo's does.",
+               "Tapping the streak, the calendar or the gems drops a drawer down from under the bar: your week of checks, the exam countdown card, or what gems are for. The rank badge still opens المجلس."],
+        why: "Image 27, and Duolingo's home_content.xml.",
+        code: "statbar, A.topTap, topDrawerBody, CAL_SVG",
+        run: (w) => [[1600, () => w.A.topTap("streak")], [3600, () => w.A.topTap("exam")], [5600, () => w.A.topTap("gems")]], hint: "opens the streak, exam and gem drawers" },
+      { t: "Home: one unit header that changes colour as you scroll", s: "old", by: 51, hash: "path",
+        what: ["One sticky card sits under the bar with «القسم ١، الوحدة N» and the unit's name, plus the rule book in its own square, exactly as Duolingo builds it.",
+               "As you scroll into the next unit, the header takes that unit's colour and name. A grey divider with the unit's name marks where each unit begins.",
+               "The exam countdown card moved into the top bar. «متى اختبار قدراتك؟» still shows here until a date is set."],
+        why: "Duolingo's PersistentUnitHeaderView and BASIC_UNIT_HEADER.",
+        code: "#pathHead, pathOnScroll, .unit-div",
+        run: (w) => [[1500, () => w.scrollTo({ top: 1300, behavior: "smooth" })], [3500, () => w.scrollTo({ top: 2600, behavior: "smooth" })]], hint: "scrolls through the units" },
+      { t: "Home: Duolingo's nodes, curve and ring", s: "old", by: 47, hash: "path",
+        what: ["Each node is Duolingo's 70×57 oval sitting on an 8px lip in its own colour, darkened by a fifth. Pressing it drops the face.",
+               "Finished nodes wear the unit's colour with two shine stripes, locked ones are grey, and a node finished with three stars turns gold (Duolingo's «legendary»).",
+               "No labels and no dotted lines. Nodes swing on Duolingo's exact curve, with every other unit mirrored.",
+               "The current node has Duolingo's ring, one segment per short lesson, breathing on its 2-second loop, with «ابدأ» bobbing above it.",
+               "Beside each unit's first bend, where Duolingo puts a character, sits a pile of that unit's maths tiles (+ × − ÷, digits, ٪ ½ ¾, △ ○ □ ∠). They stay grey until you reach the unit.",
+               "When the current node is off screen, a button brings it back."],
+        why: "Duolingo's path_level_oval, node_and_ring_119.riv's ring, and the layout maths in v5u.java.",
+        code: "renderPath, nodePaint, nodeRing, PATH_X, UNIT_TILES, A.pathFab",
+        run: (w) => [[2200, () => w.scrollTo({ top: 900, behavior: "smooth" })]], hint: "scrolls so the back button shows" },
+      { t: "Home: the node popover, locked ones too", s: "old", by: 51, hash: "pop",
+        what: ["The lesson's name now lives here (the path has no labels): a card in the unit's colour with a rim, «الدرس ١ من ٨، …», the 2× boost, and a white button on its lip.",
+               "Finished nodes show the stars you earned. Locked nodes open a grey card that says «أكمل الدروس اللي قبله عشان ينفتح!», so you can see what's coming."],
+        why: "Duolingo's PathPopupActionView.",
+        code: "A.nodeTap",
+        extra: [{ label: "Locked", hash: "path", run: (w, d) => [[1600, () => { const n = d.querySelectorAll(".node-locked")[1]; if (n) n.click(); }]] }] },
+      { t: "Back from a lesson: the ring fills, the next node unlocks", s: "old", by: 48, hash: "pathdone",
+        what: ["Back on the path after a short lesson, the ring comes back and the segment you just earned fills in with a chime.",
+               "When you finish a whole node, it squashes and hops. Then the next node catches its colour, its ring and its «ابدأ» on a rising arpeggio.",
+               "These are Duolingo's own return beats, timed from its node file."],
+        why: "«I want the users to be addicted»: the path pays out the moment you land on it.",
+        code: "PATH_FX, pathFx, .fx-seg, .fx-done, .fx-unlock",
+        extra: [{ label: "Segment", hash: "pathseg" }] },
+      { t: "Bookkeeping", s: "live",
+        what: ["CLAUDE.md: the home screen, goal screen, win screen and week pie, plus the new #pathseg / #pathdone hashes.",
+               "The study of Duolingo's home screen is saved as Duolingo Study/notes/duolingo-home-path-spec.md.",
+               "sw.js and index.html bumped to 76. pie.riv deleted."],
+        noframe: "No screen — files and notes" }
+    ] },
+  { h: "Goal 6: no week pie, «الأكثر اختياراً» in the middle, no ring, no tiles, maths signs in the nodes",
+    p: "Your words: «remove the week pie completely» — «make it here الأكثر اختياراً in middle, and remove الأكثر حماساً» — «remove the lines» — «remove these, all of them» — «something like stars but something else related to كمي».",
+    items: [
+      { t: "Week pie: removed", s: "live", hash: "stats",
+        what: ["The «هذا الأسبوع» card is back to its title, the seven bars and the line under them. No pie."],
+        why: "«remove the week pie completely».",
+        code: "weekCard",
+        run: (w, d) => [[1400, () => { const c = d.querySelector(".week-card"); if (c) c.scrollIntoView({ block: "center" }); }]], hint: "scrolls to the week card" },
+      { t: "Goal screen: «الأكثر اختياراً» on the middle row", s: "live", hash: "ob-goal",
+        what: ["«الأكثر حماساً» is gone from the 20 row.",
+               "«الأكثر اختياراً» sits centred on the top edge of the middle row (١٠ أسئلة)."],
+        why: "Image 31.",
+        code: "OB_VIEW.goal, .gl-badge" },
+      { t: "Path: no ring, no tiles", s: "old", by: 51, hash: "path",
+        what: ["The dashed ring around the current node is gone; «ابدأ» stays above it.",
+               "The piles of maths tiles beside the path are gone, all of them."],
+        why: "Images 32 and 33: «remove the lines», «remove these, all of them».",
+        code: "renderPath" },
+      { t: "Path: a maths sign in every node instead of a star", s: "old", by: 52, hash: "path",
+        what: ["Each unit's nodes carry their own sign, drawn chunky and round like Duolingo's star: + for مهارات وقوانين, ÷ for أساسيات, ٪ for النسب, a triangle for الهندسة.",
+               "White on a coloured node, grey on a locked one, dark gold on a gold one."],
+        why: "Image 35: «something like stars but something else related to كمي».",
+        code: "UNIT_GLYPH, nodeGlyph",
+        run: (w) => [[1800, () => w.scrollTo({ top: 1500, behavior: "smooth" })]], hint: "scrolls down to the ٪ and triangle units" },
+      { t: "Back from a lesson, without the ring", s: "old", by: 51, hash: "pathdone",
+        what: ["A node finished still squashes and hops, and the next one catches its colour and «ابدأ».",
+               "After one short lesson, the node hops and its «كمّل» springs back on with a chime."],
+        why: "The ring it used to fill is gone.",
+        code: "pathFx, .fx-seg",
+        extra: [{ label: "Short lesson", hash: "pathseg" }] },
+      { t: "Bookkeeping", s: "live",
+        what: ["CLAUDE.md updated; sw.js and index.html bumped to 77."],
+        noframe: "No screen — files and notes" }
+    ] },
+  { h: "Goal 7: the live site's home back, a sign for every lesson, a new rule card, and the node lab",
+    p: "Your words: «first remove the thing in square and line down» — «return the previous home screen exactly … like the photo, it's from the website now» — «change stars to something else and each level make it something different» — «show me every animation you got from pills … create a version of pills different from Duolingo but very nice for Qudrati» — the rule box «is from the old version, make its UI suit the page and make it a little bigger».",
+    items: [
+      { t: "Home: the live site's home, exactly", s: "live", hash: "path",
+        what: ["Back as qudrati.xyz shows it: the stat bar (streak, rank badge and name, gems), the exam countdown card, the unit banner, nodes with their names under them, the dotted trail, the floating chest.",
+               "The unit banner reads «القسم ١، الوحدة ١» over the unit's name, with a divider and «٠/٨ دروس» on the far side, as on the live site. Tapping the banner opens the unit's rules, so the separate «القوانين» button is gone.",
+               "Gone with it: the top-bar drawers, the sticky header, the round button back to the node, the path's return animations and the square under the node (image 36)."],
+        why: "Image 37: «exactly like the photo».",
+        code: "statbar, renderPath, drawTrails, A.nodeTap, .unit-banner",
+        run: (w) => [[2200, () => w.scrollTo({ top: 700, behavior: "smooth" })]], hint: "scrolls down the first unit" },
+      { t: "Every lesson has its own sign instead of a star", s: "live", hash: "path",
+        what: ["26 signs, one per lesson, drawn in the star's weight: the four operations, a key, a die, a bolt, repeat arrows, scissors, a balance, two circles; two boxes and a dot, a fraction, √, a power, a stopwatch; ٪, a price tag, up and down arrows, bars and their mean; an angle, a triangle, a rectangle, a square with its right angle, a parallelogram, a shaded square, a circle with its radius, parallel lines, a cube.",
+               "White on a coloured or a grey (locked) node, brown on a gold (finished) one."],
+        why: "«change stars to something else, and each level make it something different».",
+        code: "LESSON_ICON, lessonIcon, .node-ic",
+        run: (w) => [[1500, () => w.scrollTo({ top: 1400, behavior: "smooth" })], [4000, () => w.scrollTo({ top: 3200, behavior: "smooth" })]], hint: "scrolls through the units" },
+      { t: "«مراجعة اليوم» lines up with the cards around it", s: "live", hash: "path",
+        what: ["The review card ran edge to edge on the phone while the countdown card above it and the banner below it sit 16px in. It now takes the same box."],
+        why: "Seen while checking the home against your photo.",
+        code: ".due-card" },
+      { t: "Short lessons: the rule card", s: "old", by: 57, hash: "learn",
+        what: ["The pale yellow strip with a bulb is now a white card in the lessons' style: a grey border with a thicker bottom edge, and «القاعدة» in a gold tab with a bulb sitting on its top edge.",
+               "The rule itself is bigger (20px, bold, dark) and centred, with a springy entrance after the rows above it."],
+        why: "Images 38 and 39: «make its UI suit the page and make it a little bigger».",
+        code: ".ln-rule, .ln-rule-tag, .ln-rule-tx",
+        run: (w) => [[1400, () => w.A.pick(1)], [1900, () => w.A.check()], [3200, () => w.A.next()]], hint: "answers the warm-up and opens the first rule card" },
+      { t: "The node lab: every Duolingo node animation, and four shapes of our own", s: "old", by: 58,
+        what: ["A separate page. Part 1 plays Duolingo's node from their own file, with the inputs their app sets: locked, current with its ring, press, a lesson done, node complete, the next one opening, legendary, the unit trophy, skipped, the star flip, the XP boost, the unit test and dark mode, plus every icon and colour.",
+               "Part 2 has four node shapes for Qudrati, each one with press, a lesson done and the whole node done: the polygon (one side per lesson), the fraction (one slice per lesson), the tile (flips to gold) and the solid (a cube built a layer per lesson)."],
+        why: "«show me every animation you got from pills … create a version of pills different from Duolingo».",
+        noframe: "<a href=\"pills.html\" target=\"_blank\" style=\"font-weight:800;font-size:16px\">Open the node lab →</a>" },
+      { t: "Bookkeeping", s: "live",
+        what: ["CLAUDE.md: the home section, the lesson signs, the rule card and the node lab. sw.js and index.html bumped to 78."],
+        noframe: "No screen — files and notes" }
+    ] },
+  { h: "Goal 8: the rule card all in gold, and six more node shapes",
+    p: "Your words: «make it the WHOLE yellow thing, and very nice UI» — «can you suggest more things, I want more ideas».",
+    items: [
+      { t: "Short lessons: the rule card, all gold", s: "live", hash: "learn",
+        what: ["The whole card is gold now, on a darker gold edge, with a soft shine along its top like the app's buttons.",
+               "The bulb sits in a white round badge at the start of the card. When the card lands, the badge wobbles and the bulb lights up.",
+               "«القاعدة» is a small brown label over the rule; the rule itself is 21px bold in dark brown. Highlighted words sit in white."],
+        why: "Image 41: «make it the WHOLE yellow thing».",
+        code: ".ln-rule, .ln-rule-ic, .ln-rule-body, --brown-dk",
+        run: (w) => [[1400, () => w.A.pick(1)], [1900, () => w.A.check()], [3200, () => w.A.next()]], hint: "answers the warm-up and opens the first rule card" },
+      { t: "The node lab: six more shapes, and eight ideas", s: "live",
+        what: ["Six new shapes, each with press, a lesson and the whole node working: the answer bubble (shaded in pencil band by band), the die (a dot per lesson, rolls over to gold), the stopwatch (the hand sweeps a tick per lesson, rings at the end), the abacus (a bead slides across per lesson), the tangram (pieces land until the square is whole) and the capsule (the liquid rises with a rolling wave).",
+               "A new part 3 lists eight more ideas not built yet: the balance, the puzzle piece, the honeycomb, the ruler, the calculator key, the gem, the graph and the star polygon."],
+        why: "Image 42: «I want more ideas».",
+        noframe: "<a href=\"pills.html#ours\" target=\"_blank\" style=\"font-weight:800;font-size:16px\">Open the node lab →</a>" },
+      { t: "Bookkeeping", s: "live",
+        what: ["CLAUDE.md: the rule card and the lab. sw.js and index.html bumped to 79."],
+        noframe: "No screen — files and notes" }
+    ] },
+  { h: "Goal 9: three picks on the real path, and the three effects on every shape",
+    p: "Your words: «add this effect for all of our new shapes» (the star flip) — «this one every time he finishes a single lesson» (the pop and sparkles) — «and this one also» (press & open) — «show 3 versions … real and nice UI UX and have real meaning to Qudrati» — «think as business when you build them».",
+    items: [
+      { t: "Three picks, each on a phone with unit 1's real lessons", s: "live",
+        what: ["A new first section in the node lab: the answer bubble, the stopwatch and the fraction, each on a phone showing the real home screen. It has unit 1's real lesson names and their real short-lesson counts (8, 7, 6, 6, 6), two lessons finished and the third under way.",
+               "Beside each phone: what the shape means, what it does for Qudrati, the cost to build and the risk. The recommendation is the answer bubble; the fraction is the low-risk fallback."],
+        why: "«Show 3 versions … with real meaning to Qudrati», «think as business».",
+        noframe: "<a href=\"pills.html#top3\" target=\"_blank\" style=\"font-weight:800;font-size:16px\">Open the three picks →</a>" },
+      { t: "Every shape: a pop and sparkles for each finished lesson", s: "live",
+        what: ["Each short lesson finished makes the node squash, pop up bigger, flash brighter and throw four-point sparkles in its own colours, with a chime. A node with 8 lessons plays it 8 times.",
+               "Finishing the whole node adds gold sparkles as it turns gold."],
+        why: "Image 44: «every time he finishes a single lesson».",
+        noframe: "<a href=\"pills.html#top3\" target=\"_blank\">Press «A lesson» on any shape →</a>" },
+      { t: "Every shape: press & open, and the flip", s: "live",
+        what: ["Pressing a node sinks it, then it stays lifted while its lesson card opens under it: the lesson's name, «الدرس ٣ من ٦ — ٣ دقائق» and «كمّل». A ring, where the shape has one, tightens. The card closes on its own after three seconds.",
+               "«Flip» turns the lesson glyph on its axis while the shape stretches and shrinks; shapes without a glyph turn their whole face."],
+        why: "Images 43 and 45.",
+        noframe: "<a href=\"pills.html#ours\" target=\"_blank\">Try them on all ten shapes →</a>" }
+    ] },
+  { h: "Goal 10: the eight ideas, built",
+    p: "Your words: «let's see these ideas» (the balance, the puzzle piece, the honeycomb, the ruler, the calculator key, the gem, the graph, the star polygon).",
+    items: [
+      { t: "Eight more node shapes, each working", s: "live",
+        what: ["The balance: a heavy weight on one pan; each lesson drops a small weight on the other and the beam swings closer to level.",
+               "The puzzle: a piece per lesson clicks in and reveals that part of the lesson's glyph, faint on the empty board.",
+               "The honeycomb: a cell per lesson fills with honey (six make a ring, seven close it round a middle cell).",
+               "The ruler: marked ١ to N from the right; a pencil draws along it to the next mark each lesson.",
+               "The calculator key: each lesson lights one more segment of the «8» on its display.",
+               "The gem: each lesson cuts one facet into colour, with a flash of light.",
+               "The graph: each lesson plots the next point of a line climbing to the corner of the graph paper.",
+               "The star polygon: each lesson draws one more edge; the last one closes the star (two triangles for six lessons, a seven- or eight-pointed star for more).",
+               "Every one has press & open, the pop with sparkles for each lesson, the flip, and the whole node turning gold and opening the next."],
+        why: "«let's see these ideas».",
+        noframe: "<a href=\"pills.html#more\" target=\"_blank\" style=\"font-weight:800;font-size:16px\">Open the eight →</a>" }
+    ] },
+  { h: "Goal 11: Duolingo's three node effects on our real path",
+    p: "Your words: «first add the effects I told you to the regular circle we have now … I want exactly like Duolingo's effects, and then show it to me» (the star flip, «done, no ring» after every lesson, press & open).",
+    items: [
+      { t: "A lesson done: the node jumps, flips and lands in its sparkles", s: "live", hash: "pathpay",
+        what: ["Back on the path after every short lesson (and the first clear of any lesson), the node plays Duolingo's node-complete beat, timed frame by frame from their file: it crouches, jumps off its own shadow, hangs, flips over its horizontal axis, hangs again in sparkles of its colour, and lands. Total: about 1.1 seconds.",
+               "The «كمّل» bubble steps aside while it flips and pops back after the landing; then the ring fills the segment just earned.",
+               "On a node's last lesson it comes out of the flip gold, with gold sparkles and a three-note chime."],
+        why: "Images 48 and 49: «every time he finishes a single lesson».",
+        code: "PATH_PAY, pathPay, nodeSparkles, .node-ghost, .node-spk",
+        extra: [{ label: "Last lesson → gold", hash: "pathgold" }] },
+      { t: "The star flip on the current node", s: "live", hash: "path",
+        what: ["Every six seconds the current node's icon lifts out of the coin over its own shadow and turns all the way round, while the ring stretches and shrinks, as Duolingo's star flip does.",
+               "It waits while a lesson card is open, stops when you leave the path, and never runs with motion turned off."],
+        why: "Image 47.",
+        code: "nodeFlip, nodeFlipLoop", hint: "the first flip comes about two seconds in" },
+      { t: "Press & open: the ring tightens while the card is open", s: "live", hash: "pop",
+        what: ["The node's face still drops onto its lip while held. While its lesson card is open, the ring round it tightens (to 90%), and lets go when the card closes."],
+        why: "Image 51.",
+        code: "A.nodeTap, .node-col.sel" },
+      { t: "Bookkeeping", s: "live",
+        what: ["preview.html: #pathpay and #pathgold. CLAUDE.md updated. sw.js and index.html bumped to 80."],
+        noframe: "No screen — files and notes" }
+    ] },
+  { h: "Goal 12: «a lesson done» is Duolingo's animation, copied frame by frame",
+    p: "Your words: «A lesson done: I want it the same as Duolingo's animation, 100% — clone it exactly».",
+    items: [
+      { t: "The node's jump, flip and landing, frame for frame", s: "live", hash: "pathpay",
+        what: ["I played Duolingo's own node file at a tenth of its speed and measured the coin in every 17ms frame: where its top and bottom are, how wide it is, where its rim is, its shadow, and its three diamonds. Our node now plays those numbers, scaled to its size.",
+               "What you see, in 1.56 seconds: it squats, springs off its shadow tall and narrow, hangs while three diamonds slide out from behind it, tips towards you until you see it edge-on from underneath (its rim swings over its top), comes back the right way up with its sign small and growing, rises a little, stretches and drops onto its shadow, squashes, and settles.",
+               "The diamonds are Duolingo's: a big pale one and two small ones in the node's colour. They change colour with the coin in the flip and shrink away.",
+               "Duolingo's own sound plays with it: it starts on the take-off, swells through the flip and hits on the landing.",
+               "On a node's last lesson it comes out of the flip gold."],
+        why: "«100% clone it exactly».",
+        code: "PAY_COIN, PAY_ICON, PAY_GHOST, PAY_DIAS, pathPay, assets/sounds/node-complete.mp3",
+        extra: [{ label: "Last lesson → gold", hash: "pathgold" }] },
+      { t: "Bookkeeping", s: "live",
+        what: ["The star flip no longer starts in the middle of the jump. sw.js and index.html bumped to 81. CLAUDE.md updated."],
+        noframe: "No screen — files and notes" }
+    ] },
+  { h: "Goal 13: press & open is Duolingo's, and every unit banner spans the path",
+    p: "Your words: «the last thing is [Press & open] — do it correctly like Duolingo please, and fix this problem where the blue lesson bar is not complete».",
+    items: [
+      { t: "Press & open, measured off Duolingo's file", s: "new", hash: "pop",
+        what: ["I played Duolingo's node at a tenth of its speed again, pressed it, released it, opened its card and closed it, and measured the coin and its ring in every frame.",
+               "The press: the face drops its whole lip in one frame (ours eased over 80ms) and comes back on the release with Duolingo's two-step settle.",
+               "The ring now breathes as Duolingo's does: out and in every two seconds, slow to leave each end, fading as it pulls in (it used to pulse on a 1.8s ease).",
+               "Opening the card pulls the ring in behind the coin and fades it, then lets it out a little to wait there; closing the card picks the breathing up from that size. The sizes are Duolingo's, measured against its coin, so the ring sits round our coin the way theirs sits round theirs.",
+               "Duolingo's own sounds: the press, the release as the card opens, and the close when you tap away.",
+               "The lab's card was wrong too: it started the ring in a state that never breathes or tightens. It now shows the real thing."],
+        why: "«do it correctly like Duolingo».",
+        code: "A.nodePress, nodeRelease, ringSelect, ringResume, RING_SEL, ringIdle, sfxPlay, assets/sounds/node-press.wav · node-release.wav · node-close.wav" },
+      { t: "Every unit banner spans the path", s: "new", hash: "path",
+        what: ["The banner became a button when it started opening the unit's rules, and a button is only as wide as its text, so units with short names (أساسيات القدرات) came out narrow. It now spans the path on every unit, on the phone and on the desktop."],
+        why: "Image 53.",
+        code: ".unit-banner width" },
+      { t: "Bookkeeping", s: "new",
+        what: ["The current lesson's title moved down 6px so the ring clears it at its widest breath. sw.js and index.html bumped to 82. CLAUDE.md updated."],
+        noframe: "No screen — files and notes" }
+    ] }
+];
+
+/* an Arabic phrase inside English keeps its own direction */
+const ar = t => t.replace(/«[^»]*»/g, m => `<bdi dir="rtl">${m}</bdi>`);
+const live = [];   // at most two running phones
+function stop(slot) {
+  const i = live.indexOf(slot); if (i >= 0) live.splice(i, 1);
+  slot.timers.forEach(clearTimeout); slot.timers = [];
+  slot.frame.innerHTML = ""; slot.frame.appendChild(slot.btn);
+}
+function play(slot, hash, run) {
+  if (slot.timers.length || slot.frame.querySelector("iframe")) stop(slot);
+  while (live.length >= 2) stop(live[0]);
+  live.push(slot);
+  const f = document.createElement("iframe");
+  f.title = "#" + hash;
+  f.src = "../preview.html?t=" + Date.now() + "#" + hash;
+  slot.frame.innerHTML = ""; slot.frame.appendChild(f);
+  f.addEventListener("load", () => {
+    if (!run) return;
+    const w = f.contentWindow, d = f.contentDocument;
+    (run(w, d) || []).forEach(([ms, fn]) => slot.timers.push(setTimeout(() => { try { fn(); } catch (e) { console.warn(e); } }, ms)));
+  });
+}
+
+const list = document.getElementById("list");
+let n = 0;
+/* only the newest goal unless ?all; its numbers stay the same as on the full page */
+const lastOnly = !/[?&]all/.test(location.search);
+if (lastOnly) {
+  document.querySelector("header h1").textContent = "The last run";
+  document.querySelector("header p").textContent = "Only the last run. Press Play beside a change to see it working; scripted ones tap and scroll by themselves.";
+  const more = document.createElement("p");
+  more.style.cssText = "max-width:1040px;margin:12px auto 0;padding:0 16px";
+  more.innerHTML = '<a href="?all" style="color:var(--blue);font-weight:800">Show the earlier goals too</a>';
+  list.before(more);
+}
+PARTS.forEach((P, pi) => {
+  if (lastOnly && pi < PARTS.length - 1) { n += P.items.length; return; }
+  const sec = document.createElement("section");
+  sec.className = "part";
+  sec.innerHTML = `<h2>${P.h}</h2><p>${P.p}</p>`;
+  P.items.forEach(it => {
+    n++;
+    it.n = n;
+    const tag = it.s === "live" ? `<span class="tag t-live">Live now</span>`
+      : it.s === "old" ? `<span class="tag t-old">Replaced by #${it.by}</span>` : `<span class="tag t-new">This goal</span>`;
+    const card = document.createElement("article");
+    card.className = "ch"; card.id = "c" + n;
+    card.innerHTML = `<div>
+        <div class="ch-h"><span class="num">${n}</span><h3>${it.t}</h3>${tag}</div>
+        <ul>${it.what.map(x => `<li>${ar(x)}</li>`).join("")}</ul>
+        ${it.why ? `<p class="why"><b>Why:</b> ${ar(it.why)}</p>` : ""}
+        ${it.code ? `<div class="code">${it.code}</div>` : ""}
+      </div><div class="phone"></div>`;
+    const ph = card.querySelector(".phone");
+    if (it.noframe) ph.innerHTML = `<div class="noframe">${it.noframe}</div>`;
+    else {
+      const frame = document.createElement("div"); frame.className = "frame";
+      const btn = document.createElement("button"); btn.className = "play"; btn.textContent = "▶ Play";
+      const slot = { frame, btn, timers: [] };
+      btn.onclick = () => play(slot, it.hash, it.run);
+      frame.appendChild(btn);
+      ph.appendChild(frame);
+      const hint = document.createElement("div"); hint.className = "hint";
+      hint.textContent = (it.s === "old" ? "shows what replaced it" : it.hint || "") ;
+      ph.appendChild(hint);
+      const row = document.createElement("div"); row.className = "row";
+      const re = document.createElement("button"); re.className = "mini"; re.textContent = "Replay";
+      re.onclick = () => play(slot, it.hash, it.run);
+      row.appendChild(re);
+      (it.extra || []).forEach(x => {
+        const b = document.createElement("button"); b.className = "mini"; b.textContent = x.label;
+        b.onclick = () => play(slot, x.hash, x.run);
+        row.appendChild(b);
+      });
+      ph.appendChild(row);
+    }
+    sec.appendChild(card);
+  });
+  list.appendChild(sec);
+});
+</script>
+</body>
+</html>
