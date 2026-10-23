@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Card Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+/* The card lab (2026-10-23): the user's last chance for a card, «all its
+   components from Duolingo's files». Not in the app. Every piece is Duolingo's
+   own, taken from the decompiled APK and played as it is:
+     the back      — nw_header_and_card_v10.riv, card_spin_artboard (Duolingo's
+                     card that spins before it turns over)
+     the face      — year_in_review_league_<tier>_share_card_background.xml, the
+                     Year in Review league share card, converted to SVG
+     the trophy    — yir_league_icon.riv, Trophy artboard, color_num per league,
+                     its shine played by current_bool (its locked state cannot be
+                     undone cleanly, so the trophy pops in already open)
+     the sparkles  — yir_sparkles_1/2/3.json (Lottie), looping over the face
+     the sounds    — avatarcollections_newpiecereveal.mp3 on the turn,
+                     leaderboard_card_unlock on the trophy,
+                     leaderboard_card_lockin_gold on the seal,
+                     leaderboard_card_moveup on each stat
+   Ours are only the words (in our font) and the student's numbers. */
+:root {
+  --green: #58CC02; --green-lip: #478700; --blue: #1CB0F6; --blue-dk: #1899D6; --ink: #4B4B4B; --gray: #777777;
+  --line: #E5E5E5; --snow: #FFFFFF; --page: #131F24; --panel: #1A2C33; --soft: #9FB4BC;
+  --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: var(--page); color: var(--snow); font-family: var(--font); display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; align-items: flex-start; padding: 28px 16px; }
+.phone { width: 390px; height: 844px; max-width: 100%; border-radius: 44px; background: var(--snow); overflow: hidden; position: relative; box-shadow: 0 0 0 10px #0B1418, 0 30px 80px rgba(0,0,0,.5); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ctl { width: 360px; max-width: 100%; display: flex; flex-direction: column; gap: 18px; direction: ltr; text-align: left; font-family: system-ui, sans-serif; }
+.ctl h1 { margin: 0; font: 800 26px var(--font); }
+.ctl p { margin: 0; color: var(--soft); font-size: 14px; line-height: 1.55; }
+.ctl label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--soft); }
+.ctl input { width: 100%; height: 48px; border-radius: 12px; border: 2px solid #2C4650; background: var(--panel); color: var(--snow); font: 700 20px var(--font); padding: 0 14px; direction: rtl; }
+.tiers { display: flex; flex-wrap: wrap; gap: 8px; }
+.tiers button, .play { font: 700 14px system-ui, sans-serif; color: var(--snow); background: var(--panel); border: 2px solid #2C4650; border-radius: 12px; padding: 9px 14px; cursor: pointer; }
+.tiers button.on { border-color: var(--blue); background: #12384A; }
+.play { background: var(--green); border-color: var(--green); box-shadow: 0 4px 0 var(--green-lip); font-size: 16px; padding: 12px; }
+.play:active { transform: translateY(4px); box-shadow: none; }
+.src { font-size: 12.5px; color: var(--soft); line-height: 1.7; }
+.src code { color: #CFE3EA; }
+
+/* the card: 300 × 381, the share card's own size, at 1.08 */
+.stage { perspective: 1100px; }
+.card { position: relative; width: 324px; height: 411px; transform-style: preserve-3d; }
+.face { position: absolute; inset: 0; border-radius: 24px; overflow: hidden; backface-visibility: hidden; }
+.back { display: grid; place-items: center; }
+.back canvas { width: 324px; height: 405px; }
+.front { transform: rotateY(180deg); box-shadow: 0 0 0 2px var(--line), 0 6px 0 var(--line); }
+.front .bg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.spk { position: absolute; inset: 0 0 auto; height: 290px; pointer-events: none; }
+.top { position: absolute; top: 18px; inset-inline: 20px; display: flex; justify-content: space-between; align-items: center; color: var(--snow); }
+.brand { font-size: 22px; font-weight: 800; text-shadow: 0 2px 0 rgba(0,0,0,.12); }
+.kind { font-size: 13px; font-weight: 800; background: rgba(255,255,255,.26); border-radius: 10px; padding: 3px 10px; }
+.trophy { position: absolute; top: 52px; left: 50%; width: 176px; height: 176px; margin-left: -88px; }
+.tier { position: absolute; top: 232px; inset-inline: 0; text-align: center; font-size: 15px; font-weight: 800; color: var(--tier-dk, #B8860B); }
+.name { position: absolute; top: 254px; inset-inline: 16px; text-align: center; font-size: 34px; font-weight: 800; line-height: 1.25; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.name.empty { color: #AFAFAF; }
+.stats { position: absolute; bottom: 16px; inset-inline: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.st { display: flex; flex-direction: column; align-items: center; padding: 6px 2px 5px; background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 14px; }
+.st img { width: 22px; height: 22px; }
+.st b { font-size: 17px; font-weight: 800; color: var(--ink); line-height: 1.25; }
+.st span { font-size: 11px; font-weight: 700; color: var(--gray); }
+.cap { margin-top: 26px; font-size: 15px; font-weight: 700; color: var(--gray); opacity: 0; transition: opacity .4s; }
+.cap.on { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="stage"><div class="card" id="card">
+    <div class="face back"><canvas id="spin" width="648" height="810"></canvas></div>
+    <div class="face front" id="front">
+      <img class="bg" id="bg" src="card/bg-gold.svg" alt="">
+      <div class="spk" id="spk"></div>
+      <div class="top"><span class="brand">قدراتي</span><span class="kind">بطاقة طالب</span></div>
+      <canvas class="trophy" id="trophy" width="352" height="352"></canvas>
+      <div class="tier" id="tier">الدوري الذهبي</div>
+      <div class="name" id="nm">سارة</div>
+      <div class="stats">
+        <div class="st"><img src="../assets/icons/streak.svg" alt=""><b data-n="1">١</b><span>يوم حماس</span></div>
+        <div class="st"><img src="../assets/icons/lightning.svg" alt=""><b data-n="140">١٤٠</b><span>خبرة</span></div>
+        <div class="st"><img src="../assets/icons/book.svg" alt=""><b data-n="3">٣</b><span>دروس</span></div>
+      </div>
+    </div>
+  </div></div>
+  <div class="cap" id="cap">بطاقتك — تكبر مع كل دوري</div>
+</div>
+
+<div class="ctl">
+  <h1>Card lab</h1>
+  <p>Not in the app. Every moving piece and every sound is Duolingo's own file, played as-is; only the words and the student's numbers are ours.</p>
+  <div><label>Name</label><input id="nameIn" value="سارة" maxlength="20" oninput="setName(this.value)"></div>
+  <div><label>League</label><div class="tiers" id="tiers"></div></div>
+  <button class="play" onclick="play()">Play the reveal</button>
+  <div class="src">
+    <b>Back</b> — <code>nw_header_and_card_v10.riv</code> · card_spin_artboard<br>
+    <b>Face</b> — <code>year_in_review_league_*_share_card_background.xml</code> → SVG<br>
+    <b>Trophy</b> — <code>yir_league_icon.riv</code> · Trophy, color_num<br>
+    <b>Sparkles</b> — <code>yir_sparkles_1/2/3.json</code><br>
+    <b>Sounds</b> — <code>avatarcollections_newpiecereveal</code>, <code>leaderboard_card_unlock</code>, <code>leaderboard_card_lockin_gold</code>, <code>leaderboard_card_moveup</code>
+  </div>
+</div>
+
+<script src="../assets/streak/lottie.min.js"></script>
+<script src="https://unpkg.com/@rive-app/canvas@2.31.2"></script>
+<script>
+const AR = n => String(n).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+/* our five leagues on Duolingo's: its trophy colour and its share card */
+const TIERS = [
+  { k: "bronze", name: "الدوري البرونزي", color: 0, dk: "#8A5A2B" },
+  { k: "silver", name: "الدوري الفضي", color: 1, dk: "#6F7C86" },
+  { k: "gold", name: "الدوري الذهبي", color: 2, dk: "#C77A00" },
+  { k: "diamond", name: "الدوري الألماسي", color: 9, dk: "#1B8FB8" },
+  { k: "obsidian", name: "دوري الأبطال", color: 8, dk: "#3B3B46" }
+];
+let tier = TIERS[2];
+document.getElementById("tiers").innerHTML = TIERS.map((t, i) => `<button class="${t === tier ? "on" : ""}" onclick="setTier(${i})">${t.k}</button>`).join("");
+const $ = id => document.getElementById(id);
+function setName(v) { const n = v.trim(); $("nm").textContent = n || "اسمك هنا"; $("nm").classList.toggle("empty", !n); }
+function setTier(i) {
+  tier = TIERS[i];
+  document.querySelectorAll("#tiers button").forEach((b, k) => b.classList.toggle("on", k === i));
+  $("bg").src = `card/bg-${tier.k}.svg`; $("tier").textContent = tier.name; $("front").style.setProperty("--tier-dk", tier.dk);
+  if (trophyIn.color_num) trophyIn.color_num.value = tier.color;
+  play();
+}
+const snd = {}; ["reveal", "unlock", "lockin", "moveup"].forEach(k => { snd[k] = new Audio(`card/${k}.mp3`); snd[k].preload = "auto"; });
+const hit = (k, v) => { try { const a = snd[k].cloneNode(); a.volume = v || .8; a.play().catch(() => {}); } catch (e) {} };
+
+/* Duolingo's spinning card, the back */
+let spinIn = null;
+const spin = new rive.Rive({ src: "card/nw_header_and_card_v10.riv", canvas: $("spin"), artboard: "card_spin_artboard", stateMachines: "card_spin_statemachine", autoplay: true,
+  onLoad: () => { spinIn = spin.stateMachineInputs("card_spin_statemachine").find(i => i.name === "card_spin_trig"); ready(); } });
+/* Duolingo's league trophy, the face */
+const trophyIn = {};
+const trophy = new rive.Rive({ src: "card/yir_league_icon.riv", canvas: $("trophy"), artboard: "Trophy", stateMachines: "sm_trophy", autoplay: true,
+  onLoad: () => { trophy.stateMachineInputs("sm_trophy").forEach(i => trophyIn[i.name] = i); trophyIn.color_num.value = tier.color; ready(); } });
+/* Duolingo's Year in Review sparkles */
+let sparks = [];
+Promise.all([1, 2, 3].map(n => fetch(`card/yir_sparkles_${n}.json`).then(r => r.json()))).then(ds => {
+  sparks = ds.map((d, i) => lottie.loadAnimation({ container: $("spk"), renderer: "svg", loop: true, autoplay: false, animationData: d,
+    rendererSettings: { preserveAspectRatio: "xMidYMid slice" } }));
+  sparks.forEach((s, i) => { const el = $("spk").children[i]; if (el) el.style.cssText = "position:absolute;inset:0"; });
+  ready();
+});
+let loaded = 0;
+function ready() { if (++loaded === 3) play(); }
+
+let T = [];
+function play() {
+  T.forEach(clearTimeout); T = [];
+  const at = (ms, f) => T.push(setTimeout(f, ms));
+  const card = $("card");
+  card.getAnimations().forEach(a => a.cancel());
+  card.style.transform = "rotateY(0deg)";
+  $("cap").classList.remove("on");
+  sparks.forEach(s => s.goToAndStop(0, true));
+  if (trophyIn.current_bool) trophyIn.current_bool.value = false;
+  $("trophy").style.opacity = 0;
+  document.querySelectorAll(".st").forEach(s => { s.style.opacity = 0; });
+  /* 1. the back arrives and spins, as Duolingo's card does */
+  card.animate([{ transform: "translateY(60px) scale(.6) rotateY(0deg)", opacity: 0 }, { transform: "translateY(-8px) scale(1.04) rotateY(0deg)", opacity: 1, offset: .7 }, { transform: "rotateY(0deg)" }],
+    { duration: 520, easing: "cubic-bezier(.3,1.4,.5,1)" });
+  at(450, () => { if (spinIn) spinIn.fire(); });
+  /* 2. it turns over onto the face */
+  at(1350, () => {
+    hit("reveal");
+    card.animate([{ transform: "rotateY(0deg) scale(1)" }, { transform: "rotateY(100deg) scale(1.08)", offset: .45 }, { transform: "rotateY(190deg) scale(1)", offset: .8 }, { transform: "rotateY(180deg)" }],
+      { duration: 700, easing: "cubic-bezier(.5,0,.3,1)", fill: "forwards" });
+  });
+  /* 3. the trophy unlocks into the student's league and shines */
+  at(1950, () => {
+    const t = $("trophy"); t.style.opacity = 1;
+    t.animate([{ transform: "translateY(30px) scale(.3)", opacity: 0 }, { transform: "translateY(-10px) scale(1.12,.9)", opacity: 1, offset: .55 }, { transform: "scale(.96,1.05)", offset: .8 }, { transform: "none" }],
+      { duration: 520, easing: "cubic-bezier(.3,1.4,.5,1)" });
+    hit("unlock"); sparks.forEach((s, i) => setTimeout(() => s.play(), i * 400));
+  });
+  at(2600, () => { if (trophyIn.current_bool) trophyIn.current_bool.value = true; });   /* Duolingo's own shine across the trophy */
+  /* 4. the numbers land one by one */
+  document.querySelectorAll(".st").forEach((s, i) => at(2500 + i * 220, () => {
+    s.style.opacity = 1;
+    s.animate([{ transform: "translateY(16px) scale(.8)", opacity: 0 }, { transform: "translateY(-4px) scale(1.06)", opacity: 1, offset: .6 }, { transform: "none" }], { duration: 380, easing: "cubic-bezier(.3,1.5,.5,1)" });
+    hit("moveup", .5);
+  }));
+  /* 5. sealed */
+  at(3300, () => {
+    card.animate([{ transform: "rotateY(180deg) scale(1)" }, { transform: "rotateY(180deg) scale(1.05,.95)", offset: .3 }, { transform: "rotateY(180deg) scale(.98,1.02)", offset: .65 }, { transform: "rotateY(180deg)" }],
+      { duration: 420, easing: "ease-out", composite: "replace" });
+    hit("lockin");
+    $("cap").classList.add("on");
+  });
+}
+</script>
+</body>
+</html>

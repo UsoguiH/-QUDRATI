@@ -43,7 +43,7 @@
     /* the first run as a new student meets it: no name yet, so «ابدأ الآن» walks
        through every step (a saved name skips hello, the taste, the journey and
        the name card — which made the new first run look unchanged) */
-    user: location.hash === "#login" || location.hash === "#welcome" || location.hash === "#level" || location.hash.indexOf("#ob-") === 0 ? null : { name: "سارة", guest: false },
+    user: location.hash === "#login" || location.hash === "#welcome" || location.hash === "#level" || location.hash.indexOf("#ob-") === 0 || location.hash.indexOf("#signin") === 0 ? null : { name: "سارة", guest: false },
     xp: 527, totalXp: location.hash.indexOf("#earncross") === 0 ? 1190 : location.hash.indexOf("#climb") === 0 ? 380 : 850, tierSeen: 1,
     streak: { count: 12, last: null },
     /* #warm is the first lesson anyone ever plays, and the app decides that by
@@ -184,8 +184,10 @@
         A.levelReplay();   // «كم تعرف عن القسم الكمي؟»
       } else if (h === "welcome") {
         A.go("path"); document.getElementById("app").innerHTML = ""; A.welcomeReplay();
+      } else if (h.indexOf("signin") === 0) {
+        A.debugSignIn(h.slice(7) || "wall");   // #signin / #signin-how / #signin-name / #signin-done
       } else if (h.indexOf("ob-") === 0) {
-        A.obReplay(h.slice(3));   // #ob-hello / #ob-journey / #ob-level / #ob-goal / #ob-name / #ob-value / #ob-start / #ob-splash / #ob-pintro
+        A.obReplay(h.slice(3));   // #ob-hello / #ob-journey / #ob-level / #ob-goal / #ob-value / #ob-start / #ob-splash / #ob-pintro
       } else if (h === "placeintro") {
         A.placeIntroReplay();
       } else if (h === "place" || h === "placeweak" || h === "placegood" || h === "placemid" || h === "placegap") {

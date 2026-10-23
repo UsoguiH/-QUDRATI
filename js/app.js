@@ -3307,16 +3307,17 @@ function learnFs(s) { const n = String(s || "").replace(/\*/g, "").length; retur
 const RULE_OP = /^[=×÷+−←]$/, RULE_STEP = 110, RULE_LIT = 240;
 const RULE_AGAIN_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></svg>`;
 function ruleWords(text) {
-  let bold = false, t = -1;
-  return String(text).split(/\s+/).filter(Boolean).map((w, i) => {
-    let out = "", buf = "";
-    const flush = () => { if (buf) { out += bold ? `<b class="rk" style="--t:${t}">${esc(buf)}</b>` : esc(buf); buf = ""; } };
-    for (const ch of w) {
-      if (ch === "*") { flush(); bold = !bold; if (bold) t++; } else buf += ch;
-    }
-    flush();
-    return `<span class="rw${RULE_OP.test(w.replace(/\*/g, "")) ? " op" : ""}" style="--i:${i}" aria-hidden="true">${out}</span>`;
-  }).join(" ");
+  /* a marked term is one chip, however many words it has; the rest goes word by word */
+  let out = "", i = 0, t = 0;
+  String(text).split("*").forEach((p, k) => {
+    if (k % 2) { if (p) out += `<span class="rw rk" style="--i:${i++};--t:${t++}" aria-hidden="true">${esc(p)}</span>`; return; }
+    p.split(/(\s+)/).forEach(w => {
+      if (!w) return;
+      if (/^\s+$/.test(w)) { out += " "; return; }
+      out += `<span class="rw${RULE_OP.test(w) ? " op" : ""}" style="--i:${i++}" aria-hidden="true">${esc(w)}</span>`;
+    });
+  });
+  return out;
 }
 let ruleT = [];
 function rulePlay(again) {
@@ -3324,11 +3325,11 @@ function rulePlay(again) {
   const card = document.getElementById("lnRule");
   if (!card || fxReduced()) { if (card) card.classList.add("said"); return; }
   const ws = card.querySelectorAll(".rw"), n = ws.length;
-  const terms = new Set(Array.from(card.querySelectorAll(".rk"), b => b.style.getPropertyValue("--t"))).size;
+  const terms = card.querySelectorAll(".rk").length;
   if (again) {
     card.style.setProperty("--d", "-.45s");
     card.classList.remove("said");
-    const moving = card.querySelectorAll(".rw, .rk, .ln-rule-ic, .ln-rule-ic path");
+    const moving = card.querySelectorAll(".rw, .ln-rule-ic, .ln-rule-ic path");
     moving.forEach(x => { x.style.animation = "none"; });
     void card.offsetWidth;
     moving.forEach(x => { x.style.animation = ""; });
@@ -3776,7 +3777,7 @@ A.winNext = function () {
   wstStop(); wvStop();
   winHeroStop(); WIN = null;
   const L = LAST_LEARN;
-  const go = () => profileGate(() => L && L.next >= 0 ? A.startLearn(L.domKey, L.lesKey, L.next) : A.go("path"));
+  const go = () => signGate(() => L && L.next >= 0 ? A.startLearn(L.domKey, L.lesKey, L.next) : A.go("path"));
   if (pendingStreak > 0) { const c = pendingStreak; pendingStreak = 0; showStreakCelebration(c, go); }
   else go();
 };
@@ -6091,7 +6092,7 @@ function streakDayLabel(c) {
 A.winContinue = function () {
   wstStop(); wvStop();
   winHeroStop(); WIN = null;
-  const next = () => profileGate(() => {
+  const next = () => signGate(() => {
     if (!S.placeAsked && Object.values(S.lessons || {}).filter(p => p.stars > 0).length === 1) { renderPlaceOffer(); return; }
     A.go("path");
   });
@@ -7422,142 +7423,6 @@ function renderOb() {
   if (OB_BUZZ[step]) setTimeout(() => buzz(OB_BUZZ[step]), 250);
   if (step === "goal" && OB.goal != null) setTimeout(() => glWave(OB.goal), 700);
 }
-/* The profile they are making (2026-10-23: the user turned the CodePen card
-   down — «replace it with something else … we want something Brilliant»): a
-   Duolingo profile header made out to them before they have typed a thing. A
-   band of Brilliant's flat shapes drifts over the top, the avatar sits on its
-   edge, then the name, «في قدراتي من …» and what the first win already earned
-   (the streak, the XP, the league) counting up. Typing paints it: the avatar
-   takes the name's first letter, turning over to it, and a colour of its own
-   (pvPaint) that the band follows. Saving (pfStamp) pulls each shape into the
-   avatar on a rising note, the avatar squashes and pops, a gold ring draws
-   round it, a blue tick lands on its corner, and قدّور says their name. */
-function joinedDate() {
-  const a = (S.joined || todayKey()).split("-"), d = new Date(+a[0], +a[1] - 1, +a[2]);
-  return toAr(d.getDate()) + " " + AR_MONTHS[d.getMonth()] + " " + toAr(d.getFullYear());
-}
-const PV_PAINT = [["green", "green-lip", "green-bg"], ["blue", "blue-dk", "blue-light"], ["purple", "purple-dk", "purple-tint"],
-  ["orange", "orange-dk", "orange-bg"], ["red", "red-dk2", "red-bg"], ["gold", "gold-dk", "gold-bg"]];
-function pvPaint(nm) {
-  if (!nm) return "--pv:var(--gray-icon);--pv-dk:var(--gray-shadow);--pv-bg:var(--surface-hover)";
-  let h = 0; for (const ch of nm) h = (h * 31 + ch.codePointAt(0)) >>> 0;
-  const [c, dk, bg] = PV_PAINT[h % PV_PAINT.length];
-  return `--pv:var(--${c});--pv-dk:var(--${dk});--pv-bg:var(--${bg})`;
-}
-const PV_GHOST = `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="15" r="7.5" fill="currentColor"/><path d="M7 35c1.5-7.5 6.8-11 13-11s11.5 3.5 13 11Z" fill="currentColor"/></svg>`;
-/* the band's shapes: Brilliant's flat geometry in the unit colours */
-const PV_SHAPES = [
-  ["blue", `<path d="M20 6 35 32H5Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>`],
-  ["gold", `<circle cx="20" cy="20" r="14"/>`],
-  ["green", `<rect x="7" y="7" width="26" height="26" rx="6" transform="rotate(14 20 20)"/>`],
-  ["purple", `<path d="M15 5h10v10h10v10H25v10H15V25H5V15h10Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>`],
-  ["orange", `<path d="M5 29a15 15 0 0 1 30 0Z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>`]
-];
-const PV_TICK = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12.5l4 4 8-9"/></svg>`;
-function profileView() {
-  const tier = LEAGUE_TIERS[tierIndex()], st = (S.streak && S.streak.count) || 0;
-  return `<div class="pv-stage"><div class="pv" id="pv" style="${pvPaint("")}" role="img" aria-label="ملفك في قدراتي">
-    <div class="pv-band" aria-hidden="true">${PV_SHAPES.map(([c, d], i) =>
-      `<span class="pv-sh pv-sh${i}" style="color:var(--${c})"><svg viewBox="0 0 40 40" fill="currentColor">${d}</svg></span>`).join("")}</div>
-    <div class="pv-av-wrap">
-      <svg class="pv-ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="56" pathLength="100"/></svg>
-      <div class="pv-av" id="pvAv"><span class="pv-ini" id="pvIni">${PV_GHOST}</span></div>
-      <span class="pv-tick" aria-hidden="true">${PV_TICK}</span>
-    </div>
-    <div class="pv-name empty" id="pvName">اسمك هنا</div>
-    <div class="pv-since">في قدراتي من ${joinedDate()}</div>
-    <div class="pv-stats">
-      <div class="pv-st">${ico("streak", 26)}<b data-n="${st}">${toAr(st)}</b><span>${st === 1 ? "يوم حماس" : "أيام حماس"}</span></div>
-      <div class="pv-st">${ico("lightning", 26)}<b data-n="${S.totalXp || 0}">${toAr(S.totalXp || 0)}</b><span>خبرة</span></div>
-      <div class="pv-st">${rankImg(tier.key, 26)}<b>${tier.name}</b><span>الدوري</span></div>
-    </div>
-  </div></div>`;
-}
-let pvT = [];
-function pvStop() {
-  pvT.forEach(clearTimeout); pvT = [];
-  document.querySelectorAll(".pv-st b[data-n]").forEach(b => { b.textContent = toAr(+b.dataset.n); });   // a count cut short lands on its number
-}
-function pvEnter() {
-  pvStop();
-  if (fxReduced()) return;
-  document.querySelectorAll(".pv-st b[data-n]").forEach((b, i) => {
-    const n = +b.dataset.n; b.textContent = toAr(0);
-    pvT.push(setTimeout(() => countUp(b, n, "", 700 + Math.min(n, 400)), 900 + i * 120));
-  });
-}
-/* every keystroke lands on the profile: the name, and the avatar's letter and
-   colour when the first letter changes */
-A.pfName = function (v) {
-  v = String(v).replace(/[*<>]/g, "");
-  OB.name = v;
-  const nm = v.trim(), pv = document.getElementById("pv"), el = document.getElementById("pvName"), ini = document.getElementById("pvIni");
-  if (!pv || !el || !ini) return;
-  el.textContent = nm || "اسمك هنا";
-  el.classList.toggle("empty", !nm);
-  el.style.fontSize = nm.length > 14 ? "22px" : "";
-  const first = Array.from(nm)[0] || "";
-  if (ini.dataset.ch !== first) {
-    ini.dataset.ch = first;
-    ini.innerHTML = first ? esc(first) : PV_GHOST;
-    pv.setAttribute("style", pvPaint(nm));
-    if (!fxReduced()) ini.parentNode.animate([{ transform: "rotateY(90deg) scale(.9)" }, { transform: "rotateY(-12deg) scale(1.06)", offset: .7 }, { transform: "none" }],
-      { duration: 360, easing: "cubic-bezier(.3,1.4,.5,1)" });
-  }
-  pv.setAttribute("aria-label", "ملفك في قدراتي" + (nm ? " باسم " + nm : ""));
-  const go = document.getElementById("obGo"); if (go) go.disabled = !nm;
-};
-function pfStamp() {
-  OB.stamped = true;
-  const q = c => document.querySelector(c);
-  const nm = OB.name.trim(), wrap = q(".nm"), pv = document.getElementById("pv"), av = q(".pv-av-wrap"),
-        input = document.getElementById("obName"), cta = q(".ob-cta");
-  if (input) input.blur();
-  const greet = () => {
-    const say = q(".ob-say");
-    if (say) { say.innerHTML = sayHtml(`أهلاً يا *${nm}*! هذا ملفك.`); sayPlay(60); }
-    const sub = q(".obs-sub"); if (sub) sub.remove();
-    const duo = q(".obs-duo"); if (duo) duo.src = "assets/mascot/qaddour-cheer.png";
-  };
-  const done = () => {
-    if (!cta) return;
-    cta.innerHTML = PF_GO; cta.style.pointerEvents = "";
-    if (!fxReduced()) cta.animate([{ transform: "translateY(18px)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 350, easing: "cubic-bezier(.3,1.6,.5,1)" });
-  };
-  if (!wrap || !pv || fxReduced()) { if (wrap) wrap.classList.add("stamped"); greet(); done(); return; }
-  pvStop();
-  const at = (ms, f) => pvT.push(setTimeout(f, ms));
-  if (cta) cta.style.pointerEvents = "none";   // a nervous double-tap must not skip the payoff
-  [input, cta].filter(Boolean).forEach(x => x.animate([{ opacity: 1 }, { opacity: 0, transform: "translateY(14px)" }], { duration: 180, easing: "ease-in", fill: "forwards" }));
-  at(200, () => {
-    const before = pv.getBoundingClientRect().top;
-    wrap.classList.add("stamped");
-    pv.animate([{ transform: `translateY(${before - pv.getBoundingClientRect().top}px)` }, { transform: "none" }], { duration: 600, easing: "cubic-bezier(.7,0,.2,1)" });
-  });
-  /* the shapes fly into the avatar, one note higher each */
-  at(850, () => {
-    const r = av.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-    document.querySelectorAll(".pv-sh").forEach((sh, i) => {
-      const b = sh.getBoundingClientRect(), dx = cx - (b.left + b.width / 2), dy = cy - (b.top + b.height / 2);
-      sh.animate([{ transform: "none", opacity: 1 }, { transform: `translate(${dx * -.08}px,${dy * -.08 - 6}px) scale(1.15)`, opacity: 1, offset: .3 },
-        { transform: `translate(${dx}px,${dy}px) scale(.2) rotate(180deg)`, opacity: 0 }],
-        { duration: 420, delay: i * 90, easing: "cubic-bezier(.5,0,.75,0)", fill: "forwards" });
-      at(i * 90 + 400, () => { beep([[523 * Math.pow(2, i * 2 / 12), .05]]); buzz(4); });
-    });
-  });
-  /* the avatar takes them in, pops, the ring draws round it and the tick lands */
-  at(1720, () => {
-    av.animate([{ transform: "scale(1)" }, { transform: "scale(1.12,.86)", offset: .25 }, { transform: "scale(.94,1.08)", offset: .55 }, { transform: "scale(1)" }],
-      { duration: 520, easing: "ease-out" });
-    wrap.classList.add("sealed");
-    cvTone(784, 0, .5, "triangle", .12); cvTone(1175, 0, .4, "sine", .06, .06); buzz(28);
-    greet();
-    const duo = q(".obs-duo");
-    if (duo) duo.animate([{ transform: "none" }, { transform: "translateY(-30px) scale(.94,1.07)", offset: .4 }, { transform: "scale(1.08,.92)", offset: .8 }, { transform: "none" }],
-      { duration: 620, easing: "ease-out" });
-  });
-  at(2500, done);
-}
 /* An answer to a question in the first run (the taste item) lands with the
    lesson's own jump (fxAddJump) — the same launch, hang, fall, squash and
    settle a right answer gets. Choices that are not answers (level, goal, the
@@ -7655,125 +7520,206 @@ A.obNext = function () {
   OB.i++; OB.dir = 1; renderOb();
 };
 
-/* The name, after the first win (2026-10-23: the user moved it out of the
-   first run and asked for it «in very nice UI» where Duolingo and Brilliant ask:
-   both ask for a profile only once the first lesson is behind them, when there
-   is something worth keeping). Asked once, by whoever finishes a lesson without
-   a name — the win screen's exits pass through profileGate. It opens on the
-   profile they are making (profileView), «اسمك هنا» where the name goes, and
-   two ways to fill it: type it, or take it from Google. «لاحقاً» keeps them a guest and never asks again;
-   Settings can name them any day. The name stays on the phone either way.
+/* Signing in (2026-10-23: the user removed the name screen and asked for «a
+   screen for sign in with Google or putting your name … like a real app … the
+   sign in and the flow to it very nice, like Duolingo and Brilliant»). Duolingo
+   asks once the first lesson is behind them, with Duo and «Don't lose your
+   progress! Let's create a profile.» and two buttons; Brilliant then lays the
+   ways in as big buttons under a title. So: the win screen's exits pass through
+   signGate once, for whoever has no name yet (S.profileAsked), and the flow is
+     wall — قدّور among Brilliant's flat shapes: «لا تضيّع تقدّمك!», what the
+            first win earned (streak, XP, league), «سوّ ملفي» / «لاحقاً»;
+     how  — «سوّ ملفك»: «المتابعة مع Google» and «أكمل باسمي» as Duolingo's
+            white 3D buttons, and what happens to their data;
+     name — Duolingo's own name step: «وش اسمك؟», one big field;
+     done — their avatar (the name's first letter, a colour from the name)
+            pops in among the shapes, a gold ring draws round it, a blue tick
+            lands, «أهلاً يا …!», and on to where the win was going.
+   Settings opens it at «how» for a guest. «لاحقاً» keeps them a guest and is
+   never asked again. The name stays on the phone.
 
-   Google gives a name only (Google Identity Services, client side: the JWT's
-   given_name, never verified because nothing leaves the phone, and the email is
-   not kept). It needs an OAuth client ID for this origin in GOOGLE_CLIENT_ID;
-   without one, offline, or inside the Android app (Google refuses embedded
-   web views), the Google button is simply not there. */
+   Google gives a first name only: Google Identity Services' token client, then
+   Google's userinfo for given_name, all in the browser; the email is not kept.
+   It needs an OAuth client ID for this origin in GOOGLE_CLIENT_ID. Without one,
+   offline, or inside the Android app (Google refuses embedded web views) its
+   button says «قريباً» and does nothing. */
 const GOOGLE_CLIENT_ID = "";
-const PF_GO = `<button class="btn" onclick="A.pfDone()">المتابعة</button>`;
-let PF_THEN = null;
-function profileGate(then) {
+const siGoogleOk = () => !!GOOGLE_CLIENT_ID && navigator.onLine !== false && !window.Capacitor;
+const PV_PAINT = [["green", "green-lip", "green-bg"], ["blue", "blue-dk", "blue-light"], ["purple", "purple-dk", "purple-tint"],
+  ["orange", "orange-dk", "orange-bg"], ["red", "red-dk2", "red-bg"], ["gold", "gold-dk", "gold-bg"]];
+function pvPaint(nm) {
+  let h = 0; for (const ch of nm) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+  const [c, dk, bg] = PV_PAINT[h % PV_PAINT.length];
+  return `--pv:var(--${c});--pv-dk:var(--${dk});--pv-bg:var(--${bg})`;
+}
+/* Brilliant's flat geometry in the unit colours */
+const SI_SHAPES = [
+  ["blue", `<path d="M20 6 35 32H5Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>`],
+  ["gold", `<circle cx="20" cy="20" r="14"/>`],
+  ["green", `<rect x="7" y="7" width="26" height="26" rx="6" transform="rotate(14 20 20)"/>`],
+  ["purple", `<path d="M15 5h10v10h10v10H25v10H15V25H5V15h10Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>`],
+  ["orange", `<path d="M5 29a15 15 0 0 1 30 0Z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>`],
+  ["red", `<path d="M20 4 36 20 20 36 4 20Z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>`]
+];
+const siShapes = () => `<span class="si-shapes" aria-hidden="true">${SI_SHAPES.map(([c, d], i) =>
+  `<span class="si-sh si-sh${i}" style="color:var(--${c})"><svg viewBox="0 0 40 40" fill="currentColor">${d}</svg></span>`).join("")}</span>`;
+const SI_TICK = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12.5l4 4 8-9"/></svg>`;
+const SI_G = `<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.2C12.4 13.7 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.5 28.5c-.5-1.4-.8-2.9-.8-4.5s.3-3.1.8-4.5l-7.9-6.2C.9 16.6 0 20.2 0 24s.9 7.4 2.6 10.7l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.3 0-11.6-4.2-13.5-10l-7.9 6.2C6.6 42.6 14.6 48 24 48z"/></svg>`;
+const SI_ME = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1-4 4-6 7.5-6s6.5 2 7.5 6"/></svg>`;
+const SI_LOCK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>`;
+let SI = null, siT = [];
+function siStop() { siT.forEach(clearTimeout); siT = []; }
+function signGate(then) {
   if ((S.user && !S.user.guest) || S.profileAsked) { then(); return; }
-  PF_THEN = then;
-  renderProfile();
+  signOpen("wall", then);
 }
-const pfGoogleOk = () => !!GOOGLE_CLIENT_ID && navigator.onLine !== false && !window.Capacitor;
-function renderProfile() {
-  OB = { profile: true, name: "", goal: dailyGoal(), stamped: false, pct: 0, dir: 1 };
-  const gOk = pfGoogleOk();
-  obFrame(`<div class="nm pf">
-      ${obSide("cheer", "أول درس خلص! هذا *ملفك* — ناقصه اسمك.", "اختياري — اسمك يبقى في جهازك بس")}
-      ${profileView()}
-    </div>`, `<button class="btn pf-type" onclick="A.pfType()">${PEN_SVG}اكتب اسمك</button>
-      ${gOk ? `<div class="pf-or"><span>أو</span></div><div class="pf-google" id="pfGoogle"></div>` : ""}
-      <button class="login-skip pf-later" onclick="A.pfLater()">لاحقاً</button>`, 0, "", "ob-name ob-profile", false);
-  pvEnter();
-  if (gOk) pfGoogle();
+function signOpen(step, then, from) {
+  SI = { si: true, step, then, from: from || "win", name: "", pct: 0, dir: 1 };
+  OB = SI;   // obFrame reads its slide direction from here
+  renderSign();
 }
-const PEN_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>`;
-/* «اكتب اسمك»: the profile slides up, the field comes in under it with the
-   keyboard, and every letter lands on the profile (A.pfName) */
-A.pfType = function () {
-  const card = document.querySelector(".pf .pv-stage"), cta = document.querySelector(".ob-cta");
-  if (!card || !cta || document.getElementById("obName")) return;
-  sndTap(); buzz(8);
-  const y0 = card.getBoundingClientRect().top;
-  card.parentNode.classList.add("typing");
-  if (!fxReduced()) card.animate([{ transform: `translateY(${y0 - card.getBoundingClientRect().top}px)` }, { transform: "none" }], { duration: 500, easing: "cubic-bezier(.16,1,.3,1)" });
-  card.insertAdjacentHTML("afterend", `<input id="obName" class="login-input ob-input pf-input" type="text" maxlength="20" placeholder="اكتب اسمك" autocomplete="given-name" enterkeyhint="done"
-    oninput="A.pfName(this.value)" onkeydown="if(event.key==='Enter')A.pfSave()">`);
-  cta.innerHTML = `<button class="btn" id="obGo" onclick="A.pfSave()" disabled>احفظ بطاقتي</button><button class="login-skip pf-later" onclick="A.pfLater()">لاحقاً</button>`;
-  const n = document.getElementById("obName"); if (n) n.focus();
+A.signIn = function () { signOpen("how", () => A.go("settings"), "settings"); };
+const SI_ORDER = ["wall", "how", "name", "done"];
+function siGo(step) {
+  SI.dir = SI_ORDER.indexOf(step) < SI_ORDER.indexOf(SI.step) ? -1 : 1;
+  SI.step = step;
+  renderSign();
+}
+A.siTo = function (step) { sndTap(); buzz(8); siGo(step); };
+A.siBack = function () {
+  if (SI.step === "name") { siGo("how"); return; }
+  if (SI.step === "how" && SI.from !== "settings") { siGo("wall"); return; }
+  A.siLater(true);
 };
-function pfKeep(name, google) {
+function renderSign() {
+  siStop();
+  const step = SI.step, tier = LEAGUE_TIERS[tierIndex()], st = (S.streak && S.streak.count) || 0;
+  if (step === "wall") {
+    obFrame(`<div class="si si-wall">
+        <h1 class="obt-bubble ob-say si-say">${sayHtml("لا تضيّع تقدّمك! خلّنا نسوّي لك *ملف*.")}</h1>
+        <div class="si-hero">${siShapes()}${mascot("cheer", "si-duo")}</div>
+        <div class="si-earn">
+          <span style="--k:0">${ico("streak", 22)}<b>${toAr(Math.max(1, st))}</b> ${Math.max(1, st) === 1 ? "يوم حماس" : "أيام حماس"}</span>
+          <span style="--k:1">${ico("lightning", 22)}<b>${toAr(S.totalXp || 0)}</b> خبرة</span>
+          <span style="--k:2">${rankImg(tier.key, 22)}<b>${tier.name}</b></span>
+        </div>
+      </div>`,
+      `<button class="btn" onclick="A.siTo('how')">سوّ ملفي</button><button class="login-skip" onclick="A.siLater()">لاحقاً</button>`,
+      0, "", "si-screen si-s-wall", false);
+    setTimeout(() => buzz([20, 60, 40]), 340);
+    return;
+  }
+  if (step === "how") {
+    const g = siGoogleOk();
+    obFrame(`<div class="si si-how">
+        <div class="si-art">${siShapes()}<span class="si-art-av">${SI_ME}</span></div>
+        <h1 class="si-title">سوّ ملفك</h1>
+        <p class="si-sub">احفظ تقدّمك باسمك — مجاناً، وفي ثوانٍ.</p>
+        <div class="si-ways">
+          <button class="si-way si-google${g ? "" : " soon"}" onclick="A.siGoogle()" ${g ? "" : 'aria-disabled="true"'}>${SI_G}<span>المتابعة مع Google</span>${g ? "" : `<i class="si-soon">قريباً</i>`}</button>
+          <button class="si-way si-named" onclick="A.siTo('name')">${SI_ME}<span>أكمل باسمي</span></button>
+        </div>
+        <p class="si-note">${SI_LOCK}<span>تقدّمك يبقى في جهازك — ما نحفظ إيميلك ولا نرسل بياناتك لأي مكان.</span></p>
+      </div>`,
+      `<button class="login-skip" onclick="A.siLater()">لاحقاً</button>`, 0, "A.siBack()", "si-screen si-s-how", false);
+    if (g) siGsiLoad();
+    return;
+  }
+  if (step === "name") {
+    obFrame(`<div class="si si-name">
+        <h1 class="si-title">وش اسمك؟</h1>
+        <p class="si-sub">يظهر على ملفك وفي الدوري — ويبقى في جهازك بس.</p>
+        <input id="siName" class="login-input si-input" type="text" maxlength="20" placeholder="الاسم" autocomplete="given-name" enterkeyhint="done"
+          value="${esc(SI.name)}" oninput="A.siName(this.value)" onkeydown="if(event.key==='Enter')A.siSave()">
+      </div>`,
+      `<button class="btn" id="siGo" onclick="A.siSave()" ${SI.name.trim() ? "" : "disabled"}>المتابعة</button>`, 0, "A.siBack()", "si-screen si-s-name", false);
+    setTimeout(() => { const n = document.getElementById("siName"); if (n) n.focus(); }, 380);
+    return;
+  }
+  /* done: their avatar arrives among the shapes and is sealed */
+  const nm = SI.name.trim();
+  obFrame(`<div class="si si-done" style="${pvPaint(nm)}">
+      <div class="si-art si-art-done">${siShapes()}
+        <span class="si-av-wrap"><svg class="si-ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="56" pathLength="100"/></svg>
+          <span class="si-av"><span>${esc(Array.from(nm)[0] || "")}</span></span><span class="si-tick" aria-hidden="true">${SI_TICK}</span></span>
+      </div>
+      <h1 class="si-title si-hi">أهلاً يا ${esc(nm)}!</h1>
+      <p class="si-sub">ملفك جاهز${S.user && S.user.google ? " — دخلت بحساب Google" : ""}. تقدّمك محفوظ باسمك.</p>
+    </div>`,
+    `<button class="btn" onclick="A.siDone()">يلا نكمل</button>`, 0, "", "si-screen si-s-done", false);
+  if (fxReduced()) { document.querySelector(".si-done").classList.add("sealed"); return; }
+  const at = (ms, f) => siT.push(setTimeout(f, ms));
+  at(700, () => {
+    const av = document.querySelector(".si-av-wrap");
+    if (av) av.animate([{ transform: "scale(1)" }, { transform: "scale(1.12,.86)", offset: .25 }, { transform: "scale(.94,1.08)", offset: .55 }, { transform: "scale(1)" }], { duration: 520, easing: "ease-out" });
+    const d = document.querySelector(".si-done"); if (d) d.classList.add("sealed");
+    cvTone(784, 0, .5, "triangle", .12); cvTone(1175, 0, .4, "sine", .06, .06); buzz(28);
+  });
+}
+A.siName = function (v) {
+  SI.name = String(v).replace(/[*<>]/g, "");
+  const go = document.getElementById("siGo"); if (go) go.disabled = !SI.name.trim();
+};
+function siKeep(name, google) {
   const n = String(name || "").replace(/[*<>]/g, "").trim().slice(0, 20);
   if (!n) return false;
-  OB.name = n;
+  SI.name = n;
   S.user = { name: n, guest: false }; if (google) S.user.google = true;
   S.profileAsked = true; S.joined = S.joined || todayKey();
   save();
   return true;
 }
-A.pfSave = function () {
-  if (!OB || !OB.profile || OB.stamped) return;
-  if (!pfKeep(OB.name)) { const n = document.getElementById("obName"); if (n) { n.classList.remove("err"); void n.offsetWidth; n.classList.add("err"); } return; }
-  pfStamp();
+A.siSave = function () {
+  if (!SI || SI.step !== "name") return;
+  if (!siKeep(SI.name)) { const n = document.getElementById("siName"); if (n) { n.classList.remove("err"); void n.offsetWidth; n.classList.add("err"); } return; }
+  sndTap(); siGo("done");
 };
-A.pfLater = function () {
-  S.user = S.user || { name: "ضيف", guest: true };
-  S.profileAsked = true; save(); sndTap();
-  A.pfDone();
+A.siLater = function (back) {
+  if (SI && SI.from !== "settings") { S.user = S.user || { name: "ضيف", guest: true }; S.profileAsked = true; save(); }
+  if (!back) sndTap();
+  A.siDone();
 };
-A.pfDone = function () {
-  pvStop();
-  OB = null;
-  const then = PF_THEN; PF_THEN = null;
+A.siDone = function () {
+  siStop();
+  const then = SI && SI.then; SI = null; OB = null;
   if (then) then(); else A.go("path");
 };
-/* Google's own button (its rules: their mark, their words), drawn by their
-   script into #pfGoogle; the name it hands back is written onto the profile
-   and sealed exactly as a typed one */
-let pfGsi = null;
-function pfGoogle() {
-  const box = document.getElementById("pfGoogle");
-  if (!box) return;
-  const draw = () => {
-    const g = window.google && google.accounts && google.accounts.id;
-    if (!g || !document.getElementById("pfGoogle")) return;
-    g.initialize({ client_id: GOOGLE_CLIENT_ID, callback: pfGoogleBack, ux_mode: "popup", context: "use", itp_support: true });
-    g.renderButton(box, { type: "standard", theme: "outline", size: "large", shape: "pill", text: "continue_with", locale: "ar", width: Math.min(360, box.clientWidth || 320) });
-  };
-  if (window.google && google.accounts) { draw(); return; }
-  if (!pfGsi) {
-    pfGsi = new Promise((ok, no) => {
-      const sc = document.createElement("script");
-      sc.src = "https://accounts.google.com/gsi/client"; sc.async = true;
-      sc.onload = ok; sc.onerror = no;
-      document.head.appendChild(sc);
-    });
-  }
-  pfGsi.then(draw).catch(() => {
-    pfGsi = null;
-    const b = document.getElementById("pfGoogle"); if (b) { b.previousElementSibling && b.previousElementSibling.remove(); b.remove(); }
+/* Google: the script is fetched as «how» opens, so the tap itself opens
+   Google's window (a pop-up must come straight from a tap) */
+let siGsi = null;
+function siGsiLoad() {
+  if (window.google && google.accounts && google.accounts.oauth2) return Promise.resolve();
+  if (!siGsi) siGsi = new Promise((ok, no) => {
+    const sc = document.createElement("script");
+    sc.src = "https://accounts.google.com/gsi/client"; sc.async = true;
+    sc.onload = ok; sc.onerror = () => { siGsi = null; no(); };
+    document.head.appendChild(sc);
   });
+  return siGsi;
 }
-function pfGoogleBack(res) {
-  if (!OB || !OB.profile || OB.stamped) return;
-  let p = {};
-  try {
-    const b = res.credential.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
-    p = JSON.parse(decodeURIComponent(Array.from(atob(b), c => "%" + c.charCodeAt(0).toString(16).padStart(2, "0")).join("")));
-  } catch (e) { return; }
-  if (!pfKeep(p.given_name || p.name, true)) return;
-  A.pfName(OB.name);
-  pfStamp();
-}
-/* dev harness: the profile, blank or (#ob-hi) with a name typed and saved */
-A.debugProfile = function (hi) {
+A.siGoogle = function () {
+  const b = document.querySelector(".si-google");
+  if (!siGoogleOk() || !(window.google && google.accounts && google.accounts.oauth2)) {
+    if (b && !fxReduced()) b.animate([{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(6px)" }, { transform: "translateX(-3px)" }, { transform: "none" }], { duration: 320 });
+    buzz(12);
+    return;
+  }
+  sndTap();
+  google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID, scope: "openid profile",
+    callback: r => {
+      if (!r || !r.access_token || !SI) return;
+      fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: "Bearer " + r.access_token } })
+        .then(x => x.json()).then(p => { if (SI && siKeep(p.given_name || p.name, true)) siGo("done"); }).catch(() => {});
+    }
+  }).requestAccessToken();
+};
+/* dev harness: the flow on any step (preview.html#signin, #signin-how, #signin-name, #signin-done) */
+A.debugSignIn = function (step) {
   S.profileAsked = false;
-  PF_THEN = () => A.go("path");
-  renderProfile();
-  if (hi) setTimeout(() => { A.pfType(); A.pfName("سارة"); const n = document.getElementById("obName"); if (n) n.value = "سارة"; A.pfSave(); }, 900);
+  signOpen(step === "done" || step === "name" ? "how" : step || "wall", () => A.go("path"));
+  if (step === "name") siGo("name");
+  if (step === "done") { siKeep("سارة"); siGo("done"); }
 };
 A.obBack = function () {
   if (!OB || OB.i === 0) { OB = null; renderWelcome(); return; }
@@ -7821,7 +7767,6 @@ A.obReplay = function (step) {
   A.obStart();
   OB.steps = OB_STEPS.slice();
   if (step === "splash" || step === "pintro") { OB.i = OB.steps.indexOf("start"); OB.start = step === "pintro" ? "find" : "scratch"; renderObSplash(OB.start); return; }
-  if (step === "name" || step === "hi") { OB = null; A.debugProfile(step === "hi"); return; }
   OB.i = Math.max(0, OB.steps.indexOf(step || "level"));
   renderOb();
 };
@@ -7964,9 +7909,9 @@ function renderSettings() {
       </div>` : `
       <div class="set-me-tx">
         <b>${guest ? "ضيف" : esc(name)}</b>
-        <span>${guest ? "أضف اسمك ليظهر في التطبيق" : (S.joined ? "بدأ معنا " + fmtDayKey(S.joined) : "عضو جديد")}</span>
+        <span>${guest ? "سجّل باسمك أو بحساب Google" : (S.joined ? "بدأ معنا " + fmtDayKey(S.joined) : "عضو جديد")}</span>
       </div>
-      <button type="button" class="set-edit" onclick="A.setEditName(true)">${guest ? "أضف اسمك" : "تعديل"}</button>`}
+      <button type="button" class="set-edit" onclick="${guest ? "A.signIn()" : "A.setEditName(true)"}">${guest ? "سوّ ملفك" : "تعديل"}</button>`}
     </div>
 
     <div class="set-lab">التدريب</div>

@@ -75,7 +75,7 @@
 <body>
 <header>
   <h1>Every change, in order</h1>
-  <p>Two goals from 2026-10-21, four from 2026-10-22 and ten from 2026-10-23. Press <b>Play</b> beside a change to open that screen as it is now; scripted ones tap, type and pick by themselves. Two screens run at a time.</p>
+  <p>Two goals from 2026-10-21, four from 2026-10-22 and eleven from 2026-10-23. Press <b>Play</b> beside a change to open that screen as it is now; scripted ones tap, type and pick by themselves. Two screens run at a time.</p>
   <div class="legend"><span class="tag t-live">Live now</span><span class="tag t-old">Replaced later (the frame shows what replaced it)</span><span class="tag t-new">This goal</span></div>
 </header>
 
@@ -647,6 +647,32 @@ const PARTS = [
         code: "ruleWords, rulePlay, .rk, rkLit, js/data/learn.js rules" },
       { t: "Bookkeeping", s: "live",
         what: ["sw.js and index.html bumped to 87. CLAUDE.md updated."],
+        noframe: "No screen — files and notes" }
+    ] },
+  { h: "Goal 17: signing in like a real app, the rule's words as blue chips, and a card made of Duolingo's files",
+    p: "Your words: «remove the name screen completely», «make the components in blue like اضرب or ٥», «add another screen for sign in with Google or putting your name … like a real app … very nice like Duolingo and Brilliant», and «create a new card screen but don't add it in the main app … all its components from Duolingo's files».",
+    items: [
+      { t: "Signing in, after the first win", s: "new", hash: "signin",
+        what: ["The name screen and its profile are gone. In their place is a four-screen flow, the way Duolingo and Brilliant do it.",
+               "Duolingo's wall: قدّور among floating shapes says «لا تضيّع تقدّمك! خلّنا نسوّي لك ملف.», with what the first win earned underneath, «سوّ ملفي» or «لاحقاً».",
+               "Brilliant's ways in: «سوّ ملفك», «المتابعة مع Google» and «أكمل باسمي» as big white buttons, and a line saying their data stays on the phone.",
+               "Duolingo's name step: «وش اسمك؟» and one big field. Then their avatar pops in among the shapes, a gold ring draws round it, a blue tick lands: «أهلاً يا سارة!».",
+               "A guest can open it from Settings («سوّ ملفك»). The Google button needs your OAuth client ID in GOOGLE_CLIENT_ID; until then it says «قريباً»."],
+        why: "A sign-in that looks and moves like a real app, asked when there is progress to keep.",
+        code: "signGate, renderSign, A.siTo, A.siSave, A.siGoogle, SI_SHAPES",
+        extra: [{ label: "The ways in", hash: "signin-how" }, { label: "The name", hash: "signin-name" }, { label: "Done", hash: "signin-done" }] },
+      { t: "The rule's words as blue chips", s: "new", hash: "learn",
+        run: w => [[1200, () => { for (let k = 0; k < 20; k++) { const it = w.A.debugCurrent(); if (it && it.t === "see" && it.rule) break; w.A.debugLearnAnswer(true); w.A.next(); } }]],
+        what: ["Each marked term is now one blue chip like «اضرب» and «٥» above it, however many words it has, lit one after another once the rule has been said."],
+        why: "Image 68.",
+        code: "ruleWords, .rk, rkLit" },
+      { t: "The card lab (not in the app)", s: "new", noframe: "<a href=\"card.html\" target=\"_blank\" style=\"color:var(--blue);font-weight:800\">Open the card lab</a>",
+        what: ["A student card made only of Duolingo's files, played as they are: their spinning card is the back, it turns over onto their Year in Review league share card, their league trophy pops in and their shine crosses it, their sparkles drift over it, and the stats land one by one, each on one of their sounds.",
+               "Try any name and all five leagues (bronze, silver, gold, diamond, champions); the card's colour and trophy follow the league."],
+        why: "«all its components from Duolingo's files» — your last chance for a card.",
+        code: "tools/card.html, tools/card/" },
+      { t: "Bookkeeping", s: "live",
+        what: ["sw.js and index.html bumped to 88. CLAUDE.md updated."],
         noframe: "No screen — files and notes" }
     ] }
 ];
