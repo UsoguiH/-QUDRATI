@@ -7,217 +7,282 @@
 <title>Card Lab</title>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
-/* The card lab (2026-10-23): the user's last chance for a card, «all its
-   components from Duolingo's files». Not in the app. Every piece is Duolingo's
-   own, taken from the decompiled APK and played as it is:
-     the back      — nw_header_and_card_v10.riv, card_spin_artboard (Duolingo's
-                     card that spins before it turns over)
-     the face      — year_in_review_league_<tier>_share_card_background.xml, the
-                     Year in Review league share card, converted to SVG
-     the trophy    — yir_league_icon.riv, Trophy artboard, color_num per league,
-                     its shine played by current_bool (its locked state cannot be
-                     undone cleanly, so the trophy pops in already open)
-     the sparkles  — yir_sparkles_1/2/3.json (Lottie), looping over the face
-     the stats     — stat_component_72_lc_refresh.riv (assets/streak/stats.riv),
-                     Duolingo's lesson-complete stat cards, set up as the win
-                     screen sets them (right to left, XP / accuracy / time, the
-                     labels through its view model, our Arabic-digit font) and
-                     fired with flurry_start_trig, its sound with it
-     the sounds    — avatarcollections_newpiecereveal.mp3 on the turn,
-                     leaderboard_card_unlock on the trophy,
-                     lesson_complete_stats__v6 under the stat cards,
-                     leaderboard_card_lockin_gold on the seal
-   Ours are only the words (in our font) and the student's numbers. */
+/* The card lab (2026-10-23, the user: «something very very new … a card as if
+   a UI designer from Duolingo created it — redesign it fully»). Not in the app.
+   Built in Duolingo's grammar rather than from its files:
+     — a chunky slab of flat colour on its own darker lip, with the white shine
+       stroke Duolingo puts on every 3D surface;
+     — tone-on-tone maths glyphs as the pattern, the way Duolingo fills a
+       colour block with its own course icons;
+     — everything personal is a die-cut sticker (white outline, a lifted
+       shadow, a tilt of its own) slapped on with a squash;
+     — the character breaks the frame: قدّور peeks over the top edge and
+       points at the card;
+     — the back is a collection: one sticker per unit, coloured once begun.
+   Motion is weight and light only — a drop and a squash, slaps, a shine.
+   Tap the card to turn it over. */
 :root {
-  --green: #58CC02; --green-lip: #478700; --blue: #1CB0F6; --blue-dk: #1899D6; --ink: #4B4B4B; --gray: #777777;
-  --line: #E5E5E5; --snow: #FFFFFF; --page: #131F24; --panel: #1A2C33; --soft: #9FB4BC;
+  --green: #58CC02; --green-dk: #58A700; --green-pat: #4AAE02;
+  --blue: #1CB0F6; --blue-dk: #1899D6; --blue-pat: #179DDC;
+  --purple: #CE82FF; --purple-dk: #A568CC; --purple-pat: #B96FEA;
+  --orange: #FF9600; --orange-dk: #E07800; --orange-pat: #F08A00;
+  --gold: #FFC800; --gold-dk: #E6A000; --red: #FF4B4B; --red-dk: #EA2B2B;
+  --ink: #4B4B4B; --gray: #777777; --gray-icon: #AFAFAF; --line: #E5E5E5; --snow: #FFFFFF;
+  --page: #131F24; --panel: #1A2C33; --soft: #9FB4BC;
   --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
 }
-* { box-sizing: border-box; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { margin: 0; min-height: 100vh; background: var(--page); color: var(--snow); font-family: var(--font); display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; align-items: flex-start; padding: 28px 16px; }
-.phone { width: 390px; height: 844px; max-width: 100%; border-radius: 44px; background: var(--snow); overflow: hidden; position: relative; box-shadow: 0 0 0 10px #0B1418, 0 30px 80px rgba(0,0,0,.5); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.phone { width: 390px; height: 844px; max-width: 100%; border-radius: 44px; background: var(--snow); overflow: hidden; position: relative; box-shadow: 0 0 0 10px #0B1418, 0 30px 80px rgba(0,0,0,.5); }
 .ctl { width: 360px; max-width: 100%; display: flex; flex-direction: column; gap: 18px; direction: ltr; text-align: left; font-family: system-ui, sans-serif; }
 .ctl h1 { margin: 0; font: 800 26px var(--font); }
 .ctl p { margin: 0; color: var(--soft); font-size: 14px; line-height: 1.55; }
 .ctl label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--soft); }
 .ctl input { width: 100%; height: 48px; border-radius: 12px; border: 2px solid #2C4650; background: var(--panel); color: var(--snow); font: 700 20px var(--font); padding: 0 14px; direction: rtl; }
-.tiers { display: flex; flex-wrap: wrap; gap: 8px; }
-.tiers button, .play { font: 700 14px system-ui, sans-serif; color: var(--snow); background: var(--panel); border: 2px solid #2C4650; border-radius: 12px; padding: 9px 14px; cursor: pointer; }
-.tiers button.on { border-color: var(--blue); background: #12384A; }
-.play { background: var(--green); border-color: var(--green); box-shadow: 0 4px 0 var(--green-lip); font-size: 16px; padding: 12px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; }
+.row button, .play { font: 700 14px system-ui, sans-serif; color: var(--snow); background: var(--panel); border: 2px solid #2C4650; border-radius: 12px; padding: 9px 14px; cursor: pointer; }
+.row button.on { border-color: var(--snow); }
+.row button i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.play { background: var(--green); border-color: var(--green); box-shadow: 0 4px 0 var(--green-dk); font-size: 16px; padding: 12px; }
 .play:active { transform: translateY(4px); box-shadow: none; }
-.src { font-size: 12.5px; color: var(--soft); line-height: 1.7; }
-.src code { color: #CFE3EA; }
 
-/* the card: 300 × 381, the share card's own size, at 1.08 */
-.stage { perspective: 1100px; }
-.card { position: relative; width: 324px; height: 411px; transform-style: preserve-3d; }
-.face { position: absolute; inset: 0; border-radius: 24px; overflow: hidden; backface-visibility: hidden; }
-.back { display: grid; place-items: center; }
-.back canvas { width: 324px; height: 405px; }
-.front { transform: rotateY(180deg); box-shadow: 0 0 0 2px var(--line), 0 6px 0 var(--line); }
-.front .bg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.spk { position: absolute; inset: 0 0 auto; height: 290px; pointer-events: none; }
-.top { position: absolute; top: 18px; inset-inline: 20px; display: flex; justify-content: space-between; align-items: center; color: var(--snow); }
-.brand { font-size: 22px; font-weight: 800; text-shadow: 0 2px 0 rgba(0,0,0,.12); }
-.kind { font-size: 13px; font-weight: 800; background: rgba(255,255,255,.26); border-radius: 10px; padding: 3px 10px; }
-.trophy { position: absolute; top: 46px; left: 50%; width: 168px; height: 168px; margin-left: -84px; }
-.tier { position: absolute; top: 216px; inset-inline: 0; text-align: center; font-size: 15px; font-weight: 800; color: var(--tier-dk, #B8860B); }
-.name { position: absolute; top: 236px; inset-inline: 16px; text-align: center; font-size: 34px; font-weight: 800; line-height: 1.25; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.name.empty { color: #AFAFAF; }
-/* Duolingo's stat cards, its lesson-complete artboard (375 × 134) across the card's foot */
-.stats { position: absolute; left: 0; bottom: 2px; width: 324px; height: 116px; }
-.cap { margin-top: 26px; font-size: 15px; font-weight: 700; color: var(--gray); opacity: 0; transition: opacity .4s; }
-.cap.on { opacity: 1; }
+/* ---------- the scene ---------- */
+.scene { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding-top: 150px; }
+.hint { margin-top: 30px; font-size: 15px; font-weight: 700; color: var(--gray-icon); opacity: 0; transition: opacity .4s; }
+.hint.on { opacity: 1; }
+.wrap { position: relative; width: 310px; height: 450px; perspective: 1200px; }
+/* قدّور behind the card: only what is above its top edge shows */
+.peek { position: absolute; top: -118px; inset-inline-end: -26px; width: 210px; height: 210px; z-index: 0; pointer-events: none; transform-origin: 50% 100%; }
+.peek img { width: 100%; height: 100%; display: block; }
+.card { position: absolute; inset: 0; z-index: 1; transform-style: preserve-3d; cursor: pointer; }
+.face { position: absolute; inset: 0; border-radius: 30px; backface-visibility: hidden; }
+
+/* the slab: flat colour, its lip, its shine */
+.front { background: var(--c); box-shadow: 0 9px 0 var(--c-dk); overflow: hidden; }
+.front::after { content: ""; position: absolute; top: 12px; inset-inline-start: 22px; width: 90px; height: 9px; border-radius: 9px; background: rgba(255,255,255,.38); }
+.back { background: var(--snow); border: 3px solid var(--line); box-shadow: 0 9px 0 var(--line); transform: rotateY(180deg); overflow: hidden; }
+
+/* the pattern: big tone-on-tone maths glyphs */
+.pat { position: absolute; inset: -30px; pointer-events: none; }
+.pat b { position: absolute; font-weight: 800; color: var(--c-dk); opacity: .42; line-height: 1; transform: rotate(var(--r)); }
+.pat b i { display: block; font-style: normal; animation: glyphBob var(--t, 4s) var(--dl, 0s) ease-in-out infinite alternate; }
+@keyframes glyphBob { from { transform: translateY(-5px) rotate(-6deg); } to { transform: translateY(6px) rotate(6deg); } }
+
+.top { position: absolute; top: 28px; inset-inline: 20px; display: flex; align-items: center; justify-content: space-between; }
+.brand { background: var(--snow); color: var(--c-dk); font-size: 17px; font-weight: 800; border-radius: 12px; padding: 3px 12px 1px; box-shadow: 0 3px 0 rgba(0,0,0,.14); }
+.kind { color: var(--snow); font-size: 13px; font-weight: 800; opacity: .9; }
+
+/* a die-cut sticker: white outline, lifted shadow, its own tilt */
+.sticker { position: absolute; border: 6px solid var(--snow); box-shadow: 0 6px 0 rgba(0,0,0,.16), 0 10px 18px rgba(0,0,0,.12); transform: rotate(var(--r, 0deg)); }
+.av { top: 72px; left: 50%; width: 118px; height: 118px; margin-left: -59px; border-radius: 50%; --r: -7deg; display: grid; place-items: center; background: var(--av, var(--gold)); }
+.av span { font-size: 60px; font-weight: 800; color: var(--snow); line-height: 1; padding-top: 10px; text-shadow: 0 4px 0 rgba(0,0,0,.14); }
+.name { position: absolute; top: 206px; inset-inline: 14px; text-align: center; font-size: 40px; font-weight: 800; line-height: 1.2; color: var(--snow); text-shadow: 0 4px 0 var(--c-dk); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.since { position: absolute; top: 256px; inset-inline: 0; text-align: center; font-size: 14px; font-weight: 700; color: var(--snow); opacity: .85; }
+
+/* the white tray the stat stickers are slapped onto */
+.tray { position: absolute; left: 12px; right: 12px; bottom: 12px; height: 140px; background: var(--snow); border-radius: 22px; box-shadow: inset 0 -4px 0 var(--line); }
+.st { position: absolute; top: 14px; width: 84px; height: 84px; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-width: 5px; }
+.st svg { width: 26px; height: 26px; }
+.st b { font-size: 24px; font-weight: 800; color: var(--snow); line-height: 1.1; text-shadow: 0 2px 0 rgba(0,0,0,.14); }
+.st.s1 { right: 14px; --r: 5deg; background: var(--orange); }
+.st.s2 { left: 50%; margin-left: -42px; --r: -4deg; background: var(--gold); }
+.st.s3 { left: 14px; --r: 6deg; background: var(--blue); }
+.lab { position: absolute; bottom: 10px; width: 96px; text-align: center; font-size: 12.5px; font-weight: 800; color: var(--gray); }
+.lab.l1 { right: 8px; } .lab.l2 { left: 50%; margin-left: -48px; } .lab.l3 { left: 8px; }
+
+/* the shine that crosses the slab */
+.shine { position: absolute; inset: 0; pointer-events: none; overflow: hidden; border-radius: 30px; }
+.shine i { position: absolute; top: -40%; bottom: -40%; width: 70px; left: -120px; transform: rotate(20deg); background: linear-gradient(90deg, transparent, rgba(255,255,255,.42), transparent); }
+
+/* the back: the collection */
+.bk-h { margin: 30px 22px 4px; font-size: 24px; font-weight: 800; color: var(--ink); }
+.bk-s { margin: 0 22px; font-size: 14px; font-weight: 700; color: var(--gray); }
+.units { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 10px; margin: 26px 22px 0; }
+.unit { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.unit .sticker { position: relative; width: 92px; height: 92px; border-radius: 50%; display: grid; place-items: center; background: var(--u); }
+.unit .sticker b { font-size: 40px; font-weight: 800; color: var(--snow); line-height: 1; padding-top: 6px; text-shadow: 0 3px 0 rgba(0,0,0,.14); }
+.unit.off .sticker { background: var(--line); box-shadow: none; border-style: dashed; border-color: #D0D0D0; }
+.unit.off .sticker b { color: var(--gray-icon); text-shadow: none; }
+.unit span { font-size: 13px; font-weight: 800; color: var(--ink); text-align: center; line-height: 1.3; }
+.unit.off span { color: var(--gray-icon); }
+.bar { margin: 26px 22px 0; height: 16px; border-radius: 16px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; border-radius: 16px; background: var(--c); position: relative; }
+.bar i::after { content: ""; position: absolute; top: 3px; inset-inline: 8px; height: 4px; border-radius: 4px; background: rgba(255,255,255,.35); }
+.bar-t { margin: 8px 22px 0; font-size: 13px; font-weight: 800; color: var(--gray); }
 </style>
 </head>
 <body>
 <div class="phone">
-  <div class="stage"><div class="card" id="card">
-    <div class="face back"><canvas id="spin" width="648" height="810"></canvas></div>
-    <div class="face front" id="front">
-      <img class="bg" id="bg" src="card/bg-gold.svg" alt="">
-      <div class="spk" id="spk"></div>
-      <div class="top"><span class="brand">قدراتي</span><span class="kind">بطاقة طالب</span></div>
-      <canvas class="trophy" id="trophy" width="352" height="352"></canvas>
-      <div class="tier" id="tier">الدوري الذهبي</div>
-      <div class="name" id="nm">سارة</div>
-      <canvas class="stats" id="stats" width="750" height="268" aria-label="مجموع الخبرة ١٤٠، الدقة ٩٢٪، وقت التدريب ١٨ دقيقة"></canvas>
+  <div class="scene">
+    <div class="wrap" id="wrap">
+      <div class="peek" id="peek"><img src="../assets/mascot/qaddour-point.png" alt=""></div>
+      <div class="card" id="card" onclick="flip()">
+        <div class="face front" id="front">
+          <div class="pat" id="pat"></div>
+          <div class="top"><span class="brand">قدراتي</span><span class="kind">بطاقة طالب</span></div>
+          <div class="sticker av" id="av"><span id="ini">س</span></div>
+          <div class="name" id="nm">سارة</div>
+          <div class="since">طالب في قدراتي من ٢٣ أكتوبر</div>
+          <div class="tray">
+            <div class="sticker st s1" id="s1"><svg viewBox="0 0 24 24"><path fill="#fff" d="M12.6 2.3c.4 3.2 4.9 5.6 4.9 10.6A5.5 5.5 0 0 1 12 18.5a5.5 5.5 0 0 1-5.5-5.6c0-2.2 1-3.7 2.2-4.8.3 1.6 1.2 2.6 2.2 2.6 0-3.1.4-6 1.7-8.4Z"/><path fill="#FFC800" d="M12 18.5a2.7 2.7 0 0 1-2.7-2.7c0-1.6 1.4-2.7 2.7-4.3 1.3 1.6 2.7 2.7 2.7 4.3a2.7 2.7 0 0 1-2.7 2.7Z"/></svg><b data-n="7">٧</b></div>
+            <div class="sticker st s2" id="s2"><svg viewBox="0 0 24 24"><path fill="#fff" d="M13.5 2 5 13.4h5.8L9.6 22l8.9-11.9h-6Z"/></svg><b data-n="840">٨٤٠</b></div>
+            <div class="sticker st s3" id="s3"><svg viewBox="0 0 24 24"><path fill="#fff" d="M3 8.2 7.6 11 12 4l4.4 7L21 8.2 19.2 18H4.8Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/><rect x="5" y="19.2" width="14" height="2.4" rx="1.2" fill="#fff"/></svg><b data-n="9">٩</b></div>
+            <div class="lab l1">أيام حماس</div><div class="lab l2">خبرة</div><div class="lab l3">دروس</div>
+          </div>
+          <div class="shine"><i id="shine"></i></div>
+        </div>
+        <div class="face back">
+          <div class="bk-h">مجموعتي</div>
+          <p class="bk-s">ملصق لكل وحدة — يتلوّن أول ما تبدأها</p>
+          <div class="units" id="units"></div>
+          <div class="bar"><i id="bar"></i></div>
+          <div class="bar-t">٩ من ٢٦ درساً</div>
+        </div>
+      </div>
     </div>
-  </div></div>
-  <div class="cap" id="cap">بطاقتك — تكبر مع كل دوري</div>
+    <div class="hint" id="hint">اضغط البطاقة عشان تقلبها</div>
+  </div>
 </div>
 
 <div class="ctl">
   <h1>Card lab</h1>
-  <p>Not in the app. Every moving piece and every sound is Duolingo's own file, played as-is; only the words and the student's numbers are ours.</p>
+  <p>Not in the app. A new card in Duolingo's design language: a chunky slab of flat colour on its lip, maths glyphs as its pattern, everything personal as a die-cut sticker, قدّور breaking the frame, and a back that collects one sticker per unit. Tap the card to turn it over; move the pointer over it to tilt it.</p>
   <div><label>Name</label><input id="nameIn" value="سارة" maxlength="20" oninput="setName(this.value)"></div>
-  <div><label>League</label><div class="tiers" id="tiers"></div></div>
-  <button class="play" onclick="play()">Play the reveal</button>
-  <div class="src">
-    <b>Back</b> — <code>nw_header_and_card_v10.riv</code> · card_spin_artboard<br>
-    <b>Face</b> — <code>year_in_review_league_*_share_card_background.xml</code> → SVG<br>
-    <b>Trophy</b> — <code>yir_league_icon.riv</code> · Trophy, color_num<br>
-    <b>Sparkles</b> — <code>yir_sparkles_1/2/3.json</code><br>
-    <b>Stats</b> — <code>stat_component_72_lc_refresh.riv</code> · lesson_stats_compiled_artboard, flurry_start_trig<br>
-    <b>Sounds</b> — <code>avatarcollections_newpiecereveal</code>, <code>leaderboard_card_unlock</code>, <code>lesson_complete_stats__v6</code>, <code>leaderboard_card_lockin_gold</code>
-  </div>
+  <div><label>Colour</label><div class="row" id="cols"></div></div>
+  <button class="play" onclick="play()">Play it again</button>
 </div>
 
-<script src="../assets/streak/lottie.min.js"></script>
-<script src="https://unpkg.com/@rive-app/canvas@2.31.2"></script>
 <script>
-const AR = n => String(n).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
-/* our five leagues on Duolingo's: its trophy colour and its share card */
-const TIERS = [
-  { k: "bronze", name: "الدوري البرونزي", color: 0, dk: "#8A5A2B" },
-  { k: "silver", name: "الدوري الفضي", color: 1, dk: "#6F7C86" },
-  { k: "gold", name: "الدوري الذهبي", color: 2, dk: "#C77A00" },
-  { k: "diamond", name: "الدوري الألماسي", color: 9, dk: "#1B8FB8" },
-  { k: "obsidian", name: "دوري الأبطال", color: 8, dk: "#3B3B46" }
-];
-let tier = TIERS[2];
-document.getElementById("tiers").innerHTML = TIERS.map((t, i) => `<button class="${t === tier ? "on" : ""}" onclick="setTier(${i})">${t.k}</button>`).join("");
 const $ = id => document.getElementById(id);
-function setName(v) { const n = v.trim(); $("nm").textContent = n || "اسمك هنا"; $("nm").classList.toggle("empty", !n); }
-function setTier(i) {
-  tier = TIERS[i];
-  document.querySelectorAll("#tiers button").forEach((b, k) => b.classList.toggle("on", k === i));
-  $("bg").src = `card/bg-${tier.k}.svg`; $("tier").textContent = tier.name; $("front").style.setProperty("--tier-dk", tier.dk);
-  if (trophyIn.color_num) trophyIn.color_num.value = tier.color;
-  play();
+const AR = n => String(n).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+const COLS = ["green", "blue", "purple", "orange"];
+let col = "green";
+function paint() {
+  const f = $("card");
+  f.style.setProperty("--c", `var(--${col})`); f.style.setProperty("--c-dk", `var(--${col}-dk)`); f.style.setProperty("--c-pat", `var(--${col}-pat)`);
+  document.querySelectorAll("#cols button").forEach(b => b.classList.toggle("on", b.dataset.c === col));
+  setName($("nameIn").value, true);
 }
-const snd = {}; ["reveal", "unlock", "lockin", "stats"].forEach(k => { snd[k] = new Audio(`card/${k}.mp3`); snd[k].preload = "auto"; });
-const hit = (k, v) => { try { const a = snd[k].cloneNode(); a.volume = v || .8; a.play().catch(() => {}); } catch (e) {} };
-
-/* Duolingo's spinning card, the back */
-let spinIn = null;
-const spin = new rive.Rive({ src: "card/nw_header_and_card_v10.riv", canvas: $("spin"), artboard: "card_spin_artboard", stateMachines: "card_spin_statemachine", autoplay: true,
-  onLoad: () => { spinIn = spin.stateMachineInputs("card_spin_statemachine").find(i => i.name === "card_spin_trig"); ready(); } });
-/* Duolingo's league trophy, the face */
-const trophyIn = {};
-const trophy = new rive.Rive({ src: "card/yir_league_icon.riv", canvas: $("trophy"), artboard: "Trophy", stateMachines: "sm_trophy", autoplay: true,
-  onLoad: () => { trophy.stateMachineInputs("sm_trophy").forEach(i => trophyIn[i.name] = i); trophyIn.color_num.value = tier.color; ready(); } });
-/* Duolingo's Year in Review sparkles */
-let sparks = [];
-Promise.all([1, 2, 3].map(n => fetch(`card/yir_sparkles_${n}.json`).then(r => r.json()))).then(ds => {
-  sparks = ds.map((d, i) => lottie.loadAnimation({ container: $("spk"), renderer: "svg", loop: true, autoplay: false, animationData: d,
-    rendererSettings: { preserveAspectRatio: "xMidYMid slice" } }));
-  sparks.forEach((s, i) => { const el = $("spk").children[i]; if (el) el.style.cssText = "position:absolute;inset:0"; });
-  ready();
-});
-/* Duolingo's stat cards: a fresh instance per play, since its flurry fires once */
-const STATS = { xp: 140, acc: 92, min: 18, sec: 40 };
-let statFont = fetch("../assets/fonts/stat-font.ttf").then(r => r.arrayBuffer()), statRv = null;
-function statsLoad() {
-  if (statRv) { try { statRv.cleanup(); } catch (e) {} }
-  const rv = statRv = new rive.Rive({ src: "../assets/streak/stats.riv", canvas: $("stats"), autoplay: true, autoBind: true,
-    artboard: "lesson_stats_compiled_artboard", stateMachines: "stat_compile_statemachine",
-    layout: new rive.Layout({ fit: rive.Fit.Contain }),
-    assetLoader: asset => {
-      if (!asset.isFont) return false;
-      statFont.then(b => rive.decodeFont(new Uint8Array(b.slice(0)))).then(f => { asset.setFont(f); if (f.unref) f.unref(); });
-      return true;
-    },
-    onLoad: () => {
-      const vm = rv.viewModelInstance, label = { A: "مجموع الخبرة", B: "الدقة", C: "وقت التدريب" };
-      "ABC".split("").forEach(k => { vm.viewModel("stats_component_" + k + "_db_vm").string("run_main_db_str").value = label[k]; });
-      const ins = rv.stateMachineInputs("stat_compile_statemachine"), set = (n, x) => { const i = ins.find(j => j.name === n); if (i) i.value = x; };
-      set("right_left_bool", true); set("buckets_num", 3); set("dark_mode_bool", false);
-      ["A", "B", "C"].forEach(k => rv.setBooleanStateAtPath("combo_animated_gradient_bool", false, k + "_stat_box"));
-      rv.setNumberStateAtPath("main_num", STATS.xp, "A_stat_box");
-      rv.setNumberStateAtPath("main_num", STATS.acc, "B_stat_box");
-      rv.setNumberStateAtPath("symbol_type_num", 3, "B_stat_box");
-      rv.setBooleanStateAtPath("shine_bool", STATS.acc >= 90, "B_stat_box");
-      rv.setNumberStateAtPath("main_num", STATS.min, "C_stat_box");
-      rv.setNumberStateAtPath("sec_num", STATS.sec, "C_stat_box");
-      rv.fire = () => { const t = ins.find(j => j.name === "flurry_start_trig"); if (t) t.fire(); };
-      rv.ready = true;
-    } });
+$("cols").innerHTML = COLS.map(c => `<button data-c="${c}" onclick="col='${c}';paint();play()"><i style="background:var(--${c})"></i>${c}</button>`).join("");
+/* the avatar takes a colour of its own from the name, never the slab's */
+const AVC = ["gold", "red", "blue", "orange", "purple"];
+function setName(v, quiet) {
+  const n = v.trim(), ini = Array.from(n)[0] || "؟";
+  $("nm").textContent = n || "اسمك هنا";
+  let h = 0; for (const ch of n) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+  let c = AVC[h % AVC.length]; if (c === col) c = AVC[(h + 1) % AVC.length];
+  $("av").style.setProperty("--av", `var(--${c})`);
+  if ($("ini").textContent !== ini) { $("ini").textContent = ini; if (!quiet) slap($("av"), 0); }
 }
-let loaded = 0;
-function ready() { if (++loaded === 3) play(); }
+/* the pattern: Duolingo fills a colour block with its own icons, tone on tone */
+const GLYPHS = [["+", 80, 8, 6, -14], ["×", 64, 74, 10, 12], ["÷", 70, 20, 44, 8], ["=", 60, 70, 40, -10], ["√", 76, 4, 74, 6], ["٪", 58, 78, 70, -8], ["−", 70, 40, 2, 4], ["٣", 54, 50, 60, 14]];
+$("pat").innerHTML = GLYPHS.map(([g, s, x, y, r], i) => `<b style="font-size:${s}px;left:${x}%;top:${y}%;--r:${r}deg"><i style="--t:${3.2 + (i % 4) * .5}s;--dl:${-i * .7}s">${g}</i></b>`).join("");
+const UNITS = [["+", "مهارات وقوانين", "green", 1], ["√", "أساسيات القدرات", "blue", 1], ["٪", "النسب والنسبة المئوية", "orange", 0], ["△", "الهندسة", "purple", 0]];
+$("units").innerHTML = UNITS.map(([g, t, c, on], i) => `<div class="unit${on ? "" : " off"}"><div class="sticker" style="--u:var(--${c});--r:${[-6, 5, 4, -5][i]}deg"><b>${g}</b></div><span>${t}</span></div>`).join("");
 
-let T = [];
+/* sound: a synth voice on the beats, and three of Duolingo's own cues */
+let AC = null;
+function tone(f, d, type, g, at) {
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime + (at || 0), o = AC.createOscillator(), v = AC.createGain();
+    o.type = type || "sine"; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * .6, t + d);
+    v.gain.setValueAtTime(.0001, t); v.gain.exponentialRampToValueAtTime(g || .2, t + .012); v.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(v); v.connect(AC.destination); o.start(t); o.stop(t + d + .02);
+  } catch (e) {}
+}
+const snd = k => { try { const a = new Audio(`card/${k}.mp3`); a.volume = .7; a.play().catch(() => {}); } catch (e) {} };
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+
+/* a sticker slapped on: in big and turned, down hard, a squash, settled at its tilt */
+function slap(el, delay) {
+  const r = getComputedStyle(el).getPropertyValue("--r").trim() || "0deg";
+  el.animate([
+    { transform: `rotate(calc(${r} + 18deg)) scale(1.7)`, opacity: 0 },
+    { transform: `rotate(${r}) scale(.9, .86)`, opacity: 1, offset: .55 },
+    { transform: `rotate(${r}) scale(1.05, 1.03)`, offset: .78 },
+    { transform: `rotate(${r}) scale(1)` }],
+    { duration: 460, delay, easing: "cubic-bezier(.4,0,.3,1)", fill: "backwards" });
+}
+function countUp(b, delay) {
+  const n = +b.dataset.n; b.textContent = AR(0);
+  T.push(setTimeout(() => { const t0 = performance.now(); (function f(t) { const p = Math.min(1, (t - t0) / 650); b.textContent = AR(Math.round(n * (1 - Math.pow(1 - p, 3)))); if (p < 1) requestAnimationFrame(f); })(t0); }, delay));
+}
+
+let T = [], flipped = false, shineT = 0;
 function play() {
-  T.forEach(clearTimeout); T = [];
+  T.forEach(clearTimeout); T = []; clearInterval(shineT);
   const at = (ms, f) => T.push(setTimeout(f, ms));
-  const card = $("card");
-  card.getAnimations().forEach(a => a.cancel());
-  card.style.transform = "rotateY(0deg)";
-  $("cap").classList.remove("on");
-  sparks.forEach(s => s.goToAndStop(0, true));
-  if (trophyIn.current_bool) trophyIn.current_bool.value = false;
-  $("trophy").style.opacity = 0;
-  statsLoad();
-  /* 1. the back arrives and spins, as Duolingo's card does */
-  card.animate([{ transform: "translateY(60px) scale(.6) rotateY(0deg)", opacity: 0 }, { transform: "translateY(-8px) scale(1.04) rotateY(0deg)", opacity: 1, offset: .7 }, { transform: "rotateY(0deg)" }],
-    { duration: 520, easing: "cubic-bezier(.3,1.4,.5,1)" });
-  at(450, () => { if (spinIn) spinIn.fire(); });
-  /* 2. it turns over onto the face */
-  at(1350, () => {
-    hit("reveal");
-    card.animate([{ transform: "rotateY(0deg) scale(1)" }, { transform: "rotateY(100deg) scale(1.08)", offset: .45 }, { transform: "rotateY(190deg) scale(1)", offset: .8 }, { transform: "rotateY(180deg)" }],
-      { duration: 700, easing: "cubic-bezier(.5,0,.3,1)", fill: "forwards" });
+  const card = $("card"), peek = $("peek");
+  [card, peek, $("av"), $("nm"), $("bar"), ...document.querySelectorAll(".st, .lab, .pat b, .unit .sticker")].forEach(e => e.getAnimations().forEach(a => a.cancel()));
+  flipped = false;
+  $("hint").classList.remove("on");
+  /* 1. the slab drops and lands with its weight */
+  card.animate([{ transform: "translateY(-520px) rotate(-12deg)" }, { transform: "translateY(0) rotate(2deg) scale(1.04, .93)", offset: .62 },
+    { transform: "translateY(-14px) rotate(-1deg) scale(.98, 1.03)", offset: .8 }, { transform: "none" }],
+    { duration: 720, easing: "cubic-bezier(.5,0,.4,1)", fill: "backwards" });
+  at(450, () => { tone(110, .25, "sine", .35); tone(70, .3, "triangle", .2); buzz(30); });
+  /* 2. the glyphs come up out of the colour */
+  document.querySelectorAll(".pat b").forEach((b, i) => { const r = b.style.getPropertyValue("--r");
+    b.animate([{ opacity: 0, transform: `rotate(${r}) scale(0)` }, { opacity: .42, transform: `rotate(${r}) scale(1)` }],
+      { duration: 420, delay: 620 + i * 45, easing: "cubic-bezier(.3,1.6,.5,1)", fill: "backwards" }); });
+  /* 3. their sticker, then their name */
+  slap($("av"), 820);
+  at(1080, () => { snd("unlock"); buzz(14); });
+  $("nm").animate([{ opacity: 0, transform: "translateY(18px) scale(.8)" }, { opacity: 1, transform: "translateY(-4px) scale(1.06, .96)", offset: .6 }, { transform: "none" }],
+    { duration: 420, delay: 1150, easing: "cubic-bezier(.3,1.4,.5,1)", fill: "backwards" });
+  /* 4. قدّور comes up over the edge and points */
+  peek.animate([{ transform: "translateY(220px)" }, { transform: "translateY(-12px) scale(.96, 1.05)", offset: .65 }, { transform: "translateY(0) scale(1.03, .97)", offset: .85 }, { transform: "none" }],
+    { duration: 620, delay: 1400, easing: "cubic-bezier(.3,1.2,.5,1)", fill: "backwards" });
+  at(1450, () => tone(523, .12, "triangle", .12));
+  at(2100, () => peek.animate([{ transform: "rotate(0deg)" }, { transform: "rotate(-3deg) translateY(-3px)" }, { transform: "rotate(0deg)" }], { duration: 2400, iterations: Infinity, easing: "ease-in-out" }));
+  /* 5. the stat stickers, one slap each, their numbers rolling */
+  ["s1", "s2", "s3"].forEach((id, i) => {
+    slap($(id), 1750 + i * 230);
+    at(1990 + i * 230, () => { tone(392 * Math.pow(2, i * 4 / 12), .1, "triangle", .2); buzz(10); });
+    countUp($(id).querySelector("b"), 1950 + i * 230);
   });
-  /* 3. the trophy unlocks into the student's league and shines */
-  at(1950, () => {
-    const t = $("trophy"); t.style.opacity = 1;
-    t.animate([{ transform: "translateY(30px) scale(.3)", opacity: 0 }, { transform: "translateY(-10px) scale(1.12,.9)", opacity: 1, offset: .55 }, { transform: "scale(.96,1.05)", offset: .8 }, { transform: "none" }],
-      { duration: 520, easing: "cubic-bezier(.3,1.4,.5,1)" });
-    hit("unlock"); sparks.forEach((s, i) => setTimeout(() => s.play(), i * 400));
-  });
-  at(2600, () => { if (trophyIn.current_bool) trophyIn.current_bool.value = true; });   /* Duolingo's own shine across the trophy */
-  /* 4. Duolingo's stat cards fly in, with Duolingo's sound for them */
-  at(2500, () => { if (statRv && statRv.ready) { statRv.fire(); hit("stats", .7); } });
-  /* 5. sealed */
-  at(4300, () => {
-    card.animate([{ transform: "rotateY(180deg) scale(1)" }, { transform: "rotateY(180deg) scale(1.05,.95)", offset: .3 }, { transform: "rotateY(180deg) scale(.98,1.02)", offset: .65 }, { transform: "rotateY(180deg)" }],
-      { duration: 420, easing: "ease-out", composite: "replace" });
-    hit("lockin");
-    $("cap").classList.add("on");
+  document.querySelectorAll(".lab").forEach((l, i) => l.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 2050 + i * 230, fill: "backwards" }));
+  /* 6. sealed: a squash, the lock-in, the shine; then the shine comes back now and then */
+  at(2600, () => {
+    card.animate([{ transform: "none" }, { transform: "scale(1.03, .97)", offset: .35 }, { transform: "scale(.99, 1.01)", offset: .7 }, { transform: "none" }], { duration: 380, easing: "ease-out" });
+    snd("lockin"); buzz(22); shineSweep();
+    $("hint").classList.add("on");
+    shineT = setInterval(shineSweep, 5200);
   });
 }
+function shineSweep() { $("shine").animate([{ left: "-120px" }, { left: "420px" }], { duration: 900, easing: "cubic-bezier(.6,0,.3,1)" }); }
+
+/* tap: it turns over, with weight */
+function flip() {
+  flipped = !flipped;
+  const a = flipped ? 0 : 180, b = flipped ? 180 : 360;
+  $("card").animate([{ transform: `rotateY(${a}deg) scale(1)` }, { transform: `rotateY(${a + (b - a) * .55}deg) scale(1.06)`, offset: .45 },
+    { transform: `rotateY(${b + 10}deg) scale(1)`, offset: .78 }, { transform: `rotateY(${b}deg)` }], { duration: 640, easing: "cubic-bezier(.5,0,.3,1)", fill: "forwards" });
+  snd("reveal"); buzz(16);
+  if (flipped) {
+    document.querySelectorAll(".unit .sticker").forEach((s, i) => slap(s, 380 + i * 140));
+    $("bar").animate([{ width: "0%" }, { width: "35%" }], { duration: 700, delay: 900, easing: "cubic-bezier(.3,1.2,.5,1)", fill: "forwards" });
+  }
+}
+
+/* the pointer tilts the slab; the glyphs, the sticker and the name sit at
+   different depths, so they slide against each other */
+$("wrap").addEventListener("pointermove", e => {
+  if (flipped) return;
+  const r = $("wrap").getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+  $("front").style.transform = `rotateX(${-y * 8}deg) rotateY(${x * 10}deg)`;
+  $("pat").style.transform = `translate(${x * -14}px, ${y * -14}px)`;
+  $("av").style.translate = `${x * 8}px ${y * 8}px`;
+  $("nm").style.translate = `${x * 5}px ${y * 5}px`;
+});
+$("wrap").addEventListener("pointerleave", () => {
+  $("front").style.transition = "transform .5s cubic-bezier(.3,1.6,.5,1)";
+  $("front").style.transform = ""; $("pat").style.transform = ""; $("av").style.translate = ""; $("nm").style.translate = "";
+  setTimeout(() => { $("front").style.transition = ""; }, 500);
+});
+paint();
+document.fonts.ready.then(play);
 </script>
 </body>
 </html>
