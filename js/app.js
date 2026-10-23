@@ -3298,49 +3298,52 @@ function learnMake(src, tag) {
 /* a long line steps its type down instead of wrapping mid-expression */
 function learnFs(s) { const n = String(s || "").replace(/\*/g, "").length; return n > 30 ? " fs-s" : n > 21 ? " fs-m" : ""; }
 /* *x* marks the one number or word the eye should land on */
-/* the rule card says its rule a word at a time, as قدّور's bubble does, then
-   a marker runs under it word by word in reading order and the card settles
-   with a chime: the student reads it at the pace it is written, twice, and the
-   ↻ in its corner says it again. The signs (= × ÷ + − ←) land as green keys so
-   the shape of the formula is seen before its words. */
-const RULE_OP = /^[=×÷+−←]$/, RULE_STEP = 110, RULE_MARK = 70;
+/* the rule card says its rule a word at a time, as قدّور's bubble does; then
+   the things the rule is about (the *…* in learn.js: «العدد», «آخر عدد»,
+   «الزيادة الأكبر») light up blue one after another, each on a note a step
+   higher, and the card settles with a chime: the student reads the rule at the
+   pace it is written, then sees what it is made of. ↻ in its corner says it
+   again. The signs (= × ÷ + − ←) land a size up so the formula's shape shows. */
+const RULE_OP = /^[=×÷+−←]$/, RULE_STEP = 110, RULE_LIT = 240;
 const RULE_AGAIN_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></svg>`;
 function ruleWords(text) {
-  let bold = false;
+  let bold = false, t = -1;
   return String(text).split(/\s+/).filter(Boolean).map((w, i) => {
-    const open = w.startsWith("*");
-    if (open) { bold = true; w = w.slice(1); }
-    const close = /\*[!.،؟:]*$/.test(w);
-    if (close) w = w.replace(/\*([!.،؟:]*)$/, "$1");
-    const h = `<span class="rw${RULE_OP.test(w) ? " op" : ""}${bold ? " hl" : ""}" style="--i:${i}" aria-hidden="true">${esc(w)}</span>`;
-    if (close) bold = false;
-    return h;
+    let out = "", buf = "";
+    const flush = () => { if (buf) { out += bold ? `<b class="rk" style="--t:${t}">${esc(buf)}</b>` : esc(buf); buf = ""; } };
+    for (const ch of w) {
+      if (ch === "*") { flush(); bold = !bold; if (bold) t++; } else buf += ch;
+    }
+    flush();
+    return `<span class="rw${RULE_OP.test(w.replace(/\*/g, "")) ? " op" : ""}" style="--i:${i}" aria-hidden="true">${out}</span>`;
   }).join(" ");
 }
 let ruleT = [];
 function rulePlay(again) {
   ruleT.forEach(clearTimeout); ruleT = [];
   const card = document.getElementById("lnRule");
-  if (!card || fxReduced()) return;
+  if (!card || fxReduced()) { if (card) card.classList.add("said"); return; }
   const ws = card.querySelectorAll(".rw"), n = ws.length;
+  const terms = new Set(Array.from(card.querySelectorAll(".rk"), b => b.style.getPropertyValue("--t"))).size;
   if (again) {
     card.style.setProperty("--d", "-.45s");
     card.classList.remove("said");
-    [card, ...ws].forEach(x => { x.style.animation = "none"; });
-    card.querySelectorAll(".ln-rule-ic, .ln-rule-ic path").forEach(x => { x.style.animation = "none"; });
+    const moving = card.querySelectorAll(".rw, .rk, .ln-rule-ic, .ln-rule-ic path");
+    moving.forEach(x => { x.style.animation = "none"; });
     void card.offsetWidth;
-    card.querySelectorAll(".rw, .ln-rule-ic, .ln-rule-ic path").forEach(x => { x.style.animation = ""; });
-    card.style.animation = "ruleAgain .3s ease-out";
+    moving.forEach(x => { x.style.animation = ""; });
+    card.animate([{ transform: "scale(1)" }, { transform: "scale(.97)", offset: .4 }, { transform: "scale(1)" }], { duration: 300, easing: "ease-out" });
   }
   const d = parseFloat(card.style.getPropertyValue("--d")) * 1000 || 0;
-  const said = d + 450 + n * RULE_STEP + 200, marked = said + n * RULE_MARK + 120;
+  const said = d + 450 + n * RULE_STEP + 150;
   ruleT.push(setTimeout(() => card.classList.add("said"), said));
+  for (let k = 0; k < terms; k++) ruleT.push(setTimeout(() => { beep([[587 * Math.pow(2, Math.min(k, 7) * 2 / 12), .06]]); buzz(5); }, said + k * RULE_LIT + 60));
   ruleT.push(setTimeout(() => {
     card.animate([{ transform: "scale(1)" }, { transform: "scale(1.035,.965)", offset: .35 }, { transform: "scale(.99,1.01)", offset: .7 }, { transform: "scale(1)" }],
       { duration: 360, easing: "ease-out" });
     beep([[784, .07], [1175, .16]]);
     buzz(10);
-  }, marked));
+  }, said + terms * RULE_LIT + 200));
 }
 A.ruleAgain = function () { buzz(6); rulePlay(true); };
 function learnFmt(s) { return esc(s == null ? "" : s).replace(/\*([^*]+)\*/g, '<b class="ln-hl">$1</b>'); }
@@ -7411,8 +7414,6 @@ function obFrame(html, cta, pct, back, cls, bar) {
 const OB_BUZZ = { hello: [30, 140, 70], journey: [40, 200, 90], splash: [20, 40, 20, 40, 20, 40, 90] };
 function renderOb() {
   const step = OB.steps[OB.i];
-  if (nmTl) { nmTl.kill(); nmTl = null; }
-  ncStop();
   glT.forEach(clearTimeout); glT = [];
   const v = OB_VIEW[step]();
   /* the bar never fills on the last question: the student is not in yet */
@@ -7421,207 +7422,141 @@ function renderOb() {
   if (OB_BUZZ[step]) setTimeout(() => buzz(OB_BUZZ[step]), 250);
   if (step === "goal" && OB.goal != null) setTimeout(() => glWave(OB.goal), 700);
 }
-/* The name card (2026-10-22: the user asked for the card of creativeocean's
-   CodePen «SVG Debit Card Animation 4», dyRWXPz, MIT like every public pen) —
-   its art and its motion, read from the pen and laid out for Arabic: the art is
-   mirrored so the chip and the title sit on the right, and the text slides out
-   of its clip boxes from the right. The card grows out of a turning mask, the
-   two colour waves flow across it for ever, two triangles orbit on dashed
-   coils that crawl, the orb bobs, the logo's two rings slide together, and a
-   star shines each time the gold wave comes round. The name is written onto it
-   as they type; «المتابعة» prints it again and shines it (nameStamp). The
-   orbit is done by hand (getPointAtLength) instead of shipping GSAP's
-   MotionPathPlugin. */
+/* The profile they are making (2026-10-23: the user turned the CodePen card
+   down — «replace it with something else … we want something Brilliant»): a
+   Duolingo profile header made out to them before they have typed a thing. A
+   band of Brilliant's flat shapes drifts over the top, the avatar sits on its
+   edge, then the name, «في قدراتي من …» and what the first win already earned
+   (the streak, the XP, the league) counting up. Typing paints it: the avatar
+   takes the name's first letter, turning over to it, and a colour of its own
+   (pvPaint) that the band follows. Saving (pfStamp) pulls each shape into the
+   avatar on a rising note, the avatar squashes and pops, a gold ring draws
+   round it, a blue tick lands on its corner, and قدّور says their name. */
 function joinedDate() {
   const a = (S.joined || todayKey()).split("-"), d = new Date(+a[0], +a[1] - 1, +a[2]);
   return toAr(d.getDate()) + " " + AR_MONTHS[d.getMonth()] + " " + toAr(d.getFullYear());
 }
-const nameInitial = nm => Array.from(nm.trim())[0] || "";
-function nameCard(nm) {
-  const goal = OB.goal || dailyGoal();
-  return `<div class="nc-stage"><div class="nc-wrap">
-  <span class="nc-glare" aria-hidden="true"></span>
-  <svg class="nc" id="ncSvg" viewBox="0 0 600 368" direction="rtl" role="img" aria-label="بطاقة طالب قدراتي${nm ? " باسم " + esc(nm) : ""}">
-    <defs>
-      <mask id="ncChipMask">
-        <rect width="100%" height="100%" fill="#fff"/>
-        <path fill="none" stroke="#000" stroke-width="3" d="M98,133c0,0,4.3,0,7.2,0c2.8,0,3.8,2,3.8,4s-1,6-4,6H89 M109,176.2c0,0,3.5-2.7,3.5-8.7c0-4-4-10-9-10 s-15,0-15,0 M103.5,143.5V156 M136.8,133c0,0-7.3-0.5-7.1,5c0.1,2.6,1.8,5.5,6.3,5.5c5.3-0.1,14.9-0.5,14.9-0.5 M150.4,157.5 c0,0-10.1,0-15.1,0s-9.1,6-9.1,10c0,6,3.5,8.7,3.5,8.7 M135.3,143.5V156"/>
-      </mask>
-      <mask id="ncCardMask"><rect class="nc-mask" rx="22" ry="22" fill="#fff" width="600" height="368"/></mask>
-      <linearGradient id="ncBg" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#3A1C85"/><stop offset=".55" stop-color="#5B2FC0"/><stop offset="1" stop-color="#7A4BE0"/>
-      </linearGradient>
-      <linearGradient id="ncGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE066"/><stop offset="1" stop-color="#FFB800"/></linearGradient>
-      <clipPath id="ncTxt">
-        <rect class="nc-box" x="330" y="30" width="235" height="48"/>
-        <rect class="nc-box" x="330" y="240" width="235" height="32"/>
-        <rect class="nc-box" x="150" y="282" width="415" height="54"/>
-        <rect class="nc-box" x="35" y="288" width="200" height="40"/>
-      </clipPath>
-      <clipPath id="ncOrbClip"><use href="#ncOrb1"/><use href="#ncOrb2"/></clipPath>
-    </defs>
-    <g mask="url(#ncCardMask)">
-      <rect fill="url(#ncBg)" width="100%" height="100%"/>
-      <g transform="translate(600 0) scale(-1 1)">
-        <g fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2" stroke-dasharray="6 2 4 2.5 4 3 3.5 3">
-          <path class="nc-coil" d="M306.1,671.4C62.6,602.5-79.4,350.4-10.9,108.3s295.2-372.5,538.7-303.6"/>
-          <path class="nc-coil" id="ncMidC" d="M352.7,333.4c-79.2-30.9-137.8-142.9-100.6-235.7S386.5-16.5,449.6-11.7"/>
-          <path class="nc-coil" id="ncInnerC" d="M404.4,221c-39.6-7.4-65.7-45.6-58.3-85.2s41.6-63.7,81.2-56.3"/>
-        </g>
-        <polygon class="nc-tri" id="ncTri1" fill="#58CC02" points="0,47 0,0 44,22"/>
-        <polygon class="nc-tri" id="ncTri2" fill="#58CC02" points="0,47 0,0 44,22"/>
-        <g fill="#6E44D6"><circle id="ncOrb1" cx="123" cy="410" r="105"/><circle id="ncOrb2" cx="540" cy="45" r="134"/></g>
-        <path id="ncWave2" fill="#FFC800" d="M-941,1510c89-58,147-115,211-201s142-153,210-195s144-42,208-86s69-130,70-173s5-129,38-193 c0,0,17.5-27.5,30.9-40.1C-159.6,609.4-137,593-137,593c89-58,147-115,211-201s142-153,210-195s144-42,208-86s69-130,70-173 s5-129,38-193v1765H-941z"/>
-        <path id="ncWave1" fill="#1CB0F6" d="M1551.5-1044.5c0,0-63,27-131,91s-122,185-186,244s-163,152.7-206,263.3s-90,162.7-128,189.7c0,0-14,10-26,16 c-16,8-24,11-24,11s-63,27-131,91s-122,185-186,244s-163,152.7-206,263.3c-9,23.2-18.2,43.9-27.5,62.3c56.5,0,1255.5-0.1,1255.5-0.1 L1551.5-1044.5z"/>
-        <g clip-path="url(#ncOrbClip)"><use href="#ncWave2" fill="#FFE27A"/><use href="#ncWave1" fill="#84D8FF"/></g>
-        <path id="ncStar" fill="#fff" d="M397,17.6c3-3,6.1-9.1,6.1-9.1s0.8,3.8,4.5,7.6c6.1,6.1,9.1,6.1,9.1,6.1s-3,1.5-7.6,6.1 s-6.1,9.1-6.1,9.1s-2.3-5.3-6.1-9.1s-8.3-5.3-8.3-5.3S394,20.6,397,17.6z"/>
-        <g><circle class="nc-logo" fill="#fff" cx="503" cy="67" r="25"/><circle class="nc-logo" fill="none" stroke="#fff" stroke-width="4.5" cx="533" cy="67" r="22.5"/></g>
-        <g fill="#fff" stroke-linecap="round">
-          <path fill="none" stroke="#fff" stroke-width="2.4" d="M42.5,146.5c2,2,2,6.3,0,8.2 M57,163.7c5.1-5.9,5.1-19.8,0-26.3 M52.1,160.7c4.4-4.5,4.9-15.2,0-20.2 M47.8,157.2c2.9-3,2.9-10,0-13.2"/>
-          <rect mask="url(#ncChipMask)" fill="url(#ncGold)" rx="5" ry="5" x="89" y="125" width="61" height="50.2"/>
-        </g>
-      </g>
-      <g fill="#fff" clip-path="url(#ncTxt)" class="nc-txt">
-        <text class="nc-t" x="555" y="66" text-anchor="start" font-size="34">قدراتي</text>
-        <text class="nc-t nc-sub" x="555" y="264" text-anchor="start" font-size="21">بطاقة طالب</text>
-        <text class="nc-t nc-name${nm ? "" : " empty"}" id="scName" x="555" y="324" text-anchor="start" font-size="${nm.length > 11 ? 34 : 46}">${nm ? esc(nm) : "اسمك هنا"}</text>
-        <text class="nc-t" x="45" y="318" text-anchor="end" font-size="26">${toAr(goal)} يومياً</text>
-      </g>
-    </g>
-  </svg></div></div>`;
+const PV_PAINT = [["green", "green-lip", "green-bg"], ["blue", "blue-dk", "blue-light"], ["purple", "purple-dk", "purple-tint"],
+  ["orange", "orange-dk", "orange-bg"], ["red", "red-dk2", "red-bg"], ["gold", "gold-dk", "gold-bg"]];
+function pvPaint(nm) {
+  if (!nm) return "--pv:var(--gray-icon);--pv-dk:var(--gray-shadow);--pv-bg:var(--surface-hover)";
+  let h = 0; for (const ch of nm) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+  const [c, dk, bg] = PV_PAINT[h % PV_PAINT.length];
+  return `--pv:var(--${c});--pv-dk:var(--${dk});--pv-bg:var(--${bg})`;
 }
-/* the card leans toward the finger (or the pointer) and a glare follows it,
-   the way a real card catches the light; it eases back when let go */
-function ncTilt() {
-  const wrap = document.querySelector(".nc-wrap");
-  if (!wrap || !window.gsap || motionReduced() || wrap.dataset.tilt) return;
-  wrap.dataset.tilt = 1;
-  const glare = wrap.querySelector(".nc-glare");
-  const move = e => {
-    const r = wrap.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
-    gsap.to(wrap, { rotationY: x * 16, rotationX: -y * 12, duration: .3, ease: "power2.out", transformPerspective: 700 });
-    if (glare) gsap.to(glare, { opacity: .55, "--gx": (x + .5) * 100 + "%", "--gy": (y + .5) * 100 + "%", duration: .3 });
-  };
-  const leave = () => {
-    gsap.to(wrap, { rotationY: 0, rotationX: 0, duration: .8, ease: "elastic.out(1, .5)" });
-    if (glare) gsap.to(glare, { opacity: 0, duration: .4 });
-  };
-  wrap.addEventListener("pointermove", move);
-  wrap.addEventListener("pointerdown", move);
-  wrap.addEventListener("pointerleave", leave);
-  wrap.addEventListener("pointerup", leave);
-  wrap.addEventListener("pointercancel", leave);
+const PV_GHOST = `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="15" r="7.5" fill="currentColor"/><path d="M7 35c1.5-7.5 6.8-11 13-11s11.5 3.5 13 11Z" fill="currentColor"/></svg>`;
+/* the band's shapes: Brilliant's flat geometry in the unit colours */
+const PV_SHAPES = [
+  ["blue", `<path d="M20 6 35 32H5Z" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>`],
+  ["gold", `<circle cx="20" cy="20" r="14"/>`],
+  ["green", `<rect x="7" y="7" width="26" height="26" rx="6" transform="rotate(14 20 20)"/>`],
+  ["purple", `<path d="M15 5h10v10h10v10H25v10H15V25H5V15h10Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>`],
+  ["orange", `<path d="M5 29a15 15 0 0 1 30 0Z" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>`]
+];
+const PV_TICK = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12.5l4 4 8-9"/></svg>`;
+function profileView() {
+  const tier = LEAGUE_TIERS[tierIndex()], st = (S.streak && S.streak.count) || 0;
+  return `<div class="pv-stage"><div class="pv" id="pv" style="${pvPaint("")}" role="img" aria-label="ملفك في قدراتي">
+    <div class="pv-band" aria-hidden="true">${PV_SHAPES.map(([c, d], i) =>
+      `<span class="pv-sh pv-sh${i}" style="color:var(--${c})"><svg viewBox="0 0 40 40" fill="currentColor">${d}</svg></span>`).join("")}</div>
+    <div class="pv-av-wrap">
+      <svg class="pv-ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="56" pathLength="100"/></svg>
+      <div class="pv-av" id="pvAv"><span class="pv-ini" id="pvIni">${PV_GHOST}</span></div>
+      <span class="pv-tick" aria-hidden="true">${PV_TICK}</span>
+    </div>
+    <div class="pv-name empty" id="pvName">اسمك هنا</div>
+    <div class="pv-since">في قدراتي من ${joinedDate()}</div>
+    <div class="pv-stats">
+      <div class="pv-st">${ico("streak", 26)}<b data-n="${st}">${toAr(st)}</b><span>${st === 1 ? "يوم حماس" : "أيام حماس"}</span></div>
+      <div class="pv-st">${ico("lightning", 26)}<b data-n="${S.totalXp || 0}">${toAr(S.totalXp || 0)}</b><span>خبرة</span></div>
+      <div class="pv-st">${rankImg(tier.key, 26)}<b>${tier.name}</b><span>الدوري</span></div>
+    </div>
+  </div></div>`;
 }
-/* the pen's timeline, kept in nmCardTl so it can stop when the step changes */
-let ncTl = null, ncLoops = [];
-function ncStop() { if (ncTl) { ncTl.kill(); ncTl = null; } ncLoops.forEach(t => t.kill()); ncLoops = []; }
-/* a triangle riding a path with its nose along it (MotionPathPlugin's align +
-   autoRotate, by hand) */
-function ncOrbit(tri, path, from, to, dur, delay, repeatDelay) {
-  const L = path.getTotalLength(), o = { p: from };
-  const place = () => {
-    const at = Math.max(0, Math.min(1, o.p)) * L, a = path.getPointAtLength(at), b = path.getPointAtLength(Math.min(L, at + 1)), c = path.getPointAtLength(Math.max(0, at - 1));
-    const ang = Math.atan2(b.y - c.y, b.x - c.x) * 180 / Math.PI + (to < from ? 180 : 0);
-    tri.setAttribute("transform", `translate(${a.x.toFixed(1)} ${a.y.toFixed(1)}) rotate(${ang.toFixed(1)}) translate(-22 -23.5)`);
-  };
-  place();
-  return gsap.to(o, { p: to, duration: dur, delay, repeat: -1, repeatDelay, ease: "none", onUpdate: place });
+let pvT = [];
+function pvStop() {
+  pvT.forEach(clearTimeout); pvT = [];
+  document.querySelectorAll(".pv-st b[data-n]").forEach(b => { b.textContent = toAr(+b.dataset.n); });   // a count cut short lands on its number
 }
-function ncEnter() {
-  ncStop();
-  const svg = document.getElementById("ncSvg");
-  if (!svg || !window.gsap || fxReduced()) return;
-  const q = c => svg.querySelector(c), qa = c => Array.from(svg.querySelectorAll(c));
-  const star = q("#ncStar"), w1 = q("#ncWave1"), w2 = q("#ncWave2");
-  const starShine = gsap.timeline({ paused: true })
-    .set(star, { scale: 0, transformOrigin: "50% 50%", x: 2, y: 10 })
-    .to(star, { scale: 1, repeat: 1, yoyo: true, yoyoEase: true, duration: .4, ease: "power4" }, 0)
-    .fromTo(star, { rotate: -20 }, { rotate: 120, duration: .8, ease: "none" }, 0);
-  ncLoops.push(starShine);
-  gsap.set(q("#ncTri2"), { scale: .5 });
-  const tl = ncTl = gsap.timeline()
-    .from(q(".nc-mask"), { scale: 0, rotation: -20, duration: 2, transformOrigin: "50% 50%", ease: "expo.inOut" }, 0)
-    .from(qa(".nc-coil"), { attr: { "stroke-dashoffset": i => i === 1 ? -28 : 28 }, ease: "none", duration: 1, repeat: -1 }, 1)
-    .fromTo(q("#ncOrb1"), { y: 160 }, { y: -20, ease: "circ", repeat: -1, yoyo: true, duration: 1 }, .8)
-    .from(qa(".nc-logo"), { x: i => [18, -10][i], duration: 1.2, ease: "expo.inOut" }, .9)
-    .from(qa(".nc-t"), { x: 40, duration: 1.1, ease: "expo.inOut", stagger: .2 }, 1)
-    .from(qa(".nc-box"), { scaleX: 0, transformOrigin: "100% 0", duration: 1.1, ease: "expo.inOut", stagger: .2 }, 1)
-    .fromTo(w1, { x: 0, y: 0 }, { duration: 5, x: -701, y: 815, repeat: -1, ease: "none" }, 0)
-    .fromTo(w2, { x: 0, y: 0 }, { duration: 6, x: 804, y: -917, repeat: -1, ease: "none", onRepeat: () => starShine.play(0) }, 0);
-  ncLoops.push(ncOrbit(q("#ncTri1"), q("#ncMidC"), 1, 0, 6, .5, 1), ncOrbit(q("#ncTri2"), q("#ncInnerC"), 0, 1, 5, 1.5, 1));
-  NC.shine = starShine;
+function pvEnter() {
+  pvStop();
+  if (fxReduced()) return;
+  document.querySelectorAll(".pv-st b[data-n]").forEach((b, i) => {
+    const n = +b.dataset.n; b.textContent = toAr(0);
+    pvT.push(setTimeout(() => countUp(b, n, "", 700 + Math.min(n, 400)), 900 + i * 120));
+  });
 }
-const NC = { shine: null };
-/* every keystroke lands on the card: the name rewrites and steps in from the
-   right edge of its box, the size drops for a long name */
-A.obName = function (v) {
+/* every keystroke lands on the profile: the name, and the avatar's letter and
+   colour when the first letter changes */
+A.pfName = function (v) {
   v = String(v).replace(/[*<>]/g, "");
-  const grew = v.length > OB.name.length;
   OB.name = v;
-  const nm = v.trim(), el = document.getElementById("scName"), svg = document.getElementById("ncSvg");
-  if (!el || !svg) return;
+  const nm = v.trim(), pv = document.getElementById("pv"), el = document.getElementById("pvName"), ini = document.getElementById("pvIni");
+  if (!pv || !el || !ini) return;
   el.textContent = nm || "اسمك هنا";
-  el.setAttribute("font-size", nm.length > 11 ? 34 : 46);
   el.classList.toggle("empty", !nm);
-  if (OB.profile) { const go = document.getElementById("obGo"); if (go) go.disabled = !nm; }
-  svg.setAttribute("aria-label", "بطاقة طالب قدراتي" + (nm ? " باسم " + nm : ""));
-  if (window.gsap && !fxReduced() && nm) gsap.fromTo(el, { x: grew ? 10 : -6 }, { x: 0, duration: .35, ease: "expo.out", overwrite: true });
+  el.style.fontSize = nm.length > 14 ? "22px" : "";
+  const first = Array.from(nm)[0] || "";
+  if (ini.dataset.ch !== first) {
+    ini.dataset.ch = first;
+    ini.innerHTML = first ? esc(first) : PV_GHOST;
+    pv.setAttribute("style", pvPaint(nm));
+    if (!fxReduced()) ini.parentNode.animate([{ transform: "rotateY(90deg) scale(.9)" }, { transform: "rotateY(-12deg) scale(1.06)", offset: .7 }, { transform: "none" }],
+      { duration: 360, easing: "cubic-bezier(.3,1.4,.5,1)" });
+  }
+  pv.setAttribute("aria-label", "ملفك في قدراتي" + (nm ? " باسم " + nm : ""));
+  const go = document.getElementById("obGo"); if (go) go.disabled = !nm;
 };
-/* «المتابعة» with a name: the field and the skip step out and the card rides to
-   the middle of the screen; the name's box closes and opens again, printing it
-   (the pen's own text reveal), the logo's rings slide apart and back together,
-   the star shines, قدّور jumps and says their name. Then the button. */
-let nmTl = null;
-function nameStamp() {
+function pfStamp() {
   OB.stamped = true;
   const q = c => document.querySelector(c);
-  const nm = OB.name.trim(), wrap = q(".nm"), svg = document.getElementById("ncSvg"), card = q(".nc-wrap"),
+  const nm = OB.name.trim(), wrap = q(".nm"), pv = document.getElementById("pv"), av = q(".pv-av-wrap"),
         input = document.getElementById("obName"), cta = q(".ob-cta");
   if (input) input.blur();
   const greet = () => {
     const say = q(".ob-say");
-    if (say) { say.innerHTML = sayHtml(`أهلاً يا *${nm}*! بطاقتك جاهزة.`); sayPlay(60); }
+    if (say) { say.innerHTML = sayHtml(`أهلاً يا *${nm}*! هذا ملفك.`); sayPlay(60); }
     const sub = q(".obs-sub"); if (sub) sub.remove();
     const duo = q(".obs-duo"); if (duo) duo.src = "assets/mascot/qaddour-cheer.png";
   };
   const done = () => {
     if (!cta) return;
-    cta.innerHTML = OB.profile ? PF_GO : OB_GO; cta.style.pointerEvents = "";
-    if (window.gsap && !fxReduced()) gsap.fromTo(cta, { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: .35, ease: "back.out(2)" });
+    cta.innerHTML = PF_GO; cta.style.pointerEvents = "";
+    if (!fxReduced()) cta.animate([{ transform: "translateY(18px)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 350, easing: "cubic-bezier(.3,1.6,.5,1)" });
   };
-  if (!wrap || !svg || !window.gsap || fxReduced()) { if (wrap) wrap.classList.add("stamped"); greet(); done(); return; }
-  if (nmTl) nmTl.kill();
-  const before = card.getBoundingClientRect();
+  if (!wrap || !pv || fxReduced()) { if (wrap) wrap.classList.add("stamped"); greet(); done(); return; }
+  pvStop();
+  const at = (ms, f) => pvT.push(setTimeout(f, ms));
   if (cta) cta.style.pointerEvents = "none";   // a nervous double-tap must not skip the payoff
-  gsap.to([input, cta].filter(Boolean), { opacity: 0, y: 14, duration: .18, ease: "power2.in" });
-  const box = svg.querySelectorAll(".nc-box")[2], name = document.getElementById("scName"), logo = svg.querySelectorAll(".nc-logo");
-  const tl = nmTl = gsap.timeline();
-  tl.call(() => {
+  [input, cta].filter(Boolean).forEach(x => x.animate([{ opacity: 1 }, { opacity: 0, transform: "translateY(14px)" }], { duration: 180, easing: "ease-in", fill: "forwards" }));
+  at(200, () => {
+    const before = pv.getBoundingClientRect().top;
     wrap.classList.add("stamped");
-    const after = card.getBoundingClientRect();
-    gsap.fromTo(card, { y: before.top - after.top }, { y: 0, duration: .6, ease: "expo.inOut" });
-  }, null, .2)
-    .to(box, { scaleX: 0, transformOrigin: "100% 0", duration: .45, ease: "expo.in" }, .35)
-    .set(name, { x: 40 }, .8)
-    .to(box, { scaleX: 1, transformOrigin: "100% 0", duration: 1, ease: "expo.inOut" }, .8)
-    .to(name, { x: 0, duration: 1, ease: "expo.inOut" }, .8)
-    .to(logo, { x: i => [18, -10][i], duration: .45, ease: "expo.in" }, .35)
-    .to(logo, { x: 0, duration: 1, ease: "expo.inOut" }, .8)
-    .fromTo(card, { scale: 1 }, { keyframes: [{ scale: 1.05, duration: .25, ease: "power2.out" }, { scale: 1, duration: .5, ease: "elastic.out(1.1, .4)" }] }, 1.35)
-    .call(() => {
-      cvTone(784, 0, .5, "triangle", .12); cvTone(1175, 0, .4, "sine", .06, .06); buzz(28);
-      if (NC.shine) NC.shine.play(0);
-      greet();
-    }, null, 1.35);
-  const duo = q(".obs-duo");
-  if (duo) tl.to(duo, { keyframes: [
-      { y: 0, scaleX: 1.08, scaleY: .9, duration: .09 },
-      { y: -30, scaleX: .94, scaleY: 1.07, duration: .22, ease: "power2.out" },
-      { y: -30, duration: .06 },
-      { y: 0, scaleX: 1, scaleY: 1, duration: .18, ease: "power2.in" },
-      { scaleX: 1.08, scaleY: .92, duration: .06 },
-      { scaleX: 1, scaleY: 1, duration: .3, ease: "back.out(3)" }] }, 1.4);
-  tl.call(done, null, 2);
+    pv.animate([{ transform: `translateY(${before - pv.getBoundingClientRect().top}px)` }, { transform: "none" }], { duration: 600, easing: "cubic-bezier(.7,0,.2,1)" });
+  });
+  /* the shapes fly into the avatar, one note higher each */
+  at(850, () => {
+    const r = av.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    document.querySelectorAll(".pv-sh").forEach((sh, i) => {
+      const b = sh.getBoundingClientRect(), dx = cx - (b.left + b.width / 2), dy = cy - (b.top + b.height / 2);
+      sh.animate([{ transform: "none", opacity: 1 }, { transform: `translate(${dx * -.08}px,${dy * -.08 - 6}px) scale(1.15)`, opacity: 1, offset: .3 },
+        { transform: `translate(${dx}px,${dy}px) scale(.2) rotate(180deg)`, opacity: 0 }],
+        { duration: 420, delay: i * 90, easing: "cubic-bezier(.5,0,.75,0)", fill: "forwards" });
+      at(i * 90 + 400, () => { beep([[523 * Math.pow(2, i * 2 / 12), .05]]); buzz(4); });
+    });
+  });
+  /* the avatar takes them in, pops, the ring draws round it and the tick lands */
+  at(1720, () => {
+    av.animate([{ transform: "scale(1)" }, { transform: "scale(1.12,.86)", offset: .25 }, { transform: "scale(.94,1.08)", offset: .55 }, { transform: "scale(1)" }],
+      { duration: 520, easing: "ease-out" });
+    wrap.classList.add("sealed");
+    cvTone(784, 0, .5, "triangle", .12); cvTone(1175, 0, .4, "sine", .06, .06); buzz(28);
+    greet();
+    const duo = q(".obs-duo");
+    if (duo) duo.animate([{ transform: "none" }, { transform: "translateY(-30px) scale(.94,1.07)", offset: .4 }, { transform: "scale(1.08,.92)", offset: .8 }, { transform: "none" }],
+      { duration: 620, easing: "ease-out" });
+  });
+  at(2500, done);
 }
 /* An answer to a question in the first run (the taste item) lands with the
    lesson's own jump (fxAddJump) — the same launch, hang, fall, squash and
@@ -7725,9 +7660,8 @@ A.obNext = function () {
    both ask for a profile only once the first lesson is behind them, when there
    is something worth keeping). Asked once, by whoever finishes a lesson without
    a name — the win screen's exits pass through profileGate. It opens on the
-   student card already made out to them (the CodePen card of the old name
-   step), «اسمك هنا» where the name goes, and two ways to fill it: type it, or
-   take it from Google. «لاحقاً» keeps them a guest and never asks again;
+   profile they are making (profileView), «اسمك هنا» where the name goes, and
+   two ways to fill it: type it, or take it from Google. «لاحقاً» keeps them a guest and never asks again;
    Settings can name them any day. The name stays on the phone either way.
 
    Google gives a name only (Google Identity Services, client side: the JWT's
@@ -7748,26 +7682,26 @@ function renderProfile() {
   OB = { profile: true, name: "", goal: dailyGoal(), stamped: false, pct: 0, dir: 1 };
   const gOk = pfGoogleOk();
   obFrame(`<div class="nm pf">
-      ${obSide("cheer", "أول درس خلص! هذي *بطاقتك* — وش نكتب عليها؟", "اختياري — اسمك يبقى في جهازك بس")}
-      ${nameCard("")}
+      ${obSide("cheer", "أول درس خلص! هذا *ملفك* — ناقصه اسمك.", "اختياري — اسمك يبقى في جهازك بس")}
+      ${profileView()}
     </div>`, `<button class="btn pf-type" onclick="A.pfType()">${PEN_SVG}اكتب اسمك</button>
       ${gOk ? `<div class="pf-or"><span>أو</span></div><div class="pf-google" id="pfGoogle"></div>` : ""}
       <button class="login-skip pf-later" onclick="A.pfLater()">لاحقاً</button>`, 0, "", "ob-name ob-profile", false);
-  ncEnter(); ncTilt();
+  pvEnter();
   if (gOk) pfGoogle();
 }
 const PEN_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>`;
-/* «اكتب اسمك»: the two ways step aside and the field takes their place, the
-   keyboard comes up, and every letter lands on the card (A.obName) */
+/* «اكتب اسمك»: the profile slides up, the field comes in under it with the
+   keyboard, and every letter lands on the profile (A.pfName) */
 A.pfType = function () {
-  const card = document.querySelector(".pf .nc-stage"), cta = document.querySelector(".ob-cta");
+  const card = document.querySelector(".pf .pv-stage"), cta = document.querySelector(".ob-cta");
   if (!card || !cta || document.getElementById("obName")) return;
   sndTap(); buzz(8);
   const y0 = card.getBoundingClientRect().top;
   card.parentNode.classList.add("typing");
-  if (window.gsap && !fxReduced()) gsap.fromTo(card, { y: y0 - card.getBoundingClientRect().top }, { y: 0, duration: .5, ease: "expo.out" });
+  if (!fxReduced()) card.animate([{ transform: `translateY(${y0 - card.getBoundingClientRect().top}px)` }, { transform: "none" }], { duration: 500, easing: "cubic-bezier(.16,1,.3,1)" });
   card.insertAdjacentHTML("afterend", `<input id="obName" class="login-input ob-input pf-input" type="text" maxlength="20" placeholder="اكتب اسمك" autocomplete="given-name" enterkeyhint="done"
-    oninput="A.obName(this.value)" onkeydown="if(event.key==='Enter')A.pfSave()">`);
+    oninput="A.pfName(this.value)" onkeydown="if(event.key==='Enter')A.pfSave()">`);
   cta.innerHTML = `<button class="btn" id="obGo" onclick="A.pfSave()" disabled>احفظ بطاقتي</button><button class="login-skip pf-later" onclick="A.pfLater()">لاحقاً</button>`;
   const n = document.getElementById("obName"); if (n) n.focus();
 };
@@ -7783,7 +7717,7 @@ function pfKeep(name, google) {
 A.pfSave = function () {
   if (!OB || !OB.profile || OB.stamped) return;
   if (!pfKeep(OB.name)) { const n = document.getElementById("obName"); if (n) { n.classList.remove("err"); void n.offsetWidth; n.classList.add("err"); } return; }
-  nameStamp();
+  pfStamp();
 };
 A.pfLater = function () {
   S.user = S.user || { name: "ضيف", guest: true };
@@ -7791,14 +7725,14 @@ A.pfLater = function () {
   A.pfDone();
 };
 A.pfDone = function () {
-  ncStop(); if (nmTl) { nmTl.kill(); nmTl = null; }
+  pvStop();
   OB = null;
   const then = PF_THEN; PF_THEN = null;
   if (then) then(); else A.go("path");
 };
 /* Google's own button (its rules: their mark, their words), drawn by their
-   script into #pfGoogle; the name it hands back is written onto the card and
-   stamped exactly as a typed one */
+   script into #pfGoogle; the name it hands back is written onto the profile
+   and sealed exactly as a typed one */
 let pfGsi = null;
 function pfGoogle() {
   const box = document.getElementById("pfGoogle");
@@ -7831,15 +7765,15 @@ function pfGoogleBack(res) {
     p = JSON.parse(decodeURIComponent(Array.from(atob(b), c => "%" + c.charCodeAt(0).toString(16).padStart(2, "0")).join("")));
   } catch (e) { return; }
   if (!pfKeep(p.given_name || p.name, true)) return;
-  A.obName(OB.name);
-  nameStamp();
+  A.pfName(OB.name);
+  pfStamp();
 }
 /* dev harness: the profile, blank or (#ob-hi) with a name typed and saved */
 A.debugProfile = function (hi) {
   S.profileAsked = false;
   PF_THEN = () => A.go("path");
   renderProfile();
-  if (hi) setTimeout(() => { A.pfType(); A.obName("سارة"); const n = document.getElementById("obName"); if (n) n.value = "سارة"; A.pfSave(); }, 900);
+  if (hi) setTimeout(() => { A.pfType(); A.pfName("سارة"); const n = document.getElementById("obName"); if (n) n.value = "سارة"; A.pfSave(); }, 900);
 };
 A.obBack = function () {
   if (!OB || OB.i === 0) { OB = null; renderWelcome(); return; }

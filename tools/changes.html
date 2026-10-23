@@ -75,7 +75,7 @@
 <body>
 <header>
   <h1>Every change, in order</h1>
-  <p>Two goals from 2026-10-21, four from 2026-10-22 and nine from 2026-10-23. Press <b>Play</b> beside a change to open that screen as it is now; scripted ones tap, type and pick by themselves. Two screens run at a time.</p>
+  <p>Two goals from 2026-10-21, four from 2026-10-22 and ten from 2026-10-23. Press <b>Play</b> beside a change to open that screen as it is now; scripted ones tap, type and pick by themselves. Two screens run at a time.</p>
   <div class="legend"><span class="tag t-live">Live now</span><span class="tag t-old">Replaced later (the frame shows what replaced it)</span><span class="tag t-new">This goal</span></div>
 </header>
 
@@ -627,6 +627,26 @@ const PARTS = [
         code: ".node.down, .duo-bar, .node-tip::after" },
       { t: "Bookkeeping", s: "live",
         what: ["sw.js and index.html bumped to 86. The temporary measuring page is deleted. CLAUDE.md updated."],
+        noframe: "No screen — files and notes" }
+    ] ,
+  { h: "Goal 16: your profile instead of the card, and the rule in Duolingo's yellow",
+    p: "Your words: «this card — replace it with something else … make it nice animation … we want something Brilliant», and «make the law yellow, but not the last yellow — the regular Duolingo yellow — and the things in the law in blue».",
+    items: [
+      { t: "The profile they are making", s: "new", hash: "ob-name",
+        what: ["The card is gone. In its place is a Duolingo-style profile made out to them before they type: a band with five of Brilliant's flat shapes popping in and floating, the avatar on its edge, «اسمك هنا», «في قدراتي من …», and what the first win already earned — the streak, the XP and the league — counting up.",
+               "As they type, the avatar turns over to the first letter of their name and takes a colour of its own from the name; the band follows it.",
+               "Saving pulls each shape into the avatar on a rising note, the avatar squashes and pops, a gold ring draws round it, a blue tick lands on its corner, and قدّور says «أهلاً يا سارة! هذا ملفك.»."],
+        why: "«we want something Brilliant» — a profile you can see filling up with what you earned, sealed with weight and light, no confetti.",
+        code: "profileView, pvEnter, A.pfName, pfStamp, pvPaint, PV_SHAPES",
+        extra: [{ label: "Typed and saved", hash: "ob-hi" }] },
+      { t: "The rule in Duolingo's yellow, its words in blue", s: "new", hash: "learn",
+        run: w => [[1200, () => { for (let k = 0; k < 20; k++) { const it = w.A.debugCurrent(); if (it && it.t === "see" && it.rule) break; w.A.debugLearnAnswer(true); w.A.next(); } }]],
+        what: ["Pale Duolingo yellow with a yellow border and edge, a yellow bulb badge, the rule in dark ink.",
+               "The things each rule is about are marked in all 57 rules («العدد», «آخر عدد», «الزيادة الأكبر» …). The rule lands a word at a time, then those words turn blue one after another, each with a little pop on a note a step higher, and the card settles with a chime. ↻ plays it again."],
+        why: "Seeing what the rule is made of, one piece at a time, is what makes it stay.",
+        code: "ruleWords, rulePlay, .rk, rkLit, js/data/learn.js rules" },
+      { t: "Bookkeeping", s: "live",
+        what: ["sw.js and index.html bumped to 87. CLAUDE.md updated."],
         noframe: "No screen — files and notes" }
     ] }
 ];
