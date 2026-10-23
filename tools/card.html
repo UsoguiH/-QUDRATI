@@ -18,10 +18,15 @@
                      its shine played by current_bool (its locked state cannot be
                      undone cleanly, so the trophy pops in already open)
      the sparkles  — yir_sparkles_1/2/3.json (Lottie), looping over the face
+     the stats     — stat_component_72_lc_refresh.riv (assets/streak/stats.riv),
+                     Duolingo's lesson-complete stat cards, set up as the win
+                     screen sets them (right to left, XP / accuracy / time, the
+                     labels through its view model, our Arabic-digit font) and
+                     fired with flurry_start_trig, its sound with it
      the sounds    — avatarcollections_newpiecereveal.mp3 on the turn,
                      leaderboard_card_unlock on the trophy,
-                     leaderboard_card_lockin_gold on the seal,
-                     leaderboard_card_moveup on each stat
+                     lesson_complete_stats__v6 under the stat cards,
+                     leaderboard_card_lockin_gold on the seal
    Ours are only the words (in our font) and the student's numbers. */
 :root {
   --green: #58CC02; --green-lip: #478700; --blue: #1CB0F6; --blue-dk: #1899D6; --ink: #4B4B4B; --gray: #777777;
@@ -56,15 +61,12 @@ body { margin: 0; min-height: 100vh; background: var(--page); color: var(--snow)
 .top { position: absolute; top: 18px; inset-inline: 20px; display: flex; justify-content: space-between; align-items: center; color: var(--snow); }
 .brand { font-size: 22px; font-weight: 800; text-shadow: 0 2px 0 rgba(0,0,0,.12); }
 .kind { font-size: 13px; font-weight: 800; background: rgba(255,255,255,.26); border-radius: 10px; padding: 3px 10px; }
-.trophy { position: absolute; top: 52px; left: 50%; width: 176px; height: 176px; margin-left: -88px; }
-.tier { position: absolute; top: 232px; inset-inline: 0; text-align: center; font-size: 15px; font-weight: 800; color: var(--tier-dk, #B8860B); }
-.name { position: absolute; top: 254px; inset-inline: 16px; text-align: center; font-size: 34px; font-weight: 800; line-height: 1.25; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.trophy { position: absolute; top: 46px; left: 50%; width: 168px; height: 168px; margin-left: -84px; }
+.tier { position: absolute; top: 216px; inset-inline: 0; text-align: center; font-size: 15px; font-weight: 800; color: var(--tier-dk, #B8860B); }
+.name { position: absolute; top: 236px; inset-inline: 16px; text-align: center; font-size: 34px; font-weight: 800; line-height: 1.25; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .name.empty { color: #AFAFAF; }
-.stats { position: absolute; bottom: 16px; inset-inline: 14px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.st { display: flex; flex-direction: column; align-items: center; padding: 6px 2px 5px; background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 14px; }
-.st img { width: 22px; height: 22px; }
-.st b { font-size: 17px; font-weight: 800; color: var(--ink); line-height: 1.25; }
-.st span { font-size: 11px; font-weight: 700; color: var(--gray); }
+/* Duolingo's stat cards, its lesson-complete artboard (375 × 134) across the card's foot */
+.stats { position: absolute; left: 0; bottom: 2px; width: 324px; height: 116px; }
 .cap { margin-top: 26px; font-size: 15px; font-weight: 700; color: var(--gray); opacity: 0; transition: opacity .4s; }
 .cap.on { opacity: 1; }
 </style>
@@ -80,11 +82,7 @@ body { margin: 0; min-height: 100vh; background: var(--page); color: var(--snow)
       <canvas class="trophy" id="trophy" width="352" height="352"></canvas>
       <div class="tier" id="tier">الدوري الذهبي</div>
       <div class="name" id="nm">سارة</div>
-      <div class="stats">
-        <div class="st"><img src="../assets/icons/streak.svg" alt=""><b data-n="1">١</b><span>يوم حماس</span></div>
-        <div class="st"><img src="../assets/icons/lightning.svg" alt=""><b data-n="140">١٤٠</b><span>خبرة</span></div>
-        <div class="st"><img src="../assets/icons/book.svg" alt=""><b data-n="3">٣</b><span>دروس</span></div>
-      </div>
+      <canvas class="stats" id="stats" width="750" height="268" aria-label="مجموع الخبرة ١٤٠، الدقة ٩٢٪، وقت التدريب ١٨ دقيقة"></canvas>
     </div>
   </div></div>
   <div class="cap" id="cap">بطاقتك — تكبر مع كل دوري</div>
@@ -101,7 +99,8 @@ body { margin: 0; min-height: 100vh; background: var(--page); color: var(--snow)
     <b>Face</b> — <code>year_in_review_league_*_share_card_background.xml</code> → SVG<br>
     <b>Trophy</b> — <code>yir_league_icon.riv</code> · Trophy, color_num<br>
     <b>Sparkles</b> — <code>yir_sparkles_1/2/3.json</code><br>
-    <b>Sounds</b> — <code>avatarcollections_newpiecereveal</code>, <code>leaderboard_card_unlock</code>, <code>leaderboard_card_lockin_gold</code>, <code>leaderboard_card_moveup</code>
+    <b>Stats</b> — <code>stat_component_72_lc_refresh.riv</code> · lesson_stats_compiled_artboard, flurry_start_trig<br>
+    <b>Sounds</b> — <code>avatarcollections_newpiecereveal</code>, <code>leaderboard_card_unlock</code>, <code>lesson_complete_stats__v6</code>, <code>leaderboard_card_lockin_gold</code>
   </div>
 </div>
 
@@ -128,7 +127,7 @@ function setTier(i) {
   if (trophyIn.color_num) trophyIn.color_num.value = tier.color;
   play();
 }
-const snd = {}; ["reveal", "unlock", "lockin", "moveup"].forEach(k => { snd[k] = new Audio(`card/${k}.mp3`); snd[k].preload = "auto"; });
+const snd = {}; ["reveal", "unlock", "lockin", "stats"].forEach(k => { snd[k] = new Audio(`card/${k}.mp3`); snd[k].preload = "auto"; });
 const hit = (k, v) => { try { const a = snd[k].cloneNode(); a.volume = v || .8; a.play().catch(() => {}); } catch (e) {} };
 
 /* Duolingo's spinning card, the back */
@@ -147,6 +146,35 @@ Promise.all([1, 2, 3].map(n => fetch(`card/yir_sparkles_${n}.json`).then(r => r.
   sparks.forEach((s, i) => { const el = $("spk").children[i]; if (el) el.style.cssText = "position:absolute;inset:0"; });
   ready();
 });
+/* Duolingo's stat cards: a fresh instance per play, since its flurry fires once */
+const STATS = { xp: 140, acc: 92, min: 18, sec: 40 };
+let statFont = fetch("../assets/fonts/stat-font.ttf").then(r => r.arrayBuffer()), statRv = null;
+function statsLoad() {
+  if (statRv) { try { statRv.cleanup(); } catch (e) {} }
+  const rv = statRv = new rive.Rive({ src: "../assets/streak/stats.riv", canvas: $("stats"), autoplay: true, autoBind: true,
+    artboard: "lesson_stats_compiled_artboard", stateMachines: "stat_compile_statemachine",
+    layout: new rive.Layout({ fit: rive.Fit.Contain }),
+    assetLoader: asset => {
+      if (!asset.isFont) return false;
+      statFont.then(b => rive.decodeFont(new Uint8Array(b.slice(0)))).then(f => { asset.setFont(f); if (f.unref) f.unref(); });
+      return true;
+    },
+    onLoad: () => {
+      const vm = rv.viewModelInstance, label = { A: "مجموع الخبرة", B: "الدقة", C: "وقت التدريب" };
+      "ABC".split("").forEach(k => { vm.viewModel("stats_component_" + k + "_db_vm").string("run_main_db_str").value = label[k]; });
+      const ins = rv.stateMachineInputs("stat_compile_statemachine"), set = (n, x) => { const i = ins.find(j => j.name === n); if (i) i.value = x; };
+      set("right_left_bool", true); set("buckets_num", 3); set("dark_mode_bool", false);
+      ["A", "B", "C"].forEach(k => rv.setBooleanStateAtPath("combo_animated_gradient_bool", false, k + "_stat_box"));
+      rv.setNumberStateAtPath("main_num", STATS.xp, "A_stat_box");
+      rv.setNumberStateAtPath("main_num", STATS.acc, "B_stat_box");
+      rv.setNumberStateAtPath("symbol_type_num", 3, "B_stat_box");
+      rv.setBooleanStateAtPath("shine_bool", STATS.acc >= 90, "B_stat_box");
+      rv.setNumberStateAtPath("main_num", STATS.min, "C_stat_box");
+      rv.setNumberStateAtPath("sec_num", STATS.sec, "C_stat_box");
+      rv.fire = () => { const t = ins.find(j => j.name === "flurry_start_trig"); if (t) t.fire(); };
+      rv.ready = true;
+    } });
+}
 let loaded = 0;
 function ready() { if (++loaded === 3) play(); }
 
@@ -161,7 +189,7 @@ function play() {
   sparks.forEach(s => s.goToAndStop(0, true));
   if (trophyIn.current_bool) trophyIn.current_bool.value = false;
   $("trophy").style.opacity = 0;
-  document.querySelectorAll(".st").forEach(s => { s.style.opacity = 0; });
+  statsLoad();
   /* 1. the back arrives and spins, as Duolingo's card does */
   card.animate([{ transform: "translateY(60px) scale(.6) rotateY(0deg)", opacity: 0 }, { transform: "translateY(-8px) scale(1.04) rotateY(0deg)", opacity: 1, offset: .7 }, { transform: "rotateY(0deg)" }],
     { duration: 520, easing: "cubic-bezier(.3,1.4,.5,1)" });
@@ -180,14 +208,10 @@ function play() {
     hit("unlock"); sparks.forEach((s, i) => setTimeout(() => s.play(), i * 400));
   });
   at(2600, () => { if (trophyIn.current_bool) trophyIn.current_bool.value = true; });   /* Duolingo's own shine across the trophy */
-  /* 4. the numbers land one by one */
-  document.querySelectorAll(".st").forEach((s, i) => at(2500 + i * 220, () => {
-    s.style.opacity = 1;
-    s.animate([{ transform: "translateY(16px) scale(.8)", opacity: 0 }, { transform: "translateY(-4px) scale(1.06)", opacity: 1, offset: .6 }, { transform: "none" }], { duration: 380, easing: "cubic-bezier(.3,1.5,.5,1)" });
-    hit("moveup", .5);
-  }));
+  /* 4. Duolingo's stat cards fly in, with Duolingo's sound for them */
+  at(2500, () => { if (statRv && statRv.ready) { statRv.fire(); hit("stats", .7); } });
   /* 5. sealed */
-  at(3300, () => {
+  at(4300, () => {
     card.animate([{ transform: "rotateY(180deg) scale(1)" }, { transform: "rotateY(180deg) scale(1.05,.95)", offset: .3 }, { transform: "rotateY(180deg) scale(.98,1.02)", offset: .65 }, { transform: "rotateY(180deg)" }],
       { duration: 420, easing: "ease-out", composite: "replace" });
     hit("lockin");
