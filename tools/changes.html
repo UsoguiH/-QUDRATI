@@ -75,7 +75,7 @@
 <body>
 <header>
   <h1>Every change, in order</h1>
-  <p>Two goals from 2026-10-21, four from 2026-10-22 and eight from 2026-10-23. Press <b>Play</b> beside a change to open that screen as it is now; scripted ones tap, type and pick by themselves. Two screens run at a time.</p>
+  <p>Two goals from 2026-10-21, four from 2026-10-22 and nine from 2026-10-23. Press <b>Play</b> beside a change to open that screen as it is now; scripted ones tap, type and pick by themselves. Two screens run at a time.</p>
   <div class="legend"><span class="tag t-live">Live now</span><span class="tag t-old">Replaced later (the frame shows what replaced it)</span><span class="tag t-new">This goal</span></div>
 </header>
 
@@ -594,6 +594,40 @@ const PARTS = [
       { t: "One button on the welcome screen", s: "new", hash: "welcome",
         what: ["«عندي نسخة احتياطية» is gone; «ابدأ الآن» is the only thing to do. A backup is still restored from Settings."],
         why: "«remove عندي نسخة احتياطية from the real start screen»." }
+    ] },
+  { h: "Goal 15: the name after the first win, a rule you remember, Duolingo's ring",
+    p: "Your words: «make the name and sign in for Google in another screen … very nice UI UX like Brilliant and Duolingo», «the yellow — make it like the green above and add animation … so the student really memorizes the law», «the level button … lagging», «why the bar isn't like the regular bar», «كمّل has a very weird shape», and «outside of the circle make it like this, with the same 100% animation from Duolingo».",
+    items: [
+      { t: "Your name and Google, after the first win", s: "new", hash: "ob-name",
+        what: ["The first run no longer asks for a name: it goes hello, taste, value, level, goal, start — one question fewer before the first lesson.",
+               "Duolingo and Brilliant both ask for a profile once the first lesson is done, when there is something to keep. So the first time a student without a name leaves a win screen, قدّور says «أول درس خلص! هذي بطاقتك — وش نكتب عليها؟» over the student card, made out to «اسمك هنا».",
+               "«اكتب اسمك» slides the card up and the field in under it; every letter lands on the card and «احفظ بطاقتي» prints it with the stamp you already know. «لاحقاً» keeps them a guest and never asks again.",
+               "Google's own «تابع مع Google» button sits under «أو». It fills the card with their first name only; the email is not kept and nothing leaves the phone. It needs your OAuth client ID in GOOGLE_CLIENT_ID (a Web client in Google Cloud with https://qudrati.xyz as an authorised origin). Until then it is not drawn, and it never shows in the Android app, where Google refuses web views."],
+        why: "A name means something once there is progress to put it on, and the first run gets shorter.",
+        code: "profileGate, renderProfile, A.pfType, A.pfSave, A.pfLater, pfGoogle, GOOGLE_CLIENT_ID, S.profileAsked",
+        extra: [{ label: "Typed and stamped", hash: "ob-hi" }] },
+      { t: "The rule card: green, said a word at a time", s: "new", hash: "learn",
+        run: w => [[1200, () => { for (let k = 0; k < 20; k++) { const it = w.A.debugCurrent(); if (it && it.t === "see" && it.rule) break; w.A.debugLearnAnswer(true); w.A.next(); } }]],
+        what: ["The rule is in the green of the winning row above it now, with a green bulb badge.",
+               "It says the rule a word at a time, the signs (= × ÷ ←) landing as green keys so the formula's shape is seen first. Then a marker runs under the words in reading order, the bulb lights and the card settles with a chime.",
+               "↻ in its corner says it again, as many times as they like."],
+        why: "Reading it at the pace it is written, then once more under the marker, is what makes it stay.",
+        code: "ruleWords, rulePlay, A.ruleAgain, .rw, .rw.op, rwMark" },
+      { t: "Duolingo's ring round the current node", s: "new", hash: "pathpay",
+        what: ["One segment per short lesson, done ones in the unit's colour, the rest grey, as in your photo.",
+               "A short lesson done plays Duolingo's ring animation, measured off its file: the ring comes back, the earned segment fills along its length in 135ms, three diamonds pop off its end, then the sign turns over. The coin's big jump now plays only when the node's last lesson is done."],
+        why: "Image 61: «the same 100% animation from Duolingo».",
+        code: "ringSvg, ringSeg, ringPay, coinPay, pathPay",
+        extra: [{ label: "The node's last lesson", hash: "pathgold" }] },
+      { t: "Pressing the node again, the bar, the tooltip", s: "new", hash: "pop",
+        what: ["Pressing the node a second time while its card is open used to land on the veil behind it and do nothing; it presses the node now, with no lag.",
+               "The goal bar on «تقدّمك اليوم» is the regular bar every other screen uses, in gold. Every progress bar is that one now, and CLAUDE.md says so.",
+               "«كمّل»'s tail is a clean centred point, not the odd shape it had."],
+        why: "Images 58–60, and the press lag.",
+        code: ".node.down, .duo-bar, .node-tip::after" },
+      { t: "Bookkeeping", s: "live",
+        what: ["sw.js and index.html bumped to 86. The temporary measuring page is deleted. CLAUDE.md updated."],
+        noframe: "No screen — files and notes" }
     ] }
 ];
 

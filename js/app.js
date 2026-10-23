@@ -68,7 +68,7 @@ function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { co
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
 
 /* ---------------- state ---------------- */
-const DEFAULT_STATE = { v: 1, disclaimer: false, introSeen: false, trackAsked: false, placeAsked: false, placed: null, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], league: null, mistakes: {}, teach: {}, learn: {}, reports: {} };
+const DEFAULT_STATE = { v: 1, disclaimer: false, introSeen: false, trackAsked: false, placeAsked: false, profileAsked: false, placed: null, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], league: null, mistakes: {}, teach: {}, learn: {}, reports: {} };
 /* The rivals. A student who suspects the board is padded looks at the names
    first, and a column of two dozen tidy Arabic first names is the one
    arrangement that never occurs on a real sign-up sheet. These are drawn in
@@ -1660,11 +1660,7 @@ function renderPath() {
       /* a node taught in short lessons fills its ring one lesson at a time */
       const LS = current && learnSet(key);
       const frac = LS ? learnRec(key).done.length / LS.lessons.length : 0;
-      const ring = current ? `<svg class="node-ring" viewBox="0 0 89 84" fill="none">
-          <ellipse class="ring-track" cx="44.5" cy="42" rx="41.5" ry="39" stroke="#E5E5E5" stroke-width="6"/>
-          ${LS ? (frac > 0 ? `<ellipse class="ring-fill ring-arc" cx="44.5" cy="42" rx="41.5" ry="39" stroke="${u.c}" stroke-width="6" stroke-linecap="round" pathLength="100" stroke-dasharray="${(frac * 100).toFixed(1)} 100" transform="rotate(-90 44.5 42)"/>` : "")
-            : `<path class="ring-arc" d="M 44.5 3 A 41.5 39 0 0 1 81.5 25" stroke="${u.c}" stroke-width="6" stroke-linecap="round"/>`}
-        </svg>` : "";
+      const ring = current ? ringSvg(LS ? LS.lessons.length : 1, LS ? learnRec(key).done.length : 0, u.c) : "";
       // exact Figma "Level" colors per state: gold done / unit-color open / gray locked
       const nc = done ? ["#FFC800", "#E6A000", "#FFE700"] : open ? [u.c, u.s, u.h] : ["#D2D2D2", "#ADADAD", "transparent"];
       html += `<div class="path-row${current ? " row-tip" : ""}"><div class="node-col${current ? " bob" : ""}${stale ? " stale" : ""}" style="right:${x}px" data-key="${key}"${LS ? ` data-n="${LS.lessons.length}"` : ""}>
@@ -1810,80 +1806,160 @@ function rgbOf(c) {
   return (h.match(/\d+(\.\d+)?/g) || [0, 0, 0]).slice(0, 3).map(Number);
 }
 const toWhite = (c, f) => "rgb(" + rgbOf(c).map(v => Math.round(v + (255 - v) * f)).join(",") + ")";
-/* «a lesson done» (Duolingo's node complete): the coin squats, springs off its
-   own shadow tall and narrow, hangs among three diamonds, tips over towards
-   you until you see it edge-on from underneath, comes back up the right way —
-   gold, if that was the node's last lesson — and drops onto its shadow; then
-   the ring fills the segment just earned */
+/* node_complete on the coin (Duolingo's, copied frame by frame): it squats,
+   springs off its own shadow tall and narrow, hangs among three diamonds, tips
+   over towards you until you see it edge-on from underneath, comes back up the
+   right way — gold, if that was the node's last lesson — and drops onto its
+   shadow. It plays when a node is finished */
+function coinPay(col, btn, pay, keep, end) {
+  const ic = btn.querySelector(".node-ic");
+  const cs = getComputedStyle(btn), root = getComputedStyle(document.documentElement);
+  const c0 = cs.backgroundColor, s0 = (cs.boxShadow.match(/rgba?\([^)]*\)|#\w+/) || [c0])[0];
+  const c1 = pay.gold ? root.getPropertyValue("--gold").trim() : c0, s1 = pay.gold ? root.getPropertyValue("--gold-dk").trim() : s0;
+  const k = 58 / 120, kx = 71 / 148, top0 = btn.offsetTop, at = t => t / PAY_MS, lin = { easing: "linear" };
+  const ghost = document.createElement("span");
+  ghost.className = "node-ghost";
+  ghost.style.top = top0 + 7 + "px";
+  col.insertBefore(ghost, btn);
+  const dias = PAY_DIAS.map(d => {
+    const el = document.createElement("span"), big = Math.max(...d.path.map(p => p[3])) * k;
+    el.className = "node-dia";
+    el.style.cssText = `width:${(big * (d.aspect || 1)).toFixed(1)}px;height:${big.toFixed(1)}px;margin:${(-big / 2).toFixed(1)}px 0 0 ${(-big * (d.aspect || 1) / 2).toFixed(1)}px`;
+    el.innerHTML = DIA_SVG;
+    col.insertBefore(el, btn);
+    const tint = c => d.pale ? toWhite(c, .5) : c;
+    el.animate(d.path.map(([t, x, y, s]) => ({ offset: at(t), ...lin,
+      transform: `translate(${(x * kx).toFixed(2)}px,${((y - 163) * k + top0).toFixed(2)}px) scale(${(s / Math.max(...d.path.map(p => p[3]))).toFixed(3)})`,
+      color: tint(t < 663 ? c0 : c1) })), { duration: PAY_MS, fill: "forwards" });
+    return el;
+  });
+  btn.style.transformOrigin = "50% 0";
+  btn.animate(PAY_COIN.map(([t, top, h, lip, w, p]) => {
+    const sy = h / 120;
+    return { offset: at(t), ...lin,
+      transform: `translateY(${((top - 163) * k).toFixed(2)}px) scale(${(w / 148).toFixed(3)},${sy.toFixed(3)})`,
+      background: p === 1 ? s1 : p ? c1 : c0,
+      boxShadow: `0 ${(lip * 7 / 16 / sy).toFixed(2)}px 0 ${p === 1 ? toWhite(c1, .15) : p ? s1 : s0}` };
+  }), { duration: PAY_MS });
+  if (ic) ic.animate(PAY_ICON.map(([t, o, s]) => ({ offset: at(t), ...lin, opacity: o, transform: `scale(${s})` })), { duration: PAY_MS });
+  try { btn.animate([{ opacity: 1 }, { opacity: 1, offset: at(662) }, { opacity: 0, offset: at(663) }, { opacity: 0, offset: at(688) }, { opacity: 1, offset: at(689) }, { opacity: 1 }],
+    { duration: PAY_MS, pseudoElement: "::before" }); } catch (e) { /* the shine stays */ }
+  ghost.animate(PAY_GHOST.map(([t, s]) => ({ offset: at(t), ...lin, transform: `scale(${s})` })), { duration: PAY_MS });
+  setTimeout(() => sfxPlay("done", .8, () => beep(pay.gold ? [[784, .08], [1047, .1], [1319, .22]] : [[784, .08], [1047, .16]])), 136);
+  setTimeout(() => { if (pay.gold) { btn.setAttribute("style", keep); btn.style.transformOrigin = "50% 0"; btn.classList.add("node-done"); } }, 688);
+  setTimeout(() => {
+    ghost.remove(); dias.forEach(x => x.remove());
+    btn.style.transformOrigin = "";
+    end();
+  }, PAY_MS);
+}
+/* Duolingo's ring round the current node: one segment per short lesson with a
+   twentieth of the way round left between them, done ones in the unit's
+   colour and the rest grey, drawn from the top and round to the left, as
+   Duolingo's is mirrored on an Arabic phone. A node without short lessons
+   wears the whole ring, grey */
+const RING_D = "M44.5 3.5A41 38.5 0 1 0 44.5 80.5A41 38.5 0 1 0 44.5 3.5";
+function ringSeg(n, i) { const g = n > 1 ? 2.5 : 0; return [i * 100 / n + g, 100 / n - 2 * g]; }
+function ringSvg(n, done, c) {
+  n = Math.max(1, n);
+  return `<svg class="node-ring" viewBox="0 0 89 84" fill="none" aria-hidden="true">${Array.from({ length: n }, (x, i) => {
+    const [a, len] = ringSeg(n, i);
+    return `<path class="ring-seg ${i < done ? "ring-arc" : "ring-track"}" d="${RING_D}" pathLength="100"${i < done ? ` style="stroke:${c}"` : ""} stroke-dasharray="${len.toFixed(2)} ${(100 - len).toFixed(2)}" stroke-dashoffset="${(-a).toFixed(2)}"/>`;
+  }).join("")}</svg>`;
+}
+/* «a lesson done», Duolingo's (ring_return_to_path + ring_lesson_complete,
+   measured off its file at a tenth of the speed): the ring comes back from
+   .74 of its size with its segments fading in; half a second on, the
+   segment just earned lets its grey go, the colour runs along it from its
+   start to its end in 135ms, three diamonds pop off its end and drift out as
+   they fade, and the star turns over in the coin. On a node's last lesson the
+   ring then lets go and the coin plays node_complete (coinPay) instead */
+const RING_MAX = "scale(1.131,1.121)";                // Duolingo's 1.02, against our coin
+const RING_SPARKS = [[5.9, -2.9, 9.2, 480], [4.2, 6.7, 4.6, 220], [8.4, 2.5, 3, 300]];   // out, along, size, fade
+function ringPay(col, svg, seg, n, i, c, exit) {
+  const segs = [...svg.querySelectorAll(".ring-seg")], at = (ms, f) => setTimeout(f, ms);
+  [svg, ...segs].forEach(x => { x.style.animation = "none"; });
+  svg.animate([{ transform: "scale(.82,.791)" }, { transform: RING_MAX }], { duration: 750, easing: "cubic-bezier(.55,.21,.07,1)", fill: "forwards" });
+  segs.forEach(x => x.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250 }));
+  const [a, len] = ringSeg(n, i);
+  at(500, () => seg.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 480, fill: "forwards" }));
+  const fill = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  fill.setAttribute("d", RING_D); fill.setAttribute("pathLength", "100"); fill.setAttribute("class", "ring-seg ring-arc");
+  fill.setAttribute("stroke-dashoffset", (-a).toFixed(2)); fill.setAttribute("stroke-dasharray", "0 100");
+  fill.style.stroke = c; fill.style.animation = "none"; fill.style.opacity = 0;
+  svg.appendChild(fill);
+  at(880, () => {
+    fill.style.opacity = "";
+    fill.animate([{ strokeDasharray: "0 100" }, { strokeDasharray: `${len.toFixed(2)} ${(100 - len).toFixed(2)}` }], { duration: 135, easing: "linear", fill: "forwards" });
+  });
+  at(1015, () => {
+    fill.setAttribute("stroke-dasharray", `${len.toFixed(2)} ${(100 - len).toFixed(2)}`);
+    seg.remove();
+    const th = (a + len) / 100 * 2 * Math.PI, sn = Math.sin(th), cs = Math.cos(th);
+    const ex = (44.5 - 41 * sn - 44.5) * 1.131, ey = 42 + (38.5 * -cs) * 1.121;
+    RING_SPARKS.forEach(([o, t, z, ms]) => {
+      const el = document.createElement("span");
+      el.className = "node-dia";
+      el.style.cssText = `width:${z}px;height:${z}px;margin:${-z / 2}px 0 0 ${-z / 2}px;color:${c}`;
+      el.innerHTML = DIA_SVG;
+      col.appendChild(el);
+      const x = ex - sn * o - cs * t, y = ey - cs * o + sn * t;
+      el.animate([{ transform: `translate(${x}px,${y}px) scale(.3)`, opacity: 1 }, { transform: `translate(${x}px,${y}px) scale(1)`, opacity: 1, offset: .12 },
+        { transform: `translate(${x - sn * 1.7}px,${y - cs * 1.7}px) scale(1)`, opacity: 0 }], { duration: ms, fill: "forwards" })
+        .onfinish = () => el.remove();
+    });
+    beep([[784, .07], [1047, .14]]);
+    buzz(10);
+  });
+  if (exit) {
+    at(1100, () => svg.animate([{ transform: RING_MAX, opacity: 1 }, { transform: "scale(1.3)", opacity: 0 }], { duration: 300, easing: "ease-in", fill: "forwards" }));
+    return;
+  }
+  at(1240, () => { const ic = col.querySelector(".node-ic"); if (ic) nodeFlip(ic); });
+  at(1800, () => [svg, ...svg.querySelectorAll(".ring-seg")].forEach(x => {
+    x.getAnimations().forEach(an => { if (!an.animationName) an.cancel(); });
+    x.style.animation = ""; x.style.animationDelay = "0s";    // breathing again, from its widest
+  }));
+}
 function pathPay() {
   const pay = PATH_PAY; PATH_PAY = null;
   const col = document.querySelector('.node-col[data-key="' + pay.key + '"]');
   if (!col || motionReduced()) { nodeFlipLoop(); return; }
-  const btn = col.querySelector(".node"), ring = col.querySelector(".ring-fill"), n = +col.dataset.n || 0;
-  const ic = btn.querySelector(".node-ic");
-  const toDash = ring && ring.getAttribute("stroke-dasharray");
-  if (ring && n) { ring.setAttribute("stroke-dasharray", (pay.was / n * 100).toFixed(1) + " 100"); if (!pay.was) ring.style.opacity = 0; }
-  const keep = btn.getAttribute("style");
-  if (pay.gold) {
-    const [c, sh, h] = (btn.dataset.open || "").split("|");
-    btn.classList.remove("node-done");
-    btn.style.setProperty("--node-c", c); btn.style.setProperty("--node-s", sh); btn.style.setProperty("--node-h", h);
-  }
+  const btn = col.querySelector(".node"), LS = learnSet(pay.key), n = LS ? LS.lessons.length : 0;
+  const c = (btn.dataset.open || "").split("|")[0];
+  clearTimeout(flipT); payRun = true;                // no star flip mid-beat, whoever asks for one
   sfxLoad("done");
-  clearTimeout(flipT); payRun = true;                // no star flip mid-jump, whoever asks for one
+  let svg = col.querySelector(".node-ring");
+  if (!svg && n && pay.gold) {                       // a finished node has no ring left: lend it one to finish
+    col.insertAdjacentHTML("afterbegin", ringSvg(n, n, c));
+    svg = col.querySelector(".node-ring");
+  }
+  const seg = svg && n ? svg.querySelectorAll(".ring-seg")[pay.was] : null;
+  if (seg) { seg.classList.replace("ring-arc", "ring-track"); seg.style.stroke = ""; }
+  if (svg && n) svg.style.transform = "scale(.82,.791)";
+  const tip = btn.querySelector(".node-tip");
+  if (tip) tip.style.opacity = 0;
+  const keep = btn.getAttribute("style");
+  const stars = pay.gold && col.querySelector(".node-stars");
+  if (stars) stars.style.opacity = 0;                // earned on the landing, not before
+  if (pay.gold) {
+    const [cc, sh, h] = (btn.dataset.open || "").split("|");
+    btn.classList.remove("node-done");
+    btn.style.setProperty("--node-c", cc); btn.style.setProperty("--node-s", sh); btn.style.setProperty("--node-h", h);
+  }
   const r = col.getBoundingClientRect();
   if (r.top < 90 || r.bottom > innerHeight - 110) col.scrollIntoView({ block: "center", behavior: "smooth" });
+  const end = () => {
+    if (stars) { stars.style.opacity = ""; [...stars.children].forEach((x, i) => x.animate([{ transform: "scale(0)" }, { transform: "scale(1.3)", offset: .6 }, { transform: "none" }], { duration: 380, delay: i * 90, easing: "ease-out", fill: "backwards" })); }
+    if (tip) { tip.style.opacity = ""; tip.animate([{ opacity: 0, scale: .6 }, { opacity: 1, scale: 1.1, offset: .6 }, { opacity: 1, scale: 1 }], { duration: 320, easing: "ease-out" }); }
+    payRun = false;
+    nodeFlipLoop(2400);
+  };
   setTimeout(() => {
-    const cs = getComputedStyle(btn), root = getComputedStyle(document.documentElement);
-    const c0 = cs.backgroundColor, s0 = (cs.boxShadow.match(/rgba?\([^)]*\)|#\w+/) || [c0])[0];
-    const c1 = pay.gold ? root.getPropertyValue("--gold").trim() : c0, s1 = pay.gold ? root.getPropertyValue("--gold-dk").trim() : s0;
-    const k = 58 / 120, kx = 71 / 148, top0 = btn.offsetTop, at = t => t / PAY_MS, lin = { easing: "linear" };
-    const tip = btn.querySelector(".node-tip");      // the tooltip stands aside while the coin flips
-    if (tip) tip.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, fill: "forwards" });
-    const ghost = document.createElement("span");
-    ghost.className = "node-ghost";
-    ghost.style.top = top0 + 7 + "px";
-    col.insertBefore(ghost, btn);
-    const dias = PAY_DIAS.map(d => {
-      const el = document.createElement("span"), big = Math.max(...d.path.map(p => p[3])) * k;
-      el.className = "node-dia";
-      el.style.cssText = `width:${(big * (d.aspect || 1)).toFixed(1)}px;height:${big.toFixed(1)}px;margin:${(-big / 2).toFixed(1)}px 0 0 ${(-big * (d.aspect || 1) / 2).toFixed(1)}px`;
-      el.innerHTML = DIA_SVG;
-      col.insertBefore(el, btn);
-      const tint = c => d.pale ? toWhite(c, .5) : c;
-      el.animate(d.path.map(([t, x, y, s]) => ({ offset: at(t), ...lin,
-        transform: `translate(${(x * kx).toFixed(2)}px,${((y - 163) * k + top0).toFixed(2)}px) scale(${(s / Math.max(...d.path.map(p => p[3]))).toFixed(3)})`,
-        color: tint(t < 663 ? c0 : c1) })), { duration: PAY_MS, fill: "forwards" });
-      return el;
-    });
-    btn.style.transformOrigin = "50% 0";
-    btn.animate(PAY_COIN.map(([t, top, h, lip, w, p]) => {
-      const sy = h / 120;
-      return { offset: at(t), ...lin,
-        transform: `translateY(${((top - 163) * k).toFixed(2)}px) scale(${(w / 148).toFixed(3)},${sy.toFixed(3)})`,
-        background: p === 1 ? s1 : p ? c1 : c0,
-        boxShadow: `0 ${(lip * 7 / 16 / sy).toFixed(2)}px 0 ${p === 1 ? toWhite(c1, .15) : p ? s1 : s0}` };
-    }), { duration: PAY_MS });
-    if (ic) ic.animate(PAY_ICON.map(([t, o, s]) => ({ offset: at(t), ...lin, opacity: o, transform: `scale(${s})` })), { duration: PAY_MS });
-    try { btn.animate([{ opacity: 1 }, { opacity: 1, offset: at(662) }, { opacity: 0, offset: at(663) }, { opacity: 0, offset: at(688) }, { opacity: 1, offset: at(689) }, { opacity: 1 }],
-      { duration: PAY_MS, pseudoElement: "::before" }); } catch (e) { /* the shine stays */ }
-    ghost.animate(PAY_GHOST.map(([t, s]) => ({ offset: at(t), ...lin, transform: `scale(${s})` })), { duration: PAY_MS });
-    setTimeout(() => sfxPlay("done", .8, () => beep(pay.gold ? [[784, .08], [1047, .1], [1319, .22]] : [[784, .08], [1047, .16]])), 136);
-    setTimeout(() => { if (pay.gold) { btn.setAttribute("style", keep); btn.style.transformOrigin = "50% 0"; btn.classList.add("node-done"); } }, 688);
-    setTimeout(() => {
-      if (ring && toDash) {
-        ring.style.opacity = "";
-        ring.animate([{ strokeDasharray: ring.getAttribute("stroke-dasharray") }, { strokeDasharray: toDash }], { duration: 520, easing: "cubic-bezier(.3,1.3,.5,1)" });
-        ring.setAttribute("stroke-dasharray", toDash);
-      }
-    }, 1292);
-    setTimeout(() => {
-      ghost.remove(); dias.forEach(x => x.remove());
-      btn.style.transformOrigin = "";
-      if (tip) { tip.getAnimations().forEach(x => x.cancel()); tip.animate([{ opacity: 0, scale: .6 }, { opacity: 1, scale: 1.1, offset: .6 }, { opacity: 1, scale: 1 }], { duration: 320, easing: "ease-out" }); }
-      payRun = false;
-      nodeFlipLoop(2400);
-    }, PAY_MS);
+    if (svg) svg.style.transform = "";
+    if (seg) ringPay(col, svg, seg, n, pay.was, c, pay.gold);
+    if (pay.gold) setTimeout(() => { if (seg) svg.remove(); coinPay(col, btn, pay, keep, end); }, seg ? 1500 : 0);
+    else setTimeout(end, 1100);
   }, 650);
 }
 /* press & open (Duolingo's node press and node select, measured off its file
@@ -1898,8 +1974,8 @@ const RING_SEL = [[0, null], [22, 1.115, 1.104], [55, 1.044, 1.024], [89, .973, 
   [192, .896, .854], [227, .885, .842], [259, .885, .848], [294, .896, .854], [329, .907, .865], [395, .929, .888],
   [464, .94, .91], [532, .956, .927], [600, .962, .933], [667, .967, .939], [702, .973, .945]];
 A.nodePress = function () { sfxPlay("press"); buzz(8); };
-function nodeRelease(btn) {
-  sfxPlay("release");
+function nodeRelease(btn, quiet) {
+  if (!quiet) sfxPlay("release");
   if (motionReduced()) return;
   btn.animate([{ transform: "translateY(-.29px)" }, { transform: "translateY(-.29px)", offset: .37 },
     { transform: "translateY(.14px)", offset: .371 }, { transform: "translateY(.14px)", offset: .99 }, { transform: "none" }], { duration: 133 });
@@ -2091,7 +2167,17 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
     if (selCol) ringResume(selCol);
     if (start !== true) sfxPlay("close");
   };
-  veil.onclick = e => { if (e.target === veil) popClose(); };
+  /* the node still shows through the veil: pressing it again presses it — the
+     face drops and settles back — and closes the card, as Duolingo's does */
+  const onNode = e => { const b = btn.getBoundingClientRect(); return e.clientX >= b.left && e.clientX <= b.right && e.clientY >= b.top && e.clientY <= b.bottom + 7; };
+  let downOn = false;
+  veil.addEventListener("pointerdown", e => { if (e.target === veil && onNode(e)) { downOn = true; btn.classList.add("down"); A.nodePress(); } });
+  veil.addEventListener("pointercancel", () => { downOn = false; btn.classList.remove("down"); });
+  veil.onclick = e => {
+    if (e.target !== veil) return;
+    if (downOn) { downOn = false; btn.classList.remove("down"); nodeRelease(btn, true); }
+    popClose();
+  };
   let boost = false;
   const bb = veil.querySelector("#lpBoost");
   if (bb) bb.onclick = () => {
@@ -3212,6 +3298,51 @@ function learnMake(src, tag) {
 /* a long line steps its type down instead of wrapping mid-expression */
 function learnFs(s) { const n = String(s || "").replace(/\*/g, "").length; return n > 30 ? " fs-s" : n > 21 ? " fs-m" : ""; }
 /* *x* marks the one number or word the eye should land on */
+/* the rule card says its rule a word at a time, as قدّور's bubble does, then
+   a marker runs under it word by word in reading order and the card settles
+   with a chime: the student reads it at the pace it is written, twice, and the
+   ↻ in its corner says it again. The signs (= × ÷ + − ←) land as green keys so
+   the shape of the formula is seen before its words. */
+const RULE_OP = /^[=×÷+−←]$/, RULE_STEP = 110, RULE_MARK = 70;
+const RULE_AGAIN_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></svg>`;
+function ruleWords(text) {
+  let bold = false;
+  return String(text).split(/\s+/).filter(Boolean).map((w, i) => {
+    const open = w.startsWith("*");
+    if (open) { bold = true; w = w.slice(1); }
+    const close = /\*[!.،؟:]*$/.test(w);
+    if (close) w = w.replace(/\*([!.،؟:]*)$/, "$1");
+    const h = `<span class="rw${RULE_OP.test(w) ? " op" : ""}${bold ? " hl" : ""}" style="--i:${i}" aria-hidden="true">${esc(w)}</span>`;
+    if (close) bold = false;
+    return h;
+  }).join(" ");
+}
+let ruleT = [];
+function rulePlay(again) {
+  ruleT.forEach(clearTimeout); ruleT = [];
+  const card = document.getElementById("lnRule");
+  if (!card || fxReduced()) return;
+  const ws = card.querySelectorAll(".rw"), n = ws.length;
+  if (again) {
+    card.style.setProperty("--d", "-.45s");
+    card.classList.remove("said");
+    [card, ...ws].forEach(x => { x.style.animation = "none"; });
+    card.querySelectorAll(".ln-rule-ic, .ln-rule-ic path").forEach(x => { x.style.animation = "none"; });
+    void card.offsetWidth;
+    card.querySelectorAll(".rw, .ln-rule-ic, .ln-rule-ic path").forEach(x => { x.style.animation = ""; });
+    card.style.animation = "ruleAgain .3s ease-out";
+  }
+  const d = parseFloat(card.style.getPropertyValue("--d")) * 1000 || 0;
+  const said = d + 450 + n * RULE_STEP + 200, marked = said + n * RULE_MARK + 120;
+  ruleT.push(setTimeout(() => card.classList.add("said"), said));
+  ruleT.push(setTimeout(() => {
+    card.animate([{ transform: "scale(1)" }, { transform: "scale(1.035,.965)", offset: .35 }, { transform: "scale(.99,1.01)", offset: .7 }, { transform: "scale(1)" }],
+      { duration: 360, easing: "ease-out" });
+    beep([[784, .07], [1175, .16]]);
+    buzz(10);
+  }, marked));
+}
+A.ruleAgain = function () { buzz(6); rulePlay(true); };
 function learnFmt(s) { return esc(s == null ? "" : s).replace(/\*([^*]+)\*/g, '<b class="ln-hl">$1</b>'); }
 
 let LAST_LEARN = null;
@@ -3322,7 +3453,7 @@ function learnBody(it) {
         <div class="ln-kick">${esc(it.kick || "الفكرة")}</div>
         ${it.h ? `<h1 class="ln-h">${learnFmt(it.h)}</h1>` : ""}
         ${fig}<div class="ln-rows">${rows}</div>
-        ${it.rule ? `<div class="ln-rule" style="--d:${(0.3 + n * 0.5).toFixed(2)}s"><span class="ln-rule-ic">${BULB_SVG}</span><span class="ln-rule-body"><span class="ln-rule-tag">القاعدة</span><span class="ln-rule-tx">${learnFmt(it.rule)}</span></span></div>` : ""}
+        ${it.rule ? `<div class="ln-rule" id="lnRule" style="--d:${(0.3 + n * 0.5).toFixed(2)}s"><span class="ln-rule-ic">${BULB_SVG}</span><span class="ln-rule-body"><span class="ln-rule-tag">القاعدة<button class="ln-rule-again" onclick="A.ruleAgain()" aria-label="أعد القاعدة">${RULE_AGAIN_SVG}</button></span><span class="ln-rule-tx" aria-label="${esc(it.rule.replace(/\*/g, ""))}">${ruleWords(it.rule)}</span></span></div>` : ""}
       </div>`;
     }
     case "pick": {
@@ -3386,6 +3517,7 @@ function renderLearn() {
     </div>`;
   fxBindPress();
   fxPaintBar(SES.run);
+  if (it.t === "see" && it.rule) rulePlay(); else { ruleT.forEach(clearTimeout); ruleT = []; }
   SES.qStart = Date.now();
 }
 function learnPaint() {
@@ -3641,7 +3773,7 @@ A.winNext = function () {
   wstStop(); wvStop();
   winHeroStop(); WIN = null;
   const L = LAST_LEARN;
-  const go = () => L && L.next >= 0 ? A.startLearn(L.domKey, L.lesKey, L.next) : A.go("path");
+  const go = () => profileGate(() => L && L.next >= 0 ? A.startLearn(L.domKey, L.lesKey, L.next) : A.go("path"));
   if (pendingStreak > 0) { const c = pendingStreak; pendingStreak = 0; showStreakCelebration(c, go); }
   else go();
 };
@@ -4690,7 +4822,7 @@ A.winMore = function () {
         ${chestSVG("wp-chest")}
         <span class="wn-tx">
           <b><span id="wpQt">${done && !justDone ? "هدف اليوم مكتمل" : "هدف اليوم"}</span><span class="wn-count" id="wpQ">${toAr(W.qd0)}/${toAr(W.goal)}</span></b>
-          <span class="wp-bar"><i style="width:${pct(W.qd0)}%" data-w="${pct(W.qd1)}"></i></span>
+          <span class="duo-bar wp-bar"><i style="width:${pct(W.qd0)}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft)" data-w="${pct(W.qd1)}"></i></span>
           <span class="wn-next" id="wpQn">${done && !justDone ? "صندوقك بانتظارك في الرئيسية" : `باقي ${qCount(W.goal - W.qd0)} على صندوق اليوم`}</span>
         </span>
       </div>
@@ -5956,10 +6088,10 @@ function streakDayLabel(c) {
 A.winContinue = function () {
   wstStop(); wvStop();
   winHeroStop(); WIN = null;
-  const next = () => {
+  const next = () => profileGate(() => {
     if (!S.placeAsked && Object.values(S.lessons || {}).filter(p => p.stars > 0).length === 1) { renderPlaceOffer(); return; }
     A.go("path");
-  };
+  });
   if (pendingStreak > 0) { const c = pendingStreak; pendingStreak = 0; showStreakCelebration(c, next); }
   else next();
 };
@@ -7110,12 +7242,12 @@ const OB_FORK_SAY = { scratch: "نبدأ من أول درس — وأول فوز 
    the lesson splash) he stands big in the middle under his bubble. When he ASKS,
    he steps to the side, small, the question in his bubble and the answers below
    it. «ask» marks the second kind; the journey line counts them. */
-const OB_STEPS = ["hello", "taste", "value", "journey", "level", "goal", "name", "start"];
-const OB_ASKS = { level: 1, goal: 1, name: 1, start: 1 };
+const OB_STEPS = ["hello", "taste", "value", "journey", "level", "goal", "start"];
+const OB_ASKS = { level: 1, goal: 1, start: 1 };
 let OB = null;
 A.obStart = function () {
   const known = !!S.user;          // a save that already has a name resumes at the questions
-  OB = { steps: OB_STEPS.filter(k => !(known && (k === "hello" || k === "taste" || k === "journey" || k === "name")) && !(k === "value" && S.introSeen)),
+  OB = { steps: OB_STEPS.filter(k => !(known && (k === "hello" || k === "taste" || k === "journey")) && !(k === "value" && S.introSeen)),
     i: 0, dir: 1, pct: 0, level: S.level || null, goal: S.goal || DAILY_GOAL, name: "", start: null, taste: null };
   renderOb();
 };
@@ -7233,19 +7365,6 @@ const OB_VIEW = {
           <span class="ob-tx"><b>${qCount(g)} يومياً</b><span>${OB_GOALS[g][1]}</span></span>
           <span class="gl-tag">${OB_GOALS[g][0]}</span>`, i)).join("")}</div>
       <p class="ob-note">تقدر تغيّره من الإعدادات وقت ما تبي</p>` }),
-  /* the name is written onto their badge as they type it, and «المتابعة» slaps
-     the «جاهز» sticker on right there (nameStamp) — the payoff lands on the
-     screen where they did the thing, not on a new one that plays by itself */
-  name: () => {
-    const nm = OB.name.trim();
-    return { cta: OB.stamped ? OB_GO : `<button class="btn" id="obGo" onclick="A.obNext()">المتابعة</button><button class="login-skip" id="obSkip" onclick="A.obSkipName()">تخطَّ</button>`,
-      html: `<div class="nm${OB.stamped ? " stamped" : ""}">
-        ${obSide(OB.stamped ? "cheer" : "encourage", OB.stamped ? `أهلاً يا *${nm}*! بطاقتك جاهزة.` : "وش نناديك؟", OB.stamped ? "" : "اختياري — ويبقى في جهازك بس")}
-        ${nameCard(nm)}
-        <input id="obName" class="login-input ob-input" type="text" maxlength="20" placeholder="اكتب اسمك" autocomplete="off" enterkeyhint="done"
-          value="${esc(OB.name)}" oninput="A.obName(this.value)" onkeydown="if(event.key==='Enter')A.obNext()">
-      </div>` };
-  },
   start: () => {
     const rec = obRecommend();
     if (!OB.start) OB.start = rec;
@@ -7292,8 +7411,8 @@ function obFrame(html, cta, pct, back, cls, bar) {
 const OB_BUZZ = { hello: [30, 140, 70], journey: [40, 200, 90], splash: [20, 40, 20, 40, 20, 40, 90] };
 function renderOb() {
   const step = OB.steps[OB.i];
-  if (nmTl && step !== "name") { nmTl.kill(); nmTl = null; }
-  if (step !== "name") ncStop();
+  if (nmTl) { nmTl.kill(); nmTl = null; }
+  ncStop();
   glT.forEach(clearTimeout); glT = [];
   const v = OB_VIEW[step]();
   /* the bar never fills on the last question: the student is not in yet */
@@ -7301,7 +7420,6 @@ function renderOb() {
   obFrame(v.html, v.cta, pct, OB.i > 0 || !S.user ? "A.obBack()" : "", "ob-" + step, !v.top);
   if (OB_BUZZ[step]) setTimeout(() => buzz(OB_BUZZ[step]), 250);
   if (step === "goal" && OB.goal != null) setTimeout(() => glWave(OB.goal), 700);
-  if (step === "name" && !OB.stamped) { ncEnter(); ncTilt(); setTimeout(() => { const n = document.getElementById("obName"); if (n) n.focus(); }, 380); }
 }
 /* The name card (2026-10-22: the user asked for the card of creativeocean's
    CodePen «SVG Debit Card Animation 4», dyRWXPz, MIT like every public pen) —
@@ -7445,6 +7563,7 @@ A.obName = function (v) {
   el.textContent = nm || "اسمك هنا";
   el.setAttribute("font-size", nm.length > 11 ? 34 : 46);
   el.classList.toggle("empty", !nm);
+  if (OB.profile) { const go = document.getElementById("obGo"); if (go) go.disabled = !nm; }
   svg.setAttribute("aria-label", "بطاقة طالب قدراتي" + (nm ? " باسم " + nm : ""));
   if (window.gsap && !fxReduced() && nm) gsap.fromTo(el, { x: grew ? 10 : -6 }, { x: 0, duration: .35, ease: "expo.out", overwrite: true });
 };
@@ -7467,14 +7586,14 @@ function nameStamp() {
   };
   const done = () => {
     if (!cta) return;
-    cta.innerHTML = OB_GO; cta.style.pointerEvents = "";
+    cta.innerHTML = OB.profile ? PF_GO : OB_GO; cta.style.pointerEvents = "";
     if (window.gsap && !fxReduced()) gsap.fromTo(cta, { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: .35, ease: "back.out(2)" });
   };
   if (!wrap || !svg || !window.gsap || fxReduced()) { if (wrap) wrap.classList.add("stamped"); greet(); done(); return; }
   if (nmTl) nmTl.kill();
   const before = card.getBoundingClientRect();
   if (cta) cta.style.pointerEvents = "none";   // a nervous double-tap must not skip the payoff
-  gsap.to([input, cta], { opacity: 0, y: 14, duration: .18, ease: "power2.in" });
+  gsap.to([input, cta].filter(Boolean), { opacity: 0, y: 14, duration: .18, ease: "power2.in" });
   const box = svg.querySelectorAll(".nc-box")[2], name = document.getElementById("scName"), logo = svg.querySelectorAll(".nc-logo");
   const tl = nmTl = gsap.timeline();
   tl.call(() => {
@@ -7596,20 +7715,135 @@ A.obNext = function () {
   if (step === "value") S.introSeen = true;
   if (step === "level") S.level = OB.level;
   if (step === "goal") S.goal = OB.goal;
-  if (step === "name") {
-    const n = (OB.name || "").trim();
-    S.user = n ? { name: n.slice(0, 20), guest: false } : { name: "ضيف", guest: true };
-    if (n && !OB.stamped) { S.joined = S.joined || todayKey(); save(); nameStamp(); return; }
-  }
   S.joined = S.joined || todayKey();
   save(); buzz(8);
   OB.i++; OB.dir = 1; renderOb();
 };
-A.obSkipName = function () { OB.name = ""; OB.stamped = false; A.obNext(); };
+
+/* The name, after the first win (2026-10-23: the user moved it out of the
+   first run and asked for it «in very nice UI» where Duolingo and Brilliant ask:
+   both ask for a profile only once the first lesson is behind them, when there
+   is something worth keeping). Asked once, by whoever finishes a lesson without
+   a name — the win screen's exits pass through profileGate. It opens on the
+   student card already made out to them (the CodePen card of the old name
+   step), «اسمك هنا» where the name goes, and two ways to fill it: type it, or
+   take it from Google. «لاحقاً» keeps them a guest and never asks again;
+   Settings can name them any day. The name stays on the phone either way.
+
+   Google gives a name only (Google Identity Services, client side: the JWT's
+   given_name, never verified because nothing leaves the phone, and the email is
+   not kept). It needs an OAuth client ID for this origin in GOOGLE_CLIENT_ID;
+   without one, offline, or inside the Android app (Google refuses embedded
+   web views), the Google button is simply not there. */
+const GOOGLE_CLIENT_ID = "";
+const PF_GO = `<button class="btn" onclick="A.pfDone()">المتابعة</button>`;
+let PF_THEN = null;
+function profileGate(then) {
+  if ((S.user && !S.user.guest) || S.profileAsked) { then(); return; }
+  PF_THEN = then;
+  renderProfile();
+}
+const pfGoogleOk = () => !!GOOGLE_CLIENT_ID && navigator.onLine !== false && !window.Capacitor;
+function renderProfile() {
+  OB = { profile: true, name: "", goal: dailyGoal(), stamped: false, pct: 0, dir: 1 };
+  const gOk = pfGoogleOk();
+  obFrame(`<div class="nm pf">
+      ${obSide("cheer", "أول درس خلص! هذي *بطاقتك* — وش نكتب عليها؟", "اختياري — اسمك يبقى في جهازك بس")}
+      ${nameCard("")}
+    </div>`, `<button class="btn pf-type" onclick="A.pfType()">${PEN_SVG}اكتب اسمك</button>
+      ${gOk ? `<div class="pf-or"><span>أو</span></div><div class="pf-google" id="pfGoogle"></div>` : ""}
+      <button class="login-skip pf-later" onclick="A.pfLater()">لاحقاً</button>`, 0, "", "ob-name ob-profile", false);
+  ncEnter(); ncTilt();
+  if (gOk) pfGoogle();
+}
+const PEN_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></svg>`;
+/* «اكتب اسمك»: the two ways step aside and the field takes their place, the
+   keyboard comes up, and every letter lands on the card (A.obName) */
+A.pfType = function () {
+  const card = document.querySelector(".pf .nc-stage"), cta = document.querySelector(".ob-cta");
+  if (!card || !cta || document.getElementById("obName")) return;
+  sndTap(); buzz(8);
+  const y0 = card.getBoundingClientRect().top;
+  card.parentNode.classList.add("typing");
+  if (window.gsap && !fxReduced()) gsap.fromTo(card, { y: y0 - card.getBoundingClientRect().top }, { y: 0, duration: .5, ease: "expo.out" });
+  card.insertAdjacentHTML("afterend", `<input id="obName" class="login-input ob-input pf-input" type="text" maxlength="20" placeholder="اكتب اسمك" autocomplete="given-name" enterkeyhint="done"
+    oninput="A.obName(this.value)" onkeydown="if(event.key==='Enter')A.pfSave()">`);
+  cta.innerHTML = `<button class="btn" id="obGo" onclick="A.pfSave()" disabled>احفظ بطاقتي</button><button class="login-skip pf-later" onclick="A.pfLater()">لاحقاً</button>`;
+  const n = document.getElementById("obName"); if (n) n.focus();
+};
+function pfKeep(name, google) {
+  const n = String(name || "").replace(/[*<>]/g, "").trim().slice(0, 20);
+  if (!n) return false;
+  OB.name = n;
+  S.user = { name: n, guest: false }; if (google) S.user.google = true;
+  S.profileAsked = true; S.joined = S.joined || todayKey();
+  save();
+  return true;
+}
+A.pfSave = function () {
+  if (!OB || !OB.profile || OB.stamped) return;
+  if (!pfKeep(OB.name)) { const n = document.getElementById("obName"); if (n) { n.classList.remove("err"); void n.offsetWidth; n.classList.add("err"); } return; }
+  nameStamp();
+};
+A.pfLater = function () {
+  S.user = S.user || { name: "ضيف", guest: true };
+  S.profileAsked = true; save(); sndTap();
+  A.pfDone();
+};
+A.pfDone = function () {
+  ncStop(); if (nmTl) { nmTl.kill(); nmTl = null; }
+  OB = null;
+  const then = PF_THEN; PF_THEN = null;
+  if (then) then(); else A.go("path");
+};
+/* Google's own button (its rules: their mark, their words), drawn by their
+   script into #pfGoogle; the name it hands back is written onto the card and
+   stamped exactly as a typed one */
+let pfGsi = null;
+function pfGoogle() {
+  const box = document.getElementById("pfGoogle");
+  if (!box) return;
+  const draw = () => {
+    const g = window.google && google.accounts && google.accounts.id;
+    if (!g || !document.getElementById("pfGoogle")) return;
+    g.initialize({ client_id: GOOGLE_CLIENT_ID, callback: pfGoogleBack, ux_mode: "popup", context: "use", itp_support: true });
+    g.renderButton(box, { type: "standard", theme: "outline", size: "large", shape: "pill", text: "continue_with", locale: "ar", width: Math.min(360, box.clientWidth || 320) });
+  };
+  if (window.google && google.accounts) { draw(); return; }
+  if (!pfGsi) {
+    pfGsi = new Promise((ok, no) => {
+      const sc = document.createElement("script");
+      sc.src = "https://accounts.google.com/gsi/client"; sc.async = true;
+      sc.onload = ok; sc.onerror = no;
+      document.head.appendChild(sc);
+    });
+  }
+  pfGsi.then(draw).catch(() => {
+    pfGsi = null;
+    const b = document.getElementById("pfGoogle"); if (b) { b.previousElementSibling && b.previousElementSibling.remove(); b.remove(); }
+  });
+}
+function pfGoogleBack(res) {
+  if (!OB || !OB.profile || OB.stamped) return;
+  let p = {};
+  try {
+    const b = res.credential.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    p = JSON.parse(decodeURIComponent(Array.from(atob(b), c => "%" + c.charCodeAt(0).toString(16).padStart(2, "0")).join("")));
+  } catch (e) { return; }
+  if (!pfKeep(p.given_name || p.name, true)) return;
+  A.obName(OB.name);
+  nameStamp();
+}
+/* dev harness: the profile, blank or (#ob-hi) with a name typed and saved */
+A.debugProfile = function (hi) {
+  S.profileAsked = false;
+  PF_THEN = () => A.go("path");
+  renderProfile();
+  if (hi) setTimeout(() => { A.pfType(); A.obName("سارة"); const n = document.getElementById("obName"); if (n) n.value = "سارة"; A.pfSave(); }, 900);
+};
 A.obBack = function () {
   if (!OB || OB.i === 0) { OB = null; renderWelcome(); return; }
   OB.i--; OB.dir = -1;
-  if (OB.steps[OB.i] === "name") OB.stamped = false;   // back to the name means they want to change it
   renderOb();
 };
 function obFirstLesson() {
@@ -7653,11 +7887,9 @@ A.obReplay = function (step) {
   A.obStart();
   OB.steps = OB_STEPS.slice();
   if (step === "splash" || step === "pintro") { OB.i = OB.steps.indexOf("start"); OB.start = step === "pintro" ? "find" : "scratch"; renderObSplash(OB.start); return; }
-  const hi = step === "hi";
-  if (hi) { OB.name = (S.user && !S.user.guest && S.user.name) || "سارة"; step = "name"; }
+  if (step === "name" || step === "hi") { OB = null; A.debugProfile(step === "hi"); return; }
   OB.i = Math.max(0, OB.steps.indexOf(step || "level"));
   renderOb();
-  if (hi) setTimeout(() => A.obNext(), 900);
 };
 A.introReplay = function () { A.obReplay("value"); };
 A.levelReplay = function () { A.obReplay("level"); };
