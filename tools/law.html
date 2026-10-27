@@ -250,13 +250,115 @@
   }
   .e-b:active { border-bottom-width: 2px; translate: 0 2px; }
   .e-v { min-width: 44px; text-align: center; font-size: 24px; font-weight: 800; color: var(--ink); }
+
+  /* ---- F: teach your friend ---- */
+  .f-chat {
+    position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden;
+    border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 22px; background: var(--surface-hover);
+  }
+  .f-hd { display: flex; align-items: center; gap: 9px; padding: 7px 12px; background: var(--snow); border-bottom: 2px solid var(--line); }
+  .f-av { width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; background: var(--purple); box-shadow: inset 0 -3px 0 var(--purple-dk); color: var(--snow); display: grid; place-items: center; font-size: 17px; font-weight: 800; }
+  .f-nm { display: flex; flex-direction: column; line-height: 1.25; }
+  .f-nm b { font-size: 15.5px; }
+  .f-nm small { font-size: 12px; font-weight: 800; color: var(--green-dk); }
+  .f-msgs { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 10px 10px 8px; display: flex; flex-direction: column; gap: 7px; scrollbar-width: none; }
+  .f-msgs::-webkit-scrollbar { display: none; }
+  .f-b { max-width: 84%; box-sizing: border-box; padding: 5px 11px 4px; border-radius: 16px; font-size: 15px; font-weight: 700; line-height: 1.55; color: var(--ink); flex-shrink: 0; }
+  .f-b b { color: var(--blue-dk); }
+  .f-b.them { align-self: flex-start; background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px; border-start-start-radius: 5px; }
+  .f-b.me { align-self: flex-end; background: var(--blue-light); border: 2px solid var(--blue-border); border-bottom-width: 4px; border-start-end-radius: 5px; color: var(--blue-dk); font-size: 17px; font-weight: 800; }
+  .f-b.wide { width: 94%; max-width: 94%; padding: 8px 6px 6px; }
+  .f-b.wide .rrow { font-size: 15px; }
+  .f-b.wide .rc-pre { margin: 0 0 4px; font-size: 12.5px; }
+  .f-tk { display: inline-flex; vertical-align: -1px; margin-inline-start: 7px; color: var(--gray-icon); transition: color .3s; }
+  .f-tk svg { width: 17px; height: 11px; }
+  .f-tk.read { color: var(--blue); }
+  .f-b.wide .f-tk { display: flex; justify-content: flex-end; margin: 2px 4px 0 0; }
+  .f-typ { display: flex; gap: 4px; padding: 6px 2px; }
+  .f-typ i { width: 7px; height: 7px; border-radius: 50%; background: var(--gray-icon); animation: fDot 1s ease-in-out infinite; }
+  .f-typ i:nth-child(2) { animation-delay: .15s; }
+  .f-typ i:nth-child(3) { animation-delay: .3s; }
+  @keyframes fDot { 0%, 60%, 100% { translate: 0 0; } 30% { translate: 0 -5px; } }
+  .f-b.stk { background: none; border: 0; padding: 0; }
+  .f-b.stk svg { width: 104px; height: 114px; display: block; }
+  .st-rib1 { fill: var(--blue); } .st-rib2 { fill: var(--blue-dk); }
+  .st-lip { fill: var(--gold-dk); } .st-face { fill: var(--gold); } .st-in { fill: var(--gold-band); } .st-star { fill: var(--snow); }
+  .st-band { fill: var(--red); } .st-bandl { fill: var(--red-dk2); } .st-t { fill: var(--snow); font: 800 15px var(--font); }
+  .f-comp { background: var(--snow); border-top: 2px solid var(--line); padding: 8px 8px 9px; display: flex; flex-direction: column; gap: 8px; transition: opacity .25s; }
+  .f-comp.off { opacity: .4; pointer-events: none; }
+  .f-draft { min-height: 50px; box-sizing: border-box; border-radius: 16px; background: var(--surface-hover); border: 2px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 5px 6px; }
+  .f-draft .rrow { align-items: center; width: 100%; font-size: 17px; }
+  .f-draft .rc-pre { margin: 0 0 3px; font-size: 12.5px; }
+  .f-draft:empty { display: none; }
+  .f-row { display: flex; align-items: flex-end; gap: 8px; }
+  .f-tray { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; }
+  .f-tray .tl { height: 42px; min-width: 44px; font-size: 18px; }
+  .f-tray .tl.w { font-size: 15px; }
+  .f-tray .tl.off { opacity: .35; pointer-events: none; }
+  .f-tray .tl.no { background: var(--red-bg); border-color: var(--red-soft); color: var(--red-dk2); }
+  .f-send { width: 46px; height: 46px; flex-shrink: 0; border: 0; border-radius: 50%; padding: 0; background: var(--green); box-shadow: 0 4px 0 var(--green-lip); color: var(--snow); display: grid; place-items: center; margin-bottom: 4px; }
+  .f-send:disabled { background: var(--line); box-shadow: 0 4px 0 var(--divider); color: var(--gray-icon); }
+  .f-send:not(:disabled):active { box-shadow: 0 1px 0 var(--green-lip); translate: 0 3px; }
+  .f-send svg { width: 21px; height: 21px; }
+  .f-bl {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box;
+    min-width: 2.3em; height: 2.2em; padding: 0 .4em; border-radius: .65em; background: var(--snow);
+    border: 2px dashed var(--divider); color: var(--gray-icon); font: 800 1em/1.1 var(--font); cursor: pointer;
+  }
+  .f-bl.full { border-style: solid; border-color: var(--line); border-bottom-width: 4px; color: var(--ink); }
+  .f-bl.wb { height: auto; min-height: 2.3em; padding: .15em .5em; cursor: default; }
+  .f-bl.wb small { font-size: .78em; color: var(--ct); }
+  .f-bl.live { border-color: var(--blue-border); border-style: solid; animation: aBob 1.4s ease-in-out infinite; }
+
+  /* ---- G: the balance ---- */
+  .g-rd { display: flex; justify-content: center; gap: 6px; }
+  .g-rd i { width: 30px; height: 8px; border-radius: 4px; background: var(--line); transition: background-color .3s; }
+  .g-rd i.on { background: var(--purple); }
+  .g-rd i.ok { background: var(--green); }
+  .g-sc { position: relative; height: 222px; margin-top: 6px; }
+  .g-post { position: absolute; left: 50%; top: 40px; bottom: 14px; width: 14px; margin-left: -7px; border-radius: 7px; background: var(--purple-pale); }
+  .g-foot { position: absolute; left: 50%; bottom: 0; width: 116px; margin-left: -58px; height: 18px; border-radius: 10px; background: var(--purple); box-shadow: inset 0 -4px 0 var(--purple-dk); }
+  .g-beam { position: absolute; top: 34px; left: 62px; right: 62px; height: 14px; transform-origin: 50% 50%; z-index: 2; }
+  .g-bar { position: absolute; inset: 0; border-radius: 7px; background: var(--purple); box-shadow: inset 0 -4px 0 var(--purple-dk); }
+  .g-pin { position: absolute; left: 50%; top: 31px; width: 20px; height: 20px; margin-left: -10px; border-radius: 50%; background: var(--gold); box-shadow: inset 0 -3px 0 var(--gold-dk); z-index: 4; }
+  .g-hang { position: absolute; top: 5px; width: 112px; margin-left: -56px; transform-origin: 50% 0; display: flex; flex-direction: column; align-items: center; }
+  .g-hl { left: 0; } .g-hr { left: 100%; }
+  .g-hook { width: 10px; height: 10px; border-radius: 50%; background: var(--purple-dk); }
+  .g-str { display: block; width: 112px; height: 82px; margin-top: -2px; }
+  .g-str path { stroke: var(--gray-icon); stroke-width: 2; fill: none; stroke-linecap: round; }
+  .g-pan { position: relative; width: 112px; height: 13px; border-radius: 0 0 56px 56px / 0 0 13px 13px; background: var(--purple); box-shadow: inset 0 -3px 0 var(--purple-dk); }
+  .g-load { position: absolute; left: -24px; right: -24px; bottom: calc(100% - 2px); display: flex; flex-direction: column; align-items: center; min-height: 40px; justify-content: flex-end; z-index: 3; }
+  .g-val { margin-top: 7px; min-width: 40px; padding: 1px 9px 0; border-radius: 10px; background: var(--green-bg); color: var(--green-dk); font-size: 16px; font-weight: 800; text-align: center; }
+  .g-pile { display: flex; flex-direction: column-reverse; align-items: center; gap: 2px; }
+  .g-prow { display: flex; gap: 2px; }
+  .g-blk { width: 24px; height: 22px; box-sizing: border-box; border-radius: 6px; background: var(--cl); border: 2px solid var(--cb); border-bottom-width: 4px; color: var(--ct); font: 800 11.5px/1 var(--font); font-style: normal; display: grid; place-items: center; }
+  .g-card { display: inline-grid; place-items: center; box-sizing: border-box; height: 40px; padding: 0 9px 2px; border-radius: 11px; background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px; font: 800 15.5px/1 var(--font); color: var(--ink); white-space: nowrap; transition: background-color .25s, border-color .25s, color .25s; }
+  .g-card.ok { background: var(--green-bg); border-color: var(--green-pale); color: var(--green-dk); }
+  .g-bal { width: 34px; height: 50px; margin-bottom: -2px; transform-origin: 50% 100%; animation: gSway 2.4s ease-in-out infinite; }
+  @keyframes gSway { 50% { rotate: 5deg; } }
+  .g-bal .b1, .g-mini .b1 { fill: var(--blue); } .g-bal .b2, .g-mini .b2 { fill: var(--blue-dk); }
+  .g-bal .bs { stroke: var(--gray-icon); stroke-width: 1.6; fill: none; }
+  .g-bal text { fill: var(--snow); font: 800 13px var(--font); }
+  .g-tray { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 8px; margin-top: 12px; transition: opacity .25s; }
+  .g-c { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .g-opt { height: 44px; font-size: 17px; }
+  .g-mod { display: inline-flex; align-items: center; gap: 4px; }
+  .g-mod.on { background: var(--blue-light); border-color: var(--blue-border); color: var(--blue-dk); }
+  .g-mini { width: 16px; height: 22px; }
+  .g-tag { min-height: 18px; font-size: 12.5px; font-weight: 800; line-height: 18px; }
+  .g-tag.lt { color: var(--blue-dk); } .g-tag.hv { color: var(--orange-dk); }
+  .g-rule .rc { margin-top: 12px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .f-typ i, .f-bl.live, .g-bal, .tl.live { animation: none; }
+  }
 </style>
 </head>
 <body>
 <div class="lab">
   <header class="lab-h">
     <h1>مختبر القاعدة</h1>
-    <p>خمس طرق جديدة يقابل فيها الطالب القاعدة — في كل وحدة يشتغل بإيده بدل ما يتفرّج. جرّب كل وحدة على القواعد الثلاث، واختر الأحلى.</p>
+    <p>سبع طرق جديدة يقابل فيها الطالب القاعدة — في كل وحدة يشتغل بإيده بدل ما يتفرّج. جرّب كل وحدة على القواعد الثلاث، واختر الأحلى.</p>
   </header>
   <div class="grid" id="grid"></div>
 </div>
@@ -967,6 +1069,379 @@
     }));
   }
 
+  /* =====================================================================
+     F — علّم خويك: a friend asks in a chat; the student sends him a faster
+     way with numbers, then rewrites it in words so he can keep it, and
+     then he tests it on new numbers — the rule is the student's own message
+     ===================================================================== */
+  const F_CFG = {
+    rep: { hi: 'هلا! عندي سؤال في الواجب', q: 'كم <b>٣٠ + ٣٠ + ٣٠ + ٣٠ + ٣٠</b>؟ أجمعها وحدة وحدة؟',
+      tiles: [4, 30, 6, 5], f: b => b[0] * b[1], ans: 150, decoys: ['آخر عدد', 'عددها'],
+      hints: ['كم مرة تكرّر <b>٣٠</b>؟ عدّها', '<b>٣٠</b> تكرّر <b>٥</b> مرات — اضربهم في بعض'],
+      yes: 'والله! <b>١٥٠</b> صح — بضربة وحدة بدل أربع جمعات',
+      got: 'فهمت: العدد اللي يتكرر أضربه في عدد مرّاته',
+      test: { q: 'طيب وهذي؟ <b>٤٠ + ٤٠ + ٤٠ + ٤٠</b>', ch: [120, 160, 200], ans: 160, me: '٤٠ × ٤ = ١٦٠' } },
+    gauss: { hi: 'هلا! الأستاذ عطانا تحدّي', q: 'كم <b>١ + ٢ + ٣ + … + ١٠</b>؟ لازم أجمعها كلها؟!',
+      tiles: [9, 10, 11, 5], f: b => b[0] * (b[1] + 1) / 2, ans: 55, decoys: ['العدد', 'عددها'],
+      hints: ['اجمع الطرفين: <b>١ + ١٠</b> ، <b>٢ + ٩</b> … كل زوج كم؟', 'كل زوج <b>١١</b> ، والأزواج نص العشرة — يعني <b>١٠ × ١١ ÷ ٢</b>'],
+      yes: 'صدق! <b>٥٥</b> — كل زوج ١١ ، وفيه ٥ أزواج',
+      got: 'فهمت: آخر عدد في اللي بعده، والناتج على ٢',
+      test: { q: 'طيب وهذي؟ <b>١ + ٢ + … + ٦</b>', ch: [18, 21, 36], ans: 21, me: '٦ × ٧ ÷ ٢ = ٢١' } },
+    odd: { hi: 'هلا! لقيت شي غريب', q: 'كم <b>١ + ٣ + ٥ + ٧ + ٩</b>؟ فيه طريقة أسرع؟',
+      tiles: [3, 5, 9, 2], f: b => b[0] * b[1], ans: 25, decoys: ['المجموع', 'آخر عدد'],
+      hints: ['كم عدد فردي عندك؟ عدّها', '<b>٥</b> أعداد فردية — اضرب عددها في نفسه'],
+      yes: 'صح! <b>٢٥</b> — يعني ٥ × ٥ ، طلع مربّع!',
+      got: 'فهمت: أعدّ الفردية، وأضرب عددها في نفسه',
+      test: { q: 'طيب وهذي؟ <b>١ + ٣ + ٥ + ٧</b>', ch: [14, 16, 49], ans: 16, me: '٤ × ٤ = ١٦' } }
+  };
+  const F_TICK = '<svg viewBox="0 0 22 14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M1.5 7.5l4 4 8-9"/><path d="M9.5 10.5l1 1 8-9"/></svg>';
+  const F_SEND = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M2.5 12 21.5 3.5l-3.4 8.5 3.4 8.5z"/></svg>';
+  function starPts(cx, cy, R, r) {
+    const p = [];
+    for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, d = i % 2 ? r : R; p.push((cx + d * Math.cos(a)).toFixed(1) + ',' + (cy + d * Math.sin(a)).toFixed(1)); }
+    return p.join(' ');
+  }
+  const F_STICKER = `<svg viewBox="0 0 104 114"><polygon class="st-rib1" points="36,62 24,104 38,97 46,110 52,70"/><polygon class="st-rib2" points="68,62 80,104 66,97 58,110 52,70"/>
+    <circle class="st-lip" cx="52" cy="46" r="36"/><circle class="st-face" cx="52" cy="42" r="36"/><circle class="st-in" cx="52" cy="42" r="26"/>
+    <polygon class="st-star" points="${starPts(52, 43, 16, 7)}"/>
+    <rect class="st-bandl" x="14" y="76" width="76" height="26" rx="9"/><rect class="st-band" x="14" y="74" width="76" height="24" rx="9"/>
+    <text class="st-t" x="52" y="91" text-anchor="middle">يا معلّم</text></svg>`;
+  function mountF(c) {
+    const S = c.stage, R = c.R, C = F_CFG[c.rk];
+    S.innerHTML = `<div class="f-chat">
+        <div class="f-hd"><span class="f-av">س</span><span class="f-nm"><b>سعود</b><small class="f-on">متصل</small></span></div>
+        <div class="f-msgs"></div>
+        <div class="f-comp off"><div class="f-draft"></div><div class="f-row"><div class="f-tray"></div><button class="f-send" disabled aria-label="أرسل">${F_SEND}</button></div></div>
+      </div>`;
+    const msgs = $('.f-msgs', S), comp = $('.f-comp', S), draft = $('.f-draft', S), tray = $('.f-tray', S), send = $('.f-send', S), st = $('.f-on', S);
+    const termOf = k => R.toks.find(t => typeof t !== 'string' && t.k === k);
+    const fmt = v => ar(v).replace('.', '٫');
+    let phase = 0, tries = 0, lastMine = null;
+    const scroll = () => { if (msgs.scrollTo) msgs.scrollTo({ top: msgs.scrollHeight, behavior: RM ? 'auto' : 'smooth' }); else msgs.scrollTop = msgs.scrollHeight; };
+    function add(html, who, cls) {
+      const b = document.createElement('div');
+      b.className = `f-b ${who}${cls ? ' ' + cls : ''}`; b.innerHTML = html;
+      msgs.appendChild(b);
+      anim(b, [{ opacity: 0, scale: '.6', translate: '0 12px' }, { opacity: 1, scale: '1.04', translate: '0 0', offset: .6 }, { opacity: 1, scale: '1', translate: '0 0' }],
+        { duration: 300, easing: 'ease-out' });
+      scroll();
+      return b;
+    }
+    function mine(html, cls) {
+      const b = add(`${html}<span class="f-tk">${F_TICK}</span>`, 'me', cls);
+      lastMine = b; tone(880, .06, 'sine', .05);
+      return b;
+    }
+    /* the friend types, then talks; a line may be the sticker */
+    function say(lines, then) {
+      comp.classList.add('off');
+      let i = 0;
+      const next = () => {
+        if (!c.alive()) return;
+        if (i >= lines.length) { st.textContent = 'متصل'; if (then) then(); return; }
+        const line = lines[i++];
+        if (lastMine) $('.f-tk', lastMine).classList.add('read');
+        st.textContent = 'يكتب…';
+        const typ = add('<span class="f-typ"><i></i><i></i><i></i></span>', 'them');
+        const len = line === 'STK' ? 20 : line.replace(/<[^>]+>/g, '').length;
+        c.t(() => {
+          typ.remove();
+          if (line === 'STK') {
+            const b = add(F_STICKER, 'them', 'stk'); const svg = $('svg', b);
+            anim(svg, [{ scale: '.2', rotate: '-14deg' }, { scale: '1.18', rotate: '6deg', offset: .55 }, { scale: '.94', rotate: '-2deg', offset: .8 }, { scale: '1', rotate: '0deg' }],
+              { duration: 560, easing: 'ease-out' });
+            c.t(() => hop(svg, 14), 620);
+            note(6); note(8); buzz([15, 40, 20]);
+          } else { add(line, 'them'); tone(620, .07, 'sine', .05); }
+          c.t(next, 420);
+        }, 480 + Math.min(720, len * 14));
+      };
+      c.t(next, 420);
+    }
+    const open = () => { comp.classList.remove('off'); $$('.tl', tray).forEach((t, j) => popIn(t, j * 60)); requestAnimationFrame(scroll); };
+
+    /* 1 — the shortcut, with numbers */
+    const rhs = R.toks.indexOf('=') >= 0 ? R.toks.slice(R.toks.indexOf('=') + 1) : R.toks;
+    function p1() {
+      phase = 1;
+      draft.innerHTML = `<div class="rrow">${rhs.map(tk => typeof tk === 'string' ? opGlyph(tk) : `<button class="f-bl" data-k="${tk.k}">؟</button>`).join('')}</div>`;
+      tray.innerHTML = C.tiles.map(v => `<button class="tl" data-v="${v}">${ar(v)}</button>`).join('');
+      send.disabled = true;
+      open();
+      c.tip('علّمه طريقة <b>أسرع</b> — عبّ الفراغات بالأرقام وأرسلها');
+    }
+    function blanks() { return $$('.f-bl', draft); }
+    function sync() {
+      const all = blanks().every(b => b.classList.contains('full'));
+      if (all && send.disabled) { send.disabled = false; hop(send, 8); }
+      if (!all) send.disabled = true;
+    }
+    draft.addEventListener('click', e => {
+      const b = e.target.closest('.f-bl');
+      if (!b || phase !== 1 || !b.classList.contains('full')) return;
+      tap(); b.classList.remove('full'); b.textContent = '؟'; delete b.dataset.v; sync();
+    });
+    tray.addEventListener('click', e => {
+      const t = e.target.closest('.tl');
+      if (!t || comp.classList.contains('off')) return;
+      if (phase === 1) {
+        const b = blanks().find(x => !x.classList.contains('full'));
+        if (!b) { shake(t); return; }
+        tap(); b.classList.add('full'); b.dataset.v = t.dataset.v; b.textContent = ar(t.dataset.v);
+        popIn(b); hop(t, 6); sync();
+      } else if (phase === 2) word(t);
+      else if (phase === 3) reply(t);
+    });
+    send.addEventListener('click', () => {
+      if (send.disabled || comp.classList.contains('off')) return;
+      if (phase === 1) sendNums(); else if (phase === 2) sendRule();
+    });
+    function sendNums() {
+      const bl = blanks(), b = bl.map(x => +x.dataset.v);
+      const same = bl.every((x, i) => bl.every((y, j) => x.dataset.k !== y.dataset.k || b[i] === b[j]));
+      let n = 0;
+      const expr = rhs.map(tk => typeof tk === 'string' ? tk : ar(b[n++])).join(' ').replace(/\( /g, '(').replace(/ \)/g, ')');
+      mine(expr);
+      bl.forEach(x => { x.classList.remove('full'); x.textContent = '؟'; delete x.dataset.v; });
+      send.disabled = true;
+      const v = C.f(b);
+      if (v === C.ans && same) { say([C.yes, 'بس بكرة الأرقام بتتغيّر… اكتبها لي <b>بالكلام</b> عشان أحفظها'], p2); return; }
+      tries++;
+      const lines = v === C.ans ? ['طلعت صح… بس من وين جبت رقمين مختلفين؟ ما فهمت'] : [`جربتها: ${expr} = ${fmt(v)}`, `بس أنا جمعتها وطلعت <b>${ar(C.ans)}</b>!`];
+      say(lines, () => { bad(); open(); c.tip(C.hints[Math.min(tries, 2) - 1]); });
+    }
+
+    /* 2 — the same message, in words */
+    function p2() {
+      phase = 2;
+      draft.innerHTML = `${R.pre ? `<div class="rc-pre">${R.pre}</div>` : ''}<div class="rrow">${rowHtml(R, tk => `<span class="f-bl wb k-${R.col[tk.k]}" data-k="${tk.k}"><b>؟</b><small>${ar(R.val[tk.k])}</small></span>`)}</div>`;
+      const words = [...new Set(R.toks.filter(t => typeof t !== 'string').map(t => t.t))].concat(C.decoys);
+      const order = words.map((w, i) => [w, (i * 7 + 3) % words.length]).sort((a, b) => a[1] - b[1]).map(x => x[0]);
+      tray.innerHTML = order.map(w => `<button class="tl w" data-w="${w}">${w}</button>`).join('');
+      send.disabled = true;
+      fit($('.rrow', draft));
+      live();
+      open();
+    }
+    function live() {
+      const nx = $('.f-bl.wb', draft);
+      $$('.f-bl.live', draft).forEach(x => x.classList.remove('live'));
+      if (!nx) { send.disabled = false; hop(send, 10); c.tip('صارت قاعدة — <b>أرسلها</b> له'); return null; }
+      nx.classList.add('live');
+      c.tip(`الرقم <b>${ar(R.val[nx.dataset.k])}</b> — وش اسمه بالكلام؟`);
+      return nx;
+    }
+    let lit = 0;
+    function word(t) {
+      const nx = $('.f-bl.live', draft);
+      if (!nx) return;
+      const tk = termOf(nx.dataset.k);
+      if (t.dataset.w !== tk.t) {
+        bad(); shake(t); t.classList.add('no'); c.t(() => t.classList.remove('no'), 450);
+        c.tip(`«${t.dataset.w}» مو <b>${ar(R.val[tk.k])}</b> — وش يعني ${ar(R.val[tk.k])} في سؤال سعود؟`);
+        return;
+      }
+      tap(); hop(t, 8);
+      const tpl = document.createElement('span'); tpl.innerHTML = termHtml(R, tk);
+      const el = tpl.firstElementChild; nx.replaceWith(el);
+      fit($('.rrow', draft));
+      popIn(el); note(3 + lit++); buzz(8);
+      live();
+    }
+    function sendRule() {
+      const b = mine(`${R.pre ? `<div class="rc-pre">${R.pre}</div>` : ''}<div class="rrow">${rowHtml(R, tk => termHtml(R, tk))}</div>`, 'wide');
+      fit($('.rrow', b));
+      $$('.term', b).forEach((x, j) => hop(x, 8, 200 + j * 90));
+      draft.innerHTML = ''; tray.innerHTML = ''; send.disabled = true;
+      say([C.got, C.test.q], p3);
+    }
+
+    /* 3 — he tests it on new numbers, and you answer with the rule */
+    function p3() {
+      phase = 3;
+      tray.innerHTML = C.test.ch.map(v => `<button class="tl" data-v="${v}">${ar(v)}</button>`).join('');
+      open();
+      c.tip('رد عليه بسرعة — بالقاعدة اللي كتبتها له');
+    }
+    function reply(t) {
+      if (+t.dataset.v !== C.test.ans) {
+        bad(); shake(t); t.classList.add('off');
+        c.tip('لا — طبّق القاعدة اللي <b>أرسلتها</b> على الأرقام الجديدة');
+        return;
+      }
+      tap(); hop(t, 10);
+      mine(C.test.me);
+      tray.innerHTML = '';
+      comp.style.display = 'none';
+      say(['صح!! وطلّعتها أنا بعد بالقاعدة', 'STK', 'شكراً يا <b>معلّم</b> — حفظتها خلاص'], () => {
+        c.tip('علّمته القاعدة — واللي يعلّم غيره ما ينساها');
+        c.done();
+      });
+    }
+
+    say([C.hi, C.q], p1);
+  }
+
+  /* =====================================================================
+     G — وازن الميزان: the long sum sits on one pan; the student loads the
+     other with a shortcut and the beam tells lighter or heavier, until it
+     levels — and the rule's «=» is that balance
+     ===================================================================== */
+  const G_CFG = {
+    rep: { x: 'وزنت <b>١٥٠</b> بـ <b>٣٠ × ٥</b> — و <b>١٦٠</b> بـ <b>٤٠ × ٤</b>', rounds: [
+      { right: [30, 30, 30, 30, 30], R: 150, cards: [['٣٠ × ٤', 120], ['٣٠ × ٦', 180], ['٣٠ + ٥', 35], ['٣٠ × ٥', 150]],
+        hint: 'عدّ أوزان الـ <b>٣٠</b> في الكفة الثانية — كم وحدة؟', won: 'توازن! <b>٣٠ × ٥</b> توزن الخمسة كلها' },
+      { right: [40, 40, 40, 40], R: 160, cards: [['٤ × ٤', 16], ['٤٠ × ٤', 160], ['٤٠ × ٣', 120]],
+        won: '<b>٤٠ × ٤</b> — العدد في عدد مرّاته' }] },
+    gauss: { x: 'وزنت <b>٥٥</b> بـ <b>١٠ × ١١ ÷ ٢</b> — و <b>٢١</b> بـ <b>٦ × ٧ ÷ ٢</b>', rounds: [
+      { right: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], R: 55, cards: [['١٠ × ١٠', 100], ['١١ × ١١', 121], ['١٠ × ١١', 110]], mod: true,
+        hint: 'جرّب كل رقم مع البالونة — وشوف أي واحد يوازن', won: 'توازن! <b>١٠ × ١١ ÷ ٢</b> توزن العشرة كلها' },
+      { right: [1, 2, 3, 4, 5, 6], R: 21, cards: [['٦ × ٦ ÷ ٢', 18], ['٧ × ٨ ÷ ٢', 28], ['٦ × ٧ ÷ ٢', 21]],
+        won: '<b>٦ × ٧ ÷ ٢</b> — آخر عدد في اللي بعده، على ٢' }] },
+    odd: { x: 'وزنت <b>٢٥</b> بـ <b>٥ × ٥</b> — و <b>١٦</b> بـ <b>٤ × ٤</b>', rounds: [
+      { right: [1, 3, 5, 7, 9], R: 25, cards: [['٥ × ٢', 10], ['٩ × ٩', 81], ['٥ × ٥', 25], ['٥ × ٩', 45]],
+        hint: 'كم وزن في الكفة الثانية؟ عدّها — واضرب عددها في نفسه', won: 'توازن! <b>٥ × ٥</b> توزن الفردية الخمسة' },
+      { right: [1, 3, 5, 7], R: 16, cards: [['٤ × ٢', 8], ['٤ × ٤', 16], ['٧ × ٧', 49]],
+        won: '<b>٤ × ٤</b> — عددها في نفسها' }] }
+  };
+  const G_BAL = '<svg class="g-bal" viewBox="0 0 34 50"><path class="bs" d="M17 34c-3 5 3 8 0 15"/><path class="b2" d="M14 36h6l-3-4z"/><ellipse class="b2" cx="17" cy="18" rx="15" ry="17"/><ellipse class="b1" cx="17" cy="16.5" rx="15" ry="15.5"/><text x="17" y="21.5" text-anchor="middle">÷ ٢</text></svg>';
+  const G_MINI = '<svg class="g-mini" viewBox="0 0 16 22"><path class="b2" d="M6.5 17h3l-1.5-2z"/><ellipse class="b2" cx="8" cy="8.5" rx="7" ry="8"/><ellipse class="b1" cx="8" cy="7.8" rx="7" ry="7.3"/></svg>';
+  function gPile(vals) {
+    let b = 1; while (b * (b + 1) / 2 < vals.length) b++;
+    const rows = []; let i = 0;
+    for (let w = b; w > 0 && i < vals.length; w--) { rows.push(vals.slice(i, i + w)); i += w; }
+    return `<div class="g-pile">${rows.map(r => `<div class="g-prow">${r.map(v => `<i class="g-blk k-orange">${ar(v)}</i>`).join('')}</div>`).join('')}</div>`;
+  }
+  function mountG(c) {
+    const S = c.stage, R = c.R, G = G_CFG[c.rk];
+    const hang = side => `<div class="g-hang ${side}"><i class="g-hook"></i><svg class="g-str" viewBox="0 0 112 82"><path d="M56 1L5 81M56 1l51 80"/></svg><div class="g-pan"><div class="g-load"></div></div><b class="g-val"></b></div>`;
+    S.innerHTML = `<div class="g-rd"><i></i><i></i></div>
+      <div class="g-sc"><i class="g-post"></i><i class="g-foot"></i>
+        <div class="g-beam"><i class="g-bar"></i>${hang('g-hl')}${hang('g-hr')}</div><i class="g-pin"></i></div>
+      <div class="g-tray"></div><div class="g-rule"></div>`;
+    const beam = $('.g-beam', S), hangs = $$('.g-hang', S), lLoad = $('.g-hl .g-load', S), rLoad = $('.g-hr .g-load', S),
+          lVal = $('.g-hl .g-val', S), rVal = $('.g-hr .g-val', S), tray = $('.g-tray', S), dots = $$('.g-rd i', S);
+    /* the beam is a damped spring: it overshoots and settles like a real one */
+    const sp = { a: 0, v: 0, to: 0, run: false };
+    const apply = () => { beam.style.rotate = sp.a.toFixed(2) + 'deg'; hangs.forEach(h => { h.style.rotate = (-sp.a).toFixed(2) + 'deg'; }); };
+    function tilt(to) {
+      sp.to = to;
+      if (RM) { sp.a = to; sp.v = 0; apply(); return; }
+      if (sp.run) return;
+      sp.run = true;
+      let last = performance.now();
+      const step = now => {
+        if (!c.alive()) { sp.run = false; return; }
+        const dt = Math.min(.032, (now - last) / 1000); last = now;
+        sp.v += (-150 * (sp.a - sp.to) - 9 * sp.v) * dt; sp.a += sp.v * dt;
+        if (Math.abs(sp.a - sp.to) < .03 && Math.abs(sp.v) < .08) { sp.a = sp.to; sp.v = 0; apply(); sp.run = false; return; }
+        apply(); requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    }
+    const angle = (L, Rv) => {
+      if (L === Rv) return 0;
+      const d = (Rv - L) / Math.max(Rv, L, 1);
+      const a = 12 * clamp(d * 2.5, -1, 1);
+      return Math.abs(a) < 3 ? Math.sign(a) * 3 : a;
+    };
+    let ri = 0, D = null, base = null, half = false, busy = true, tries = 0, modShown = false;
+    const lv = () => base ? (half ? base.v / 2 : base.v) : 0;
+
+    function round(i) {
+      ri = i; D = G.rounds[i]; base = null; half = false; tries = 0; busy = true; modShown = false;
+      dots.forEach((d, j) => d.classList.toggle('on', j === i && !d.classList.contains('ok')));
+      [lVal, rVal].forEach(v => { v.style.opacity = 0; });
+      const old = [...$$('.g-blk', rLoad), ...$$('.g-card, .g-bal', lLoad)];
+      old.forEach((b, j) => anim(b, [{ opacity: 1, translate: '0 0' }, { opacity: 0, translate: '0 -40px' }], { duration: 260, delay: j * 25, fill: 'forwards' }));
+      c.t(() => {
+        lLoad.innerHTML = ''; rLoad.innerHTML = gPile(D.right);
+        const blks = $$('.g-blk', rLoad);
+        blks.forEach((b, j) => anim(b, [{ translate: '0 -90px', opacity: 0 }, { translate: '0 2px', opacity: 1, scale: '1.12 .84', offset: .72 }, { translate: '0 0', scale: '1 1', opacity: 1 }],
+          { duration: 380, delay: j * 55, easing: 'ease-in', fill: 'backwards' }));
+        c.t(() => { thud(); tilt(angle(0, D.R)); }, blks.length * 55 + 300);
+        tray.innerHTML = D.cards.map((cd, j) => `<div class="g-c"><button class="tl g-opt" data-j="${j}">${cd[0]}</button><small class="g-tag"></small></div>`).join('')
+          + (D.mod ? `<div class="g-c" style="display:none"><button class="tl g-opt g-mod" data-mod="1">${G_MINI}<span>÷ ٢</span></button><small class="g-tag">بالونة</small></div>` : '');
+        $$('.g-c', tray).forEach((x, j) => popIn(x, 300 + j * 70));
+        c.t(() => { busy = false; }, blks.length * 55 + 320);
+        c.tip(i === 0 ? 'الكفة اليمين فيها الجمع الطويل — <b>حط في كفّتك</b> شي يوازنها' : 'جولة ثانية: وازنها من <b>أول محاولة</b>');
+      }, old.length ? 320 : 0);
+    }
+    function drawLeft() {
+      lLoad.innerHTML = `${half ? G_BAL : ''}<span class="g-card">${base.l}</span>`;
+    }
+    tray.addEventListener('click', e => {
+      const btn = e.target.closest('.g-opt');
+      if (!btn || busy) return;
+      if (btn.dataset.mod) {
+        if (!base) { shake(btn); bad(); c.tip('حط رقم في كفّتك <b>أول</b> — وبعدين اربط فيه البالونة'); return; }
+        half = !half; tap(); btn.classList.toggle('on', half);
+        drawLeft();
+        if (half) { const bl = $('.g-bal', lLoad); anim(bl, [{ translate: '0 30px', scale: '.3', opacity: 0 }, { translate: '0 -6px', scale: '1.1', opacity: 1, offset: .6 }, { translate: '0 0', scale: '1', opacity: 1 }], { duration: 420, easing: 'ease-out' }); tone(980, .1, 'sine', .06); }
+        weigh(btn);
+        return;
+      }
+      const cd = D.cards[+btn.dataset.j];
+      if (base && base.btn === btn) { hop($('.g-card', lLoad), 8); return; }
+      busy = true; tap();
+      if (base) { base.btn.classList.remove('gone'); popIn(base.btn); }
+      base = { l: cd[0], v: cd[1], btn };
+      flyClone(btn, lLoad, S, () => {
+        if (!c.alive()) return;
+        drawLeft();
+        const card = $('.g-card', lLoad);
+        anim(card, [{ translate: '0 -6px', scale: '1.06 .9' }, { translate: '0 0', scale: '1 1' }], { duration: 220, easing: 'ease-out' });
+        thud(); buzz(10);
+        busy = false;
+        weigh(btn);
+      }, 420);
+      btn.classList.add('gone');
+    });
+    function weigh(btn) {
+      tries++;
+      const L = lv();
+      tilt(angle(L, D.R));
+      const tagFor = base.btn.parentElement.querySelector('.g-tag');
+      if (L === D.R) { busy = true; c.t(level, 700); return; }
+      const heavy = L > D.R;
+      tagFor.textContent = (half ? '÷٢: ' : '') + (heavy ? 'أثقل' : 'أخف');
+      tagFor.className = 'g-tag ' + (heavy ? 'hv' : 'lt');
+      popIn(tagFor);
+      if (D.mod && !half && heavy && !modShown) {
+        modShown = true;
+        const m = $('.g-mod', tray).parentElement; m.style.display = ''; popIn(m); c.t(() => hop($('.g-mod', tray), 12), 420);
+        c.tip(L === 2 * D.R ? 'أثقل — وبالضبط <b>الضعف</b>! البالونة تشيل نصّه' : 'أثقل بكثير — البالونة <b>÷ ٢</b> تشيل نصّه');
+        return;
+      }
+      if (ri === 0 && tries >= 3 && D.hint) { c.tip(D.hint); return; }
+      c.tip(heavy ? 'أثقل — كفّتك نزلت. تحتاج شي <b>أخف</b>' : 'أخف — كفّتك طارت فوق. تحتاج شي <b>أثقل</b>');
+    }
+    function level() {
+      const card = $('.g-card', lLoad);
+      card.classList.add('ok');
+      rVal.textContent = ar(D.R); lVal.textContent = ar(D.R);
+      [rVal, lVal].forEach((v, j) => popIn(v, j * 120));
+      hop(card, 14); hop($('.g-pile', rLoad), 10, 90);
+      note(5); c.t(() => note(7), 110); buzz([15, 30, 15]);
+      dots[ri].classList.remove('on'); dots[ri].classList.add('ok');
+      c.tip((ri === 1 && tries === 1 ? 'من أول محاولة! ' : '') + D.won);
+      if (ri === 0) c.t(() => round(1), 2100);
+      else c.t(finish, 1700);
+    }
+    function finish() {
+      anim(tray, [{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: 'forwards' });
+      c.t(() => {
+        tray.remove();
+        c.tip('القاعدة ميزان: اللي قبل «=» يوزن اللي بعدها');
+        const src = {};
+        Object.keys(R.col).forEach(k => { src[k] = k === 's' ? $('.g-pile', rLoad) : $('.g-card', lLoad); });
+        const ms = aRule(c, $('.g-rule', S), src, G.x);
+        c.t(() => c.done(), ms);
+      }, 220);
+    }
+    round(0);
+  }
+
   /* ---------------- the shell ---------------- */
   const VERS = [
     { id: 'A', name: 'اعصرها بإيدك', mount: mountA,
@@ -983,7 +1458,13 @@
       en: 'The rule as face-down cards: flip one, then tap where that word lives in the worked example. A right tap paints the card and every matching place in the example the same colour, so the rule ends colour-coded to the example. A wrong tap only shakes.' },
     { id: 'E', name: 'العب فيها', mount: mountE,
       ar: 'لعبة صغيرة: يغيّر الطالب الأرقام فتتغيّر الرسمة والقاعدة معه — وتحدّي يوصّله لرقم معيّن.',
-      en: 'A toy: plus and minus change the numbers; a picture proof (towers, a staircase that is half a rectangle, a growing square), the long sum and the live rule all update with rolling numbers, and a small target makes them use the rule to hit it.' }
+      en: 'A toy: plus and minus change the numbers; a picture proof (towers, a staircase that is half a rectangle, a growing square), the long sum and the live rule all update with rolling numbers, and a small target makes them use the rule to hit it.' },
+    { id: 'F', name: 'علّم خويك', mount: mountF,
+      ar: 'خويك سعود يسألك في الشات — ترسل له الطريقة الأسرع بالأرقام، وبعدين تكتبها له بالكلام عشان يحفظها، ويختبرك على أرقام جديدة.',
+      en: 'A chat with a friend who is stuck on the long sum: the student sends him a shortcut built from number tiles (he tries it and says if it works), then rewrites the same message in words so it works for any numbers, and answers his follow-up with new numbers. The rule ends up as a message the student wrote, and explaining to someone else is what makes it stick.' },
+    { id: 'G', name: 'وازن الميزان', mount: mountG,
+      ar: 'الجمع الطويل في كفة، والطالب يحط في كفّته الثانية لين يتوازن الميزان — يميل ويهتز مع كل محاولة، والقاعدة هي «=» الميزان.',
+      en: 'A balance scale: the long sum sits as a pile of weights on one pan, and the student loads the other with a shortcut card. The beam springs and wobbles to say lighter or heavier (for the 1-to-n rule a ÷2 balloon lifts the double), until it levels; a second round must level on the first try, and then the words of the rule fly out of the two pans.' }
   ];
   const grid = $('#grid');
   grid.innerHTML = VERS.map(v => `<section class="ver" id="v${v.id}">

@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>صوت الكتابة</title>
+<style>
+  :root { --ink: #3c3c3c; --mute: #777; --line: #e5e5e5; --bg: #f7f7f7; --card: #fff; --blue: #1cb0f6; --blue-dk: #1899d6; --blue-bg: #ddf4ff; --green: #58cc02; --green-dk: #58a700; --gold: #ffc800; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 "Baloo Bhaijaan 2", system-ui, sans-serif; }
+  .wrap { display: flex; gap: 28px; padding: 24px; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+  .phone { width: 390px; height: 760px; border: 10px solid #222; border-radius: 44px; overflow: hidden; background: #fff; flex: none; box-shadow: 0 12px 40px rgba(0,0,0,.15); position: relative; }
+  .phone iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .side { width: 440px; max-width: 100%; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  .lead { color: var(--mute); margin: 0 0 16px; }
+  button { font: inherit; cursor: pointer; }
+  .bar { display: flex; gap: 10px; margin-bottom: 12px; }
+  .play { flex: 1; background: var(--green); color: #fff; border: 0; border-radius: 14px; padding: 12px; font-weight: 700; font-size: 17px; box-shadow: 0 4px 0 var(--green-dk); }
+  .play:active { transform: translateY(4px); box-shadow: none; }
+  .seg { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .seg > span { color: var(--mute); font-weight: 700; align-self: center; margin-left: 4px; }
+  .chip { background: var(--card); border: 2px solid var(--line); border-radius: 12px; padding: 6px 12px; font-weight: 700; color: var(--mute); box-shadow: 0 3px 0 var(--line); }
+  .chip.on { border-color: var(--blue); color: var(--blue-dk); background: var(--blue-bg); box-shadow: 0 3px 0 var(--blue-dk); }
+  .opts { display: grid; gap: 10px; margin-bottom: 18px; }
+  .opt { text-align: right; background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 10px 14px; box-shadow: 0 4px 0 var(--line); color: var(--ink); display: flex; gap: 12px; align-items: center; transition: transform .08s; }
+  .opt b { display: block; font-size: 16px; }
+  .opt span { color: var(--mute); font-size: 13px; }
+  .opt .txt { flex: 1; }
+  .opt .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--line); flex: none; transition: background .06s; }
+  .opt.on { border-color: var(--blue); background: var(--blue-bg); box-shadow: 0 4px 0 var(--blue-dk); }
+  .opt.on .dot { background: var(--blue); }
+  .opt.tick { transform: translateY(1px); }
+  .opt.tick .dot { background: var(--gold); }
+  .opt.now b::after { content: "  (اللي في التطبيق الحين)"; color: var(--mute); font-weight: 500; font-size: 13px; }
+  .say { background: #fff8de; border: 2px solid var(--gold); border-radius: 14px; padding: 12px 14px; }
+  .say b { display: block; margin-bottom: 4px; }
+  .say code { direction: ltr; display: block; text-align: left; font-size: 13px; color: #6b4a00; word-break: break-word; }
+  .note { color: var(--mute); font-size: 13px; margin: 0 0 12px; }
+  @media (max-width: 860px) { .wrap { padding: 16px; } .phone { width: 100%; max-width: 390px; height: 700px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="phone"><iframe id="ph" src="type-phone.html#ob-hello" title="التطبيق"></iframe></div>
+  <div class="side">
+    <h1>صوت كتابة فهيم</h1>
+    <p class="lead">كل كلمة في فقاعة فهيم تنزل مع صوت. اختر خيار وتنكتب الفقاعة من جديد بصوته — كل الأصوات من Brilliant.</p>
+    <p class="note">اضغط أي خيار أو «اكتبها من جديد» — المتصفح ما يشغّل صوت قبل أول ضغطة.</p>
+    <div class="bar"><button class="play" id="go">اكتبها من جديد</button></div>
+    <div class="seg" id="scr"><span>الشاشة:</span></div>
+    <div class="seg" id="vol"><span>الصوت:</span></div>
+    <div class="opts" id="opts"></div>
+    <div class="say"><b>إذا عجبك واحد، قول لي رقمه — أو انسخ هذا:</b><code id="pick"></code></div>
+  </div>
+</div>
+<script>
+/* dev page, never shipped: tries Brilliant sounds as the typing under فهيم's
+   words (sayPlay). type-phone.html hands this page each word as it lands —
+   blue or not, which one, how many — and the page plays the picked sound. As
+   the app does it: a little off pitch every word (.92–1.08) and higher on a
+   blue word (×1.16). Every option is set to the same loudness (its own peak
+   brought to −22 dB, a little under the app's other clicks), so they are
+   judged by their sound and not by how loud the file happens to be. */
+(function () {
+  const KEYS = ["assessment-click-option-1", "assessment-click-option-2", "assessment-click-option-3", "assessment-click-option-4"];
+  /* pk: the file's own peak in dB, measured with ffmpeg */
+  const OPTS = [
+    { n: "٠", t: "القديم", d: "تكّة العدّاد (tutor-xp-countup-stop)، بعد ما علّيناها", files: ["tutor-xp-countup-stop"], pk: -37.4 },
+    { n: "١", t: "مفاتيح", d: "نقرات الاختيارات الأربع، كل كلمة مفتاح بنغمة غير اللي قبلها", files: KEYS, pk: -15.5 },
+    { n: "٢", t: "نقرة حادّة", d: "أقصر نقرة عند Brilliant، حادّة وخفيفة (lightweight-choice)", files: ["lightweight-choice"], pk: -11.9, now: true },
+    { n: "٣", t: "تكّة ناعمة", d: "تكّة صغيرة من زر الإطفاء (toggle-off)", files: ["toggle-off"], pk: -17.5 },
+    { n: "٤", t: "كبسة", d: "كبسة زر «متابعة»، واضحة (continue)", files: ["continue"], pk: -12.9 },
+    { n: "٥", t: "فقاعة", d: "نقرة أوطى ومدوّرة من زر التشغيل (toggle-on)", files: ["toggle-on"], pk: -12.4 },
+    { n: "٦", t: "طقطقة", d: "طق-طق مزدوجة مثل مفتاح آلة كاتبة (assessment-submit)", files: ["assessment-submit"], pk: -7.8 },
+    { n: "٧", t: "آلة كاتبة بجرس", d: "المفاتيح (١)، وفي آخر كلمة رنّة صغيرة (hint)", files: KEYS, pk: -15.5, bell: { file: "hint", pk: -17.9 } }
+  ];
+  const SCREENS = [["ob-hello", "أهلاً"], ["ob-journey", "٤ أسئلة"], ["ob-splash", "قبل الدرس"]];
+  const VOLS = [[.5, "أخفض"], [1, "عادي"], [2, "أعلى"]];
+  const TARGET = -22;
+  let cur = 2, scr = 0, vol = 1, last = -1;
+  try { const p = JSON.parse(localStorage.getItem("typePick3") || "null"); if (p) { cur = p.cur; scr = p.scr; vol = p.vol; } } catch (e) {}
+  const $ = s => document.querySelector(s);
+  const gainOf = pk => Math.pow(10, (TARGET - pk) / 20) * VOLS[vol][0];
+
+  /* sounds */
+  let ac = null; const buf = {};
+  const ctx = () => { if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === "suspended") ac.resume(); return ac; };
+  const load = f => buf[f] || (buf[f] = fetch(f + ".mp3").then(r => r.arrayBuffer()).then(ab => ctx().decodeAudioData(ab)));
+  const play = (f, gain, rate) => load(f).then(b => {
+    const s = ac.createBufferSource(), g = ac.createGain();
+    s.buffer = b; g.gain.value = gain; s.playbackRate.value = rate || 1;
+    s.connect(g); g.connect(ac.destination); s.start();
+  });
+  const warm = () => { ctx(); OPTS.forEach(o => { o.files.forEach(load); if (o.bell) load(o.bell.file); }); };
+  window.__TYPE = function (hl, k, n) {
+    if (!ac) return;
+    const o = OPTS[cur];
+    let i = Math.floor(Math.random() * o.files.length);
+    if (o.files.length > 1 && i === last) i = (i + 1) % o.files.length;
+    last = i;
+    play(o.files[i], gainOf(o.pk), (hl ? 1.16 : 1) * (.92 + Math.random() * .16));
+    if (o.bell && k === n) setTimeout(() => play(o.bell.file, gainOf(o.bell.pk)), 90);
+    const el = document.querySelector(`.opt[data-i="${cur}"]`);
+    if (el) { el.classList.add("tick"); setTimeout(() => el.classList.remove("tick"), 60); }
+  };
+
+  /* the panel */
+  function paint() {
+    $("#opts").innerHTML = OPTS.map((o, i) => `<button class="opt${i === cur ? " on" : ""}${o.now ? " now" : ""}" data-i="${i}"><i class="dot"></i><div class="txt"><b>${o.n}. ${o.t}</b><span>${o.d}</span></div></button>`).join("");
+    $("#scr").innerHTML = `<span>الشاشة:</span>` + SCREENS.map(([h, t], i) => `<button class="chip${i === scr ? " on" : ""}" data-s="${i}">${t}</button>`).join("");
+    $("#vol").innerHTML = `<span>الصوت:</span>` + VOLS.map(([v, t], i) => `<button class="chip${i === vol ? " on" : ""}" data-v="${i}">${t}</button>`).join("");
+    const o = OPTS[cur];
+    $("#pick").textContent = `الخيار ${o.n} — ${o.files.join(" / ")}${o.bell ? " + " + o.bell.file : ""} — volume ${VOLS[vol][1]}`;
+    try { localStorage.setItem("typePick3", JSON.stringify({ cur, scr, vol })); } catch (e) {}
+  }
+  function run() {
+    warm();
+    $("#ph").src = "type-phone.html?dev=1&r=" + Date.now() + "#" + SCREENS[scr][0];
+  }
+  $("#opts").addEventListener("click", e => { const b = e.target.closest(".opt"); if (!b) return; cur = +b.dataset.i; paint(); run(); });
+  $("#scr").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; scr = +b.dataset.s; paint(); run(); });
+  $("#vol").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; vol = +b.dataset.v; paint(); run(); });
+  $("#go").addEventListener("click", run);
+  paint();
+  $("#ph").src = "type-phone.html#" + SCREENS[scr][0];
+})();
+</script>
+</body>
+</html>

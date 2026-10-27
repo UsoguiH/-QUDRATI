@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Enter Phone</title>
+</head>
+<body style="margin:0;background:#fff;font:15px system-ui,sans-serif;color:#777">
+<p id="boot" style="padding:24px">Loading the app…</p>
+<script>
+/* dev harness, never shipped: boots the real app (preview.html + js/app.js, read
+   from disk) for enter.html. Tapping «يلا نبدأ» on the splash before the first
+   lesson (A.placeScratch) hands its beat to the page above (parent.__ENTER),
+   which plays the sound being tried. Every other sound is the
+   app's own. The patch is anchored on exact code text and refuses to run when
+   the anchor is not found exactly once. */
+(async function () {
+  const qs = new URLSearchParams(location.search);
+  if (qs.get("dev") !== "1") { qs.set("dev", "1"); location.replace(location.pathname + "?" + qs + location.hash); return; }
+  const bust = "?t=" + Date.now();
+  const say = t => { const b = document.getElementById("boot"); if (b) b.textContent = t; };
+  let pv, src;
+  try {
+    [pv, src] = await Promise.all([
+      fetch("../../preview.html" + bust).then(r => r.text()),
+      fetch("../../js/app.js" + bust).then(r => r.text())
+    ]);
+  } catch (e) { say("Could not load the app: " + e.message); return; }
+  src = src.replace(/\r\n/g, "\n");
+  const P = [
+    [`snd("first-lesson-enter"); S.placeAsked = true;`, `if (window.__ENTER) __ENTER(); else `]
+  ];
+  for (const [a, pre] of P) {
+    if (src.split(a).length !== 2) { say("app.js changed: the «يلا نبدأ» line was not found. Tell Claude."); return; }
+    src = src.replace(a, () => pre + a);
+  }
+  const hook = `window.__ENTER = function () { try { parent !== window && parent.__ENTER && parent.__ENTER(); } catch (e) {} };`;
+  const esc = s => s.replace(/<\/script/gi, "<\\/script");
+  let html = pv.replace(/\r\n/g, "\n");
+  html = html.replace(/<head>/i, () => `<head>\n<base href="../../">\n<script>${hook}<\/script>`);
+  const tag = /<script src="js\/app\.js"><\/script>/;
+  if (!tag.test(html)) { say("preview.html no longer loads js/app.js the way this harness expects."); return; }
+  html = html.replace(tag, () => `<script>${esc(src)}\n//# sourceURL=app.enter.js\n<\/script>`);
+  document.open();
+  document.write(html);
+  document.close();
+})();
+</script>
+</body>
+</html>

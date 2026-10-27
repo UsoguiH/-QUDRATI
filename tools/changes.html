@@ -832,6 +832,136 @@ const PARTS = [
       { t: "Bookkeeping", s: "live",
         what: ["CLAUDE.md updated for every change above. Validators pass. Not committed; sw.js is still at 89, not released."],
         noframe: "No screen — files and notes" }
+    ] },
+  { h: "Today: the rule takes either side of «×», the flip's sounds, a bigger فهيم who types out loud, and every sound that isn't Brilliant's or Duolingo's",
+    p: "Your words: «I replaced the left with right but that's okay because that's multiply», «make the sounds of flipping better, it's very bad», «make the mascots bigger here and make the text have a very very nice Brilliant typewriter sound», «I hear the sounds twice, please fix it».",
+    items: [
+      { t: "The rule: the two sides of «×» or «+» go in either order", s: "new", hash: "rulewords",
+        what: ["«المجموع = عدد مرات تكراره × العدد» is right now. Before, it was marked wrong because the two sides of «×» were the other way round.",
+               "The same on the numbers screen («٨٠ = ٤ × ٢٠»), and for the two sides of a «+».",
+               "Only where the order can't change the answer. After a «÷», a «−» before a sum, or a power, the order still counts.",
+               "Checked every rule screen of nodes 1–5: 16 of 114 have such a pair, and all 16 are safe. A real mistake is still caught."],
+        why: "Image 134: «I typed it right but I get it wrong because I replaced the left with right».",
+        code: "rfSwapRuns, learnFillWant",
+        run: (w) => {
+          const it = () => w.A.debugCurrent(), used = [];
+          const put = v => { const t = it(); const k = t.tiles.findIndex((x, i) => x === v && used.indexOf(i) < 0); used.push(k); w.A.lTile(k); };
+          return [[1400, () => put(it().a[0])], [2000, () => put(it().a[2])], [2600, () => put(it().a[1])], [3400, () => w.A.check()]];
+        }, hint: "puts «المجموع», then the two sides of «×» swapped, and checks: right",
+        extra: [{ label: "Numbers, swapped", hash: "rulenums", run: (w) => {
+          const it = () => w.A.debugCurrent(), used = [];
+          const put = v => { const t = it(); const k = t.tiles.findIndex((x, i) => x === v && used.indexOf(i) < 0); used.push(k); w.A.lTile(k); };
+          return [[1400, () => put(it().a[0])], [2000, () => put(it().a[2])], [2600, () => put(it().a[1])], [3400, () => w.A.check()]];
+        } }] },
+      { t: "The node flip after a short lesson: your sounds (option ٦)", s: "new", hash: "pathpay",
+        what: ["A light sound as the ring fills (Brilliant's toggle-on), a tap as the node jumps (lightweight-choice) and a shine as it turns over (hint).",
+               "Before, Brilliant's 2-second ring sound was still playing when Duolingo's jump sound came in, a third of a second later, so the two piled up. Duolingo's flip sound no longer plays.",
+               "Turn your sound on. Click the page once first, because Chrome won't play sound before a click."],
+        why: "«make the sounds of flipping here better, it's very bad»; you picked option ٦ on the flip page.",
+        code: "SND_MAP: ring-segment-pay, node-flip-up, node-flip-turn; coinPay, ringPay",
+        hint: "the ring fills, the node jumps and turns, with sound" },
+      { t: "The gold flip: «لمعة وحدة» (option ٥), without its last part", s: "new", hash: "pathgold",
+        what: ["On a node's last lesson the ring is silent. As the node turns gold, Brilliant's chime plays (level-passed), and a soft shine as it lands (highlight-node). That is option ٥, as you heard it on the flip page.",
+               "The chime has three hits, the last one at exactly 2 seconds. It now fades out and stops just before that last hit: the first two are untouched, the third is completely silent (checked by playing it through the browser and measuring).",
+               "The flip page itself also started every flip twice when its phone restarted. That's fixed too.",
+               "Logged in the app: a normal flip plays exactly 3 sounds, and a gold flip exactly 1."],
+        why: "«I want لمعة وحدة on gold flip, and in this sound remove the last 0.5s or last part of the sound».",
+        code: "node-gold-turn (level-passed, SND_END 1.97s), node-gold-land; ringPay(…, exit) is silent",
+        hint: "the node's last lesson: it flips into gold" },
+      { t: "فهيم is bigger where he talks", s: "new", hash: "ob-hello",
+        what: ["On hello, «بس ٤ أسئلة», and the splash before the first lesson or the level test, he's as big as the phone allows: 342px on a normal phone instead of 232.",
+               "Smaller phones get less of him so nothing is cut. Checked at 390×844, 375×667 and 320×568, and no screen scrolls.",
+               "On the level-test intro, where chips sit under him, he stays a little smaller so the button and its link fit."],
+        why: "Image 137: «make the mascots bigger here».",
+        code: ".obt-duo (clamp 232–340px, 41vh)",
+        extra: [{ label: "Journey", hash: "ob-journey" }, { label: "Splash", hash: "ob-splash" }, { label: "Level-test intro", hash: "ob-pintro" }] },
+      { t: "His words type out with Brilliant's click", s: "new", hash: "ob-journey",
+        what: ["Each word in فهيم's bubble lands on Brilliant's short click (tutor-xp-countup-stop), a little softer than the app's other clicks.",
+               "Why you heard nothing: that file is about 23 dB quieter than Brilliant's other clicks, and I had also turned it down, so it played far too quietly to hear. It is now 15 times louder than before.",
+               "The pitch shifts a little every time so it sounds like real typing, and it's a bit higher on the blue words (like «فهيم»).",
+               "It also plays when his bubble answers your pick. With reduced motion the words show at once, with no sound."],
+        why: "«make the text have a very very very nice Brilliant sounds effect, textwriter sounds».",
+        code: "sayPlay, say-word, SND_GAIN, snd(…, rate)",
+        hint: "click the page once first, then Replay to hear it",
+        extra: [{ label: "Hello", hash: "ob-hello" }] },
+      { t: "The flip sound page", s: "new",
+        noframe: "<a href=\"brilliant-sounds/flip.html\" target=\"_blank\" style=\"color:var(--blue);font-weight:800\">Open the flip sound page</a>",
+        what: ["The real path in a phone, with six ways to sound the flip and a picker for each beat: the ring fills, the node jumps, turns, lands, and turns gold.",
+               "Option ١ «اللي في التطبيق» is now what the app plays: option ٦, and on the gold flip option ٥ with its chime cut before the last hit. «القديم» is how it was before.",
+               "«آخر درس (ذهبي)» switches to the gold flip."],
+        why: "So you could hear each option on the real flip before it went into the app.",
+        code: "tools/brilliant-sounds/flip.html, flip-phone.html" },
+      { t: "Sounds that are neither Brilliant nor Duolingo: three left", s: "new",
+        noframe: "Found by searching js/app.js for every sound it makes",
+        what: ["Every sound moment in the app (59) has a Brilliant sound now. Three still make their own beeps:",
+               "1. The chest, before you tap it: a «boing» every 2 seconds as it hops. My suggestion: Brilliant's lightweight-choice.",
+               "2. The daily goal screen in the first run: a rising tick on each tile in the wave. My suggestion: Brilliant's tallies, a step up each tile.",
+               "3. The stat cards on the win screen, only when Duolingo's animation hasn't loaded (offline, slow phone): a thump on each card. My suggestion: Duolingo's own card sounds, already in the app.",
+               "There are also 52 places where an old beep plays only if a sound file fails to download, so you never hear silence.",
+               "Not changed yet. Say yes and I'll switch the three."],
+        why: "«how many sounds are not Brilliant sounds and not Duolingo sounds, show it to me all».",
+        code: "cvSnd.hop (chest), glWave (goal tiles), statCardIn (stat cards)" },
+      { t: "Bookkeeping", s: "live",
+        what: ["CLAUDE.md and REMAINING.md updated. Validators pass, and 30 screens open with no errors. Not committed. sw.js is still at 89, not released."],
+        noframe: "No screen — files and notes" }
+    ] },
+  { h: "This run: the gold flip's chime cut to its first hit, فهيم types on the sharp tap you picked, sounds to pick for entering the first lesson, and two new rule ideas",
+    p: "Your words: «I want لمعة وحدة on gold flip, and in this sound remove the last 0.5s or last part of the sound», and on the typing card: «don't hear any sounds». Then: «remove the last part in the sounds of the flip» and «فهيم typing sounds, I don't like it, suggest 7 sounds from Brilliant».",
+    items: [
+      { t: "The gold flip: «لمعة وحدة» (option ٥), its chime cut to its first hit", s: "new", hash: "pathgold",
+        what: ["On a node's last lesson the ring is silent. As the node turns gold, Brilliant's chime plays (level-passed), and a soft shine as it lands (highlight-node). This is option ٥ as you heard it on the flip page.",
+               "The chime has three hits: at 0.5s, 1.3s and 2.0s. You asked twice to remove its last part, so now only the first hit plays: it fades out over a tenth of a second and stops at 1.25s, just before the second.",
+               "Measured in the browser: the second and third hits are now completely silent; the first is the same as before.",
+               "Only the gold flip is cut. The mock exam's pass still plays the chime in full.",
+               "The listen buttons under the phone play the chime alone: in full, then as the app plays it now."],
+        why: "You asked for «لمعة وحدة» on the gold flip, and: «in this sound remove the last 0.5s or last part of the sound».",
+        code: "SND_MAP node-gold-turn → level-passed; SND_END { node-gold-turn: 1.25 }; sfxPlay(…, end); coinPay",
+        hint: "the node's last lesson: it flips into gold",
+        listen: [{ label: "Chime, full", file: "level-passed", gain: .9 }, { label: "Chime, cut (the app)", file: "level-passed", gain: .9, end: 1.25 }] },
+      { t: "فهيم's typing: you can hear it now", s: "old", by: 119, hash: "ob-journey",
+        what: ["The click was playing all along, too quietly to hear. Brilliant's tick file (tutor-xp-countup-stop) is about 23 dB quieter than its other clicks, and I had turned it down even further (×0.4).",
+               "It now plays at ×6, 15 times louder than before, and still a little softer than the app's other clicks, so it sits under the words.",
+               "Turn your sound on and click the page once first, because Chrome won't play sound before a click.",
+               "The listen buttons play six words' worth of typing alone: before, then now."],
+        why: "«don't hear any sounds» (the typing card).",
+        code: "SND_GAIN { say-word: 6 } (was .4)",
+        hint: "click the page once first, then Replay to hear it",
+        extra: [{ label: "Hello", hash: "ob-hello" }],
+        listen: [{ label: "Typing, before", file: "tutor-xp-countup-stop", gain: .4, n: 6, step: .075 }, { label: "Typing, now", file: "tutor-xp-countup-stop", gain: 6, n: 6, step: .075 }] },
+      { t: "فهيم's typing: your pick, the sharp tap (٢), with no bell at the end", s: "new", hash: "ob-hello", hint: "click the page once first, then Replay to hear it", extra: [{ label: "Journey", hash: "ob-journey" }], listen: [{ label: "Typing (the app)", file: "lightweight-choice", gain: .31, n: 11, step: .075 }],
+                what: ["The typing page (tools/brilliant-sounds/type.html) works like the flip page: the real first-run screen in a phone, and a list of options. Tap one and فهيم's bubble types itself out again with that sound.",
+               "٠ is what the app plays now. ١ to ٧ are the seven shortest, cleanest clicks Brilliant has: keys (its four answer clicks, a different one each word), a sharp tap, a soft tick, a button press, a round pop, a double clack like a typewriter key, and keys with a small bell on the last word.",
+               "They are all set to the same loudness, so you compare the sounds and not the volume. «أخفض / عادي / أعلى» changes the loudness, and three screens to try them on.",
+               "You picked ٢, the sharp tap (lightweight-choice), and then asked for no sound when the typing finishes. That is in the app now: one tap per word, and nothing after the last. Logged in the app: the hello bubble plays 11 taps and nothing else."],
+        why: "«فهيم typing sounds, I don't like it. Suggest 7 sounds from Brilliant … and I will choose».",
+        code: "tools/brilliant-sounds/type.html, type-phone.html" },
+      { t: "Entering the first lesson: «افتتاح», your pick", s: "new", hash: "ob-splash",
+        run: (w) => [[1800, () => w.A.placeScratch()]],
+        hint: "the phone taps «يلا نبدأ» by itself; click the page once first",
+        listen: [{ label: "First lesson (افتتاح)", file: "welcome-to-leagues", gain: .9 }, { label: "Every other lesson", file: "start-lesson", gain: .9 }],
+        what: ["You picked ٤ «افتتاح» (Brilliant's welcome-to-leagues). It is in the app now: tapping «يلا نبدأ» plays it as the first lesson opens. It is loaded as that screen appears, so it is ready before the tap (logged: it plays 46ms after the tap, already loaded).",
+               "It is not the same sound as entering any other lesson. Every other lesson start plays Brilliant's start-lesson, a short quick hit. This one is a bigger hit with a ring, and only the first lesson ever plays it. The two listen buttons play them one after the other.",
+               "Before, tapping «يلا نبدأ» on the last screen before the first lesson plays no sound at all (logged in the app). Every other lesson start plays Brilliant's start-lesson; this one was missed.",
+               "The page shows that screen in a phone. Tap an option, and the phone taps «يلا نبدأ» by itself so you hear it as the lesson opens. You can also tap the button in the phone yourself.",
+               "١ انطلاقة: Brilliant's lesson start, a quick hit. ٢ شحن: energy rising for about a second. ٣ شحن ثم انطلاقة: the charge, with the start hit landing at its peak. ٤ افتتاح: a big hit and a ring, like a door opening. ٥ حماس كامل: builds for half a second, then a second and a half of celebration, the biggest of the five.",
+               "The page with the five options stays at tools/brilliant-sounds/enter.html."],
+        why: "«after this screen what sounds does it play? We need very amazing sounds, suggest 5 حماسي sounds for entering the first level».",
+        code: "SND_MAP first-lesson-enter → welcome-to-leagues (new file in assets/sounds/bri); A.placeScratch; sndWarm on the splash" },
+      { t: "Two new rule ideas: F «علّم خويك» and G «وازن الميزان»", s: "new",
+        noframe: "<a href=\"law.html#vF\" target=\"_blank\" style=\"color:var(--blue);font-weight:800\">Open F</a> &nbsp; <a href=\"law.html#vG\" target=\"_blank\" style=\"color:var(--blue);font-weight:800\">Open G</a>",
+        what: ["Added to the rule lab next to A to E, on all three rule tabs.",
+               "F «علّم خويك»: a friend, سعود, asks in a chat how to add «٣٠ + ٣٠ + ٣٠ + ٣٠ + ٣٠». The student builds the shortcut from number tiles and sends it, and he tries it and says if it is wrong («جربتها … بس أنا جمعتها وطلعت ١٥٠!»). Then he asks for it in words, so the student turns each number into its word. Last, he tests them with new numbers and sends a «يا معلّم» sticker. Explaining to someone is one of the strongest ways to remember.",
+               "G «وازن الميزان»: the long sum is a pile of weights on one pan. The student puts shortcut cards on the other, and the beam swings lighter or heavier. For «from ١ to a number» every first try is too heavy, until a «÷ ٢» balloon levels it. Then the rule builds itself out of the two pans: what is before «=» weighs the same as what is after.",
+               "Played to the end on every tab at 320, 360 and 390px with no errors, by a separate agent, and checked again here."],
+        why: "«create an agent that creates 2 more law ideas, creative ideas for students».",
+        code: "tools/law.html: mountF, mountG" },
+      { t: "Found, not changed: the lesson timer's tick is silent too", s: "new",
+        noframe: "No screen — a finding",
+        what: ["The timer tick in timed lessons uses the same quiet file at ×0.9, so it is probably silent as well.",
+               "Not changed. Say yes and I'll raise it the same way."] },
+      { t: "Bookkeeping", s: "live",
+        what: ["The flip sound page's option ١ plays the gold flip exactly as the app does now. CLAUDE.md updated. Validators pass, and 30 screens open with no errors. Not committed. sw.js is still at 89."],
+        noframe: "No screen — files and notes" }
     ] }
 ];
 
@@ -849,6 +979,7 @@ function play(slot, hash, run) {
   live.push(slot);
   const f = document.createElement("iframe");
   f.title = "#" + hash;
+  f.allow = "autoplay";
   f.src = "../preview.html?t=" + Date.now() + "#" + hash;
   slot.frame.innerHTML = ""; slot.frame.appendChild(f);
   f.addEventListener("load", () => {
@@ -858,6 +989,22 @@ function play(slot, hash, run) {
   });
 }
 
+/* a listen button plays one sound file alone, as the app would (gain, a cut at end, n clicks step apart) */
+let LAC = null; const LBUF = {};
+function listen(x) {
+  LAC = LAC || new (window.AudioContext || window.webkitAudioContext)();
+  if (LAC.state === "suspended") LAC.resume();
+  const url = "../assets/sounds/bri/" + x.file + ".mp3";
+  (LBUF[url] = LBUF[url] || fetch(url).then(r => r.arrayBuffer()).then(b => LAC.decodeAudioData(b))).then(buf => {
+    for (let i = 0; i < (x.n || 1); i++) {
+      const src = LAC.createBufferSource(), g = LAC.createGain(), t0 = LAC.currentTime + .05 + i * (x.step || 0);
+      src.buffer = buf; g.gain.value = x.gain;
+      if (x.n) src.playbackRate.value = .92 + Math.random() * .16;
+      src.connect(g); g.connect(LAC.destination); src.start(t0);
+      if (x.end) { g.gain.setValueAtTime(x.gain, t0 + x.end - .12); g.gain.linearRampToValueAtTime(0, t0 + x.end); src.stop(t0 + x.end); }
+    }
+  });
+}
 const list = document.getElementById("list");
 let n = 0;
 /* only the newest goal unless ?all; its numbers stay the same as on the full page */
@@ -910,6 +1057,15 @@ PARTS.forEach((P, pi) => {
         row.appendChild(b);
       });
       ph.appendChild(row);
+      if (it.listen) {
+        const lr = document.createElement("div"); lr.className = "row";
+        it.listen.forEach(x => {
+          const b = document.createElement("button"); b.className = "mini"; b.textContent = "♪ " + x.label;
+          b.onclick = () => listen(x);
+          lr.appendChild(b);
+        });
+        ph.appendChild(lr);
+      }
     }
     sec.appendChild(card);
   });

@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>صوت أول درس</title>
+<style>
+  :root { --ink: #3c3c3c; --mute: #777; --line: #e5e5e5; --bg: #f7f7f7; --card: #fff; --blue: #1cb0f6; --blue-dk: #1899d6; --blue-bg: #ddf4ff; --green: #58cc02; --green-dk: #58a700; --gold: #ffc800; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 "Baloo Bhaijaan 2", system-ui, sans-serif; }
+  .wrap { display: flex; gap: 28px; padding: 24px; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+  .phone { width: 390px; height: 760px; border: 10px solid #222; border-radius: 44px; overflow: hidden; background: #fff; flex: none; box-shadow: 0 12px 40px rgba(0,0,0,.15); }
+  .phone iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .side { width: 440px; max-width: 100%; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  .lead { color: var(--mute); margin: 0 0 16px; }
+  .note { color: var(--mute); font-size: 13px; margin: 0 0 12px; }
+  button { font: inherit; cursor: pointer; }
+  .bar { display: flex; gap: 10px; margin-bottom: 12px; }
+  .play { flex: 1; background: var(--green); color: #fff; border: 0; border-radius: 14px; padding: 12px; font-weight: 700; font-size: 17px; box-shadow: 0 4px 0 var(--green-dk); }
+  .play:active { transform: translateY(4px); box-shadow: none; }
+  .seg { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .seg > span { color: var(--mute); font-weight: 700; align-self: center; margin-left: 4px; }
+  .chip { background: var(--card); border: 2px solid var(--line); border-radius: 12px; padding: 6px 12px; font-weight: 700; color: var(--mute); box-shadow: 0 3px 0 var(--line); }
+  .chip.on { border-color: var(--blue); color: var(--blue-dk); background: var(--blue-bg); box-shadow: 0 3px 0 var(--blue-dk); }
+  .opts { display: grid; gap: 10px; margin-bottom: 18px; }
+  .opt { text-align: right; background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 10px 14px; box-shadow: 0 4px 0 var(--line); color: var(--ink); display: flex; gap: 12px; align-items: center; }
+  .opt b { display: block; font-size: 16px; }
+  .opt span { color: var(--mute); font-size: 13px; }
+  .opt .txt { flex: 1; }
+  .opt .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--line); flex: none; }
+  .opt.on { border-color: var(--blue); background: var(--blue-bg); box-shadow: 0 4px 0 var(--blue-dk); }
+  .opt.on .dot { background: var(--blue); }
+  .opt.hit .dot { background: var(--gold); }
+  .opt.now b::after { content: "  (اللي في التطبيق الحين)"; color: var(--mute); font-weight: 500; font-size: 13px; }
+  .say { background: #fff8de; border: 2px solid var(--gold); border-radius: 14px; padding: 12px 14px; }
+  .say b { display: block; margin-bottom: 4px; }
+  .say code { direction: ltr; display: block; text-align: left; font-size: 13px; color: #6b4a00; word-break: break-word; }
+  @media (max-width: 860px) { .wrap { padding: 16px; } .phone { width: 100%; max-width: 390px; height: 700px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="phone"><iframe id="ph" src="enter-phone.html#ob-splash" title="التطبيق"></iframe></div>
+  <div class="side">
+    <h1>صوت الدخول لأول درس</h1>
+    <p class="lead">آخر شاشة قبل أول درس: فهيم يقول «هذا أول درس لك — ٣ دقائق بس» والطالب يضغط «يلا نبدأ». اختر خيار، والتلفون يضغط الزر بنفسه وتسمع الصوت وانت تدخل الدرس — أو اضغط «يلا نبدأ» في التلفون بنفسك.</p>
+    <p class="note">اضغط أي خيار أو «من جديد» أول — المتصفح ما يشغّل صوت قبل أول ضغطة.</p>
+    <div class="bar"><button class="play" id="go">من جديد</button></div>
+    <div class="seg" id="vol"><span>الصوت:</span></div>
+    <div class="opts" id="opts"></div>
+    <div class="say"><b>إذا عجبك واحد، قول لي رقمه — أو انسخ هذا:</b><code id="pick"></code></div>
+  </div>
+</div>
+<script>
+/* dev page, never shipped: tries Brilliant sounds on the tap that enters the
+   very first lesson (the splash's «يلا نبدأ», A.placeScratch), which is silent
+   today — every other lesson start plays start-lesson. enter-phone.html hands
+   the tap up (parent.__ENTER) and the page plays the option: one file or a
+   chain, each file at its own delay. Every option is brought to the same peak
+   (−6 dB) so they are judged by their sound, not by how loud the file is. */
+(function () {
+  /* pk: the file's own peak in dB, measured with ffmpeg */
+  const PK = { "start-lesson": -3.0, "streak-charge": -4.2, "welcome-to-leagues": -4.8, "streak-celebration": -4.9 };
+  const OPTS = [
+    { n: "٠", t: "بدون صوت", d: "قبل: الدخول لأول درس كان صامت (بس اهتزاز على الشاشة)", seq: [] },
+    { n: "١", t: "انطلاقة", d: "صوت Brilliant لبداية الدرس، ضربة سريعة (start-lesson) — نفس صوت باقي الدروس", seq: [["start-lesson", 0]] },
+    { n: "٢", t: "شحن", d: "طاقة تطلع وتشحن قرابة ثانية (streak-charge)", seq: [["streak-charge", 0]] },
+    { n: "٣", t: "شحن ثم انطلاقة", d: "الشحن (٢)، ولما يوصل قمّته تضرب الانطلاقة (١) فوقه", seq: [["streak-charge", 0], ["start-lesson", 420]] },
+    { n: "٤", t: "افتتاح", d: "ضربة كبيرة ورنّة، مثل باب ينفتح على شي جديد (welcome-to-leagues)", seq: [["welcome-to-leagues", 0]], now: true },
+    { n: "٥", t: "حماس كامل", d: "يبني نص ثانية وبعدين ينفجر احتفال ثانية ونص — الأكبر فيهم (streak-celebration)", seq: [["streak-celebration", 0]] }
+  ];
+  const VOLS = [[.5, "أخفض"], [1, "عادي"], [1.6, "أعلى"]];
+  const TARGET = -6;
+  let cur = 4, vol = 1, timers = [];
+  try { const p = JSON.parse(localStorage.getItem("enterPick2") || "null"); if (p) { cur = p.cur; vol = p.vol; } } catch (e) {}
+  const $ = s => document.querySelector(s);
+  const gainOf = f => Math.pow(10, (TARGET - PK[f]) / 20) * VOLS[vol][0];
+
+  let ac = null; const buf = {};
+  const ctx = () => { if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); if (ac.state === "suspended") ac.resume(); return ac; };
+  const load = f => buf[f] || (buf[f] = fetch(f + ".mp3").then(r => r.arrayBuffer()).then(ab => ctx().decodeAudioData(ab)));
+  const play = f => load(f).then(b => { const s = ac.createBufferSource(), g = ac.createGain(); s.buffer = b; g.gain.value = gainOf(f); s.connect(g); g.connect(ac.destination); s.start(); });
+  const warm = () => { ctx(); Object.keys(PK).forEach(load); };
+  window.__ENTER = function () {
+    if (!ac) return;
+    OPTS[cur].seq.forEach(([f, ms]) => timers.push(setTimeout(() => play(f), ms)));
+    const el = document.querySelector(`.opt[data-i="${cur}"]`);
+    if (el) { el.classList.add("hit"); setTimeout(() => el.classList.remove("hit"), 600); }
+  };
+
+  function paint() {
+    $("#opts").innerHTML = OPTS.map((o, i) => `<button class="opt${i === cur ? " on" : ""}${o.now ? " now" : ""}" data-i="${i}"><i class="dot"></i><div class="txt"><b>${o.n}. ${o.t}</b><span>${o.d}</span></div></button>`).join("");
+    $("#vol").innerHTML = `<span>الصوت:</span>` + VOLS.map(([v, t], i) => `<button class="chip${i === vol ? " on" : ""}" data-v="${i}">${t}</button>`).join("");
+    const o = OPTS[cur];
+    $("#pick").textContent = `الخيار ${o.n} — ${o.seq.length ? o.seq.map(([f, ms]) => f + (ms ? " @" + ms + "ms" : "")).join(" + ") : "silent"} — volume ${VOLS[vol][1]}`;
+    try { localStorage.setItem("enterPick2", JSON.stringify({ cur, vol })); } catch (e) {}
+  }
+  /* a fresh splash, then the phone taps «يلا نبدأ» itself once the app is up and
+     the splash has been seen; the phone fires load twice (its loader, then the
+     app it writes), so it taps once */
+  function run() {
+    warm();
+    timers.forEach(clearTimeout); timers = [];
+    const fr = $("#ph");
+    let fired = false;
+    fr.onload = () => {
+      const t0 = Date.now();
+      const wait = () => {
+        const w = fr.contentWindow;
+        if (fired) return;
+        if (w && w.A && w.A.placeScratch) { fired = true; timers.push(setTimeout(() => w.A.placeScratch(), 1300)); return; }
+        if (Date.now() - t0 < 8000) timers.push(setTimeout(wait, 100));
+      };
+      wait();
+    };
+    fr.src = "enter-phone.html?dev=1&r=" + Date.now() + "#ob-splash";
+  }
+  $("#opts").addEventListener("click", e => { const b = e.target.closest(".opt"); if (!b) return; cur = +b.dataset.i; paint(); run(); });
+  $("#vol").addEventListener("click", e => { const b = e.target.closest(".chip"); if (!b) return; vol = +b.dataset.v; paint(); run(); });
+  $("#go").addEventListener("click", run);
+  paint();
+})();
+</script>
+</body>
+</html>

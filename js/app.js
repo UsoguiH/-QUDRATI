@@ -1880,7 +1880,7 @@ const DIA_SVG = `<svg viewBox="-12 -12 24 24"><path d="M0-9.5L9.5 0 0 9.5-9.5 0Z
    press and release of a node, the card closing, and node_complete (it starts
    on the take-off, swells through the flip and lands with the coin). The
    clicks are WAV: an mp3 frame is longer than the click itself */
-const SFX_SRC = { done: "assets/sounds/node-complete.mp3", right: "assets/sounds/right-answer.mp3",
+const SFX_SRC = { right: "assets/sounds/right-answer.mp3",
   lcDone: "assets/sounds/lesson-complete.mp3", lcPerfect: "assets/sounds/lesson-perfect.mp3",
   stat1: "assets/sounds/stat-1.mp3", stat2: "assets/sounds/stat-2.mp3", stat3: "assets/sounds/stat-3.mp3" };
 /* Duolingo's quest-bar sounds (daily_quest_bar_*): by how far the bar jumps, and whether it fills */
@@ -1899,14 +1899,16 @@ function sfxLoad(k) {
     .then(b => { SFX_BUF[k] = b; })
     .catch(() => { delete SFX_P[k]; });
 }
-function sfxPlay(k, gain, fallback) {
+function sfxPlay(k, gain, fallback, rate, end) {
   if (!S.sound) return;
   const ac = audioCtx();
   if (SFX_BUF[k] && ac) {
     try {
       const src = ac.createBufferSource(), g = ac.createGain();
       src.buffer = SFX_BUF[k]; g.gain.value = gain || 1;
+      if (rate) src.playbackRate.value = rate;
       src.connect(g); g.connect(ac.destination); src.start();
+      if (end) { const t = ac.currentTime + end; g.gain.setValueAtTime(gain || 1, t - .12); g.gain.linearRampToValueAtTime(0, t); src.stop(t); }
       return;
     } catch (e) { /* the fallback below */ }
   }
@@ -1950,7 +1952,13 @@ const SND_MAP = {
   "rule-fill-miss": "incorrect",
   "boost-toggle": "toggle-on",
   "start-lesson": "start-lesson",
-  "ring-segment-pay": "highlight-node",
+  "ring-segment-pay": "toggle-on",
+  "node-flip-up": "lightweight-choice",
+  "node-flip-turn": "hint",
+  "node-gold-turn": "level-passed",
+  "node-gold-land": "highlight-node",
+  "say-word": "lightweight-choice",
+  "first-lesson-enter": "welcome-to-leagues",
   "chest-tip": "lightweight-choice",
   "quest-banner": "endstate",
   "chest-tap": "assessment-click-option-1",
@@ -1986,18 +1994,20 @@ const SND_MAP = {
   "settings-segment": "lightweight-choice",
   "settings-name-saved": "assessment-submit"
 };
-const SND_FILES = ["assessment-click-option-1","assessment-click-option-2","assessment-click-option-3","assessment-click-option-4","assessment-dont-know","assessment-submit","continue","diagnostic-answer","diagnostic-complete","drag-released","drag-started","endstate","highlight-node","hint","incorrect","lesson-complete","lesson-failed","level-failed","level-mastered","level-passed","lightweight-choice","router-koji-recommendation","skip","start-lesson","streak-celebration","streak-charge","streak-inlesson","toggle-off","toggle-on","tutor-xp-countup-start","tutor-xp-countup-stop","xp-tally-1","xp-tally-2","xp-tally-3","xp-tally-4","xp-tally-5","xp-tally-final"];
+const SND_FILES = ["assessment-click-option-1","assessment-click-option-2","assessment-click-option-3","assessment-click-option-4","assessment-dont-know","assessment-submit","continue","diagnostic-answer","diagnostic-complete","drag-released","drag-started","endstate","highlight-node","hint","incorrect","lesson-complete","lesson-failed","level-failed","level-mastered","level-passed","lightweight-choice","router-koji-recommendation","skip","start-lesson","streak-celebration","streak-charge","streak-inlesson","toggle-off","toggle-on","tutor-xp-countup-start","tutor-xp-countup-stop","welcome-to-leagues","xp-tally-1","xp-tally-2","xp-tally-3","xp-tally-4","xp-tally-5","xp-tally-final"];
 const SND_ONCE = { "chest-gems-tick": 1500 };      // a counted-up number calls on every step; Brilliant's count-up is one sound
 const SND_DELAY = { "answer-run": 260 };           // the streak sting lands just after the correct sound
+const SND_END = { "node-gold-turn": 1.25 };          // level-passed keeps only its first hit, stopping before the second (1.28s): the user, 2026-10-28, «remove the last part of the sound», twice
+const SND_GAIN = { "say-word": .31 };              // فهيم's typing (the user's pick, 2026-10-28, option ٢ on tools/brilliant-sounds/type.html, no bell at the end) at −22 dB, a little under the app's other clicks: the file peaks at −11.9
 const sndLast = {};
 SND_FILES.forEach(f => { SFX_SRC["b:" + f] = "assets/sounds/bri/" + f + ".mp3"; });
-function snd(id, fn, file) {
+function snd(id, fn, file, rate) {
   const f = file === undefined ? SND_MAP[id] : file;
   if (f === undefined) { if (fn) fn(); return; }
   if (!f || !S.sound) return;
   if (SND_ONCE[id]) { const t = performance.now(); if (t - (sndLast[id] || -1e9) < SND_ONCE[id]) return; sndLast[id] = t; }
   if (!SFX_BUF["b:" + f]) sndWarm();                 // one not ready yet: the rest come now, not when the phone is next idle
-  const go = () => sfxPlay("b:" + f, .9, fn);
+  const go = () => sfxPlay("b:" + f, SND_GAIN[id] || .9, fn, rate, SND_END[id]);
   if (SND_DELAY[id]) setTimeout(go, SND_DELAY[id]); else go();
 }
 const SND_FIRST = ["continue", "lightweight-choice", "assessment-click-option-1", "assessment-click-option-2", "assessment-click-option-3",
@@ -2055,7 +2065,13 @@ function coinPay(col, btn, pay, keep, end) {
   if (hi) hi.animate([{ opacity: 1 }, { opacity: 1, offset: at(662) }, { opacity: 0, offset: at(663) }, { opacity: 0, offset: at(688) }, { opacity: 1, offset: at(689) }, { opacity: 1 }],
     { duration: PAY_MS });
   ghost.animate(PAY_GHOST.map(([t, s]) => ({ offset: at(t), ...lin, transform: `scale(${s})` })), { duration: PAY_MS });
-  setTimeout(() => sfxPlay("done", .8, () => beep(pay.gold ? [[784, .08], [1047, .1], [1319, .22]] : [[784, .08], [1047, .16]])), 136);
+  /* the user's picks (2026-10-27, tools/brilliant-sounds/flip.html): a light tap
+     as it takes off and a shine as it turns over (option ٦); on the node's
+     last lesson option ٥, «لمعة وحدة» (asked for again on 2026-10-28): the
+     chime as it comes back gold, cut to its first hit, and the shine as it
+     lands; the ring is silent */
+  if (pay.gold) setTimeout(() => snd("node-gold-land", () => beep([[784, .08], [1047, .1], [1319, .22]])), 1460), setTimeout(() => snd("node-gold-turn"), 663);
+  else { setTimeout(() => snd("node-flip-up", () => beep([[784, .08], [1047, .16]])), 136); setTimeout(() => snd("node-flip-turn"), 600); }
   setTimeout(() => {
     if (!pay.gold) return;
     btn.querySelector(".node-sh").outerHTML = NODE_GOLD;
@@ -2128,7 +2144,7 @@ function ringPay(col, svg, seg, n, i, c, exit, coin) {
         { transform: `translate(${x + ux * 1.7}px,${y + uy * 1.7}px) scale(1)`, opacity: 0 }], { duration: ms, fill: "forwards" })
         .onfinish = () => el.remove();
     });
-    snd("ring-segment-pay", () => beep([[784, .07], [1047, .14]]));
+    snd("ring-segment-pay", () => beep([[784, .07], [1047, .14]]), exit ? "" : undefined);
     buzz(10);
   });
   if (exit) {
@@ -2148,7 +2164,7 @@ function pathPay() {
   const btn = col.querySelector(".node"), LS = learnSet(pay.key), n = LS ? LS.lessons.length : 0;
   const c = (btn.dataset.open || "").split("|")[0];
   clearTimeout(flipT); payRun = true;                // no star flip mid-beat, whoever asks for one
-  sfxLoad("done");
+  sndWarm(["toggle-on", "lightweight-choice", "hint", "highlight-node", "level-passed"]);
   let svg = col.querySelector(".node-ring");
   if (!svg && n && pay.gold) {                       // a finished node has no ring left: lend it one to finish
     col.insertAdjacentHTML("afterbegin", ringSvg(n, n, c));
@@ -3876,15 +3892,43 @@ function learnSteps(src) {
    answers in any order (٦ × ٥ × ٤ is ٤ × ٥ × ٦), so those blanks are matched
    against what the student placed before the leftovers are handed out. */
 function learnFillWant(it) {
-  const k = it.anyOrder || 0;
-  if (!k) return it.a;
-  const pool = it.a.slice(0, k), want = [];
-  for (let j = 0; j < k; j++) {
-    const v = it.tiles[it.ui.slots[j]], at = pool.indexOf(v);
-    if (at >= 0) { want[j] = v; pool.splice(at, 1); }
+  const k = it.anyOrder || 0, want = it.a.slice();
+  const free = (s, e) => {
+    const pool = want.slice(s, e + 1), got = [];
+    for (let j = s; j <= e; j++) {
+      const v = it.tiles[it.ui.slots[j]], at = pool.indexOf(v);
+      if (at >= 0) { got[j] = v; pool.splice(at, 1); }
+    }
+    for (let j = s; j <= e; j++) want[j] = got[j] !== undefined ? got[j] : pool.shift();
+  };
+  if (k) free(0, k - 1);
+  if (it.rf || it.type === "rfill" || it.type === "rnum") rfSwapRuns(it.eq).forEach(([s, e]) => free(s, e));
+  return want;
+}
+/* On a rule screen the sides of a «×» or a «+» may go in either order (the
+   user, 2026-10-27, after writing «المجموع = عدد مرات تكراره × العدد» and
+   being marked wrong: «I replaced the left with the right, but that's okay
+   because that's multiply»). A run is blanks that stand alone as the factors
+   of one product or the terms of one sum — "_ × _", "_ + _ + _" — and is
+   left out wherever the swap would change the value: a «÷» before a product,
+   a «−», «×» or «÷» before a sum or a «×» or «÷» after it, or anything glued
+   to a blank (a power, «٪»). Returns [first, last] blank numbers per run. */
+function rfSwapRuns(eq) {
+  const parts = String(eq || "").split("_"), runs = [], n = parts.length - 1;
+  const last = s => s.trim().split(/\s+/).pop() || "", first = s => s.trim().split(/\s+/)[0] || "";
+  const link = s => /^ +[×+] +$/.test(s);
+  for (let j = 0; j + 1 < n; ) {
+    if (!link(parts[j + 1])) { j++; continue; }
+    const op = parts[j + 1].trim();
+    let e = j + 1;
+    while (e + 1 < n && link(parts[e + 1]) && parts[e + 1].trim() === op) e++;
+    const pre = parts[j], post = parts[e + 1], b = last(pre), a = first(post);
+    const edge = (pre === "" || /[\s(]$/.test(pre)) && (post === "" || /^[\s)]/.test(post));
+    const safe = op === "×" ? b !== "÷" && b !== "/" : !/^[−\-×÷/]$/.test(b) && !/^[×÷/]/.test(a);
+    if (edge && safe) runs.push([j, e]);
+    j = e + 1;
   }
-  for (let j = 0; j < k; j++) if (want[j] === undefined) want[j] = pool.shift();
-  return want.concat(it.a.slice(k));
+  return runs;
 }
 /* A rule screen's line is a row of tokens — words, numbers, signs and each
    bracket on its own, so Arabic brackets face the right way — that never
@@ -8360,7 +8404,12 @@ function sayPlay(delay) {
   if (fxReduced()) { ws.forEach(w => w.classList.add("on")); return; }
   let k = 0;
   SAY_D = setTimeout(() => {
-    SAY_T = setInterval(() => { if (k >= ws.length) { clearInterval(SAY_T); return; } ws[k++].classList.add("on"); }, SAY_STEP);
+    SAY_T = setInterval(() => {
+      if (k >= ws.length) { clearInterval(SAY_T); return; }
+      const w = ws[k++];
+      w.classList.add("on");
+      snd("say-word", null, undefined, (w.classList.contains("hl") ? 1.16 : 1) * (.92 + Math.random() * .16));
+    }, SAY_STEP);
   }, delay == null ? SAY_AT : delay);
 }
 const buzz = ms => { try { if (navigator.vibrate && (S.haptic === undefined ? S.sound !== false : S.haptic)) navigator.vibrate(ms); } catch (e) { } };
@@ -8866,11 +8915,15 @@ function renderObSplash(kind) {
   obFrame(obTop("teach", "تمام! هذا أول درس لك — *٣ دقائق* بس."),
     `<button class="btn" onclick="A.placeScratch()">يلا نبدأ</button>`, 100, back, "ob-splash", false);
   setTimeout(() => buzz(OB_BUZZ.splash), 300);
+  sndWarm(["welcome-to-leagues"]);
 }
 function renderPlaceIntro() { renderObSplash("find"); }
 A.placeIntroBack = function () { if (!OB) { go("path"); return; } OB.dir = -1; renderOb(); };
 A.placeBegin = function () { snd("start-lesson"); OB = null; S.placeAsked = true; save(); A.startPlacement(); };
-A.placeScratch = function () { S.placeAsked = true; save(); obFirstLesson(); };
+/* entering the very first lesson has a sound no other moment uses: Brilliant's
+   «welcome» opening (the user's pick, 2026-10-28, option ٤ on
+   tools/brilliant-sounds/enter.html); every later lesson start plays start-lesson */
+A.placeScratch = function () { snd("first-lesson-enter"); S.placeAsked = true; save(); obFirstLesson(); };
 
 function afterLogin() {
   S.joined = S.joined || todayKey();

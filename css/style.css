@@ -4814,9 +4814,11 @@ body:has(.screen-session) { overflow: hidden; }
 .obt-bubble::before { border-top-color: var(--line); }
 .obt-bubble::after  { border-top-color: var(--snow); margin-top: -3px; }
 .obt-duo {
-  height: 232px; transform-origin: 50% 100%;
+  height: clamp(232px, 41vh, 340px);   /* the user, 2026-10-27: «make the mascots bigger here» — as big as the phone allows */ transform-origin: 50% 100%;
   animation: obDuoIn .55s .08s cubic-bezier(.3,1.5,.5,1) backwards, obBreathe 3.4s .8s ease-in-out infinite;
 }
+.obt:has(.obt-chips) .obt-duo { height: clamp(160px, 30vh, 300px); }   /* chips under him: a little less of him, so a small phone does not scroll */
+@media (max-height: 620px) { .obt:has(.obt-chips) .obt-duo { height: 124px; } }
 @keyframes obDuoIn { from { opacity: 0; transform: translateY(34px) scale(.82); } }
 @keyframes obBreathe { 50% { transform: scale(1.012, 1.02) translateY(-2px); } }
 .obt-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; margin-top: 18px; animation: fadeUp .4s .5s ease backwards; }
