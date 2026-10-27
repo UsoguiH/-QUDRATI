@@ -1,0 +1,1183 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>قدراتي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&display=swap">
+<style>
+:root {
+  --green: #58CC02;        --green-dk: #58A700;
+  --blue: #1CB0F6;         --blue-dk: #1899D6;
+  --blue-light: #DDF4FF;   --blue-border: #63C9F9;
+  --purple: #CE82FF;       --purple-dk: #A568CC;
+  --purple-tint: #EDD1FF;  --purple-wash: #F7EDFF;
+  --gold: #FFC800;         --gold-dk: #E6A000;     --gold-bg: #FFF4BF;
+  --brown: #AA572A;        --brown-dk: #7A3B12;
+  --red: #FF4B4B;          --red-soft: #FFB2B2;
+  --orange: #FF9600;       --orange-dk: #E07800;   --orange-bg: #FFEFD6;   --orange-edge: #FFCB85;
+  --ink: #4B4B4B;          --gray: #777777;        --gray-icon: #AFAFAF;
+  --line: #E5E5E5;         --snow: #FFFFFF;        --polar: #F7F7F7;      --dash: #CFCFCF;
+  --green-lip: #478700;    --green-pale: #A5ED6E;
+  --green-bg: #D6FFB8;     --red-bg: #FFDFE0;      --red-dk2: #EA2B2B;
+  --chest: #1E3A8A;
+  --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--snow); }
+body { font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { font-family: var(--font); cursor: pointer; -webkit-tap-highlight-color: transparent; color: inherit; }
+#app { position: relative; height: 100dvh; max-width: 430px; margin: 0 auto; display: flex; flex-direction: column; overflow: hidden; background: var(--snow); }
+
+.top { display: flex; align-items: center; gap: 10px; padding: 16px 16px 4px; min-height: 52px; }
+.bar { flex: 1; height: 16px; border-radius: 8px; background: var(--line); overflow: hidden; position: relative; }
+.bar i { position: absolute; inset: 0 0 0 auto; width: 0; border-radius: 8px; background: var(--green); transition: width .45s cubic-bezier(.3,1.3,.5,1); }
+.bar i::after { content: ""; position: absolute; top: 4px; inset-inline: 8px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.3); }
+.run { display: flex; align-items: center; gap: 3px; font-weight: 800; font-size: 18px; color: var(--gray-icon); }
+.run svg { width: 22px; height: 26px; }
+.run .fl { fill: var(--line); transition: fill .2s; } .run .fi { fill: var(--polar); transition: fill .2s; }
+.run.hot { color: var(--orange); } .run.hot .fl { fill: var(--orange); } .run.hot .fi { fill: var(--gold); }
+.shd { width: 24px; height: 26px; display: grid; place-items: center; }
+.shd svg { width: 22px; height: 24px; }
+.shd .sf { fill: var(--blue); transition: fill .25s; } .shd .ss { fill: var(--blue-dk); transition: fill .25s; }
+.shd.off .sf { fill: var(--line); } .shd.off .ss { fill: var(--dash); }
+.xpp { position: relative; display: flex; align-items: center; gap: 3px; font-weight: 800; font-size: 16px; color: var(--gold-dk); white-space: nowrap; }
+.xpp b { font-size: 18px; }
+.xpf { position: absolute; top: -4px; inset-inline-start: 50%; translate: 50% 0; font-size: 15px; font-weight: 800; color: var(--gold-dk); pointer-events: none; white-space: nowrap; }
+.dvw { margin: 0 .1em; display: inline-flex; align-items: center; justify-content: center; position: relative; vertical-align: -.04em; }
+.dvw svg { width: .62em; height: .62em; fill: currentColor; display: block; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+#app.bare .top { visibility: hidden; }
+
+.kick { margin: 12px 16px 0; font-size: 14px; font-weight: 800; color: var(--purple-dk); min-height: 20px; }
+.ttl { margin: 0 16px; font-size: 22px; font-weight: 800; line-height: 1.4; }
+.ttl b { color: var(--blue); }
+#stage { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.body { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 14px 16px 16px; overflow-y: auto; overflow-x: hidden; scrollbar-width: none; }
+.body::-webkit-scrollbar { display: none; }
+
+.foot { padding: 10px 16px 22px; border-top: 2px solid var(--line); }
+#app.nofoot .foot { display: none; }
+.btn { display: block; width: 100%; height: 50px; border: 0; border-radius: 16px; font: 800 17px var(--font); color: var(--snow); background: var(--green); box-shadow: 0 5px 0 var(--green-lip); }
+.btn:not(:disabled):active { translate: 0 5px; box-shadow: 0 0 0 var(--green-lip); }
+.btn:disabled { background: var(--line); box-shadow: 0 5px 0 var(--dash); color: var(--gray-icon); cursor: default; }
+.btn.red { background: var(--red); box-shadow: 0 5px 0 var(--red-dk2); }
+.btn.red:active { box-shadow: 0 0 0 var(--red-dk2); }
+.btn.blue { background: var(--blue); box-shadow: 0 5px 0 var(--blue-dk); }
+.btn.blue:active { box-shadow: 0 0 0 var(--blue-dk); }
+
+.sheet { position: absolute; inset: auto 0 0 0; z-index: 30; padding: 16px 16px 22px; background: var(--green-bg); translate: 0 110%; visibility: hidden; transition: translate .28s cubic-bezier(.3,1.2,.5,1), visibility 0s .28s; }
+.sheet.on { translate: 0 0; visibility: visible; transition: translate .28s cubic-bezier(.3,1.2,.5,1); }
+.sheet.bad { background: var(--red-bg); }
+.sh-h { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 800; color: var(--green-dk); }
+.sheet.bad .sh-h { color: var(--red-dk2); }
+.sh-i { width: 34px; height: 34px; border-radius: 50%; background: var(--snow); display: grid; place-items: center; flex: none; }
+.sh-i svg { width: 20px; height: 20px; }
+.sh-l { margin: 6px 2px 14px; font-size: 17px; font-weight: 700; color: var(--green-dk); line-height: 1.55; min-height: 24px; }
+.sheet.bad .sh-l { color: var(--red-dk2); }
+.sh-l b { font-weight: 800; }
+
+.card { border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 20px; padding: 14px 12px; background: var(--snow); }
+.big { display: flex; align-items: center; justify-content: center; gap: .28em; font-size: 28px; font-weight: 800; line-height: 1.5; white-space: nowrap; }
+.big > * { flex: none; }
+.big .op { color: var(--gray-icon); }
+.big .q { color: var(--gray-icon); }
+.big .ans { color: var(--green-dk); }
+.note { text-align: center; font-size: 15.5px; font-weight: 700; color: var(--gray); line-height: 1.5; }
+.note b { color: var(--ink); }
+.tell { min-height: 28px; margin-top: 12px; text-align: center; font-size: 16px; font-weight: 800; color: var(--red-dk2); line-height: 1.45; }
+.tell.ok { color: var(--green-dk); }
+.tell.soft { color: var(--gray); }
+
+.ch { display: inline-flex; align-items: center; justify-content: center; padding: .05em .42em 0; border-radius: .5em; font-weight: 800; line-height: 1.45; white-space: nowrap; }
+.k-blue { background: var(--blue-light); color: var(--blue-dk); box-shadow: 0 .13em 0 var(--blue-border); }
+.k-purple { background: var(--purple-wash); color: var(--purple-dk); box-shadow: 0 .13em 0 var(--purple-tint); }
+.k-orange { background: var(--orange-bg); color: var(--orange-dk); box-shadow: 0 .13em 0 var(--orange-edge); }
+.k-gold { background: var(--gold-bg); color: var(--brown); box-shadow: 0 .13em 0 var(--gold); }
+
+.opts { display: grid; gap: 10px; margin-top: 16px; }
+.opts.c3 { grid-template-columns: repeat(3, 1fr); }
+.opts.c2 { grid-template-columns: 1fr 1fr; }
+.opt { min-height: 60px; border-radius: 16px; border: 2px solid var(--line); border-bottom-width: 5px; background: var(--snow); font: 800 23px/1.2 var(--font); color: var(--ink); padding: 8px; }
+.opt:not(:disabled):active { border-bottom-width: 2px; translate: 0 3px; }
+.opt.sel { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+.opt.ok { border-color: var(--green-pale); background: var(--green-bg); color: var(--green-dk); }
+.opt.no { border-color: var(--red-soft); background: var(--red-bg); color: var(--red-dk2); }
+.opt.dim { opacity: .4; }
+.opt:disabled { cursor: default; }
+.opt small { display: block; font-size: 14px; font-weight: 700; opacity: .8; }
+.rpick { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px; min-height: 64px; }
+.rpick .ri { width: 32px; height: 32px; border-radius: 10px; background: var(--purple); box-shadow: 0 3px 0 var(--purple-dk); display: grid; place-items: center; flex: none; }
+.rpick .ri svg { width: 22px; height: 22px; }
+.rpick.g .ri { background: var(--blue); box-shadow: 0 3px 0 var(--blue-dk); }
+
+.rc { scroll-margin-bottom: 14px; position: relative; border-radius: 22px; background: var(--snow); border: 2px solid var(--line); border-bottom-width: 6px; overflow: hidden; transform-origin: 50% 100%; }
+.rc-h { display: flex; align-items: center; gap: 10px; padding: 9px 12px 9px 10px; background: var(--purple); color: var(--snow); box-shadow: inset 0 -4px 0 var(--purple-dk); }
+.rc.g .rc-h { background: var(--blue); box-shadow: inset 0 -4px 0 var(--blue-dk); }
+.rc-ic { width: 34px; height: 34px; border-radius: 11px; background: rgba(255,255,255,.22); display: grid; place-items: center; flex: none; }
+.rc-ic svg { width: 24px; height: 24px; }
+.rc-t { flex: 1; min-width: 0; line-height: 1.15; padding-bottom: 3px; }
+.rc-t small { display: block; font-size: 12.5px; font-weight: 800; opacity: .85; }
+.rc-t b { font-size: 19px; font-weight: 800; }
+.rc-new { font-size: 12.5px; font-weight: 800; background: var(--gold); color: var(--brown-dk); padding: 2px 9px 0; border-radius: 9px; box-shadow: 0 2px 0 var(--gold-dk); margin-bottom: 3px; }
+.rc-re { width: 36px; height: 36px; border-radius: 12px; border: 0; background: rgba(255,255,255,.22); display: grid; place-items: center; flex: none; padding: 0; margin-bottom: 3px; }
+.rc-re svg { width: 20px; height: 20px; }
+.rc-re:active { translate: 0 2px; }
+.rc-pic { margin: 10px 10px 0; border-radius: 16px; background: var(--polar); display: flex; justify-content: center; padding: 6px 6px 4px; }
+.rc-pic svg { width: 100%; max-width: 280px; height: auto; display: block; overflow: visible; }
+.rc-out { min-height: 28px; margin: 6px 12px 0; text-align: center; font-size: 17px; font-weight: 800; color: var(--gray); white-space: nowrap; overflow: hidden; }
+.rc-out .ch { font-size: 16px; }
+.rc-pre { text-align: center; font-size: 14px; font-weight: 800; color: var(--gray); margin-top: 4px; }
+.rc-eq { display: flex; align-items: center; justify-content: center; gap: .26em; padding: 6px 10px 14px; font-size: 18px; font-weight: 800; white-space: nowrap; }
+.rc-eq > * { flex: none; }
+.rc-eq .op { color: var(--gray-icon); }
+.tk { border: 0; font: 800 1em/1.55 var(--font); padding: .05em .5em 0; border-radius: .55em; background: var(--line); color: var(--gray); box-shadow: 0 .16em 0 var(--dash); transition: background .2s, color .2s, box-shadow .2s, opacity .2s; }
+.tk:active { translate: 0 .1em; box-shadow: 0 .06em 0 var(--dash); }
+.tk.lit.c-b { background: var(--blue-light); color: var(--blue-dk); box-shadow: 0 .16em 0 var(--blue-border); }
+.tk.lit.c-p { background: var(--purple-wash); color: var(--purple-dk); box-shadow: 0 .16em 0 var(--purple-tint); }
+.tk.lit.c-o { background: var(--orange-bg); color: var(--orange-dk); box-shadow: 0 .16em 0 var(--orange-edge); }
+.tk.lit.c-g { background: var(--gold-bg); color: var(--brown); box-shadow: 0 .16em 0 var(--gold); }
+.tk.f.c-b { background: var(--blue); color: var(--snow); box-shadow: 0 .16em 0 var(--blue-dk); }
+.tk.f.c-p { background: var(--purple); color: var(--snow); box-shadow: 0 .16em 0 var(--purple-dk); }
+.tk.f.c-o { background: var(--orange); color: var(--snow); box-shadow: 0 .16em 0 var(--orange-dk); }
+.tk.f.c-g { background: var(--gold); color: var(--brown-dk); box-shadow: 0 .16em 0 var(--gold-dk); }
+.rc.foc .tk.lit:not(.f) { opacity: .45; }
+.rc-hint { text-align: center; font-size: 12.5px; font-weight: 800; color: var(--gray-icon); margin: -6px 0 8px; opacity: 0; transition: opacity .3s; }
+.rc.ready .rc-hint { opacity: 1; }
+
+.pp { opacity: 0; transition: opacity .25s; }
+.pp.on { opacity: 1; }
+svg .dot circle { fill: var(--line); }
+svg .bdot circle { fill: var(--blue); }
+svg .odot circle { fill: var(--orange); }
+svg .pdot circle { fill: var(--purple); }
+svg .brk-b { stroke: var(--blue); } svg .brk-p { stroke: var(--purple); } svg .brk-o { stroke: var(--orange); }
+svg .t-b { fill: var(--blue-dk); } svg .t-p { fill: var(--purple-dk); } svg .t-o { fill: var(--orange-dk); } svg .t-g { fill: var(--brown); } svg .t-i { fill: var(--ink); } svg .t-w { fill: var(--snow); }
+svg .tl-b { fill: var(--snow); stroke: var(--line); }
+svg .tl-on { fill: var(--blue-light); stroke: var(--blue); }
+svg .arc0 { stroke: var(--line); fill: none; }
+svg .arc1 { stroke: var(--purple); fill: none; }
+svg .bg-g { fill: var(--gold); }
+svg text { font-family: var(--font); font-weight: 800; }
+svg .rw { transform-box: fill-box; transform-origin: 50% 50%; }
+
+.sum .n { display: inline-block; }
+.big .n.odd { color: var(--orange-dk); background: var(--orange-bg); border-radius: .3em; padding: 0 .18em; box-shadow: 0 .1em 0 var(--orange-edge); }
+.brg { padding: 10px 8px 6px; }
+.brg svg { max-width: 300px; }
+.bq { margin-top: 12px; }
+.inv-h { text-align: center; font-size: 14px; font-weight: 800; color: var(--gray); margin-top: 10px; }
+.gridcard { padding: 8px 10px 10px; margin-bottom: 12px; }
+.gridcard svg { width: 100%; max-width: 270px; height: auto; display: block; margin: 0 auto; overflow: visible; }
+.cap { text-align: center; font-size: 16px; font-weight: 800; min-height: 26px; margin-top: 2px; white-space: nowrap; }
+.rslot { margin-top: 14px; }
+
+.pw { position: relative; padding: 96px 6px 8px; }
+.pw svg.arcs { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.nums { display: flex; justify-content: center; gap: 4px; }
+.nt { flex: 1 1 30px; max-width: 34px; height: 46px; min-width: 0; padding: 0 0 2px; border-radius: 11px; border: 2px solid var(--line); border-bottom-width: 4px; background: var(--snow); display: grid; place-items: center; font: 800 18px/1 var(--font); color: var(--ink); transition: background .2s, border-color .2s, color .2s; }
+.nt:not(:disabled):active { border-bottom-width: 2px; translate: 0 2px; }
+.nt:disabled { cursor: default; }
+.nt.next { border-color: var(--blue-border); animation: nudge 1.3s ease-in-out infinite; }
+@keyframes nudge { 0%, 100% { translate: 0 0; } 50% { translate: 0 -5px; } }
+.p0 { --pc: var(--purple); --pd: var(--purple-dk); --pl: var(--purple-wash); }
+.p1 { --pc: var(--orange); --pd: var(--orange-dk); --pl: var(--orange-bg); }
+.p2 { --pc: var(--green); --pd: var(--green-dk); --pl: var(--green-bg); }
+.p3 { --pc: var(--blue); --pd: var(--blue-dk); --pl: var(--blue-light); }
+.p4 { --pc: var(--red); --pd: var(--red-dk2); --pl: var(--red-bg); }
+.nt.pr { background: var(--pl); border-color: var(--pc); color: var(--pd); }
+.pchips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 14px; min-height: 34px; }
+.pc { display: inline-flex; align-items: center; justify-content: center; padding: .1em .55em 0; border-radius: .55em; font-size: 16px; font-weight: 800; color: var(--snow); background: var(--pc); box-shadow: 0 .14em 0 var(--pd); white-space: nowrap; }
+.aft { margin-top: 16px; }
+.say { text-align: center; font-size: 19px; font-weight: 800; line-height: 1.6; }
+
+.chain { display: flex; flex-direction: column; gap: 8px; }
+.ln { display: flex; align-items: center; gap: 10px; border: 2px solid var(--line); border-radius: 16px; padding: 6px 10px; min-height: 52px; }
+.ln .no { width: 26px; height: 26px; border-radius: 50%; background: var(--polar); color: var(--gray-icon); font-size: 14px; font-weight: 800; display: grid; place-items: center; flex: none; }
+.ln .big { flex: 1; min-width: 0; font-size: 21px; justify-content: flex-start; }
+.ln .big .ch { font-size: 19px; }
+.ln .sm { font-size: 13px; font-weight: 800; color: var(--gray-icon); white-space: nowrap; flex: none; }
+
+.stw { display: grid; grid-template-columns: auto 1fr; grid-template-areas: "body side" "bot ."; justify-content: center; align-items: end; gap: 6px 8px; margin: 4px auto 0; }
+.stw .sbody { grid-area: body; }
+.stw .sside { grid-area: side; align-self: stretch; display: flex; align-items: center; gap: 6px; }
+.stw .sside i { width: 4px; align-self: stretch; border-radius: 2px; background: var(--purple); }
+.stw .sbot { grid-area: bot; display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
+.stw .sbot i { height: 4px; border-radius: 2px; background: var(--blue); }
+.stw .sbot .ch { align-self: center; }
+.stw svg { display: block; overflow: visible; }
+.stw .sb { fill: var(--blue); } .stw .so { fill: var(--orange); }
+.stw .sb, .stw .so { transform-box: fill-box; }
+.stw .sb { transform-origin: 50% 100%; } .stw .so { transform-origin: 50% 0%; }
+.hid { visibility: hidden; }
+.scap { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; align-items: center; min-height: 64px; }
+.scap .big { font-size: 22px; }
+.scap .big .ch { font-size: 20px; }
+
+.sort { flex: 1; display: flex; flex-direction: column; }
+.slot { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 150px; }
+.scard { width: 100%; border: 2px solid var(--line); border-bottom-width: 6px; border-radius: 22px; background: var(--snow); padding: 22px 12px 18px; text-align: center; position: relative; }
+.scard .cnt { position: absolute; top: 8px; right: 16px; font-size: 13px; font-weight: 800; color: var(--gray-icon); }
+.scard .big { font-size: 30px; }
+.recap { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.rcp { display: flex; align-items: center; gap: 10px; border: 2px solid var(--green-pale); background: var(--green-bg); border-radius: 16px; padding: 6px 10px; }
+.rcp.x { border-color: var(--red-soft); background: var(--red-bg); }
+.rcp .ri { width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; flex: none; background: var(--purple); box-shadow: 0 3px 0 var(--purple-dk); }
+.rcp .ri.gauss { background: var(--blue); box-shadow: 0 3px 0 var(--blue-dk); }
+.rcp .ri.none { background: var(--gray-icon); box-shadow: 0 3px 0 var(--gray); }
+.rcp .ri svg { width: 20px; height: 20px; }
+.rcp .big { flex: 1; min-width: 0; font-size: 20px; justify-content: flex-start; }
+.bins { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.bin { border-radius: 20px; border: 2px solid var(--line); border-bottom-width: 6px; background: var(--snow); padding: 12px 6px 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; min-height: 120px; }
+.bin:active { border-bottom-width: 3px; translate: 0 3px; }
+.bin .bi { width: 46px; height: 46px; border-radius: 14px; background: var(--purple); box-shadow: 0 4px 0 var(--purple-dk); display: grid; place-items: center; }
+.bin .bi svg { width: 30px; height: 30px; }
+.bin.g .bi { background: var(--blue); box-shadow: 0 4px 0 var(--blue-dk); }
+.bin b { font-size: 16px; font-weight: 800; line-height: 1.3; }
+.bin small { font-size: 12.5px; font-weight: 700; color: var(--gray); line-height: 1.2; }
+.bin .dots { display: flex; gap: 4px; min-height: 10px; }
+.bin .dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--green); }
+.bin.none { grid-column: 1 / -1; flex-direction: row; justify-content: center; min-height: 58px; gap: 10px; padding: 8px; }
+.bin.none .bi { width: 34px; height: 34px; border-radius: 11px; background: var(--gray-icon); box-shadow: 0 3px 0 var(--gray); }
+.bin.none .bi svg { width: 18px; height: 18px; }
+.bin.none .dots { min-height: 0; }
+.bin.flash { border-color: var(--red-soft); background: var(--red-bg); }
+.bin.hit { border-color: var(--green-pale); background: var(--green-bg); }
+
+.word { font-size: 19px; font-weight: 700; line-height: 1.65; text-align: center; padding: 14px 12px; }
+.word b { color: var(--ink); font-weight: 800; }
+.step2 { margin-top: 12px; }
+.q2 { text-align: center; font-size: 15px; font-weight: 800; color: var(--gray); margin-bottom: -6px; }
+
+.who { display: flex; align-items: flex-start; gap: 10px; }
+.av { width: 50px; height: 50px; border-radius: 50%; background: var(--orange); box-shadow: 0 4px 0 var(--orange-dk); color: var(--snow); font-size: 24px; font-weight: 800; display: grid; place-items: center; flex: none; }
+.bub { position: relative; flex: 1; border: 2px solid var(--line); border-radius: 16px; padding: 8px 12px 6px; font-size: 16px; font-weight: 700; }
+.bub::before { content: ""; position: absolute; top: 16px; right: -8px; width: 12px; height: 12px; background: var(--snow); border-right: 2px solid var(--line); border-top: 2px solid var(--line); transform: rotate(45deg); }
+.work { margin-top: 18px; }
+.said { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 28px; font-weight: 800; white-space: nowrap; margin-top: 10px; }
+.said > * { flex: none; }
+.said .op { color: var(--gray-icon); }
+.stk { border: 2px solid var(--line); border-bottom-width: 5px; background: var(--snow); border-radius: 14px; font: 800 1em/1.3 var(--font); padding: 2px 12px 0; min-width: 2em; }
+.stk:not(:disabled):active { border-bottom-width: 2px; translate: 0 3px; }
+.stk.ok { border-color: var(--green-pale); background: var(--green-bg); color: var(--green-dk); }
+.stk.no { border-color: var(--red-soft); background: var(--red-bg); color: var(--red-dk2); }
+.stk.show { border-color: var(--green); border-style: dashed; }
+.stk.sel { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+.stk:disabled { cursor: default; }
+
+.rows { display: flex; flex-direction: column; gap: 10px; }
+.rrow { border: 2px solid var(--line); border-radius: 18px; padding: 6px 8px 8px; }
+.rrow .rh { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 800; color: var(--purple-dk); }
+.rrow.g .rh { color: var(--blue-dk); }
+.rrow .rh i { width: 20px; height: 20px; border-radius: 7px; background: var(--purple); display: grid; place-items: center; }
+.rrow.g .rh i { background: var(--blue); }
+.rrow .rh i svg { width: 14px; height: 14px; }
+.rline { display: flex; align-items: center; justify-content: center; gap: .3em; white-space: nowrap; font-size: 18px; font-weight: 800; min-height: 46px; }
+.rline > * { flex: none; }
+.rline .op { color: var(--gray-icon); font-size: 1.1em; }
+.rline .w { color: var(--ink); }
+.bk { display: inline-grid; place-items: center; min-width: 3.4em; height: 2.1em; padding: 0 .5em; border-radius: .7em; border: 2px dashed var(--dash); background: var(--polar); color: var(--blue-dk); font: 800 1em/1 var(--font); }
+.bk.tgt { border: 2.5px solid var(--blue); background: var(--snow); animation: nudge 1.2s ease-in-out infinite; }
+.bk.f { border: 2px solid var(--blue-border); border-bottom-width: 4px; background: var(--blue-light); }
+.bk.no { border-color: var(--red); background: var(--red-bg); color: var(--red-dk2); }
+.bk.ok { border-color: var(--green-pale); background: var(--green-bg); color: var(--green-dk); }
+.bk.lock { cursor: default; pointer-events: none; }
+.bk.sm { min-width: 2.2em; }
+.tiles { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 18px; }
+.tl { height: 48px; padding: 0 14px 2px; border-radius: 14px; background: var(--snow); border: 2px solid var(--line); border-bottom-width: 5px; font: 800 17px/1 var(--font); white-space: nowrap; }
+.tl:active { border-bottom-width: 2px; translate: 0 3px; }
+.tl.used { background: var(--line); border-color: var(--line); color: transparent; cursor: default; }
+.tl.used:active { border-bottom-width: 5px; translate: 0 0; }
+.tl:disabled { cursor: default; }
+
+.full { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 8px; }
+.logo { font-size: 38px; font-weight: 800; color: var(--green); line-height: 1.1; }
+.lead { font-size: 21px; font-weight: 800; margin: 16px 0 4px; line-height: 1.45; }
+.sub { font-size: 16px; font-weight: 700; color: var(--gray); line-height: 1.5; }
+.backs { display: flex; gap: 16px; margin-top: 28px; perspective: 600px; }
+.cb { width: 124px; height: 158px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--snow); background: var(--purple); box-shadow: inset 0 -6px 0 var(--purple-dk); position: relative; overflow: hidden; }
+.cb.g { background: var(--blue); box-shadow: inset 0 -6px 0 var(--blue-dk); }
+.cb::before { content: ""; position: absolute; inset: 8px; border-radius: 14px; border: 2px dashed rgba(255,255,255,.45); }
+.cb b { font-size: 46px; line-height: 1; }
+.cb small { font-size: 14px; font-weight: 800; }
+.cb.face { color: var(--ink); background: var(--snow); border: 2px solid var(--line); border-bottom-width: 6px; box-shadow: none; }
+.cb.face::before { display: none; }
+.cb.face .ci { width: 52px; height: 52px; border-radius: 16px; background: var(--purple); box-shadow: 0 4px 0 var(--purple-dk); display: grid; place-items: center; }
+.cb.face.g .ci { background: var(--blue); box-shadow: 0 4px 0 var(--blue-dk); }
+.cb.face .ci svg { width: 34px; height: 34px; }
+.cb.face b { font-size: 16px; }
+.cb.face small { color: var(--gray); font-size: 12.5px; }
+
+.days { display: flex; gap: 10px; margin: 6px 0 24px; }
+.day { width: 64px; height: 74px; border-radius: 16px; border: 2px solid var(--line); border-bottom-width: 5px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 800; color: var(--gray-icon); }
+.day b { font-size: 26px; line-height: 1; } .day small { font-size: 12px; }
+.day.on { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+.later-t { font-size: 32px; font-weight: 800; color: var(--blue); }
+.meters { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+.mtr { display: flex; align-items: center; gap: 10px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 18px; padding: 10px 12px; text-align: start; }
+.mtr .bi { width: 38px; height: 38px; border-radius: 12px; background: var(--purple); box-shadow: 0 3px 0 var(--purple-dk); display: grid; place-items: center; flex: none; }
+.mtr .bi svg { width: 26px; height: 26px; }
+.mtr.g .bi { background: var(--blue); box-shadow: 0 3px 0 var(--blue-dk); }
+.mtr .mm { flex: 1; min-width: 0; }
+.mtr .mn { display: flex; justify-content: space-between; font-size: 15px; font-weight: 800; }
+.mtr .mn span { color: var(--gray); font-size: 13.5px; }
+.mtr .mb { height: 12px; border-radius: 6px; background: var(--line); overflow: hidden; margin-top: 4px; position: relative; }
+.mtr .mb i { position: absolute; inset: 0 0 0 auto; border-radius: 6px; background: var(--green); width: 100%; }
+.mtr .mb i.warm { background: var(--orange); }
+.mtr .mb i.cold { background: var(--red); }
+
+.cue { display: flex; justify-content: center; padding: 14px 8px 10px; }
+.cue svg { width: 100%; max-width: 280px; height: auto; overflow: visible; }
+
+.end { flex: 1; display: flex; flex-direction: column; padding-top: 10px; gap: 14px; }
+.end h1 { margin: 0; text-align: center; font-size: 32px; font-weight: 800; color: var(--gold-dk); }
+.end .sub { text-align: center; margin-top: -10px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.st { border: 2px solid var(--c); border-radius: 16px; overflow: hidden; background: var(--c); }
+.st .sh { color: var(--snow); font-size: 12.5px; font-weight: 800; text-align: center; padding: 3px 0 1px; }
+.st .sv { background: var(--snow); border-radius: 13px; height: 52px; display: grid; place-items: center; font-size: 23px; font-weight: 800; color: var(--c); }
+.spd { display: flex; align-items: center; gap: 10px; border-radius: 18px; background: var(--blue-light); padding: 10px 12px; }
+.spd svg { width: 30px; height: 30px; flex: none; }
+.spd b { display: block; font-size: 16px; font-weight: 800; color: var(--blue-dk); }
+.spd span { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.got { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.got .cb { width: auto; height: 132px; }
+.plan { text-align: center; font-size: 14px; font-weight: 700; color: var(--gray); }
+.plan b { color: var(--green-dk); }
+
+.toast { position: absolute; top: 12px; left: 50%; translate: -50% -30px; opacity: 0; pointer-events: none; z-index: 40; background: var(--gold); color: var(--brown-dk); font-weight: 800; font-size: 15px; padding: 6px 16px 4px; border-radius: 14px; box-shadow: 0 4px 0 var(--gold-dk); white-space: nowrap; transition: translate .3s cubic-bezier(.3,1.5,.5,1); }
+.toast.on { translate: -50% 0; opacity: 1; transition: translate .3s cubic-bezier(.3,1.5,.5,1), opacity .15s; }
+@media (max-height: 700px) {
+  .top { padding-top: 10px; } .kick { margin-top: 6px; } .ttl { font-size: 20px; }
+  .body { padding-top: 10px; } .opt { min-height: 52px; } .foot { padding-bottom: 14px; }
+  .bin { min-height: 92px; padding-top: 8px; } .bin .bi { width: 38px; height: 38px; } .slot { min-height: 110px; }
+  .word { padding: 10px; font-size: 17px; } .days { margin-bottom: 14px; } .st .sv { height: 42px; } .end { gap: 10px; }
+  .cb { height: 138px; } .got .cb { height: 112px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div id="app" class="bare">
+  <div class="top"><div class="bar"><i></i></div>
+    <div class="shd"><svg viewBox="0 0 22 24"><path class="sf" d="M11 1l9 3.4v6.2c0 6-3.8 10.4-9 12.4C5.8 21 2 16.6 2 10.6V4.4z"/><path class="ss" d="M11 1v22C5.8 21 2 16.6 2 10.6V4.4z" opacity=".35"/></svg></div>
+    <div class="run"><svg viewBox="0 0 22 26"><path class="fl" d="M11 1c1 4 6 7 6 13a6 6 0 0 1-12 0c0-3 1.5-5 3-6.5 0 2 1 3.5 2.5 3.5C9 8 10 4 11 1z"/><path class="fi" d="M11 13c1.5 2 3 3 3 5a3 3 0 0 1-6 0c0-1.5 1.5-3 3-5z"/></svg><span>٠</span></div>
+    <div class="xpp"><b>٠</b>XP</div>
+  </div>
+  <div id="stage"></div>
+  <div class="foot"><button class="btn" id="go"></button></div>
+  <div class="sheet" id="sheet"><div class="sh-h"><span class="sh-i"></span><span class="sh-t"></span></div><div class="sh-l"></div><button class="btn" id="shgo">المتابعة</button></div>
+  <div class="toast" id="toast"></div>
+</div>
+<script>
+(function () {
+  const ar = n => String(n).replace(/-/g, '−').replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const shuf = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const NS = 'http://www.w3.org/2000/svg';
+
+  function anim(el, kf, o) {
+    if (!el || !el.animate) return null;
+    o = Object.assign({ fill: 'none' }, o);
+    if (RM) { o.duration = 1; o.delay = 0; }
+    return el.animate(kf, o);
+  }
+  const popIn = (el, d = 0) => anim(el, [{ opacity: 0, scale: '.3' }, { opacity: 1, scale: '1.12', offset: .55 }, { scale: '.96', offset: .8 }, { opacity: 1, scale: '1' }], { duration: 420, delay: d, easing: 'ease-out', fill: 'backwards' });
+  const rise = (el, d = 0) => anim(el, [{ opacity: 0, translate: '0 16px' }, { opacity: 1, translate: '0 0' }], { duration: 340, delay: d, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' });
+  const shake = el => anim(el, [{ translate: '0 0' }, { translate: '-9px 0' }, { translate: '8px 0' }, { translate: '-5px 0' }, { translate: '3px 0' }, { translate: '0 0' }], { duration: 380 });
+  const sink = el => anim(el, [{ translate: '0 0', scale: '1 1' }, { translate: '0 5px', scale: '1.03 .94', offset: .3 }, { translate: '0 0', scale: '1 1' }], { duration: 300 });
+  const stamp = (el, d = 0) => anim(el, [{ opacity: 0, scale: '1.6', translate: '0 -10px' }, { opacity: 1, scale: '.92 1.04', translate: '0 0', offset: .5 }, { scale: '1.05 .92', offset: .72 }, { opacity: 1, scale: '1', translate: '0 0' }], { duration: 440, delay: d, easing: 'ease-in', fill: 'backwards' });
+  const flipIn = (el, d = 0) => anim(el, [{ opacity: 0, transform: 'perspective(700px) rotateY(-88deg) scale(.9)' }, { opacity: 1, transform: 'perspective(700px) rotateY(12deg) scale(1.02)', offset: .6 }, { transform: 'perspective(700px) rotateY(-4deg) scale(1, .97)', offset: .82 }, { opacity: 1, transform: 'perspective(700px) rotateY(0) scale(1)' }], { duration: 620, delay: d, easing: 'ease-out', fill: 'backwards' });
+  const JUMP = [[0, 0, 'cubic-bezier(.01,0,0,1)'], [.1277, 7.3, 'linear'], [.1538, -12.7, 'cubic-bezier(.1,.53,0,.92)'], [.3585, -23.6, 'cubic-bezier(1,-.05,.95,.65)'], [.6923, 4.4, 'cubic-bezier(.09,.75,.4,.95)'], [.8723, -7.3, 'cubic-bezier(.89,-.08,.95,.79)'], [1, 0]];
+  const SQ = [[0, 1, 1, 'cubic-bezier(.01,0,0,1)'], [.1509, 1.08, .86, 'linear'], [.1818, .9, 1.06, 'cubic-bezier(.01,0,.15,1)'], [.4236, 1, 1, 'cubic-bezier(.85,0,.94,.72)'], [.7873, 1, 1.06, 'linear'], [.8182, 1.05, .93, 'cubic-bezier(.1,.47,.01,1)'], [1, 1, 1]];
+  function jump(els, cls = 'ok') {
+    [].concat(els).filter(Boolean).forEach((c, i) => {
+      const D = i * 50;
+      if (cls) setTimeout(() => c.classList.add(cls), D + 100);
+      anim(c, JUMP.map(([o, y, e]) => Object.assign({ offset: o, translate: `0 ${y}px` }, e ? { easing: e } : {})), { duration: 650, delay: D });
+      anim(c, SQ.map(([o, x, y, e]) => Object.assign({ offset: o, scale: `${x} ${y}` }, e ? { easing: e } : {})), { duration: 550, delay: D });
+    });
+  }
+  const hop = (el, h = 10, d = 0) => anim(el, [{ translate: '0 0', scale: '1 1' }, { translate: '0 2px', scale: '1.08 .9', offset: .14 }, { translate: `0 -${h}px`, scale: '.95 1.06', offset: .46 }, { translate: '0 1px', scale: '1.06 .93', offset: .78 }, { translate: '0 0', scale: '1 1' }], { duration: 480, delay: d, easing: 'ease-out' });
+  function fit(row) {
+    if (!row) return;
+    row.style.fontSize = '';
+    const avail = row.clientWidth; if (!avail) return;
+    const cs = getComputedStyle(row), kids = Array.from(row.children);
+    const need = cs.display.includes('flex') && kids.length
+      ? kids.reduce((a, k) => a + k.offsetWidth, 0) + (parseFloat(cs.columnGap) || 0) * (kids.length - 1) + (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0)
+      : row.scrollWidth;
+    if (need > avail + 1) row.style.fontSize = (parseFloat(cs.fontSize) * avail / need * .95).toFixed(2) + 'px';
+  }
+  const fitAll = root => $$('.big, .rc-eq, .rline, .said, .cap, .rc-out', root).forEach(fit);
+
+  let AC = null;
+  function ac() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } } if (AC.state === 'suspended') AC.resume(); return AC; }
+  function tone(f, d = .12, type = 'sine', g = .1, at = 0) {
+    const a = ac(); if (!a) return;
+    const t = a.currentTime + at, o = a.createOscillator(), v = a.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(g, t + .01); v.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(v); v.connect(a.destination); o.start(t); o.stop(t + d + .03);
+  }
+  const SCALE = [523, 587, 659, 784, 880, 1047, 1175, 1319, 1568, 1760, 2093];
+  const note = k => tone(SCALE[Math.max(0, Math.min(SCALE.length - 1, k))], .18, 'triangle', .09);
+  const tick = () => tone(720, .05, 'square', .02);
+  const good = () => { tone(784, .12, 'triangle', .09); tone(1175, .22, 'triangle', .08, .08); };
+  const bad = () => { tone(230, .14, 'sawtooth', .04); tone(190, .2, 'sawtooth', .04, .09); };
+  const thud = () => { tone(150, .14, 'sine', .2); tone(90, .1, 'triangle', .08); };
+  const chime = () => { [0, 4, 7].forEach((k, i) => tone(SCALE[k + 2], .3, 'triangle', .07, i * .07)); };
+  const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+
+  const ICON = {
+    rep: '<svg viewBox="0 0 24 24" fill="#fff">' + [6, 12, 18].map(y => [6, 12, 18].map(x => `<circle cx="${x}" cy="${y}" r="2.6"/>`).join('')).join('') + '</svg>',
+    gauss: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M4 18Q12 0 20 18"/><path d="M8 18Q12 8 16 18"/><circle cx="4" cy="19" r="1.6" fill="#fff"/><circle cx="20" cy="19" r="1.6" fill="#fff"/></svg>',
+    none: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    again: '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12a7 7 0 1 1-2.1-5"/><path d="M19 4v4.5h-4.5"/></svg>',
+    clock: '<svg viewBox="0 0 30 30"><circle cx="15" cy="16" r="12" fill="#1CB0F6"/><circle cx="15" cy="16" r="8.5" fill="#fff"/><path d="M15 11v5.5l3.5 2" stroke="#1899D6" stroke-width="2.6" fill="none" stroke-linecap="round"/><rect x="12" y="1.5" width="6" height="3.4" rx="1.7" fill="#1899D6"/></svg>'
+  };
+  const OK_I = '<svg viewBox="0 0 24 24" fill="none" stroke="#58A700" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  const NO_I = '<svg viewBox="0 0 24 24" fill="none" stroke="#EA2B2B" stroke-width="3.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+
+  const DV = '<svg viewBox="0 0 12 12" aria-hidden="true"><rect x="1" y="5.15" width="10" height="1.7" rx=".85"/><circle cx="6" cy="2.2" r="1.35"/><circle cx="6" cy="9.8" r="1.35"/></svg>';
+  function dv(root) {
+    if (!root || !root.ownerDocument) return;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => n.nodeValue.includes('÷') && n.parentElement && !n.parentElement.closest('svg, .dvw') ? 1 : 3 });
+    const list = []; while (w.nextNode()) list.push(w.currentNode);
+    list.forEach(n => {
+      const f = document.createDocumentFragment();
+      n.nodeValue.split('÷').forEach((s, i) => {
+        if (i) { const sp = document.createElement('span'); sp.className = 'dvw'; sp.innerHTML = DV + '<span class="sr">÷</span>'; f.appendChild(sp); }
+        if (s) f.appendChild(document.createTextNode(s));
+      });
+      n.replaceWith(f);
+    });
+  }
+  new MutationObserver(ms => ms.forEach(m => {
+    if (m.type === 'characterData') return dv(m.target.parentElement);
+    m.addedNodes.forEach(n => dv(n.nodeType === 1 ? n : n.parentElement));
+  })).observe(document.getElementById('app'), { childList: true, subtree: true, characterData: true });
+
+  const NAME = { rep: 'العدد × مرّاته', gauss: 'حيلة الطرفين' };
+  const TELL = { rep: 'نفس العدد يتكرر', gauss: 'من ١ ورا بعض' };
+  const opTok = t => t === '(' ? '<span class="op" dir="ltr">)</span>' : t === ')' ? '<span class="op" dir="ltr">(</span>' : `<span class="op">${t}</span>`;
+  const sumG = L => L <= 6 ? Array.from({ length: L }, (_, i) => ar(i + 1)).join(' + ') : `١ + ٢ + ٣ + … + ${ar(L)}`;
+  const sumR = (a, n) => Array(n).fill(ar(a)).join(' + ');
+  const toks = s => s.split(' ').map(t => /^[+×÷=…←]$/.test(t) ? `<span class="op">${t}</span>` : `<span class="n">${t}</span>`).join('');
+
+  function repPic(a, n, o = {}) {
+    const s = Math.max(10, Math.min(16, Math.floor(150 / Math.max(a, n))));
+    const r = (s * .33).toFixed(1), gw = a * s, gh = n * s, xg = 48, yg = 30;
+    const W = xg + gw + 70, H = yg + gh + 8;
+    const row = j => Array.from({ length: a }, (_, i) => `<circle cx="${xg + i * s + s / 2}" cy="${yg + j * s + s / 2}" r="${r}"/>`).join('');
+    const rows = Array.from({ length: n }, (_, j) => `<g class="rw" data-r="${j}">${row(j)}</g>`).join('');
+    const allO = Array.from({ length: n }, (_, j) => row(j)).join('');
+    const xs = xg + gw + 8, mid = yg + gh / 2;
+    return `<svg viewBox="0 0 ${W} ${H}" style="direction:rtl">
+      <g class="dot">${rows}</g>
+      <g class="pp ps" data-p="s"><g class="odot">${allO}</g><rect x="${xg - 3}" y="${yg - 3}" width="${gw + 6}" height="${gh + 6}" rx="8" fill="none" class="brk-o" stroke-width="2.4" stroke-dasharray="5 4"/><text x="${xg - 10}" y="${mid + 6}" text-anchor="start" font-size="17" class="t-o">${ar(a * n)}</text></g>
+      <g class="pp pa" data-p="a"><g class="bdot">${row(0)}</g><path d="M${xg + 2} ${yg - 5}v-5h${gw - 4}v5" fill="none" class="brk-b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="${xg + gw / 2}" y="${yg - 14}" text-anchor="middle" font-size="15" class="t-b">${ar(a)}</text></g>
+      <g class="pp pn" data-p="n"><g class="pdot">${Array.from({ length: n }, (_, j) => `<circle cx="${xg + (a - 1) * s + s / 2}" cy="${yg + j * s + s / 2}" r="${r}"/>`).join('')}</g><path d="M${xs} ${yg + 2}h5V${yg + gh - 2}h-5" fill="none" class="brk-p" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><text x="${xs + 11}" y="${mid + 5}" text-anchor="end" font-size="14" class="t-p">${ar(n)} مرات</text></g>
+    </svg>`;
+  }
+  function gaussPic(L, o = {}) {
+    const tw = L > 10 ? 20 : 24, gap = 4, pad = 8, step = tw + gap, half = L / 2;
+    const W = pad * 2 + L * step - gap, ty = 86, th = 28, H = ty + th + 4;
+    const cx = i => pad + (L - i) * step + tw / 2;
+    const hOf = i => half === 1 ? 40 : 14 + (half - i) * (54 / (half - 1));
+    let tiles = '', arcs0 = '', arcs1 = '', bdg = '';
+    for (let i = 1; i <= L; i++) tiles += `<rect x="${cx(i) - tw / 2}" y="${ty}" width="${tw}" height="${th}" rx="7" class="tl-b" stroke-width="2"/><text x="${cx(i)}" y="${ty + 20}" text-anchor="middle" font-size="${tw > 22 ? 15 : 13}" class="t-i">${ar(i)}</text>`;
+    for (let i = 1; i <= half; i++) {
+      const x1 = cx(i), x2 = cx(L + 1 - i), y = ty - 3, h = hOf(i);
+      const d = `M${x1} ${y}C${x1} ${y - h} ${x2} ${y - h} ${x2} ${y}`;
+      arcs0 += `<path d="${d}" class="arc0" stroke-width="2.4"/>`;
+      arcs1 += `<path d="${d}" class="arc1" stroke-width="3" stroke-linecap="round"/>`;
+      const t = .16, u = 1 - t, bx = u * u * u * x1 + 3 * u * u * t * x1 + 3 * u * t * t * x2 + t * t * t * x2, by = u * u * u * y + 3 * u * u * t * (y - h) + 3 * u * t * t * (y - h) + t * t * t * y;
+      bdg += `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="8.5" class="bg-g"/><text x="${bx.toFixed(1)}" y="${(by + 4.5).toFixed(1)}" text-anchor="middle" font-size="12" class="t-g">${ar(i)}</text>`;
+    }
+    const topY = ty - 3 - .75 * hOf(1);
+    return `<svg viewBox="0 0 ${W} ${H}">
+      ${o.noArcs ? '' : `<g>${arcs0}</g>`}${tiles}
+      <g class="pp pL" data-p="L"><rect x="${cx(L) - tw / 2}" y="${ty}" width="${tw}" height="${th}" rx="7" class="tl-on" stroke-width="2.4"/><text x="${cx(L)}" y="${ty + 20}" text-anchor="middle" font-size="${tw > 22 ? 15 : 13}" class="t-b">${ar(L)}</text></g>
+      <g class="pp pL1" data-p="L1">${arcs1}<text x="${W / 2}" y="${(topY - 6).toFixed(1)}" text-anchor="middle" font-size="14" class="t-p">${ar(L + 1)}</text></g>
+      <g class="pp ph" data-p="h">${bdg}</g>
+    </svg>`;
+  }
+
+  const CARD = {
+    rep: v => ({ k: 'rep', no: 1, pic: repPic(v.a, v.n),
+      eq: [{ p: 's', c: 'o', t: 'المجموع' }, '=', { p: 'a', c: 'b', t: 'العدد' }, '×', { p: 'n', c: 'p', t: 'عدد مرات تكراره' }],
+      say: { s: `<span class="ch k-orange">المجموع</span> = كل النقاط = ${ar(v.a * v.n)}`, a: `<span class="ch k-blue">العدد</span> = ${ar(v.a)} — في كل صف`, n: `تكرر <span class="ch k-purple">${ar(v.n)} مرات</span> — ${ar(v.n)} صفوف` },
+      fin: `${ar(v.a)} × ${ar(v.n)} = ${ar(v.a * v.n)}` }),
+    gauss: v => ({ k: 'gauss', no: 2, pic: gaussPic(v.L), pre: 'من ١ إلى أي عدد:',
+      eq: [{ p: 'L', c: 'b', t: 'آخر عدد' }, '×', '(', { p: 'L1', c: 'p', t: 'آخر عدد + ١' }, ')', { p: 'h', c: 'g', t: '÷ ٢' }],
+      say: { L: `<span class="ch k-blue">آخر عدد</span> = ${ar(v.L)}`, L1: `<span class="ch k-purple">${ar(v.L)} + ١ = ${ar(v.L + 1)}</span> — مجموع كل زوج`, h: `<span class="ch k-gold">÷ ٢</span> ← ${ar(v.L)} أعداد = ${ar(v.L / 2)} أزواج` },
+      fin: `${ar(v.L)} × ${ar(v.L + 1)} ÷ ٢ = ${ar(v.L * (v.L + 1) / 2)}` })
+  };
+  function ruleCard(C, fresh) {
+    return `<div class="rc${C.k === 'gauss' ? ' g' : ''}" data-k="${C.k}">
+      <div class="rc-h"><span class="rc-ic">${ICON[C.k]}</span><div class="rc-t"><small>قاعدة ${ar(C.no)}</small><b>${NAME[C.k]}</b></div>${fresh ? '<span class="rc-new">جديدة!</span>' : ''}<button class="rc-re" title="شوفها مرة ثانية">${ICON.again}</button></div>
+      <div class="rc-pic">${C.pic}</div>
+      <div class="rc-out"></div>
+      ${C.pre ? `<div class="rc-pre">${C.pre}</div>` : ''}
+      <div class="rc-eq">${C.eq.map(t => typeof t === 'string' ? opTok(t) : `<button class="tk c-${t.c}" data-p="${t.p}">${t.t}</button>`).join('')}</div>
+      <div class="rc-hint">اضغط أي كلمة — تشوفها في الصورة</div>
+    </div>`;
+  }
+  function liveCard(el, C, delay = 0) {
+    const tks = $$('.tk', el), out = $('.rc-out', el), parts = $$('.pp', el);
+    let tm = [];
+    const later = (f, ms) => { const id = setTimeout(f, ms); tm.push(id); timers.push(id); };
+    const stop = () => { tm.forEach(clearTimeout); tm = []; };
+    const focus = p => {
+      el.classList.add('foc');
+      tks.forEach(t => t.classList.toggle('f', t.dataset.p === p));
+      parts.forEach(x => x.classList.toggle('on', x.dataset.p === p));
+      out.innerHTML = C.say[p]; fit(out);
+      const tk = tks.find(t => t.dataset.p === p); tk.classList.add('lit'); hop(tk, 8);
+      const part = parts.find(x => x.dataset.p === p); if (part) anim(part, [{ opacity: 0 }, { opacity: 1 }], { duration: 260 });
+    };
+    const settle = () => {
+      el.classList.remove('foc'); tks.forEach(t => { t.classList.remove('f'); t.classList.add('lit'); });
+      parts.forEach(x => x.classList.add('on'));
+      out.innerHTML = `<span style="color:var(--ink)">${C.fin}</span>`; fit(out);
+      el.classList.add('ready');
+    };
+    const play = (d = 0) => {
+      stop(); el.classList.remove('ready');
+      const order = C.eq.filter(t => typeof t !== 'string');
+      order.forEach((t, i) => later(() => { focus(t.p); note(3 + i * 2); buzz(8); }, d + i * 760));
+      later(() => { settle(); chime(); tks.forEach((t, i) => hop(t, 6, i * 60)); }, d + order.length * 760 + 120);
+    };
+    tks.forEach(t => t.addEventListener('click', () => { stop(); tick(); focus(t.dataset.p); el.classList.add('ready'); later(settle, 2200); }));
+    $('.rc-re', el).addEventListener('click', () => { tick(); play(0); });
+    play(delay);
+  }
+
+  function stairsHtml(L) {
+    const W = Math.min(230, 12 * L), H = Math.round(W * (L + 1) / L * .82), cw = W / L, u = H / (L + 1);
+    let r = '';
+    for (let j = 1; j <= L; j++) {
+      const x = W - j * cw, gp = cw > 8 ? 1.2 : .6;
+      r += `<rect class="sb" data-j="${j}" x="${(x + gp / 2).toFixed(2)}" y="${(H - j * u).toFixed(2)}" width="${(cw - gp).toFixed(2)}" height="${(j * u).toFixed(2)}" rx="${Math.min(3, cw / 4).toFixed(1)}"/>`;
+      r += `<rect class="so" data-j="${j}" x="${(x + gp / 2).toFixed(2)}" y="0" width="${(cw - gp).toFixed(2)}" height="${((L + 1 - j) * u - gp).toFixed(2)}" rx="${Math.min(3, cw / 4).toFixed(1)}"/>`;
+    }
+    return `<div class="stw"><div class="sbody"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${r}</svg></div>
+      <div class="sside hid"><i></i><span class="ch k-purple">${ar(L + 1)}</span></div>
+      <div class="sbot hid"><i></i><span class="ch k-blue">${ar(L)}</span></div></div>`;
+  }
+
+  const POOL = [12, 14, 16, 18, 22, 24, 26, 28, 30, 32, 36, 40];
+  let USED;
+  const freshL = (pool = POOL) => { const c = pool.filter(x => !USED.has(x)); const L = pick(c.length ? c : pool); USED.add(L); return L; };
+  const G = {
+    gauss(L) {
+      const ans = L * (L + 1) / 2;
+      return { k: 'gauss', L, ans, long: sumG(L), fast: `${ar(L)} × ${ar(L + 1)} ÷ ٢`, opts: shuf([ans, L * L / 2, L * (L + 1)]),
+        why: { [L * L / 2]: { t: 'نسيت + ١', s: 'plus', l: `بعد ${ar(L)} يجي <b>${ar(L + 1)}</b> — آخر عدد + ١` }, [L * (L + 1)]: { t: 'نسيت ÷ ٢', s: 'half', l: `${ar(L)} × ${ar(L + 1)} = ${ar(L * (L + 1))} — هذا ضعف الجواب` } } };
+    },
+    rep(a, n) {
+      const ans = a * n;
+      return { k: 'rep', a, n, ans, long: sumR(a, n), fast: `${ar(a)} × ${ar(n)}`, opts: shuf([ans, a + n, a * (n + 1)]),
+        why: { [a + n]: { t: 'جمعت بدل ما تضرب', l: `${ar(a)} تكرر ${ar(n)} مرات ← نضرب` }, [a * (n + 1)]: { t: 'عدّ المرات', l: `${ar(n)} مرات مو ${ar(n + 1)}` } } };
+    },
+    freshRep() {
+      for (let k = 0; k < 20; k++) { const a = pick([6, 7, 9, 12, 15, 25]), n = rnd(4, 7), s = Math.min(a, n) + 'x' + Math.max(a, n); if (!USED.has(s) && a !== n) { USED.add(s); return [a, n]; } }
+      return [7, 6];
+    },
+    none(a0, avoid) {
+      const a = a0 || pick([5, 6, 8, 9].filter(x => x !== avoid)), n = a0 ? 4 : 5, list = Array(n).fill(a), at = a0 ? 2 : rnd(1, n - 2), odd = a0 ? a + 1 : a + pick([1, -1]);
+      list[at] = odd; return { k: 'none', a, long: list.map(ar).join(' + '), odd, mark: [ar(odd)] };
+    },
+    gap(avoid) {
+      for (let k = 0; k < 20; k++) {
+        const L = pick([6, 7]), m = rnd(3, L - 2); if (m === avoid) continue;
+        const list = []; for (let i = 1; i <= L; i++) if (i !== m) list.push(i);
+        return { k: 'none', long: list.map(ar).join(' + '), gap: m, mark: [ar(m - 1), ar(m + 1)] };
+      }
+      return G.gap();
+    }
+  };
+  const WORD = {
+    gauss: [v => `هرم علب: فوق علبة وحدة، تحتها <b>٢</b>، تحتها <b>٣</b>… وآخر صف تحت فيه <b>${ar(v.L)}</b>. كم علبة في الهرم؟`,
+            v => `أول يوم قريت صفحة، ثاني يوم صفحتين، ثالث يوم ٣… لين اليوم <b>${ar(v.L)}</b>. كم صفحة قريت؟`],
+    rep: [v => `تحوّش <b>${ar(v.a)}</b> ريال كل يوم لمدة <b>${ar(v.n)}</b> أيام. كم صار معك؟`,
+          v => `في القاعة <b>${ar(v.n)}</b> صفوف، وفي كل صف <b>${ar(v.a)}</b> ${v.a > 10 ? 'كرسي' : 'كراسي'}. كم كرسي؟`]
+  };
+
+  const app = $('#app'), go = $('#go'), sheet = $('#sheet'), shgo = $('#shgo'), toastEl = $('#toast');
+  let ST, Q, qi, phase, timers = [], prog = 0, again = false;
+  function reset() {
+    ST = { xp: 0, run: 0, best: 0, shield: true, since: 0, right: 0, graded: 0, miss: { rep: 0, gauss: 0 }, revMiss: { rep: 0, gauss: 0 }, t0: 0, t1: 0, r0: 0, r1: 0 };
+    USED = new Set([8, 10, 14, 20, 40, 100, '5x9', '6x9', '5x7', '4x4', 12, 24, 30]); prog = 0; setRun(); $('.xpp b').textContent = ar(0);
+  }
+  const T = (fn, ms) => { const id = setTimeout(fn, ms); timers.push(id); return id; };
+  function clear() { timers.forEach(clearTimeout); timers = []; }
+  function setBar() { const p = Q ? qi / Q.length : 0; prog = Math.max(prog, p); $('.bar i').style.width = (prog * 100) + '%'; }
+  function setRun(pop) {
+    const c = $('.run'); c.classList.toggle('hot', ST.run >= 2); $('span', c).textContent = ar(ST.run);
+    $('.shd').classList.toggle('off', !ST.shield);
+    if (pop) hop(c, 8);
+  }
+  function xpUp() {
+    const p = $('.xpp'); $('b', p).textContent = ar(ST.xp); hop(p, 6);
+    const f = document.createElement('span'); f.className = 'xpf'; f.textContent = '+' + ar(10); p.appendChild(f);
+    anim(f, [{ opacity: 0, translate: '50% 6px' }, { opacity: 1, translate: '50% -14px', offset: .35 }, { opacity: 0, translate: '50% -26px' }], { duration: 900, easing: 'ease-out', fill: 'forwards' });
+    setTimeout(() => f.remove(), RM ? 300 : 950);
+  }
+  function choose(root, q, onCheck, label = 'تحقق') {
+    let cur = null;
+    const h = e => { const o = e.target.closest(q); if (!o || o.disabled || !root.contains(o)) return; $$(q, root).forEach(x => x.classList.toggle('sel', x === o)); cur = o; tick(); enable(true); };
+    root.addEventListener('click', h);
+    btn(label, () => { if (!cur) return; root.removeEventListener('click', h); $$(q, root).forEach(x => x.disabled = true); cur.classList.remove('sel'); onCheck(cur); }, false);
+  }
+  function toast(t) { toastEl.textContent = t; toastEl.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => { toastEl.classList.remove('on'); setTimeout(() => { if (!toastEl.classList.contains('on')) toastEl.textContent = ''; }, 350); }, 1800); }
+  function score(ok, rule) {
+    ST.graded++;
+    if (ok) {
+      ST.right++; ST.xp += 10; ST.run++; ST.best = Math.max(ST.best, ST.run); xpUp();
+      if (!ST.shield && ++ST.since >= 3) { ST.shield = true; T(() => { toast('رجع لك الدرع'); hop($('.shd'), 8); }, 300); }
+      else if (ST.run % 5 === 0) T(() => { toast(`${ar(ST.run)} ورا بعض!`); note(8); }, 300);
+      setRun(true);
+    } else {
+      if (rule && ST.miss[rule] != null) { ST.miss[rule]++; if (phase === 'review') ST.revMiss[rule]++; }
+      if (!ST.run) {} else if (ST.shield) { ST.shield = false; ST.since = 0; T(() => { toast('الدرع حمى سلسلتك'); shake($('.shd')); }, 300); }
+      else ST.run = Math.floor(ST.run / 2);
+      setRun();
+    }
+  }
+  function frame(o) {
+    clear();
+    app.classList.toggle('bare', !!o.bare);
+    app.classList.toggle('nofoot', !!o.nofoot);
+    sheet.classList.remove('on', 'bad');
+    const st = $('#stage'), fr = st.cloneNode(false); st.replaceWith(fr);
+    if (o.kick != null && again) o.kick = 'رجعت لك — بأرقام جديدة';
+    fr.innerHTML = (o.kick != null ? `<div class="kick">${o.kick}</div><div class="ttl">${o.title || ''}</div>` : '') + `<div class="body"></div>`;
+    if (o.kick != null) { rise($('.kick', fr)); rise($('.ttl', fr), 60); }
+    setBar();
+    return $('.body', fr);
+  }
+  function btn(text, fn, on = true, cls = '') {
+    go.textContent = text; go.disabled = !on; go.className = 'btn' + (cls ? ' ' + cls : '');
+    const at = performance.now();
+    go.onclick = () => { if (go.disabled || !fn || performance.now() - at < 400) return; go.disabled = true; tick(); fn(); };
+  }
+  const enable = (on = true) => { go.disabled = !on; };
+  function showSheet(ok, title, line, onCont, contText) {
+    sheet.classList.toggle('bad', !ok);
+    $('.sh-i', sheet).innerHTML = ok ? OK_I : NO_I;
+    $('.sh-t', sheet).textContent = title;
+    $('.sh-l', sheet).innerHTML = line || '';
+    shgo.textContent = contText || 'المتابعة';
+    shgo.className = 'btn' + (ok ? '' : ' red');
+    const at = performance.now();
+    shgo.onclick = () => { if (performance.now() - at < 450) return; shgo.onclick = null; tick(); sheet.classList.remove('on'); onCont ? onCont() : next(); };
+    requestAnimationFrame(() => sheet.classList.add('on'));
+    if (ok) { good(); buzz(20); } else { bad(); buzz([30, 40, 30]); }
+  }
+  const PRAISE = ['ممتاز!', 'صح!', 'كفو!', 'عليك نور!', 'بالضبط!'];
+  const after = (...steps) => Q.splice(qi + 1, 0, ...steps);
+  const comeback = spec => { if (phase === 'lesson' && !(Q[qi] && Q[qi].again)) Q.push(Object.assign({}, spec, { again: true })); };
+  function next() {
+    qi++;
+    if (qi >= Q.length) { if (phase === 'lesson') return later(); if (phase === 'review') return end(); }
+    run(Q[qi]);
+  }
+  function run(spec) { again = !!spec.again; ITEMS[spec.t](spec); }
+
+  function pickChoices(root, v, onCheck) {
+    let sel = null;
+    root.addEventListener('click', e => {
+      const o = e.target.closest('.opt[data-v]'); if (!o || o.disabled) return;
+      $$('.opt[data-v]', root).forEach(x => x.classList.toggle('sel', x === o)); sel = o; tick(); enable(true);
+    });
+    btn('تحقق', () => {
+      if (!sel) return;
+      const val = +sel.dataset.v, ok = val === v.ans;
+      $$('.opt[data-v]', root).forEach(x => x.disabled = true);
+      sel.classList.remove('sel');
+      if (ok) jump(sel); else { sel.classList.add('no'); shake(sel); T(() => { const r = $(`.opt[data-v="${v.ans}"]`, root); if (r) r.classList.add('ok'); }, 250); }
+      onCheck(ok, val);
+    }, false);
+  }
+
+  const ITEMS = {
+    rule1(spec) {
+      const v = spec.grid ? { a: 7, n: 5 } : { a: 9, n: 6 }, ans = v.a * v.n;
+      const b = frame({ kick: spec.grid ? 'بأرقام جديدة' : 'قاعدة ١ من ٢', title: spec.grid ? 'الحين بدون جمع: <b>كم المجموع؟</b>' : 'كم <b>المجموع</b>؟' });
+      b.innerHTML = (spec.grid ? `<div class="card gridcard">${repPic(9, 6)}<div class="cap"></div></div>` : '') +
+        `<div class="qwrap"><div class="card"><div class="big sum">${toks(sumR(v.a, v.n))}<span class="op">=</span><span class="q">؟</span></div></div>
+        <div class="opts c3 os">${shuf([ans, v.a * (v.n - 1), v.a + v.n]).map(x => `<button class="opt" data-v="${x}">${ar(x)}</button>`).join('')}</div></div>
+        <div class="rslot"></div>`;
+      fitAll(b);
+      const qw = $('.qwrap', b);
+      if (spec.grid) {
+        const gc = $('.gridcard', b), rows = $$('.dot .rw', gc), cap = $('.cap', gc);
+        qw.style.visibility = 'hidden';
+        rows.forEach(r => r.style.opacity = 0);
+        rows.forEach((r, i) => T(() => { r.style.opacity = 1; popIn(r); note(i + 1); cap.innerHTML = `<span class="ch k-blue">٩</span> في كل صف — <span class="ch k-purple">${ar(i + 1)}</span> ${i ? 'صفوف' : 'صف'}`; fit(cap); }, 200 + i * 260));
+        T(() => { $$('.pp', gc).forEach(p => p.classList.add('on')); cap.innerHTML = `<span class="ch k-blue">٩</span> × <span class="ch k-purple">٦</span> = <span class="ch k-orange">٥٤</span> — بدل ما تجمع ٦ مرات`; fit(cap); thud(); stamp(cap); }, 200 + 6 * 260 + 150);
+        T(() => { qw.style.visibility = ''; rise(qw); }, 2400);
+      } else rise($('.card', b));
+      const reveal = o => {
+        $$('.os .opt', b).forEach(x => { x.disabled = true; x.classList.toggle('dim', x !== o); });
+        jump(o); good(); buzz(20);
+        const row = $('.sum', b), kids = Array.from(row.children), r0 = kids[0].getBoundingClientRect();
+        T(() => kids.slice(1).forEach((k, i) => { const r = k.getBoundingClientRect(); anim(k, [{ translate: '0 0', opacity: 1 }, { translate: `${r0.left - r.left}px 0`, opacity: 0 }], { duration: 360, delay: i * 18, easing: 'cubic-bezier(.5,0,.8,.4)', fill: 'forwards' }); }), 380);
+        T(() => {
+          row.innerHTML = `<span class="ch k-blue">${ar(v.a)}</span><span class="op">×</span><span class="ch k-purple">${ar(v.n)}</span><span class="op">=</span><span class="ch k-orange">${ar(ans)}</span>`;
+          fit(row); Array.from(row.children).forEach((x, i) => stamp(x, i * 90)); T(thud, 250);
+        }, 820);
+        T(() => {
+          const gc = $('.gridcard', b); if (gc) gc.remove();
+          $('.os', b).remove();
+          const slot = $('.rslot', b), C = CARD.rep(v);
+          slot.innerHTML = ruleCard(C, true); const el = slot.firstElementChild; fitAll(slot);
+          flipIn(el); liveCard(el, C, 650); T(() => toast('كرت جديد لمجموعتك!'), 500);
+          btn('المتابعة', next);
+          T(() => el.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'nearest' }), 700);
+        }, 1350);
+      };
+      const why = { [v.a * (v.n - 1)]: `الـ${ar(v.a)} مكتوبة <b>${ar(v.n)}</b> مرات مو ${ar(v.n - 1)}`, [v.a + v.n]: `جمعت ${ar(v.a)} + ${ar(v.n)} — بس الـ${ar(v.a)} <b>تكررت ${ar(v.n)} مرات</b>` };
+      const ask = () => choose(b, '.os .opt', o => {
+        const val = +o.dataset.v;
+        if (val === ans) { score(true, 'rep'); return reveal(o); }
+        o.classList.add('no'); shake(o); score(false, 'rep');
+        if (spec.grid) T(() => showSheet(false, `الجواب: ${ar(ans)}`, `${why[val]}<br>${ar(v.a)} × ${ar(v.n)} = <b>${ar(ans)}</b>`, () => { o.classList.remove('no'); reveal($(`.os .opt[data-v="${ans}"]`, b)); }), 450);
+        else T(() => showSheet(false, 'عدّها مرة ثانية', why[val], () => run({ t: 'rule1', grid: true }), 'شوفها بالصورة'), 450);
+      });
+      if (spec.grid) { btn('…', null, false); T(ask, 2400); } else ask();
+    },
+
+    hook() {
+      const b = frame({ kick: 'قاعدة ٢ من ٢', title: 'كم المجموع؟ <b>خمّن — لا تحسب</b>' });
+      b.innerHTML = `<div class="card"><div class="big">${toks('١ + ٢ + ٣ + … + ١٠٠')}</div></div>
+        <div class="opts c3">${shuf([5050, 10000, 5000]).map(x => `<button class="opt" data-v="${x}">${ar(x)}</button>`).join('')}</div><div class="aft"></div>`;
+      fitAll(b); rise($('.card', b));
+      choose(b, '.opt', o => {
+        const p = +o.dataset.v;
+        $$('.opt', b).forEach(x => { const val = +x.dataset.v; if (val === 5050) x.classList.add('ok'); else if (val === p) x.classList.add('sel'); else x.classList.add('dim'); });
+        T(() => { jump($('.opt[data-v="5050"]', b), ''); thud(); }, p === 5050 ? 0 : 200);
+        const a = $('.aft', b);
+        a.innerHTML = `<div class="say">${p === 5050 ? 'صح!' : 'الجواب'} <span class="ch k-orange">٥٠٥٠</span><br>بثانيتين؟ <span style="color:var(--blue)">فيه حيلة.</span></div>`;
+        rise(a.firstChild, 300);
+        T(() => btn('وريني الحيلة', next), 450);
+      }, 'خمّن');
+    },
+
+    pairs() {
+      const L = 10, half = 5;
+      const b = frame({ kick: 'اكتشفها', title: 'زوّج <b>الطرفين</b> — اضغط ١' });
+      b.innerHTML = `<div class="card pw"><svg class="arcs"></svg><div class="nums">${Array.from({ length: L }, (_, i) => `<button class="nt" data-x="${i + 1}">${ar(i + 1)}</button>`).join('')}</div></div>
+        <div class="pchips"></div><div class="aft"></div>`;
+      rise($('.card', b));
+      btn('زوّج كل الأطراف', null, false);
+      const card = $('.card', b), svg = $('.arcs', card);
+      const mark = () => { $$('.nt', card).forEach(x => x.classList.remove('next')); const n = $$('.nt:not(.pr)', card).map(x => +x.dataset.x); if (n.length) $(`.nt[data-x="${Math.min(...n)}"]`, card).classList.add('next'); };
+      mark();
+      let k = 0;
+      card.addEventListener('click', e => {
+        const t = e.target.closest('.nt'); if (!t || t.classList.contains('pr') || k >= half) return;
+        const x = +t.dataset.x, lo = Math.min(x, L + 1 - x), hi = L + 1 - lo;
+        const A = $(`.nt[data-x="${lo}"]`, card), B = $(`.nt[data-x="${hi}"]`, card), cls = 'p' + (k % 5);
+        [A, B].forEach((z, i) => { z.classList.add('pr', cls); z.disabled = true; hop(z, 10, i * 60); });
+        const cr = card.getBoundingClientRect(), ra = A.getBoundingClientRect(), rb = B.getBoundingClientRect();
+        const x1 = ra.left + ra.width / 2 - cr.left, x2 = rb.left + rb.width / 2 - cr.left, y = ra.top - cr.top - 4;
+        const h = 16 + (half - lo) * 15;
+        const p = document.createElementNS(NS, 'path');
+        p.setAttribute('d', `M${x1} ${y} C${x1} ${y - h} ${x2} ${y - h} ${x2} ${y}`);
+        p.setAttribute('fill', 'none'); p.setAttribute('stroke-width', '3.5'); p.setAttribute('stroke-linecap', 'round');
+        p.style.stroke = getComputedStyle(A).borderTopColor;
+        svg.appendChild(p);
+        const len = p.getTotalLength(); p.style.strokeDasharray = len; p.style.strokeDashoffset = RM ? 0 : len;
+        anim(p, [{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: 320, easing: 'ease-out', fill: 'forwards' });
+        $('.pchips', b).insertAdjacentHTML('beforeend', `<span class="pc ${cls}">${ar(lo)} + ${ar(hi)} = ${ar(L + 1)}</span>`);
+        popIn($('.pchips', b).lastChild); note(k * 2); buzz(10);
+        k++; mark();
+        if (k === 1) $('.ttl').innerHTML = 'كمّل — <b>كل ضغطة زوج</b>';
+        if (k === 2) { const s = $('.aft', b); s.innerHTML = `<div class="note">لاحظ؟ كل زوج يطلع <b>${ar(L + 1)}</b></div>`; rise(s.firstChild); }
+        if (k === half) {
+          T(() => {
+            const s = $('.aft', b);
+            s.innerHTML = `<div class="say">كل زوج = <span class="ch k-purple">${ar(L + 1)}</span></div>`;
+            rise(s.firstChild); thud(); buzz(20);
+            $('.ttl').innerHTML = 'طلّعتها <b>بنفسك!</b>';
+            btn('المتابعة', next);
+          }, 420);
+        }
+      });
+    },
+
+    bridge() {
+      const b = frame({ kick: 'ليش ÷ ٢؟', title: 'كم <b>زوج</b> طلع؟' });
+      b.innerHTML = `<div class="card cue brg">${gaussPic(10)}</div><div class="chain" style="margin-top:12px"></div><div class="opts c3 bq"></div><div class="tell"></div>`;
+      const pic = $('.brg', b), chain = $('.chain', b), opts = $('.bq', b), tell = $('.tell', b);
+      $('.pL1', pic).classList.add('on'); rise(pic);
+      const PC = ['--purple', '--orange', '--green', '--blue', '--red'];
+      $$('.pL1 path', pic).forEach((p, i) => p.style.stroke = `var(${PC[i % 5]})`);
+      const ph = $('.ph', pic), phAt = ph.parentNode; ph.remove();
+      const line = (no, html, sm) => {
+        chain.insertAdjacentHTML('beforeend', `<div class="ln"><span class="no">${no}</span><div class="big">${html}</div><span class="sm">${sm}</span></div>`);
+        const l = chain.lastChild; fitAll(l); rise(l); Array.from($('.big', l).children).forEach((x, k) => stamp(x, 80 + k * 80)); return l;
+      };
+      const ask = (title, vals, ans, hints, done) => {
+        $('.ttl').innerHTML = title; tell.textContent = '';
+        opts.innerHTML = shuf(vals).map(x => `<button class="opt" data-v="${x}">${ar(x)}</button>`).join('');
+        $$('.opt', opts).forEach((o, i) => rise(o, i * 50));
+        let cur = null;
+        opts.onclick = e => { const o = e.target.closest('.opt'); if (!o || o.disabled) return; $$('.opt', opts).forEach(x => x.classList.toggle('sel', x === o)); cur = o; tick(); enable(true); };
+        btn('تحقق', () => {
+          if (!cur) return;
+          const val = +cur.dataset.v; cur.classList.remove('sel');
+          if (val === ans) { $$('.opt', opts).forEach(x => x.disabled = true); opts.onclick = null; jump(cur); good(); buzz(15); return T(done, 650); }
+          cur.classList.add('no'); cur.disabled = true; shake(cur); bad(); buzz([30, 40, 30]);
+          tell.className = 'tell'; tell.innerHTML = hints[val]; cur = null;
+        }, false);
+      };
+      ask('كم <b>زوج</b> طلع؟', [5, 10, 11], 5, { 10: '١٠ هي الأعداد — وكل زوج فيه عددين', 11: '١١ مجموع كل زوج — عدّ الأقواس' }, () => {
+        phAt.appendChild(ph); ph.classList.add('on'); anim(ph, [{ opacity: 0 }, { opacity: 1 }], { duration: 300 }); note(4);
+        opts.innerHTML = ''; tell.textContent = '';
+        line('١', '<span class="ch k-blue">١٠ أعداد</span><span class="op">←</span><span class="ch k-gold">٥ أزواج</span>', 'نص العدد');
+        T(() => ask('كل زوج <b>١١</b> — كم المجموع؟', [55, 110, 16], 55, { 110: '١١٠ لو عندك ١٠ أزواج — عندك ٥ بس', 16: '٥ أزواج، كل زوج ١١ ← نضرب' }, () => {
+          opts.innerHTML = ''; tell.textContent = '';
+          line('٢', '<span class="ch k-gold">٥ أزواج</span><span class="op">×</span><span class="ch k-purple">١١</span><span class="op">=</span><span class="ans">٥٥</span>', 'كل زوج ١١');
+          T(() => {
+            const l = line('٣', '<span class="ch k-blue">١٠</span><span class="op">×</span><span class="ch k-purple">١١</span><span class="ch k-gold">÷ ٢</span><span class="op">=</span><span class="ans">٥٥</span>', 'نفس الشي');
+            $('.ttl').innerHTML = '÷ ٢ <b>لأن كل زوج عددين</b>'; note(7);
+            T(() => { hop($$('.ch', l)[2], 10); thud(); buzz(15); }, 650);
+            btn('شوف القاعدة', next);
+          }, 700);
+        }), 650);
+      });
+    },
+
+    card2() {
+      const b = frame({ kick: 'قاعدة ٢ من ٢', title: 'من الأزواج <b>للقاعدة</b>' });
+      b.innerHTML = '<div class="rslot" style="margin-top:4px"></div>';
+      const slot = $('.rslot', b), C = CARD.gauss({ L: 10 });
+      slot.innerHTML = ruleCard(C, true); const el = slot.firstElementChild; fitAll(slot);
+      flipIn(el); liveCard(el, C, 650); T(() => toast('كرت جديد لمجموعتك!'), 500);
+      btn('المتابعة', next);
+    },
+
+    use(spec) {
+      const L = spec.L || (spec.again || spec.retry ? freshL([16, 18, 24, 26, 32]) : 20);
+      spec.L = L;
+      const v = G.gauss(L);
+      const b = frame({ kick: spec.retry ? 'بأرقام جديدة' : 'جرّبها', title: 'احسبها <b>بالحيلة</b>' });
+      b.innerHTML = `<div class="card"><div class="big">${toks(v.long)}<span class="op">=</span><span class="q">؟</span></div></div><div class="opts c3">${v.opts.map(x => `<button class="opt" data-v="${x}">${ar(x)}</button>`).join('')}</div>`;
+      fitAll(b); rise($('.card', b));
+      pickChoices(b, v, (ok, val) => {
+        score(ok, 'gauss');
+        const q = $('.big .q', b);
+        if (ok) { q.className = 'ans'; q.textContent = ar(v.ans); stamp(q, 120); return T(() => showSheet(true, pick(PRAISE), `${v.fast} = <b>${ar(v.ans)}</b>`), 350); }
+        const w = v.why[val];
+        if (spec.again || spec.retry) {
+          const back = spec.retry && !spec.again;
+          if (back) comeback({ t: 'use', L: 0 });
+          return T(() => showSheet(false, w.t, w.l + `<br>${v.fast} = <b>${ar(v.ans)}</b>` + (back ? '<br>وبترجع لك بأرقام جديدة' : '')), 400);
+        }
+        after({ t: 'stairs', L, slip: w.s }, { t: 'use', retry: true });
+        T(() => showSheet(false, w.t, w.l, null, 'وريني ليش'), 400);
+      });
+    },
+
+    stairs(spec) {
+      const L = spec.L, half = spec.slip === 'half';
+      const b = frame({ kick: 'شوفها بالدرج', title: half ? 'أخذت <b>المستطيل كله</b>' : `الضلع <b>${ar(L + 1)}</b> مو ${ar(L)}` });
+      b.innerHTML = `<div class="note">${sumG(L)} = الدرج الأزرق</div>${stairsHtml(L)}<div class="scap"></div>`;
+      $('.note', b).style.cssText = 'font-size:17px;font-weight:800;color:var(--blue-dk);margin-bottom:8px';
+      btn('…', null, false);
+      const sb = $$('.sb', b), so = $$('.so', b), cap = $('.scap', b), side = $('.sside', b), bot = $('.sbot', b);
+      const step = Math.min(45, 900 / L);
+      sb.forEach((r, i) => anim(r, [{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], { duration: 260, delay: i * step, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' }));
+      so.forEach(r => r.style.opacity = 0);
+      sb.forEach((r, i) => i % 3 === 0 && T(() => note(Math.min(9, Math.floor(i / 3))), i * step));
+      const flip = () => {
+        so.forEach((r, i) => { r.style.opacity = 1; anim(r, [{ transform: 'translateY(-140px)', opacity: 0 }, { transform: 'translateY(0)', opacity: 1 }], { duration: 360, delay: (L - 1 - i) * step * .6, easing: 'cubic-bezier(.4,1.3,.6,1)', fill: 'backwards' }); });
+        cap.innerHTML = '';
+        const t2 = L * step * .6 + 420;
+        T(() => {
+          side.classList.remove('hid'); bot.classList.remove('hid'); popIn(side); popIn(bot, 120); thud(); buzz(20);
+          cap.innerHTML = `<div class="big"><span>مستطيل</span><span class="ch k-blue">${ar(L)}</span><span class="op">×</span><span class="ch k-purple">${ar(L + 1)}</span><span class="op">=</span><span>${ar(L * (L + 1))}</span></div>`;
+          fitAll(cap); stamp(cap.firstChild);
+          if (!half) T(() => hop(side, 10), 400);
+        }, t2);
+        T(() => {
+          so.forEach(r => anim(r, [{ opacity: 1 }, { opacity: .18 }], { duration: 500, fill: 'forwards' }));
+          cap.insertAdjacentHTML('beforeend', `<div class="big"><span>والمطلوب نصّه</span><span class="op">←</span><span>${ar(L * (L + 1))}</span><span class="ch k-gold">÷ ٢</span><span class="op">=</span><span class="ans">${ar(L * (L + 1) / 2)}</span></div>`);
+          fitAll(cap); rise(cap.lastChild); note(7);
+          btn('المتابعة', next);
+        }, t2 + 1000);
+      };
+      T(() => { cap.innerHTML = '<div class="note">نحط نسخة منه <b>مقلوبة</b> فوقه؟</div>'; rise(cap.firstChild); btn('اقلب نسخة فوقه', flip, true, 'blue'); }, L * step + 200);
+    },
+
+    tiles() {
+      const b = frame({ kick: 'ثبّتها', title: 'كمّل <b>القاعدتين</b>' });
+      const want = ['العدد', 'عدد مرات تكراره', 'آخر عدد', '١', '٢'];
+      const bk = i => `<button class="bk" data-i="${i}"></button>`;
+      b.innerHTML = `<div class="rows">
+        <div class="rrow"><div class="rh"><i>${ICON.rep}</i>${NAME.rep}</div><div class="rline"><span class="w">المجموع</span>${opTok('=')}${bk(0)}${opTok('×')}${bk(1)}</div></div>
+        <div class="rrow g"><div class="rh"><i>${ICON.gauss}</i>${NAME.gauss} — من ١ إلى أي عدد</div><div class="rline">${bk(2)}${opTok('×')}${opTok('(')}<span class="w">آخر عدد</span>${opTok('+')}${bk(3)}${opTok(')')}${opTok('÷')}${bk(4)}</div></div>
+      </div><div class="tell soft">القطعة تنحط في <b style="color:var(--blue-dk)">المربع الأزرق</b> </div><div class="tiles"></div>`;
+      const tiles = shuf(want.concat(['أول عدد', '٣']));
+      $('.tiles', b).innerHTML = tiles.map((t, k) => `<button class="tl" data-k="${k}">${t}</button>`).join('');
+      fitAll(b); rise($('.rows', b)); $$('.tl', b).forEach((t, i) => rise(t, 150 + i * 40));
+      const bks = $$('.bk', b), put = {}, order = [], tell = $('.tell', b);
+      let tgt = null, firstTry = true;
+      const empty = () => bks.find(x => put[x.dataset.i] == null);
+      const refresh = () => {
+        $$('.tl', b).forEach(t => {
+          const u = Object.values(put).includes(+t.dataset.k), was = t.classList.contains('used');
+          if (u && !was) { t.style.width = t.offsetWidth + 'px'; t.textContent = ''; }
+          if (!u && was) { t.textContent = tiles[+t.dataset.k]; t.style.width = ''; }
+          t.classList.toggle('used', u);
+        });
+        if (!tgt || put[tgt.dataset.i] != null) tgt = empty() || null;
+        bks.forEach(x => x.classList.toggle('tgt', x === tgt));
+        enable(bks.every(x => put[x.dataset.i] != null)); $$('.rline', b).forEach(fit);
+      };
+      refresh();
+      b.addEventListener('click', e => {
+        const t = e.target.closest('.tl');
+        if (t) {
+          if (t.disabled || t.classList.contains('used')) return;
+          const x = tgt || empty(); if (!x) return;
+          put[x.dataset.i] = +t.dataset.k; order.push(x); x.textContent = tiles[+t.dataset.k]; x.classList.add('f'); x.classList.remove('no'); tick(); popIn(x); tgt = null; refresh(); return;
+        }
+        const x = e.target.closest('.bk');
+        if (!x || x.classList.contains('lock')) return;
+        if (put[x.dataset.i] != null) { delete put[x.dataset.i]; order.splice(order.indexOf(x), 1); x.textContent = ''; x.classList.remove('f', 'no'); }
+        tgt = x; tick(); refresh();
+      });
+      const val = x => tiles[put[x.dataset.i]];
+      btn('تحقق', () => {
+        const badB = bks.filter(x => { const i = +x.dataset.i, v = val(x); return i > 1 ? v !== want[i] : !(want.slice(0, 2).includes(v) && v !== val(bks[1 - i])); });
+        if (!badB.length) {
+          bks.forEach(x => x.classList.add('lock')); $$('.tl', b).forEach(t => t.disabled = true);
+          if (firstTry) score(true); jump(order.filter(x => bks.includes(x)));
+          tell.className = 'tell ok'; tell.textContent = '';
+          return T(() => showSheet(true, firstTry ? 'كفو!' : 'صح — ثبّتها!', 'القاعدتين كاملة — من راسك'), 450);
+        }
+        if (firstTry) { firstTry = false; score(false); }
+        bad(); buzz([30, 40, 30]);
+        bks.filter(x => !badB.includes(x)).forEach(x => { x.classList.add('ok', 'lock'); });
+        badB.forEach(x => { x.classList.add('no'); shake(x); });
+        tell.className = 'tell'; tell.textContent = 'اللي بالأحمر رجع للقطع — والصح ثابت';
+        T(() => { badB.filter(x => x.classList.contains('no')).forEach(x => { delete put[x.dataset.i]; order.splice(order.indexOf(x), 1); x.textContent = ''; x.classList.remove('f', 'no'); }); tgt = null; refresh(); }, 650);
+        enable(false);
+      }, false);
+    },
+
+    sort(spec) {
+      const mix = d => { let o = d; for (let k = 0; k < 80; k++) { o = shuf(d); if (o[0].k !== 'none' && o.every((x, i) => !i || x.k !== o[i - 1].k)) break; } return o; };
+      const freshG = () => G.gauss(freshL([12, 16, 18, 22, 26, 28]));
+      let deck;
+      if (spec.redo) {
+        deck = spec.redo.map(d => d.k === 'rep' ? G.rep(...G.freshRep()) : d.k === 'gauss' ? freshG() : d.gap ? G.gap(d.gap) : G.none(null, d.a));
+        deck.push(spec.redo.some(d => d.k === 'rep') ? freshG() : G.rep(...G.freshRep()));
+        deck = mix(deck);
+      } else deck = mix([G.gauss(30), G.none(7), G.rep(4, 4), G.gauss(4), G.gap()]);
+      const b = frame({ kick: 'فرّزها', title: 'كل مجموع لقاعدته — <b>وانتبه للفخ</b>', nofoot: true });
+      b.innerHTML = `<div class="sort"><div class="slot"></div><div class="tell"></div>
+        <div class="bins"><button class="bin" data-k="rep"><span class="bi">${ICON.rep}</span><b>${NAME.rep}</b><small>${TELL.rep}</small><span class="dots"></span></button>
+        <button class="bin g" data-k="gauss"><span class="bi">${ICON.gauss}</span><b>${NAME.gauss}</b><small>${TELL.gauss}</small><span class="dots"></span></button>
+        <button class="bin none" data-k="none"><span class="bi">${ICON.none}</span><b>ولا وحدة</b><span class="dots"></span></button></div></div>`;
+      let i = 0, firstTry = true, t0 = 0, hits = 0, busy = false; const missed = [], res = [];
+      const show = () => {
+        const d = deck[i]; firstTry = true;
+        $('.slot', b).innerHTML = `<div class="scard"><span class="cnt">${ar(i + 1)} من ${ar(deck.length)}</span><div class="big">${toks(d.long)}</div></div>`;
+        fitAll(b); popIn($('.scard', b)); t0 = performance.now(); busy = false;
+      };
+      show();
+      const markOdd = d => { if (d.mark) $$('.scard .n', b).forEach(n => { if (d.mark.includes(n.textContent) && !n.classList.contains('odd')) { n.classList.add('odd'); hop(n, 6); } }); };
+      const why = d => d.k === 'rep' ? `كلها <b>${ar(d.a)}</b> — تكررت ${ar(d.n)} مرات` : d.k === 'gauss' ? 'أعداد ورا بعض <b>تبدأ من ١</b>' : d.gap ? `بعد <b>${ar(d.gap - 1)}</b> جا <b>${ar(d.gap + 1)}</b> — ناقص ${ar(d.gap)}، مو ورا بعض` : `فيه <b>${ar(d.odd)}</b> مختلف — لا هي نفس العدد ولا ورا بعض`;
+      b.addEventListener('click', e => {
+        const bn = e.target.closest('.bin'); if (!bn || busy || i >= deck.length || performance.now() - t0 < 300) return;
+        const d = deck[i], card = $('.scard', b), tell = $('.tell', b);
+        if (bn.dataset.k === d.k) {
+          busy = true;
+          if (firstTry) { hits++; score(true, d.k === 'none' ? null : d.k); }
+          res.push({ d, ok: firstTry });
+          tell.className = 'tell ok'; tell.innerHTML = why(d); markOdd(d);
+          bn.classList.add('hit'); setTimeout(() => bn.classList.remove('hit'), 420);
+          jump(card, '');
+          const a = card.getBoundingClientRect(), r = bn.getBoundingClientRect();
+          T(() => anim(card, [{ translate: '0 0', scale: '1', opacity: 1 }, { translate: `${(r.left + r.width / 2) - (a.left + a.width / 2)}px ${(r.top + r.height / 2) - (a.top + a.height / 2)}px`, scale: '.2', opacity: .1 }], { duration: 330, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' }), 800);
+          T(() => { $('.dots', bn).insertAdjacentHTML('beforeend', '<i></i>'); popIn($('.dots', bn).lastChild); hop(bn, 6); note(3 + i * 2); }, 1100);
+          i++;
+          T(() => {
+            tell.textContent = ''; tell.className = 'tell';
+            if (i < deck.length) return show();
+            $('.slot', b).innerHTML = `<div class="recap">${res.map(r => `<div class="rcp${r.ok ? '' : ' x'}"><span class="ri ${r.d.k}">${ICON[r.d.k]}</span><div class="big">${toks(r.d.long)}</div></div>`).join('')}</div>`;
+            $('.slot', b).style.justifyContent = 'flex-start'; $('.bins', b).style.display = 'none'; fitAll(b);
+            $$('.rcp', b).forEach((x, k) => { rise(x, k * 70); const m = res[k].d.mark; if (m) $$('.n', x).forEach(n => m.includes(n.textContent) && n.classList.add('odd')); });
+            if (missed.length) comeback({ t: 'sort', redo: missed.slice() });
+            const all = hits === deck.length;
+            showSheet(hits >= deck.length - 1, `${ar(hits)} من ${ar(deck.length)}${all ? '!' : ''}`,
+              all ? 'ما طحت في الفخ — وهذا اللي <b>يطيّح الناس</b> في الاختبار' : missed.length && !spec.again && phase === 'lesson' ? 'اللي غلطت فيه بيرجع لك بأرقام جديدة' : 'الفرق: <b>نفس العدد</b>؟ ولا <b>ورا بعض من ١</b>؟');
+          }, 1350);
+        } else {
+          bad(); buzz([30, 40, 30]); shake(card); sink(bn); bn.classList.add('flash'); setTimeout(() => bn.classList.remove('flash'), 500);
+          if (firstTry) { firstTry = false; missed.push(d); score(false, d.k === 'none' ? null : d.k); }
+          tell.className = 'tell'; tell.innerHTML = 'لا، ' + why(d); markOdd(d);
+        }
+      });
+    },
+
+    word(spec) {
+      const R = spec.rule;
+      let v, tpl;
+      if (R === 'gauss') { v = G.gauss(spec.again ? freshL([16, 18, 22, 26]) : 14); tpl = WORD.gauss[spec.again ? 1 : 0]; }
+      else { v = G.rep(...G.freshRep()); tpl = pick(WORD.rep); }
+      const b = frame({ kick: phase === 'review' ? 'جولة أخيرة' : 'مسألة قدرات', title: 'وش القاعدة؟ <b>بعدين احسب</b>' });
+      b.innerHTML = `<div class="card word">${tpl(v)}</div>
+        <div class="opts c2 rp">${shuf(['rep', 'gauss']).map(k => `<button class="opt rpick${k === 'gauss' ? ' g' : ''}" data-k="${k}"><span class="ri">${ICON[k]}</span>${NAME[k]}</button>`).join('')}</div>
+        <div class="step2"></div>`;
+      rise($('.card', b));
+      let missed = false;
+      const pickRule = () => choose(b, '.rpick', o => {
+        if (o.dataset.k === R) {
+          $$('.rpick', b).forEach(x => { if (x !== o) x.classList.add('dim'); });
+          jump(o); note(5);
+          const s2 = $('.step2', b);
+          s2.innerHTML = `<div class="q2">الحين احسب</div><div class="opts c3">${v.opts.map(x => `<button class="opt" data-v="${x}">${ar(x)}</button>`).join('')}</div>`;
+          rise(s2);
+          T(() => s2.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'nearest' }), 100);
+          pickChoices(s2, v, (ok, val) => {
+            const full = ok && !missed;
+            score(full, R);
+            if (!full) comeback({ t: 'word', rule: R });
+            const tail = !full && phase === 'lesson' && !spec.again ? '<br>وبترجع لك بأرقام جديدة' : '';
+            if (ok && missed) return T(() => showSheet(false, 'تقريباً!', `الحساب صح — بس هذي «<b>${NAME[R]}</b>» من أول نظرة${tail}`), 350);
+            if (ok) return T(() => showSheet(true, pick(PRAISE), `${v.fast} = <b>${ar(v.ans)}</b>`), 350);
+            const w = v.why[val];
+            T(() => showSheet(false, w ? w.t : 'الجواب الصح:', (w ? w.l + '<br>' : '') + `${v.fast} = <b>${ar(v.ans)}</b>${tail}`), 400);
+          });
+          return;
+        }
+        bad(); buzz([30, 40, 30]); o.classList.add('no'); shake(o);
+        missed = true;
+        $('.step2', b).innerHTML = `<div class="tell">لا — هذي ${R === 'rep' ? 'نفس العدد يتكرر' : 'أعداد ورا بعض تبدأ من ١'}</div>`;
+        $$('.rpick', b).forEach(x => { if (x !== o) x.disabled = false; });
+        pickRule();
+      });
+      pickRule();
+    },
+
+    spot(spec) {
+      const L = spec.again ? freshL([16, 18, 26, 28]) : 24, kind = spec.again ? pick(['plus2', 'div4']) : 'minus1';
+      const said = kind === 'plus2' ? [L, '×', L + 2, '÷', 2] : kind === 'minus1' ? [L, '×', L - 1, '÷', 2] : [L, '×', L + 1, '÷', 4];
+      const wrong = kind === 'div4' ? 4 : 2;
+      const fix = kind === 'plus2' ? `<b>${ar(L + 1)}</b> مو ${ar(L + 2)} — آخر عدد + ١` : kind === 'minus1' ? `<b>${ar(L + 1)}</b> مو ${ar(L - 1)} — اللي بعد آخر عدد، مو اللي قبله` : 'نقسم على <b>٢</b> مو ٤ — الأزواج نص العدد';
+      const b = frame({ kick: 'صيد الغلط', title: 'أحمد غلط — <b>وين؟</b>' });
+      b.innerHTML = `<div class="who"><span class="av">أ</span><div class="bub">حليتها بالحيلة… بس طلع جوابي غلط!</div></div>
+        <div class="card work"><div class="big" style="font-size:24px">${toks(sumG(L))}</div><div class="said"><span class="op">=</span>${said.map((x, i) => typeof x === 'number' ? `<button class="stk" data-i="${i}">${ar(x)}</button>` : `<span class="op">${x}</span>`).join('')}</div></div>
+        <div class="note" style="margin-top:14px">اختر الرقم الغلط — رقم واحد بس</div>`;
+      fitAll(b); rise($('.who', b)); rise($('.work', b), 120);
+      choose(b, '.stk', s => {
+        const ok = +s.dataset.i === wrong;
+        score(ok, 'gauss');
+        if (ok) jump(s); else { s.classList.add('no'); shake(s); $(`.stk[data-i="${wrong}"]`, b).classList.add('show'); comeback({ t: 'spot' }); }
+        T(() => { showSheet(ok, ok ? pick(PRAISE) : 'الغلط في المنقّط', fix + (!ok && phase === 'lesson' && !spec.again ? '<br>وبترجع لك بأرقام جديدة' : '')); }, ok ? 450 : 500);
+      });
+    },
+
+    cue() {
+      const k = pick(['rep', 'gauss']);
+      const pic = k === 'rep' ? repPic(6, 4) : gaussPic(8);
+      const b = frame({ kick: 'جولة أخيرة', title: 'هذي صورته… <b>وش قاعدته؟</b>' });
+      b.innerHTML = `<div class="card cue">${pic}</div><div class="opts c2">${shuf(['rep', 'gauss']).map(x => `<button class="opt rpick${x === 'gauss' ? ' g' : ''}" data-k="${x}"><span class="ri">${ICON[x]}</span>${NAME[x]}</button>`).join('')}</div>`;
+      const cue = $('.cue', b); rise(cue);
+      $$('.pp', cue).forEach(p => p.classList.add('on'));
+      $$(k === 'rep' ? '.pp text' : '.ph, .pL1 text', cue).forEach(t => t.remove());
+      choose(b, '.rpick', o => {
+        const ok = o.dataset.k === k; score(ok, k);
+        if (ok) jump(o); else { o.classList.add('no'); shake(o); T(() => $(`.rpick[data-k="${k}"]`, b).classList.add('ok'), 250); }
+        T(() => showSheet(ok, ok ? pick(PRAISE) : `هذي «${NAME[k]}»`, k === 'rep' ? 'صفوف متساوية = <b>نفس العدد يتكرر</b>' : 'أزواج من الطرفين = <b>من ١ ورا بعض</b>'), 400);
+      });
+    },
+
+    inv() {
+      const n = 13, S = n * (n + 1) / 2;
+      const b = frame({ kick: 'تحدّي', title: 'هذي <b>بالعكس</b>' });
+      b.innerHTML = `<div class="card word">مدرّج: أول صف فيه كرسي، والثاني <b>٢</b>، والثالث <b>٣</b>… وكل صف يزيد كرسي. في المدرّج كله <b>${ar(S)}</b> كرسي. كم صف فيه؟</div>
+        <div class="inv-h">جرّب الخيارات في الحيلة</div>
+        <div class="opts c3">${shuf([12, 13, 14]).map(x => `<button class="opt" data-v="${x}">${ar(x)}<small>صف</small></button>`).join('')}</div>`;
+      rise($('.card', b));
+      const tri = x => `${ar(x)} × ${ar(x + 1)} ÷ ٢ = ${ar(x * (x + 1) / 2)}`;
+      pickChoices(b, { ans: n }, (ok, val) => {
+        score(ok, 'gauss');
+        if (ok) return T(() => showSheet(true, 'تحدّي محلول!', `${ar(n)} × ${ar(n + 1)} ÷ ٢ = <b>${ar(S)}</b> — آخر عدد هو عدد الصفوف`), 350);
+        T(() => showSheet(false, `الجواب: ${ar(n)} صف`, `${tri(val)} — ${val < n ? 'أقل' : 'أكثر'} من ${ar(S)}<br>${ar(n)} × ${ar(n + 1)} ÷ ٢ = <b>${ar(S)}</b>`), 400);
+      });
+    }
+  };
+
+  function start() {
+    reset(); phase = 'start'; Q = null; again = false;
+    const b = frame({ bare: true });
+    b.innerHTML = `<div class="full"><div class="logo">قدراتي</div><div class="lead">قاعدتين — وتعرف متى<br>تستخدم كل وحدة</div><div class="sub">بدون وقت ولا عدّاد — على راحتك</div>
+      <div class="backs"><div class="cb"><b>؟</b><small>قاعدة ١</small></div><div class="cb g"><b>؟</b><small>قاعدة ٢</small></div></div></div>`;
+    $$('.cb', b).forEach((t, i) => flipIn(t, 200 + i * 160));
+    btn('يلا نبدأ', lesson);
+  }
+  function lesson() {
+    phase = 'lesson'; qi = 0; prog = 0; ST.t0 = performance.now();
+    Q = [{ t: 'rule1' }, { t: 'hook' }, { t: 'pairs' }, { t: 'bridge' }, { t: 'card2' }, { t: 'use' }, { t: 'tiles' }, { t: 'sort' }, { t: 'word', rule: 'gauss' }, { t: 'spot' }];
+    run(Q[0]);
+  }
+  const face = (k, line) => `<div class="cb face${k === 'gauss' ? ' g' : ''}"><span class="ci">${ICON[k]}</span><b>${NAME[k]}</b><small>${line}</small></div>`;
+  function later() {
+    phase = 'later'; again = false; ST.t1 = performance.now(); $('.bar i').style.width = '100%';
+    const b = frame({ bare: true });
+    b.innerHTML = `<div class="full"><div class="later-t">جولة أخيرة</div><div class="sub" style="margin:4px 0 20px">٣ أسئلة بأرقام جديدة — وآخرها تحدّي</div>
+      <div class="got" style="width:100%">${['rep', 'gauss'].map(k => face(k, TELL[k])).join('')}</div>
+      <div class="sub" style="margin-top:16px">مجموعتك: <b style="color:var(--ink)">٢ من ٢</b> كروت</div></div>`;
+    $$('.got .cb', b).forEach((x, i) => flipIn(x, 150 + i * 160));
+    btn('يلا', review, true, 'blue');
+  }
+  function review() {
+    phase = 'review'; qi = 0; prog = 0; ST.r0 = performance.now();
+    Q = [{ t: 'cue' }, { t: 'word', rule: 'rep' }, { t: 'inv' }];
+    run(Q[0]);
+  }
+  function secs(n) { return n >= 3 && n <= 10 ? `${ar(n)} ثواني` : `${ar(n)} ثانية`; }
+  function end() {
+    phase = 'end'; again = false; ST.r1 = performance.now(); $('.bar i').style.width = '100%';
+    const b = frame({ bare: true });
+    const acc = ST.graded ? Math.round(ST.right / ST.graded * 100) : 0;
+    const lt = Math.round((ST.r1 - ST.t0) / 1000), rt = Math.max(1, Math.round((ST.r1 - ST.r0) / 1000));
+    const mm = `${Math.floor(lt / 60)}:${String(lt % 60).padStart(2, '0')}`;
+    b.innerHTML = `<div class="end"><h1>${acc >= 90 ? 'ثبّتها!' : 'خلّصتها!'}</h1><div class="sub">القاعدتين معك — ومتى تستخدم كل وحدة</div>
+      <div class="stats"><div class="st" style="--c:var(--gold)"><div class="sh">مجموع XP</div><div class="sv xpv">٠</div></div>
+        <div class="st" style="--c:var(--green)"><div class="sh">الدقة</div><div class="sv">${ar(acc)}٪</div></div>
+        <div class="st" style="--c:var(--blue)"><div class="sh">وقت الدرس</div><div class="sv" dir="ltr">${ar(mm)}</div></div></div>
+      <div class="spd">${ICON.clock}<div><b>حليت الجولة الأخيرة في ${secs(rt)}</b><span>اكسر رقمك المرة الجاية</span></div></div>
+      <div class="got">${['rep', 'gauss'].map(k => face(k, ST.revMiss[k] ? 'ترجع لك بكرة' : 'ترجع بعد ٣ أيام')).join('')}</div>
+      <div class="plan">أطول سلسلة: <b>${ar(ST.best)}</b> ورا بعض</div></div>`;
+    stamp($('h1', b), 100); thud();
+    $$('.st', b).forEach((x, i) => rise(x, 300 + i * 140));
+    rise($('.spd', b), 800);
+    $$('.got .cb', b).forEach((x, i) => flipIn(x, 1000 + i * 180));
+    const xv = $('.xpv', b); let x = 0; const step = Math.max(1, Math.ceil(ST.xp / 30));
+    T(() => { const iv = setInterval(() => { x = Math.min(ST.xp, x + step); xv.textContent = ar(x); if (x === ST.xp) { clearInterval(iv); hop(xv.parentNode, 8); } }, 30); timers.push(iv); }, 500);
+    T(chime, 1100);
+    btn('من جديد', start);
+  }
+
+  addEventListener('resize', () => fitAll(document));
+  start();
+})();
+</script>
+</body>
+</html>

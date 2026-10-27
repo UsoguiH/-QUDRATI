@@ -1,0 +1,16 @@
+{
+"choice-select":"lessonPick","correct-answer":"fbgood","wrong-answer":"fb","teach-check-wrong":"teachcheck","time-up":"lesson","timer-tick":"lesson","answer-run":"fbgood","continue":"fbgood","teach-chunk-done":"teachrule","help-open":"method","lesson-win":"done1","lesson-failed":"fb","revive":"fb","practice-complete":"done3","report-sent":"report",
+"tile-place":"fillPlaced","tile-remove":"fillPlaced","keypad-key":"keypad","pair-pick":"pairs","pair-match":"pairs","pair-miss":"pairs","rule-terms-light":"rulecard","rule-said":"rulecard","rule-fill-miss":"rulewords",
+"node-press":"pop","boost-toggle":"pop","start-lesson":"pop","ring-segment-pay":"pathpay","node-complete":"pathgold","chest-tip":"chesttip",
+"quest-banner":"questbanner","chest-idle-hop":"chest1","chest-tap":"chest2","chest-open":"chest3","chest-gems-reveal":"chest4","chest-gems-tick":"chest4",
+"win-stat-cards":"done3",
+"climb-xp-count":"climb1","climb-lift":"climb2","climb-move":"climb3","climb-pass-tick":"climb3","climb-pass-note":"climb3","climb-medal-turn":"climb3","climb-settle":"climb4",
+"progress-bar-fill":"learnmore1","progress-lesson-seg":"learnmore1","progress-gems":"learnmore2",
+"streak-open":"streak1","streak-coin":"streak2","rankup-unlock":"rankup1","rankup-burst":"rankup2",
+"placement-answer":"place","placement-dont-know":"place","placement-complete":"placemid","place-nudge":"lesson",
+"mock-select":"mocktest","mock-flag":"mocktest","mock-end-section":"mocktest","mock-pass":"mockdone","mock-fail":"mockdone",
+"ob-continue":"obhello","ob-pick":"oblevel","ob-goal-pick":"obgoal","ob-goal-wave":"obgoal",
+"taste-tap":"taste1","taste-swap-lift":"taste2","taste-swap-land":"taste2","taste-equals":"taste3","taste-right":"taste4",
+"exam-saved":"exam","signin-step":"signinhow","signin-later":"signin","signin-done":"signindone",
+"settings-toggle":"settings","settings-segment":"settings","settings-name-saved":"settings"
+}

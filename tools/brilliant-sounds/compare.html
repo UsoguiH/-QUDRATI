@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Sound Swap</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  /* dev page: every sound moment in the app (moments.json), what it plays now —
+     through the app's own sound code, read out of js/app.js — beside the
+     Brilliant sound proposed for it, with a pick per row */
+  :root {
+    --bg: #F7F7F7; --card: #FFFFFF; --ink: #3C3C3C; --mute: #777777; --line: #E5E5E5;
+    --green: #58CC02; --green-dk: #478700; --green-bg: #D7FFB8; --blue: #1CB0F6; --blue-dk: #1899D6; --blue-bg: #DDF4FF;
+    --gold-bg: #FFF4BF; --gold-ink: #9A6A00; --purple: #CE82FF; --purple-dk: #A568CC; --purple-bg: #F3E3FF; --grey-bg: #F0F0F0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #131F24; --card: #1B2B32; --ink: #F1F7FB; --mute: #9AA9B1; --line: #37464F; --green-bg: #2B4A12; --blue-bg: #12384A; --gold-bg: #4A3B0A; --gold-ink: #FFE38A; --purple-bg: #3A2650; --grey-bg: #26363D; }
+  }
+  :root[data-theme="dark"] { --bg: #131F24; --card: #1B2B32; --ink: #F1F7FB; --mute: #9AA9B1; --line: #37464F; --green-bg: #2B4A12; --blue-bg: #12384A; --gold-bg: #4A3B0A; --gold-ink: #FFE38A; --purple-bg: #3A2650; --grey-bg: #26363D; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Baloo Bhaijaan 2', 'Segoe UI', sans-serif; line-height: 1.45; }
+  main { max-width: 1060px; margin: 0 auto; padding: 28px 16px 120px; }
+  h1 { margin: 0; font-size: 30px; }
+  .lead { color: var(--mute); margin: 4px 0 0; }
+  .rules { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 0; }
+  .rules span { padding: 4px 12px; border-radius: 99px; font-weight: 700; font-size: 14px; }
+  .r1 { background: var(--gold-bg); color: var(--gold-ink); }
+  .r2 { background: var(--grey-bg); color: var(--mute); }
+  .stats { color: var(--mute); margin-top: 10px; font-size: 14.5px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 4px; }
+  .f { font: inherit; font-weight: 800; font-size: 14px; padding: 6px 14px; border-radius: 12px; cursor: pointer; background: var(--card); color: var(--ink); border: 2px solid var(--line); border-bottom-width: 4px; }
+  .f.on { background: var(--blue); color: #fff; border-color: var(--blue-dk); }
+  h2 { font-size: 20px; margin: 26px 0 10px; text-transform: capitalize; }
+  .row {
+    display: grid; grid-template-columns: 1fr 150px 190px 168px; gap: 12px; align-items: center;
+    background: var(--card); border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 16px; padding: 12px 14px; margin-bottom: 10px;
+  }
+  .row.kept { opacity: .78; }
+  .mo b { display: block; font-size: 15.5px; }
+  .mo .ar { color: var(--mute); font-size: 14px; direction: rtl; unicode-bidi: isolate; }
+  .mo .why { color: var(--mute); font-size: 13px; margin-top: 2px; }
+  .mo .fq { display: inline-block; font-size: 11.5px; font-weight: 800; padding: 0 8px; border-radius: 99px; background: var(--grey-bg); color: var(--mute); margin-top: 4px; }
+  .pb { display: flex; align-items: center; gap: 8px; width: 100%; font: inherit; text-align: left; cursor: pointer; background: none; border: 0; color: inherit; padding: 0; }
+  .pb[disabled] { cursor: default; }
+  .pl { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; }
+  .pl svg { width: 14px; height: 14px; fill: #fff; margin-left: 2px; }
+  .now .pl { background: #9D9D9D; box-shadow: 0 3px 0 #777; }
+  .now.duo .pl { background: var(--green); box-shadow: 0 3px 0 var(--green-dk); }
+  .bri .pl { background: var(--purple); box-shadow: 0 3px 0 var(--purple-dk); }
+  .pb.on .pl { transform: translateY(2px); box-shadow: none; }
+  .pb[disabled] .pl { background: var(--line); box-shadow: none; }
+  .lb { font-size: 13px; line-height: 1.25; }
+  .lb small.w { font-family: inherit; word-break: normal; }
+  .lb small { display: block; color: var(--mute); font-size: 12px; font-family: Consolas, monospace; word-break: break-all; }
+  .pick { display: flex; border: 2px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .pick button { flex: 1; font: inherit; font-size: 13px; font-weight: 800; padding: 6px 4px; border: 0; background: var(--card); color: var(--mute); cursor: pointer; }
+  .pick button.on.k { background: var(--grey-bg); color: var(--ink); }
+  .pick button.on.b { background: var(--purple); color: #fff; }
+  .pick.fixed { border-style: dashed; justify-content: center; padding: 6px; font-size: 13px; font-weight: 800; color: var(--green-dk); }
+  .bar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 2px solid var(--line); padding: 10px 16px; display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap; z-index: 5; }
+  .big { font: inherit; font-weight: 800; font-size: 15px; color: #fff; background: var(--green); border: 0; border-bottom: 4px solid var(--green-dk); border-radius: 14px; padding: 8px 18px; cursor: pointer; }
+  .big:active { transform: translateY(2px); border-bottom-width: 2px; }
+  #count { font-weight: 700; color: var(--mute); }
+  @media (max-width: 760px) { .row { grid-template-columns: 1fr 1fr; } .mo { grid-column: 1 / -1; } .pick, .pick.fixed { grid-column: 1 / -1; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Our sounds beside Brilliant's</h1>
+  <p class="lead">Every moment in the app that makes a sound, or should. <b>Now</b> plays what the app plays today, through its own sound code. <b>Brilliant</b> plays the sound proposed for it. Pick per row, then copy your picks and send them to me.</p>
+  <div class="rules"><span class="r1">Our correct-answer sound stays</span><span class="r2">Duolingo's own files stay (marked green)</span></div>
+  <div class="stats" id="stats"></div>
+  <div class="filters" id="filters"></div>
+  <section id="list"></section>
+</main>
+<div class="bar"><span id="count"></span><button class="big" id="copy">Copy my picks</button></div>
+<script>
+const PLAY = '<svg viewBox="0 0 16 16"><path d="M3 1.5v13l11-6.5z"/></svg>';
+const AREAS = ["lesson", "short lesson", "rule screens", "first run", "path", "win screen", "climb", "quest/chest", "streak", "league", "level test", "mock", "settings", "sign-in", "other"];
+const KEY = "soundPicks";
+let picks = {}; try { picks = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch (e) {}
+const savePicks = () => { try { localStorage.setItem(KEY, JSON.stringify(picks)); } catch (e) {} };
+let SND = null, cur = null;
+
+/* the app's own sound helpers, cut out of js/app.js so "Now" is exactly what a student hears */
+async function loadSound() {
+  const src = (await (await fetch("../../js/app.js?t=" + Date.now())).text()).replace(/\r\n/g, "\n");
+  const cut = (from, to, incl) => { const a = src.indexOf(from), b = src.indexOf(to, a + from.length); if (a < 0 || b < 0) throw new Error("not found: " + from); return src.slice(a, incl ? b + to.length : b); };
+  const code = [
+    "const S = { sound: true }; const buzz = () => {};",
+    cut("let AC = null;", "const sndRankUnlock", false), cut("const sndRankUnlock", "\n", true),
+    cut("const CORRECT_SRC", "function playCorrect() {", false), cut("function playCorrect() {", "\n}\n", true),
+    cut("function cvTone(", "let CV = null;", false),
+    cut("const SFX_SRC =", "function sfxPlay(", false), cut("function sfxPlay(", "\n}\n", true),
+    cut("const sndTap = ", "\n", true)
+  ].join("\n").split("assets/sounds/").join("../../assets/sounds/");
+  return new Function(code + "\nreturn { audioCtx, beep, cvTone, cvHiss, cvSnd, sndGood, sndBad, sndWin, sndLose, sndTick, sndFreeze, sndFifty, sndChest, sndRankUp, sndRankUnlock, sndTap, playCorrect, sfxLoad, sfxPlay, SFX_SRC, loadCorrectBuffer };")();
+}
+function stopAll() {
+  if (cur) { try { cur.pause(); } catch (e) {} cur = null; }
+  document.querySelectorAll(".pb.on").forEach(b => b.classList.remove("on"));
+}
+function flash(btn, ms) { btn.classList.add("on"); setTimeout(() => btn.classList.remove("on"), ms); }
+function playNow(m, btn) {
+  stopAll();
+  if (!SND || !m.nowCode) return;
+  SND.audioCtx();
+  try {
+    const f = new Function(...Object.keys(SND), m.nowCode);
+    f(...Object.values(SND));
+  } catch (e) { console.warn(m.id, e); }
+  flash(btn, 600);
+}
+function playBri(m, btn) {
+  stopAll();
+  const a = new Audio(m.brilliant + ".mp3");
+  cur = a; btn.classList.add("on");
+  a.onended = () => btn.classList.remove("on");
+  a.play().catch(() => {});
+}
+function row(m) {
+  const kept = m.brilliant === "keep", none = m.brilliant === "none";
+  const el = document.createElement("div");
+  el.className = "row" + (kept ? " kept" : "");
+  el.dataset.area = m.area; el.dataset.now = m.now;
+  const nowLabel = m.id === "correct-answer" ? "our correct sound" : m.now === "duolingo" ? "Duolingo's file" : m.now === "synth" ? "our generated beep" : "silent now";
+  el.innerHTML = `<div class="mo"><b>${m.moment.replace(/</g, "&lt;")}</b>${m.ar ? `<div class="ar">${m.ar}</div>` : ""}<div class="why">${(m.why || "").replace(/</g, "&lt;")}</div><span class="fq">${m.freq}</span></div>
+    <button class="pb now${m.now === "duolingo" ? " duo" : ""}" ${m.nowCode ? "" : "disabled"}><span class="pl">${PLAY}</span><span class="lb">Now<small class="w">${nowLabel}</small></span></button>
+    <button class="pb bri" ${kept || none ? "disabled" : ""}><span class="pl">${PLAY}</span><span class="lb">Brilliant<small>${kept ? "stays as it is" : none ? "nothing fits" : m.brilliant}</small></span></button>
+    ${kept ? `<div class="pick fixed">stays</div>` : none ? `<div class="pick fixed" style="color:var(--mute)">no change</div>` :
+      `<div class="pick"><button class="k">keep ours</button><button class="b">Brilliant</button></div>`}`;
+  el.querySelector(".now").onclick = e => playNow(m, e.currentTarget);
+  el.querySelector(".bri").onclick = e => playBri(m, e.currentTarget);
+  const pk = el.querySelector(".pick:not(.fixed)");
+  if (pk) {
+    const paint = () => { const v = picks[m.id]; pk.querySelector(".k").classList.toggle("on", v === "k"); pk.querySelector(".b").classList.toggle("on", v === "b"); };
+    pk.querySelector(".k").onclick = () => { picks[m.id] = "k"; savePicks(); paint(); count(); };
+    pk.querySelector(".b").onclick = () => { picks[m.id] = "b"; savePicks(); paint(); count(); };
+    paint();
+  }
+  return el;
+}
+let ALL = [], filter = "all";
+function count() {
+  const swap = ALL.filter(m => m.brilliant !== "keep" && m.brilliant !== "none");
+  const b = swap.filter(m => picks[m.id] === "b").length, k = swap.filter(m => picks[m.id] === "k").length;
+  document.getElementById("count").textContent = `${b} to Brilliant, ${k} kept as ours, ${swap.length - b - k} not chosen yet`;
+}
+function draw() {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  AREAS.concat([...new Set(ALL.map(m => m.area))].filter(a => !AREAS.includes(a))).forEach(a => {
+    const ms = ALL.filter(m => m.area === a && (filter === "all" || m.now === filter));
+    if (!ms.length) return;
+    const h = document.createElement("h2"); h.textContent = a + " (" + ms.length + ")"; list.appendChild(h);
+    ms.forEach(m => list.appendChild(row(m)));
+  });
+}
+(async () => {
+  const data = await (await fetch("moments.json?t=" + Date.now())).json();
+  ALL = Array.isArray(data) ? data : data.moments;
+  const by = k => ALL.filter(m => m.now === k).length;
+  document.getElementById("stats").textContent = `${ALL.length} moments: ${by("synth")} play our generated beeps, ${by("none")} are silent now, ${by("duolingo")} play Duolingo's files.`;
+  [["all", "All"], ["synth", "Our beeps"], ["none", "Silent now"], ["duolingo", "Duolingo's (kept)"]].forEach(([k, l]) => {
+    const b = document.createElement("button"); b.className = "f" + (k === filter ? " on" : ""); b.textContent = l;
+    b.onclick = () => { filter = k; document.querySelectorAll(".f").forEach(x => x.classList.toggle("on", x === b)); draw(); };
+    document.getElementById("filters").appendChild(b);
+  });
+  draw(); count();
+  try { SND = await loadSound(); } catch (e) { document.getElementById("stats").textContent += " (Could not load the app's sound code: " + e.message + ")"; }
+  /* Duolingo's files and our correct sound decode on the first tap, so "Now" plays them at once after */
+  document.addEventListener("pointerdown", function once() {
+    document.removeEventListener("pointerdown", once);
+    if (!SND) return;
+    SND.audioCtx(); SND.loadCorrectBuffer(); Object.keys(SND.SFX_SRC).forEach(k => SND.sfxLoad(k));
+  });
+  document.getElementById("copy").onclick = () => {
+    const swap = ALL.filter(m => m.brilliant !== "keep" && m.brilliant !== "none");
+    const txt = "Sound picks:\n" + swap.map(m => `${m.id}: ${picks[m.id] === "b" ? "Brilliant " + m.brilliant : picks[m.id] === "k" ? "keep ours" : "not chosen"}`).join("\n");
+    navigator.clipboard.writeText(txt).then(() => { document.getElementById("copy").textContent = "Copied ✓"; setTimeout(() => document.getElementById("copy").textContent = "Copy my picks", 1500); },
+      () => { prompt("Copy this:", txt); });
+  };
+})();
+</script>
+</body>
+</html>

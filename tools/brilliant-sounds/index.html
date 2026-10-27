@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Brilliant Sounds</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  /* dev page: every sound effect brilliant.org serves from /sounds/<action>.mp3,
+     named and grouped as Brilliant's own staff sound panel lists them */
+  :root {
+    --bg: #F7F7F7; --card: #FFFFFF; --ink: #3C3C3C; --mute: #777777; --line: #E5E5E5;
+    --green: #58CC02; --green-dk: #478700; --green-bg: #D7FFB8; --blue: #1CB0F6; --blue-dk: #1899D6; --blue-bg: #DDF4FF;
+    --gold-bg: #FFF4BF; --gold-ink: #9A6A00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #131F24; --card: #1B2B32; --ink: #F1F7FB; --mute: #9AA9B1; --line: #37464F; --green-bg: #2B4A12; --blue-bg: #12384A; --gold-bg: #4A3B0A; --gold-ink: #FFE38A; }
+  }
+  :root[data-theme="dark"] { --bg: #131F24; --card: #1B2B32; --ink: #F1F7FB; --mute: #9AA9B1; --line: #37464F; --green-bg: #2B4A12; --blue-bg: #12384A; --gold-bg: #4A3B0A; --gold-ink: #FFE38A; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Baloo Bhaijaan 2', 'Segoe UI', sans-serif; line-height: 1.45; }
+  main { max-width: 980px; margin: 0 auto; padding: 28px 16px 56px; }
+  h1 { margin: 0; font-size: 30px; }
+  .lead { color: var(--mute); margin: 4px 0 0; }
+  .keep { margin: 16px 0 0; padding: 12px 14px; border-radius: 14px; background: var(--gold-bg); color: var(--gold-ink); font-weight: 700; }
+  .bar { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 6px; align-items: center; }
+  .big { font: inherit; font-weight: 800; font-size: 16px; color: #fff; background: var(--green); border: 0; border-bottom: 4px solid var(--green-dk); border-radius: 14px; padding: 9px 18px; cursor: pointer; }
+  .big.alt { background: var(--card); color: var(--ink); border: 2px solid var(--line); border-bottom-width: 4px; }
+  .big:active { transform: translateY(2px); border-bottom-width: 2px; }
+  h2 { font-size: 21px; margin: 26px 0 10px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .snd {
+    display: flex; align-items: center; gap: 12px; text-align: left; width: 100%;
+    font: inherit; color: inherit; background: var(--card); border: 2px solid var(--line); border-bottom-width: 4px;
+    border-radius: 16px; padding: 10px 12px; cursor: pointer;
+  }
+  .snd:active { transform: translateY(2px); border-bottom-width: 2px; }
+  .snd.on { border-color: var(--blue); background: var(--blue-bg); }
+  .pl { flex: none; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--blue); box-shadow: 0 3px 0 var(--blue-dk); }
+  .pl svg { width: 16px; height: 16px; fill: #fff; margin-left: 2px; }
+  .snd.on .pl svg { margin-left: 0; }
+  .nm { font-weight: 800; font-size: 15.5px; display: block; }
+  .fl { color: var(--mute); font-size: 12.5px; font-family: Consolas, monospace; word-break: break-all; }
+  .tag { display: inline-block; font-size: 11.5px; font-weight: 800; padding: 0 8px; border-radius: 99px; margin-top: 3px; }
+  .tag.ours { background: var(--green-bg); color: #3E8B00; }
+  .tag.no { background: var(--gold-bg); color: var(--gold-ink); }
+  footer { margin-top: 28px; color: var(--mute); font-size: 14px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Brilliant's sound effects</h1>
+  <p class="lead">All 46 of them, named and grouped the way Brilliant's own staff sound panel lists them. Tap a card to hear it.</p>
+  <p class="keep">Our correct-answer sound stays as it is. Brilliant's «Correct» is here only to listen to, and our own is beside it.</p>
+  <div class="bar">
+    <button class="big" id="all">▶ Play all, one after another</button>
+    <button class="big alt" id="stop">■ Stop</button>
+  </div>
+  <section id="list"></section>
+  <footer>Downloaded from brilliant.org/sounds/&lt;name&gt;.mp3 on 2026-10-27. Brilliant's catalogue lists 11 more (the tutor chat, drawing and voice-recording sounds), but they are not served at that address. These are Brilliant's copyrighted files: fine to listen to; shipping any of them in the app is a licensing decision.</footer>
+</main>
+<script>
+const ROWS = [{"a":"assessment-click-option-1","c":"lesson","l":"Assessment Click Option 1","kb":9},{"a":"assessment-click-option-2","c":"lesson","l":"Assessment Click Option 2","kb":9},{"a":"assessment-click-option-3","c":"lesson","l":"Assessment Click Option 3","kb":9},{"a":"assessment-click-option-4","c":"lesson","l":"Assessment Click Option 4","kb":10},{"a":"assessment-dont-know","c":"lesson","l":"Assessment I Don’t Know","kb":13},{"a":"assessment-submit","c":"lesson","l":"Assessment Submit","kb":14},{"a":"continue","c":"lesson","l":"Continue","kb":54},{"a":"correct","c":"lesson","l":"Correct","kb":47},{"a":"diagnostic-answer","c":"lesson","l":"Diagnostic Answer","kb":25},{"a":"diagnostic-complete","c":"lesson","l":"Diagnostic Complete","kb":44},{"a":"drag-released","c":"lesson","l":"Drag Released","kb":51},{"a":"drag-started","c":"lesson","l":"Drag Started","kb":30},{"a":"endstate","c":"lesson","l":"Endstate","kb":76},{"a":"highlight-node","c":"lesson","l":"Highlight Node","kb":84},{"a":"hint","c":"lesson","l":"Hint","kb":76},{"a":"incorrect","c":"lesson","l":"Incorrect","kb":51},{"a":"lesson-failed","c":"lesson","l":"Lesson Failed","kb":75},{"a":"lightweight-choice","c":"lesson","l":"Lightweight Choice","kb":50},{"a":"router-koji-recommendation","c":"lesson","l":"Router Koji Recommendation","kb":41},{"a":"skip","c":"lesson","l":"Skip","kb":59},{"a":"start-lesson","c":"lesson","l":"Start Lesson","kb":48},{"a":"toggle-off","c":"lesson","l":"Toggle Off","kb":18},{"a":"toggle-on","c":"lesson","l":"Toggle On","kb":25},{"a":"tutor-xp-countup-start","c":"lesson","l":"Tutor XP Countup Start","kb":71},{"a":"tutor-xp-countup-stop","c":"lesson","l":"Tutor XP Countup Stop","kb":5},{"a":"xp-tally","c":"lesson","l":"XP Tally","kb":111},{"a":"course-complete","c":"endstate","l":"Course Complete","kb":175},{"a":"lesson-complete","c":"endstate","l":"Lesson Complete","kb":146},{"a":"level-failed","c":"endstate","l":"Level Failed","kb":128},{"a":"level-mastered","c":"endstate","l":"Level Mastered","kb":186},{"a":"level-passed","c":"endstate","l":"Level Passed","kb":197},{"a":"leagues-placement-medium","c":"endstate","l":"Leagues Placement","kb":234},{"a":"leagues-unlocked-partone","c":"endstate","l":"Leagues Unlocked","kb":175},{"a":"skill-check-failed","c":"endstate","l":"Skill Check Failed","kb":108},{"a":"streak-celebration","c":"endstate","l":"Streak Celebration","kb":174},{"a":"streak-charge","c":"endstate","l":"Streak Charge","kb":116},{"a":"streak-inlesson","c":"endstate","l":"Streak In-Lesson","kb":78},{"a":"welcome-to-leagues","c":"endstate","l":"Welcome to Leagues","kb":117},{"a":"welcome-to-leagues-earn-xp-to-get-ahead","c":"endstate","l":"Leagues: Earn XP","kb":82},{"a":"welcome-to-leagues-level-up-each-week","c":"endstate","l":"Leagues: Level Up","kb":117},{"a":"xp-tally-1","c":"endstate","l":"XP Tally 1","kb":111},{"a":"xp-tally-2","c":"endstate","l":"XP Tally 2","kb":111},{"a":"xp-tally-3","c":"endstate","l":"XP Tally 3","kb":111},{"a":"xp-tally-4","c":"endstate","l":"XP Tally 4","kb":111},{"a":"xp-tally-5","c":"endstate","l":"XP Tally 5","kb":111},{"a":"xp-tally-final","c":"endstate","l":"XP Tally Final","kb":111}];
+const GROUPS = { lesson: "In-lesson sounds", endstate: "End-of-lesson sounds" };
+const PLAY = '<svg viewBox="0 0 16 16"><path d="M3 1.5v13l11-6.5z"/></svg>', STOP = '<svg viewBox="0 0 16 16"><rect x="3" y="3" width="10" height="10" rx="2"/></svg>';
+let cur = null, curBtn = null, queue = [];
+function stop() {
+  queue = [];
+  if (cur) { cur.pause(); cur = null; }
+  if (curBtn) { curBtn.classList.remove("on"); curBtn.querySelector(".pl").innerHTML = PLAY; curBtn = null; }
+}
+function play(btn, src, next) {
+  const again = btn === curBtn && !next;
+  if (cur) { cur.pause(); cur = null; }
+  if (curBtn) { curBtn.classList.remove("on"); curBtn.querySelector(".pl").innerHTML = PLAY; curBtn = null; }
+  if (again) return;
+  const a = new Audio(src);
+  cur = a; curBtn = btn;
+  btn.classList.add("on"); btn.querySelector(".pl").innerHTML = STOP;
+  btn.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  a.onended = () => { btn.classList.remove("on"); btn.querySelector(".pl").innerHTML = PLAY; if (curBtn === btn) { cur = null; curBtn = null; } if (next) setTimeout(next, 450); };
+  a.play().catch(() => {});
+}
+function card(r, src, extra) {
+  const b = document.createElement("button");
+  b.className = "snd";
+  b.innerHTML = `<span class="pl">${PLAY}</span><span><span class="nm">${r.l}</span><span class="fl">${r.file}</span>${extra || ""}<span class="fl dur"></span></span>`;
+  const meta = new Audio(); meta.preload = "metadata"; meta.src = src;
+  meta.onloadedmetadata = () => { b.querySelector(".dur").textContent = " — " + meta.duration.toFixed(2) + " s"; };
+  b.onclick = () => { queue = []; play(b, src); };
+  b._src = src;
+  return b;
+}
+const list = document.getElementById("list");
+const all = [];
+Object.keys(GROUPS).forEach(g => {
+  const h = document.createElement("h2"); h.textContent = GROUPS[g]; list.appendChild(h);
+  const grid = document.createElement("div"); grid.className = "grid"; list.appendChild(grid);
+  ROWS.filter(r => r.c === g).forEach(r => {
+    const src = r.a + ".mp3";
+    const b = card({ l: r.l, file: src }, src, r.a === "correct" ? '<span class="tag no">not replacing ours</span><br>' : "");
+    grid.appendChild(b); all.push(b);
+    if (r.a === "correct") {
+      const o = card({ l: "Ours: correct answer", file: "assets/sounds/correct.mp3" }, "../../assets/sounds/correct.mp3", '<span class="tag ours">stays in the app</span><br>');
+      grid.appendChild(o);
+    }
+  });
+});
+document.getElementById("stop").onclick = stop;
+document.getElementById("all").onclick = () => {
+  stop();
+  queue = all.slice();
+  const step = () => { const b = queue.shift(); if (b) play(b, b._src, step); };
+  step();
+};
+</script>
+</body>
+</html>

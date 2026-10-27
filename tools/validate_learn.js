@@ -66,6 +66,21 @@ function checkItem(it, where) {
     case "see":
       if (!(it.rows || []).length) err(where, "see without rows");
       if ((it.rows || []).length > 5) warn(where, "see with more than five rows");
+      /* every rule is followed by two screens the app builds (learnRuleWords,
+         learnRuleNums): its *terms* to fill back in, and `num`, the rule with numbers */
+      if (it.rule) {
+        const terms = String(it.rule).split("*").filter((p, i) => i % 2 && p);
+        if (!terms.length) err(where, "rule without a *term* — nothing to fill in");
+        const n = it.num;
+        if (!n) { err(where, "rule without num — the numbers screen has nothing to show"); break; }
+        const a = (String(n.eq).match(/\{[^}]+\}/g) || []).map(x => x.slice(1, -1));
+        if (!a.length) err(where, "num.eq without a {blank}");
+        if (Array.isArray(n.lab) && n.lab.length !== a.length) err(where, `num has ${a.length} blanks and ${n.lab.length} captions`);
+        if (n.lab === undefined && terms.length < a.length) warn(where, `num has ${a.length} blanks but the rule only ${terms.length} terms to caption them`);
+        (n.more || []).forEach(x => { if (a.indexOf(x) >= 0) err(where, `num distractor «${x}» is also an answer`); });
+        if (n.any && n.any > a.length) err(where, "num.any is more than its blanks");
+        [n.q, n.eq].concat(n.more || [], n.lab || []).forEach(s => { if (latin(s)) err(where, `Latin digit in num «${s}»`); });
+      }
       break;
     case "pick": {
       const ch = it.ch || [];

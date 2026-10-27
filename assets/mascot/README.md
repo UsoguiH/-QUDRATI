@@ -1,4 +1,4 @@
-# قدّور — the mascot files
+# فهيم — the mascot files
 
 Two states ship. The character sheets in `sheets/` carry fourteen poses;
 `python tools/slice_mascot.py` cuts them all, reports them with `--check`, and writes only

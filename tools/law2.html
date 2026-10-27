@@ -1,0 +1,1372 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rule Lab Two</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  /* The rule, met five evidence-based ways, and kept for ninety days
+     (2026-10-26: «they want a very nice and easy way to learn and memorize …
+     1- memorize it fast 2- not forget it … 90 days»). Every version is grounded
+     in research/rule-memory.md. Each phone is a whole first meeting with a rule
+     — four to seven screens — on three real rules of node 1 (learn.js,
+     skills.bigsum lessons 1, 4 and 5), and each ends on recall from a blank.
+     The last section is the review plan every version shares. Nothing here is
+     in the app. */
+  html, body { background: #F7F7F7; }
+  body { margin: 0; font-family: var(--font); color: var(--ink); }
+  .lab { max-width: 2140px; margin: 0 auto; padding: 28px 16px 72px; }
+  .lab-h { max-width: 680px; margin: 0 auto 30px; text-align: center; }
+  .lab-h h1 { font-size: 28px; font-weight: 800; margin: 0; }
+  .lab-h p { margin: 8px 0 0; color: var(--gray); font-weight: 600; font-size: 15.5px; line-height: 1.65; }
+  .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 40px 26px; }
+  .ver { width: min(390px, 100%); }
+  .ver-h { display: flex; align-items: center; gap: 9px; margin: 0 4px 10px; }
+  .ver-h b { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: var(--ink); color: #fff; font-size: 16px; font-family: system-ui, sans-serif; }
+  .ver-h span { font-size: 19px; font-weight: 800; }
+  button { -webkit-tap-highlight-color: transparent; font-family: var(--font); }
+
+  /* ---------- the phone ---------- */
+  .phone {
+    position: relative; height: 790px; box-sizing: border-box; background: #fff;
+    border: 2px solid var(--line); border-bottom-width: 6px; border-radius: 34px;
+    padding: 14px 16px 16px; display: flex; flex-direction: column; overflow: hidden;
+  }
+  .ph-top { display: flex; align-items: center; gap: 6px; }
+  .pills { display: flex; gap: 6px; flex: 1; min-width: 0; }
+  .pill {
+    border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; border-radius: 12px;
+    padding: 4px 9px 2px; font: 700 13.5px var(--font); color: var(--gray); white-space: nowrap; cursor: pointer;
+  }
+  .pill.on { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+  .pill:active, .rp:active { border-bottom-width: 2px; translate: 0 2px; }
+  .rp {
+    flex-shrink: 0; width: 38px; height: 38px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px;
+    background: #fff; display: grid; place-items: center; color: var(--gray); padding: 0; cursor: pointer;
+  }
+  .rp svg { width: 18px; height: 18px; }
+  .steps { display: flex; gap: 5px; margin: 14px 2px 0; }
+  .steps i { flex: 1; height: 10px; border-radius: 5px; background: var(--line); position: relative; overflow: hidden; }
+  .steps i.done { background: var(--green); }
+  .steps i.now::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--green-pale); animation: stNow 1.6s ease-in-out infinite; }
+  @keyframes stNow { 50% { opacity: .35; } }
+  .ph-kick { margin: 16px 0 0; font-size: 14px; font-weight: 800; color: var(--purple-dk); min-height: 20px; }
+  .ph-h { font-size: 21px; font-weight: 800; line-height: 1.35; margin: 2px 0 0; min-height: 28px; }
+  .ph-h b { color: var(--blue); }
+  .stage { position: relative; flex: 1; min-height: 0; margin-top: 12px; display: flex; flex-direction: column; }
+  .ph-foot { padding-top: 6px; }
+  .tip { min-height: 48px; margin: 0 0 8px; text-align: center; font-weight: 700; font-size: 15px; color: var(--gray); line-height: 1.5; display: flex; align-items: center; justify-content: center; padding: 0 6px; }
+  .tip b { color: var(--ink); }
+  .tip.good b, .tip.good { color: var(--green-dk); }
+  .gobtn {
+    display: block; width: 100%; height: 48px; border: 0; border-radius: 14px; margin-bottom: 5px; cursor: pointer;
+    font: 800 16.5px var(--font); color: #fff; background: var(--green); box-shadow: 0 5px 0 var(--green-lip);
+  }
+  .gobtn:not(:disabled):active { translate: 0 5px; box-shadow: 0 0 0 var(--green-lip); }
+  .gobtn:disabled { background: var(--line); box-shadow: 0 5px 0 #CFCFCF; color: #AFAFAF; cursor: default; }
+  .cap { margin: 14px 6px 0; }
+  .cap p { margin: 0; font-weight: 700; font-size: 15px; line-height: 1.6; }
+  .cap ul { direction: ltr; text-align: left; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-weight: 500; font-size: 13px; color: var(--gray); margin: 8px 0 0; padding-left: 18px; line-height: 1.5; }
+  .cap li + li { margin-top: 4px; }
+  .cap li b { color: var(--ink); font-weight: 650; }
+
+  /* ---------- colours of a rule's terms ---------- */
+  .k-blue   { --c: #1CB0F6; --cd: #1899D6; --cl: #DDF4FF; --cb: #84D8FF; --ct: #1899D6; }
+  .k-purple { --c: #CE82FF; --cd: #A568CC; --cl: #F6E8FF; --cb: #E3B6FF; --ct: #A568CC; }
+  .k-orange { --c: #FF9600; --cd: #E07800; --cl: #FFEFD6; --cb: #FFC778; --ct: #E07800; }
+  .k-green  { --c: #58CC02; --cd: #58A700; --cl: #D7FFB8; --cb: #A5ED6E; --ct: #58A700; }
+  .k-red    { --c: #FF4B4B; --cd: #EA2B2B; --cl: #FFDFE0; --cb: #FFB2B2; --ct: #EA2B2B; }
+
+  /* ---------- the rule line ---------- */
+  .rrow { display: flex; align-items: center; justify-content: center; gap: .3em; white-space: nowrap; font-size: 18px; min-width: 0; }
+  .rrow > *, .eqline > *, .said > *, .cmp-long > *, .cmp-fast > * { flex: none; }
+  .rrow .op { font-size: 1.15em; font-weight: 800; color: var(--gray-icon); line-height: 1; }
+  .rrow .w { font-weight: 800; color: var(--ink); }
+  .rwrap { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .rwrap > .rrow { align-self: stretch; }
+  .rpre { font-size: 15px; font-weight: 800; color: var(--gray); }
+  .chip {
+    display: inline-flex; align-items: center; justify-content: center; padding: .2em .62em .08em;
+    border-radius: .72em; background: var(--c); box-shadow: 0 .2em 0 var(--cd); color: #fff;
+    font-weight: 800; line-height: 1.45; white-space: nowrap;
+  }
+  .chip.soft { background: var(--cl); box-shadow: 0 .16em 0 var(--cb); color: var(--ct); }
+  .slot {
+    display: inline-block; min-width: 3.4em; height: 2em; border-radius: .7em; box-sizing: border-box;
+    border: 2px dashed #CFCFCF; background: #F7F7F7;
+  }
+  .slot.cue { min-width: 2.2em; display: inline-grid; place-items: center; color: #BDBDBD; font-weight: 800; font-size: .9em; }
+
+  /* ---------- the rule card: white, its picture and its name ---------- */
+  .rc {
+    position: relative; background: #fff; border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 20px;
+    padding: 12px 12px 16px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .rc-h { display: flex; align-items: center; gap: 8px; min-height: 30px; }
+  .rc-ic { width: 34px; height: 34px; border-radius: 11px; background: var(--purple); box-shadow: 0 3px 0 var(--purple-dk); display: grid; place-items: center; flex: none; }
+  .rc-ic svg { width: 24px; height: 24px; }
+  .rc-tag { font-size: 14px; font-weight: 800; color: var(--gray); }
+  .rc-name { font-size: 16px; font-weight: 800; color: var(--purple-dk); background: #F6E8FF; border-radius: 10px; padding: 2px 10px 0; }
+  .rc-own { margin-inline-start: auto; font-size: 12.5px; font-weight: 800; color: var(--green-dk); display: inline-flex; align-items: center; gap: 4px; }
+  .rc-own svg { width: 15px; height: 15px; }
+  .rc-body { display: flex; align-items: center; gap: 10px; }
+  .rc-body .rrow { flex: 1; }
+  .rc-pic { flex: none; width: 64px; height: 56px; border-radius: 14px; background: #F7F7F7; display: grid; place-items: center; }
+  .rc-pic svg { width: 50px; height: 42px; }
+  .rc-h .rc-pic { margin-inline-start: auto; width: 54px; height: 42px; border-radius: 12px; }
+  .rc-h .rc-pic svg { width: 40px; height: 32px; }
+  .rc-own + .rc-pic { margin-inline-start: 8px; }
+
+  /* ---------- big type ---------- */
+  .big { text-align: center; font-size: 27px; font-weight: 800; line-height: 1.5; white-space: nowrap; }
+  .big.sm { font-size: 22px; }
+  .eqline { display: flex; justify-content: center; align-items: center; gap: .3em; white-space: nowrap; font-size: 24px; font-weight: 800; }
+  .ans { color: var(--green-dk); }
+  .note { text-align: center; font-size: 15px; font-weight: 700; color: var(--gray); }
+  .muted { color: var(--gray-icon); }
+
+  /* ---------- choices ---------- */
+  .opts { display: grid; gap: 10px; }
+  .opts.c3 { grid-template-columns: repeat(3, 1fr); }
+  .opt {
+    min-height: 54px; border-radius: 14px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff;
+    font: 800 20px/1.3 var(--font); color: var(--ink); cursor: pointer; padding: 8px 10px; text-align: center;
+  }
+  .opt.txt { font-size: 15.5px; font-weight: 700; text-align: start; padding: 10px 14px; }
+  .opt:not(:disabled):active { border-bottom-width: 2px; translate: 0 2px; }
+  .opt.sel { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+  .opt.ok { border-color: var(--green-pale); background: var(--green-bg); color: var(--green-dk); }
+  .opt.no { border-color: #FFB2B2; background: var(--red-bg); color: var(--red-dk2); }
+  .opt.dim { opacity: .45; }
+  .opt:disabled { cursor: default; }
+
+  /* ---------- tiles and blanks ---------- */
+  .tiles { display: flex; flex-wrap: wrap; justify-content: center; gap: 9px; margin-top: 18px; }
+  .tl {
+    display: inline-grid; place-items: center; box-sizing: border-box; min-width: 50px; height: 46px; padding: 0 12px 2px;
+    border-radius: 13px; background: #fff; border: 2px solid var(--line); border-bottom-width: 4px;
+    font: 800 18px/1 var(--font); color: var(--ink); white-space: nowrap; cursor: pointer;
+  }
+  .tl:active { border-bottom-width: 2px; translate: 0 2px; }
+  .tl.used { background: var(--line); border-color: var(--line); color: transparent; pointer-events: none; }
+  .bk { /* a blank in the rule */
+    display: inline-grid; place-items: center; min-width: 3.6em; height: 2.05em; box-sizing: border-box; padding: 0 .5em;
+    border-radius: .65em; border: 2px dashed #CFCFCF; background: #F7F7F7; font-weight: 800; color: var(--blue-dk); cursor: pointer; white-space: nowrap;
+  }
+  .bk.f { border: 2px solid var(--blue-border); border-bottom-width: 3px; background: var(--blue-light); }
+  .bk.no { border-color: var(--red); background: var(--red-bg); color: var(--red-dk2); }
+  .bk.ok, .chip.ok, .kp-in.ok, .tl.ok { border-color: var(--green-pale) !important; background: var(--green-bg) !important; color: var(--green-dk) !important; box-shadow: 0 .16em 0 var(--green-pale); }
+  .box { background: #fff; border: 2px solid var(--line); border-radius: 18px; box-shadow: 0 2px 0 var(--line); padding: 16px 10px; }
+
+  /* ---------- the keypad ---------- */
+  .kp-wrap { margin-top: auto; }
+  .kp-in {
+    display: flex; align-items: center; justify-content: center; gap: 2px; height: 58px; margin: 0 auto 12px; width: 70%;
+    border-radius: 16px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font: 800 30px/1 var(--font); color: var(--ink);
+  }
+  .kp-in.no { border-color: #FFB2B2; background: var(--red-bg); color: var(--red-dk2); }
+  .kp-car { width: 2px; height: 30px; background: var(--blue); animation: car 1s steps(1) infinite; }
+  .kp-in.ok .kp-car, .kp-in.lock .kp-car { display: none; }
+  @keyframes car { 50% { opacity: 0; } }
+  .kp { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .kp button {
+    height: 46px; border-radius: 13px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff;
+    font: 800 22px/1 var(--font); color: var(--ink); cursor: pointer; padding: 0 0 2px;
+  }
+  .kp button:active { border-bottom-width: 2px; translate: 0 2px; }
+  .kp button.del { color: var(--gray); font-size: 19px; }
+  .kp span { display: block; }
+  .kp.small button { height: 40px; font-size: 19px; }
+
+  /* ---------- the reminder after a miss: the trick's rows for three seconds ---------- */
+  .remind {
+    position: absolute; inset: 0; z-index: 40; background: rgba(255, 255, 255, .96); border-radius: 18px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center;
+  }
+  .remind .rk { font-size: 14px; font-weight: 800; color: var(--purple-dk); }
+  .remind .rr { font-size: 22px; font-weight: 800; white-space: nowrap; }
+  .remind .rb { width: 60%; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 10px; }
+  .remind .rb i { display: block; height: 100%; background: var(--purple); width: 100%; }
+
+  /* ---------- A: guess, race, compare ---------- */
+  .timer { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; margin: 6px 20px 18px; }
+  .timer i { display: block; height: 100%; width: 100%; background: var(--orange); border-radius: 5px; }
+  .drop { text-align: center; font-size: 46px; font-weight: 800; color: var(--green-dk); line-height: 1.2; margin-top: 18px; }
+  .lane { border-radius: 18px; padding: 12px 14px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; }
+  .lane + .lane { margin-top: 12px; }
+  .lane-h { display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 800; color: var(--gray); }
+  .lane-h .tm { font-variant-numeric: tabular-nums; color: var(--ink); }
+  .lane-v { font-size: 30px; font-weight: 800; text-align: center; margin-top: 4px; min-height: 44px; white-space: nowrap; }
+  .lane-bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin-top: 6px; }
+  .lane-bar i { display: block; height: 100%; width: 0; background: var(--gray-icon); border-radius: 4px; }
+  .lane.fast { border-color: var(--green-pale); background: var(--green-bg); }
+  .lane.fast .lane-h { color: var(--green-dk); }
+  .lane.fast .lane-bar i { background: var(--green); }
+  .cmp { display: flex; flex-direction: column; gap: 12px; }
+  .cmp-card { border-radius: 18px; border: 2px solid var(--line); border-bottom-width: 4px; padding: 12px 10px 10px; text-align: center; }
+  .cmp-long { display: flex; justify-content: center; align-items: center; flex-wrap: nowrap; gap: 5px; font-size: 20px; font-weight: 800; white-space: nowrap; }
+  .cmp-long .t { position: relative; display: inline-grid; place-items: center; min-width: 1.4em; padding: 1px 4px 0; border-radius: 8px; transition: background .2s, color .2s; }
+  .cmp-long .t.hl { background: var(--cl); color: var(--ct); }
+  .cmp-long .t .n { position: absolute; top: -13px; left: 50%; translate: -50% 0; min-width: 18px; height: 18px; border-radius: 9px; background: var(--purple); color: #fff; font-size: 11.5px; line-height: 19px; }
+  .cmp-long .p { color: var(--gray-icon); }
+  .cmp-fast { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 12px; font-size: 22px; font-weight: 800; white-space: nowrap; }
+  .cmp-fast .op { color: var(--gray-icon); }
+  .ftk { border: 0; cursor: pointer; font: 800 22px/1.4 var(--font); padding: 1px 12px 0; border-radius: 12px; background: #fff; box-shadow: inset 0 0 0 2px var(--cb), 0 3px 0 var(--cb); color: var(--ct); animation: ftk 1.6s ease-in-out infinite; }
+  .ftk.on { background: var(--c); color: #fff; box-shadow: 0 3px 0 var(--cd); animation: none; }
+  @keyframes ftk { 50% { translate: 0 -3px; } }
+
+  /* ---------- B: from things to symbols ---------- */
+  .pic { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 6px; position: relative; }
+  .drow { display: flex; gap: 8px; padding: 8px 12px; border-radius: 20px; border: 2px dashed transparent; cursor: pointer; background: none; position: relative; }
+  .drow .d { width: 22px; height: 22px; border-radius: 50%; background: #E5E5E5; box-shadow: inset 0 -3px 0 #D0D0D0; transition: background .2s, box-shadow .2s; }
+  .drow.idle { border-color: #DADADA; animation: ftk 1.6s ease-in-out infinite; }
+  .drow.g { background: var(--blue-light); border: 2px solid var(--blue-border); cursor: default; }
+  .drow.g .d { background: var(--blue); box-shadow: inset 0 -3px 0 var(--blue-dk); }
+  .drow .dc { position: absolute; left: -38px; top: 50%; translate: 0 -50%; min-width: 26px; height: 26px; border-radius: 13px; background: var(--blue); box-shadow: 0 3px 0 var(--blue-dk); color: #fff; font-size: 15px; font-weight: 800; display: grid; place-items: center; line-height: 1; }
+  .brk { position: absolute; font-size: 15px; font-weight: 800; white-space: nowrap; display: flex; align-items: center; gap: 6px; }
+  .brk .line { background: currentColor; border-radius: 2px; }
+  .brk.v { flex-direction: row; color: var(--purple-dk); }
+  .brk.v .line { width: 4px; align-self: stretch; }
+  .brk.h { flex-direction: column; color: var(--blue-dk); }
+  .brk.h .line { height: 4px; align-self: stretch; }
+  .gtiles { display: flex; gap: 5px; justify-content: center; margin-top: 8px; }
+  .gt { width: 30px; height: 40px; border-radius: 10px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; display: grid; place-items: center; font-weight: 800; font-size: 16px; cursor: pointer; padding: 0; }
+  .gt.p { background: var(--cl); border-color: var(--cb); color: var(--ct); cursor: default; }
+  .pairs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 18px; min-height: 40px; }
+  .pairs .chip { font-size: 16px; }
+  .sq { display: grid; gap: 4px; justify-content: center; margin-top: 6px; }
+  .sq i { width: 36px; height: 36px; border-radius: 9px; border: 2px dashed #DADADA; box-sizing: border-box; }
+  .sq i.on { border: 0; background: var(--c); box-shadow: inset 0 -4px 0 var(--cd); }
+  .sq.idle { cursor: pointer; }
+  .runsum { text-align: center; font-size: 22px; font-weight: 800; margin-top: 14px; min-height: 34px; white-space: nowrap; }
+  .collapse { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 18px; }
+  .numrow .chip { cursor: pointer; }
+  .numrow .chip.num { animation: ftk 1.6s ease-in-out infinite; }
+
+  /* ---------- C: faded examples ---------- */
+  .wk { display: flex; flex-direction: column; gap: 6px; }
+  .wk-l { display: flex; align-items: center; gap: 10px; }
+  .wk-l .eqline { flex: 1; justify-content: flex-start; font-size: 22px; }
+  .wk-t { flex: none; width: 74px; font-size: 12.5px; font-weight: 800; color: var(--purple-dk); text-align: center; background: #F6E8FF; border-radius: 9px; padding: 3px 4px 1px; line-height: 1.3; }
+  .fb { display: inline-grid; place-items: center; min-width: 1.9em; height: 1.55em; border-radius: .5em; border: 2px dashed var(--blue-border); background: #F7F7F7; color: var(--blue-dk); }
+  .fb.f { border-style: solid; background: var(--blue-light); }
+  .clock { display: flex; justify-content: center; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; color: var(--gray); margin-bottom: 4px; }
+  .clock b { font-variant-numeric: tabular-nums; color: var(--ink); min-width: 1.6em; text-align: center; }
+
+  /* ---------- D: the name ---------- */
+  .ntag {
+    display: inline-flex; align-items: center; gap: 10px; padding: 8px 18px 6px 10px; border-radius: 18px; cursor: pointer; border: 0;
+    background: var(--purple); box-shadow: 0 5px 0 var(--purple-dk); color: #fff; font: 800 22px/1.3 var(--font);
+  }
+  .ntag .ni { width: 38px; height: 38px; border-radius: 12px; background: #fff; display: grid; place-items: center; }
+  .ntag .ni svg { width: 28px; height: 28px; }
+  .ntag.idle { animation: ftk 1.6s ease-in-out infinite; }
+  .why-q { font-size: 20px; font-weight: 800; text-align: center; line-height: 1.5; margin-bottom: 14px; }
+  .more { margin-top: 12px; border-radius: 16px; background: var(--green-bg); color: var(--green-dk); font-weight: 800; font-size: 15.5px; padding: 10px 14px; line-height: 1.5; text-align: center; }
+
+  /* ---------- E: which rule ---------- */
+  .bins { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; }
+  .bin {
+    border-radius: 18px; border: 2px solid var(--line); border-bottom-width: 5px; background: #fff; cursor: pointer;
+    padding: 10px 8px 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; min-height: 120px; font-family: var(--font);
+  }
+  .bin:active { border-bottom-width: 3px; translate: 0 2px; }
+  .bin .bi { width: 40px; height: 40px; border-radius: 12px; background: var(--purple); box-shadow: 0 3px 0 var(--purple-dk); display: grid; place-items: center; }
+  .bin .bi svg { width: 28px; height: 28px; }
+  .bin.alt .bi { background: var(--blue); box-shadow: 0 3px 0 var(--blue-dk); }
+  .bin b { font-size: 15px; font-weight: 800; color: var(--ink); line-height: 1.3; text-align: center; }
+  .bin .cnt { display: flex; gap: 4px; min-height: 12px; }
+  .bin .cnt i { width: 12px; height: 12px; border-radius: 50%; background: var(--green); }
+  .bin.hit { border-color: var(--green-pale); background: var(--green-bg); }
+  .pcard { margin: 18px auto 0; border-radius: 18px; border: 2px solid var(--line); border-bottom-width: 5px; background: #fff; padding: 18px 14px; text-align: center; font-size: 24px; font-weight: 800; white-space: nowrap; min-width: 70%; }
+  .pcard small { display: block; font-size: 13px; color: var(--gray-icon); font-weight: 800; margin-bottom: 2px; }
+  .said { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 24px; font-weight: 800; white-space: nowrap; }
+  .said .stk { border: 0; background: none; font: 800 24px/1.4 var(--font); color: var(--ink); padding: 0 6px; border-radius: 10px; cursor: pointer; box-shadow: inset 0 -3px 0 #E5E5E5; }
+  .said .stk.ok { background: var(--green-bg); color: var(--green-dk); box-shadow: inset 0 0 0 2px var(--green-pale); }
+  .said .stk.no { background: var(--red-bg); color: var(--red-dk2); }
+  .ahmad { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .ahmad .av { width: 44px; height: 44px; border-radius: 50%; background: var(--orange); color: #fff; font-size: 22px; font-weight: 800; display: grid; place-items: center; box-shadow: 0 3px 0 var(--orange-dk); flex: none; }
+  .ahmad .bub { flex: 1; border: 2px solid var(--line); border-radius: 16px; padding: 8px 12px; font-size: 15px; font-weight: 700; color: var(--gray); }
+
+  /* ---------- recall from a blank ---------- */
+  .rec-cue { display: flex; justify-content: center; margin-bottom: 14px; }
+  .self { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+  .self .opt { font-size: 16.5px; }
+  .fin { margin-top: 16px; border-radius: 16px; padding: 12px 14px; font-weight: 800; font-size: 15.5px; line-height: 1.5; text-align: center; }
+  .fin.good { background: var(--green-bg); color: var(--green-dk); }
+  .fin.soft { background: var(--blue-light); color: var(--blue-dk); }
+  .fin small { display: block; font-size: 13px; opacity: .8; margin-top: 2px; }
+
+  /* ---------- the right-answer wave (the app's adWave) ---------- */
+  .wv { position: relative; }
+
+  /* =====================================================================
+     the 90-day plan
+     ===================================================================== */
+  .plan { max-width: 1200px; margin: 64px auto 0; }
+  .plan-h { text-align: center; }
+  .plan-h h2 { font-size: 30px; font-weight: 800; margin: 0; }
+  .plan-h p { margin: 8px auto 0; max-width: 720px; color: var(--gray); font-weight: 600; font-size: 15.5px; line-height: 1.65; }
+  .plan-h .en { direction: ltr; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-size: 13.5px; font-weight: 500; }
+  .card { background: #fff; border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 24px; padding: 20px 20px 18px; margin-top: 22px; }
+  .card h3 { font-size: 19px; font-weight: 800; margin: 0 0 4px; }
+  .card .sub { font-size: 14.5px; font-weight: 600; color: var(--gray); margin: 0 0 12px; line-height: 1.6; }
+  .chart-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .legend { display: flex; gap: 16px; align-items: center; font-size: 14px; font-weight: 700; color: var(--ink); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { display: inline-block; width: 22px; height: 0; border-top: 3px solid; border-radius: 2px; }
+  .legend .lw i { border-color: var(--green); }
+  .legend .lo i { border-color: #AFAFAF; border-top-style: dashed; }
+  .play { margin-inline-start: auto; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; border-radius: 12px; padding: 5px 14px 3px; font: 800 14px var(--font); color: var(--ink); cursor: pointer; }
+  .play:active { border-bottom-width: 2px; translate: 0 2px; }
+  .chart { position: relative; margin-top: 10px; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; direction: ltr; }
+  .chart .ax { font: 600 12px var(--font); fill: #8A8A8A; }
+  .chart .grid line { stroke: #EFEFEF; stroke-width: 1; }
+  .chart .lbl { font: 800 14px var(--font); }
+  .tipbox { position: absolute; pointer-events: none; background: #fff; border: 2px solid var(--line); border-radius: 12px; padding: 6px 10px 4px; font-size: 13px; font-weight: 700; white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,.08); opacity: 0; transition: opacity .12s; }
+  .tipbox b { display: block; font-size: 12px; color: var(--gray); }
+  .tipbox .r { display: flex; align-items: center; gap: 6px; }
+  .tipbox .r i { width: 12px; border-top: 3px solid; }
+  .tl90 { position: relative; margin: 56px 38px 8px; height: 120px; }
+  .tl90 .rail { position: absolute; top: 44px; left: 0; right: 0; height: 12px; border-radius: 6px; background: #EFEFEF; }
+  .tl90 .win { position: absolute; top: 40px; height: 20px; border-radius: 8px; }
+  .tl90 .mk { position: absolute; top: 38px; width: 24px; height: 24px; margin-right: -12px; border-radius: 50%; background: var(--green); box-shadow: 0 3px 0 var(--green-lip); display: grid; place-items: center; color: #fff; font-size: 12px; font-weight: 800; }
+  .tl90 .mk.learn { background: var(--purple); box-shadow: 0 3px 0 var(--purple-dk); }
+  .tl90 .mk.exam { background: var(--red); box-shadow: 0 3px 0 var(--red-dk2); width: 30px; height: 30px; margin-right: -15px; top: 35px; }
+  .tl90 .gap.lo { top: -22px; }
+  .tl90 .gap { position: absolute; top: 6px; translate: 50% 0; font-size: 12.5px; font-weight: 800; color: var(--green-dk); background: var(--green-bg); border-radius: 8px; padding: 2px 7px 0; white-space: nowrap; }
+  .tl90 .day { position: absolute; top: 72px; translate: 50% 0; font-size: 12px; font-weight: 700; color: var(--gray); white-space: nowrap; }
+  .tl90 .wl { position: absolute; top: 96px; translate: 50% 0; font-size: 12px; font-weight: 800; white-space: nowrap; }
+  .exw { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; }
+  .exw div { border-radius: 16px; padding: 12px 14px; font-size: 14px; font-weight: 700; line-height: 1.55; color: var(--ink); }
+  .exw b { display: block; font-size: 15px; margin-bottom: 2px; }
+  .exw .w1 { background: var(--orange-bg); } .exw .w1 b { color: var(--orange-dk); }
+  .exw .w2 { background: #FFE5E5; } .exw .w2 b { color: var(--red-dk2); }
+  .exw .w3 { background: var(--blue-light); } .exw .w3 b { color: var(--blue-dk); }
+  .revs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 14px; }
+  .rv { position: relative; border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 22px; padding: 14px 14px 14px; display: flex; flex-direction: column; min-height: 470px; background: #fff; overflow: hidden; }
+  .rv-h { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: var(--gray); }
+  .rv-h .tag { margin-inline-start: auto; background: #F2F2F2; border-radius: 8px; padding: 2px 8px 0; }
+  .rv-k { font-size: 13.5px; font-weight: 800; color: var(--purple-dk); margin-top: 10px; }
+  .rv-q { font-size: 19px; font-weight: 800; margin: 4px 0 12px; line-height: 1.45; }
+  .rv .stage { margin-top: 0; }
+  .rv .box { padding: 12px 4px; }
+  .rv .bk { min-width: 2.6em; padding: 0 .3em; }
+  .rv .gobtn { height: 44px; font-size: 15.5px; margin-top: 10px; }
+  .rv-done { margin-top: 10px; border-radius: 14px; background: var(--green-bg); color: var(--green-dk); font-weight: 800; font-size: 14.5px; padding: 8px 10px; text-align: center; line-height: 1.45; }
+  .rv-done.soft { background: var(--blue-light); color: var(--blue-dk); }
+  .load { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 22px; font-size: 20px; font-weight: 800; }
+  .load .pillx { background: var(--green); color: #fff; box-shadow: 0 4px 0 var(--green-lip); border-radius: 16px; padding: 8px 18px 6px; }
+  .rules3 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 12px; }
+  .rules3 div { border-radius: 16px; background: #F7F7F7; padding: 12px; font-size: 14px; font-weight: 700; line-height: 1.55; }
+  .rules3 b { display: block; font-size: 15px; color: var(--ink); }
+  @media (max-width: 1100px) { .revs, .rules3 { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 640px) {
+    .revs, .rules3, .exw { grid-template-columns: 1fr; }
+    /* the chart and the timeline keep their size and scroll sideways on a phone */
+    .chart, .tlw { overflow-x: auto; overscroll-behavior-x: contain; }
+    .chart svg { min-width: 680px; }
+    .tl90 { min-width: 700px; }
+  }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="lab">
+  <div class="lab-h">
+    <h1>القاعدة — تنحفظ بسرعة وما تنتسى</h1>
+    <p>خمس طرق يقابل فيها الطالب القاعدة أول مرة، كل وحدة مبنية على أبحاث الذاكرة وطريقة ديولينجو — وكلها تنتهي بإنه يتذكرها من الصفر. وتحتها الخطة اللي تخليها معه ٩٠ يوم لين الاختبار.</p>
+  </div>
+  <div class="grid" id="grid"></div>
+  <section class="plan" id="plan"></section>
+</div>
+<script>
+(function () {
+  /* ================================================================
+     helpers
+     ================================================================ */
+  const ar = n => String(n).replace(/-/g, '−').replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+  const num = s => +String(s).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const shuf = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function anim(el, kf, o) {
+    if (!el || !el.animate) return null;
+    o = Object.assign({ fill: 'none' }, o);
+    if (RM) { o.duration = 1; o.delay = 0; }
+    return el.animate(kf, o);
+  }
+  const popIn = (el, d = 0) => { if (!el) return; return anim(el, [
+    { opacity: 0, scale: '.3' }, { opacity: 1, scale: '1.14', offset: .55 }, { scale: '.96', offset: .8 }, { opacity: 1, scale: '1' }],
+    { duration: 420, delay: d, easing: 'ease-out', fill: 'backwards' }); };
+  const rise = (el, d = 0) => anim(el, [{ opacity: 0, translate: '0 14px' }, { opacity: 1, translate: '0 0' }], { duration: 340, delay: d, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' });
+  const shake = el => anim(el, [{ translate: '0 0' }, { translate: '-8px 0' }, { translate: '7px 0' }, { translate: '-5px 0' }, { translate: '3px 0' }, { translate: '0 0' }], { duration: 360 });
+  const sink = el => anim(el, [{ translate: '0 0', scale: '1 1' }, { translate: '0 5px', scale: '1.03 .94', offset: .3 }, { translate: '0 0', scale: '1 1' }], { duration: 300 });
+  const hop = (el, h = 14, d = 0) => anim(el, [
+    { translate: '0 0', scale: '1 1' }, { translate: '0 2px', scale: '1.08 .9', offset: .14 },
+    { translate: `0 -${h}px`, scale: '.95 1.06', offset: .46 }, { translate: '0 1px', scale: '1.07 .92', offset: .78 },
+    { translate: '0 0', scale: '1 1' }], { duration: 500, delay: d, easing: 'ease-out' });
+  const stamp = (el, d = 0) => anim(el, [
+    { opacity: 0, scale: '1.7', translate: '0 -10px' }, { opacity: 1, scale: '.9 1.04', translate: '0 0', offset: .5 },
+    { scale: '1.06 .9', offset: .72 }, { opacity: 1, scale: '1', translate: '0 0' }], { duration: 440, delay: d, easing: 'ease-in', fill: 'backwards' });
+  /* one line, always: shrink a row's type until it fits */
+  function fit(row) {
+    if (!row) return;
+    row.style.fontSize = '';
+    const avail = row.clientWidth;
+    if (!avail) return;
+    const cs = getComputedStyle(row), kids = Array.from(row.children);
+    const need = cs.display.includes('flex') && kids.length
+      ? kids.reduce((a, k) => a + k.offsetWidth, 0) + (parseFloat(cs.columnGap) || 0) * (kids.length - 1) + (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0)
+      : row.scrollWidth;
+    if (need > avail + 1) row.style.fontSize = (parseFloat(getComputedStyle(row).fontSize) * avail / need * .96).toFixed(2) + 'px';
+  }
+  const fitAll = root => $$('.rrow, .big, .eqline, .cmp-long, .cmp-fast, .said, .pcard, .lane-v, .runsum', root).forEach(fit);
+
+  /* Duolingo's right-answer wave on chips (the app's adWave, AtomicDelightAnimation):
+     one after another 50ms apart, in the order they were placed; each crouches,
+     springs, lands past its place, and turns green 100ms in */
+  const AD_JUMP = [[0, 0, 'cubic-bezier(.01,0,0,1)'], [.1277, 7.3, 'linear'], [.1538, -12.7, 'cubic-bezier(.1,.53,0,.92)'],
+    [.3585, -23.6, 'cubic-bezier(1,-.05,.95,.65)'], [.6923, 4.4, 'cubic-bezier(.09,.75,.4,.95)'], [.8723, -7.3, 'cubic-bezier(.89,-.08,.95,.79)'], [1, 0]];
+  const AD_SQ = [[0, 1, 1, 'cubic-bezier(.01,0,0,1)'], [.1509, 1.08, .86, 'linear'], [.1818, .9, 1.06, 'cubic-bezier(.01,0,.15,1)'],
+    [.4236, 1, 1, 'cubic-bezier(.85,0,.94,.72)'], [.7873, 1, 1.06, 'linear'], [.8182, 1.05, .93, 'cubic-bezier(.1,.47,.01,1)'], [1, 1, 1]];
+  function wave(chips) {
+    chips.filter(Boolean).forEach((c, i) => {
+      const D = i * 50;
+      if (RM) { c.classList.add('ok'); return; }
+      anim(c, AD_JUMP.map(([o, y, e]) => Object.assign({ offset: o, translate: `0 ${y}px` }, e ? { easing: e } : {})), { duration: 650, delay: D });
+      anim(c, AD_SQ.map(([o, x, y, e]) => Object.assign({ offset: o, scale: `${x} ${y}` }, e ? { easing: e } : {})), { duration: 550, delay: D });
+      setTimeout(() => c.classList.add('ok'), D + 100);
+    });
+  }
+
+  /* ---------------- sound ---------------- */
+  let AC = null;
+  function ac() {
+    if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+    if (AC.state === 'suspended') AC.resume();
+    return AC;
+  }
+  function tone(f, d = .12, type = 'sine', g = .1, at = 0) {
+    const a = ac(); if (!a) return;
+    const t = a.currentTime + at, o = a.createOscillator(), v = a.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(g, t + .01); v.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(v); v.connect(a.destination); o.start(t); o.stop(t + d + .03);
+  }
+  const SCALE = [523, 587, 659, 784, 880, 1047, 1175, 1319, 1568, 1760, 2093];
+  const note = k => tone(SCALE[clamp(k, 0, SCALE.length - 1)], .18, 'triangle', .09);
+  const tap = () => tone(720, .05, 'square', .025);
+  const thud = () => { tone(150, .14, 'sine', .2); tone(90, .1, 'triangle', .08); };
+  const bad = () => { tone(230, .14, 'sawtooth', .04); tone(190, .2, 'sawtooth', .04, .09); };
+  const tick = k => tone(900 + k * 40, .03, 'square', .02);
+  let rightClip = null;
+  const right = () => {
+    try { rightClip = rightClip || new Audio('../assets/sounds/right-answer.mp3'); rightClip.currentTime = 0; const p = rightClip.play(); if (p && p.catch) p.catch(() => {}); }
+    catch (e) { [523, 659, 784].forEach((f, i) => tone(f, .2, 'triangle', .08, i * .07)); }
+  };
+  const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+
+  /* ---------------- icons and pictures ---------------- */
+  const SVG = {
+    replay: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    bulb: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2.5a7 7 0 0 0-4.2 12.6c.7.5 1.2 1.3 1.2 2.2v.7h6v-.7c0-.9.5-1.7 1.2-2.2A7 7 0 0 0 12 2.5z"/><rect x="9" y="19" width="6" height="2.6" rx="1.3"/></svg>'
+  };
+  /* the rule's own picture: the dual code it keeps on its card and on every review */
+  const PIC = {
+    rep: '<svg viewBox="0 0 60 48"><g fill="#DDF4FF"><rect x="2" y="3" width="56" height="12" rx="6"/><rect x="2" y="18" width="56" height="12" rx="6"/><rect x="2" y="33" width="56" height="12" rx="6"/></g><g fill="#1CB0F6">' +
+      [9, 24, 39].map(y => [11, 23, 35, 47].map(x => `<circle cx="${x}" cy="${y}" r="4.3"/>`).join('')).join('') + '</g></svg>',
+    gauss: '<svg viewBox="0 0 64 44"><g fill="none" stroke-width="3.2" stroke-linecap="round"><path d="M7 33Q32 -6 57 33" stroke="#CE82FF"/><path d="M17 33Q32 6 47 33" stroke="#FF9600"/><path d="M27 33Q32 18 37 33" stroke="#58CC02"/></g><g fill="#1CB0F6">' +
+      [7, 17, 27, 37, 47, 57].map(x => `<circle cx="${x}" cy="37" r="4.3"/>`).join('') + '</g></svg>',
+    odd: '<svg viewBox="0 0 48 48">' + [0, 1, 2].map(r => [0, 1, 2].map(c => { const L = Math.max(r, c), f = ['#FF9600', '#1CB0F6', '#CE82FF'][L];
+      return `<rect x="${2 + c * 15.5}" y="${2 + r * 15.5}" width="13" height="13" rx="3.5" fill="${f}"/>`; }).join('')).join('') + '</svg>'
+  };
+  const ICON = {
+    rep: '<svg viewBox="0 0 24 24" fill="#CE82FF">' + [6, 12, 18].map(y => [6, 12, 18].map(x => `<circle cx="${x}" cy="${y}" r="2.6"/>`).join('')).join('') + '</svg>',
+    gauss: '<svg viewBox="0 0 24 24" fill="none" stroke="#CE82FF" stroke-width="2.6" stroke-linecap="round"><path d="M4 18Q12 0 20 18"/><path d="M8 18Q12 8 16 18"/><circle cx="4" cy="19" r="1.6" fill="#CE82FF"/><circle cx="20" cy="19" r="1.6" fill="#CE82FF"/></svg>',
+    odd: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="5" rx="1.4" fill="#CE82FF"/><path d="M10 3h4v11H3v-4h7z" fill="#E3B6FF"/><path d="M16 3h5v18H3v-5h13z" fill="#CE82FF"/></svg>'
+  };
+  const iconWhite = k => ICON[k].replace(/#CE82FF/g, "#fff").replace(/#E3B6FF/g, "#F6E8FF");
+
+  /* ================================================================
+     the three rules — learn.js wording, exactly (skills.bigsum lessons 1, 4, 5)
+     ================================================================ */
+  const T = (k, t) => ({ k, t });
+  const terms = (v, list) => list.length <= 7 ? list.map(ar).join(' + ') : [list[0], list[1], list[2]].map(ar).join(' + ') + ' + … + ' + ar(list[list.length - 1]);
+  const RULES = {
+    rep: {
+      tab: 'المكرر', name: 'العدد × مرّاته', alike: 'gauss',
+      learn: '*المجموع* = *العدد* × *عدد مرات تكراره*',
+      col: { s: 'orange', a: 'blue', n: 'purple' },
+      toks: [T('s', 'المجموع'), '=', T('a', 'العدد'), '×', T('n', 'عدد مرات تكراره')],
+      decoys: ['آخر عدد', 'عددها'],
+      gen(o = {}) {
+        const a = o.dots ? rnd(3, 6) : pick([6, 7, 8, 9, 12, 15, 20, 25, 30, 40]);
+        let n = o.dots ? rnd(3, 5) : rnd(4, 7); if (n === a) n = n > 3 ? n - 1 : n + 1;
+        const list = Array(n).fill(a);
+        return { a, n, ans: a * n, list, vals: { s: a * n, a, n }, long: terms(null, list), fast: `${ar(a)} × ${ar(n)}` };
+      },
+      fastToks: v => [{ t: v.a, act: 'same', k: 'a' }, '×', { t: v.n, act: 'count', k: 'n' }],
+      blank: v => ({ html: `${ar(v.a)} × <span class="fb"></span>`, want: v.n, fill: v.n }),
+      work: ['نفس العدد', 'كم مرة؟', 'الناتج'],
+      why: { q: v => `ليش ${v.long}<br>= ${ar(v.a)} × ${ar(v.n)}؟`, ch: ['لأن الضرب يعني تجمع العدد نفسه كذا مرة', 'لأن العددين قريبين من بعض', 'صدفة — بس في هالمثال'], more: v => `الضرب = جمع متكرر: «× ${ar(v.n)}» يعني «اجمعه ${ar(v.n)} مرات».`, hint: v => `فكّر: وش معنى «× ${ar(v.n)}» أصلاً؟` },
+      spot: v => ({ said: [v.a, '×', v.a], wrong: [2], fix: `تكرّر ${ar(v.n)} مرات — مو ${ar(v.a)}` }),
+      tell: 'نفس العدد يتكرر',
+      bTitle: 'كم حبّة؟ <b>اضغط كل صف</b>'
+    },
+    gauss: {
+      tab: 'من ١ إلى عدد', name: 'حيلة الطرفين', alike: 'odd',
+      learn: 'من ١ إلى أي عدد: *آخر عدد* × (*آخر عدد* + ١) ÷ ٢',
+      col: { L: 'blue' },
+      pre: 'من ١ إلى أي عدد:',
+      toks: [T('L', 'آخر عدد'), '×', '(', T('L', 'آخر عدد'), '+', '١', ')', '÷', '٢'],
+      decoys: ['العدد', 'عددها'],
+      gen(o = {}) {
+        const L = o.dots ? pick([6, 8, 10]) : pick([10, 12, 20, 30, 40, 50, 100]);
+        const list = Array.from({ length: L }, (_, i) => i + 1);
+        return { L, ans: L * (L + 1) / 2, list, vals: { L }, long: terms(null, list), fast: `${ar(L)} × ${ar(L + 1)} ÷ ٢` };
+      },
+      fastToks: v => [{ t: v.L, act: 'last', k: 'L' }, '×', '(', { t: v.L, act: 'last', k: 'L' }, '+', '١', ')', '÷', '٢'],
+      blank: v => ({ html: `${ar(v.L)} × <span class="fb"></span> ÷ ٢`, want: v.L + 1, fill: v.L + 1 }),
+      work: ['آخر عدد', 'اللي بعده', 'الناتج'],
+      why: { q: v => `ليش ١ + ٢ + … + ${ar(v.L)}<br>= ${ar(v.L)} × ${ar(v.L + 1)} ÷ ٢؟`, ch: ['لأن كل طرفين مع بعض = آخر عدد + ١', 'لأن الأعداد كلها زوجية', 'لأن ÷ ٢ تصغّر الناتج وبس'], more: '١ + ١٠ = ٢ + ٩ = ٣ + ٨ = ١١ … وعدد الأزواج نص الأعداد.', hint: 'جرّب: ١ + آخر عدد = ؟ وبعدها ٢ + اللي قبل الأخير؟' },
+      spot: v => ({ said: [v.L, '×', v.L, '÷', '٢'], wrong: [2], fix: `بعد آخر عدد: ${ar(v.L)} + ١ = ${ar(v.L + 1)}` }),
+      tell: 'أعداد متتالية من ١',
+      bTitle: 'زوّج الأطراف: <b>اضغط أي رقم</b>'
+    },
+    odd: {
+      tab: 'الفردية', name: 'عددها في نفسها', alike: 'gauss',
+      learn: '*مجموع الفردية* من ١ = *عددها* × *عددها*',
+      col: { s: 'orange', k: 'blue' },
+      toks: [T('s', 'مجموع الفردية'), 'من ١', '=', T('k', 'عددها'), '×', T('k', 'عددها')],
+      decoys: ['آخر عدد', 'العدد'],
+      gen(o = {}) {
+        const k = o.dots ? rnd(3, 5) : rnd(4, 7);
+        const list = Array.from({ length: k }, (_, i) => 2 * i + 1);
+        return { k, last: 2 * k - 1, ans: k * k, list, vals: { s: k * k, k }, long: terms(null, list), fast: `${ar(k)} × ${ar(k)}` };
+      },
+      fastToks: v => [{ t: v.k, act: 'count', k: 'k' }, '×', { t: v.k, act: 'count', k: 'k' }],
+      blank: v => ({ html: `<span class="fb"></span> × <span class="fb"></span>`, want: v.k, fill: v.k }),
+      work: ['كم فردي؟', 'في نفسه', 'الناتج'],
+      why: { q: v => `ليش ${v.long}<br>= ${ar(v.k)} × ${ar(v.k)}؟`, ch: ['لأن كل فردي يزيد المربع طبقة على شكل زاوية', 'لأن الفردية أصغر من الزوجية', 'صدفة — بس في هالمثال'], more: '١ مربع، + ٣ يصير ٢ × ٢، + ٥ يصير ٣ × ٣ …', hint: 'ارسمها: ١ حبّة، بعدين ٣ حولها… وش يطلع؟' },
+      spot: v => ({ said: [v.last, '×', v.last], wrong: [0, 2], fix: `عددها ${ar(v.k)} — مو آخر فردي (${ar(v.last)})` }),
+      tell: 'أعداد فردية من ١',
+      bTitle: 'ابنِ بالطبقات: <b>اضغط المربع</b>'
+    }
+  };
+  for (const k in RULES) RULES[k].key = k;
+
+  /* the rule as a row: chips, blanks or numbers */
+  const opGlyph = tk => tk === '(' ? '<span class="op" dir="ltr">)</span>' : tk === ')' ? '<span class="op" dir="ltr">(</span>'
+    : /^[=×÷+−١٢]$/.test(tk) ? `<span class="op">${tk}</span>` : `<span class="w">${tk}</span>`;
+  function rowHtml(R, mode, v) {
+    const row = `<div class="rrow">${R.toks.map((tk, i) => {
+      if (typeof tk === 'string') return opGlyph(tk);
+      const col = R.col[tk.k];
+      if (mode === 'blank') return `<span class="bk k-${col}" data-i="${i}"></span>`;
+      if (mode === 'num') return `<span class="chip num k-${col}" data-i="${i}" data-w="${tk.t}">${ar(v.vals[tk.k])}</span>`;
+      return `<span class="chip k-${col}" data-i="${i}">${tk.t}</span>`;
+    }).join('')}</div>`;
+    /* a rule that opens with its condition («من ١ إلى أي عدد:») says it on a line of its own above the row */
+    return R.pre ? `<div class="rwrap"><span class="rpre">${R.pre}</span>${row}</div>` : row;
+  }
+  function cardHtml(R, o = {}) {
+    return `<div class="rc">
+      <div class="rc-h"><span class="rc-ic">${o.name ? iconWhite(R.key) : SVG.bulb}</span>
+        ${o.name ? `<span class="rc-name">${R.name}</span>` : `<span class="rc-tag">القاعدة</span>`}
+        ${o.own ? `<span class="rc-own">${SVG.check}بكلماتك</span>` : ''}${o.pic ? `<span class="rc-pic">${PIC[R.key]}</span>` : ''}</div>
+      <div class="rc-body">${rowHtml(R, 'chip')}</div>
+    </div>`;
+  }
+  const nameTag = (R, idle) => `<button class="ntag${idle ? ' idle' : ''}"><span class="ni">${ICON[R.key]}</span>${R.name}</button>`;
+  const near = v => shuf([...new Set([v.ans, Math.round(v.ans * 1.25), Math.round(v.ans * .8), v.ans + (v.a || v.L || v.k)])].filter(x => x !== v.ans)).slice(0, 2).concat(v.ans);
+
+  /* ================================================================
+     widgets: keypad, tiles-into-blanks, the reminder
+     ================================================================ */
+  function keypad(box, onChange, small) {
+    box.insertAdjacentHTML('beforeend', `<div class="kp-wrap"><div class="kp-in"><span class="kp-v"></span><i class="kp-car"></i></div>
+      <div class="kp${small ? ' small' : ''}" dir="ltr">${['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩', '', '٠', '⌫'].map(k => k ? `<button data-k="${k}"${k === '⌫' ? ' class="del"' : ''}>${k}</button>` : '<span></span>').join('')}</div></div>`);
+    const wrap = box.lastElementChild, inp = $('.kp-in', wrap), val = $('.kp-v', wrap);
+    let s = '', locked = false;
+    wrap.addEventListener('click', e => {
+      const b = e.target.closest('button[data-k]'); if (!b || locked) return;
+      const k = b.dataset.k;
+      if (k === '⌫') s = s.slice(0, -1); else if (s.length < 6) s += k;
+      inp.classList.remove('no');
+      val.textContent = s; tap(); onChange && onChange(s);
+    });
+    return { get: () => s, n: () => num(s), clear() { s = ''; val.textContent = ''; inp.classList.remove('no'); onChange && onChange(s); }, lock(on = true) { locked = on; inp.classList.toggle('lock', on); }, inp };
+  }
+  /* tiles into the rule's blanks; the order they went in is kept for the wave */
+  function builder(box, R, onFull) {
+    const terms = R.toks.map((tk, i) => typeof tk === 'string' ? null : { i, t: tk.t }).filter(Boolean);
+    const tiles = shuf(terms.map(x => x.t).concat(R.decoys));
+    box.insertAdjacentHTML('beforeend', `<div class="box">${rowHtml(R, 'blank')}</div>
+      <div class="tiles">${tiles.map((t, k) => `<button class="tl" data-k="${k}">${t}</button>`).join('')}</div>`);
+    const blanks = $$('.bk', box), tl = $$('.tl', box), put = {}, order = [];
+    const refresh = () => { tl.forEach(b => b.classList.toggle('used', Object.values(put).includes(+b.dataset.k))); onFull(blanks.every(b => put[b.dataset.i] != null)); };
+    box.addEventListener('click', e => {
+      const t = e.target.closest('.tl');
+      if (t) {
+        const b = blanks.find(x => put[x.dataset.i] == null); if (!b) return;
+        put[b.dataset.i] = +t.dataset.k; order.push(b);
+        b.textContent = tiles[+t.dataset.k]; b.classList.add('f'); b.classList.remove('no'); tap(); popIn(b); refresh(); fit($('.rrow', box)); return;
+      }
+      const b = e.target.closest('.bk');
+      if (b && put[b.dataset.i] != null && !b.classList.contains('ok')) { delete put[b.dataset.i]; b.textContent = ''; b.classList.remove('f', 'no'); order.splice(order.indexOf(b), 1); tap(); refresh(); fit($('.rrow', box)); }
+    });
+    return {
+      check() {
+        const bad = blanks.filter(b => tiles[put[b.dataset.i]] !== R.toks[+b.dataset.i].t);
+        if (!bad.length) { blanks.forEach(b => b.style.pointerEvents = 'none'); tl.forEach(b => b.disabled = true); wave(order.slice()); return true; }
+        bad.forEach(b => { b.classList.add('no'); shake(b); });
+        setTimeout(() => { bad.forEach(b => { delete put[b.dataset.i]; b.textContent = ''; b.classList.remove('f', 'no'); order.splice(order.indexOf(b), 1); }); refresh(); fit($('.rrow', box)); }, 900);
+        return false;
+      }
+    };
+  }
+  /* after a miss: the trick's rows on another example for three seconds, then back */
+  function remind(host, R, done) {
+    const v = R.gen();
+    host.insertAdjacentHTML('beforeend', `<div class="remind"><span class="rk">تذكير سريع</span>
+      <span class="rr">${v.long}</span><span class="rr muted">↓</span><span class="rr">= ${v.fast} = <span class="ans">${ar(v.ans)}</span></span>
+      <span class="rb"><i></i></span></div>`);
+    const r = host.lastElementChild;
+    fitAll(r); rise(r);
+    anim($('.rb i', r), [{ width: '100%' }, { width: '0%' }], { duration: 3000, easing: 'linear', fill: 'forwards' });
+    setTimeout(() => { anim(r, [{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: 'forwards' }); setTimeout(() => { r.remove(); done && done(); }, 200); }, RM ? 400 : 3000);
+  }
+
+  /* ================================================================
+     screens — each draws into c.stage and drives the button
+     ================================================================ */
+  /* a fresh problem on the keypad; a miss shows the reminder and asks again */
+  const sApply = o => c => {
+    const R = c.R, v = R.gen();
+    c.want = v.ans;
+    c.head(o.kick || 'طبّقها', o.h || 'احسبها <b>بالقاعدة</b>');
+    c.stage.innerHTML = `${o.cue === 'name' ? `<div class="rec-cue">${nameTag(R)}</div>` : ''}${o.cue === 'pic' ? `<div class="rec-cue"><span class="rc-pic">${PIC[R.key]}</span></div>` : ''}
+      ${o.clock ? '<div class="clock">ثوانيك <b>٠</b></div>' : ''}<div class="big">${v.long} = ؟</div>`;
+    fitAll(c.stage);
+    const t0 = performance.now();
+    if (o.clock) { const cl = $('.clock b', c.stage); const iv = setInterval(() => { if (!cl.isConnected) return clearInterval(iv); cl.textContent = ar(Math.floor((performance.now() - t0) / 1000)); }, 250); }
+    const kp = keypad(c.stage, s => c.enable(!!s));
+    c.tip(o.tip || 'اكتب الناتج');
+    c.need('تحقق', () => {
+      const secs = (performance.now() - t0) / 1000;
+      if (kp.n() === v.ans) {
+        kp.lock(); wave([kp.inp]); right(); buzz(20);
+        c.stage.querySelector('.big').innerHTML = `${v.long} = <span class="ans">${ar(v.ans)}</span>`; fitAll(c.stage);
+        if (o.onRight) return o.onRight(c, secs);
+        c.tip(`<b>${v.fast} = ${ar(v.ans)}</b> — بضربة وحدة`, true); c.cont();
+      } else {
+        if (o.onWrong) return o.onWrong(c, kp, v);
+        bad(); kp.inp.classList.add('no'); shake(kp.inp); c.enable(false);
+        remind(c.stage, R, () => { kp.clear(); c.tip('جرّب مرة ثانية — نفس الأرقام'); });
+      }
+    });
+  };
+  /* recall from a blank: say it in your head, uncover it, judge yourself */
+  const sRecall = o => c => {
+    const R = c.R;
+    c.head(o.kick || 'بعد شوي', o.h || 'تذكرها؟ <b>قلها في راسك</b>');
+    c.stage.innerHTML = `${o.cue === 'name' ? `<div class="rec-cue">${nameTag(R)}</div>` : ''}
+      <div class="rc"><div class="rc-h"><span class="rc-ic">${o.cue === 'name' ? iconWhite(R.key) : SVG.bulb}</span><span class="rc-tag">${o.cue === 'name' ? 'وش تقول القاعدة؟' : 'القاعدة'}</span>${o.cue === 'pic' ? `<span class="rc-pic">${PIC[R.key]}</span>` : ''}</div>
+      <div class="rc-body">${rowHtml(R, 'blank')}</div></div>
+      <div class="rec-out"></div>`;
+    fitAll(c.stage);
+    $$('.bk', c.stage).forEach((b, i) => { b.style.cursor = 'default'; anim(b, [{ opacity: .4 }, { opacity: 1 }], { duration: 900, delay: i * 120, iterations: 2, direction: 'alternate' }); });
+    c.tip('بدون خيارات — من راسك، بعدين اكشفها');
+    c.btn('اكشفها', () => {
+      const bl = $$('.bk', c.stage);
+      bl.forEach((b, i) => {
+        const tk = R.toks[+b.dataset.i];
+        setTimeout(() => {
+          b.outerHTML = `<span class="chip k-${R.col[tk.k]}" data-i="${b.dataset.i}">${tk.t}</span>`;
+          const ch = $(`.chip[data-i="${b.dataset.i}"]`, c.stage);
+          anim(ch, [{ rotate: 'x 90deg' }, { rotate: 'x 0deg' }], { duration: 260, easing: 'cubic-bezier(.3,1.5,.5,1)' }); note(i + 2);
+          fit($('.rrow', c.stage));
+        }, RM ? 0 : i * 260);
+      });
+      c.enable(false);
+      setTimeout(() => {
+        const out = $('.rec-out', c.stage);
+        out.innerHTML = `<div class="self"><button class="opt" data-s="1">طلعت صح</button><button class="opt" data-s="0">نسيت شي</button></div>`;
+        rise(out);
+        c.tip('كن صادق مع نفسك — هذا اللي يحدد متى ترجع لك');
+        let judged = false;
+        out.addEventListener('click', e => {
+          const b = e.target.closest('.opt'); if (!b || judged) return;
+          judged = true;
+          const ok = b.dataset.s === '1';
+          tap(); $$('.opt', out).forEach(x => { x.disabled = true; x.classList.toggle(ok ? 'ok' : 'sel', x === b); x.classList.toggle('dim', x !== b); });
+          if (ok) { right(); wave($$('.chip', c.stage)); }
+          out.insertAdjacentHTML('beforeend', ok
+            ? `<div class="fin good">ثبتت! نسألك عنها بكرة بعد ما تنام<small>بعدها بعد ٣ أيام، ثم أسبوع، ثم أسبوعين…</small></div>`
+            : `<div class="fin soft">عادي — ترجع لك بعد شوي في الدرس، وبكرة مرة ثانية<small>اللي ننساه ونرجع نتذكره ينحفظ أقوى</small></div>`);
+          rise(out.lastElementChild);
+          c.finish();
+        });
+      }, RM ? 100 : bl.length * 260 + 500);
+    });
+  };
+  /* build the rule from tiles, decoys among them, before it is ever shown */
+  const sBuild = o => c => {
+    const R = c.R;
+    c.head(o.kick || 'اكتبها أنت', o.h || 'رتّب <b>القاعدة</b> بنفسك');
+    c.stage.innerHTML = o.top || '';
+    const bd = builder(c.stage, R, full => c.enable(full));
+    fitAll(c.stage);
+    c.tip(o.tip || 'فيه كلمات زيادة — مو كلها من القاعدة');
+    c.need('تحقق', () => {
+      if (bd.check()) { right(); buzz(20); c.tip(o.ok || 'هذي هي القاعدة — وطلّعتها بنفسك', true); c.cont(); }
+      else { bad(); c.tip('قريب! المكان الأحمر يرجع — جرّب ثانية'); c.enable(false); }
+    });
+  };
+  /* meet it: the example unfolds, then the card */
+  const sSee = o => c => {
+    const R = c.R, v = c.mem.v = R.gen();
+    c.head('الفكرة', o.h || 'شوف <b>الحيلة</b>');
+    c.stage.innerHTML = `<div class="big sm">${v.long}</div><div class="big muted">↓</div><div class="big">${v.fast} = <span class="ans">${ar(v.ans)}</span></div>
+      <div style="margin-top:18px">${cardHtml(R)}</div>`;
+    fitAll(c.stage);
+    const k = c.stage.children;
+    rise(k[0], 100); rise(k[1], 500); stamp(k[2], 800); rise(k[3], 1400);
+    c.t(() => { $$('.rc .chip', c.stage).forEach((ch, i) => hop(ch, 10, i * 90)); note(4); }, 1700);
+    c.tip('');
+    c.cont('فهمت');
+  };
+
+  /* ---------------- A: guess, then discover ---------------- */
+  const aGuess = c => {
+    const R = c.R, v = c.mem.v = R.gen();
+    c.head('خمّن بسرعة', 'كم المجموع؟ <b>بدون ما تحسب</b>');
+    c.stage.innerHTML = `<div class="big">${v.long}</div><div class="timer"><i></i></div>
+      <div class="opts c3">${near(v).map(x => `<button class="opt" data-v="${x}">${ar(x)}</button>`).join('')}</div><div class="dropw"></div>`;
+    fitAll(c.stage);
+    const bar = $('.timer i', c.stage), t0 = performance.now();
+    const run = anim(bar, [{ width: '100%' }, { width: '0%' }], { duration: 5000, easing: 'linear', fill: 'forwards' });
+    let done = false;
+    const reveal = picked => {
+      if (done) return; done = true;
+      if (run) run.pause();
+      const secs = (performance.now() - t0) / 1000;
+      c.mem.quick = picked === v.ans && secs < 3;
+      $$('.opt', c.stage).forEach(b => { b.disabled = true; b.classList.toggle('sel', +b.dataset.v === picked); });
+      const d = $('.dropw', c.stage);
+      d.innerHTML = `<div class="drop">= ${ar(v.ans)}</div><div class="note">في ثانيتين وبدون ما تجمع؟ <b style="color:var(--ink)">فيه حيلة.</b></div>`;
+      stamp(d.firstChild); thud(); buzz(30); rise(d.lastChild, 300);
+      c.tip(picked == null ? 'خلص الوقت — عادي، هذا مجرد تخمين' : 'ما يهم صح ولا غلط — المهم وش اللي جاي');
+      c.cont('وريني الحيلة');
+    };
+    c.stage.addEventListener('click', e => { const b = e.target.closest('.opt'); if (b && !done) { tap(); reveal(+b.dataset.v); } });
+    c.t(() => reveal(null), 5000);
+    c.tip('عندك ٥ ثواني — خمّن');
+    c.need('خمّن أول');
+  };
+  const aRace = c => {
+    const R = c.R, v = c.mem.v;
+    c.head('سباق', 'الطريقة الطويلة <b>ضد</b> الحيلة');
+    c.stage.innerHTML = `<div class="big sm">${v.long}</div>
+      <div class="lane" style="margin-top:14px"><div class="lane-h"><span>تجمع واحد واحد</span><span class="tm">٠ خطوة</span></div><div class="lane-v">٠</div><div class="lane-bar"><i></i></div></div>
+      <div class="lane fast"><div class="lane-h"><span>الحيلة</span><span class="tm">خطوة وحدة</span></div><div class="lane-v">&nbsp;</div><div class="lane-bar"><i></i></div></div>`;
+    fitAll(c.stage);
+    const [slow, fast] = $$('.lane', c.stage), list = v.list, N = list.length, per = clamp(2600 / N, 24, 420), every = Math.max(1, Math.round(N / 14));
+    let sum = 0;
+    list.forEach((x, i) => c.t(() => {
+      sum += x; $('.lane-v', slow).textContent = ar(sum); $('.tm', slow).textContent = ar(i + 1) + ' خطوة';
+      $('.lane-bar i', slow).style.width = ((i + 1) / N * 100) + '%'; if (i % every === 0) tick((i / every) % 12);
+      if (i === N - 1) { c.tip(`الطويلة ${ar(N)} خطوة — والحيلة <b>خطوة وحدة</b>`); c.cont('كيف؟'); }
+    }, 500 + i * per));
+    c.t(() => { const fv = $('.lane-v', fast); fv.innerHTML = `${v.fast} = <span>${ar(v.ans)}</span>`; fit(fv); stamp(fv); $('.lane-bar i', fast).style.width = '100%'; right(); buzz(20); }, 900);
+    c.tip('شوف مين يخلص أول');
+    c.need('…');
+  };
+  const aCompare = c => {
+    const R = c.R;
+    let v1 = R.gen(), v2 = R.gen();
+    for (let n = 0; n < 9 && v2.ans === v1.ans; n++) v2 = R.gen();
+    c.head('لاحظ', 'وش <b>المشترك</b> بين المثالين؟');
+    const card = v => `<div class="cmp-card"><div class="cmp-long">${(v.list.length <= 7 ? v.list : [v.list[0], v.list[1], v.list[2], '…', v.list[v.list.length - 1]])
+        .map((x, i, a) => `<span class="t" data-x="${x}" data-last="${i === a.length - 1 ? 1 : 0}">${x === '…' ? '…' : ar(x)}</span>${i < a.length - 1 ? '<span class="p">+</span>' : ''}`).join('')}</div>
+      <div class="cmp-fast"><span class="op">=</span>${R.fastToks(v).map(tk => typeof tk === 'string' ? opGlyph(tk) : `<button class="ftk k-${R.col[tk.k]}" data-act="${tk.act}">${ar(tk.t)}</button>`).join('')}</div></div>`;
+    c.stage.innerHTML = `<div class="cmp">${card(v1)}${card(v2)}</div>`;
+    fitAll(c.stage);
+    c.tip('اضغط الأرقام الملوّنة — وشوف من وين جات');
+    c.need('اضغطها كلها');
+    c.stage.addEventListener('click', e => {
+      const b = e.target.closest('.ftk'); if (!b || b.classList.contains('on')) return;
+      const cd = b.closest('.cmp-card'), ts = $$('.t', cd), col = [...b.classList].find(x => x.startsWith('k-'));
+      b.classList.add('on'); popIn(b);
+      const act = b.dataset.act;
+      if (act === 'same') ts.forEach((t, i) => { t.classList.add('hl', col); setTimeout(() => hop(t, 8), i * 70); });
+      if (act === 'last') ts.filter(t => t.dataset.last === '1').forEach(t => { t.classList.add('hl', col); hop(t, 10); });
+      if (act === 'count') ts.filter(t => t.dataset.x !== '…').forEach((t, i) => setTimeout(() => { t.insertAdjacentHTML('beforeend', `<span class="n">${ar(i + 1)}</span>`); popIn(t.lastChild); tick(i); }, i * 110));
+      note($$('.ftk.on', c.stage).length + 1);
+      if ($$('.ftk:not(.on)', c.stage).length === 0) c.t(() => { c.tip('نفس الشي في الاثنين — يعني فيه <b>قاعدة</b>', true); c.cont('أكتبها؟'); }, 700);
+    });
+  };
+  const aConfirm = c => {
+    const R = c.R;
+    c.head('صح عليك', 'هذي <b>قاعدتك</b> — بكلماتك');
+    c.stage.innerHTML = `<div style="margin-top:20px">${cardHtml(R, { own: true })}</div><div class="note" style="margin-top:16px">اللي تطلّعه بنفسك ينحفظ أقوى من اللي تقراه</div>`;
+    fitAll(c.stage);
+    rise($('.rc', c.stage));
+    $$('.rc .chip', c.stage).forEach((ch, i) => { stamp(ch, 250 + i * 160); c.t(() => note(i + 2), 250 + i * 160); });
+    rise($('.note', c.stage), 900);
+    c.tip('');
+    c.cont();
+  };
+
+  /* ---------------- B: from things to the rule ---------------- */
+  const CONC = {
+    rep: {
+      one(c, v) {
+        c.stage.innerHTML = `<div class="pic">${Array.from({ length: v.n }, (_, r) => `<button class="drow idle" data-r="${r}">${'<i class="d"></i>'.repeat(v.a)}</button>`).join('')}</div>`;
+        let g = 0;
+        c.stage.addEventListener('click', e => {
+          const row = e.target.closest('.drow'); if (!row || row.classList.contains('g')) return;
+          row.classList.remove('idle'); row.classList.add('g'); row.insertAdjacentHTML('beforeend', `<span class="dc">${ar(v.a)}</span>`);
+          popIn(row.lastChild); $$('.d', row).forEach((d, i) => hop(d, 6, i * 40)); note(g++);
+          if (g === v.n) c.t(() => { c.tip(`كل صف فيه <b>${ar(v.a)}</b> — والصفوف <b>${ar(v.n)}</b>`, true); c.cont(); }, 500);
+        });
+      },
+      two(c, v) {
+        c.stage.innerHTML = `<div class="pic" style="padding:0 60px 0 0;margin-top:40px">${Array.from({ length: v.n }, () => `<div class="drow g">${'<i class="d"></i>'.repeat(v.a)}</div>`).join('')}</div>`;
+        const pic = $('.pic', c.stage), rows = $$('.drow', pic);
+        const r0 = rows[0].getBoundingClientRect(), p = pic.getBoundingClientRect(), rl = rows[rows.length - 1].getBoundingClientRect();
+        pic.insertAdjacentHTML('beforeend', `<span class="brk v" style="right:0;top:${r0.top - p.top}px;height:${rl.bottom - r0.top}px"><span class="line"></span>${ar(v.n)} مرات</span>
+          <span class="brk h" style="left:${r0.left - p.left}px;width:${r0.width}px;top:-34px">${ar(v.a)} في كل صف<span class="line"></span></span>`);
+        const [bv, bh] = $$('.brk', pic);
+        popIn(bv, 300); popIn(bh, 800); c.t(() => note(3), 300); c.t(() => note(5), 800);
+        return () => `<span class="chip k-blue">${ar(v.a)}</span><span class="op">×</span><span class="chip k-purple">${ar(v.n)}</span><span class="op">=</span><span class="chip k-orange">${ar(v.ans)}</span>`;
+      }
+    },
+    gauss: {
+      one(c, v) {
+        c.stage.innerHTML = `<div class="gtiles">${v.list.map(x => `<button class="gt" data-x="${x}">${ar(x)}</button>`).join('')}</div><div class="pairs"></div>`;
+        const cols = ['k-purple', 'k-orange', 'k-green', 'k-blue', 'k-red'];
+        let i = 0; const L = v.L;
+        c.stage.addEventListener('click', e => {
+          if (!e.target.closest('.gt') || i >= L / 2) return;
+          const a = $(`.gt[data-x="${i + 1}"]`, c.stage), b = $(`.gt[data-x="${L - i}"]`, c.stage), col = cols[i % cols.length];
+          [a, b].forEach(x => { x.classList.add('p', col); hop(x, 10); });
+          $('.pairs', c.stage).insertAdjacentHTML('beforeend', `<span class="chip soft ${col}">${ar(i + 1)} + ${ar(L - i)} = ${ar(L + 1)}</span>`);
+          popIn($('.pairs', c.stage).lastChild); note(i * 2);
+          i++;
+          if (i === L / 2) c.t(() => { c.tip(`كل زوج = <b>${ar(L + 1)}</b> — وعندك <b>${ar(L / 2)}</b> أزواج`, true); c.cont(); }, 500);
+        });
+      },
+      two(c, v) {
+        const L = v.L;
+        c.stage.innerHTML = `<div class="pairs" style="margin-top:22px">${Array.from({ length: L / 2 }, (_, i) => `<span class="chip soft k-purple">${ar(i + 1)} + ${ar(L - i)}</span>`).join('')}</div>
+          <div class="note" style="margin-top:22px;font-size:16px;line-height:2.2">كل زوج = <span class="chip k-blue" style="font-size:16px">${ar(L)} + ١</span> &nbsp; وعدد الأزواج = <span class="chip k-purple" style="font-size:16px">${ar(L)} ÷ ٢</span></div>`;
+        $$('.pairs .chip', c.stage).forEach((x, i) => popIn(x, i * 90)); rise($('.note', c.stage), 600); c.t(() => note(4), 600);
+        return () => `<span class="chip k-blue">${ar(L)}</span><span class="op">×</span><span class="op" dir="ltr">)</span><span class="chip k-blue">${ar(L)}</span><span class="op">+</span><span class="op">١</span><span class="op" dir="ltr">(</span><span class="op">÷</span><span class="op">٢</span><span class="op">=</span><span class="chip k-orange">${ar(v.ans)}</span>`;
+      }
+    },
+    odd: {
+      one(c, v) {
+        const k = v.k, cols = ['k-orange', 'k-blue', 'k-purple', 'k-green', 'k-red'];
+        c.stage.innerHTML = `<div class="sq idle" style="grid-template-columns:repeat(${k},36px)">${Array.from({ length: k * k }, (_, j) => `<i data-l="${Math.max(Math.floor(j / k), j % k)}"></i>`).join('')}</div><div class="runsum"></div>`;
+        let l = 0;
+        c.stage.addEventListener('click', e => {
+          if (!e.target.closest('.sq') || l >= k) return;
+          const cells = $$(`.sq i[data-l="${l}"]`, c.stage);
+          cells.forEach((x, i) => { x.classList.add('on', cols[l % cols.length]); popIn(x, i * 30); });
+          $('.runsum', c.stage).textContent = v.list.slice(0, l + 1).map(ar).join(' + ') + ' = ' + ar((l + 1) * (l + 1));
+          fit($('.runsum', c.stage)); note(l * 2); l++;
+          if (l === k) { $('.sq', c.stage).classList.remove('idle'); c.t(() => { c.tip(`${ar(k)} أعداد فردية صنعت مربع <b>${ar(k)} × ${ar(k)}</b>`, true); c.cont(); }, 500); }
+        });
+      },
+      two(c, v) {
+        const k = v.k, cols = ['k-orange', 'k-blue', 'k-purple', 'k-green', 'k-red'];
+        c.stage.innerHTML = `<div class="pic" style="margin-top:40px"><div class="sq" style="grid-template-columns:repeat(${k},36px)">${Array.from({ length: k * k }, (_, j) => { const L = Math.max(Math.floor(j / k), j % k); return `<i class="on ${cols[L % cols.length]}"></i>`; }).join('')}</div></div>`;
+        const pic = $('.pic', c.stage), sq = $('.sq', pic), s = sq.getBoundingClientRect(), p = pic.getBoundingClientRect();
+        pic.insertAdjacentHTML('beforeend', `<span class="brk v" style="right:${p.right - s.left + 8}px;top:${s.top - p.top}px;height:${s.height}px;flex-direction:row-reverse"><span class="line"></span>عددها ${ar(k)}</span>
+          <span class="brk h" style="left:${s.left - p.left}px;width:${s.width}px;top:-34px">عددها ${ar(k)}<span class="line"></span></span>`);
+        const [bv, bh] = $$('.brk', pic);
+        bv.style.color = 'var(--blue-dk)';
+        popIn(bv, 300); popIn(bh, 800); c.t(() => note(3), 300); c.t(() => note(5), 800);
+        return () => `<span class="chip k-blue">${ar(k)}</span><span class="op">×</span><span class="chip k-blue">${ar(k)}</span><span class="op">=</span><span class="chip k-orange">${ar(v.ans)}</span>`;
+      }
+    }
+  };
+  const bOne = c => { const v = c.mem.v = c.R.gen({ dots: true }); c.head('جرّب بإيدك', c.R.bTitle); c.tip('ما نبي أرقام للحين — بس شوف'); c.need('كمّلها'); CONC[c.R.key].one(c, v); };
+  const bTwo = c => {
+    const v = c.mem.v;
+    c.head('سمّها', 'الحين <b>اختصرها</b> برموز');
+    const expr = CONC[c.R.key].two(c, v);
+    c.tip('نفس الصورة — بس نعدّ بذكاء');
+    c.btn('اختصرها', () => {
+      c.stage.insertAdjacentHTML('beforeend', `<div class="collapse"><div class="rrow" style="font-size:22px">${expr()}</div></div>`);
+      const pic = c.stage.firstElementChild;
+      anim(pic, [{ scale: '1', opacity: 1 }, { scale: '.55', opacity: .35 }], { duration: 420, easing: 'cubic-bezier(.5,0,.5,1)', fill: 'forwards' });
+      $$('.collapse .rrow > *', c.stage).forEach((x, i) => stamp(x, 250 + i * 110));
+      fit($('.collapse .rrow', c.stage)); thud(); c.t(() => { right(); buzz(20); }, 700);
+      c.tip('من حبّات… لرموز', true); c.cont();
+    });
+  };
+  const bWords = c => {
+    const R = c.R, v = c.mem.v;
+    c.head('من رموز لكلمات', 'اضغط كل رقم — <b>وش اسمه؟</b>');
+    c.stage.innerHTML = `<div class="box" style="margin-top:14px">${rowHtml(R, 'num', v)}</div><div class="rec-cue" style="margin-top:18px"><span class="rc-pic">${PIC[R.key]}</span></div>`;
+    fitAll(c.stage);
+    c.tip('كل رقم له معنى في القاعدة');
+    c.need('اضغطها كلها');
+    c.stage.addEventListener('click', e => {
+      const ch = e.target.closest('.chip.num'); if (!ch) return;
+      const w = ch.dataset.w;
+      $$(`.chip.num[data-w="${w}"]`, c.stage).forEach(x => {
+        x.classList.remove('num'); x.textContent = w;
+        anim(x, [{ rotate: 'y 90deg' }, { rotate: 'y 0deg' }], { duration: 300, easing: 'cubic-bezier(.3,1.5,.5,1)' });
+      });
+      note($$('.chip:not(.num)', c.stage).length); fit($('.rrow', c.stage));
+      if (!$('.chip.num', c.stage)) c.t(() => { right(); wave($$('.chip', c.stage)); c.tip('هذي القاعدة — والصورة معها', true); c.cont(); }, 300);
+    });
+  };
+  const bCard = c => {
+    const R = c.R;
+    c.head('القاعدة', 'القاعدة <b>وصورتها</b>');
+    c.stage.innerHTML = `<div style="margin-top:20px">${cardHtml(R, { pic: true })}</div><div class="note" style="margin-top:16px">الصورة تبقى على القاعدة — وترجع معها في كل مراجعة</div>`;
+    fitAll(c.stage); rise($('.rc', c.stage)); stamp($('.rc-pic', c.stage), 500); rise($('.note', c.stage), 800);
+    c.tip(''); c.cont();
+  };
+
+  /* ---------------- C: faded examples ---------------- */
+  const cFirst = sApply({ kick: 'جرّب أول', h: 'تقدر تحلها <b>بسرعة</b>؟', clock: true, tip: 'لو تعرف الحيلة بتخلص في ثواني',
+    onRight(c, secs) {
+      if (secs < 10) { c.mem.fast = true; c.tip(`<b>${ar(Math.round(secs))} ثواني!</b> واضح إنك تعرفها — نروح للصعبة`, true); c.btn('للصعبة', () => c.goto(3)); }
+      else { c.tip('صح! — بس فيه طريقة أسرع بكثير', true); c.cont('وريني'); }
+    },
+    onWrong(c, kp, v) { tone(330, .1, 'triangle', .05); kp.lock(); c.tip(`الجواب ${ar(v.ans)} — ولا يهمك، خلّنا نشوفها خطوة خطوة`); c.cont('وريني'); } });
+  const cWorked = c => {
+    const R = c.R, v = R.gen();
+    c.head('مثال محلول', 'شوف <b>الخطوات</b>');
+    c.stage.innerHTML = `<div class="box wk" style="margin-top:10px">
+      <div class="wk-l"><span class="wk-t">المسألة</span><div class="eqline">${v.long}</div></div>
+      <div class="wk-l"><span class="wk-t">${R.work[0]} — ${R.work[1]}</span><div class="eqline">= ${v.fast}</div></div>
+      <div class="wk-l"><span class="wk-t">${R.work[2]}</span><div class="eqline">= <span class="ans">${ar(v.ans)}</span></div></div></div>`;
+    fitAll(c.stage);
+    $$('.wk-l', c.stage).forEach((l, i) => { rise(l, 200 + i * 700); c.t(() => note(i * 2), 200 + i * 700); });
+    c.tip('كل خطوة لها سبب — اقرأها');
+    c.need('…'); c.t(() => c.cont('فهمت'), 1800);
+  };
+  const cBlank = c => {
+    const R = c.R, v = R.gen(), bk = R.blank(v);
+    c.want = bk.want;
+    c.head('ناقصة خطوة', 'كمّل <b>الفراغ</b>');
+    c.stage.innerHTML = `<div class="box wk" style="margin-top:6px">
+      <div class="wk-l"><span class="wk-t">المسألة</span><div class="eqline">${v.long}</div></div>
+      <div class="wk-l"><span class="wk-t">${R.work[0]} — ${R.work[1]}</span><div class="eqline">= ${bk.html}</div></div>
+      <div class="wk-l res" style="visibility:hidden"><span class="wk-t">${R.work[2]}</span><div class="eqline">= <span class="ans">${ar(v.ans)}</span></div></div></div>`;
+    fitAll(c.stage);
+    const fbs = $$('.fb', c.stage);
+    const kp = keypad(c.stage, s => { fbs.forEach(f => { f.textContent = s; f.classList.toggle('f', !!s); }); c.enable(!!s); }, true);
+    c.tip('اكتب الرقم اللي يكمّل الخطوة');
+    c.need('تحقق', () => {
+      if (kp.n() === bk.want) {
+        kp.lock(); wave(fbs); right(); buzz(20);
+        const res = $('.res', c.stage); res.style.visibility = ''; stamp(res, 300);
+        c.tip('صح — الباقي سهل', true); c.cont();
+      } else { bad(); fbs.forEach(f => { f.classList.add('no'); shake(f); }); kp.inp.classList.add('no'); c.enable(false); remind(c.stage, R, () => { kp.clear(); fbs.forEach(f => f.classList.remove('no')); }); }
+    });
+  };
+  const cSolo = sApply({ kick: 'لحالك', h: 'الحين <b>بدون مساعدة</b>' });
+
+  /* ---------------- D: its name, and why ---------------- */
+  const dName = c => {
+    const R = c.R;
+    c.head('لها اسم', 'سمّها عشان <b>تناديها</b>');
+    c.stage.innerHTML = `<div style="margin-top:14px">${cardHtml(R)}</div><div class="rec-cue" style="margin-top:30px">${nameTag(R, true)}</div>
+      <div class="note" style="margin-top:14px">اضغط الاسم — يلصق على القاعدة</div>`;
+    fitAll(c.stage); popIn($('.ntag', c.stage), 200);
+    c.tip('اسم قصير وصورة = مفتاح القاعدة');
+    c.need('اضغط الاسم');
+    $('.ntag', c.stage).addEventListener('click', () => {
+      const tag = $('.ntag', c.stage), head = $('.rc-h', c.stage);
+      const a = tag.getBoundingClientRect(), b = head.getBoundingClientRect();
+      anim(tag, [{ translate: '0 0', scale: '1' }, { translate: `${(b.left + b.width * .7) - (a.left + a.width / 2)}px ${(b.top + b.height / 2) - (a.top + a.height / 2) - 30}px`, scale: '1.1', offset: .6 },
+        { translate: `${(b.left + b.width * .7) - (a.left + a.width / 2)}px ${(b.top + b.height / 2) - (a.top + a.height / 2)}px`, scale: '.5', opacity: 0 }], { duration: 480, easing: 'cubic-bezier(.45,0,.35,1)', fill: 'forwards' });
+      setTimeout(() => {
+        $('.rc', c.stage).outerHTML = cardHtml(R, { name: true });
+        stamp($('.rc-name', c.stage)); stamp($('.rc-ic', c.stage)); thud(); buzz(25);
+        $('.note', c.stage).innerHTML = `كل ما تشوف «<b style="color:var(--purple-dk)">${R.name}</b>» تذكر القاعدة كلها`;
+        c.tip(''); c.cont();
+      }, RM ? 0 : 470);
+    }, { once: true });
+  };
+  const dWhy = c => {
+    const R = c.R, v = c.mem.v || R.gen(), W = R.why, order = shuf([0, 1, 2]);
+    c.head('ليش تشتغل؟', 'ضغطة وحدة — <b>ليش؟</b>');
+    c.stage.innerHTML = `<div class="why-q">${W.q(v)}</div><div class="opts">${order.map(i => `<button class="opt txt" data-i="${i}">${W.ch[i]}</button>`).join('')}</div><div class="whyout"></div>`;
+    c.tip('اللي يعرف «ليش» ما ينسى «كيف»');
+    c.need('اختر سبب');
+    c.stage.addEventListener('click', e => {
+      const b = e.target.closest('.opt'); if (!b || b.disabled) return;
+      if (b.dataset.i === '0') {
+        $$('.opt', c.stage).forEach(x => { x.disabled = true; x.classList.toggle('dim', x !== b); });
+        wave([b]); right(); buzz(20);
+        $('.whyout', c.stage).innerHTML = `<div class="more">${typeof W.more === 'function' ? W.more(v) : W.more}</div>`; rise($('.more', c.stage), 200);
+        c.tip('بالضبط', true); c.cont();
+      } else { bad(); b.classList.add('no'); b.disabled = true; shake(b); c.tip(typeof W.hint === 'function' ? W.hint(v) : W.hint); }
+    });
+  };
+  const dApply = sApply({ cue: 'name', h: 'استخدم <b>اسمها</b>' });
+  const dRecall = sRecall({ cue: 'name', kick: 'من اسمها', h: 'هذا اسمها — <b>وش القاعدة؟</b>' });
+
+  /* ---------------- E: which rule? ---------------- */
+  const eSort = c => {
+    const R = c.R, A = RULES[R.alike];
+    const deck = shuf([R, R, A, A].map(X => ({ X, v: X.gen() })));
+    c.head('أي قاعدة؟', 'وين <b>تروح</b> هذي؟');
+    c.stage.innerHTML = `<div class="pslot"></div>
+      <div class="bins"><button class="bin" data-k="${R.key}"><span class="bi">${ICON[R.key].replace(/#CE82FF/g, '#fff').replace(/#E3B6FF/g, '#F6E8FF')}</span><b>${R.name}</b><span class="cnt"></span></button>
+      <button class="bin alt" data-k="${A.key}"><span class="bi">${ICON[A.key].replace(/#CE82FF/g, '#fff').replace(/#E3B6FF/g, '#DDF4FF')}</span><b>${A.name}</b><span class="cnt"></span></button></div>`;
+    let i = 0;
+    c.sortKey = () => deck[i] && deck[i].X.key;
+    const show = () => {
+      const d = deck[i];
+      $('.pslot', c.stage).innerHTML = `<div class="pcard"><small>${ar(i + 1)} من ${ar(deck.length)}</small>${d.v.long}</div>`;
+      fitAll(c.stage); popIn($('.pcard', c.stage));
+    };
+    show();
+    c.tip('القاعدتين يشبهون بعض — فرّق بينهم');
+    c.need('وزّعها كلها');
+    c.stage.addEventListener('click', e => {
+      const b = e.target.closest('.bin'); if (!b || i >= deck.length) return;
+      const d = deck[i], card = $('.pcard', c.stage);
+      if (b.dataset.k === d.X.key) {
+        const a = card.getBoundingClientRect(), r = b.getBoundingClientRect();
+        anim(card, [{ translate: '0 0', scale: '1', opacity: 1 }, { translate: `${(r.left + r.width / 2) - (a.left + a.width / 2)}px ${(r.top + r.height / 2) - (a.top + a.height / 2)}px`, scale: '.25', opacity: .2 }], { duration: 360, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' });
+        setTimeout(() => { $('.cnt', b).insertAdjacentHTML('beforeend', '<i></i>'); popIn($('.cnt', b).lastChild); hop(b, 8); }, 300);
+        note(i * 2); i++;
+        if (i === deck.length) setTimeout(() => { $('.pslot', c.stage).innerHTML = ''; right(); c.tip('تعرف <b>أي قاعدة</b> — وهذا اللي يسأل عنه الاختبار', true); c.cont(); }, 420);
+        else setTimeout(show, 380);
+      } else { bad(); shake(card); sink(b); c.tip(`شوفها مرة ثانية: ${d.X.tell}`); }
+    });
+  };
+  const eSpot = c => {
+    const R = c.R, v = R.gen(), sp = R.spot(v);
+    c.spot = sp.wrong;
+    c.head('صيد الغلط', 'أحمد غلط — <b>وين؟</b>');
+    c.stage.innerHTML = `<div class="ahmad"><span class="av">أ</span><span class="bub">حليتها بالقاعدة… بس طلع الجواب غلط</span></div>
+      <div class="box"><div class="big sm">${v.long}</div><div class="said"><span class="op" style="color:var(--gray-icon)">=</span>${sp.said.map((x, i) => typeof x === 'number' ? `<button class="stk" data-i="${i}">${ar(x)}</button>` : `<span class="op" style="color:var(--gray-icon)">${x}</span>`).join('')}</div></div><div class="spout"></div>`;
+    fitAll(c.stage);
+    c.tip('اضغط الرقم الغلط');
+    c.need('لقيته؟');
+    c.stage.addEventListener('click', e => {
+      const b = e.target.closest('.stk'); if (!b || b.disabled) return;
+      if (sp.wrong.includes(+b.dataset.i)) {
+        $$('.stk', c.stage).forEach(x => x.disabled = true);
+        const hits = sp.wrong.map(i => $(`.stk[data-i="${i}"]`, c.stage));
+        wave(hits); right(); buzz(20);
+        $('.spout', c.stage).innerHTML = `<div class="more">${sp.fix}<br><span style="font-size:20px">${v.fast} = ${ar(v.ans)}</span></div>`; rise($('.more', c.stage), 200);
+        c.tip('عين صقر', true); c.cont();
+      } else { bad(); b.classList.add('no'); shake(b); setTimeout(() => b.classList.remove('no'), 600); c.tip('هذا صح — دوّر غيره'); }
+    });
+  };
+  const eMixed = c => {
+    const R = c.R, A = RULES[R.alike], X = Math.random() < .5 ? R : A, v = X.gen();
+    c.want = v.ans; c.pick = X.key;
+    c.head('مخلوطة', 'أي قاعدة؟ <b>بعدين احسب</b>');
+    c.stage.innerHTML = `<div class="big">${v.long} = ؟</div><div class="opts" style="grid-template-columns:1fr 1fr;margin-top:14px">${shuf([R, A]).map(Y => `<button class="opt txt" style="text-align:center" data-k="${Y.key}">${Y.name}</button>`).join('')}</div><div class="kslot" style="flex:1;display:flex;flex-direction:column"></div>`;
+    fitAll(c.stage);
+    c.tip('اختر القاعدة أول');
+    c.need('تحقق');
+    let kp = null;
+    c.stage.addEventListener('click', e => {
+      const b = e.target.closest('.opt'); if (!b || b.disabled || kp) return;
+      if (b.dataset.k === X.key) {
+        $$('.opt', c.stage).forEach(x => { x.disabled = true; x.classList.toggle('dim', x !== b); }); b.classList.add('ok'); hop(b, 8); note(3);
+        kp = keypad($('.kslot', c.stage), s => c.enable(!!s), true); rise($('.kslot', c.stage));
+        c.tip('صح — الحين احسب');
+      } else { bad(); b.classList.add('no'); b.disabled = true; shake(b); c.tip(`لا — هذي ${X.tell}`); }
+    });
+    c.ready(() => {
+      if (kp.n() === v.ans) { kp.lock(); wave([kp.inp]); right(); $('.big', c.stage).innerHTML = `${v.long} = <span class="ans">${ar(v.ans)}</span>`; fitAll(c.stage); c.tip(`<b>${v.fast} = ${ar(v.ans)}</b>`, true); c.cont(); }
+      else { bad(); kp.inp.classList.add('no'); shake(kp.inp); c.enable(false); remind(c.stage, X, () => kp.clear()); }
+    });
+  };
+
+  /* ================================================================
+     the five versions
+     ================================================================ */
+  const VERS = [
+    { id: 'A', name: 'خمّن ثم اكتشف',
+      steps: [aGuess, aRace, aCompare, sBuild({}), aConfirm, sApply({ kick: 'طبّقها', h: 'أرقام <b>جديدة</b>' }), sRecall({})],
+      ar: 'يخمّن قبل ما يعرف، يشوف الحيلة تسبق الجمع، يلاحظ في مثالين، ويكتب القاعدة بنفسه قبل ما نقولها له — وآخر شي يتذكرها من الصفر.',
+      en: ['<b>Pretesting + surprise:</b> a failed 5-second guess before teaching improves learning, and curiosity boosts memory (Richland, Kornell &amp; Kao 2009; Gruber 2014).',
+        '<b>Comparison + generation:</b> two examples side by side, then the student builds the rule from tiles with look-alike decoys before it is ever shown (Rittle-Johnson &amp; Star 2007; Bertsch 2007, d ≈ 0.40).',
+        '<b>Ends on blank recall</b> after other items, not on tiles (Karpicke &amp; Roediger 2007).'] },
+    { id: 'B', name: 'من الحبّات للقاعدة',
+      steps: [bOne, bTwo, bWords, bCard, sApply({ cue: 'pic', h: 'الصورة معك — <b>احسب</b>' }), sRecall({ cue: 'pic' })],
+      ar: 'يجمّع حبّات بإيده، تصير رموز، بعدين كلمات — والصورة تبقى على القاعدة وترجع معها في كل مراجعة.',
+      en: ['<b>Concreteness fading:</b> objects → diagram → symbols beats starting with either alone (Fyfe, McNeil, Son &amp; Goldstone 2014).',
+        '<b>Dual coding:</b> the little picture is a second, visual code kept on the card and shown again as the cue on recall and reviews (Paivio; Mayer 2009).'] },
+    { id: 'C', name: 'أمثلة تتلاشى',
+      steps: [cFirst, cWorked, cBlank, cSolo, sBuild({ kick: 'سمّها', h: 'اللي سويته له <b>قاعدة</b> — رتّبها', ok: 'استخدمتها قبل ما تعرف اسمها' }), sRecall({})],
+      ar: 'مثال محلول، بعده واحد ناقص خطوة، بعده لحاله — واللي يعرفها من أول محاولة يقفز للصعبة. والقاعدة نسمّيها بعد ما يستخدمها.',
+      en: ['<b>Worked examples, then fading</b> one step at a time (Sweller &amp; Cooper 1985; Renkl &amp; Atkinson 2003).',
+        '<b>Expertise reversal:</b> a fast right first try (under 10 s) skips the examples straight to solo (Kalyuga et al. 2003).',
+        '<b>Named after use:</b> the rule is generated from what they just did (Bertsch 2007), then recalled blank.'] },
+    { id: 'D', name: 'اسمها وليش',
+      steps: [sSee({}), dName, dWhy, dApply, dRecall],
+      ar: 'للقاعدة اسم قصير بلهجتنا وأيقونة، و«ليش تشتغل؟» بضغطة — وآخر شي نعطيه الاسم ويطلّع القاعدة كلها منه.',
+      en: ['<b>Self-explanation:</b> a one-tap «why» prompt, g ≈ 0.55 (Chi 1989; Bisra et al. 2018).',
+        '<b>A name is a cue, not the method</b> (Dunlosky et al. 2013): name + icon + why, and the name becomes the prompt every review recalls from.'] },
+    { id: 'E', name: 'أيّ قاعدة؟',
+      steps: [sSee({}), eSort, eSpot, eMixed, sRecall({})],
+      ar: 'يفرّق بينها وبين قاعدة تشبهها، ويصيد غلط أحمد، ويختار القاعدة قبل ما يحسب — لأن الاختبار ما يقول لك أي قاعدة.',
+      en: ['<b>Interleaving</b> trains choosing the method: d ≈ 0.8 thirty days later (Rohrer, Dedrick &amp; Stershic 2015; RCT Rohrer et al. 2020).',
+        '<b>Discrimination:</b> look-alike pairs and spot-the-error target the exact confusion the exam exploits (Rohrer 2012).'] }
+  ];
+
+  /* ================================================================
+     the phone that plays a version
+     ================================================================ */
+  function mount(V) {
+    const el = document.createElement('div');
+    el.className = 'ver';
+    el.innerHTML = `<div class="ver-h"><b>${V.id}</b><span>${V.name}</span></div>
+      <div class="phone"><div class="ph-top"><div class="pills">${Object.keys(RULES).map(k => `<button class="pill" data-rk="${k}">${RULES[k].tab}</button>`).join('')}</div><button class="rp" aria-label="من البداية">${SVG.replay}</button></div>
+        <div class="steps">${V.steps.map(() => '<i></i>').join('')}</div>
+        <p class="ph-kick"></p><h2 class="ph-h"></h2><div class="stage"></div>
+        <div class="ph-foot"><p class="tip"></p><button class="gobtn"></button></div></div>
+      <div class="cap"><p>${V.ar}</p><ul>${V.en.map(x => `<li>${x}</li>`).join('')}</ul></div>`;
+    $('#grid').appendChild(el);
+    const go = $('.gobtn', el), tipEl = $('.tip', el), dots = $$('.steps i', el);
+    let rk = 'rep', gen = 0, idx = 0, timers = [], handler = null, mem = {};
+    function show(i) {
+      idx = i; const my = ++gen;
+      timers.forEach(clearTimeout); timers = [];
+      const cur = $('.stage', el); if (cur.getAnimations) cur.getAnimations({ subtree: true }).forEach(a => a.cancel());
+      const old = $('.stage', el), fresh = old.cloneNode(false); old.replaceWith(fresh);
+      const st = fresh;
+      dots.forEach((d, j) => { d.className = j < i ? 'done' : j === i ? 'now' : ''; });
+      $$('.pill', el).forEach(p => p.classList.toggle('on', p.dataset.rk === rk));
+      handler = null;
+      const c = {
+        R: RULES[rk], stage: st, mem,
+        alive: () => my === gen,
+        head(k, h) { $('.ph-kick', el).textContent = k; $('.ph-h', el).innerHTML = h; rise($('.ph-h', el)); },
+        tip(html, good) { tipEl.innerHTML = html ? `<span>${html}</span>` : ''; tipEl.classList.toggle('good', !!good); if (html) anim(tipEl, [{ opacity: 0, translate: '0 6px' }, { opacity: 1, translate: '0 0' }], { duration: 220 }); },
+        t(fn, ms) { timers.push(setTimeout(() => { if (my === gen) fn(); }, RM ? Math.min(ms, 60) : ms)); },
+        btn(label, fn) { go.textContent = label; go.disabled = false; handler = fn; },
+        need(label, fn) { go.textContent = label; go.disabled = true; handler = fn || null; },
+        ready(fn) { handler = fn; },
+        enable(on) { go.disabled = !on; },
+        cont(label) { c.btn(label || 'متابعة', () => c.next()); hop(go, 6); },
+        next() { if (idx < V.steps.length - 1) show(idx + 1); },
+        goto(j) { show(j); },
+        finish() {
+          dots.forEach(d => d.className = 'done');
+          dots.forEach((d, j) => hop(d, 6, j * 50));
+          c.btn('مرة ثانية بأرقام جديدة', () => { mem = {}; show(0); });
+        }
+      };
+      Object.defineProperty(c, 'mem', { get: () => mem });
+      el.__c = c;   /* the current screen, for the lab's own scripted run-throughs */
+      V.steps[i](c);
+      requestAnimationFrame(() => { if (my === gen) fitAll(st); });
+    }
+    go.addEventListener('click', () => { if (!go.disabled && handler) { tap(); handler(); } });
+    el.addEventListener('click', e => {
+      const p = e.target.closest('.pill');
+      if (p) { rk = p.dataset.rk; mem = {}; tap(); show(0); return; }
+      const r = e.target.closest('.rp');
+      if (r) { tap(); anim($('svg', r), [{ rotate: '0deg' }, { rotate: '-360deg' }], { duration: 500, easing: 'cubic-bezier(.3,1.4,.5,1)' }); mem = {}; show(0); }
+    });
+    return { start: () => show(0), show, el };
+  }
+
+  /* ================================================================
+     the 90-day plan
+     ================================================================ */
+  /* one rule under HLR (Settles & Meeder 2016): p = 2^(-Δ/h), h starts at 3 days;
+     each review lands when p drops under 0.8, capped at 21 days and at exam − 3;
+     a right review multiplies h by 2.5. Without reviews it just decays. */
+  const EXAM = 90, CAP = 21;
+  function schedule() {
+    const out = []; let h = 3, last = 0, d = 0;
+    const gaps = [1, 3, 7, 15, 21, 21, 21];
+    for (const g of gaps) { d = Math.min(last + Math.min(g, CAP), EXAM - 3); if (d <= last) break; out.push({ day: d, gap: d - last, h }); h *= 2.5; last = d; if (d === EXAM - 3) break; }
+    return out;
+  }
+  const REV = schedule();
+  const FLOOR = .08;
+  const pAt = (t, withRev) => {
+    if (!withRev) return FLOOR + (1 - FLOOR) * Math.pow(2, -t / 3);
+    let last = 0, h = 3;
+    for (const r of REV) { if (r.day <= t) { last = r.day; h = r.h * 2.5; } else break; }
+    return FLOOR + (1 - FLOOR) * Math.pow(2, -(t - last) / h);
+  };
+  function plan() {
+    const host = $('#plan');
+    const W = 1000, H = 300, M = { l: 54, r: 132, t: 16, b: 36 }, iw = W - M.l - M.r, ih = H - M.t - M.b;
+    const X = d => M.l + iw - d / EXAM * iw;               /* day 0 on the right: the page reads right to left */
+    const Y = p => M.t + (1 - p) * ih;
+    const path = withRev => { let s = ''; for (let t = 0; t <= EXAM; t += .25) s += (t ? 'L' : 'M') + X(t).toFixed(1) + ' ' + Y(pAt(t, withRev)).toFixed(1); return s; };
+    const ticks = [0, 15, 30, 45, 60, 75, 90];
+    const pW = Math.round(pAt(EXAM, true) * 100), pO = Math.round(pAt(EXAM, false) * 100);
+    host.innerHTML = `<div class="plan-h"><h2>لا تنساها — خطة ٩٠ يوم</h2>
+      <p>اللي يخلّي القاعدة معه لين الاختبار مو الدرس الأول — هي المراجعات. كل قاعدة ترجع له بعد ما يبدأ ينساها بالضبط: بعد يوم، ٣ أيام، أسبوع، أسبوعين، ٣ أسابيع… وما تطوّل أكثر من ٣ أسابيع أبداً.</p>
+      <p class="en">Shared by all five versions. Half-life regression per rule (Settles &amp; Meeder 2016): due when recall p &lt; 0.8; gaps cap at 21 days, about 20% of a 90-day horizon (Cepeda et al. 2008); a review is always retrieval (Roediger &amp; Karpicke 2006), and a miss is re-asked until right once (Rawson &amp; Dunlosky 2011).</p></div>
+      <div class="card"><div class="chart-top"><h3>كم يبقى في الذاكرة؟</h3>
+        <div class="legend"><span class="lw"><i></i>مع المراجعة</span><span class="lo"><i></i>بدون مراجعة</span></div>
+        <button class="play" id="cPlay">شغّل من جديد</button></div>
+        <p class="sub">قاعدة وحدة تعلّمها في اليوم الأول — والاختبار في اليوم ٩٠.</p>
+        <div class="chart" id="chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="منحنى النسيان مع المراجعة وبدونها">
+          <g class="grid">${[0, .25, .5, .75, 1].map(p => `<line x1="${M.l}" x2="${M.l + iw}" y1="${Y(p)}" y2="${Y(p)}"/>`).join('')}</g>
+          ${[0, .5, 1].map(p => `<text class="ax" x="${M.l + iw + 8}" y="${Y(p) + 4}" text-anchor="start">٪${ar(Math.round(p * 100))}</text>`).join('')}
+          ${ticks.map(d => `<text class="ax" x="${X(d)}" y="${H - 10}" text-anchor="middle">${d ? 'يوم ' + ar(d) : 'البداية'}</text>`).join('')}
+          <line x1="${X(EXAM)}" x2="${X(EXAM)}" y1="${M.t}" y2="${M.t + ih}" stroke="#FF4B4B" stroke-width="2" stroke-dasharray="4 4"/>
+          <text class="lbl" x="${X(EXAM) + 8}" y="${M.t + ih - 8}" fill="#EA2B2B" text-anchor="start">الاختبار</text>
+          <path id="pO" d="${path(false)}" fill="none" stroke="#AFAFAF" stroke-width="2.5" stroke-dasharray="7 6" stroke-linecap="round"/>
+          <path id="pW" d="${path(true)}" fill="none" stroke="#58CC02" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+          <g id="rvDots">${REV.map(r => `<circle cx="${X(r.day)}" cy="${Y(1)}" r="5.5" fill="#58CC02" stroke="#fff" stroke-width="2.5"/>`).join('')}</g>
+          <text class="lbl" x="${X(EXAM) - 10}" y="${Y(pAt(EXAM, true)) + 5}" fill="#58A700" text-anchor="end">٪${ar(pW)}</text>
+          <text class="lbl" x="${X(EXAM) - 10}" y="${Y(pAt(EXAM, false)) - 6}" fill="#777" text-anchor="end">٪${ar(pO)}</text>
+          <line id="hx" y1="${M.t}" y2="${M.t + ih}" stroke="#4B4B4B" stroke-width="1" opacity="0"/>
+          <rect id="hit" x="${M.l}" y="${M.t}" width="${iw}" height="${ih}" fill="transparent"/>
+        </svg><div class="tipbox" id="tipbox"></div></div></div>
+      <div class="card"><h3>المراجعات لقاعدة وحدة</h3><p class="sub">كل نقطة مراجعة ١٠–٢٠ ثانية — وكل مرة الفجوة أطول، لين ٣ أسابيع وتوقف.</p>
+        <div class="tlw"><div class="tl90"><div class="rail"></div>
+          <span class="win" style="right:${(EXAM - 14) / EXAM * 100}%;width:${7 / EXAM * 100}%;background:#FFEFD6"></span>
+          <span class="win" style="right:${(EXAM - 7) / EXAM * 100}%;width:${5 / EXAM * 100}%;background:#FFDFE0"></span>
+          <span class="win" style="right:${(EXAM - 2) / EXAM * 100}%;width:${2 / EXAM * 100}%;background:#DDF4FF"></span>
+          <span class="wl" style="right:0%;color:var(--purple-dk)">الدرس</span>
+          ${REV.map((r, i) => `<span class="mk" style="right:${r.day / EXAM * 100}%">${ar(i + 1)}</span><span class="gap${i % 2 ? '' : ' lo'}" style="right:${(r.day - r.gap / 2) / EXAM * 100}%">${GAPNAME(r.gap)}</span>${i ? `<span class="day" style="right:${r.day / EXAM * 100}%">يوم ${ar(r.day)}</span>` : ''}`).join('')}
+          <span class="mk exam" style="right:100%">!</span>
+          <span class="wl" style="right:${(EXAM - 11) / EXAM * 100}%;color:#E07800">−١٤</span><span class="wl" style="right:${(EXAM - 5) / EXAM * 100}%;color:#EA2B2B">−٧</span><span class="wl" style="right:${(EXAM - 1) / EXAM * 100}%;color:#1899D6">−٢</span>
+        </div></div>
+        <div class="exw"><div class="w1"><b>من −١٤ إلى −٨: كنسة أولى</b>كل قاعدة لازم يتذكرها صح مرة — الأضعف أول. وأسئلة مخلوطة بوقت الاختبار.</div>
+          <div class="w2"><b>من −٧ إلى −٣: كنسة ثانية</b>بس القواعد اللي غلط فيها أو بطيء. اختبارين تجريبيين. ولا درس جديد بعد −٥.</div>
+          <div class="w3"><b>−٢ و −١: خفيف ونوم</b>١٠ دقائق لأضعف ١٠ قواعد بس. «نم ٨ ساعات — النوم يثبّت اللي راجعته».</div></div>
+        <div class="rules3"><div><b>بعد النوم</b>أول مراجعة بكرة — النوم يثبّت اللي تعلّمه اليوم.</div><div><b>غلط؟ ترجع اليوم</b>القاعدة اللي ينساها ترجع له في نفس الجلسة لين يجيبها صح.</div><div><b>دايم مخلوطة</b>كل جلسة من ٣ دروس على الأقل، والقواعد المتشابهة جنب بعض.</div><div><b>بدون قلوب</b>المراجعة ما تعاقب — تعطي نقاط وتحسب في الهدف اليومي.</div></div></div>
+      <div class="card"><h3>كيف تبان المراجعة؟ جرّبها</h3><p class="sub">أربعة أشكال تتبدّل — كلها استرجاع، ولا مرة إعادة قراءة. الغلط يعرض الحيلة ٣ ثواني وبعدها يرجع السؤال.</p>
+        <div class="revs" id="revs"></div>
+        <div class="load"><span class="pillx">≈ ١٢ مراجعة يومياً — ٣ دقائق</span></div></div>`;
+    chartFx();
+    reviews();
+  }
+  const GAPNAME = g => g === 1 ? 'بعد يوم' : g === 3 ? '٣ أيام' : g === 7 ? 'أسبوع' : g === 14 || g === 15 ? 'أسبوعين' : g === 21 ? '٣ أسابيع' : ar(g) + ' يوم';
+  function chartFx() {
+    const svg = $('#chart svg'), pW = $('#pW'), pO = $('#pO'), dotsG = $('#rvDots');
+    const draw = () => {
+      [pO, pW].forEach((p, i) => {
+        const L = p.getTotalLength();
+        p.style.strokeDasharray = i === 0 ? '' : L; p.style.strokeDashoffset = i === 0 ? '' : L;
+        if (i === 0) { anim(p, [{ opacity: 0 }, { opacity: 1 }], { duration: 600 }); return; }
+        anim(p, [{ strokeDashoffset: L }, { strokeDashoffset: 0 }], { duration: 2600, easing: 'cubic-bezier(.3,0,.3,1)', fill: 'forwards' });
+      });
+      $$('circle', dotsG).forEach((d, i) => anim(d, [{ opacity: 0, scale: '0' }, { opacity: 1, scale: '1.4', offset: .6 }, { opacity: 1, scale: '1' }],
+        { duration: 360, delay: 2600 * (REV[i].day / EXAM) * .9 + 200, fill: 'backwards', easing: 'ease-out' }));
+      $$('circle', dotsG).forEach(d => d.style.transformBox = 'fill-box');
+      $$('circle', dotsG).forEach(d => d.style.transformOrigin = 'center');
+    };
+    draw();
+    $('#cPlay').addEventListener('click', () => { tap(); draw(); });
+    /* hover: a crosshair and both values for the day under the pointer */
+    const tb = $('#tipbox'), hx = $('#hx'), hit = $('#hit'), wrap = $('#chart');
+    const move = e => {
+      const r = svg.getBoundingClientRect(), sx = (e.clientX - r.left) / r.width * 1000;
+      const M = { l: 54, r: 132 }, iw = 1000 - M.l - M.r;
+      const day = clamp(Math.round((M.l + iw - sx) / iw * EXAM), 0, EXAM);
+      const x = M.l + iw - day / EXAM * iw;
+      hx.setAttribute('x1', x); hx.setAttribute('x2', x); hx.setAttribute('opacity', .35);
+      tb.innerHTML = `<b>يوم ${ar(day)}</b><span class="r"><i style="border-color:#58CC02"></i>مع المراجعة ${ar(Math.round(pAt(day, true) * 100))}٪</span><span class="r"><i style="border-color:#AFAFAF;border-top-style:dashed"></i>بدون ${ar(Math.round(pAt(day, false) * 100))}٪</span>`;
+      const wr = wrap.getBoundingClientRect(), px = x / 1000 * r.width + (r.left - wr.left);
+      tb.style.left = clamp(px - tb.offsetWidth / 2, 0, wr.width - tb.offsetWidth) + 'px'; tb.style.top = '0px'; tb.style.opacity = 1;
+    };
+    hit.addEventListener('pointermove', move); hit.addEventListener('pointerdown', move);
+    hit.addEventListener('pointerleave', () => { tb.style.opacity = 0; hx.setAttribute('opacity', 0); });
+  }
+
+  /* the four review shapes: always retrieval, ten to twenty seconds, no hearts */
+  function reviews() {
+    const host = $('#revs');
+    const KINDS = [
+      { k: 'apply', tag: 'طبّق — ٦٠٪', title: 'أرقام جديدة', R: RULES.rep },
+      { k: 'name', tag: 'سمّ القاعدة — ٢٠٪', title: 'أي قاعدة تحلها أسرع؟', R: RULES.gauss },
+      { k: 'recall', tag: 'تذكّرها — ١٠٪', title: 'كمّل القاعدة', R: RULES.rep },
+      { k: 'spot', tag: 'صيد الغلط — ١٠٪', title: 'وين الغلط؟', R: RULES.odd }
+    ];
+    KINDS.forEach(K => {
+      const el = document.createElement('div');
+      el.className = 'rv';
+      host.appendChild(el);
+      let tries = 0;
+      const run = () => {
+        el.innerHTML = `<div class="rv-h"><span class="rc-ic" style="width:28px;height:28px;border-radius:9px">${iconWhite(K.R.key)}</span><span>${K.R.name}</span><span class="tag">${K.tag}</span></div>
+          <div class="rv-k">مراجعة — ${K.title}</div><div class="stage"></div><button class="gobtn" disabled>تحقق</button>`;
+        const st = $('.stage', el), go = $('.gobtn', el);
+        let check = null;
+        const done = (msg, soft) => {
+          go.disabled = false; go.textContent = 'مرة ثانية';
+          check = () => { tries = 0; run(); };
+          st.insertAdjacentHTML('beforeend', `<div class="rv-done${soft ? ' soft' : ''}">${msg}</div>`); rise(st.lastChild);
+        };
+        const ok = () => { right(); buzz(20); done(tries ? 'صح — بس ترجع لك بكرة عشان تثبت' : `ممتاز — المراجعة الجاية بعد ${pick(['٣ أيام', 'أسبوع', 'أسبوعين'])}`, !!tries); };
+        const miss = again => { bad(); tries++; remind(el, K.R, again); };
+        if (K.k === 'apply') {
+          const v = K.R.gen();
+          st.innerHTML = `<div class="rec-cue" style="margin-bottom:6px"><span class="rc-pic">${PIC[K.R.key]}</span></div><div class="big sm">${v.long} = ؟</div>`;
+          fitAll(st);
+          const kp = keypad(st, s => go.disabled = !s, true);
+          check = () => { if (kp.n() === v.ans) { kp.lock(); wave([kp.inp]); $('.big', st).innerHTML = `${v.long} = <span class="ans">${ar(v.ans)}</span>`; fitAll(st); ok(); } else { kp.inp.classList.add('no'); shake(kp.inp); go.disabled = true; miss(() => kp.clear()); } };
+        }
+        if (K.k === 'name') {
+          const v = K.R.gen();
+          st.innerHTML = `<div class="rv-q">أسرع طريقة لحل<br><span style="white-space:nowrap">${v.long}</span>؟</div><div class="opts">${shuf(['gauss', 'rep', 'odd']).map(k => `<button class="opt txt" data-k="${k}" style="display:flex;align-items:center;gap:8px"><span class="rc-ic" style="width:26px;height:26px;border-radius:8px">${iconWhite(k)}</span>${RULES[k].name}</button>`).join('')}</div>`;
+          fitAll(st);
+          let sel = null;
+          st.addEventListener('click', e => { const b = e.target.closest('.opt'); if (!b || b.disabled) return; tap(); sel = b; $$('.opt', st).forEach(x => x.classList.toggle('sel', x === b)); go.disabled = false; });
+          check = () => {
+            if (sel.dataset.k === 'gauss') { $$('.opt', st).forEach(x => { x.disabled = true; x.classList.toggle('dim', x !== sel); }); sel.classList.replace('sel', 'ok'); wave([sel]); ok(); }
+            else { sel.classList.replace('sel', 'no'); shake(sel); go.disabled = true; miss(() => { $$('.opt', st).forEach(x => x.classList.remove('no', 'sel')); }); }
+          };
+        }
+        if (K.k === 'recall') {
+          st.innerHTML = `<div class="rec-cue" style="margin-bottom:6px"><span class="rc-pic">${PIC[K.R.key]}</span></div>`;
+          const bd = builder(st, K.R, full => go.disabled = !full);
+          fitAll(st);
+          check = () => { if (bd.check()) ok(); else { go.disabled = true; miss(); } };
+        }
+        if (K.k === 'spot') {
+          const v = K.R.gen(), sp = K.R.spot(v);
+          st.innerHTML = `<div class="rv-q" style="font-size:16px">أحمد كتب:</div><div class="box"><div class="big sm">${v.long}</div><div class="said"><span class="op" style="color:var(--gray-icon)">=</span>${sp.said.map((x, i) => typeof x === 'number' ? `<button class="stk" data-i="${i}">${ar(x)}</button>` : `<span class="op" style="color:var(--gray-icon)">${x}</span>`).join('')}</div></div><div class="note" style="margin-top:10px">اضغط الرقم الغلط</div>`;
+          fitAll(st);
+          let sel = null;
+          st.addEventListener('click', e => { const b = e.target.closest('.stk'); if (!b || b.disabled) return; tap(); sel = b; $$('.stk', st).forEach(x => x.classList.toggle('no', false)); $$('.stk', st).forEach(x => x.style.outline = x === b ? '2px solid var(--blue-border)' : ''); go.disabled = false; });
+          check = () => {
+            if (sp.wrong.includes(+sel.dataset.i)) { $$('.stk', st).forEach(x => { x.disabled = true; x.style.outline = ''; }); wave(sp.wrong.map(i => $(`.stk[data-i="${i}"]`, st))); st.insertAdjacentHTML('beforeend', `<div class="note" style="color:var(--green-dk)">${sp.fix}</div>`); ok(); }
+            else { sel.classList.add('no'); shake(sel); go.disabled = true; miss(() => { sel.classList.remove('no'); sel.style.outline = ''; }); }
+          };
+        }
+        go.addEventListener('click', () => { if (!go.disabled && check) { tap(); check(); } });
+      };
+      run();
+    });
+  }
+
+  /* ---------------- go ---------------- */
+  const start = () => { VERS.forEach(V => mount(V).start()); plan(); };
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(start); else start();
+})();
+</script>
+</body>
+</html>

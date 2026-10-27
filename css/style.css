@@ -13,7 +13,7 @@
   --purple: #CE82FF;       --purple-dk: #A568CC;
   --purple-tint: #EDD1FF;  --purple-pale: #DBC3EB;  --purple-shine: #DAA0FF;
   --gold: #FFC800;         --gold-dk: #E6A000;
-  --gold-shine: #FFE700;   --gold-soft: #FBE56D;    --brown: #AA572A;    --brown-dk: #7A3B12;
+  --gold-shine: #FFE700;   --gold-soft: #FBE56D;    --brown: #AA572A;    --gold-star: #C57A1C;  --gold-band: #FFD940;    --brown-dk: #7A3B12;
   --lime: #A5D92B;
   --red: #FF4B4B;          --red-soft: #FFB2B2;
   --orange: #FF9600;       --orange-dk: #E07800;    --orange-bg: #FFEFD6;    --gold-bg: #FFF4BF;
@@ -377,28 +377,36 @@ svg.ic { display: block; }
    + floating white "START" tooltip (r11, 2px #E5E5E5, 17px/900)
    ============================================================ */
 .path { display: flex; flex-direction: column; align-items: center; padding: 38px 0 6px; position: relative; }
-.path-row { position: relative; height: 142px; width: 100%; display: flex; justify-content: center; }
+.path-row { position: relative; height: 160px; width: 100%; display: flex; justify-content: center; }
 .path-row.row-tip { margin-top: 70px; }
 /* room under the last node so its start bubble can always scroll it up into view */
 .path-tail { height: 200px; }
 .node-col { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
+/* the level buttons are a fifth bigger (the user, 2026-10-26: «make level
+   buttons bigger»): the whole node — hexagon, lip, sign, ring, ghost, the
+   lesson-done coin and its diamonds — is zoomed as one, so every measured beat
+   keeps its proportions; its title and the «ابدأ» bubble are zoomed back and
+   stay the size they were */
+.node-col { --nz: 1.2; zoom: var(--nz); }
+.node-col .node-label, .node-col .node-tip { zoom: calc(1 / var(--nz)); }
 
+/* the node is a hexagon (NODE_SHAPE in app.js): face, its lip 7px under it and
+   a smaller hexagon of shine, painted from the same --node-* colours the coin
+   used. The press is the coin's: the button drops 7px and its lip goes under it */
 .node {
   position: relative;
   width: 71px; height: 58px; margin-top: 10px;
-  border-radius: 50%;
-  border: 0; padding: 0;
-  background: var(--node-c, var(--purple));
-  box-shadow: 0 7px 0 var(--node-s, var(--purple-dk));
+  border: 0; padding: 0; background: none;
   display: flex; align-items: center; justify-content: center;
-}
-.node::before { /* inner dome shine */
-  content: ''; position: absolute; top: 3px; left: 6.5px;
-  width: 58px; height: 48px; border-radius: 50%;
-  background: var(--node-h, transparent);
+  -webkit-tap-highlight-color: transparent;
 }
 .node > * { position: relative; }
-.node:active:not(:disabled), .node.down { transform: translateY(7px); box-shadow: 0 0 0 var(--node-s, var(--purple-dk)); }
+.node > .node-sh { position: absolute; inset: 0; width: 71px; height: 58px; overflow: visible; pointer-events: none; }
+.nd-face { fill: var(--node-c, var(--purple)); }
+.nd-lip { fill: var(--node-s, var(--purple-dk)); transform: translateY(7px); }
+.nd-hi { fill: var(--node-h, transparent); }
+.node:active:not(:disabled), .node.down { transform: translateY(7px); }
+.node:active:not(:disabled) .nd-lip, .node.down .nd-lip { transform: none; }
 .node-done   { --node-c: var(--gold); --node-s: var(--gold-dk); --node-h: var(--gold-shine); }
 /* each lesson's own sign (lessonIcon): white on an open node, the star-done
    brown on a finished one, so it reads against the gold */
@@ -406,8 +414,18 @@ svg.ic { display: block; }
 .node-ic .s { fill: none; stroke: currentColor; stroke-width: 4.2; stroke-linecap: round; stroke-linejoin: round; }
 .node-ic .f { fill: currentColor; }
 .node-ic .j { stroke: currentColor; stroke-width: 3; stroke-linejoin: round; }
-.node-done .node-ic { color: var(--brown); }
+.node-done .node-ic { color: var(--gold-star); width: 31px; height: 31px; }
+/* the finished node (NODE_GOLD): its bands of light over the gold face */
+.nd-gold .nd-hi { fill: var(--gold-band); }
+.nd-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 .node-locked { --node-c: var(--line); --node-s: var(--gray-shadow); --node-h: transparent; cursor: default; }
+/* a locked lesson's sign in Duolingo's Hare grey, not white (LevelOval.Locked:
+   face Swan, icon Hare; the user, 2026-10-27: «make the icons darker in locked
+   levels exactly like Duolingo») */
+.node-locked .node-ic { color: var(--gray-icon); }
+/* the sign's shadow during the star flip (nodeFlip): its own shape in the
+   lip's colour, laid where the sign rests, under it */
+.node > .node-ic-sh { position: absolute; left: 50%; top: 50%; margin: -19px 0 0 -19px; opacity: 0; pointer-events: none; }
 /* Lesson title under each node. Readability over compactness: no opacity
    fade (it muddied the text), a wider box so Arabic titles break at a word
    instead of mid-phrase, and state carried by colour rather than by dimming. */
@@ -431,6 +449,27 @@ svg.ic { display: block; }
    into the label, so its title needs to start lower than the others — 29px
    clears the ring at its widest breath. */
 .node-col.bob .node-label { font-size: 14px; color: var(--ink); margin-top: 29px; }
+/* beside the node, not under it: on its left or its right by where it stands on
+   the path (lbl-l / lbl-r, set in renderPath), level with the face and aligned
+   to the node's side, a little further out round the current node's ring */
+.node-col[class*="lbl-"] .node-label {
+  position: absolute; top: calc(39px * var(--nz)); transform: translateY(-50%);
+  width: max-content; max-width: 128px; margin: 0;
+  text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 6px #fff;
+}
+.node-col.lbl-l .node-label { right: calc(100% + 14px); text-align: right; }
+.node-col.lbl-r .node-label { left: calc(100% + 14px); text-align: left; }
+.node-col.bob.lbl-l .node-label { right: calc(100% + 26px); margin: 0; }
+.node-col.bob.lbl-r .node-label { left: calc(100% + 26px); margin: 0; }
+/* never past the screen's edge (the user, 2026-10-26, on a long title cut off on
+   a narrow phone): the title is as wide as the room between the node and a
+   12px margin — half the screen, plus how far the node leans away (--ax, ×1.2
+   for the zoom), less the node's half and the gap — and takes a third line (more, a size down, on a 320px phone)
+   rather than run off */
+.node-col[class*="lbl-"] .node-label { max-width: min(128px, calc(50vw + var(--ax, 0) * 1.2px - 70px)); -webkit-line-clamp: 5; }
+@media (max-width: 350px) { .node-col[class*="lbl-"] .node-label { font-size: 12.5px; } }
+.node-col.bob[class*="lbl-"] .node-label { max-width: min(128px, calc(50vw + var(--ax, 0) * 1.2px - 82px)); }
+.node-col[class*="lbl-"] .node-stars + .node-label { margin-top: 0; }
 .node-ring { /* progress ring around current level; node face+lip spans y 10-75, ring height 84 → top 0 centers it */
   position: absolute; top: 0; left: 50%; margin-left: -44.5px;
   width: 89px; height: 84px; pointer-events: none;
@@ -1360,13 +1399,15 @@ button.dom-stat:active { transform: scale(.99); }
   0%, 100% { transform: scale(1.131, 1.121); animation-timing-function: cubic-bezier(.8, 0, .85, 1); }
   50%      { transform: scale(.972, .944); animation-timing-function: cubic-bezier(.15, 0, .2, 1); }
 }
-@keyframes ringDimTrack {
-  0%, 100% { opacity: 1; animation-timing-function: cubic-bezier(.8, 0, .85, 1); }
-  50%      { opacity: .73; animation-timing-function: cubic-bezier(.15, 0, .2, 1); }
+@keyframes ringDimTrack {        /* Duolingo's ring loop: .89 → .70 at its smallest → 1 at 1450ms → .89, linear */
+  0%, 100% { opacity: .89; }
+  50%      { opacity: .7; }
+  72.5%    { opacity: 1; }
 }
 @keyframes ringDimArc {
-  0%, 100% { opacity: 1; animation-timing-function: cubic-bezier(.8, 0, .85, 1); }
-  50%      { opacity: .6; animation-timing-function: cubic-bezier(.15, 0, .2, 1); }
+  0%, 100% { opacity: .86; }
+  50%      { opacity: .6; }
+  72.5%    { opacity: 1; }
 }
 @keyframes spinSlow { to { transform: rotate(360deg); } }
 @keyframes glowPulse {
@@ -1404,10 +1445,10 @@ button.dom-stat:active { transform: scale(.99); }
 .path-row .bob { animation: nodeBob 1.8s .8s ease-in-out infinite; }
 .node-ring { animation: ringIdle 2s infinite; }
 .node-ring .ring-seg { stroke-width: 7; stroke-linecap: round; }
-.node-ring .ring-track { stroke: var(--line); animation: ringDimTrack 2s infinite; }
-.node-ring .ring-arc { animation: ringDimArc 2s infinite; }
-.node-done::after { /* gold coin shine sweep */
-  content: ''; position: absolute; inset: 0; border-radius: 50%;
+.node-ring .ring-track { stroke: var(--line); animation: ringDimTrack 2s linear infinite; }
+.node-ring .ring-arc { animation: ringDimArc 2s linear infinite; }
+.node-done::after { /* gold shine sweep, inside the hexagon */
+  content: ''; position: absolute; inset: 0; clip-path: path("M35.5 0 L27.75 0 Q17.75 0 12.53 8.53 L5.22 20.47 Q0 29 5.22 37.53 L12.53 49.47 Q17.75 58 27.75 58 L43.25 58 Q53.25 58 58.47 49.47 L65.78 37.53 Q71 29 65.78 20.47 L58.47 8.53 Q53.25 0 43.25 0 Z");
   background: linear-gradient(115deg, transparent 32%, rgba(255,255,255,.55) 50%, transparent 68%) no-repeat;
   background-size: 220% 100%;
   animation: coinShine 3.2s ease-in-out infinite;
@@ -1419,7 +1460,7 @@ button.dom-stat:active { transform: scale(.99); }
    Duolingo's grey) and its three diamonds — both slid in under the coin */
 .node-ghost {
   position: absolute; left: 50%; width: 71px; height: 58px; margin-left: -35.5px;
-  border-radius: 50%; background: var(--node-ghost); pointer-events: none;
+  clip-path: path("M35.5 0 L27.75 0 Q17.75 0 12.53 8.53 L5.22 20.47 Q0 29 5.22 37.53 L12.53 49.47 Q17.75 58 27.75 58 L43.25 58 Q53.25 58 58.47 49.47 L65.78 37.53 Q71 29 65.78 20.47 L58.47 8.53 Q53.25 0 43.25 0 Z"); background: var(--node-ghost); pointer-events: none;
 }
 .node-dia { position: absolute; top: 0; left: 50%; pointer-events: none; transform: scale(0); }
 .node-dia svg { display: block; width: 100%; height: 100%; }
@@ -1824,7 +1865,6 @@ button.dom-stat:active { transform: scale(.99); }
 .due-card.due-risk { border-color: var(--orange); box-shadow: 0 4px 0 #E07D00; }
 .due-card.due-risk .due-ico { background: #FFF1DB; }
 .due-card.due-risk .due-go { color: #E07D00; }
-.set-seg-goal button { padding-inline: 15px; }
 
 /* --- what the exam date asks of them, inside the countdown card --- */
 .ec2-plan { font-size: 12px; font-weight: 700; color: var(--gray); line-height: 1.5; }
@@ -2118,6 +2158,20 @@ button.dom-stat:active { transform: scale(.99); }
 .stat-chest:active .sc-chest { transform: scale(.92); }
 
 /* --- floating daily chest (bottom corner of the path, rides the scroll) --- */
+/* Duolingo's «back to my lesson» card (pathFabCheck): white on its grey rim and
+   lip, the blue arrow; it appears at once and shrinks away in 200ms */
+.path-fab {
+  position: fixed; bottom: calc(var(--nav-h) + 16px); right: max(16px, calc(50% - 215px + 16px)); z-index: 41;
+  display: grid; place-items: center; width: 52px; height: 52px; padding: 0; box-sizing: border-box;
+  background: var(--snow); border: 2px solid var(--line); border-radius: 14px; box-shadow: 0 4px 0 var(--line);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transform: scale(0); pointer-events: none; transition: transform .2s ease;
+}
+.path-fab.on { transform: none; pointer-events: auto; transition: none; }
+.path-fab:active { transform: translateY(4px); box-shadow: 0 0 0 var(--line); }
+.path-fab svg { width: 20px; height: 24px; fill: none; stroke: var(--blue); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.path-fab.down svg { transform: rotate(180deg); }
+:root[data-motion="reduced"] .path-fab { transition: none; }
 .chest-float {
   position: fixed; bottom: calc(var(--nav-h) + 12px); left: 14px; z-index: 40;
   background: none; border: 0; padding: 4px;
@@ -2131,7 +2185,63 @@ button.dom-stat:active { transform: scale(.99); }
 }
 .chest-float .ch-glow { opacity: 0; }
 .chest-float:active .cf-chest { transform: scale(.92); }
-.chest-float.ready { animation: questGlowSoft 1.6s ease-in-out infinite; }
+.chest-float.ready { animation: fadeUp .45s .25s cubic-bezier(.3,1.3,.5,1) backwards; }
+/* the ready chest knocks (floatingQuest): one 2.6s cycle — crouch, jump, the lid
+   pops a crack with the light inside, two gems hop out and fall back, a squash
+   on the landing that the badge and the button beat on */
+.cf-box { position: relative; display: block; }
+.chest-float.ready .cf-chest { width: 72px; height: 68px; transform-origin: 50% 100%; animation: cfHop 2.6s cubic-bezier(.45,0,.55,1) infinite; }
+.cf-hop .ch-lid { transform-box: view-box; transform-origin: 130px 225px; animation: cfLid 2.6s ease-in-out infinite; }
+.cf-light { fill: #FFF3B0; opacity: 0; animation: cfShine 2.6s ease-in-out infinite; }
+@keyframes cfHop {
+  0%, 62%, 100% { transform: translateY(0) scale(1, 1); }
+  8%  { transform: translateY(0) scale(1.1, .86); }
+  15% { transform: translateY(-14px) scale(.93, 1.09); }
+  24% { transform: translateY(-20px) scale(1, 1); }
+  33% { transform: translateY(-14px) scale(1, 1); }
+  40% { transform: translateY(0) scale(1.12, .86); }
+  47% { transform: translateY(-3px) scale(.97, 1.04); }
+  54% { transform: translateY(0) scale(1.02, .98); }
+}
+@keyframes cfLid {
+  0%, 12%, 40%, 100% { transform: none; }
+  20%, 30% { transform: translateY(-58px) rotate(-4deg); }
+}
+@keyframes cfShine { 0%, 13%, 39%, 100% { opacity: 0; } 19%, 31% { opacity: 1; } }
+.cf-gem { position: absolute; left: 50%; top: 34%; width: 16px; height: 21px; margin-left: -8px; opacity: 0; z-index: 2; pointer-events: none; }
+.cf-gem svg { display: block; width: 100%; height: 100%; }
+.cf-g1 { animation: cfGem1 2.6s ease-in-out infinite; }
+.cf-g2 { animation: cfGem2 2.6s ease-in-out infinite; }
+@keyframes cfGem1 {
+  0%, 17% { opacity: 0; transform: translate(0, -4px) rotate(0) scale(.5); }
+  20% { opacity: 1; }
+  27% { transform: translate(-17px, -40px) rotate(-25deg) scale(1); opacity: 1; }
+  37% { transform: translate(-6px, -6px) rotate(-40deg) scale(.8); opacity: 1; }
+  40%, 100% { transform: translate(0, 8px) rotate(-40deg) scale(.5); opacity: 0; }
+}
+@keyframes cfGem2 {
+  0%, 18% { opacity: 0; transform: translate(0, -4px) rotate(0) scale(.5); }
+  21% { opacity: 1; }
+  28% { transform: translate(15px, -34px) rotate(22deg) scale(.9); opacity: 1; }
+  37% { transform: translate(5px, -6px) rotate(36deg) scale(.75); opacity: 1; }
+  40%, 100% { transform: translate(0, 8px) rotate(36deg) scale(.5); opacity: 0; }
+}
+.cf-badge {
+  position: absolute; top: 2px; right: -4px; z-index: 3; min-width: 24px; height: 24px; padding: 2px 6px 0; box-sizing: border-box;
+  border-radius: 12px; background: var(--red); border: 2px solid var(--snow); color: var(--snow);
+  font-size: 14px; font-weight: 800; line-height: 18px; text-align: center;
+  animation: cfBeat 2.6s ease-out infinite;
+}
+.cf-open {
+  position: relative; margin-top: 6px; padding: 5px 14px 3px; border-radius: 12px;
+  background: var(--gold); box-shadow: 0 4px 0 var(--gold-dk); color: var(--snow);
+  font-size: 17px; font-weight: 800; line-height: 1.2; white-space: nowrap; text-shadow: 0 1px 0 rgba(170, 87, 42, .35);
+  animation: cfBeat 2.6s ease-out infinite;
+}
+@keyframes cfBeat { 0%, 40%, 62%, 100% { transform: scale(1); } 46% { transform: scale(1.16); } 54% { transform: scale(.96); } }
+.chest-float.ready:active .cf-open { transform: translateY(4px); box-shadow: none; animation: none; }
+:root[data-motion="reduced"] .chest-float.ready .cf-chest, :root[data-motion="reduced"] .cf-hop .ch-lid, :root[data-motion="reduced"] .cf-light,
+:root[data-motion="reduced"] .cf-gem, :root[data-motion="reduced"] .cf-badge, :root[data-motion="reduced"] .cf-open { animation: none; }
 .chest-float.claimed .cf-chest { filter: saturate(.5) opacity(.78) drop-shadow(0 4px 0 rgba(0,0,0,.08)); }
 .sc-done svg { width: 12px; height: 12px; color: #fff; display: block; }
 /* the chest's speech bubble: the path's node tip, white with the grey line and a tail, sitting over the chest */
@@ -2247,6 +2357,7 @@ button.dom-stat:active { transform: scale(.99); }
   -webkit-tap-highlight-color: transparent;
 }
 .mk-flag span { font-size: 11.5px; font-weight: 800; }
+.mk-flag-ic { width: 18px; height: 18px; flex: none; }
 .mk-flag:active { transform: translateY(4px); box-shadow: none; }
 .mk-flag.on { background: var(--gold); border-color: var(--gold-dk); color: #fff; box-shadow: 0 4px 0 var(--gold-dk); }
 .mk-side { flex: 0 0 auto !important; width: auto; }
@@ -2284,18 +2395,6 @@ button.dom-stat:active { transform: scale(.99); }
    ============================================================ */
 .q-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin: 10px 0 16px; }
 .q-top .q-kicker { margin: 0; flex: 1; }
-.method-btn {
-  display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
-  background: #fff; color: var(--green-dk); border: 2px solid var(--line);
-  border-radius: 13px;
-  font-family: var(--font); font-weight: 700; font-size: 13.5px;
-  padding: 7px 13px 5px; cursor: pointer; margin-top: 2px;
-  box-shadow: 0 2px 0 var(--line);
-  transition: transform .08s, box-shadow .08s, border-color .12s; -webkit-tap-highlight-color: transparent;
-  animation: fadeUp .35s .18s ease backwards; user-select: none;
-}
-.method-btn svg { width: 17px; height: 17px; }
-.method-btn:active { transform: translateY(2px); box-shadow: none; }
 
 .method-veil {
   position: fixed; inset: 0; z-index: 120;
@@ -2414,6 +2513,52 @@ button.dom-stat:active { transform: scale(.99); }
 .lb-listhead { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 15px; color: var(--ink); margin: 4px 2px 8px; }
 .lb-listhead .ic { width: 18px; height: 18px; }
 .lb-sub { color: var(--gray); font-weight: 600; font-size: 14px; margin-bottom: 10px; }
+/* the league's name on a ribbon in its own colour (2026-10-26): the band
+   unrolls from its middle with a little overshoot, the tails slide out from
+   behind it and fold back, the name springs up onto it and a band of light
+   crosses it; after that the tails stir in a slow breeze and the light comes
+   back every few seconds */
+.lbb-bronze   { --bm: #C46A2F; --bd: #9C5022; --bl: #DD8A52; --bf: #6E3714; }
+.lbb-silver   { --bm: #8A9DB5; --bd: #6B7F99; --bl: #A9B9CC; --bf: #4E5F77; }
+.lbb-gold     { --bm: #F0A800; --bd: #C98A00; --bl: #FFC845; --bf: #946500; }
+.lbb-diamond  { --bm: #1CB0F6; --bd: #1482BF; --bl: #5CC8F8; --bf: #0C5E8C; }
+.lbb-champion { --bm: #8E4CF0; --bd: #6A2FC8; --bl: #A46CF5; --bf: #4C1E96; }
+.lb-banner { position: relative; display: inline-flex; margin: 14px 0 26px; padding: 0; font-size: inherit; isolation: isolate; }
+.lbb-band {
+  position: relative; z-index: 2; display: flex; align-items: center; height: 48px; padding: 0 30px; overflow: hidden;
+  background: var(--bm); border-radius: 8px; box-shadow: inset 0 4px 0 var(--bl), inset 0 -4px 0 var(--bd);
+  animation: lbbBand .6s cubic-bezier(.22, .9, .3, 1) backwards;
+}
+.lbb-tx {
+  color: var(--snow); font-size: 24px; font-weight: 800; line-height: 1; white-space: nowrap; text-shadow: 0 2px 0 var(--bd);
+  animation: lbbTx .5s .32s cubic-bezier(.3, 1.5, .5, 1) backwards;
+}
+.lbb-sh {
+  position: absolute; inset: 0; pointer-events: none; transform: translateX(-130%);
+  background: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, .5) 50%, transparent 65%);
+  animation: lbbSh 5s .8s cubic-bezier(.4, 0, .2, 1) infinite;
+}
+.lbb-tail { position: absolute; z-index: 1; top: 13px; width: 54px; height: 43px; background: var(--bd); }
+.lbb-tail.l { left: -36px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 17px 50%); transform-origin: 100% 40%; animation: lbbTailL .5s .2s cubic-bezier(.22, .9, .3, 1.25) backwards, lbbFlapL 3.6s 1s ease-in-out infinite; }
+.lbb-tail.r { right: -36px; clip-path: polygon(0 0, 100% 0, calc(100% - 17px) 50%, 100% 100%, 0 100%); transform-origin: 0 40%; animation: lbbTailR .5s .2s cubic-bezier(.22, .9, .3, 1.25) backwards, lbbFlapR 3.6s 1s ease-in-out infinite; }
+.lbb-fold { position: absolute; z-index: 1; top: 48px; width: 18px; height: 8px; background: var(--bf); animation: lbbFold .3s .38s ease-out backwards; }
+.lbb-fold.l { left: 0; clip-path: polygon(0 0, 100% 0, 100% 100%); }
+.lbb-fold.r { right: 0; clip-path: polygon(0 0, 100% 0, 0 100%); }
+@keyframes lbbBand {
+  0% { transform: scale(0, .5); }
+  55% { transform: scale(1.07, 1.06); }
+  78% { transform: scale(.98, .99); }
+  100% { transform: none; }
+}
+@keyframes lbbTx { from { opacity: 0; transform: translateY(16px) scale(.6); } to { opacity: 1; transform: none; } }
+@keyframes lbbSh { 0% { transform: translateX(130%); } 22%, 100% { transform: translateX(-130%); } }
+@keyframes lbbTailL { from { opacity: 0; transform: translateX(34px) scaleX(.2); } to { opacity: 1; transform: none; } }
+@keyframes lbbTailR { from { opacity: 0; transform: translateX(-34px) scaleX(.2); } to { opacity: 1; transform: none; } }
+@keyframes lbbFlapL { 0%, 100% { transform: none; } 50% { transform: rotate(-3deg) translateY(1px); } }
+@keyframes lbbFlapR { 0%, 100% { transform: none; } 50% { transform: rotate(3deg) translateY(1px); } }
+@keyframes lbbFold { from { opacity: 0; } to { opacity: 1; } }
+:root[data-motion="reduced"] .lbb-band, :root[data-motion="reduced"] .lbb-tx, :root[data-motion="reduced"] .lbb-sh,
+:root[data-motion="reduced"] .lbb-tail, :root[data-motion="reduced"] .lbb-fold { animation: none; }
 .lb-timer {
   display: inline-flex; align-items: center; gap: 6px;
   background: var(--blue-light); color: var(--blue-dk); border: 1.5px solid var(--blue-border);
@@ -2448,9 +2593,12 @@ button.dom-stat:active { transform: scale(.99); }
 .lb-name b { color: var(--gold-dk); font-size: 13px; }
 .lb-xp { font-weight: 800; font-size: 15px; color: var(--gray); white-space: nowrap; }
 .lb-xp i { font-style: normal; font-size: 12px; color: var(--gray-icon); }
-.lb-foot { text-align: center; font-size: 14px; font-weight: 600; color: var(--gray); margin: 16px 0 4px; }
-.lb-foot b { color: var(--gold-dk); }
-.lb-note { text-align: center; font-size: 12px; font-weight: 600; color: var(--gray-icon); margin: 2px 0 6px; }
+/* the score (the user, 2026-10-26: «XP rather than خبرة», then «make it
+   just word XP»): the number in ink and the word «XP» after it, plain */
+.lb-row .lb-xp { display: inline-flex; align-items: baseline; gap: 4px; direction: rtl; }
+.lb-row .lb-xp b { font-size: 16px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+.lb-row .lb-xp i { font-style: normal; font-size: 13px; font-weight: 800; letter-spacing: .4px; color: var(--gray); direction: ltr; }
+.lb-row.me .lb-xp b, .lb-row.me .lb-xp i { color: var(--brown); }
 
 /* The board redraws on a slow beat while it is open. Replaying the entrance
    stagger on every beat would read as the page re-mounting — louder than the
@@ -2534,6 +2682,10 @@ button.dom-stat:active { transform: scale(.99); }
   -webkit-backdrop-filter: blur(4px);
           backdrop-filter: blur(4px);
 }
+/* the league row from league-animation.zip: its own bright stage, edge to edge */
+.rankup-veil.ru-league { padding: 0; background: #fffffc; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.rankup-veil.ru-league::after { content: none; }
+.ru-frame { display: block; width: 100%; height: 100%; border: 0; background: #fffffc; }
 /* Only claim transparency where the blur is really available. Without it the
    app behind stays sharp and fights the celebration, so those browsers keep
    the solid field they had. */
@@ -3396,13 +3548,6 @@ body:has(.screen-session) { overflow: hidden; }
    UI/UX pass — the path reads as a path
    ============================================================ */
 .path { position: relative; }
-.path-trail {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  pointer-events: none; z-index: 0; overflow: visible;
-}
-.path-trail .tl { stroke-width: 8; stroke-linecap: round; stroke-dasharray: 0.1 17; }
-.path-trail .tl-open   { stroke: var(--divider); }
-.path-trail .tl-locked { stroke: var(--line); }
 .path-row { z-index: 1; }
 
 /* tighter rhythm: one more lesson per screen without crowding the labels */
@@ -3433,76 +3578,135 @@ body:has(.screen-session) { overflow: hidden; }
 /* ============================================================
    SETTINGS
    ------------------------------------------------------------
-   Reads like a phone's own settings: the student on top, then
-   short grouped lists — one bordered card per group, rows parted
-   by a hairline rather than each row wearing its own lipped
-   card. Same tokens as everything else; the reset is the only
-   red on the page.
+   A hub of short pages, like a phone's own settings: your card
+   on top, then grouped lists, each row a coloured icon tile on
+   its lip, its name and a value. Each page opens with a back
+   arrow and slides in from the side it is going to.
    ============================================================ */
-.set-page { display: flex; flex-direction: column; gap: 10px; }
+.set-page { display: flex; flex-direction: column; gap: 10px; padding-bottom: 12px; }
 .set-page h1 { margin-bottom: 6px; }
+.set-in-fwd { animation: setInFwd .26s var(--ease) both; }
+.set-in-back { animation: setInBack .26s var(--ease) both; }
+@keyframes setInFwd { from { opacity: 0; transform: translateX(-28px); } }
+@keyframes setInBack { from { opacity: 0; transform: translateX(28px); } }
+[data-motion="reduced"] .set-in-fwd, [data-motion="reduced"] .set-in-back { animation: none; }
 
-.set-me {
-  display: flex; align-items: center; gap: 14px; margin-bottom: 10px;
-  padding: 14px 16px; border: 2px solid var(--line); border-radius: 18px; background: var(--snow);
+.set-head { display: flex; align-items: center; gap: 6px; margin: 0 -6px 4px; }
+.set-head h1 { margin: 0; font-size: 22px; }
+.set-back {
+  width: 44px; height: 44px; flex: none; display: grid; place-items: center; border: 0; border-radius: 12px;
+  background: none; color: var(--gray-icon); cursor: pointer;
 }
+.set-back:hover { background: var(--surface-hover); }
+.set-back:active { transform: scale(.94); }
+
+/* your card */
+.set-me {
+  display: flex; align-items: center; gap: 14px; width: 100%; margin-bottom: 6px; text-align: right; cursor: pointer;
+  padding: 14px 16px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 18px; background: var(--snow);
+  font-family: inherit; color: var(--ink); transition: background-color .14s;
+}
+.set-me:hover { background: var(--surface-hover); }
+.set-me:active { transform: translateY(2px); border-bottom-width: 2px; margin-bottom: 8px; }
 .set-av {
-  width: 58px; height: 58px; flex: none; border-radius: 18px;
-  display: grid; place-items: center; background: var(--green); color: #fff;
-  font-size: 27px; font-weight: 800; box-shadow: 0 4px 0 var(--green-dk);
+  width: 58px; height: 58px; flex: none; border-radius: 50%;
+  display: grid; place-items: center; background: var(--pv, var(--green)); color: var(--snow);
+  font-size: 27px; font-weight: 800; box-shadow: 0 4px 0 var(--pv-dk, var(--green-lip));
 }
 .set-av span { transform: translateY(-2px); }
-.set-me-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.set-me-tx b {
-  font-size: 19px; font-weight: 800; color: var(--ink);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+.set-av.big { width: 96px; height: 96px; font-size: 44px; box-shadow: 0 6px 0 var(--pv-dk, var(--green-lip)); }
+.set-me-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.set-me-tx b { font-size: 19px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.set-me-tx small { font-size: 13px; font-weight: 600; color: var(--gray); }
+.set-me-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.set-me-stats i {
+  display: inline-flex; align-items: center; gap: 4px; font-style: normal; font-size: 12.5px; font-weight: 800;
+  padding: 1px 9px; border-radius: 99px; background: var(--surface-hover); color: var(--gray);
 }
-.set-me-tx span { font-size: 13px; font-weight: 600; color: var(--gray); }
-.set-edit {
-  flex: none; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 12px;
-  background: var(--snow); color: var(--blue); cursor: pointer;
-  font-family: inherit; font-size: 13.5px; font-weight: 800; padding: 8px 14px 6px;
-  transition: background-color .14s, transform .06s;
-}
-.set-edit:hover { background: var(--line); }
-.set-edit:active { transform: translateY(2px); border-bottom-width: 2px; }
-.set-me.editing { align-items: flex-start; }
-.set-me-edit { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
-.set-me-edit .login-input { margin: 0; animation: none; }   /* the login delay has no place here */
-.set-me-btns { display: flex; gap: 8px; }
-.set-me-btns .btn { height: 46px; font-size: 15px; }
+.set-me-stats .sm-fire { color: var(--orange); }
+.set-me-stats .sm-xp { color: var(--gold-dk); }
+.set-me-stats .rank-badge { height: 16px; width: auto; }
 
+/* lists */
 .set-lab { padding: 8px 4px 0; font-size: 13px; font-weight: 800; color: var(--gray-icon); }
+.set-lab-danger { color: var(--red); }
 .set-list { border: 2px solid var(--line); border-radius: 16px; background: var(--snow); overflow: hidden; }
 .set-item {
-  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 58px;
-  padding: 10px 16px; border: 0; background: none; text-align: right;
+  display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px;
+  padding: 10px 14px; border: 0; background: none; text-align: right;
   font-family: inherit; color: var(--ink);
 }
 .set-item + .set-item { border-top: 2px solid var(--line); }
-.set-item-tx { flex: 1; min-width: 0; font-size: 16px; font-weight: 700; color: var(--ink); }
+.set-item-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.set-item-tx b { font-size: 16px; font-weight: 700; }
+.set-item-tx small { font-size: 12.5px; font-weight: 600; color: var(--gray); line-height: 1.4; }
 .set-link { cursor: pointer; transition: background-color .14s; }
-.set-link:hover { background: var(--line); }
-.set-link:active { background: var(--divider); }
-.set-val { font-size: 14.5px; font-weight: 700; color: var(--gray); white-space: nowrap; }
+.set-link:hover { background: var(--surface-hover); }
+.set-link:active { background: var(--line); }
+.set-val { font-size: 14px; font-weight: 700; color: var(--gray); white-space: nowrap; }
 .set-chev { flex: none; width: 22px; height: 22px; color: var(--gray-icon); }
+.set-item .rank-badge { width: auto; flex: none; }
+.set-danger .set-item-tx b { color: var(--red-dk2); }
 
-.set-seg { display: flex; gap: 4px; padding: 3px; border-radius: 12px; background: var(--line); }
-.set-seg button {
-  border: 0; border-radius: 9px; background: none; cursor: pointer; padding: 7px 12px 5px;
-  font-family: inherit; font-size: 13.5px; font-weight: 800; color: var(--gray); white-space: nowrap;
-  transition: background-color .14s, color .14s, box-shadow .14s;
-}
-.set-seg button.on { background: var(--snow); color: var(--blue-dk); box-shadow: 0 2px 0 var(--divider); }
+/* a flat line icon in the row's grey (the user, 2026-10-27: «wouldn't be better
+   to be icons flat, not this childish icons»); only the reset is red */
+.set-ic { width: 26px; height: 26px; flex: none; display: grid; place-items: center; color: var(--gray); }
+.set-ic svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.set-ic svg .f { fill: currentColor; stroke: none; }
+.set-danger .set-ic, .set-note .set-ic { color: var(--ic); }
 
-.set-reset {
-  margin-top: 12px; width: 100%; padding: 14px 16px 12px; border-radius: 16px;
-  border: 2px solid var(--red-soft); border-bottom-width: 4px; background: var(--snow);
-  color: var(--red-dk2); cursor: pointer; font-family: inherit; font-size: 15.5px; font-weight: 800;
-  transition: background-color .14s, transform .06s;
+/* the account page */
+.set-hero { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0 6px; text-align: center; }
+.set-hero .set-av.big { margin-bottom: 10px; animation: setPop .4s var(--ease) both; }
+@keyframes setPop { from { transform: scale(.7); opacity: 0; } }
+[data-motion="reduced"] .set-hero .set-av.big { animation: none; }
+.set-hero-name { font-size: 22px; font-weight: 800; color: var(--ink); }
+.set-hero-sub { font-size: 13.5px; font-weight: 600; color: var(--gray); }
+.set-hero-btn { width: auto; min-width: 150px; height: 44px; margin-top: 10px; padding: 0 22px; font-size: 15px; }
+.set-hero .set-me-edit { width: 100%; }
+.set-me-edit { display: flex; flex-direction: column; gap: 10px; }
+.set-me-edit .login-input { margin: 0; animation: none; text-align: center; }
+.set-me-btns { display: flex; gap: 8px; }
+.set-me-btns .btn { height: 46px; font-size: 15px; }
+.set-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 4px; }
+.set-stat {
+  display: flex; flex-direction: column; padding: 12px 14px; border: 2px solid var(--line); border-radius: 16px; background: var(--snow);
 }
-.set-reset:hover { background: var(--red-bg); }
-.set-reset:active { transform: translateY(2px); border-bottom-width: 2px; }
+.set-stat b { font-size: 22px; font-weight: 800; color: var(--st); line-height: 1.3; }
+.set-stat small { font-size: 13px; font-weight: 700; color: var(--gray); }
+
+/* the training page: the goal as rows of question tiles, the track as two cards */
+.set-goals { display: flex; flex-direction: column; gap: 10px; }
+.set-goal, .set-track {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: right; cursor: pointer;
+  padding: 12px 14px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 16px; background: var(--snow);
+  font-family: inherit; color: var(--ink); transition: background-color .14s, border-color .14s;
+}
+.set-goal:active, .set-track:active { transform: translateY(2px); border-bottom-width: 2px; }
+.set-goal.on, .set-track.on { border-color: var(--blue-border); background: var(--blue-light); }
+.set-goal-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.set-goal-tx b, .set-track b { font-size: 16px; font-weight: 800; }
+.set-goal-tx small, .set-track small { font-size: 12.5px; font-weight: 600; color: var(--gray); }
+.set-goal.on .set-goal-tx b, .set-track.on b { color: var(--blue-dk); }
+.set-goal .gl-grid { flex: none; }
+.set-tracks { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+.set-track { flex-direction: column; align-items: flex-start; gap: 2px; }
+
+/* the data page's note */
+.set-note {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 16px;
+  background: var(--green-bg); color: var(--ink);
+}
+.set-note span { display: flex; flex-direction: column; gap: 2px; }
+.set-note b { font-size: 15px; font-weight: 800; color: var(--green-dk); }
+.set-note small { font-size: 13px; font-weight: 600; line-height: 1.5; }
+
+/* the about page */
+.set-app { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0 10px; }
+.set-app img { border-radius: 22px; box-shadow: 0 4px 0 var(--line); margin-bottom: 8px; }
+.set-app b { font-size: 22px; font-weight: 800; color: var(--ink); }
+.set-app small { font-size: 13.5px; font-weight: 700; color: var(--gray); }
+
 /* the one line of the old disclaimer that has to stay somewhere a student
    can read it */
 .set-foot { margin: 8px 6px 0; text-align: center; font-size: 12.5px; font-weight: 600; color: var(--gray); line-height: 1.7; }
@@ -3915,7 +4119,7 @@ body:has(.screen-session) { overflow: hidden; }
 }
 
 /* ============================================================
-   قدّور — the mascot
+   فهيم — the mascot
    ------------------------------------------------------------
    One flat PNG per emotional state plus a small motion layer. Not Rive, not
    Lottie, not a layered SVG rig — the states are art, and only the entrance
@@ -3952,7 +4156,7 @@ body:has(.screen-session) { overflow: hidden; }
 
 :root[data-motion="reduced"] .mascot { animation: none !important; }
 
-/* ---------- the win screen: قدّور replaces the flame ----------
+/* ---------- the win screen: فهيم replaces the flame ----------
    Nothing behind him. The motion lives in winHeroPlay() (app.js, GSAP): a drop-in
    with a hard landing, then hop, hop, sway, again — with a live shadow. These rules
    only lay the two pieces out; he starts invisible so the drop, not the paint, is
@@ -4016,7 +4220,7 @@ body:has(.screen-session) { overflow: hidden; }
   max-width: 210px; line-height: 1.5;
   animation: fadeUp .34s .1s ease backwards;
 }
-/* the tail points at قدّور. The bubble comes first in the row, so in RTL he
+/* the tail points at فهيم. The bubble comes first in the row, so in RTL he
    stands at its inline-END (the left); the tail used to hang off the other
    side and point at nothing */
 .iv-bubble::after,
@@ -4029,7 +4233,7 @@ body:has(.screen-session) { overflow: hidden; }
 
 /* The rows used to take the leftover height and stack at the top of it, which on
    a tall phone left a third of the screen blank between the last row and the
-   button. The slack belongs to قدّور and the rows together — .iv-body holds the
+   button. The slack belongs to فهيم and the rows together — .iv-body holds the
    pair and centres it, so the button stays pinned at the bottom and the mascot
    is not stranded at the top with a void under him. */
 .iv-body { display: flex; flex-direction: column; justify-content: center; flex: 1; min-height: 0; }
@@ -4150,6 +4354,19 @@ body:has(.screen-session) { overflow: hidden; }
 .ln-rule-again svg { width: 18px; height: 18px; }
 .ln-rule-again:active { transform: scale(.88); }
 .ln-rule-tx { display: block; margin-top: 4px; font-size: 22px; line-height: 1.65; font-weight: 800; color: var(--ink); text-wrap: balance; }
+.ln-rule.ln-rule-see { display: block; box-sizing: border-box; width: 100%; padding: 12px 10px 16px; }
+.ln-rule-see .rf-head .ln-rule-again { margin: -6px auto -6px -6px; }
+.ln-rule-see .ln-rule-tx {
+  display: flex; flex-wrap: nowrap; justify-content: safe center; align-items: center; gap: .2em;
+  margin-top: 12px; white-space: nowrap; line-height: 1.5; min-width: 0;
+}
+.ln-rule-see .rk { padding: 0 .3em; }
+.ln-rule-see .rw.op { font-size: 1.1em; padding: 0; }
+.ln-rule-see .rw-br { flex-basis: 100%; height: 0; }
+.ln-rule-see .ln-rule-tx.two { flex-wrap: wrap; row-gap: .2em; white-space: normal; }
+.ln-rule-see .rw { flex: none; }
+.rw.par { color: var(--gray); font-weight: 700; }
+.ln-rule-note { display: block; margin-top: 8px; text-align: center; font-size: 14px; font-weight: 700; color: var(--brown); }
 .rw { display: inline-block; animation: rwIn .32s calc(var(--d, 0s) + .45s + var(--i) * 110ms) cubic-bezier(.3, 1.6, .5, 1) backwards; }
 .rw.op { font-size: 1.2em; line-height: 1.2; color: var(--gold-dk); padding: 0 2px; }
 /* a term is a blue chip like the lesson's own «اضرب» and «٥» (.ln-hl), lit in turn */
@@ -4207,6 +4424,63 @@ body:has(.screen-session) { overflow: hidden; }
 .ln-tile:disabled { cursor: default; }
 @keyframes tilePop { 0% { transform: scale(.85); } 70% { transform: scale(1.06); } 100% { transform: none; } }
 
+/* the two screens after every rule (rfBody), drawn as a fill is: the ask,
+   the line in the fill's white box (the numbers screen with its example over
+   a dashed rule), grey dashed blanks that turn blue, the fill's white tiles.
+   rfFit keeps each line on one line. */
+.rf-head { display: flex; align-items: center; gap: 8px; }
+.rf-head .ln-rule-ic { width: 30px; height: 30px; box-shadow: 0 3px 0 var(--gold-dk); }
+.rf-head .ln-rule-ic svg { width: 17px; height: 17px; }
+.ln-eq.rf-box { box-sizing: border-box; width: 100%; min-width: 0; padding: 14px 10px; line-height: 1.2; text-wrap: nowrap; }
+.rf-box .rf-ex { font-size: 24px; font-weight: 800; line-height: 1.5; color: var(--ink); white-space: nowrap; padding: 0 4px 10px; margin-bottom: 12px; border-bottom: 1px dashed var(--line); }
+.rf-line {
+  display: flex; flex-wrap: nowrap; justify-content: safe center; align-items: center; gap: .26em; width: 100%; min-width: 0;
+  font-size: 28px; font-weight: 800; line-height: 1.2; color: var(--ink); white-space: nowrap; --bh: 1.8em;
+}
+.rf-words .rf-line { font-size: 24px; gap: .2em; }
+.rf-words .rf-line .ln-blank { padding: 0 .3em; }
+.rf-line + .rf-line { margin-top: 12px; }
+/* the numbers screen's steps, one under the other, a dashed rule between them as the example has (rfRows) */
+.rf-num .rf-line + .rf-line { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.rf-t { display: inline-flex; align-items: center; height: var(--bh); flex: none; }
+.rf-t.par { color: var(--gray); font-weight: 700; }
+.rf-line .ln-blank {
+  flex: none; height: var(--bh); min-width: 2.2em; margin: 0; padding: 0 .4em; font-size: .86em; border-radius: 12px;
+  border: 2px dashed var(--gray-icon); background: #F7F7F7; color: var(--blue-dk); white-space: nowrap;
+}
+.rf-line .ln-blank.filled, .rf-line .ln-blank.right { border: 2px solid var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+.rf-line .ln-blank.wrong { border: 2px solid var(--red); background: var(--red-bg); color: var(--red-dk2); }
+.rf-line .ln-blank.shown { border-style: solid; border-color: var(--blue-border); background: var(--snow); color: var(--blue-dk); }
+.rf-line .ln-blank.right, .rf-line .ln-blank.wrong, .rf-line .ln-blank.shown { animation: none; }
+.rf-hint { margin: 14px 0 0; text-align: center; font-size: 14px; font-weight: 700; color: var(--gray); }
+.rf-hint:empty { display: none; }
+@keyframes rfWarn { 0% { transform: scale(.8); opacity: 0; } 100% { transform: none; opacity: 1; } }
+/* the help after a miss (rfHelp): a white card with the bulb, the trick's rows
+   or the rule again, the word to look for in blue; tiles that belong nowhere
+   in the rule turn to empty slots; the first blank still to fill pulses */
+.rf-hint.help {
+  display: flex; align-items: flex-start; gap: 10px; box-sizing: border-box; width: 100%; max-width: 420px;
+  margin: 14px auto 0; padding: 11px 14px; border: 2px solid var(--line); border-radius: 16px; background: var(--snow);
+  color: var(--ink); text-align: start; font-size: 15px; line-height: 1.5;
+}
+.rf-hint.help.go { animation: rfWarn .4s cubic-bezier(.3, 1.6, .5, 1); }
+.rf-help-ic { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--gold); color: var(--snow); }
+.rf-help-ic svg { width: 17px; height: 17px; }
+.rf-help-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-top: 2px; }
+.rf-help-tx > b:first-child { color: var(--gray); font-size: 13px; }
+.rf-tr { font-size: 16px; font-weight: 800; color: var(--ink); direction: rtl; }
+.rf-help-tx .ln-hl { display: inline; padding: 0 6px; }
+.rf-tiles .ln-tile.out { background: var(--line); border-color: var(--line); color: transparent; box-shadow: none; pointer-events: none; animation: rfOut .3s ease-out; }
+@keyframes rfOut { from { transform: scale(1.06); } to { transform: none; } }
+.rf-line .ln-blank.pt { border-color: var(--blue); animation: rfPt .9s ease-in-out 3; }
+@keyframes rfPt { 0%, 100% { transform: none; } 45% { transform: scale(1.15); } }
+:root[data-motion="reduced"] .rf-hint.help.go, :root[data-motion="reduced"] .rf-tiles .ln-tile.out,
+:root[data-motion="reduced"] .rf-line .ln-blank.pt { animation: none; }
+.rf-tiles .ln-tile.used { color: transparent; }
+.ln-bw { display: inline-flex; flex-direction: column; align-items: center; vertical-align: top; line-height: 1; margin: 0 2px; }
+.tc-rf { width: 100%; }
+.tc-rf .tc-why { margin-top: 14px; }
+
 /* order the steps: they land on a ruled line */
 .ln-line {
   display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px; min-height: 124px;
@@ -4216,6 +4490,21 @@ body:has(.screen-session) { overflow: hidden; }
 .ln-line .ln-tile { animation: tilePop .18s ease; font-size: 18px; }
 .lt-order .ln-tiles .ln-tile { font-size: 18px; }
 .ln-line.right .ln-tile { border-color: var(--green); color: var(--green-dk); background: var(--green-bg); }
+/* Duolingo's right answer on a word chip (adWave): its correct colours —
+   seaSponge face, turtle lip and border, treeFrog text — the grey slab under
+   it, the pale band across its face and its two sparkles */
+.ln-blank.ad-ok, .ln-line .ln-tile.ad-ok, .rf-line .ln-blank.ad-ok, .ln-eq.rf-num .ln-blank.ad-ok {
+  border-style: solid; border-color: var(--green-pale); background: var(--green-bg); color: var(--green-dk);
+}
+.ln-blank.ad-ok .ln-hl, .ln-line .ln-tile.ad-ok .ln-hl { background: transparent; color: inherit; }
+.ad-go { position: relative; z-index: 1; }
+.ad-slab { position: absolute; z-index: 0; display: block; background: var(--line); opacity: 0; pointer-events: none; }
+.ad-sh { position: absolute; inset: 0; z-index: -1; display: block; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.ad-sh b { position: absolute; top: 0; bottom: 0; left: 0; width: 38px; background: #F8FFF2; transform-origin: 0 0; translate: -200px 0; }
+.ad-sp { position: absolute; z-index: 1; display: block; pointer-events: none; scale: 0; }
+.ad-sp svg { display: block; width: 100%; height: 100%; fill: #F8FFF2; }
+.ad-sp.a { top: 4px; left: 4px; }
+.ad-sp.b { bottom: 4px; right: 4px; }
 .ln-line.wrong .ln-tile { border-color: var(--red); color: var(--red-dk2); background: var(--red-bg); }
 
 /* type it: an Arabic keypad, because recalling a number beats recognising one */
@@ -4396,19 +4685,26 @@ body:has(.screen-session) { overflow: hidden; }
 
 /* «جرّب»: one comparison item, then the swap rule shown on the numbers themselves */
 .ts { display: flex; flex-direction: column; }
-.ts-cmp { position: relative; display: flex; gap: 12px; margin: 2px 0 16px; animation: fadeUp .38s var(--se, .15s) ease backwards; }
+.ts-cmp { position: relative; display: flex; gap: 30px; margin: 2px 0 16px; animation: fadeUp .38s var(--se, .15s) ease backwards; }
 .ts-box { padding: 14px 8px; transition: border-color .2s, background-color .2s, box-shadow .2s; will-change: transform; }
 .ts-box .cmp-v { font-size: 23px; font-weight: 800; color: var(--ink); white-space: nowrap; }
 .ts-n, .ts-p { display: inline-block; }
-.ts-n { will-change: transform; }
+.ts-n { will-change: transform; position: relative; z-index: 1; }
+.ts-box .cmp-v { position: relative; }
+/* where a flying number will land: its own digits, pale, under it (tasteSwap) */
+.ts-ghost { position: absolute; color: var(--line); opacity: 0; pointer-events: none; }
 .ts-box.same, .ts.shown .ts-box { border-color: var(--green); background: var(--green-bg); box-shadow: 0 2px 0 var(--green); }
 .ts-box.same .cmp-t, .ts.shown .ts-box .cmp-t { color: var(--green-dk); }
-.ts-eq {
-  position: absolute; left: 50%; top: 50%; width: 38px; height: 38px; margin: -19px 0 0 -19px; z-index: 2;
-  display: grid; place-items: center; border-radius: 50%; background: var(--green); color: var(--snow);
-  font-size: 26px; font-weight: 800; line-height: 1; box-shadow: 0 3px 0 var(--green-lip); opacity: 0;
-}
-.ts.shown .ts-eq { opacity: 1; }
+/* between the values: a grey «؟» while it is asked, then a flat «=» of two
+   green bars (no disc, no lip — the user: «replace the = with better UI not
+   this 3D») */
+.ts-eq { position: absolute; left: 50%; top: 50%; width: 26px; height: 26px; margin: -13px 0 0 -13px; z-index: 2; pointer-events: none; }
+.ts-q { position: absolute; inset: 0; display: grid; place-items: center; font-style: normal; font-size: 24px; font-weight: 800; line-height: 1; color: var(--gray-icon); }
+.ts-bar { position: absolute; left: 2px; right: 2px; height: 5px; border-radius: 3px; background: var(--green); transform: scaleX(0); }
+.ts-bar:nth-of-type(2) { top: 7px; }
+.ts-bar:nth-of-type(3) { bottom: 7px; }
+.ts.shown .ts-q { opacity: 0; }
+.ts.shown .ts-bar { transform: none; }
 .ts-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .ts-opt { min-height: 54px; padding: 10px 12px; justify-content: center; text-align: center; font-size: 15.5px; font-weight: 700; line-height: 1.35; }
 .ts-opt:disabled { color: var(--ink); }
@@ -4424,6 +4720,17 @@ body:has(.screen-session) { overflow: hidden; }
 .ts-rule span { font-size: 14px; font-weight: 700; color: var(--ink); }
 .ts.shown .ts-more { display: block; margin-top: 12px; text-align: center; font-size: 14.5px; font-weight: 700; color: var(--gray); animation: fadeUp .4s .25s ease backwards; }
 .ts-more b { color: var(--ink); }
+/* the answer sheet: the lesson's correct sheet, cut short — it stays in the
+   flow at the foot of the screen (so it never covers the trick) and only holds
+   the verdict and the button */
+.ob-cta.ts-up { padding-top: 0; margin: 0 -20px calc(-20px - env(safe-area-inset-bottom)); }
+.feedback.ts-fb { position: relative; bottom: auto; max-width: none; z-index: 5; box-shadow: none;
+  padding: 8px 20px calc(18px + env(safe-area-inset-bottom)); }
+.feedback.ts-fb .fb-head { font-size: 21px; gap: 8px; }
+.feedback.ts-fb .fb-ok { width: 26px; height: 26px; }
+.feedback.ts-fb .fb-ok svg { width: 15px; height: 15px; }
+.feedback.ts-fb .btn { margin-top: 10px; height: 50px; font-size: 17px; }
+.feedback.ts-fb.still, .feedback.ts-fb.still * { transition: none; animation: none; }
 :root[data-motion="reduced"] .ts-cmp, :root[data-motion="reduced"] .ts-rule, :root[data-motion="reduced"] .ts-more { animation: none; }
 
 /* ---------- the level test ---------- */
@@ -4488,7 +4795,7 @@ body:has(.screen-session) { overflow: hidden; }
 :root[data-motion="reduced"] .screen-place .q-area, :root[data-motion="reduced"] .pl-head, :root[data-motion="reduced"] .pl-badge,
 :root[data-motion="reduced"] .pl-urow { animation: none; }
 
-/* ---------- قدّور in the first run: Duolingo's two layouts ----------
+/* ---------- فهيم in the first run: Duolingo's two layouts ----------
    TOP — he talks, nothing to pick: big, centred, his bubble above him with the
    tail pointing down. SIDE — he asks: small, at the bubble's inline-end (the
    left in RTL, where his open hand and pointer face the bubble — he is never
@@ -4638,7 +4945,7 @@ body:has(.screen-session) { overflow: hidden; }
 :root[data-motion="reduced"] .obs-bubble, :root[data-motion="reduced"] .obt-chips { animation: none; }
 :root[data-motion="reduced"] .ob-say .w { opacity: 1; transition: none; }
 
-/* ---------- the win screen (lessonComplete): stars thrown by قدّور, the
+/* ---------- the win screen (lessonComplete): stars thrown by فهيم, the
    lesson ticked off like a task, the stats that flatter ---------- */
 .wn { justify-content: flex-start; padding: 18px 16px 0; overflow: hidden; }
 .wn-top { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; }
@@ -4665,31 +4972,11 @@ body:has(.screen-session) { overflow: hidden; }
 @keyframes wnShine { to { background-position: -40% 0; } }
 .wn-say { font-size: 19px; font-weight: 700; color: var(--gray); margin: 0 0 22px; line-height: 1.5; max-width: 330px; text-wrap: balance; }
 
-.wn-task {
-  display: flex; align-items: center; gap: 12px; width: 100%; max-width: 360px; margin: 0 0 14px;
-  padding: 12px 14px; border-radius: 16px; border: 2px solid var(--line); border-bottom-width: 4px; background: var(--snow);
-  text-align: start; transition: border-color .25s, background-color .25s;
-}
-.wn-task.done { border-color: var(--green); background: var(--green-bg); }
-.wn-check { width: 38px; height: 38px; flex-shrink: 0; }
-.wn-check svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.wn-ring { fill: var(--snow); stroke: var(--line); stroke-width: 3; transition: fill .2s, stroke .2s; }
-.wn-task.done .wn-ring { fill: var(--green); stroke: var(--green); }
-.wn-tick { fill: none; stroke: var(--snow); stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; }
 .wn-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .wn-tx > b { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 16px; font-weight: 800; color: var(--ink); }
-.wn-task.done .wn-tx > b { color: var(--green-lip); }
 .wn-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.wn-count { display: inline-block; flex-shrink: 0; font-size: 14px; color: var(--gray); font-variant-numeric: tabular-nums; }
-.wn-task.done .wn-count { color: var(--green-lip); }
-.wn-bar { display: flex; gap: 4px; }
-.wn-bar i { position: relative; flex: 1; height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; }
-.wn-bar i.on { background: var(--gold); }
-.wn-bar i u { position: absolute; inset: 0; border-radius: inherit; background: var(--green); transform-origin: right center; transform: scaleX(0); }
-.wn-bar i.now u { transform: scaleX(1); }
-.wn-task.full .wn-bar i, .wn-task.full .wn-bar i.on { background: var(--green); }
 .wn-next { font-size: 13px; font-weight: 700; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.wn-task.done .wn-next { color: var(--green-dk); }
+.wn-task.full .wn-next { color: var(--green-dk); }
 .wn .action-bar.wn-cta {
   position: sticky; bottom: 0; width: 100%; max-width: 360px; margin-top: auto;
   padding: 10px 0 calc(14px + env(safe-area-inset-bottom)); background: var(--snow);
@@ -4715,51 +5002,118 @@ body:has(.screen-session) { overflow: hidden; }
 /* the league climb (A.winClimb): the board in a window that follows your row */
 .cl-kick { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 15px; color: var(--gray); animation: fadeUp .4s cubic-bezier(.3,1.2,.5,1) backwards; }
 .cl-kick .rank-badge { height: 30px; width: auto; }
-.cl-rank { display: flex; flex-direction: column; align-items: center; margin-top: 14px; line-height: 1; }
-.cl-rank span { font-size: 14px; font-weight: 800; color: var(--gray-icon); }
-.cl-rank b { display: block; font-size: 72px; font-weight: 800; color: var(--gold); text-shadow: 0 4px 0 var(--gold-dk); margin-top: 6px; }
+.cl-rank { display: flex; flex-direction: column; align-items: center; margin-top: 12px; line-height: 1; }
+.cl-rank > span { font-size: 14px; font-weight: 800; color: var(--gray-icon); margin-bottom: 6px; }
+/* «مركزك»: the podium medal's drawing at 96px, its number in HTML on the disc
+   (so it can roll, clipped to the disc) */
+.cl-medal { position: relative; width: 96px; height: 98.3px; transform-origin: 50% 80%; animation: clMedalIn .6s .15s cubic-bezier(.3,1.6,.5,1) backwards; }
+.cl-medal svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, .08)); }
+.cl-mn { position: absolute; left: 49%; top: 47.8%; width: 64%; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; overflow: hidden;
+  display: grid; place-items: center; }
+.cl-mn b { display: grid; place-items: center; font-size: 36px; font-weight: 800; line-height: 1; color: var(--mi); padding-top: 4px; }
+.cl-msh { position: absolute; top: -10%; bottom: -10%; left: -60%; width: 35%; background: rgba(255, 255, 255, .7); transform: skewX(-20deg); pointer-events: none; }
+.cl-medal.shine .cl-msh { animation: clMsh .6s .25s ease-in-out; }
+@keyframes clMsh { from { left: -60%; } to { left: 130%; } }
+@keyframes clMedalIn { 0% { transform: scale(.3) rotate(-14deg); opacity: 0; } 60% { opacity: 1; } 100% { transform: none; } }
+/* a number rolling over in its cell (clRoll) */
+.cl-roll { display: inline-grid; overflow: hidden; vertical-align: middle; }
+.cl-roll > span { grid-area: 1 / 1; display: inline-flex; align-items: center; justify-content: center; }
+.cl-mn .cl-roll { overflow: visible; }
 .complete h1.cl-title { font-size: 28px; color: var(--gold-dk); margin: 14px 0 2px; letter-spacing: 0; opacity: 0; transform: scale(.6); }
 .complete h1.cl-title.go { animation: clPop .55s cubic-bezier(.3,1.6,.5,1) forwards; }
-.cl-sub { font-size: 15px; font-weight: 700; color: var(--gray); min-height: 22px; opacity: 0; }
-.cl-sub b { color: var(--gold-dk); }
-.cl-sub.go { animation: fadeUp .4s .25s cubic-bezier(.3,1.2,.5,1) backwards; opacity: 1; }
 @keyframes clPop { 0% { opacity: 0; transform: scale(.6); } 60% { opacity: 1; transform: scale(1.08); } 100% { opacity: 1; transform: scale(1); } }
+/* 12px wider than the board on each side and the board CLIMB_PAD (16px) down
+   from its top, so the lifted row (×1.06) and its shadow are never cut; the
+   fades are set by climbPlay (--ft / --fb), only where rows run on past an edge */
 .cl-win {
-  position: relative; width: 100%; max-width: 380px; height: 310px; margin: 16px 0 8px; overflow: hidden;
-  -webkit-mask-image: linear-gradient(transparent, #000 13%, #000 87%, transparent);
-  mask-image: linear-gradient(transparent, #000 13%, #000 87%, transparent);
+  position: relative; box-sizing: border-box; width: calc(100% + 24px); max-width: 404px; height: 326px; margin: 0 -12px 8px; overflow: hidden;
+  -webkit-mask-image: linear-gradient(transparent, #000 var(--ft, 0px), #000 calc(100% - var(--fb, 40px)), transparent);
+  mask-image: linear-gradient(transparent, #000 var(--ft, 0px), #000 calc(100% - var(--fb, 40px)), transparent);
 }
-.cl-list { position: absolute; top: 0; left: 0; right: 0; }
+.cl-list { position: absolute; top: 16px; left: 12px; right: 12px; }
+.cl-row.me .lb-name { color: var(--brown-dk); }
+.cl-row.me .lb-name b { color: var(--brown); }
 .cl-row { position: absolute; left: 4px; right: 4px; height: 58px; background: var(--snow); transition: top .36s cubic-bezier(.3, 1.5, .5, 1); }
-.cl-row.me { z-index: 2; transition: box-shadow .25s; background: #FFF8DC; }
-.cl-row.me.up { box-shadow: inset 0 0 0 2px var(--gold), 0 12px 26px rgba(0, 0, 0, .16); }
+/* your row: Duolingo's gold on its darker lip, no border (2026-10-26: no
+   border; 2026-10-27: «make my name background yellow, nice yellow» over the
+   pale cream band), its ink dark brown; lifted, its shadow follows its speed
+   (climbPlay) */
+.cl-row.me { z-index: 2; background: var(--gold-bg); border-radius: 14px; box-shadow: inset 0 0 0 2px var(--gold), 0 3px 0 var(--gold); }
+.cl-row.me.up { box-shadow: inset 0 0 0 2px var(--gold), 0 3px 0 var(--gold), 0 12px 22px rgba(170, 120, 0, .28); }
+.cl-row.me .lb-rank, .cl-row.me .lb-xp, .cl-row.me .lb-xp b, .cl-row.me .lb-xp i { color: var(--brown-dk); }
+.cl-row .lb-xp b, .cl-row .lb-xp i { display: inline-block; }
 .cl-rk { display: inline-flex; width: 30px; justify-content: center; flex-shrink: 0; }
-.cl-gain {
-  font-weight: 800; font-size: 14px; color: var(--snow); background: var(--gold); border-radius: 10px; padding: 1px 8px 0;
-  box-shadow: 0 2px 0 var(--gold-dk); opacity: 0; transform: scale(.4);
-}
-.cl-gain.go { opacity: 1; transform: none; transition: transform .4s cubic-bezier(.3,1.7,.5,1), opacity .2s; }
 .cl-shine { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
 .cl-shine i { position: absolute; top: -20%; bottom: -20%; width: 40%; left: -50%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .85), transparent); transform: skewX(-18deg); }
 .cl-row.me.shine .cl-shine i { animation: clShine .8s .15s ease-in-out; }
 @keyframes clShine { from { left: -50%; } to { left: 120%; } }
 .cl-cta { opacity: 0; transform: translateY(18px); pointer-events: none; }
+.complete.cl .action-bar.cl-cta { box-sizing: border-box; width: 100%; max-width: 452px; padding: 10px 16px calc(16px + env(safe-area-inset-bottom)); }
 .cl-cta.go { opacity: 1; transform: none; pointer-events: auto; transition: opacity .3s .5s, transform .45s .5s cubic-bezier(.3,1.4,.5,1); }
-:root[data-motion="reduced"] .cl-kick, :root[data-motion="reduced"] .cl-row { animation: none; transition: none; }
+:root[data-motion="reduced"] .cl-kick, :root[data-motion="reduced"] .cl-row, :root[data-motion="reduced"] .cl-medal { animation: none; transition: none; }
 .complete h1.wp-title { font-size: 27px; color: var(--gold); margin: 0 0 22px; letter-spacing: 0; }
 .wp-list { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 14px; }
 .wp-card {
   display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; text-align: start;
   border-radius: 18px; border: 2px solid var(--line); border-bottom-width: 4px; background: var(--snow);
-  transition: border-color .25s, background-color .25s; will-change: transform;
+  transition: border-color .3s, background-color .3s; will-change: transform;
 }
-.wp .wn-task { margin: 0; max-width: none; }
-.wp-chest { width: 46px; height: 46px; flex-shrink: 0; overflow: visible; }
-/* the day's bar is the app's one progress bar (.duo-bar), filled by wpPlay */
-.wp-bar { display: block; }
-.wp-bar > i { animation: none; }
+/* a quest card as Duolingo's session end has it (view_daily_quest_session_end_item):
+   its title (H2) over the quest bar, the bar's chest on its far end */
+.wp-card.wp-quest { flex-direction: column; align-items: stretch; gap: 10px; padding: 16px 16px 14px; }
+.wq-h { display: block; font-size: 19px; font-weight: 800; line-height: 1.3; color: var(--ink); }
+.wp-card .wn-name { display: block; }
+/* the highlight face Duolingo's card flashes as it swells (300ms) */
+.wp-card.lit { background: #FFFDF2; border-color: var(--gold-soft); transition-duration: .1s; }
+/* the lesson ticked off in its stage */
+.wp-card.wn-task.lit { background: var(--snow); border-color: var(--line); }
+.wn-task.done { border-color: var(--green); background: var(--green-bg); }
+.wn-check { width: 38px; height: 38px; flex-shrink: 0; }
+.wn-check svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.wn-ring { fill: var(--snow); stroke: var(--line); stroke-width: 3; transition: fill .2s, stroke .2s; }
+.wn-task.done .wn-ring { fill: var(--green); stroke: var(--green); }
+.wn-tick { fill: none; stroke: var(--snow); stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; }
+.wn-task.done .wn-tx > b { color: var(--green-lip); }
+.wn-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wn-count { display: inline-block; flex-shrink: 0; font-size: 14px; color: var(--gray); font-variant-numeric: tabular-nums; }
+.wn-task.done .wn-count { color: var(--green-lip); }
+.wn-bar { position: relative; display: flex; gap: 4px; }
+.wn-bar i { position: relative; flex: 1; height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.wn-bar i.on { background: var(--gold); }
+.wn-bar i u { position: absolute; inset: 0; border-radius: inherit; background: var(--green); transform-origin: right center; transform: scaleX(0); }
+.wn-bar i.now u { transform: scaleX(1); }
+.wn-task.full .wn-bar i, .wn-task.full .wn-bar i.on { background: var(--green); }
+.wn-fx { position: absolute; top: 50%; width: 0; height: 0; pointer-events: none; z-index: 2; }
+.wn-task.done .wn-next { color: var(--green-dk); }
 .wp-quest.full { border-color: var(--gold); background: var(--gold-bg); }
-.wp-quest.full .wn-tx > b { color: var(--gold-dk); }
+.wp-quest.full .wq-h { color: var(--gold-dk); }
+/* the chest cropped to its drawing (12 75 236 192 of its 260 × 290) so it sits
+   centred on the bar's far end, the bar running in under its middle */
+.cpb-end > svg.wp-chest { width: 50px; height: 41px; flex-shrink: 0; overflow: visible; }
+.wp-quest .cpb-track { margin-left: -25px; }
+
+/* Duolingo's quest bar (ChallengeProgressBarView): the app's bar at 20px, the
+   count centred in it — juicyHare over the track, --cpb-ink over the fill, cut
+   at the fill's edge — and a 46px end icon over its far end, the bar running
+   30% of the way into it */
+.cpb { position: relative; display: flex; align-items: center; height: 46px; }
+.cpb-track { position: relative; flex: 1; min-width: 0; margin-left: -14px; z-index: 0; }
+.cpb-bar { position: relative; display: block; height: 20px; }
+.cpb-bar > i { animation: none; min-width: 0; }
+.cpb-bar > i::after { top: 4px; height: 6px; right: 16px; left: 16px; border-radius: 6px; background: var(--bar-shine); opacity: .55; }
+.cpb-tx {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; font-weight: 800; line-height: 1; color: #AFAFAF; font-variant-numeric: tabular-nums;
+  padding-top: 2px; pointer-events: none; white-space: nowrap;
+}
+.cpb-tx.on { color: var(--cpb-ink, #fff); }
+.cpb-end { position: relative; z-index: 1; flex: none; width: 46px; height: 46px; display: grid; place-items: center; }
+.cpb-end > svg { width: 46px; height: 46px; }
+/* the particle and the sparkles: Duolingo's sizes (90 / the bar + 24, ×1.5 tall) */
+.cpb-fx { position: absolute; top: 50%; width: 0; height: 0; pointer-events: none; z-index: 2; }
+.cpb-part { position: absolute; left: -45px; top: -45px; width: 90px; height: 90px; display: block; }
+.cpb-spark { position: absolute; left: -12px; right: -12px; top: 50%; display: block; pointer-events: none; z-index: 2; }
+.cpb-part svg, .cpb-spark svg { display: block; }
 .wp-gem { position: relative; width: 46px; height: 46px; display: grid; place-items: center; flex-shrink: 0; }
 /* Duolingo's gem pile (wgLoad): four times the slot, centred on it, so the
    drop starts above the card */
@@ -4802,23 +5156,26 @@ body:has(.screen-session) { overflow: hidden; }
    that room from the start, so the list never shifts under a jumping card */
 .ob-goal .obs-bubble { min-height: calc(3 * 1.55em + 28px); }
 
-/* ---------- the victory (winPlay): Duolingo's floating crown (its own Lottie)
-   lands on its shadow over Duolingo's gold title ---------- */
-.wv { position: relative; width: 100%; max-width: 390px; display: flex; flex-direction: column; align-items: center; margin-bottom: 6px; }
-/* قدّور's leap (winPlay, wvJoy): his shadow, and him with Duolingo's crown
-   riding on his head. Duolingo's frame: the hero is the top 45% of the screen,
-   straight under the status bar, on the plain white page */
-.wv-hero { position: relative; width: 100%; height: clamp(230px, 42vh, 360px); margin-bottom: 4px; }
-.wv-man { position: absolute; left: 50%; bottom: 10px; width: min(250px, 30vh); aspect-ratio: 1; transform-origin: 50% 100%; translate: -50% 0; z-index: 1; will-change: transform; }
+/* ---------- the victory (winPlay): Duolingo's lesson-complete file
+   (assets/fx/lesson-complete.riv) drawn edge to edge over the top of the
+   screen down to where its stats begin, فهيم flying where Duo flies, and the
+   HTML title and subtitle at the file's own places for when it cannot play ---------- */
+.complete.wn { justify-content: flex-start; padding-top: 0; }
+.wv-lc { position: relative; flex: none; width: calc(100% + 32px); margin: 0 -16px; height: clamp(300px, 52vh, 460px); }
+.wv-rive { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: block; opacity: 0; }
+.wn.rv-on .wv-rive { opacity: 1; }
+.wv-fh { position: absolute; left: 0; top: 0; transform-origin: 50% 50%; z-index: 1; will-change: transform; pointer-events: none; }
+.wv-fh-in { width: 100%; height: 100%; }
 .wv-qd { width: 100%; height: 100%; }
-.wv-lot { position: absolute; left: 46%; top: -10%; width: 34%; height: 30%; translate: -50% 0; z-index: 1; will-change: transform; }
-.wv-lot svg { display: block; width: 100%; height: 100%; }
-.wv-shadow { position: absolute; left: 50%; bottom: 2px; width: 150px; height: 16px; margin-left: -75px; border-radius: 50%; background: rgba(0, 0, 0, .08); }
-.complete h1.wv-title {
-  margin: 0 0 6px; padding: 0 8px; font-size: 32px; line-height: 1.15; font-weight: 800; letter-spacing: 0;
-  color: var(--gold); text-shadow: none; will-change: transform;
-}
-.wn .wn-say { margin: 4px 0 34px; }
+.complete h1.wv-title, .wv-sub { position: absolute; left: 16px; right: 16px; margin: 0; translate: 0 -50%; text-align: center; }
+.complete h1.wv-title { font-size: 30px; line-height: 1.15; font-weight: 800; letter-spacing: 0; color: var(--gold); text-shadow: none; }
+.wv-sub { font-size: 19px; font-weight: 700; line-height: 1.35; color: var(--gray); text-wrap: balance; }
+.wn.rv-wait .wv-title, .wn.rv-wait .wv-sub, .wn.rv-on .wv-title, .wn.rv-on .wv-sub { visibility: hidden; }
+.wn .wst-wrap { margin-top: 8px; }
+/* the file draws on the whole screen (a perfect run floods it cyan, then lets it go), so nothing under the band cuts it off */
+.wn .wst-wrap, .wn .action-bar.wn-cta { z-index: 1; }
+.wn .wst-wrap { position: relative; }
+.wn .action-bar.wn-cta { background: transparent; }
 
 
 /* Duolingo's stat cards (stat_component_72_lc_refresh.riv and the legacy

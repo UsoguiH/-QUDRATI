@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Replay Button Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  /* The rule card's «say it again» button, five ways (2026-10-26: «i dont like
+     this button shape, its not Duolingo style — create 5 more versions … not
+     AI slop, not 3D»). Every one sits on the real see card, flat, in the card's
+     own yellow family; tap it and the card says the rule again. */
+  html, body { background: var(--snow); }
+  body { margin: 0; font-family: var(--font); color: var(--ink); }
+  .lab { max-width: 430px; margin: 0 auto; padding: 24px 16px 60px; box-sizing: border-box; }
+  .lab h1 { font-size: 22px; margin: 0 0 4px; }
+  .lab > p { margin: 0 0 18px; color: var(--gray); font-weight: 600; font-size: 15px; }
+  .opt { margin: 0 0 30px; }
+  .opt-h { display: flex; align-items: baseline; gap: 8px; margin: 0 0 2px; }
+  .opt-h b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--ink); color: var(--snow); font-size: 15px; }
+  .opt-h span { font-size: 17px; font-weight: 800; }
+  .opt-d { margin: 0 0 4px; color: var(--gray); font-size: 14px; font-weight: 600; }
+  .opt .ln-rule { margin-top: 12px; }
+  .opt .ln-rule-see .ln-rule-tx { font-size: 18px; }
+
+  /* the shared tap: a quick dip, and the arrow turns once round */
+  .rp { -webkit-tap-highlight-color: transparent; cursor: pointer; font-family: inherit; }
+  .rp svg { transition: transform .5s cubic-bezier(.3, 1.4, .5, 1); }
+  .rp.spin svg { transform: rotate(-360deg); }
+  .rp:active { transform: scale(.9); }
+
+  /* A — a flat gold disc beside the title, white arrow: the bulb's own badge */
+  .rp-a { display: grid; place-items: center; width: 32px; height: 32px; margin-inline-start: auto; padding: 0; border: 0; border-radius: 50%; background: var(--gold); color: var(--snow); }
+  .rp-a svg { width: 17px; height: 17px; }
+
+  /* B — a soft pill «أعدها» tinted from the card, brown text */
+  .rp-b { display: inline-flex; align-items: center; gap: 5px; height: 30px; margin-inline-start: auto; padding: 0 12px 0 10px; border: 0; border-radius: 15px; background: rgba(230, 160, 0, .16); color: var(--brown); font-size: 14px; font-weight: 800; }
+  .rp-b svg { width: 15px; height: 15px; }
+
+  /* C — a thin gold ring, brown arrow, nothing filled */
+  .rp-c { display: grid; place-items: center; width: 32px; height: 32px; margin-inline-start: auto; padding: 0; border: 2px solid var(--gold); border-radius: 50%; background: transparent; color: var(--gold-dk); box-sizing: border-box; }
+  .rp-c svg { width: 16px; height: 16px; }
+
+  /* D — a line under the rule: «↻ اسمعها مرة ثانية», centred, a hairline above */
+  .rp-d { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 14px 0 -4px; padding: 10px 0 0; border: 0; border-top: 2px dashed rgba(230, 160, 0, .35); background: none; color: var(--gold-dk); font-size: 15px; font-weight: 800; }
+  .rp-d svg { width: 16px; height: 16px; }
+
+  /* E — the bulb is the button: a small arrow badge on its corner */
+  .rp-e { position: relative; padding: 0; border: 0; background: none; }
+  .rp-e .ln-rule-ic { box-shadow: none; }
+  .rp-e i { position: absolute; bottom: -4px; inset-inline-start: -5px; display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--snow); color: var(--gold-dk); box-shadow: 0 0 0 2px var(--gold); }
+  .rp-e i svg { width: 11px; height: 11px; }
+  .rp-e:active { transform: scale(.9); }
+  .rp-e.spin i svg { transform: rotate(-360deg); }
+  .opt .rf-head .ln-rule-ic { box-shadow: none; }
+</style>
+</head>
+<body>
+<div class="lab">
+  <h1>زر «أعد القاعدة» — خمس نسخ</h1>
+  <p>كلها مسطّحة على بطاقة القاعدة نفسها. اضغط الزر في كل بطاقة لتسمع القاعدة مرة ثانية، واختر اللي يعجبك.</p>
+  <div id="opts"></div>
+</div>
+<script>
+(() => {
+  const AGAIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></svg>';
+  const BULB = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z"/></svg>';
+  const RULE = '*المجموع* = *العدد* × *عدد مرات تكراره*';
+  const OP = /^[=×÷+−←]$/;
+  const words = () => {
+    let out = '', i = 0, t = 0;
+    RULE.split('*').forEach((p, k) => {
+      if (k % 2) { if (p) out += `<span class="rw rk" style="--i:${i++};--t:${t++}">${p}</span>`; return; }
+      p.split(/\s+/).filter(Boolean).forEach(w => { out += `<span class="rw${OP.test(w) ? ' op' : ''}" style="--i:${i++}">${w}</span>`; });
+    });
+    return { html: out, n: i };
+  };
+  const bulb = '<span class="ln-rule-ic">' + BULB + '</span>';
+  const OPTS = [
+    ['A', 'قرص ذهبي', 'دائرة ذهبية مسطّحة بجانب العنوان والسهم أبيض — نفس شارة اللمبة.', b => `<span class="rf-head">${bulb}<span class="ln-rule-tag">القاعدة</span>${b('<button class="rp rp-a" aria-label="أعد القاعدة">' + AGAIN + '</button>')}</span>`, ''],
+    ['B', 'حبة «أعدها»', 'كبسولة ناعمة بلون البطاقة فيها السهم وكلمة «أعدها» — أوضح لمن لا يفهم الأيقونة.', b => `<span class="rf-head">${bulb}<span class="ln-rule-tag">القاعدة</span>${b('<button class="rp rp-b">' + AGAIN + 'أعدها</button>')}</span>`, ''],
+    ['C', 'حلقة رفيعة', 'إطار ذهبي رفيع والسهم بداخله، بدون تعبئة — الأخف على العين.', b => `<span class="rf-head">${bulb}<span class="ln-rule-tag">القاعدة</span>${b('<button class="rp rp-c" aria-label="أعد القاعدة">' + AGAIN + '</button>')}</span>`, ''],
+    ['D', 'سطر تحت القاعدة', 'العنوان نظيف، وتحت القاعدة سطر «اسمعها مرة ثانية» بعد خط متقطع.', () => `<span class="rf-head">${bulb}<span class="ln-rule-tag">القاعدة</span></span>`, '<button class="rp rp-d">' + AGAIN + 'اسمعها مرة ثانية</button>'],
+    ['E', 'اللمبة هي الزر', 'ما في زر إضافي: اضغط اللمبة نفسها، وعليها شارة سهم صغيرة.', () => `<span class="rf-head"><button class="rp rp-e" aria-label="أعد القاعدة">${bulb}<i>${AGAIN}</i></button><span class="ln-rule-tag">القاعدة</span></span>`, '']
+  ];
+  const host = document.getElementById('opts');
+  const card = (o) => {
+    const w = words();
+    return `<div class="ln-rule ln-rule-see" style="--d:.1s" data-n="${w.n}">${o[3](x => x)}<span class="ln-rule-tx">${w.html}</span>${o[4]}</div>`;
+  };
+  host.innerHTML = OPTS.map(o => `<section class="opt" data-k="${o[0]}">
+      <div class="opt-h"><b>${o[0]}</b><span>${o[1]}</span></div>
+      <p class="opt-d">${o[2]}</p>
+      <div class="slot">${card(o)}</div>
+    </section>`).join('');
+  /* after the last word lands the terms light up, as the lesson does */
+  const say = el => {
+    const n = +el.dataset.n;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => el.classList.add('said'), 450 + 100 + n * 110 + 320);
+  };
+  document.querySelectorAll('.ln-rule').forEach(say);
+  host.addEventListener('click', e => {
+    const b = e.target.closest('.rp');
+    if (!b) return;
+    const sec = b.closest('.opt'), o = OPTS.find(x => x[0] === sec.dataset.k), slot = sec.querySelector('.slot');
+    slot.innerHTML = card(o).replace('--d:.1s', '--d:0s').replace('ln-rule ln-rule-see', 'ln-rule ln-rule-see again');
+    const el = slot.querySelector('.ln-rule'), nb = slot.querySelector('.rp');
+    el.style.animation = 'none';
+    nb.classList.add('spin');
+    say(el);
+  });
+})();
+</script>
+</body>
+</html>

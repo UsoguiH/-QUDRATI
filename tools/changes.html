@@ -80,7 +80,7 @@
 </header>
 
 <main id="list"></main>
-<footer>Not committed. sw.js and index.html are at version 75. Validators: validate.js, validate_teach.js, validate_learn.js all pass.</footer>
+<footer>Not committed. sw.js and index.html are at version 89 (not released). Validators: validate.js, validate_teach.js, validate_learn.js all pass.</footer>
 
 <script>
 /* each change: what it was, why, where it lives, and how to show it */
@@ -675,6 +675,162 @@ const PARTS = [
         code: "tools/card.html" },
       { t: "Bookkeeping", s: "live",
         what: ["sw.js and index.html bumped to 88. CLAUDE.md updated."],
+        noframe: "No screen — files and notes" }
+    ] },
+  { h: "The latest round: «جرّب», the rule screens drawn as a fill, the chips in your order, the climb, and the rule labs",
+    p: "Your words: «when he click to an answer make it just regular answer no animation … then when the real answer appear i want the sound of Duolingo … less than usual», «what i meant with الارقام, القانون is something like this exactly», «the thing he choose first … jump first», «not the lightning … make it just word XP», «like first place, second place and third place svg but make it for 4+ … less good than bronze silver gold», «move slow at first then fast», «there was a sound for every one i pass», and «the law UI … full redesign … memorize it fast and not forget it».",
+    items: [
+      { t: "«جرّب»: the tap only selects, the answer gets Duolingo's right answer", s: "new", hash: "ob-taste",
+        what: ["Tapping a choice now just selects it — no jump. This is the one exception to «every answer jumps».",
+               "Then the trick plays on the numbers as before, and when the answer shows: the right choice jumps, Duolingo's own right-answer sound plays, and the green sheet with its wave rises — cut short, only at the foot of the screen, so it never covers the trick.",
+               "«صح!» if they picked equal, otherwise «الجواب: القيمتان متساويتان», and «المتابعة»."],
+        why: "Images 105: a regular tap, then the real reward when the real answer appears.",
+        code: "A.obTaste, tasteSheet, .ts-fb, assets/sounds/right-answer.mp3",
+        run: (w) => [[2600, () => w.A.obTaste(2)]], hint: "picks the right answer by itself",
+        extra: [{ label: "Wrong guess", hash: "ob-taste", run: (w) => [[2600, () => w.A.obTaste(0)]] }] },
+      { t: "Fill the rule in words: drawn exactly like «كمّل الخطوة:»", s: "new", hash: "rulewords",
+        what: ["The yellow rule card is gone from this screen. It is the fill's own layout: «كمّل القاعدة:», the white box, grey dashed blanks that turn blue, and white tiles under it.",
+               "A miss: the wrong chips go red and shake and go back; a help card brings back the trick's rows. Never the answer."],
+        why: "Image 106: «something like this exactly».",
+        code: "rfBody, .rf-box, .rf-q, rfHelp, rfPoint",
+        run: (w) => {
+          const it = () => w.A.debugCurrent(), used = [];
+          const pick = v => { const t = it(); const k = t.tiles.findIndex((x, i) => x === v && used.indexOf(i) < 0); used.push(k); w.A.lTile(k); };
+          return [[1400, () => pick(it().a[0])], [2000, () => it().a.slice(1).forEach(pick)], [2800, () => w.A.check()]];
+        }, hint: "fills it in and checks",
+        extra: [{ label: "A miss", hash: "rulewords", run: (w) => {
+          const it = () => w.A.debugCurrent();
+          return [[1400, () => { const t = it(); t.tiles.map((x, i) => i).filter(i => t.a.indexOf(t.tiles[i]) < 0).slice(0, t.a.length).forEach(k => w.A.lTile(k)); }],
+                  [2400, () => w.A.check()]];
+        } }] },
+      { t: "Fill the rule in numbers: the example on top, the same fill under it", s: "new", hash: "rulenums",
+        what: ["«كمّل الخطوة:», the worked example on the box's first row over a dashed line, then the rule's line with its blanks.",
+               "A miss brings back the rule («تذكّر القاعدة:», its terms in blue) and «دوّر … في المثال» for the first wrong blank, which pulses."],
+        why: "Image 106.",
+        code: "rfBody, .rf-ex, rfHelp",
+        run: (w) => {
+          const it = () => w.A.debugCurrent(), used = [];
+          const pick = v => { const t = it(); const k = t.tiles.findIndex((x, i) => x === v && used.indexOf(i) < 0); used.push(k); w.A.lTile(k); };
+          return [[1400, () => it().a.forEach(pick)], [2600, () => w.A.check()]];
+        }, hint: "fills it in and checks" },
+      { t: "The green wave jumps in the order you placed the chips", s: "new", hash: "rulenums",
+        what: ["When a fill or a write-the-rule screen is right, the chip you picked first jumps first, wherever it sits — right before left, or left before right."],
+        why: "«the thing he choose first if left then left if right then right».",
+        code: "stampTile, byPlaced, adWave",
+        run: (w) => {
+          const it = () => w.A.debugCurrent(), used = [];
+          const pick = v => { const t = it(); const k = t.tiles.findIndex((x, i) => x === v && used.indexOf(i) < 0); used.push(k); w.A.lTile(k); };
+          return [[1400, () => it().a.forEach(pick)],
+                  [2200, () => w.A.lUnfill(0)],
+                  [2900, () => w.A.lTile(used[0])],
+                  [3700, () => w.A.check()]];
+        }, hint: "fills every blank, then redoes the first one last — watch it jump last" },
+      { t: "The climb: a medal, the word XP, slow then fast, a note per rival", s: "new", hash: "climb",
+        what: ["The big number is now a medal: the podium medals' own drawing, and from 4th down a plain grey disc with no ribbon and no shine, so it never looks as good as bronze, silver or gold. Entering the top three, it turns over edge-on into the medal.",
+               "Every rank number rolls — yours up, the passed rival's down.",
+               "XP is the plain word «XP» after the number. The «+37» chip and «باقي لك … وتتخطى …» are gone.",
+               "Your XP counts up with a hop at each step. The row moves off slowly and gathers speed, then brakes into its place.",
+               "A rising note for every rival you pass, as in the first version."],
+        why: "Images 108–110, «move slow at first then fast», «there was a sound for every one i pass».",
+        code: "clMedal, CL_PAINT, clRoll, bigTo, medalLand, climbPlay",
+        extra: [{ label: "To the top (gold)", hash: "climbtop" }] },
+      { t: "League tab: the plain word XP", s: "new", hash: "league",
+        what: ["The score on every row is the number and the word «XP», brown on your row."],
+        why: "«make it just word XP».", code: ".lb-row .lb-xp" },
+      { t: "Rule lab 2: five ways to learn a rule fast and keep it 90 days (not in the app)", s: "new",
+        noframe: "<a href=\"law2.html\" target=\"_blank\" style=\"color:var(--blue);font-weight:800\">Open rule lab 2</a><br><a href=\"law.html\" target=\"_blank\" style=\"color:var(--mute)\">the first lab</a>",
+        what: ["Built on research (research/rule-memory.md): A «خمّن ثم اكتشف», B «من الحبّات للقاعدة», C «أمثلة تتلاشى», D «اسمها وليش», E «أيّ قاعدة؟», each playable on three rules.",
+               "«لا تنساها — خطة ٩٠ يوم»: the forgetting curve with and without reviews, when one rule comes back (1, 3, 7, 15, 21 days…), and four review cards to try."],
+        why: "«memorize it fast and not forget it … 90 days».",
+        code: "tools/law2.html, research/rule-memory.md" },
+      { t: "A finished lesson is the gold hexagon, and the flip into it", s: "new", hash: "pathgold",
+        what: ["A finished lesson is now our hexagon in the gold of Duolingo's finished coin: two bands of light and a brown-gold star (first drawn round, then made our shape at your ask).",
+               "When the last short lesson of a node is done: the ring fills, the hexagon jumps off its shadow, turns until it is edge-on, and comes back as the gold hexagon with its star, then lands and its stars pop in."],
+        why: "Images 111–112: «make the level i finished like this», «it must be the same shape not circle … like this but for our shape».",
+        code: "NODE_GOLD, NODE_DONE_IC, coinPay, pathPay",
+        extra: [{ label: "The path", hash: "path" }, { label: "One short lesson done", hash: "pathpay" }] },
+      { t: "No dots between the levels; the star flip every two seconds", s: "new", hash: "path",
+        what: ["The dotted trail between the nodes is gone.",
+               "The current lesson's icon now flips every two seconds and turns in about half a second (it was every six seconds, and slower)."],
+        why: "«remove the dots», «too slow … every 2 second it do the animation».",
+        code: "nodeFlip, nodeFlipLoop (drawTrails removed)" },
+      { t: "«جرّب»: the swap in the star flip's style, and a flat «=»", s: "new", hash: "ob-taste",
+        what: ["The two numbers trade places on the star flip's own beats: each squats, springs off, flies to the other's place (one over the top, one underneath) while a pale copy marks where it will land, and lands with Duolingo's squash and stretch.",
+               "The 3D green disc is gone. A grey «؟» sits between the values while it is asked; on the answer it pops out and a flat green «=» draws itself in, bar by bar. Then both values turn green and hop."],
+        why: "Image 114: «better and more amazing like what you did with star flipping … replace the = with better UI not this 3D».",
+        code: "tasteSwap, STAR_FLIP, .ts-ghost, .ts-q, .ts-bar",
+        run: (w) => [[2600, () => w.A.obTaste(2)]], hint: "picks the right answer by itself",
+        extra: [{ label: "Slow (¼×)", hash: "ob-taste", run: (w) => [[2600, () => { const R = .25, st = w.setTimeout; w.setTimeout = (f, ms, ...a) => st(f, (ms || 0) / R, ...a); const o = w.Element.prototype.animate; w.Element.prototype.animate = function (k, op) { const a = o.call(this, k, op); a.playbackRate = R; return a; }; w.A.obTaste(2); }]] }] },
+      { t: "Every lesson's icon flips like Duolingo's star", s: "new", noframe: "<a href=\"starflip.html\" target=\"_blank\" style=\"color:var(--blue);font-weight:800\">Open the star flip page</a>",
+        what: ["The current lesson's icon now plays Duolingo's star_flip_anim, measured frame by frame from its own file: a squat, a spring up, a flat turn while it hangs, a landing squash, with a shadow copy in the rim's colour — once every two seconds, on the ring's breath.",
+               "The star flip page shows Duolingo's node beside ours at 1×, ¼× and ⅒×, and all 26 lesson icons flipping with the app's own code."],
+        why: "«study pixel by pixel and in code Duolingo's version», «do the same thing for every icon».",
+        code: "STAR_FLIP, nodeFlip, nodeFlipLoop, tools/starflip.html" },
+      { t: "Bookkeeping", s: "live",
+        what: ["CLAUDE.md updated for every change above. Validators pass. Not committed; sw.js is at 89 and not released."],
+        noframe: "No screen — files and notes" }
+    ] },
+  { h: "This round: Duolingo's win screen, the rule that never shrinks, steps top to bottom, the climb, and the sounds on your phone",
+    p: "Your words: «exactly like Duolingo style … use their files», «why there is a very clear border remove it», «the law is getting smaller when I enter words in blank … fix this problem for good», «make it up and down like this, just for this type of questions», «I want regular yellow the previous one we have», «it still doesn't do a flipping after I finish a lesson», «I want it like a real app that I can play with and try it with the sounds».",
+    items: [
+      { t: "The win screen is Duolingo's own file, with فهيم in Duo's place", s: "new", hash: "learnwin",
+        what: ["Duolingo's lesson-complete animation plays from its own file: the band, the title, the sparkles, the cyan flood on a perfect run. Duo is switched off and فهيم flies Duo's exact path, measured off the file.",
+               "No hard edge any more: the colour fills the whole screen and fades out on its own (it used to stop in a straight line halfway down).",
+               "One sound only: Duolingo's lesson-complete (or its perfect-lesson sound). Our old win jingle was playing on top of it — fixed.",
+               "Then Duolingo's three stat cards with their own three sounds, then the button."],
+        why: "«exactly like Duolingo style … use their files», and Image 122: «why there is a very clear border».",
+        code: "wvLoad, winPlay, WV_PATH, lcSound, assets/fx/lesson-complete.riv",
+        extra: [{ label: "A run with misses (green band)", hash: "learnwinmiss" }] },
+      { t: "Fill the rule in words: its size never changes", s: "new", hash: "rulewords",
+        what: ["The rule is sized once, when the screen opens, for the widest tiles that could go in its blanks. Placing any tile — right or wrong — no longer makes it smaller.",
+               "The wrong tiles are now short terms from the other rules, so a long phrase can't shrink the rule for everyone (and length can't give the answer away).",
+               "Checked: every rule screen of lessons 1–7, filled and emptied in both orders, at 320 and 360 wide — one size the whole time, never off the edge."],
+        why: "Image 123: «the law is getting smaller when I enter words in blank … fix this problem for good».",
+        code: "rfFit, rfDecoys",
+        run: (w) => {
+          const it = () => w.A.debugCurrent();
+          return [[1400, () => { const t = it(); t.tiles.map((x, i) => i).filter(i => t.a.indexOf(t.tiles[i]) < 0).forEach(k => w.A.lTile(k)); }],
+                  [2600, () => { for (let j = 3; j >= 0; j--) { try { w.A.lUnfill(j); } catch (e) {} } }],
+                  [3300, () => { const t = it(), used = []; t.a.forEach(v => { const k = t.tiles.findIndex((x, i) => x === v && used.indexOf(i) < 0); used.push(k); w.A.lTile(k); }); }],
+                  [4300, () => w.A.check()]];
+        }, hint: "puts the wrong tiles in, takes them out, puts the right ones in — the rule keeps its size" },
+      { t: "Fill the rule in numbers: the steps go top to bottom", s: "new", hash: "learn-skills.bigsum-3",
+        what: ["A chain of steps («… = … = …») is now written one step under the other, each new line starting with its «=», with a dashed line between — like «كمّل الحل خطوة خطوة».",
+               "Only for this screen. A line with one «=» or with words in it stays one line."],
+        why: "Images 124–125: «don't make it like this right to left … make it up and down like this, just for this type of questions».",
+        code: "rfRows, .rf-num .rf-line",
+        run: (w) => {
+          const it = () => w.A.debugCurrent(), used = [];
+          const pick = v => { const t = it(); const k = t.tiles.findIndex((x, i) => x === v && used.indexOf(i) < 0); used.push(k); w.A.lTile(k); };
+          return [[1300, () => w.A.debugLearnGo(x => x.rf === "nums")], [2600, () => pick(it().a[0])], [3300, () => it().a.slice(1).forEach(pick)], [4200, () => w.A.check()]];
+        }, hint: "opens lesson 3's numbers screen, fills it and checks" },
+      { t: "The climb: your row in the regular yellow, and a skip that lands right", s: "new", hash: "climb",
+        what: ["Your row is Duolingo's regular yellow again — the rule card's: pale yellow inside a yellow ring, on a yellow lip. It keeps it while it moves.",
+               "Bug fixed: tapping to skip the climb left your rank one place under where you started (the «٢٠» in your photo). It now lands on your real place every time — checked at eight different tap times."],
+        why: "Image 126: «I want regular yellow the previous one we have».",
+        code: ".cl-row.me, climbPlay (land)",
+        extra: [{ label: "Tap to skip half way", hash: "climb", run: (w) => [[1800, () => w.document.getElementById("comp").dispatchEvent(new w.PointerEvent("pointerdown", { bubbles: true }))]] },
+                { label: "To the top", hash: "climbtop" }] },
+      { t: "«الدرس التالي» goes by the path, so you see the node fill", s: "new", hash: "pathpay",
+        what: ["After a short lesson, «الدرس التالي» now goes back to the path first: the ring fills its segment (or, on the node's last lesson, the node flips into gold), then the next lesson starts by itself a second later.",
+               "Before, it jumped straight into the next lesson and you never saw the node fill. A rank-up on top of the path now waits its turn instead of hiding the beat."],
+        why: "«it still doesn't do a flipping after I finish a lesson … if I finished one it should show me».",
+        code: "PATH_NEXT, pathNext, A.winNext, renderPath",
+        extra: [{ label: "The node's last lesson (gold flip)", hash: "pathgold" }] },
+      { t: "Settings like a real app, with flat grey icons", s: "new", hash: "settings",
+        what: ["Your card at the top, then grouped rows — الحساب، التدريب، الصوت والحركة، بياناتك، عن قدراتي — each opening its own page with a back arrow.",
+               "The icons are flat grey line icons, not the coloured ones. Every emoji a student could see was removed from the app."],
+        why: "«it feels like a demo app, make it like real settings», «wouldn't it be better to be icons flat», «delete this emoji».",
+        code: "setRow, setIc, SET_IC, SET_PAGE, A.setPage" },
+      { t: "Brilliant's sounds in the real app, on your phone (not in the app)", s: "new",
+        noframe: "<a href=\"brilliant-sounds/phone.html?snd=bri#path\" target=\"_blank\" style=\"color:var(--blue);font-weight:800\">Open the playable app with the sounds</a><br><a href=\"brilliant-sounds/live.html\" target=\"_blank\" style=\"color:var(--mute)\">both phones side by side</a> — <a href=\"brilliant-sounds/compare.html\" target=\"_blank\" style=\"color:var(--mute)\">the full list</a>",
+        what: ["The whole app, playable, with every sound routed. A tab on the left edge opens a sheet: switch between today's sounds and Brilliant's at any moment, see each sound you just heard with «Keep ours» / «Brilliant», and jump to any screen.",
+               "A small note at the top names each sound as it plays. Our correct-answer sound and Duolingo's sounds are the same in both.",
+               "Your picks are shared with the full list. Nothing in the app changes until you've picked."],
+        why: "«I want it not screenshots, I want it like real app that I can play with and try it with the sounds».",
+        code: "tools/brilliant-sounds/phone.html, dock.js" },
+      { t: "Bookkeeping", s: "live",
+        what: ["CLAUDE.md updated for every change above. Validators pass. Not committed; sw.js is still at 89, not released."],
         noframe: "No screen — files and notes" }
     ] }
 ];

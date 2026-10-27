@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<title>Duolingo Node</title>
+<style>
+  html, body { margin: 0; background: #fff; overflow: hidden; }
+  canvas { display: block; width: 320px; height: 440px; }
+</style>
+<script>
+/* dev page for tools/starflip.html: Duolingo's own node (node_and_ring_119.riv)
+   on a clock that runs at ?speed= of real time, so its star flip can be
+   watched slowly beside ours */
+(() => {
+  const speed = +(new URLSearchParams(location.search).get("speed") || 1);
+  const raf = window.requestAnimationFrame.bind(window), pnow = performance.now.bind(performance);
+  let real0 = pnow(), virt = 0;
+  const now = () => virt + (pnow() - real0) * speed;
+  performance.now = now;
+  window.requestAnimationFrame = cb => raf(() => cb(now()));
+})();
+</script>
+<script src="https://unpkg.com/@rive-app/canvas@2.31.2"></script>
+</head>
+<body>
+<canvas id="cv" width="640" height="880"></canvas>
+<script>
+(async () => {
+  const buf = await (await fetch("pills/node.riv")).arrayBuffer();
+  const R = new rive.Rive({
+    buffer: buf, canvas: document.getElementById("cv"), artboard: "node", stateMachines: "node_statemachine", autoplay: true, autoBind: true,
+    onLoad: () => {
+      const I = {}; R.stateMachineInputs("node_statemachine").forEach(i => (I[i.name] = i));
+      const set = (k, v) => { if (I[k]) I[k].value = v; };
+      set("color_num", 1); set("from_icon_num", 3); set("to_icon_num", 3);
+      set("isactive_bool", true); set("ringon_bool", true); set("icon_anim_bool", true); set("star_flip_mode_num", 1);
+      R.setNumberStateAtPath("ring_starting_state_num", 0, "node highlight ring");
+      R.setNumberStateAtPath("ring_total_lessons_num", 4, "node highlight ring");
+      R.setNumberStateAtPath("ring_current_lesson_num", 1, "node highlight ring");
+      R.setNumberStateAtPath("ring_color_num", 1, "node highlight ring");
+    }
+  });
+})();
+</script>
+</body>
+</html>

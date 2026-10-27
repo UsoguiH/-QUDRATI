@@ -1,4 +1,4 @@
-# قدّور — placement map
+# فهيم — placement map
 
 Where he appears, which state, and what makes it change.
 Verified against `js/app.js` (4,348 lines) on 2026-09-02.
@@ -20,7 +20,7 @@ Watched against Duolingo's own screens, not from memory:
    walks past. He is not performing. That is why the path pose is `stand`, not `point`.
 2. **He shows up at the peaks, never the flat parts.** Duo is absent from the boring
    middle of a session and present at start, finish, streak, and reward.
-3. **Never twice on one screen.** One قدّور per view, always.
+3. **Never twice on one screen.** One فهيم per view, always.
 4. **Urgency is tempo, not new art.** Duolingo speeds Duo up rather than drawing an
    panicked Duo. We do the same with `bob` → `bob-fast`. This is why 17 states is
    enough and 40 would not be better.
@@ -30,7 +30,7 @@ Watched against Duolingo's own screens, not from memory:
    — and it is the one Duolingo advantage we cannot copy until reminders exist.
 
 **And the one thing Duolingo can't do:** Duo teaches a language with no deadline.
-قدّور has an exam date. The countdown card is the placement that is ours alone, and
+فهيم has an exam date. The countdown card is the placement that is ours alone, and
 it should be the one that changes the most.
 
 ---

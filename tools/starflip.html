@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Star Flip</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  /* dev page: Duolingo's current node (its own .riv) beside ours (preview.html's
+     path), the same size, at 1×, ¼× or ⅒× speed */
+  :root { --bg: #F7F7F7; --card: #FFFFFF; --ink: #3C3C3C; --mute: #777777; --line: #E5E5E5; --green: #58CC02; --green-dk: #478700; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #131F24; --card: #1B2B32; --ink: #F1F7FB; --mute: #9AA9B1; --line: #37464F; } }
+  :root[data-theme="dark"] { --bg: #131F24; --card: #1B2B32; --ink: #F1F7FB; --mute: #9AA9B1; --line: #37464F; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Baloo Bhaijaan 2', 'Segoe UI', sans-serif; }
+  main { max-width: 820px; margin: 0 auto; padding: 28px 16px 48px; }
+  h1 { margin: 0; font-size: 28px; }
+  p { color: var(--mute); margin: 4px 0 0; }
+  .speeds { display: flex; gap: 8px; margin: 16px 0; flex-wrap: wrap; }
+  .sp { font: inherit; font-weight: 800; font-size: 15px; padding: 7px 16px; border-radius: 12px; cursor: pointer; background: var(--card); color: var(--ink); border: 2px solid var(--line); border-bottom-width: 4px; }
+  .sp.on { background: var(--green); color: #fff; border-color: var(--green-dk); }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .side { background: var(--card); border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 18px; padding: 12px; text-align: center; }
+  .side h2 { margin: 0 0 8px; font-size: 18px; }
+  .win { position: relative; width: 320px; height: 330px; max-width: 100%; margin: 0 auto; overflow: hidden; background: #fff; border-radius: 12px; }
+  .win iframe { position: absolute; border: 0; }
+  #duo { left: 0; top: -55px; width: 320px; height: 440px; }
+  #ours { width: 390px; height: 844px; transform-origin: 0 0; }
+  .all-h { margin: 28px 0 0; font-size: 22px; }
+  .icons { display: block; width: 100%; height: 1240px; border: 2px solid var(--line); border-radius: 18px; margin-top: 12px; background: #fff; }
+  @media (max-width: 700px) { .pair { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Star flip: Duolingo beside ours</h1>
+  <p class="lead">Left is Duolingo's own node file. Right is our path. Both flip once every two seconds, on the ring's breath. Pick a speed to watch it slowly.</p>
+  <div class="speeds" id="speeds"></div>
+  <div class="pair">
+    <div class="side"><h2>Duolingo</h2><div class="win"><iframe id="duo" title="Duolingo"></iframe></div></div>
+    <div class="side"><h2>Ours</h2><div class="win"><iframe id="ours" title="Ours"></iframe></div></div>
+  </div>
+  <h2 class="all-h">Every lesson's icon, with the same flip</h2>
+  <p>All 26 signs on their own node, flipping together every two seconds with the code the app runs. The speed buttons slow these too.</p>
+  <iframe id="icons" title="Every icon" class="icons"></iframe>
+</main>
+<script>
+const SPEEDS = [[1, "1×"], [.25, "¼×"], [.1, "⅒×"]];
+const duo = document.getElementById("duo"), ours = document.getElementById("ours");
+let speed = 1, poll = 0;
+/* Duolingo's coin is 70 units at 2 px a unit = 140px; ours is 71px × 1.2 = 85px */
+const K = 140 / 85.2;
+function slow(w, r) {
+  /* the app scrolls its node into view; inside a frame that drags this page
+     along, so its scrolls stay inside the frame */
+  const sv = w.Element.prototype.scrollIntoView;
+  w.Element.prototype.scrollIntoView = function (o) {
+    const px = window.scrollX, py = window.scrollY;
+    sv.call(this, o && typeof o === "object" ? { ...o, behavior: "auto" } : o);
+    window.scrollTo(px, py);
+  };
+  const st = w.setTimeout.bind(w);
+  w.setTimeout = (f, ms, ...a) => st(f, (ms || 0) / r, ...a);
+  const anim = w.Element.prototype.animate;
+  w.Element.prototype.animate = function (k, o) { const a = anim.call(this, k, o); a.playbackRate = r; return a; };
+  clearInterval(poll);
+  poll = setInterval(() => { try { w.document.getAnimations().forEach(a => { if (a.playbackRate !== r) a.playbackRate = r; }); } catch (e) {} }, 50);
+}
+function frame() {
+  const w = ours.contentWindow, d = ours.contentDocument;
+  const node = d.querySelector(".path-row .bob .node");
+  if (!node) return setTimeout(frame, 200);
+  slow(w, speed);
+  w.A.go("path");                                     // re-render so the flip loop starts on the slowed clock
+  /* the path may still be scrolling to its node: keep the window on it */
+  clearInterval(frame.t);
+  frame.t = setInterval(() => {
+    const n = d.querySelector(".path-row .bob .node"); if (!n) return;
+    /* rects inside the zoomed node column come back off, so: the node is
+       scrolled to the middle of the frame, and its x is the path's middle
+       less its offset (style right, zoomed 1.2) */
+    /* the path settles in its first seconds (its own smooth scroll): centre
+       the node in the frame until then, then leave it. scrollIntoView also
+       scrolls this page, so this page is put back where the reader had it */
+    if ((frame.n = (frame.n || 0) + 1) <= 30) {
+      n.scrollIntoView({ block: "center" });
+      window.scrollTo(frame.px, frame.py);           // where the reader had this page when it loaded
+    }
+    const col = n.closest(".node-col"), pr = d.querySelector(".path").getBoundingClientRect();
+    const cx = pr.left + pr.width / 2 - (parseFloat(col.style.right) || 0) * 1.2, cy = w.innerHeight / 2;
+    ours.style.transform = "scale(" + K + ")";
+    ours.style.left = (160 - cx * K) + "px";
+    ours.style.top = (175 - cy * K) + "px";
+  }, 120);
+}
+function load() {
+  frame.s = 0; frame.n = 0; frame.px = window.scrollX; frame.py = window.scrollY;
+  duo.src = "starflip-duo.html?speed=" + speed;
+  document.getElementById("icons").src = "starflip-icons.html?speed=" + speed + "&t=" + Date.now();
+  ours.onload = () => {
+    const sv = ours.contentWindow.Element.prototype.scrollIntoView;   // the app's first scroll, before frame() runs
+    ours.contentWindow.Element.prototype.scrollIntoView = function (o) { sv.call(this, o && typeof o === "object" ? { ...o, behavior: "auto" } : o); window.scrollTo(frame.px, frame.py); };
+    setTimeout(frame, 1200);
+  };
+  ours.src = "../preview.html?t=" + Date.now() + "#path";
+  [...document.querySelectorAll(".sp")].forEach(b => b.classList.toggle("on", +b.dataset.s === speed));
+}
+SPEEDS.forEach(([s, l]) => {
+  const b = document.createElement("button"); b.className = "sp"; b.dataset.s = s; b.textContent = l;
+  b.onclick = () => { speed = s; load(); };
+  document.getElementById("speeds").appendChild(b);
+});
+load();
+</script>
+</body>
+</html>

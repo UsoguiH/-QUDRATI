@@ -1,0 +1,1035 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rule Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&display=swap">
+<link rel="stylesheet" href="../css/style.css">
+<style>
+  /* The rule, met five new ways (2026-10-26: «i want it full redesign even the
+     yellow everything in it … an experience where the user is very interactive
+     with it … create 5 different versions»). Each phone plays one idea on three
+     real rules from node 1 (learn.js: skills.bigsum lessons 1, 4 and 5). Nothing
+     here is in the app. */
+  html, body { background: #F7F7F7; }
+  body { margin: 0; font-family: var(--font); color: var(--ink); }
+  .lab { max-width: 2100px; margin: 0 auto; padding: 28px 16px 64px; }
+  .lab-h { max-width: 620px; margin: 0 auto 28px; text-align: center; }
+  .lab-h h1 { font-size: 27px; font-weight: 800; }
+  .lab-h p { margin: 6px 0 0; color: var(--gray); font-weight: 600; font-size: 15px; line-height: 1.6; }
+  .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 36px 26px; }
+  .ver { width: min(390px, 100%); }
+  .ver-h { display: flex; align-items: center; gap: 9px; margin: 0 4px 10px; }
+  .ver-h b { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: var(--ink); color: #fff; font-size: 16px; font-family: system-ui, sans-serif; }
+  .ver-h span { font-size: 19px; font-weight: 800; }
+  .phone {
+    position: relative; height: 790px; box-sizing: border-box; background: #fff;
+    border: 2px solid var(--line); border-bottom-width: 6px; border-radius: 34px;
+    padding: 14px 14px 16px; display: flex; flex-direction: column; overflow: hidden;
+  }
+  .ph-top { display: flex; align-items: center; gap: 6px; }
+  .pills { display: flex; gap: 6px; flex: 1; min-width: 0; }
+  .pill {
+    border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; border-radius: 12px;
+    padding: 4px 9px 2px; font: 700 13.5px var(--font); color: var(--gray); white-space: nowrap;
+  }
+  .pill.on { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+  .pill:active, .rp:active { border-bottom-width: 2px; translate: 0 2px; }
+  .rp {
+    flex-shrink: 0; width: 38px; height: 38px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px;
+    background: #fff; display: grid; place-items: center; color: var(--gray); padding: 0;
+  }
+  .rp svg { width: 18px; height: 18px; }
+  .ph-kick { margin: 16px 0 0; font-size: 14px; font-weight: 800; color: var(--purple-dk); }
+  .ph-h { font-size: 20px; font-weight: 800; line-height: 1.35; margin: 0; }
+  .ph-h b { color: var(--blue); }
+  .stage { position: relative; flex: 1; min-height: 0; margin-top: 12px; }
+  .ph-foot { padding-top: 8px; }
+  .tip { min-height: 46px; margin: 0 0 8px; text-align: center; font-weight: 700; font-size: 15px; color: var(--gray); line-height: 1.5; display: flex; align-items: center; justify-content: center; }
+  .tip b { color: var(--ink); }
+  .gobtn {
+    display: block; width: 100%; height: 46px; border: 0; border-radius: 14px; margin-bottom: 5px;
+    font: 800 16px var(--font); color: #fff; background: var(--green); box-shadow: 0 5px 0 var(--green-lip);
+  }
+  .gobtn:disabled { background: var(--line); box-shadow: 0 5px 0 #CFCFCF; color: #AFAFAF; }
+  .cap { margin: 14px 6px 0; }
+  .cap p { margin: 0; font-weight: 700; font-size: 15px; line-height: 1.55; }
+  .cap .en { direction: ltr; text-align: left; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; font-weight: 500; font-size: 13px; color: var(--gray); margin-top: 6px; line-height: 1.5; }
+  button { -webkit-tap-highlight-color: transparent; }
+
+  /* ---- shared pieces: a term's colour, a chip, a tile ---- */
+  .k-blue   { --c: #1CB0F6; --cd: #1899D6; --cl: #DDF4FF; --cb: #84D8FF; --ct: #1899D6; }
+  .k-purple { --c: #CE82FF; --cd: #A568CC; --cl: #F6E8FF; --cb: #E3B6FF; --ct: #A568CC; }
+  .k-orange { --c: #FF9600; --cd: #E07800; --cl: #FFEFD6; --cb: #FFC778; --ct: #E07800; }
+  .k-green  { --c: #58CC02; --cd: #58A700; --cl: #D7FFB8; --cb: #A5ED6E; --ct: #58A700; }
+  .k-red    { --c: #FF4B4B; --cd: #EA2B2B; --cl: #FFDFE0; --cb: #FFB2B2; --ct: #EA2B2B; }
+  .chip {
+    display: inline-flex; align-items: center; justify-content: center; padding: .16em .6em .06em;
+    border-radius: .7em; background: var(--c); box-shadow: 0 .19em 0 var(--cd); color: #fff;
+    font-weight: 800; font-size: 1em; line-height: 1.5; white-space: nowrap;
+  }
+  .tl {
+    display: inline-grid; place-items: center; box-sizing: border-box; min-width: 46px; height: 46px; padding: 0 8px 2px;
+    border-radius: 12px; background: #fff; border: 2px solid var(--line); border-bottom-width: 4px;
+    font: 800 21px/1 var(--font); color: var(--ink); white-space: nowrap;
+  }
+  button.tl { cursor: pointer; }
+  .tl.paint { background: var(--cl); border-color: var(--cb); color: var(--ct); }
+  .tl.solid { background: var(--c); border-color: var(--cd); color: #fff; }
+  .rrow { display: flex; align-items: flex-start; justify-content: center; gap: .32em; white-space: nowrap; font-size: 17px; }
+  .rrow .op { font-size: 1.12em; font-weight: 800; color: var(--gray); padding-top: .12em; line-height: 1.4; }
+  .term { display: inline-flex; flex-direction: column; align-items: center; gap: .22em; }
+  .term small { font-size: .8em; font-weight: 800; color: var(--ct); line-height: 1.2; }
+
+  /* ---- A: squash it ---- */
+  .a-src { display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 104px; justify-content: center; }
+  .a-row { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: nowrap; }
+  .a-plus { font-size: 20px; font-weight: 800; color: #AFAFAF; transition: opacity .25s; }
+  .a-plus.gone { opacity: 0; }
+  .tl.gone { background: transparent; border-style: dashed; border-bottom-width: 2px; color: #D0D0D0; pointer-events: none; }
+  .tl.dim { opacity: .45; pointer-events: none; }
+  .tl.live { animation: aBob 1.4s ease-in-out infinite; border-color: var(--blue-border); }
+  @keyframes aBob { 50% { translate: 0 -4px; } }
+  .a-tray {
+    position: relative; margin: 14px 0 0; min-height: 172px; border-radius: 22px; background: #F7F7F7;
+    display: flex; align-items: center; justify-content: center; padding: 14px 8px;
+  }
+  .a-hint { position: absolute; top: 9px; inset-inline-start: 14px; font-size: 13px; font-weight: 800; color: #AFAFAF; }
+  .a-eq { display: flex; align-items: center; gap: 8px; }
+  .a-eq .op { font-size: 24px; font-weight: 800; color: #AFAFAF; }
+  .a-pile { position: relative; display: inline-grid; }
+  .a-pile .tl { position: relative; z-index: 2; min-width: 62px; height: 56px; font-size: 25px; }
+  .a-sheet { position: absolute; inset: 0; border-radius: 12px; background: var(--cl); border: 2px solid var(--cb); border-bottom-width: 4px; opacity: 0; transition: opacity .2s, translate .25s; }
+  .a-badge {
+    position: absolute; z-index: 3; top: -14px; left: -16px; min-width: 30px; height: 26px; padding: 0 7px;
+    border-radius: 13px; background: var(--purple); box-shadow: 0 3px 0 var(--purple-dk); color: #fff;
+    font-size: 15px; font-weight: 800; display: grid; place-items: center; line-height: 1;
+  }
+  .a-pair { position: absolute; top: 12px; left: 0; right: 0; text-align: center; font-size: 15px; font-weight: 800; color: var(--purple-dk); opacity: 0; }
+  .a-grid { display: grid; grid-template-columns: repeat(5, 24px); grid-template-rows: repeat(5, 24px); gap: 4px; position: relative; }
+  .a-cell { border-radius: 7px; border: 2px dashed #DADADA; }
+  .a-cell.on { border: 0; background: var(--c); box-shadow: inset 0 -4px 0 var(--cd); }
+  .a-sq { display: flex; align-items: center; gap: 22px; }
+  .a-sqcap { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 92px; }
+  .a-sqcap b { font-size: 40px; font-weight: 800; line-height: 1.1; color: var(--orange-dk); }
+  .a-sqcap span { font-size: 20px; font-weight: 800; color: var(--blue-dk); min-height: 30px; }
+  .a-side { position: absolute; font-size: 16px; font-weight: 800; color: var(--blue-dk); }
+  .rc { margin-top: 14px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 20px; padding: 10px 10px 12px; }
+  .rc-h { display: flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; color: var(--gray); margin-bottom: 8px; }
+  .rc-h svg { width: 18px; height: 18px; }
+  .rc-pre { text-align: center; font-size: 14px; font-weight: 800; color: var(--gray); margin: -2px 0 6px; }
+  .rc-x { text-align: center; font-size: 14px; font-weight: 700; color: var(--gray); margin-top: 8px; }
+  .rc-x b { color: var(--ink); }
+
+  /* ---- B: the machine ---- */
+  .b-cards { display: flex; gap: 8px; }
+  .b-card {
+    flex: 1; min-width: 0; background: #fff; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 14px;
+    padding: 7px 4px 5px; font: 800 14px/1.35 var(--font); color: var(--ink); touch-action: none; cursor: grab;
+    display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; z-index: 2;
+  }
+  .b-card small { display: inline-flex; align-items: center; gap: 3px; font-size: 11.5px; color: var(--gray); font-weight: 700; }
+  .b-card small svg { width: 11px; height: 11px; }
+  .b-card.lock { background: #F7F7F7; color: #AFAFAF; cursor: default; }
+  .b-card.used { opacity: .35; border-style: dashed; border-bottom-width: 2px; pointer-events: none; }
+  .b-card.drag { z-index: 20; scale: 1.06; cursor: grabbing; }
+  .b-mc { display: flex; flex-direction: column; align-items: center; margin-top: 16px; }
+  .b-mouth { width: 140px; height: 22px; border-radius: 12px 12px 4px 4px; background: var(--purple-dk); position: relative; z-index: 1; margin-bottom: -6px; display: grid; place-items: center; transition: scale .18s; }
+  .b-mouth i { width: 104px; height: 9px; border-radius: 6px; background: #6B3F8C; }
+  .b-mouth.open { scale: 1.14 1.3; }
+  .b-body { position: relative; width: 100%; box-sizing: border-box; background: var(--purple); border-radius: 26px; box-shadow: 0 8px 0 var(--purple-dk); padding: 12px 10px 14px; }
+  .b-face { display: flex; justify-content: center; gap: 36px; margin-bottom: 9px; }
+  .b-eye { width: 26px; height: 26px; border-radius: 50%; background: #fff; display: grid; place-items: center; }
+  .b-eye i { width: 12px; height: 12px; border-radius: 50%; background: var(--ink); }
+  .b-lights { position: absolute; top: 18px; inset-inline-start: 18px; display: flex; gap: 5px; }
+  .b-lights i { width: 10px; height: 10px; border-radius: 50%; background: #B672E3; }
+  .b-lights i.on { background: var(--gold); }
+  .b-plate { background: #fff; border-radius: 16px; box-shadow: inset 0 -4px 0 #EBD7FA; padding: 8px 6px 12px; text-align: center; }
+  .b-ph { font-size: 13px; font-weight: 800; color: var(--purple-dk); margin-bottom: 7px; }
+  .b-plate .rrow { align-items: center; }
+  .b-slot {
+    display: inline-flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box;
+    min-width: 2.5em; height: 2.6em; padding: 0 .45em; border-radius: .7em; background: #F2F2F2; border: 2px dashed #CFCFCF;
+    color: #AFAFAF; font-weight: 800; line-height: 1.1;
+  }
+  .b-slot b { font-size: 1.15em; }
+  .b-slot.val { background: var(--cl); border: 2px solid var(--cb); border-bottom-width: 4px; color: var(--ct); }
+  .b-slot.ask { border-color: var(--gold); color: var(--gold-dk); background: var(--gold-bg); }
+  .b-slot.name { background: var(--c); border: 0; box-shadow: 0 4px 0 var(--cd); color: #fff; height: auto; padding: .25em .6em .2em; }
+  .b-slot.name b { font-size: .95em; }
+  .b-slot.name small { font-size: .72em; opacity: .9; }
+  .b-chute { width: 92px; height: 14px; margin: 12px auto 0; border-radius: 8px; background: #6B3F8C; }
+  .b-out { height: 66px; display: grid; place-items: center; margin-top: 14px; }
+  .b-res { min-width: 70px; height: 54px; font-size: 26px; visibility: hidden; }
+  .b-res.on { visibility: visible; }
+  .b-guess { display: flex; justify-content: center; gap: 10px; min-height: 52px; }
+  .b-guess .tl.off { opacity: .35; pointer-events: none; }
+
+  /* ---- C: drag to shorten ---- */
+  .c-ops { display: flex; align-items: center; justify-content: center; gap: 10px; height: 46px; }
+  .c-ops span { font-size: 14px; font-weight: 800; color: var(--gray); }
+  .c-ops b { min-width: 46px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-size: 25px; font-weight: 800; background: var(--red-bg); color: var(--red-dk2); transition: background-color .3s, color .3s; }
+  .c-ops.short b { background: var(--green-bg); color: var(--green-dk); }
+  .c-way { min-width: 104px; text-align: start; }
+  .c-morph { position: relative; height: 252px; margin-top: 4px; }
+  .mi { position: absolute; left: 0; top: 0; translate: -50% -50%; will-change: transform, opacity; }
+  .mi.tl { padding: 0; }
+  .mop { font-size: 22px; font-weight: 800; color: #AFAFAF; }
+  .mcap { font-size: 18px; font-weight: 800; color: var(--ink); white-space: nowrap; }
+  .mlab { font-size: 13px; font-weight: 800; color: #AFAFAF; }
+  .dt { width: 16px; height: 16px; border-radius: 5px; background: var(--c); box-shadow: inset 0 -3px 0 var(--cd); }
+  .c-sl { position: relative; height: 60px; border-radius: 30px; background: #F0F0F0; box-shadow: inset 0 3px 0 #E2E2E2; margin-top: 6px; touch-action: none; }
+  .c-fill { position: absolute; top: 0; bottom: 0; right: 0; width: 60px; border-radius: 30px; background: var(--green-bg); }
+  .c-lab { position: absolute; inset: 0; display: grid; place-items: center; padding-inline-start: 40px; font-size: 15px; font-weight: 800; color: #AFAFAF; pointer-events: none; }
+  .c-knob {
+    position: absolute; top: 4px; right: 4px; width: 52px; height: 48px; border: 0; border-radius: 24px; padding: 0;
+    background: var(--green); box-shadow: 0 4px 0 var(--green-lip); color: #fff; display: grid; place-items: center; cursor: grab; touch-action: none;
+  }
+  .c-knob svg { width: 24px; height: 24px; }
+  .c-knob.hold { cursor: grabbing; scale: 1.06; }
+  .c-rule { min-height: 92px; }
+  .c-tk { margin-top: 10px; border-radius: 20px; background: var(--green-bg); box-shadow: inset 0 -4px 0 #B9EE90; padding: 9px 8px 12px; }
+  .c-tk .rc-h { color: var(--green-dk); margin-bottom: 7px; justify-content: center; }
+  .c-tk .rc-pre { color: var(--green-dk); }
+
+  /* ---- D: where is it in the example? ---- */
+  .d-ex { border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 20px; padding: 12px 8px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .d-exh { font-size: 13px; font-weight: 800; color: #AFAFAF; text-align: center; }
+  .d-ln { display: flex; flex-wrap: nowrap; justify-content: center; align-items: center; gap: .2em; font-size: 18px; white-space: nowrap; }
+  .d-ln.big { font-size: 23px; }
+  .d-ln.sm { font-size: 15px; }
+  .d-tk {
+    border: 2px solid transparent; border-bottom-width: 4px; background: transparent; border-radius: 11px; padding: 0 .25em 1px;
+    font: 800 1em/1.5 var(--font); color: var(--ink); cursor: pointer; white-space: nowrap;
+  }
+  .d-ln.sm .d-tk { color: var(--gray); }
+  .d-tk.paint { background: var(--cl); border-color: var(--cb); color: var(--ct); }
+  .d-tk.no { background: var(--red-bg); color: var(--red-dk2); }
+  .d-rule { margin-top: 18px; }
+  .d-rule .rrow { align-items: center; gap: .4em; }
+  .d-card {
+    position: relative; min-width: 3em; min-height: 2.5em; padding: .2em .6em .1em; border-radius: .75em; box-sizing: border-box;
+    border: 2px solid var(--line); border-bottom-width: 5px; background: #F7F7F7; color: #AFAFAF;
+    font: 800 1em/1.4 var(--font); display: inline-flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .d-card .d-q { font-size: 1.3em; }
+  .d-card.up { background: #fff; border-color: var(--cb); color: var(--ct); }
+  .d-card.up.act { translate: 0 -5px; border-color: var(--c); }
+  .d-card.found { background: var(--c); border-color: var(--cd); color: #fff; }
+  .d-card small { font-size: .75em; opacity: .92; line-height: 1.2; }
+
+  /* ---- E: play with it ---- */
+  .e-goal {
+    display: flex; align-items: center; gap: 8px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 16px;
+    padding: 6px 12px 5px; font-size: 15px; font-weight: 800; color: var(--gray); transition: background-color .3s, border-color .3s, color .3s;
+  }
+  .e-goal svg { width: 22px; height: 22px; flex-shrink: 0; }
+  .e-goal b { color: var(--orange-dk); font-size: 18px; }
+  .e-goal.won { background: var(--green-bg); border-color: var(--green-pale); color: var(--green-dk); }
+  .e-goal.won b { color: var(--green-dk); }
+  .e-res { display: flex; align-items: baseline; justify-content: center; gap: 10px; margin-top: 8px; }
+  .e-res span { font-size: 15px; font-weight: 800; color: var(--gray); }
+  .e-res b { font-size: 38px; font-weight: 800; color: var(--orange-dk); line-height: 1.1; min-width: 64px; text-align: center; }
+  .e-pic { position: relative; height: 128px; display: flex; align-items: flex-end; justify-content: center; gap: 5px; }
+  .e-tw { width: 28px; border-radius: 9px 9px 6px 6px; background: var(--blue); box-shadow: inset 0 -4px 0 var(--blue-dk); display: flex; justify-content: center; transition: height .35s cubic-bezier(.3,1.4,.5,1); }
+  .e-tw span { color: #fff; font-size: 12.5px; font-weight: 800; padding-top: 3px; }
+  .e-pic svg { overflow: visible; }
+  .e-long { text-align: center; font-size: 14px; font-weight: 700; color: var(--gray); min-height: 22px; margin-top: 6px; white-space: nowrap; overflow: hidden; }
+  .e-rule { margin-top: 8px; }
+  .e-st { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+  .e-s { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .e-s .chip { font-size: 15px; }
+  .e-ctl { display: flex; align-items: center; gap: 8px; }
+  .e-b {
+    width: 44px; height: 40px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff;
+    font: 800 24px/1 var(--font); color: var(--blue); padding: 0 0 3px; touch-action: manipulation;
+  }
+  .e-b:active { border-bottom-width: 2px; translate: 0 2px; }
+  .e-v { min-width: 44px; text-align: center; font-size: 24px; font-weight: 800; color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="lab">
+  <header class="lab-h">
+    <h1>مختبر القاعدة</h1>
+    <p>خمس طرق جديدة يقابل فيها الطالب القاعدة — في كل وحدة يشتغل بإيده بدل ما يتفرّج. جرّب كل وحدة على القواعد الثلاث، واختر الأحلى.</p>
+  </header>
+  <div class="grid" id="grid"></div>
+</div>
+<script>
+(function () {
+  const ar = n => String(n).replace(/-/g, '−').replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------------- motion ---------------- */
+  function anim(el, kf, o) {
+    if (!el || !el.animate) return null;
+    o = Object.assign({ fill: 'none' }, o);
+    if (RM) { o.duration = 1; o.delay = 0; }
+    return el.animate(kf, o);
+  }
+  const hop = (el, h = 16, d = 0) => anim(el, [
+    { translate: '0 0', scale: '1 1' },
+    { translate: '0 2px', scale: '1.08 .9', offset: .14 },
+    { translate: `0 -${h}px`, scale: '.95 1.06', offset: .46 },
+    { translate: '0 1px', scale: '1.07 .92', offset: .78 },
+    { translate: '0 0', scale: '1 1' }], { duration: 500, delay: d, easing: 'ease-out' });
+  const popIn = (el, d = 0) => { if (!el) return; el.style.opacity = ''; return anim(el, [
+    { opacity: 0, scale: '.3' }, { opacity: 1, scale: '1.16', offset: .55 }, { scale: '.95', offset: .8 }, { opacity: 1, scale: '1' }],
+    { duration: 420, delay: d, easing: 'ease-out', fill: 'backwards' }); };
+  const shake = el => anim(el, [{ translate: '0 0' }, { translate: '-8px 0' }, { translate: '7px 0' }, { translate: '-5px 0' }, { translate: '3px 0' }, { translate: '0 0' }], { duration: 360 });
+  const stamp = (el, d = 0) => { el.style.opacity = ''; return anim(el, [
+    { opacity: 0, scale: '1.7', translate: '0 -10px' }, { opacity: 1, scale: '.9 1.04', translate: '0 0', offset: .5 },
+    { scale: '1.06 .9', offset: .72 }, { opacity: 1, scale: '1', translate: '0 0' }], { duration: 440, delay: d, easing: 'ease-in', fill: 'backwards' }); };
+  /* a thing arrives from where it was made: from a rect to its own place, on an arc */
+  function flyFrom(el, rect, d = 0, dur = 480) {
+    if (!rect) return popIn(el, d);
+    const r = el.getBoundingClientRect();
+    const dx = (rect.left + rect.width / 2) - (r.left + r.width / 2), dy = (rect.top + rect.height / 2) - (r.top + r.height / 2);
+    const s0 = clamp(rect.height / (r.height || 1), .5, 1.6);
+    return anim(el, [
+      { translate: `${dx}px ${dy}px`, scale: String(s0) },
+      { translate: `${dx * .5}px ${dy * .5 - 44}px`, scale: '1.12', offset: .55 },
+      { translate: '0 0', scale: '1' }], { duration: dur, delay: d, easing: 'cubic-bezier(.4,0,.3,1)', fill: 'backwards' });
+  }
+  /* a copy flies from one element to another, then goes */
+  function flyClone(from, to, stage, cb, dur = 440) {
+    const sr = stage.getBoundingClientRect(), a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
+    const cl = from.cloneNode(true);
+    cl.classList.remove('gone', 'live', 'drag', 'used');
+    cl.style.translate = ''; cl.style.scale = '';
+    Object.assign(cl.style, { position: 'absolute', left: a.left - sr.left + 'px', top: a.top - sr.top + 'px', width: a.width + 'px', height: a.height + 'px', margin: 0, zIndex: 30, pointerEvents: 'none' });
+    stage.appendChild(cl);
+    const dx = (b.left + b.width / 2) - (a.left + a.width / 2), dy = (b.top + b.height / 2) - (a.top + a.height / 2);
+    const s1 = to.dataset.shrink ? .35 : clamp(b.height / (a.height || 1), .5, 1.4);
+    const an = anim(cl, [
+      { translate: '0 0', scale: '1', rotate: '0deg', opacity: 1 },
+      { translate: `${dx * .5}px ${dy * .5 - 50}px`, scale: '1.12', rotate: (dx > 0 ? 8 : -8) + 'deg', opacity: 1, offset: .5 },
+      { translate: `${dx}px ${dy}px`, scale: String(s1), rotate: '0deg', opacity: to.dataset.shrink ? 0 : 1 }],
+      { duration: dur, easing: 'cubic-bezier(.45,0,.35,1)', fill: 'forwards' });
+    const end = () => { cl.remove(); cb && cb(); };
+    if (an) an.onfinish = end; else end();
+  }
+  function roll(el, from, to, ms = 520, fmt = ar) {
+    if (RM) { el.textContent = fmt(to); return; }
+    const t0 = performance.now();
+    const step = now => {
+      const k = clamp((now - t0) / ms, 0, 1), e = 1 - Math.pow(1 - k, 3);
+      el.textContent = fmt(Math.round(lerp(from, to, e)));
+      if (k < 1 && el.isConnected) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+  /* one line, always: shrink the row's type until its layout width fits */
+  function fit(row) {
+    if (!row) return;
+    row.style.fontSize = '';
+    const avail = row.clientWidth, kids = Array.from(row.children);
+    if (!avail || !kids.length) return;
+    const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
+    const need = kids.reduce((s, k) => s + k.offsetWidth, 0) + gap * (kids.length - 1);
+    if (need > avail) row.style.fontSize = (parseFloat(getComputedStyle(row).fontSize) * avail / need * .97).toFixed(2) + 'px';
+  }
+
+  /* ---------------- sound ---------------- */
+  let AC = null;
+  function ac() {
+    if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
+    if (AC.state === 'suspended') AC.resume();
+    return AC;
+  }
+  function tone(f, d = .12, type = 'sine', g = .1, at = 0) {
+    const a = ac(); if (!a) return;
+    const t = a.currentTime + at, o = a.createOscillator(), v = a.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(g, t + .01); v.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(v); v.connect(a.destination); o.start(t); o.stop(t + d + .03);
+  }
+  const SCALE = [523, 587, 659, 784, 880, 1047, 1175, 1319, 1568, 1760, 2093];
+  const note = k => tone(SCALE[clamp(k, 0, SCALE.length - 1)], .18, 'triangle', .09);
+  const tap = () => tone(720, .05, 'square', .025);
+  const thud = () => { tone(150, .14, 'sine', .2); tone(90, .1, 'triangle', .08); };
+  const bad = () => { tone(230, .14, 'sawtooth', .04); tone(190, .2, 'sawtooth', .04, .09); };
+  const tick = k => tone(900 + k * 60, .03, 'square', .02);
+  let correct = null;
+  const win = () => {
+    try { correct = correct || new Audio('../assets/sounds/correct.mp3'); correct.currentTime = 0; const p = correct.play(); if (p && p.catch) p.catch(() => {}); }
+    catch (e) { [523, 659, 784, 1047].forEach((f, i) => tone(f, .22, 'triangle', .08, i * .07)); }
+  };
+  const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+
+  /* ---------------- icons ---------------- */
+  const SVG = {
+    replay: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/></svg>',
+    key: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="12" r="4"/><path d="M12 12h9M18 12v3.5M21 12v2.5"/></svg>',
+    arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6l-6 6 6 6M19 6l-6 6 6 6"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    lock: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="10" width="16" height="12" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="3"/></svg>',
+    target: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#FF4B4B"/><circle cx="12" cy="12" r="6.5" fill="#fff"/><circle cx="12" cy="12" r="3.2" fill="#FF4B4B"/></svg>',
+    star: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.2l-5.9 3.2 1.3-6.5L2.5 9.3l6.6-.8z"/></svg>'
+  };
+
+  /* ---------------- the three rules (learn.js, skills.bigsum) ---------------- */
+  const RULES = {
+    rep: {
+      tab: 'المكرر', kick: 'الحيلة', h: 'نفس العدد يتكرر؟ لا تجمع… <b>اضرب</b>',
+      col: { s: 'orange', a: 'blue', n: 'purple' },
+      toks: [{ k: 's', t: 'المجموع' }, '=', { k: 'a', t: 'العدد' }, '×', { k: 'n', t: 'عدد مرات تكراره' }],
+      val: { s: 150, a: 30, n: 5 }
+    },
+    gauss: {
+      tab: 'من ١ إلى عدد', kick: 'الحيلة', h: 'اجمع <b>الطرفين</b> مع بعض', pre: 'من ١ إلى أي عدد:',
+      col: { L: 'blue' },
+      toks: [{ k: 'L', t: 'آخر عدد' }, '×', '(', { k: 'L', t: 'آخر عدد' }, '+', '١', ')', '÷', '٢'],
+      val: { L: 10 }
+    },
+    odd: {
+      tab: 'الفردية', kick: 'اكتشف', h: 'اجمع الفردية من ١… وشوف <b>وش يطلع</b>',
+      col: { s: 'orange', k: 'blue' },
+      toks: [{ k: 's', t: 'مجموع الفردية' }, 'من ١', '=', { k: 'k', t: 'عددها' }, '×', { k: 'k', t: 'عددها' }],
+      val: { s: 25, k: 5 }
+    }
+  };
+  const termHtml = (R, tk, inner) => `<span class="term k-${R.col[tk.k]}" data-k="${tk.k}">${inner || `<span class="chip">${tk.t}</span><small>${ar(R.val[tk.k])}</small>`}</span>`;
+  /* a bracket on its own is drawn as its mirror in a left-to-right box, so it faces the way Arabic reads */
+  const opGlyph = tk => tk === '(' ? '<span class="op" dir="ltr">)</span>' : tk === ')' ? '<span class="op" dir="ltr">(</span>' : `<span class="op">${tk}</span>`;
+  const rowHtml = (R, termFn) => R.toks.map(tk => typeof tk === 'string' ? opGlyph(tk) : termFn(tk)).join('');
+
+  /* =====================================================================
+     A — اعصرها بإيدك: the student's own taps squash the long sum, and the
+     rule's words fly out of what they made
+     ===================================================================== */
+  function mountA(c) {
+    c.stage.innerHTML = `<div class="a-src"></div><div class="a-tray"><span class="a-hint">هنا</span></div><div class="a-rule"></div>`;
+    ({ rep: aRep, gauss: aGauss, odd: aOdd })[c.rk](c, $('.a-src', c.stage), $('.a-tray', c.stage), $('.a-rule', c.stage));
+  }
+  function aRule(c, box, src, extra) {
+    const R = c.R;
+    box.innerHTML = `<div class="rc"><div class="rc-h">${SVG.key}<span>القاعدة</span></div>${R.pre ? `<div class="rc-pre">${R.pre}</div>` : ''}
+      <div class="rrow">${rowHtml(R, tk => termHtml(R, tk))}</div>${extra ? `<div class="rc-x">${extra}</div>` : ''}</div>`;
+    const card = $('.rc', box), row = $('.rrow', box);
+    fit(row);
+    popIn(card);
+    const terms = $$('.term', row), ops = $$('.op', row), x = $('.rc-x', box);
+    terms.forEach(t => { t.style.opacity = 0; });
+    ops.forEach(o => { o.style.opacity = 0; });
+    if (x) x.style.opacity = 0;
+    terms.forEach((tm, j) => c.t(() => {
+      tm.style.opacity = '';
+      const s = src[tm.dataset.k];
+      flyFrom(tm, s && s.getBoundingClientRect(), 0, 520);
+      c.t(() => { note(3 + j); hop(tm, 8); buzz(10); }, 520);
+    }, 300 + j * 430));
+    const end = 300 + terms.length * 430 + 300;
+    c.t(() => { ops.forEach((o, j) => popIn(o, j * 40)); if (x) popIn(x, 200); }, end);
+    return end + 500;
+  }
+  function aRep(c, src, tray, ruleBox) {
+    const N = 5;
+    src.innerHTML = `<div class="a-row">${Array.from({ length: N }, (_, i) => `${i ? '<span class="a-plus">+</span>' : ''}<button class="tl a-t">${ar(30)}</button>`).join('')}</div>`;
+    tray.insertAdjacentHTML('beforeend', `<div class="a-eq"><span class="a-pile" style="opacity:0">${[4, 3, 2, 1].map(i => `<i class="a-sheet k-blue" style="translate:${i * 4}px ${-i * 4}px"></i>`).join('')}<span class="tl paint k-blue a-top">${ar(30)}</span><b class="a-badge">×${ar(0)}</b></span></div>`);
+    const pile = $('.a-pile', tray), top = $('.a-top', tray), badge = $('.a-badge', tray), sheets = $$('.a-sheet', tray).reverse();
+    let n = 0;
+    c.tip('اضغط على كل <b>٣٠</b> — وعدّ كم مرة تكرّر');
+    $$('.a-t', src).forEach(b => b.addEventListener('click', () => {
+      if (b.classList.contains('gone')) return;
+      tap(); b.classList.add('gone');
+      const p = b.previousElementSibling && b.previousElementSibling.classList.contains('a-plus') ? b.previousElementSibling : b.nextElementSibling;
+      if (p && p.classList.contains('a-plus')) p.classList.add('gone');
+      flyClone(b, top, c.stage, () => {
+        if (!c.alive()) return;
+        n++;
+        if (n === 1) { pile.style.opacity = ''; popIn(pile); } else { hop(top, 6); sheets[n - 2] && (sheets[n - 2].style.opacity = 1); }
+        badge.textContent = '×' + ar(n); popIn(badge); note(n); buzz(8);
+        if (n === N) c.t(finish, 450);
+      });
+    }));
+    function finish() {
+      const eq = $('.a-eq', tray);
+      $('.a-hint', tray).style.opacity = 0;
+      anim(badge, [{ opacity: 1, scale: '1' }, { opacity: 0, scale: '.3' }], { duration: 200, fill: 'forwards' });
+      eq.insertAdjacentHTML('beforeend', `<span class="op">×</span><span class="tl paint k-purple a-n">${ar(5)}</span><span class="op">=</span><span class="tl paint k-orange a-s">${ar(0)}</span>`);
+      const parts = Array.from(eq.children).slice(1);
+      parts.forEach((p, i) => popIn(p, i * 110));
+      c.t(() => { roll($('.a-s', eq), 0, 150, 600); note(6); thud(); }, 480);
+      c.tip('<b>٣٠</b> تكرّر <b>٥</b> مرات… يعني ٣٠ × ٥');
+      c.t(() => {
+        c.tip('والقاعدة؟ كل كلمة فيها طلعت من اللي سوّيته');
+        const ms = aRule(c, ruleBox, { a: top, n: $('.a-n', eq), s: $('.a-s', eq) });
+        c.t(() => c.done(), ms);
+      }, 1500);
+    }
+  }
+  function aGauss(c, src, tray, ruleBox) {
+    src.innerHTML = [[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]].map(r => `<div class="a-row">${r.map(v => `<button class="tl a-t" data-v="${v}">${ar(v)}</button>`).join('')}</div>`).join('');
+    tray.insertAdjacentHTML('beforeend', `<div class="a-pair"></div><div class="a-eq"><span class="a-pile" style="opacity:0">${[4, 3, 2, 1].map(i => `<i class="a-sheet k-purple" style="translate:${i * 4}px ${-i * 4}px"></i>`).join('')}<span class="tl paint k-purple a-top">${ar(11)}</span><b class="a-badge">×${ar(0)}</b></span></div>`);
+    const pile = $('.a-pile', tray), top = $('.a-top', tray), badge = $('.a-badge', tray), pair = $('.a-pair', tray), sheets = $$('.a-sheet', tray).reverse();
+    let n = 0;
+    c.tip('اضغط أي عدد — ويلقى <b>شريكه</b> من الطرف الثاني');
+    $$('.a-t', src).forEach(b => b.addEventListener('click', () => {
+      if (b.classList.contains('gone')) return;
+      const v = +b.dataset.v, w = 11 - v, mate = $(`.a-t[data-v="${w}"]`, src);
+      tap(); b.classList.add('gone'); mate.classList.add('gone');
+      let got = 0;
+      const land = () => {
+        if (!c.alive() || ++got < 2) return;
+        n++;
+        if (n === 1) { pile.style.opacity = ''; popIn(pile); } else { hop(top, 6); sheets[n - 2] && (sheets[n - 2].style.opacity = 1); }
+        badge.textContent = '×' + ar(n); popIn(badge); note(n + 1); buzz(8);
+        pair.textContent = `${ar(Math.min(v, w))} + ${ar(Math.max(v, w))} = ${ar(11)}`;
+        pair.getAnimations().forEach(a => a.cancel());
+        anim(pair, [{ opacity: 0, translate: '0 8px' }, { opacity: 1, translate: '0 0', offset: .2 }, { opacity: 1, offset: .8 }, { opacity: 0 }], { duration: 1300 });
+        if (n === 5) c.t(finish, 600);
+      };
+      flyClone(b, top, c.stage, land);
+      flyClone(mate, top, c.stage, land, 520);
+    }));
+    function finish() {
+      const eq = $('.a-eq', tray);
+      $('.a-hint', tray).style.opacity = 0;
+      anim(badge, [{ opacity: 1, scale: '1' }, { opacity: 0, scale: '.3' }], { duration: 200, fill: 'forwards' });
+      eq.insertAdjacentHTML('beforeend', `<span class="op">×</span><span class="tl paint k-orange">${ar(5)}</span><span class="op">=</span><span class="tl paint k-green a-s">${ar(0)}</span>`);
+      Array.from(eq.children).slice(1).forEach((p, i) => popIn(p, i * 110));
+      c.t(() => { roll($('.a-s', eq), 0, 55, 600); note(7); thud(); }, 480);
+      c.tip('كل زوج = <b>١١</b> ، و <b>٥</b> أزواج — نص العشرة');
+      c.t(() => {
+        c.tip('والقاعدة جات من آخر عدد — <b>١٠</b>');
+        const ms = aRule(c, ruleBox, { L: $('.a-t[data-v="10"]', src) }, 'يعني هنا: <b>١٠</b> × <b>١١</b> ÷ ٢ = <b>٥٥</b>');
+        c.t(() => c.done(), ms);
+      }, 1600);
+    }
+  }
+  function aOdd(c, src, tray, ruleBox) {
+    const odds = [1, 3, 5, 7, 9], LAYER = ['blue', 'purple', 'orange', 'green', 'red'];
+    src.innerHTML = `<div class="a-row">${odds.map((v, i) => `${i ? '<span class="a-plus">+</span>' : ''}<button class="tl a-t${i ? ' dim' : ' live'}" data-i="${i}">${ar(v)}</button>`).join('')}</div>`;
+    const cells = [];
+    for (let r = 0; r < 5; r++) for (let q = 0; q < 5; q++) cells.push({ r, q, k: Math.max(r, q) });
+    tray.insertAdjacentHTML('beforeend', `<div class="a-sq"><div class="a-grid">${cells.map(x => `<i class="a-cell" data-k="${x.k}" style="grid-row:${x.r + 1};grid-column:${x.q + 1}"></i>`).join('')}
+        <span class="a-side" style="opacity:0;top:-24px;left:0;right:0;text-align:center">${ar(5)}</span><span class="a-side" style="opacity:0;top:0;bottom:0;right:-22px;display:grid;place-items:center">${ar(5)}</span></div>
+      <div class="a-sqcap"><b class="a-sum"></b><span class="a-kk"></span></div></div>`);
+    $('.a-hint', tray).style.opacity = 0;
+    const sum = $('.a-sum', tray), kk = $('.a-kk', tray), grid = $('.a-grid', tray);
+    let k = 0, total = 0;
+    c.tip('اضغط <b>١</b> — وكمّل بالترتيب، وشوف وش يصير');
+    $$('.a-t', src).forEach(b => b.addEventListener('click', () => {
+      if (+b.dataset.i !== k || b.classList.contains('gone')) return;
+      tap(); b.classList.remove('live'); b.classList.add('gone');
+      const p = b.previousElementSibling; if (p && p.classList.contains('a-plus')) p.classList.add('gone');
+      const my = k; k++;
+      const next = $(`.a-t[data-i="${k}"]`, src); if (next) { next.classList.remove('dim'); next.classList.add('live'); }
+      flyClone(b, grid, c.stage, () => {
+        if (!c.alive()) return;
+        const layer = $$(`.a-cell[data-k="${my}"]`, grid);
+        layer.forEach((cl, j) => c.t(() => { cl.classList.add('on', 'k-' + LAYER[my]); popIn(cl); if (j % 2 === 0) tick(j); }, j * 45));
+        c.t(() => {
+          roll(sum, total, (my + 1) * (my + 1), 420); total = (my + 1) * (my + 1);
+          kk.textContent = `${ar(my + 1)} × ${ar(my + 1)}`; popIn(kk); note(my + 2); buzz(10);
+          if (my === 4) c.t(finish, 600);
+        }, layer.length * 45 + 60);
+      }, 420);
+    }));
+    function finish() {
+      $$('.a-side', tray).forEach((s, i) => popIn(s, i * 120));
+      c.tip('٥ أعداد فردية… والمجموع <b>٥ × ٥</b> — مربّع!');
+      c.t(() => {
+        c.tip('والقاعدة؟ عدّ الفردية، واضرب عددها في نفسه');
+        const ms = aRule(c, ruleBox, { s: sum, k: kk });
+        c.t(() => c.done(), ms);
+      }, 1400);
+    }
+  }
+
+  /* =====================================================================
+     B — آلة القاعدة: two examples go in, the plate fills with their numbers;
+     the third the student predicts, and only then the plate shows its words
+     ===================================================================== */
+  const B_IN = {
+    rep: { unk: 's', help: 'شوف التجربتين: الآلة سوّت وش بالعدد وعدد المرات؟', ex: [
+      { l: '٢٠ + ٢٠ + ٢٠', v: { a: 20, n: 3, s: 60 }, out: 60 },
+      { l: '٤٠ + ٤٠ + ٤٠ + ٤٠', v: { a: 40, n: 4, s: 160 }, out: 160 },
+      { l: '٣٠ + ٣٠ + ٣٠ + ٣٠ + ٣٠', v: { a: 30, n: 5, s: 150 }, out: 150, ch: [120, 150, 180] }] },
+    gauss: { unk: null, help: 'في التجربتين: ٤ طلعت ١٠ ، و ٦ طلعت ٢١ — وش تسوّي الآلة بآخر عدد؟', ex: [
+      { l: '١ + ٢ + ٣ + ٤', v: { L: 4 }, out: 10 },
+      { l: '١ + ٢ + … + ٦', v: { L: 6 }, out: 21 },
+      { l: '١ + ٢ + … + ١٠', v: { L: 10 }, out: 55, ch: [50, 55, 110] }] },
+    odd: { unk: 's', help: 'عددها ٢ طلع ٤ ، وعددها ٣ طلع ٩ — وإذا عددها ٥؟', ex: [
+      { l: '١ + ٣', v: { k: 2, s: 4 }, out: 4 },
+      { l: '١ + ٣ + ٥', v: { k: 3, s: 9 }, out: 9 },
+      { l: '١ + ٣ + ٥ + ٧ + ٩', v: { k: 5, s: 25 }, out: 25, ch: [20, 25, 30] }] }
+  };
+  function mountB(c) {
+    const { R } = c, D = B_IN[c.rk];
+    c.stage.innerHTML = `
+      <div class="b-cards">${D.ex.map((x, i) => `<button class="b-card${i === 2 ? ' lock' : ''}" data-i="${i}"><span>${x.l}</span><small>${i === 2 ? SVG.lock : ''}تجربة ${ar(i + 1)}</small></button>`).join('')}</div>
+      <div class="b-mc">
+        <div class="b-mouth" data-shrink="1"><i></i></div>
+        <div class="b-body">
+          <div class="b-lights"><i></i><i></i><i></i></div>
+          <div class="b-face"><span class="b-eye"><i></i></span><span class="b-eye"><i></i></span></div>
+          <div class="b-plate"><div class="b-ph">وش مكتوب على الآلة؟</div>${R.pre ? `<div class="rc-pre b-pre" style="opacity:0">${R.pre}</div>` : ''}
+            <div class="rrow">${rowHtml(R, tk => `<span class="b-slot k-${R.col[tk.k]}" data-k="${tk.k}"><b>؟</b></span>`)}</div></div>
+          <div class="b-chute"></div>
+        </div>
+      </div>
+      <div class="b-out"><span class="tl b-res">${ar(0)}</span></div>
+      <div class="b-guess"></div>`;
+    const S = c.stage, cards = $$('.b-card', S), mouth = $('.b-mouth', S), body = $('.b-body', S), res = $('.b-res', S),
+          guess = $('.b-guess', S), row = $('.b-plate .rrow', S), lights = $$('.b-lights i', S), eyes = $$('.b-eye', S);
+    const slots = $$('.b-slot', S).sort((a, b) => (a.dataset.k === D.unk) - (b.dataset.k === D.unk));
+    let runs = 0, busy = false;
+    fit(row);
+    c.tip('اسحب تجربة إلى فم الآلة — أو اضغطها');
+    cards.forEach(cd => dragTo(cd, mouth, () => feed(cd)));
+    function feed(cd) {
+      if (busy || cd.classList.contains('used')) { cd.style.translate = ''; return; }
+      if (cd.classList.contains('lock')) { cd.style.translate = ''; shake(cd); bad(); c.tip('جرّب أول تجربتين — وبعدها <b>أنت</b> تخمّن'); return; }
+      busy = true; tap();
+      const i = +cd.dataset.i, x = D.ex[i];
+      flyClone(cd, mouth, S, null, 400);
+      cd.style.translate = ''; cd.classList.add('used');
+      res.classList.remove('on', 'paint', 'k-green');
+      slots.forEach(s => { s.className = s.className.replace(/\b(val|ask)\b/g, '').trim(); s.innerHTML = '<b>؟</b>'; });
+      c.t(() => chew(), 380);
+      c.t(() => {
+        slots.forEach((s, j) => c.t(() => {
+          const k = s.dataset.k;
+          if (i === 2 && k === D.unk) { s.classList.add('ask'); popIn(s); return; }
+          s.classList.add('val'); s.innerHTML = `<b>${ar(x.v[k])}</b>`;
+          anim(s, [{ rotate: 'x 90deg' }, { rotate: 'x 0deg' }], { duration: 260, easing: 'cubic-bezier(.3,1.6,.5,1)' }); note(j + 1);
+        }, j * 170));
+        c.t(() => i < 2 ? out(x, () => { runs++; busy = false; next(); }) : ask(x), slots.length * 170 + 200);
+      }, 1180);
+    }
+    function chew() {
+      anim(mouth, [{ scale: '1 1' }, { scale: '1.15 .5', offset: .3 }, { scale: '1 1' }], { duration: 260 });
+      anim(body, [{ scale: '1 1' }, { scale: '1.03 .96', offset: .16 }, { scale: '.99 1.02', offset: .33 }, { scale: '1.03 .96', offset: .5 }, { scale: '.99 1.02', offset: .66 }, { scale: '1.02 .97', offset: .83 }, { scale: '1 1' }], { duration: 760, delay: 120 });
+      eyes.forEach(e => anim(e, [{ scale: '1 1' }, { scale: '1 .12', offset: .2 }, { scale: '1 1', offset: .4 }, { scale: '1 1' }], { duration: 700 }));
+      lights.forEach((l, j) => { c.t(() => { l.classList.add('on'); tone(260 + j * 70, .07, 'square', .03); }, 150 + j * 200); c.t(() => l.classList.remove('on'), 900); });
+    }
+    function out(x, then) {
+      res.classList.add('on'); res.textContent = ar(0);
+      anim(res, [{ translate: '0 -46px', scale: '.4 .6', opacity: 0 }, { translate: '0 4px', scale: '1.08 .9', opacity: 1, offset: .6 }, { translate: '0 0', scale: '1 1', opacity: 1 }], { duration: 420, easing: 'cubic-bezier(.3,0,.4,1)' });
+      thud(); buzz(15);
+      roll(res, 0, x.out, 560);
+      c.t(then, 700);
+    }
+    function next() {
+      if (runs === 1) c.tip('زين! وش طلع؟ <b>' + ar(D.ex[0].out) + '</b> — جرّب الثانية');
+      if (runs === 2) {
+        const lk = cards[2]; lk.classList.remove('lock'); $('small', lk).innerHTML = 'تجربة ٣ — خمّن!'; hop(lk, 12); note(5);
+        c.tip('الحين الثالثة — بس هالمرة <b>أنت</b> تقول وش بيطلع');
+      }
+    }
+    function ask(x) {
+      c.tip('وقفت الآلة! وش بيطلع؟');
+      eyes.forEach(e => anim(e, [{ translate: '0 0' }, { translate: '0 5px' }], { duration: 300, fill: 'forwards' }));
+      guess.innerHTML = x.ch.map(v => `<button class="tl" data-v="${v}">${ar(v)}</button>`).join('');
+      $$('.tl', guess).forEach((b, j) => { popIn(b, j * 90); b.addEventListener('click', () => {
+        if (+b.dataset.v !== x.out) { shake(b); bad(); b.classList.add('off'); c.tip(D.help); return; }
+        tap(); b.classList.add('paint', 'k-green'); hop(b, 14);
+        $$('.tl', guess).forEach(o => { if (o !== b) o.classList.add('off'); });
+        eyes.forEach(e => e.getAnimations().forEach(a => a.cancel()));
+        c.tip('صح!');
+        c.t(() => out(x, reveal), 350);
+      }); });
+      function reveal() {
+        res.classList.add('paint', 'k-green'); hop(res, 10);
+        const uk = slots.find(s => s.dataset.k === D.unk);
+        if (uk) { uk.classList.remove('ask'); uk.classList.add('val'); uk.innerHTML = `<b>${ar(x.v[D.unk])}</b>`; popIn(uk); note(4); }
+        c.t(() => {
+          $('.b-ph', S).textContent = 'هذا اللي مكتوب على الآلة:';
+          const pre = $('.b-pre', S); if (pre) popIn(pre);
+          const inOrder = $$('.b-slot', row);
+          inOrder.forEach((s, j) => c.t(() => {
+            const tk = R.toks.filter(t => typeof t !== 'string')[j], v = x.v[tk.k];
+            anim(s, [{ rotate: 'y 0deg' }, { rotate: 'y 90deg' }], { duration: 140, fill: 'forwards' }).onfinish = () => {
+              s.className = `b-slot name k-${R.col[tk.k]}`; s.innerHTML = `<b>${tk.t}</b><small>${ar(v)}</small>`;
+              s.getAnimations().forEach(a => a.cancel());
+              anim(s, [{ rotate: 'y -90deg' }, { rotate: 'y 0deg' }], { duration: 220, easing: 'cubic-bezier(.3,1.5,.5,1)' });
+              fit(row); note(4 + j); buzz(8);
+            };
+          }, j * 330));
+          c.t(() => { hop(body, 10); c.tip('هذي القاعدة اللي داخل الآلة — وأنت خمّنتها قبل لا تشوفها'); c.done(); }, inOrder.length * 330 + 500);
+        }, 600);
+      }
+    }
+  }
+  /* drag a card onto a target, or just tap it */
+  function dragTo(el, target, drop) {
+    let sx = 0, sy = 0, id = null, moved = false, handled = false;
+    const over = (e, pad) => { const r = target.getBoundingClientRect(); return e.clientX > r.left - pad && e.clientX < r.right + pad && e.clientY > r.top - pad && e.clientY < r.bottom + pad * 2; };
+    el.addEventListener('pointerdown', e => { if (el.classList.contains('used')) return; id = e.pointerId; sx = e.clientX; sy = e.clientY; moved = false; try { el.setPointerCapture(id); } catch (x) {} });
+    el.addEventListener('pointermove', e => {
+      if (e.pointerId !== id) return;
+      const dx = e.clientX - sx, dy = e.clientY - sy;
+      if (!moved && Math.hypot(dx, dy) < 7) return;
+      moved = true; el.classList.add('drag'); el.style.translate = `${dx}px ${dy}px`;
+      target.classList.toggle('open', over(e, 30));
+    });
+    const up = e => {
+      if (e.pointerId !== id) return;
+      id = null; el.classList.remove('drag'); target.classList.remove('open');
+      if (moved && !over(e, 50)) {
+        const t = el.style.translate; el.style.translate = '';
+        anim(el, [{ translate: t }, { translate: '0 0' }], { duration: 340, easing: 'cubic-bezier(.3,1.5,.5,1)' });
+        return;
+      }
+      handled = true; drop();
+    };
+    el.addEventListener('pointerup', up);
+    /* a tap already dropped it on pointerup; a keyboard press only clicks */
+    el.addEventListener('click', () => { if (handled) { handled = false; return; } drop(); });
+    el.addEventListener('pointercancel', e => { if (e.pointerId !== id) return; id = null; el.classList.remove('drag'); el.style.translate = ''; target.classList.remove('open'); });
+  }
+
+  /* =====================================================================
+     C — اسحب واختصر: the long way morphs into the shortcut under the
+     student's finger, and the count of operations falls with it
+     ===================================================================== */
+  const C_SCENE = {
+    rep(W) {
+      const sc = Math.min(1, (W - 8) / 340), step = 68 * sc, y0 = 52, y1 = 150, items = [];
+      const end = { s: W / 2 + 108 * sc, x: W / 2 + 54 * sc, n: W / 2 + 12 * sc, e: W / 2 - 30 * sc, r: W / 2 - 88 * sc };
+      for (let i = 0; i < 5; i++) items.push({ html: ar(30), cls: 'tl', st: `min-width:${48 * sc}px;height:${46 * sc}px;font-size:${21 * sc}px`, p0: { x: W / 2 + (2 - i) * step, y: y0 }, p1: { x: end.s + i * 3, y: y1 - i * 4 }, d: i * .08, span: .5, arc: 34, endCls: ['paint', 'k-blue'] });
+      for (let i = 0; i < 4; i++) items.push({ html: '+', cls: 'mop', p0: { x: W / 2 + (1.5 - i) * step, y: y0 }, p1: { x: W / 2 + (1.5 - i) * step, y: y0, o: 0 }, span: .25 });
+      items.push(
+        { html: '×', cls: 'mop', p0: { x: end.x, y: y1, o: 0, s: .3 }, p1: { x: end.x, y: y1 }, d: .66, span: .12 },
+        { html: ar(5), cls: 'tl paint k-purple', p0: { x: end.n, y: y1, o: 0, s: .3 }, p1: { x: end.n, y: y1 }, d: .72, span: .12 },
+        { html: '=', cls: 'mop', p0: { x: end.e, y: y1, o: 0, s: .3 }, p1: { x: end.e, y: y1 }, d: .8, span: .1 },
+        { html: ar(150), cls: 'tl paint k-orange', p0: { x: end.r, y: y1, o: 0, s: .3 }, p1: { x: end.r, y: y1 }, d: .86, span: .12 },
+        { html: '٣٠ تكرّر ٥ مرات', cls: 'mcap', p0: { x: W / 2, y: 222, o: 0 }, p1: { x: W / 2, y: 222 }, d: .9, span: .1 });
+      return { items, ops: [4, 1] };
+    },
+    gauss(W) {
+      const sc = Math.min(1, (W - 6) / 344), step = 34 * sc, items = [];
+      for (let v = 1; v <= 10; v++) {
+        const i = v - 1, j = v <= 5 ? v - 1 : 10 - v, top = v <= 5;
+        items.push({ html: ar(v), cls: 'tl', st: `min-width:${30 * sc}px;height:${38 * sc}px;font-size:${17 * sc}px;padding:0;border-radius:${10 * sc}px`,
+          p0: { x: W / 2 + (4.5 - i) * step, y: 34 }, p1: { x: W / 2 + (2 - j) * 60 * sc, y: top ? 82 : 130, s: 1.3 },
+          d: top ? j * .03 : .12 + (10 - v) * .06, span: .42, arc: top ? 6 : 64, endCls: v === 10 ? ['paint', 'k-blue'] : null });
+      }
+      for (let j = 0; j < 5; j++) items.push({ html: ar(11), cls: 'tl paint k-purple', st: 'min-width:44px;height:38px;font-size:17px', p0: { x: W / 2 + (2 - j) * 60 * sc, y: 182, o: 0, s: .3 }, p1: { x: W / 2 + (2 - j) * 60 * sc, y: 182 }, d: .7 + j * .04, span: .1 });
+      items.push({ html: '٥ أزواج × ١١ = ٥٥', cls: 'mcap', p0: { x: W / 2, y: 230, o: 0 }, p1: { x: W / 2, y: 230 }, d: .92, span: .08 });
+      return { items, ops: [9, 2] };
+    },
+    odd(W) {
+      const LAYER = ['blue', 'purple', 'orange', 'green', 'red'], items = [], P = 26, cy = 152;
+      for (let k = 1; k <= 5; k++) {
+        const n = 2 * k - 1, y = 18 + (k - 1) * 22, path = [];
+        for (let q = 0; q < k; q++) path.push([k - 1, q]);
+        for (let r = k - 2; r >= 0; r--) path.push([r, k - 1]);
+        for (let j = 0; j < n; j++) {
+          const [r, q] = path[j];
+          items.push({ html: '', cls: 'dt k-' + LAYER[k - 1], p0: { x: W / 2 + (j - (n - 1) / 2) * 20, y }, p1: { x: W / 2 + (2 - q) * P, y: cy + (r - 2) * P, s: 1.4 }, d: (k - 1) * .11, span: .42, arc: 18 });
+        }
+        items.push({ html: ar(n), cls: 'mlab', p0: { x: W / 2 + ((n - 1) / 2) * 20 + 24, y }, p1: { x: W / 2 + ((n - 1) / 2) * 20 + 24, y, o: 0 }, span: .2 });
+      }
+      items.push(
+        { html: ar(5), cls: 'mcap', p0: { x: W / 2, y: cy - 3 * P + 2, o: 0 }, p1: { x: W / 2, y: cy - 3 * P + 2 }, d: .86, span: .1 },
+        { html: ar(5), cls: 'mcap', p0: { x: W / 2 + 3 * P + 4, y: cy, o: 0 }, p1: { x: W / 2 + 3 * P + 4, y: cy }, d: .88, span: .1 },
+        { html: '١ + ٣ + ٥ + ٧ + ٩ = ٥ × ٥ = ٢٥', cls: 'mcap', p0: { x: W / 2, y: 236, o: 0 }, p1: { x: W / 2, y: 236 }, d: .92, span: .08 });
+      return { items, ops: [4, 1] };
+    }
+  };
+  function mountC(c) {
+    const S = c.stage;
+    S.innerHTML = `<div class="c-ops"><span>عدد العمليات</span><b class="c-opn"></b><span class="c-way">بالطريقة الطويلة</span></div>
+      <div class="c-morph"></div>
+      <div class="c-sl"><div class="c-fill"></div><span class="c-lab">اسحب عشان تختصر</span><button class="c-knob" aria-label="اسحب">${SVG.arrow}</button></div>
+      <div class="c-rule"></div>`;
+    const box = $('.c-morph', S), opsBox = $('.c-ops', S), opn = $('.c-opn', S), way = $('.c-way', S),
+          sl = $('.c-sl', S), knob = $('.c-knob', S), fill = $('.c-fill', S), lab = $('.c-lab', S);
+    const W = box.clientWidth, scene = C_SCENE[c.rk](W);
+    scene.items.forEach(it => {
+      const el = document.createElement('div');
+      el.className = 'mi ' + it.cls; el.innerHTML = it.html; if (it.st) el.style.cssText = it.st;
+      box.appendChild(el); it.el = el;
+    });
+    let t = 0, lastOps = null, done = false;
+    const travel = () => sl.clientWidth - knob.offsetWidth - 8;
+    function paint(tt) {
+      t = tt;
+      scene.items.forEach(it => {
+        const a = it.d || 0, span = it.span || (1 - a), e = ease(clamp((tt - a) / span, 0, 1)), p0 = it.p0, p1 = it.p1 || p0;
+        const x = lerp(p0.x, p1.x, e), y = lerp(p0.y, p1.y, e) - (it.arc || 0) * Math.sin(Math.PI * e);
+        const s = lerp(p0.s ?? 1, p1.s ?? 1, e), o = lerp(p0.o ?? 1, p1.o ?? 1, e);
+        it.el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) scale(${s.toFixed(3)})`;
+        it.el.style.opacity = o.toFixed(3);
+        if (it.endCls) it.endCls.forEach(k => it.el.classList.toggle(k, e > .97));
+      });
+      const ops = Math.round(lerp(scene.ops[0], scene.ops[1], tt));
+      if (ops !== lastOps) { if (lastOps !== null) { tick(scene.ops[0] - ops); popIn(opn); } lastOps = ops; opn.textContent = ar(ops); }
+      opsBox.classList.toggle('short', tt > .97);
+      way.textContent = tt > .97 ? 'بالحيلة' : tt > .03 ? 'نختصر…' : 'بالطريقة الطويلة';
+      const px = tt * travel();
+      knob.style.transform = `translateX(${-px}px)`;
+      fill.style.width = (px + knob.offsetWidth + 8) + 'px';
+      lab.style.opacity = clamp(1 - tt * 3, 0, 1);
+    }
+    function tween(to, ms, then) {
+      const from = t, t0 = performance.now();
+      const step = now => {
+        if (!c.alive()) return;
+        const k = RM ? 1 : clamp((now - t0) / ms, 0, 1);
+        paint(lerp(from, to, ease(k)));
+        if (k < 1) requestAnimationFrame(step); else if (then) then();
+      };
+      requestAnimationFrame(step);
+    }
+    paint(0);
+    c.tip('اسحب الزر الأخضر لليسار — وشوف الطريقة الطويلة تنطوي');
+    anim(knob, [{ translate: '0 0' }, { translate: '-14px 0', offset: .3 }, { translate: '0 0', offset: .6 }, { translate: '0 0' }], { duration: 1400, iterations: 2, delay: 600 });
+    let id = null, sx = 0, t0 = 0;
+    knob.addEventListener('pointerdown', e => {
+      if (done) return;
+      knob.getAnimations().forEach(a => a.cancel());
+      id = e.pointerId; sx = e.clientX; t0 = t; knob.classList.add('hold'); tap();
+      try { knob.setPointerCapture(id); } catch (x) {}
+    });
+    knob.addEventListener('pointermove', e => { if (e.pointerId !== id) return; paint(clamp(t0 + (sx - e.clientX) / travel(), 0, 1)); });
+    const up = e => {
+      if (e.pointerId !== id) return;
+      id = null; knob.classList.remove('hold');
+      if (t > .9) tween(1, 200, finish);
+      else { tween(0, 420); c.tip('كمّل للآخر — لا توقف في النص!'); }
+    };
+    knob.addEventListener('pointerup', up);
+    knob.addEventListener('pointercancel', up);
+    function finish() {
+      if (done) return; done = true;
+      knob.innerHTML = SVG.check; popIn(knob); thud(); buzz([20, 30, 20]);
+      c.tip({ rep: 'من <b>٤</b> عمليات جمع إلى ضربة وحدة', gauss: 'من <b>٩</b> عمليات جمع إلى عمليتين', odd: 'من <b>٤</b> عمليات جمع إلى ضربة وحدة' }[c.rk]);
+      const R = c.R, rb = $('.c-rule', S);
+      rb.innerHTML = `<div class="c-tk"><div class="rc-h">${SVG.star}<span>القاعدة</span></div>${R.pre ? `<div class="rc-pre">${R.pre}</div>` : ''}<div class="rrow">${rowHtml(R, tk => termHtml(R, tk))}</div></div>`;
+      const row = $('.rrow', rb); fit(row);
+      popIn($('.c-tk', rb));
+      Array.from(row.children).forEach((p, j) => { p.style.opacity = 0; c.t(() => { stamp(p); if (p.classList.contains('term')) { note(3 + j); buzz(8); } }, 260 + j * 150); });
+      c.t(() => c.done(), 260 + row.children.length * 150 + 450);
+    }
+  }
+
+  /* =====================================================================
+     D — وين هي في المثال؟: the rule is face-down cards; flip one, then find
+     its word in the worked example, and both turn the same colour
+     ===================================================================== */
+  const D_EX = {
+    rep: { lines: [
+      { c: 'big', t: [['٣٠', 'a'], '+', ['٣٠', 'a'], '+', ['٣٠', 'a'], '+', ['٣٠', 'a'], '+', ['٣٠', 'a'], '=', ['١٥٠', 's']] },
+      { t: [['٣٠', 'a'], 'تكرّر', ['٥', 'n'], 'مرات'] }] },
+    gauss: {
+      toks: [{ k: 'L', t: 'آخر عدد' }, '×', '(', { k: 'L1', t: 'آخر عدد + ١' }, ')', { k: 'h', t: '÷ ٢' }],
+      col: { L: 'blue', L1: 'purple', h: 'orange' }, val: { L: '١٠', L1: '١١', h: 'نص' },
+      lines: [
+        { c: 'big', t: ['١', '+', '٢', '+', '٣', '+', '…', '+', ['١٠', 'L'], '=', '٥٥'] },
+        { c: 'sm', t: ['(١ + ١٠) ، (٢ + ٩) ، (٣ + ٨) …'] },
+        { t: ['كل زوج =', ['١١', 'L1']] },
+        { t: [['٥', 'h'], 'أزواج —', ['نص', 'h'], 'العشرة'] }] },
+    odd: { lines: [
+      { c: 'big', t: ['١', '+', '٣', '+', '٥', '+', '٧', '+', '٩', '=', ['٢٥', 's']] },
+      { t: ['كم عدد عندك؟', ['٥', 'k'], 'أعداد فردية'] }] }
+  };
+  function mountD(c) {
+    const S = c.stage, D = D_EX[c.rk], R = Object.assign({}, c.R, D.toks ? { toks: D.toks, col: D.col } : {});
+    const val = D.val || Object.fromEntries(Object.entries(c.R.val).map(([k, v]) => [k, ar(v)]));
+    S.innerHTML = `<div class="d-ex"><div class="d-exh">المثال</div>${D.lines.map(l => `<div class="d-ln ${l.c || ''}">${l.t.map(x => Array.isArray(x)
+        ? `<button class="d-tk" data-k="${x[1]}">${x[0]}</button>` : `<button class="d-tk">${x}</button>`).join('')}</div>`).join('')}</div>
+      <div class="d-rule rc"><div class="rc-h">${SVG.key}<span>القاعدة — اقلب كل بطاقة</span></div>${R.pre ? `<div class="rc-pre">${R.pre}</div>` : ''}
+        <div class="rrow">${rowHtml(R, tk => `<button class="d-card k-${R.col[tk.k]}" data-k="${tk.k}" data-t="${tk.t}"><span class="d-q">؟</span></button>`)}</div></div>`;
+    const row = $('.rrow', S), cards = $$('.d-card', S), toks = $$('.d-tk', S);
+    const keys = [...new Set(cards.map(x => x.dataset.k))], found = new Set();
+    let act = null;
+    fit(row); $$('.d-ln', S).forEach(fit);
+    cards.forEach((cd, j) => popIn(cd, 200 + j * 90));
+    c.tip('اقلب بطاقة من القاعدة — وبعدها لاقِ كلمتها في المثال');
+    const flip = (cd, front) => {
+      const a = anim(cd, [{ rotate: 'y 0deg' }, { rotate: 'y 90deg' }], { duration: 130, fill: 'forwards' });
+      const swap = () => { front(); cd.getAnimations().forEach(x => x.cancel()); anim(cd, [{ rotate: 'y -90deg' }, { rotate: 'y 0deg' }], { duration: 240, easing: 'cubic-bezier(.3,1.6,.5,1)' }); fit(row); };
+      if (a) a.onfinish = swap; else swap();
+    };
+    cards.forEach(cd => cd.addEventListener('click', () => {
+      const k = cd.dataset.k;
+      if (found.has(k)) { hop(cd, 8); note(4); return; }
+      tap();
+      act = k;
+      cards.forEach(o => o.classList.toggle('act', o.dataset.k === k));
+      cards.filter(o => o.dataset.k === k && !o.classList.contains('up')).forEach((o, j) => c.t(() => flip(o, () => { o.classList.add('up'); o.innerHTML = `<span>${o.dataset.t}</span>`; }), j * 120));
+      c.tip(`وين «<b>${cd.dataset.t}</b>» في المثال؟ اضغطه`);
+    }));
+    toks.forEach(tk => tk.addEventListener('click', () => {
+      if (!act) { shake(tk); const f = cards.find(x => !found.has(x.dataset.k)); if (f) hop(f, 10); c.tip('اقلب بطاقة من القاعدة <b>أول</b>'); return; }
+      if (tk.dataset.k !== act) {
+        tk.classList.add('no'); shake(tk); bad(); c.t(() => tk.classList.remove('no'), 420);
+        c.tip(`لا — هذا مو «<b>${cards.find(x => x.dataset.k === act).dataset.t}</b>». دوّر ثاني`); return;
+      }
+      const k = act; act = null; found.add(k);
+      const col = 'k-' + R.col[k];
+      $$(`.d-tk[data-k="${k}"]`, S).forEach((x, j) => c.t(() => { x.classList.add('paint', col); hop(x, 10); note(2 + j); }, j * 90));
+      cards.filter(o => o.dataset.k === k).forEach((o, j) => c.t(() => {
+        o.classList.remove('act'); o.classList.add('found'); o.innerHTML = `<span>${o.dataset.t}</span><small>${val[k]}</small>`; fit(row); hop(o, 14); buzz(10);
+      }, 250 + j * 120));
+      c.tip(`صح! «<b>${cards.find(x => x.dataset.k === k).dataset.t}</b>» هنا = <b>${val[k]}</b>`);
+      if (found.size === keys.length) c.t(() => {
+        cards.forEach((o, j) => hop(o, 12, j * 70));
+        c.tip('كل كلمة في القاعدة لها مكان في المثال — وبنفس لونها');
+        c.done();
+      }, 900);
+    }));
+  }
+
+  /* =====================================================================
+     E — العب فيها: change the numbers, and the picture, the long sum and
+     the live rule change with them; a small target to hit with the rule
+     ===================================================================== */
+  const E_CFG = {
+    rep: { st: [{ k: 'a', min: 10, max: 90, step: 10, v: 30 }, { k: 'n', min: 2, max: 8, step: 1, v: 5 }], f: v => v.a * v.n, goal: 240,
+      vals: v => ({ s: v.a * v.n, a: v.a, n: v.n }), long: v => Array(v.n).fill(ar(v.a)).join(' + '),
+      won: v => `صح! ${ar(v.a)} × ${ar(v.n)} = ${ar(240)}` },
+    gauss: { st: [{ k: 'L', min: 2, max: 12, step: 1, v: 4 }], f: v => v.L * (v.L + 1) / 2, goal: 36,
+      vals: v => ({ L: v.L }), long: v => v.L <= 5 ? Array.from({ length: v.L }, (_, i) => ar(i + 1)).join(' + ') : `١ + ٢ + ٣ + … + ${ar(v.L)}`,
+      won: v => `صح! ${ar(v.L)} × ${ar(v.L + 1)} ÷ ٢ = ${ar(36)}` },
+    odd: { st: [{ k: 'k', min: 1, max: 8, step: 1, v: 3 }], f: v => v.k * v.k, goal: 49,
+      vals: v => ({ s: v.k * v.k, k: v.k }), long: v => v.k <= 4 ? Array.from({ length: v.k }, (_, i) => ar(2 * i + 1)).join(' + ') : `١ + ٣ + ٥ + … + ${ar(2 * v.k - 1)}`,
+      won: v => `صح! ${ar(v.k)} × ${ar(v.k)} = ${ar(49)}` }
+  };
+  function mountE(c) {
+    const S = c.stage, R = c.R, C = E_CFG[c.rk], v = {};
+    C.st.forEach(s => { v[s.k] = s.v; });
+    const name = k => R.toks.find(t => typeof t !== 'string' && t.k === k).t;
+    S.innerHTML = `<div class="e-goal">${SVG.target}<span>تحدّي: خلّ المجموع <b>${ar(C.goal)}</b></span></div>
+      <div class="e-res"><span>المجموع</span><b class="e-sum">${ar(C.f(v))}</b></div>
+      <div class="e-pic"></div><div class="e-long"></div>
+      <div class="e-rule">${R.pre ? `<div class="rc-pre">${R.pre}</div>` : ''}<div class="rrow">${rowHtml(R, tk => `<span class="term k-${R.col[tk.k]}" data-k="${tk.k}"><span class="chip">${tk.t}</span><small class="e-bv">٠</small></span>`)}</div></div>
+      <div class="e-st">${C.st.map(s => `<div class="e-s k-${R.col[s.k]}"><span class="chip">${name(s.k)}</span><div class="e-ctl"><button class="e-b" data-k="${s.k}" data-d="-1">−</button><b class="e-v" data-k="${s.k}">${ar(v[s.k])}</b><button class="e-b" data-k="${s.k}" data-d="1">+</button></div></div>`).join('')}</div>`;
+    const pic = $('.e-pic', S), sum = $('.e-sum', S), long = $('.e-long', S), goal = $('.e-goal', S), row = $('.e-rule .rrow', S);
+    fit(row);
+    let won = false, moved = false, last = C.f(v);
+    function draw(fresh) {
+      const W = pic.clientWidth;
+      if (c.rk === 'rep') {
+        const tw = $$('.e-tw', pic);
+        while (tw.length < v.n) { const el = document.createElement('div'); el.className = 'e-tw'; el.style.height = '0px'; el.innerHTML = '<span></span>'; pic.appendChild(el); tw.push(el); if (!fresh) popIn(el); }
+        while (tw.length > v.n) tw.pop().remove();
+        requestAnimationFrame(() => tw.forEach(el => { el.style.height = (16 + v.a / 90 * 104) + 'px'; $('span', el).textContent = ar(v.a); }));
+      } else {
+        const L = c.rk === 'gauss' ? v.L : v.k;
+        const rows = c.rk === 'gauss' ? L + 1 : L, cols = L;
+        const cs = Math.min((W - 90) / cols, 102 / rows, 24), g = 2, w = cols * cs, h = rows * cs;
+        let cells = '';
+        for (let q = 0; q < cols; q++) for (let r = 0; r < rows; r++) {
+          let fillc, lip, ghost = false;
+          if (c.rk === 'gauss') { const on = (rows - 1 - r) < q + 1; fillc = on ? '#1CB0F6' : '#EDD1FF'; lip = on ? '#1899D6' : '#DBC3EB'; ghost = !on; }
+          else { const layer = Math.max(r, q); const P = [['#1CB0F6', '#1899D6'], ['#CE82FF', '#A568CC'], ['#FF9600', '#E07800'], ['#58CC02', '#58A700']][layer % 4]; fillc = P[0]; lip = P[1]; }
+          const x = (cols - 1 - q) * cs, y = r * cs;
+          cells += `<rect x="${x + g / 2}" y="${y + g / 2}" width="${cs - g}" height="${cs - g}" rx="${cs * .22}" fill="${lip}"/><rect x="${x + g / 2}" y="${y + g / 2}" width="${cs - g}" height="${cs - g - Math.max(2, cs * .14)}" rx="${cs * .22}" fill="${fillc}"/>`;
+        }
+        const labs = c.rk === 'gauss'
+          ? `<text x="${w / 2}" y="${h + 17}" text-anchor="middle" font-size="13" font-weight="800" fill="#1899D6">${ar(L)}</text><text x="${w + 8}" y="${h / 2 + 4}" text-anchor="start" font-size="13" font-weight="800" fill="#A568CC">${ar(L + 1)}</text>`
+          : `<text x="${w / 2}" y="${h + 17}" text-anchor="middle" font-size="13" font-weight="800" fill="#1899D6">${ar(L)}</text><text x="${w + 8}" y="${h / 2 + 4}" text-anchor="start" font-size="13" font-weight="800" fill="#1899D6">${ar(L)}</text>`;
+        pic.innerHTML = `<svg width="${w + 30}" height="${h + 22}" viewBox="0 0 ${w + 30} ${h + 22}" style="font-family:var(--font)">${cells}${labs}</svg>`;
+        if (!fresh) popIn($('svg', pic));
+      }
+      long.textContent = C.long(v);
+      const vals = C.vals(v);
+      $$('.e-bv', row).forEach(b => { const k = b.parentElement.dataset.k, to = vals[k]; const from = +(b.dataset.v || 0); b.dataset.v = to; if (fresh) b.textContent = ar(to); else roll(b, from, to, 380); });
+      $$('.e-v', S).forEach(b => { b.textContent = ar(v[b.dataset.k]); });
+      if (c.rk === 'gauss') long.innerHTML = C.long(v) + ' <span style="color:#A568CC">— الأزرق نص المستطيل</span>';
+    }
+    draw(true);
+    c.tip('غيّر الأرقام بـ <b>−</b> و <b>+</b> — وشوف القاعدة تشتغل معك');
+    $$('.e-b', S).forEach(b => b.addEventListener('click', () => {
+      if (won) { hop(b, 6); return; }
+      const st = C.st.find(s => s.k === b.dataset.k), nv = v[st.k] + st.step * +b.dataset.d;
+      if (nv < st.min || nv > st.max) { shake(b); bad(); return; }
+      v[st.k] = nv; tap(); hop($(`.e-v[data-k="${st.k}"]`, S), 8);
+      const f = C.f(v);
+      roll(sum, last, f, 420); note(clamp(Math.round(f / C.goal * 6), 0, 9)); last = f;
+      draw(false);
+      $$(`.term[data-k="${st.k}"]`, row).forEach(t => hop(t, 6));
+      if (!moved) { moved = true; c.tip('القاعدة تحت تحسبها معك — والحين وصّل المجموع للهدف'); }
+      if (f === C.goal) {
+        won = true;
+        c.t(() => {
+          goal.classList.add('won'); $('svg', goal).outerHTML = `<span style="width:22px;height:22px;border-radius:50%;background:var(--green);color:#fff;display:grid;place-items:center;flex-shrink:0">${SVG.check.replace('<svg', '<svg style="width:15px;height:15px"')}</span>`;
+          hop(goal, 12); hop(sum, 16, 80); c.tip(C.won(v)); c.done();
+        }, 420);
+      } else if (Math.abs(f - C.goal) <= C.goal * .15) {
+        anim(goal, [{ scale: '1' }, { scale: '1.04' }, { scale: '1' }], { duration: 300 });
+      }
+    }));
+  }
+
+  /* ---------------- the shell ---------------- */
+  const VERS = [
+    { id: 'A', name: 'اعصرها بإيدك', mount: mountA,
+      ar: 'الطالب يضغط الأرقام بنفسه فتنضم لبعض — والقاعدة تتركّب من اللي سوّاه.',
+      en: 'Squash the long sum with your own taps: repeats stack into a pile, partners pair up to eleven, odd numbers wrap into a square. Then each word of the rule flies out of the thing the student just built.' },
+    { id: 'B', name: 'آلة القاعدة', mount: mountB,
+      ar: 'آلة تاكل الأمثلة وتطلع الجواب — بعد تجربتين يخمّن الطالب وش بتطلع، وبعدها ينكشف المكتوب عليها.',
+      en: 'A friendly machine: drag two examples into its mouth and watch the plate fill with their numbers. On the third the machine stops and the student predicts the output; only then does the plate flip to the rule in words.' },
+    { id: 'C', name: 'اسحب واختصر', mount: mountC,
+      ar: 'يسحب الطالب الزر فتنطوي الطريقة الطويلة قدّام عينه إلى الحيلة، وعدّاد العمليات ينزل.',
+      en: 'A slider under the thumb: the long way morphs into the shortcut as they drag (tiles stack, the row folds in half into pairs, a pyramid of dots becomes a square) while the operation counter falls. Let go early and it rewinds.' },
+    { id: 'D', name: 'وين هي في المثال؟', mount: mountD,
+      ar: 'القاعدة بطاقات مقلوبة — يقلب الطالب بطاقة ويلقى كلمتها في المثال، فتتلوّن الكلمة ومكانها بنفس اللون.',
+      en: 'The rule as face-down cards: flip one, then tap where that word lives in the worked example. A right tap paints the card and every matching place in the example the same colour, so the rule ends colour-coded to the example. A wrong tap only shakes.' },
+    { id: 'E', name: 'العب فيها', mount: mountE,
+      ar: 'لعبة صغيرة: يغيّر الطالب الأرقام فتتغيّر الرسمة والقاعدة معه — وتحدّي يوصّله لرقم معيّن.',
+      en: 'A toy: plus and minus change the numbers; a picture proof (towers, a staircase that is half a rectangle, a growing square), the long sum and the live rule all update with rolling numbers, and a small target makes them use the rule to hit it.' }
+  ];
+  const grid = $('#grid');
+  grid.innerHTML = VERS.map(v => `<section class="ver" id="v${v.id}">
+      <div class="ver-h"><b>${v.id}</b><span>${v.name}</span></div>
+      <div class="phone">
+        <div class="ph-top"><div class="pills">${Object.keys(RULES).map(k => `<button class="pill" data-rk="${k}">${RULES[k].tab}</button>`).join('')}</div>
+          <button class="rp" aria-label="من جديد">${SVG.replay}</button></div>
+        <div class="ph-kick"></div><h2 class="ph-h"></h2>
+        <div class="stage"></div>
+        <div class="ph-foot"><p class="tip"></p><button class="gobtn" disabled>متابعة</button></div>
+      </div>
+      <div class="cap"><p>${v.ar}</p><p class="en">${v.en}</p></div>
+    </section>`).join('');
+
+  VERS.forEach(v => {
+    const root = $('#v' + v.id), stage = $('.stage', root), tipEl = $('.tip', root), go = $('.gobtn', root);
+    let rk = 'rep', gen = 0, timers = [];
+    function start() {
+      const my = ++gen;
+      timers.forEach(clearTimeout); timers = [];
+      if (stage.getAnimations) stage.getAnimations({ subtree: true }).forEach(a => a.cancel());
+      stage.innerHTML = '';
+      $$('.pill', root).forEach(p => p.classList.toggle('on', p.dataset.rk === rk));
+      const R = RULES[rk];
+      $('.ph-kick', root).textContent = R.kick;
+      $('.ph-h', root).innerHTML = R.h;
+      go.disabled = true;
+      const c = {
+        rk, R, stage,
+        alive: () => my === gen,
+        tip: html => { tipEl.innerHTML = `<span>${html}</span>`; anim(tipEl, [{ opacity: 0, translate: '0 6px' }, { opacity: 1, translate: '0 0' }], { duration: 220 }); },
+        t: (fn, ms) => { timers.push(setTimeout(() => { if (my === gen) fn(); }, RM ? ms * .15 : ms)); },
+        done: () => { if (my !== gen) return; go.disabled = false; hop(go, 10); win(); buzz([20, 40, 30]); }
+      };
+      v.mount(c);
+    }
+    root.addEventListener('click', e => {
+      const p = e.target.closest('.pill');
+      if (p) { rk = p.dataset.rk; tap(); start(); return; }
+      const r = e.target.closest('.rp');
+      if (r) { tap(); anim($('svg', r), [{ rotate: '0deg' }, { rotate: '-360deg' }], { duration: 500, easing: 'cubic-bezier(.3,1.4,.5,1)' }); start(); return; }
+      if (e.target.closest('.gobtn') && !go.disabled) { tap(); hop(go, 8); }
+    });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(start); else start();
+  });
+})();
+</script>
+</body>
+</html>

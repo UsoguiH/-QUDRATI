@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>أصوات Brilliant</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  /* dev page, never shipped: one sound at a time, in Arabic — what it is, when
+     a student hears it, what to do to hear it — over two live copies of the
+     app at the screen where it plays (phone.html: today's sounds on one,
+     Brilliant's on the other), both playable like the real app. Each phone
+     lights up when it plays this sound. Picks are the shared "soundPicks"
+     (compare.html, tour.html, live.html). Text: moments-ar.json. */
+  :root {
+    --bg: #F7F7F7; --card: #FFFFFF; --ink: #3C3C3C; --mute: #777777; --line: #E5E5E5; --frame: #2B2B2B; --chip: #F0F0F0;
+    --green: #58CC02; --green-dk: #478700; --green-bg: #D7FFB8;
+    --purple: #CE82FF; --purple-dk: #A568CC; --purple-bg: #F3E3FF;
+    --blue: #1CB0F6; --blue-dk: #1899D6; --gold-bg: #FFF4BF; --gold-ink: #9A6A00;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #131F24; --card: #1B2B32; --ink: #F1F7FB; --mute: #9AA9B1; --line: #37464F; --frame: #0B1418; --chip: #26363D; --green-bg: #2B4A12; --purple-bg: #3A2650; --gold-bg: #4A3B0A; --gold-ink: #FFE38A; }
+  }
+  :root[data-theme="dark"] { --bg: #131F24; --card: #1B2B32; --ink: #F1F7FB; --mute: #9AA9B1; --line: #37464F; --frame: #0B1418; --chip: #26363D; --green-bg: #2B4A12; --purple-bg: #3A2650; --gold-bg: #4A3B0A; --gold-ink: #FFE38A; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Baloo Bhaijaan 2', system-ui, sans-serif; line-height: 1.5; }
+  main { max-width: 1000px; margin: 0 auto; padding: 10px 16px 40px; }
+  .bar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .btn { font: inherit; font-size: 15px; font-weight: 800; padding: 6px 14px; border-radius: 12px; cursor: pointer; background: var(--card); color: var(--ink); border: 2px solid var(--line); border-bottom-width: 4px; }
+  .btn:active { transform: translateY(2px); border-bottom-width: 2px; }
+  .btn:disabled { opacity: .4; }
+  .pos { font-weight: 800; color: var(--mute); min-width: 64px; text-align: center; }
+  select { flex: 1; min-width: 180px; font: inherit; font-size: 14px; font-weight: 700; padding: 8px 10px; border-radius: 12px; border: 2px solid var(--line); background: var(--card); color: var(--ink); }
+  .card { margin-top: 10px; background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 14px 16px; }
+  .card h2 { margin: 0; font-size: 22px; line-height: 1.3; }
+  .card p { margin: 6px 0 0; font-size: 15.5px; }
+  .card p b { color: var(--blue-dk); }
+  .card .try { display: inline-block; margin-top: 8px; padding: 3px 12px; border-radius: 99px; background: var(--gold-bg); color: var(--gold-ink); font-weight: 800; font-size: 14px; }
+  .card .meta { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .card .meta span { padding: 1px 10px; border-radius: 99px; background: var(--chip); color: var(--mute); font-size: 12.5px; font-weight: 700; }
+  .tabs { display: none; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+  .tabs button { font: inherit; font-size: 15px; font-weight: 800; padding: 8px; border-radius: 12px; cursor: pointer; background: var(--card); color: var(--ink); border: 2px solid var(--line); border-bottom-width: 4px; }
+  .tabs button.on.now { background: var(--green-bg); border-color: var(--green); color: var(--green-dk); }
+  .tabs button.on.bri { background: var(--purple-bg); border-color: var(--purple); color: var(--purple-dk); }
+  .stage { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 12px; }
+  .side { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+  .side h3 { margin: 0; font-size: 18px; }
+  .side .src { font-size: 13px; color: var(--mute); font-weight: 700; margin-bottom: 8px; text-align: center; }
+  .frame { background: var(--frame); border-radius: 34px; padding: 9px; position: relative; transition: box-shadow .2s; }
+  .frame.hit.now { box-shadow: 0 0 0 4px var(--green); }
+  .frame.hit.bri { box-shadow: 0 0 0 4px var(--purple); }
+  .scr { position: relative; overflow: hidden; border-radius: 26px; background: #fff; }
+  .scr iframe { position: absolute; left: 0; top: 0; width: 390px; height: 844px; border: 0; transform-origin: 0 0; }
+  .heard { position: absolute; top: 18px; left: 50%; translate: -50% 0; z-index: 2; padding: 4px 12px; border-radius: 99px; font-size: 13px; font-weight: 800; color: #fff; pointer-events: none; opacity: 0; transition: opacity .2s; white-space: nowrap; }
+  .frame.now .heard { background: var(--green-dk); } .frame.bri .heard { background: var(--purple-dk); }
+  .heard.on { opacity: 1; }
+  .pick { margin-top: 10px; font: inherit; font-size: 15px; font-weight: 800; padding: 9px 18px; border-radius: 14px; cursor: pointer; background: var(--card); color: var(--ink); border: 2px solid var(--line); border-bottom-width: 4px; min-width: 170px; }
+  .pick.on.now { background: var(--green-bg); border-color: var(--green); color: var(--green-dk); }
+  .pick.on.bri { background: var(--purple-bg); border-color: var(--purple); color: var(--purple-dk); }
+  .same { margin-top: 10px; font-size: 14px; font-weight: 700; color: var(--mute); text-align: center; }
+  .note { margin-top: 12px; font-size: 13px; color: var(--mute); text-align: center; }
+  .note a { color: var(--blue-dk); font-weight: 800; }
+  @media (max-width: 760px) {
+    main { padding: 8px 10px 30px; }
+    .tabs { display: grid; }
+    .stage { grid-template-columns: 1fr; }
+    .side.off { display: none; }
+    .frame { border-radius: 28px; padding: 7px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="bar">
+    <button class="btn" id="prev">→ السابق</button>
+    <button class="btn" id="next">التالي ←</button>
+    <span class="pos" id="pos"></span>
+    <select id="pick" aria-label="اختر الصوت"></select>
+  </div>
+  <div class="card" id="card">جاري التحميل…</div>
+  <div class="tabs" id="tabs"><button class="now on" data-s="now">الحالي</button><button class="bri" data-s="bri">Brilliant</button></div>
+  <div class="stage">
+    <div class="side" id="sNow">
+      <h3>الحالي</h3><div class="src" id="srcNow"></div>
+      <div class="frame now" id="fNow"><span class="heard">سمعته الحين</span><div class="scr"><iframe id="iNow" title="التطبيق بأصواته الحالية"></iframe></div></div>
+      <div id="kNow"></div>
+    </div>
+    <div class="side off" id="sBri">
+      <h3>Brilliant</h3><div class="src" id="srcBri"></div>
+      <div class="frame bri" id="fBri"><span class="heard">سمعته الحين</span><div class="scr"><iframe id="iBri" title="التطبيق بأصوات Brilliant"></iframe></div></div>
+      <div id="kBri"></div>
+    </div>
+  </div>
+  <p class="note">الصوت يشتغل بعد أول ضغطة داخل كل جوال (قاعدة المتصفح). صوت الإجابة الصحيحة وأصوات ديولينقو ما تتغيّر. اختياراتك محفوظة مع <a href="compare.html">القائمة الكاملة</a>.</p>
+</main>
+<script>
+const KEY = "soundPicks";
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+const toAr = n => String(n).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+const store = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
+const picks = () => { try { return JSON.parse(store.get(KEY, "{}")) || {}; } catch (e) { return {}; } };
+/* the screen each sound plays on: a preview.html hash, and an item type to jump to inside a short lesson */
+const SCREEN = {
+  lessonPick: ["lesson"], fbgood: ["fbgood"], fb: ["fb"], teachcheck: ["teachcheck"], lesson: ["lesson"], teachrule: ["teachrule"],
+  method: ["lesson"], done1: ["learnwin"], done2: ["learnwin"], done3: ["learnwin"], report: ["fb"],
+  fillPlaced: ["learn", "fill"], fill: ["learn", "fill"], keypad: ["learn", "type"], pairs: ["learn", "pairs"], rulecard: ["learn", "see"], rulewords: ["rulewords"],
+  pop: ["pop"], pathpay: ["pathpay"], pathgold: ["pathgold"], chesttip: ["path"], questbanner: ["questbanner"],
+  chest1: ["chest"], chest2: ["chest"], chest3: ["chest"], chest4: ["chest"],
+  climb1: ["climb"], climb2: ["climb"], climb3: ["climb"], climb4: ["climb"], learnmore1: ["learnmore"], learnmore2: ["learnmore"],
+  streak1: ["streak7"], streak2: ["streak7"], rankup1: ["rankup"], rankup2: ["rankup"],
+  place: ["place"], placemid: ["placemid"], mocktest: ["mocktest"], mockdone: ["mockdone"],
+  obhello: ["ob-hello"], oblevel: ["ob-level"], obgoal: ["ob-goal"], taste: ["ob-taste"], taste1: ["ob-taste"], taste2: ["ob-taste"], taste3: ["ob-taste"], taste4: ["ob-taste"],
+  exam: ["exam"], signin: ["signin"], signinhow: ["signin-how"], signindone: ["signin-done"], settings: ["settings"]
+};
+const BY_ID = { "lesson-failed": ["fail"], "revive": ["fail"], "practice-complete": ["reviewdo"] };
+let ALL = [], AR = {}, MAP = {}, cur = 0, side = "now", loaded = "";
+const swaps = m => m.brilliant && m.brilliant !== "keep" && m.brilliant !== "none";
+const nowText = m => m.id === "correct-answer" ? "صوت الإجابة الصحيحة حقّنا (ما يتغيّر)" : m.now === "duolingo" ? "ملف ديولينقو" : m.now === "synth" ? "صوتنا الحالي" : "صامت الآن — ما فيه صوت";
+const briText = m => swaps(m) ? "Brilliant: " + m.brilliant : m.brilliant === "keep" ? "نفس الصوت — ما يتغيّر" : "ما فيه صوت من Brilliant لهذي اللحظة";
+const screenOf = m => BY_ID[m.id] || SCREEN[MAP[m.id]] || ["lesson"];
+
+function fit() {
+  const narrow = innerWidth <= 760;
+  const colW = narrow ? Math.min(innerWidth - 20, 440) : (Math.min(innerWidth, 1000) - 32 - 18) / 2;
+  const s = Math.max(.42, Math.min(1, (colW - 18) / 390, (innerHeight - (narrow ? 120 : 210)) / 844));
+  [["fNow", "iNow"], ["fBri", "iBri"]].forEach(([f, i]) => {
+    const scr = $(f).querySelector(".scr");
+    scr.style.width = Math.round(390 * s) + "px"; scr.style.height = Math.round(844 * s) + "px";
+    $(i).style.transform = `scale(${s})`;
+  });
+}
+function paintPick() {
+  const m = ALL[cur], p = picks()[m.id];
+  if (swaps(m)) {
+    $("kNow").innerHTML = `<button class="pick now${p === "k" ? " on" : ""}" data-v="k">خلّ صوتنا</button>`;
+    $("kBri").innerHTML = `<button class="pick bri${p === "b" ? " on" : ""}" data-v="b">اختر Brilliant</button>`;
+  } else {
+    $("kNow").innerHTML = ""; $("kBri").innerHTML = `<div class="same">${m.brilliant === "keep" ? "هذا الصوت يبقى مثل ما هو" : "Brilliant ما عنده صوت لهذي اللحظة"}</div>`;
+  }
+  document.querySelectorAll(".pick").forEach(b => { b.onclick = () => { const all = picks(); all[m.id] = b.dataset.v; store.set(KEY, JSON.stringify(all)); paintPick(); paintSelect(); }; });
+}
+function paintSelect() {
+  const p = picks();
+  $("pick").innerHTML = ALL.map((m, i) => {
+    const a = AR[m.id] || {}, v = p[m.id];
+    return `<option value="${i}"${i === cur ? " selected" : ""}>${toAr(i + 1)}. ${esc(a.t || m.id)}${swaps(m) ? (v === "b" ? " — Brilliant" : v === "k" ? " — صوتنا" : "") : ""}</option>`;
+  }).join("");
+}
+function show(i) {
+  cur = Math.max(0, Math.min(ALL.length - 1, i));
+  const m = ALL[cur], a = AR[m.id] || {};
+  store.set("soundsAt", m.id);
+  history.replaceState(null, "", "#" + m.id);
+  $("pos").textContent = `${toAr(cur + 1)} / ${toAr(ALL.length)}`;
+  $("prev").disabled = cur === 0; $("next").disabled = cur === ALL.length - 1;
+  $("card").innerHTML = `<h2>${esc(a.t || m.moment)}</h2>
+    <p><b>متى تسمعه:</b> ${esc(a.w || m.moment)}</p>
+    <span class="try">جرّبه: ${esc(a.d || "")}</span>
+    <div class="meta"><span>${esc(m.ar || "")}</span><span dir="ltr">${esc(m.id)}</span></div>`;
+  $("srcNow").textContent = nowText(m); $("srcBri").textContent = briText(m);
+  paintPick(); paintSelect();
+  const [hash, after] = screenOf(m), key = hash + "|" + (after || "");
+  if (key !== loaded) {
+    loaded = key;
+    const q = `&dev=1${after ? "&after=" + after : ""}&r=${Date.now()}#${hash}`;
+    $("iNow").src = "phone.html?snd=now" + q;
+    $("iBri").src = "phone.html?snd=bri" + q;
+  }
+}
+addEventListener("message", e => {
+  const d = e.data;
+  if (!d || d.qsnd !== "moment" || d.id !== (ALL[cur] && ALL[cur].id)) return;
+  const which = e.source === $("iNow").contentWindow ? "fNow" : e.source === $("iBri").contentWindow ? "fBri" : null;
+  if (!which) return;
+  const act = String(d.act || ""), what = act.slice(4);
+  if (act !== "app" && !(act.indexOf("bri:") === 0 && ["silent", "muted", "once", "no-tap-yet"].indexOf(what) < 0)) return;
+  const f = $(which), h = f.querySelector(".heard");
+  f.classList.add("hit"); h.classList.add("on");
+  clearTimeout(f._t); f._t = setTimeout(() => { f.classList.remove("hit"); h.classList.remove("on"); }, 1400);
+});
+document.querySelectorAll("#tabs button").forEach(b => { b.onclick = () => {
+  side = b.dataset.s;
+  document.querySelectorAll("#tabs button").forEach(x => x.classList.toggle("on", x === b));
+  $("sNow").classList.toggle("off", side !== "now"); $("sBri").classList.toggle("off", side !== "bri");
+}; });
+$("prev").onclick = () => show(cur - 1);
+$("next").onclick = () => show(cur + 1);
+$("pick").onchange = e => show(+e.target.value);
+addEventListener("resize", fit);
+(async function () {
+  try {
+    const [m, ar, map] = await Promise.all([
+      fetch("moments.json?t=" + Date.now()).then(r => r.json()),
+      fetch("moments-ar.json?t=" + Date.now()).then(r => r.json()),
+      fetch("screens-map.json?t=" + Date.now()).then(r => r.json())
+    ]);
+    ALL = Array.isArray(m) ? m : m.moments; AR = ar; MAP = map;
+  } catch (e) { $("card").textContent = "ما قدرت أحمّل الأصوات: " + e.message; return; }
+  /* wide screens show both phones; a phone shows one at a time with the tabs */
+  if (innerWidth > 760) { $("sBri").classList.remove("off"); }
+  fit();
+  const want = location.hash.slice(1) || store.get("soundsAt", "");
+  const at = ALL.findIndex(m => m.id === want);
+  show(at >= 0 ? at : 0);
+})();
+</script>
+</body>
+</html>

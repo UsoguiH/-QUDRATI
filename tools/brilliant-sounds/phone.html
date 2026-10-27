@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Sound Phone</title>
+</head>
+<body style="margin:0;background:#fff;font:15px system-ui,sans-serif;color:#777">
+<p id="boot" style="padding:24px">Loading the app…</p>
+<script>
+/* dev harness, never shipped: boots the real app (preview.html + js/app.js, read
+   from disk) with a sound router wired into it, so live.html can show two
+   playable copies side by side.
+
+   ?snd=now  every routed moment runs the app's own sound code — the phone sounds
+             exactly like the app
+   ?snd=bri  a moment with a Brilliant file (and not picked "keep ours") plays
+             that mp3 instead; "keep" / "none" moments and kept picks run the
+             app's own code
+   &after=<t> once booted, jump to the first short-lesson item of type t (pairs …)
+
+   Both modes run the same patched source. Every patch is anchored on exact code
+   text; an anchor that is not found is skipped and reported, never forced.
+   Our correct-answer sound (playCorrect) and Duolingo's files are never wrapped. */
+(async function () {
+  const qs = new URLSearchParams(location.search);
+  /* app.js removes its dev helpers (A.debug*) unless the URL says dev=1 */
+  if (qs.get("dev") !== "1") { qs.set("dev", "1"); location.replace(location.pathname + "?" + qs + location.hash); return; }
+  const MODE = qs.get("snd") === "bri" ? "bri" : "now";
+  const AFTER = qs.get("after") || "";
+  const bust = "?t=" + Date.now();
+  const say = t => { const b = document.getElementById("boot"); if (b) b.textContent = t; };
+  let pv, src, moments;
+  try {
+    [pv, src, moments] = await Promise.all([
+      fetch("../../preview.html" + bust).then(r => r.text()),
+      fetch("../../js/app.js" + bust).then(r => r.text()),
+      fetch("moments.json" + bust).then(r => r.json())
+    ]);
+  } catch (e) { say("Could not load the app: " + e.message); return; }
+  src = src.replace(/\r\n/g, "\n");
+  moments = Array.isArray(moments) ? moments : moments.moments;
+
+  /* [moment id, anchor (exact text, must occur `n` times), text inside the anchor, its replacement, n] */
+  const P = [
+    ["choice-select", `  SES.sel = i;\n  document.querySelectorAll(".choice").forEach((b, j) => b.classList.toggle("sel", j === i));\n  paintRadios(i);\n  const cb = document.getElementById("checkBtn");`,
+      `SES.sel = i;`, `SES.sel = i; __S("choice-select", null, "assessment-click-option-" + (Math.min(i, 3) + 1));`],
+    ["wrong-answer", `  } else {\n    sndBad();\n    SES.run = 0;                         // one miss and the run is gone`, `sndBad();`, `__S("wrong-answer", () => sndBad());`],
+    ["wrong-answer", `sndBad();\n    if (graded) { SES.run = 0; learnRequeue(it);`, `sndBad();`, `__S("wrong-answer", () => sndBad());`],
+    ["wrong-answer", `if (cur.cz.ok) playCorrect(); else sndBad();`, `else sndBad();`, `else __S("wrong-answer", () => sndBad());`],
+    ["teach-check-wrong", `  if (cur.revealed) playCorrect();\n  questTick();`, `playCorrect();`, `playCorrect(); else __S("teach-check-wrong");`],
+    ["time-up", `  sndBad();\n  const fb = document.getElementById("fb");\n  fb.className = "feedback bad show";\n  fb.innerHTML = \`<div class="fb-head"><span class="fb-x fb-clock">`, `sndBad();`, `__S("time-up", () => sndBad());`],
+    ["timer-tick", `left > 0) sndTick();`, `sndTick();`, `__S("timer-tick", () => sndTick());`],
+    ["answer-run", `function answerFx(card, run) {\n`, `{\n`, `{\n  if (run === 3 || run === 5) __S("answer-run");\n`],
+    ["continue", `  if (placeNudgeDue()) placeNudge();   // offered over the next question`, `  if (placeNudgeDue())`, `  __S("continue");\n  if (placeNudgeDue())`],
+    ["continue", `if (cur.i < cur.steps.length - 1) { cur.i++; cur.picked = null; cur.revealed = false; renderTeach(); return; }`, `{ cur.i++;`, `{ __S("continue"); cur.i++;`],
+    ["continue", `A.winOn = function () { if (WIN`, `{ if`, `{ __S("continue"); if`],
+    ["continue", `A.winContinue = function () {\n`, `{\n`, `{\n  __S("continue");\n`],
+    ["continue", `A.closeStreak = function () {\n`, `{\n`, `{\n  __S("continue");\n`],
+    ["continue", `  if (!S.daily || S.daily.claimed) return;\n  gainGems(gems); S.daily.claimed = true; save();`, `gainGems(gems);`, `__S("continue"); gainGems(gems);`],
+    ["continue", `A.closeRankUp = function () {\n  const v = document.querySelector(".rankup-veil");\n  if (!v) return;\n`, `if (!v) return;\n`, `if (!v) return;\n  __S("continue");\n`],
+    ["teach-chunk-done", `sndGood();                            // the chunk is finished; it was silent`, `sndGood();`, `__S("teach-chunk-done", () => sndGood());`],
+    ["help-open", `A.showMethod = function () {\n  if (!SES) return;\n`, `return;\n`, `return;\n  __S("help-open");\n`],
+    ["help-open", `  s.style.display = s.style.display === "none" ? "block" : "none";`, `  s.style.display =`, `  if (s.style.display === "none") __S("help-open");\n  s.style.display =`],
+    ["lesson-failed", `  sndLose();\n  const canRevive = S.xp >= REVIVE_COST;`, `sndLose();`, `__S("lesson-failed", () => sndLose());`],
+    ["revive", `save(); sndGood && sndGood();`, `sndGood && sndGood();`, `__S("revive", () => { sndGood && sndGood(); });`],
+    ["practice-complete", `gainXP(xpWon); gainGems(SES.gems); bumpStreak(); save(); sndWin();`, `sndWin();`, `__S("practice-complete", () => sndWin());`, 2],
+    ["report-sent", `save(); sndGood(); sheet.close();`, `sndGood();`, `__S("report-sent", () => sndGood());`],
+    ["tile-place", `  } else return;\n  sndTap();\n  learnPaint();`, `sndTap();`, `__S("tile-place", () => sndTap());`],
+    ["tile-place", `sl[j] = k; stampTile(cur.cz.ui, k);\n  sndTap();`, `sndTap();`, `__S("tile-place", () => sndTap());`],
+    ["tile-remove", `else if (it.t === "order") it.ui.seq.splice(j, 1);\n  learnPaint();`, `learnPaint();`, `__S("tile-remove"); learnPaint();`],
+    ["tile-remove", `cur.cz.ui.slots[j] = undefined;\n  tcPaint();`, `tcPaint();`, `__S("tile-remove"); tcPaint();`],
+    ["keypad-key", `else if (it.ui.val.length < 9) it.ui.val += k;\n  sndTap();`, `sndTap();`, `__S("keypad-key", () => sndTap());`],
+    ["pair-pick", `el(it.ui.pick).classList.add("sel");\n    sndTap();`, `sndTap();`, `__S("pair-pick", () => sndTap());`],
+    ["pair-match", `    } else sndGood();\n  } else {\n    it.ui.miss++;`, `else sndGood();`, `else __S("pair-match", () => sndGood());`],
+    ["pair-miss", `it.ui.miss++;\n    sndBad();`, `sndBad();`, `__S("pair-miss", () => sndBad());`],
+    ["rule-terms-light", `beep([[587 * Math.pow(2, Math.min(k, 7) * 2 / 12), .06]]); buzz(5);`, `beep([[587 * Math.pow(2, Math.min(k, 7) * 2 / 12), .06]]);`, `__S("rule-terms-light", () => beep([[587 * Math.pow(2, Math.min(k, 7) * 2 / 12), .06]]));`],
+    ["rule-said", `{ duration: 360, easing: "ease-out" });\n    beep([[784, .07], [1175, .16]]);`, `beep([[784, .07], [1175, .16]]);`, `__S("rule-said", () => beep([[784, .07], [1175, .16]]));`],
+    ["rule-fill-miss", `sndBad(); buzz([30, 40, 30]);`, `sndBad();`, `__S("rule-fill-miss", () => sndBad());`],
+    ["boost-toggle", `if (boost) sndGood();`, `sndGood();`, `__S("boost-toggle", () => sndGood());`],
+    ["start-lesson", `veil.querySelector(".btn-white").onclick = () => { popClose(true); A.startLesson(domKey, lesKey, boost); };`, `{ popClose(true);`, `{ __S("start-lesson"); popClose(true);`],
+    ["start-lesson", `A.winNext = function () {\n`, `{\n`, `{\n  __S(LAST_LEARN && LAST_LEARN.next >= 0 ? "start-lesson" : "continue");\n`],
+    ["start-lesson", `  PLACE_START = null;\n  A.startLesson(d, l);`, `  A.startLesson(d, l);`, `  __S("start-lesson"); A.startLesson(d, l);`],
+    ["start-lesson", `A.placeBegin = function () { OB = null;`, `{ OB = null;`, `{ __S("start-lesson"); OB = null;`],
+    ["start-lesson", `A.startMix = function () {\n`, `{\n`, `{\n  __S("start-lesson");\n`],
+    ["start-lesson", `  if (!list.length) { toast("لا توجد أخطاء للمراجعة"); return; }\n`, `return; }\n`, `return; }\n  __S("start-lesson");\n`],
+    ["start-lesson", `A.startMock = function (replace) {\n`, `{\n`, `{\n  __S("start-lesson");\n`],
+    ["ring-segment-pay", `    beep([[784, .07], [1047, .14]]);\n    buzz(10);\n  });\n  if (exit) {`, `beep([[784, .07], [1047, .14]]);`, `__S("ring-segment-pay", () => beep([[784, .07], [1047, .14]]));`],
+    ["chest-tip", `function chestTip(msg) {\n`, `{\n`, `{\n  __S("chest-tip");\n`],
+    ["quest-banner", `  document.body.appendChild(el);\n  const fill = () => { el.querySelector(".duo-bar > i")`, `appendChild(el);\n`, `appendChild(el); __S("quest-banner");\n`],
+    ["chest-tap", `startHop(CV_TAP_HOP); cvSnd.tap();`, `cvSnd.tap();`, `__S("chest-tap", () => cvSnd.tap());`],
+    ["chest-open", `body.style.transform = ""; cvSnd.open();`, `cvSnd.open();`, `__S("chest-open", () => cvSnd.open());`],
+    ["chest-gems-reveal", `reward.classList.add("told"); cvSnd.gems();`, `cvSnd.gems();`, `__S("chest-gems-reveal", () => cvSnd.gems());`],
+    ["chest-gems-tick", `counter.classList.add("bump"); cvSnd.tick(); }`, `cvSnd.tick();`, `__S("chest-gems-tick", () => cvSnd.tick());`],
+    ["climb-xp-count", `  at(450, () => {\n    const x0 = C.list[C.from - 1].xp`, `  at(450, () => {\n`, `  at(450, () => {\n    if (!done) __S("climb-xp-count");\n`],
+    ["climb-pass-note", `beep([[523 * Math.pow(2, Math.min(k, 12) / 12) * 1.5, .07]]);`, `beep([[523 * Math.pow(2, Math.min(k, 12) / 12) * 1.5, .07]]);`,
+      `__S("climb-pass-note", () => beep([[523 * Math.pow(2, Math.min(k, 12) / 12) * 1.5, .07]]), "xp-tally-" + Math.min(k, 5));`],
+    ["progress-gems", `countUp(gEl, W.gems, "", 500); cvSnd.gems();`, `cvSnd.gems();`, `__S("progress-gems", () => cvSnd.gems());`],
+    ["streak-open", `sndWin && sndWin();`, `sndWin && sndWin();`, `__S("streak-open", () => { sndWin && sndWin(); });`],
+    ["streak-coin", `cvTone(660, 0, .12, "triangle", .08); cvTone(990, 0, .2, "triangle", .07, .55); cvTone(1320, 0, .3, "sine", .06, .62);`, `cvTone(660, 0, .12, "triangle", .08); cvTone(990, 0, .2, "triangle", .07, .55); cvTone(1320, 0, .3, "sine", .06, .62);`,
+      `__S("streak-coin", () => { cvTone(660, 0, .12, "triangle", .08); cvTone(990, 0, .2, "triangle", .07, .55); cvTone(1320, 0, .3, "sine", .06, .62); });`],
+    ["placement-answer", `  if (instant) { go(); return; }\n  sndTap();`, `  sndTap();`, `  __S(skip ? "placement-dont-know" : "placement-answer", () => sndTap());`],
+    ["placement-complete", `function placementComplete() {\n`, `{\n`, `{\n  __S("placement-complete");\n`],
+    ["place-nudge", `  SES.nudged = true;\n  askConfirm("الدرس صعب عليك؟"`, `SES.nudged = true;`, `SES.nudged = true; __S("place-nudge");`],
+    ["mock-select", `  sec.answers[MOCK.qi] = i;\n`, `= i;\n`, `= i;\n  __S("mock-select", null, "assessment-click-option-" + (Math.min(i, 3) + 1));\n`],
+    ["mock-flag", `  sec.flags[MOCK.qi] = !sec.flags[MOCK.qi];\n`, `!sec.flags[MOCK.qi];\n`, `!sec.flags[MOCK.qi];\n  __S("mock-flag", null, sec.flags[MOCK.qi] ? "toggle-on" : "toggle-off");\n`],
+    ["mock-end-section", `A.mockEndSection = function () {\n`, `{\n`, `{\n  __S("mock-end-section");\n`],
+    ["mock-pass", `score / total >= 0.5 ? sndWin() : sndLose();`, `score / total >= 0.5 ? sndWin() : sndLose();`, `score / total >= 0.5 ? __S("mock-pass", () => sndWin()) : __S("mock-fail", () => sndLose());`],
+    ["ob-continue", `A.obStart = function () {\n`, `{\n`, `{\n  __S("ob-continue");\n`],
+    ["ob-continue", `  S.joined = S.joined || todayKey();\n  save(); buzz(8);`, `save(); buzz(8);`, `save(); buzz(8); __S("ob-continue");`],
+    ["ob-pick", `else { sndTap(); buzz(12); }`, `sndTap();`, `__S("ob-pick", () => sndTap());`],
+    ["ob-goal-pick", `[523, 659, 784].slice(0, i + 1).forEach((f, k) => cvTone(f, 0, .28, "triangle", .1, k * .08));`, `[523, 659, 784].slice(0, i + 1).forEach((f, k) => cvTone(f, 0, .28, "triangle", .1, k * .08));`,
+      `__S("ob-goal-pick", () => [523, 659, 784].slice(0, i + 1).forEach((f, k) => cvTone(f, 0, .28, "triangle", .1, k * .08)));`],
+    ["taste-tap", `sndTap(); buzz(12); sfxLoad("right");`, `sndTap();`, `__S("taste-tap", () => sndTap());`],
+    ["taste-swap-lift", `T([383, () => cvHiss(.3, .05, 0, 1200, 3800)]);`, `() => cvHiss(.3, .05, 0, 1200, 3800)`, `() => __S("taste-swap-lift", () => cvHiss(.3, .05, 0, 1200, 3800))`],
+    ["taste-swap-land", `T([967, () => { cvSnd.tick(); buzz(10); }]);`, `cvSnd.tick();`, `__S("taste-swap-land", () => cvSnd.tick());`],
+    ["taste-equals", `cvTone(520, 780, .07, "triangle", .07);`, `cvTone(520, 780, .07, "triangle", .07);`, `__S("taste-equals", () => cvTone(520, 780, .07, "triangle", .07));`],
+    ["taste-equals", `cvTone(780, 1170, .09, "triangle", .07);`, `cvTone(780, 1170, .09, "triangle", .07);`, `__S("taste-equals", () => cvTone(780, 1170, .09, "triangle", .07), "");`],
+    ["exam-saved", `S.examAsked = true; save(); sndGood();`, `sndGood();`, `__S("exam-saved", () => sndGood());`],
+    ["signin-step", `A.siTo = function (step) { sndTap();`, `sndTap();`, `__S("signin-step", () => sndTap());`],
+    ["signin-step", `  sndTap(); siGo("done");`, `sndTap();`, `__S("signin-step", () => sndTap());`],
+    ["signin-step", `  sndTap();\n  google.accounts.oauth2.initTokenClient`, `sndTap();`, `__S("signin-step", () => sndTap());`],
+    ["signin-later", `if (!back) sndTap();`, `sndTap();`, `__S("signin-later", () => sndTap());`],
+    ["signin-done", `cvTone(784, 0, .5, "triangle", .12); cvTone(1175, 0, .4, "sine", .06, .06);`, `cvTone(784, 0, .5, "triangle", .12); cvTone(1175, 0, .4, "sine", .06, .06);`,
+      `__S("signin-done", () => { cvTone(784, 0, .5, "triangle", .12); cvTone(1175, 0, .4, "sine", .06, .06); });`],
+    ["settings-toggle", `A.setSound = function (btn) {\n  S.sound = !S.sound; save();`, `  S.sound = !S.sound;`, `  if (S.sound) __S("settings-toggle", null, "toggle-off");\n  S.sound = !S.sound;`],
+    ["settings-toggle", `  if (S.sound) sndTap();\n};\nA.setHaptic`, `sndTap();`, `__S("settings-toggle", () => sndTap(), "toggle-on");`],
+    ["settings-toggle", `  motionApply(); save();\n  btn.classList.toggle("on", !motionReduced());`, `motionApply(); save();`, `motionApply(); save(); __S("settings-toggle", null, motionReduced() ? "toggle-off" : "toggle-on");`],
+    ["settings-segment", `S.goal = g; save(); sndTap(); buzz(8);`, `sndTap();`, `__S("settings-segment", () => sndTap());`],
+    ["settings-segment", `S.track = t; save(); sndTap(); buzz(8);`, `sndTap();`, `__S("settings-segment", () => sndTap());`],
+    ["settings-name-saved", `SET_EDIT = false; save(); sndGood();`, `sndGood();`, `__S("settings-name-saved", () => sndGood());`],
+    /* the router borrows the app's own audio context and sound switch */
+    ["(hooks)", `boot();\nnetBar();\n})();`, `boot();\n`, `window.__Sac = audioCtx; window.__Ssound = () => !!S.sound;\nboot();\n`]
+  ];
+  const count = (s, f) => s.split(f).length - 1;
+  const okIds = new Set(), badIds = {}, sites = {};
+  for (const [id, anchor, from, to, n] of P) {
+    const want = n || 1, got = count(src, anchor), at = anchor.indexOf(from);
+    if (got !== want || at < 0) { (badIds[id] = badIds[id] || []).push(got === 0 ? "anchor not found" : got !== want ? `anchor found ${got}× (expected ${want})` : "bad patch"); continue; }
+    src = src.split(anchor).join(anchor.slice(0, at) + to + anchor.slice(at + from.length));
+    okIds.add(id); sites[id] = (sites[id] || 0) + want;
+  }
+  if (okIds.has("placement-answer")) okIds.add("placement-dont-know");
+  if (okIds.has("mock-pass")) okIds.add("mock-fail");
+  const wired = [...okIds].filter(k => k !== "(hooks)");
+  /* a moment is "partly" wired when one of its call sites wired and another did not */
+  const notWired = {};
+  Object.keys(badIds).forEach(k => { notWired[k] = (okIds.has(k) ? "partly: " : "") + badIds[k].join("; "); });
+  /* a Brilliant swap that has no patch at all */
+  moments.forEach(m => {
+    if (m.brilliant === "keep" || m.brilliant === "none") return;
+    if (!okIds.has(m.id) && !notWired[m.id]) notWired[m.id] = "no call site wired";
+  });
+
+  const MAP = {};
+  moments.forEach(m => { MAP[m.id] = m.brilliant; });
+  const INFO = { mode: MODE, wired, notWired, hooks: okIds.has("(hooks)") };
+  const files = [...new Set(moments.map(m => m.brilliant).filter(b => b && b !== "keep" && b !== "none")
+    .concat(["assessment-click-option-1", "assessment-click-option-2", "assessment-click-option-3", "assessment-click-option-4",
+      "xp-tally-1", "xp-tally-2", "xp-tally-3", "xp-tally-4", "xp-tally-5", "toggle-on", "toggle-off"]))];
+
+  /* the router, written into the page ahead of everything else */
+  const router = `(function () {
+  var MODE = ${JSON.stringify(MODE)}, MAP = ${JSON.stringify(MAP)}, FILES = ${JSON.stringify(files)};
+  var INFO = ${JSON.stringify(INFO)};
+  /* a counted-up number calls its sound on every step; Brilliant's count-up is one sound */
+  var ONCE = { "chest-gems-tick": 1500 };
+  /* Brilliant's in-lesson streak sting goes just after our correct sound */
+  var DELAY = { "answer-run": 260 };
+  var LOG = window.__SLOG = [], last = {}, raw = {}, buf = {}, own = null;
+  window.__SINFO = INFO;
+  function ctx() {
+    if (window.__Sac) { try { var a = window.__Sac(); if (a) return a; } catch (e) {} }
+    if (!own) { var C = window.AudioContext || window.webkitAudioContext; if (C) own = new C(); }
+    if (own && own.state === "suspended") { try { own.resume(); } catch (e) {} }
+    return own;
+  }
+  function picks() { try { return JSON.parse(localStorage.getItem("soundPicks") || "{}") || {}; } catch (e) { return {}; } }
+  function soundOn() { try { return window.__Ssound ? window.__Ssound() : true; } catch (e) { return true; } }
+  function gestured() { return !navigator.userActivation || navigator.userActivation.hasBeenActive; }
+  function fetchRaw(f) { return raw[f] || (raw[f] = fetch("tools/brilliant-sounds/" + f + ".mp3").then(function (r) { return r.arrayBuffer(); })); }
+  function decode(f) {
+    if (buf[f]) return buf[f];
+    var ac = ctx(); if (!ac) return Promise.reject();
+    buf[f] = fetchRaw(f).then(function (ab) { return new Promise(function (res, rej) { ac.decodeAudioData(ab.slice(0), res, rej); }); })
+      .then(function (b) { buf[f].ready = b; return b; });
+    buf[f].catch(function () { delete buf[f]; });
+    return buf[f];
+  }
+  function play(f) {
+    var ac = ctx(); if (!ac) return;
+    var go = function (b) { try { var s = ac.createBufferSource(), g = ac.createGain(); s.buffer = b; g.gain.value = .9; s.__bri = f; s.connect(g); g.connect(ac.destination); s.start(); } catch (e) {} };
+    var p = decode(f);
+    if (p.ready) go(p.ready); else p.then(go, function () {});
+  }
+  function tell(id, act) {
+    var e = { t: Math.round(performance.now()), id: id, act: act };
+    LOG.push(e); if (LOG.length > 400) LOG.shift();
+    if (window.__SON) { try { window.__SON(e); } catch (x) {} }
+    try { parent !== window && parent.postMessage({ qsnd: "moment", mode: MODE, id: id, act: act }, "*"); } catch (x) {}
+  }
+  window.__S = function (id, fn, file) {
+    var b = MAP[id], act;
+    var swap = (window.__SMODE || MODE) === "bri" && b && b !== "keep" && b !== "none" && picks()[id] !== "k";
+    if (swap) {
+      var f = file === undefined ? b : file;
+      if (!f) act = "bri:silent";
+      else if (!soundOn()) act = "bri:muted";
+      else if (ONCE[id] && performance.now() - (last[id] || -1e9) < ONCE[id]) act = "bri:once";
+      else if (!gestured()) act = "bri:no-tap-yet";
+      else {
+        last[id] = performance.now(); act = "bri:" + f;
+        if (DELAY[id]) setTimeout(function () { play(f); }, DELAY[id]); else play(f);
+      }
+    } else { act = fn ? "app" : "silent"; }
+    tell(id, act);
+    if (!swap && fn) fn();
+  };
+  window.__SMODE = MODE;
+  {
+    FILES.forEach(fetchRaw);
+    var warm = function () { removeEventListener("pointerdown", warm, true); removeEventListener("keydown", warm, true); FILES.forEach(function (f) { decode(f); }); };
+    addEventListener("pointerdown", warm, true); addEventListener("keydown", warm, true);
+  }
+  /* the app plays its correct sound and Duolingo's files itself; the page is told so it can show them too */
+  addEventListener("load", function () {
+    try { parent !== window && parent.postMessage({ qsnd: "ready", mode: MODE, info: INFO }, "*"); } catch (x) {}
+  });
+})();`;
+
+  const esc = s => s.replace(/<\/script/gi, "<\\/script");
+  let html = pv.replace(/\r\n/g, "\n");
+  html = html.replace(/<head>/i, () => `<head>\n<base href="../../">\n<script>${esc(router)}<\/script>`);
+  const tag = /<script src="js\/app\.js"><\/script>/;
+  if (!tag.test(html)) { say("preview.html no longer loads js/app.js the way this harness expects."); return; }
+  html = html.replace(tag, () => `<script>${esc(src)}\n//# sourceURL=app.patched.js\n<\/script>`);
+  /* opened on its own (a phone), not inside live.html: the sound dock to switch, pick and jump */
+  if (window.top === window) html = html.replace(/<\/body>/i, () => `<script src="tools/brilliant-sounds/dock.js?t=${Date.now()}"><\/script>\n</body>`);
+  if (AFTER) html = html.replace(/<\/body>/i, () => `<script>(function () { try { var r = A.debugLearnGo(function (it) { return it && it.t === ${JSON.stringify(AFTER)}; }); if (r === "none") console.warn("no item of type ${AFTER.replace(/[^a-z]/g, "")}"); } catch (e) { console.warn(e); } })();<\/script>\n</body>`);
+  document.open();
+  document.write(html);
+  document.close();
+})();
+</script>
+</body>
+</html>

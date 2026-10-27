@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Live Sounds</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  /* dev page: two live copies of the app side by side — today's sounds on the
+     left, Brilliant's swapped in on the right (phone.html does the swapping).
+     Picks are shared with compare.html and screens.html ("soundPicks"). */
+  :root {
+    --bg: #F7F7F7; --card: #FFFFFF; --ink: #3C3C3C; --mute: #777777; --line: #E5E5E5; --frame: #2B2B2B;
+    --green: #58CC02; --green-dk: #478700; --blue: #1CB0F6; --blue-dk: #1899D6; --blue-bg: #DDF4FF;
+    --purple: #CE82FF; --purple-dk: #A568CC; --purple-bg: #F3E3FF; --grey: #9D9D9D; --grey-dk: #777777;
+    --gold-bg: #FFF4BF; --gold-ink: #9A6A00; --chip: #F0F0F0; --flash: #FFF4BF;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #131F24; --card: #1B2B32; --ink: #F1F7FB; --mute: #9AA9B1; --line: #37464F; --frame: #0B1418; --blue-bg: #12384A; --purple-bg: #3A2650; --gold-bg: #4A3B0A; --gold-ink: #FFE38A; --chip: #26363D; --flash: #4A3B0A; }
+  }
+  :root[data-theme="dark"] { --bg: #131F24; --card: #1B2B32; --ink: #F1F7FB; --mute: #9AA9B1; --line: #37464F; --frame: #0B1418; --blue-bg: #12384A; --purple-bg: #3A2650; --gold-bg: #4A3B0A; --gold-ink: #FFE38A; --chip: #26363D; --flash: #4A3B0A; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Baloo Bhaijaan 2', 'Segoe UI', sans-serif; line-height: 1.45; }
+  main { max-width: 1240px; margin: 0 auto; padding: 18px 16px 96px; }
+  h1 { margin: 0; font-size: 26px; }
+  .lead { color: var(--mute); margin: 2px 0 0; font-size: 15px; max-width: 760px; }
+  .notes { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 0; }
+  .notes span { padding: 3px 12px; border-radius: 99px; font-weight: 700; font-size: 13.5px; background: var(--chip); color: var(--mute); }
+  .notes .tap { background: var(--gold-bg); color: var(--gold-ink); }
+  .wire { margin-top: 8px; font-size: 13.5px; color: var(--mute); }
+  .wire b { color: var(--ink); }
+  .picker { margin: 14px 0 0; display: grid; gap: 6px; }
+  .grp { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .grp > em { font-style: normal; font-size: 12.5px; font-weight: 800; color: var(--mute); text-transform: uppercase; letter-spacing: .04em; min-width: 92px; }
+  .sc { font: inherit; font-size: 13.5px; font-weight: 800; padding: 4px 12px; border-radius: 12px; cursor: pointer; background: var(--card); color: var(--ink); border: 2px solid var(--line); border-bottom-width: 4px; }
+  .sc:active { transform: translateY(2px); border-bottom-width: 2px; }
+  .sc.on { background: var(--blue); color: #fff; border-color: var(--blue-dk); }
+  .bar2 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0 0; }
+  .big { font: inherit; font-weight: 800; font-size: 15px; color: #fff; background: var(--green); border: 0; border-bottom: 4px solid var(--green-dk); border-radius: 14px; padding: 7px 18px; cursor: pointer; }
+  .big:active { transform: translateY(2px); border-bottom-width: 2px; }
+  .big.alt { background: var(--card); color: var(--ink); border: 2px solid var(--line); border-bottom-width: 4px; }
+  #cur { font-weight: 800; color: var(--mute); }
+  .stage { display: grid; grid-template-columns: 1fr 1fr 320px; gap: 18px; margin-top: 14px; align-items: start; }
+  .side { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+  .side h2 { margin: 0; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--grey); }
+  .bri .dot { background: var(--purple); }
+  .frame { background: var(--frame); border-radius: 34px; padding: 9px; }
+  .scr { position: relative; overflow: hidden; border-radius: 26px; background: #fff; }
+  .scr iframe { position: absolute; left: 0; top: 0; width: 390px; height: 844px; border: 0; transform-origin: 0 0; background: #fff; }
+  .heard { width: 100%; max-width: 420px; min-height: 66px; font-size: 13px; display: flex; flex-direction: column; gap: 3px; }
+  .heard div { display: flex; gap: 6px; align-items: baseline; padding: 2px 10px; border-radius: 10px; background: var(--card); border: 1px solid var(--line); }
+  .heard div:first-child { animation: in .35s ease-out; }
+  @keyframes in { from { background: var(--flash); } }
+  .heard b { font-weight: 800; }
+  .heard i { font-style: normal; color: var(--mute); font-family: Consolas, monospace; font-size: 12px; margin-left: auto; text-align: right; }
+  .heard .empty { color: var(--mute); border-style: dashed; background: none; }
+  .list { background: var(--card); border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 16px; padding: 12px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; }
+  .list h3 { margin: 0 0 2px; font-size: 16px; }
+  .list .sub { margin: 0 0 8px; color: var(--mute); font-size: 13px; }
+  .mo { border-top: 1px solid var(--line); padding: 8px 2px; transition: background .4s; border-radius: 8px; }
+  .mo.hit { background: var(--flash); transition: none; }
+  .mo b { display: block; font-size: 14px; line-height: 1.3; }
+  .mo .ar { color: var(--mute); font-size: 13px; direction: rtl; unicode-bidi: isolate; }
+  .mo .fl { display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+  .mo code { font-size: 12px; background: var(--chip); color: var(--mute); border-radius: 6px; padding: 0 6px; }
+  .mo .tag { font-size: 11.5px; font-weight: 800; padding: 0 8px; border-radius: 99px; background: var(--chip); color: var(--mute); }
+  .mo .tag.stay { color: var(--green-dk); }
+  .mo .tag.nw { background: var(--gold-bg); color: var(--gold-ink); }
+  .pl { font: inherit; font-size: 12px; font-weight: 800; border: 0; border-radius: 99px; padding: 1px 10px; background: var(--purple-bg); color: var(--purple-dk); cursor: pointer; }
+  .pick { display: flex; border: 2px solid var(--line); border-radius: 10px; overflow: hidden; margin-top: 5px; }
+  .pick button { flex: 1; font: inherit; font-size: 12.5px; font-weight: 800; padding: 3px 4px; border: 0; background: var(--card); color: var(--mute); cursor: pointer; }
+  .pick .k.on { background: var(--grey); color: #fff; }
+  .pick .b.on { background: var(--purple); color: #fff; }
+  .foot { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 2px solid var(--line); padding: 9px 16px; display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap; z-index: 5; }
+  #count { font-weight: 700; color: var(--mute); font-size: 14px; }
+  @media (max-width: 1180px) { .stage { grid-template-columns: 1fr 1fr; } .list { grid-column: 1 / -1; position: static; max-height: none; } }
+  @media (max-width: 760px) { .stage { grid-template-columns: 1fr; } .grp > em { min-width: 0; width: 100%; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Both phones, live</h1>
+  <p class="lead">Two working copies of the app. The <b>left</b> one is the app exactly as it is today. The <b>right</b> one is the same app with Brilliant's sounds in place of ours. Pick a screen, then tap through both and listen.</p>
+  <div class="notes">
+    <span class="tap">Sound starts after your first tap inside each phone (a browser rule)</span>
+    <span>Our correct-answer sound never changes</span>
+    <span>Duolingo's own files stay</span>
+    <span>"Keep ours" on a moment puts our sound back on the right phone too</span>
+  </div>
+  <div class="wire" id="wire">Loading the phones…</div>
+  <div class="picker" id="picker"></div>
+  <div class="bar2">
+    <button class="big" id="reload">Reload both</button>
+    <span id="cur"></span>
+  </div>
+  <div class="stage">
+    <div class="side now"><h2><span class="dot"></span>Now — the app today</h2><div class="frame"><div class="scr" id="scrNow"><iframe id="fNow" title="The app with today's sounds"></iframe></div></div><div class="heard" id="hNow"></div></div>
+    <div class="side bri"><h2><span class="dot"></span>Brilliant — swapped in</h2><div class="frame"><div class="scr" id="scrBri"><iframe id="fBri" title="The app with Brilliant's sounds"></iframe></div></div><div class="heard" id="hBri"></div></div>
+    <aside class="list" id="list"></aside>
+  </div>
+</main>
+<div class="foot"><span id="count"></span><button class="big" id="copy">Copy my picks</button></div>
+<script>
+const KEY = "soundPicks";
+let picks = {}; try { picks = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) {}
+const savePicks = () => { try { localStorage.setItem(KEY, JSON.stringify(picks)); } catch (e) {} };
+const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+
+/* the preview.html screens that reach the moments, and what can be heard on each */
+const SCREENS = [
+  ["Lesson", [
+    { k: "lesson", label: "Lesson", hash: "lesson", ids: ["continue", "teach-check-wrong", "teach-chunk-done", "choice-select", "correct-answer", "wrong-answer", "answer-run", "timer-tick", "time-up", "help-open", "report-sent", "quest-banner", "lesson-win"] },
+    { k: "fbgood", label: "Right answer", hash: "fbgood", ids: ["help-open", "continue", "choice-select", "correct-answer", "wrong-answer", "answer-run", "timer-tick"] },
+    { k: "fb", label: "Wrong answer", hash: "fb", ids: ["report-sent", "continue", "choice-select", "correct-answer", "wrong-answer", "timer-tick", "time-up"] },
+    { k: "fail", label: "Lesson lost", hash: "fail", ids: ["lesson-failed", "revive", "continue"] },
+    { k: "warm", label: "Warm-up", hash: "warm", ids: ["correct-answer", "teach-check-wrong", "continue", "teach-chunk-done"] },
+    { k: "teachcheck", label: "Quick check", hash: "teachcheck", ids: ["continue", "teach-chunk-done", "choice-select", "correct-answer", "wrong-answer"] },
+    { k: "review", label: "Review", hash: "reviewdo", ids: ["choice-select", "correct-answer", "wrong-answer", "continue", "practice-complete"] }
+  ]],
+  ["Short lesson", [
+    { k: "learn", label: "Lesson 1", hash: "learn", ids: ["choice-select", "correct-answer", "wrong-answer", "continue", "rule-terms-light", "rule-said", "tile-place", "tile-remove", "answer-run", "lesson-win"] },
+    { k: "learn3", label: "Lesson 3", hash: "learn3", ids: ["choice-select", "correct-answer", "wrong-answer", "continue", "rule-terms-light", "rule-said", "tile-place", "tile-remove"] },
+    { k: "fill", label: "Fill tiles", hash: "learn", after: "fill", ids: ["tile-place", "tile-remove", "correct-answer", "wrong-answer", "continue"] },
+    { k: "pairs", label: "Match pairs", hash: "learn", after: "pairs", ids: ["pair-pick", "pair-match", "pair-miss", "correct-answer", "continue"] },
+    { k: "type", label: "Keypad", hash: "learn", after: "type", ids: ["keypad-key", "correct-answer", "wrong-answer", "continue"] },
+    { k: "order", label: "Order", hash: "learn3", after: "order", ids: ["tile-place", "tile-remove", "correct-answer", "wrong-answer", "continue"] },
+    { k: "rulewords", label: "Write the rule", hash: "rulewords", ids: ["tile-place", "tile-remove", "rule-fill-miss", "correct-answer", "continue"] },
+    { k: "rulenums", label: "Rule in numbers", hash: "rulenums", ids: ["tile-place", "tile-remove", "rule-fill-miss", "correct-answer", "continue"] }
+  ]],
+  ["Path", [
+    { k: "pop", label: "Lesson card", hash: "pop", ids: ["node-press", "boost-toggle", "start-lesson", "chest-tip"] },
+    { k: "path", label: "Path", hash: "path", ids: ["node-press", "boost-toggle", "start-lesson", "chest-tip"] },
+    { k: "pathpay", label: "Ring fills", hash: "pathpay", ids: ["ring-segment-pay", "start-lesson"] },
+    { k: "pathgold", label: "Node done", hash: "pathgold", ids: ["ring-segment-pay", "node-complete"] },
+    { k: "exam", label: "Exam date", hash: "exam", ids: ["exam-saved"] }
+  ]],
+  ["Rewards", [
+    { k: "chestready", label: "Chest ready", hash: "chestready", ids: ["chest-idle-hop", "chest-tap", "chest-open", "chest-gems-reveal", "chest-gems-tick", "continue"] },
+    { k: "chest", label: "Chest open", hash: "chest", ids: ["chest-idle-hop", "chest-tap", "chest-open", "chest-gems-reveal", "chest-gems-tick", "continue"] },
+    { k: "questbanner", label: "Quest banner", hash: "questbanner", ids: ["quest-banner", "choice-select", "correct-answer", "wrong-answer"] },
+    { k: "learnwin", label: "Win screen", hash: "learnwin", ids: ["lesson-win", "win-stat-cards", "continue", "start-lesson"] },
+    { k: "learnmore", label: "Today's progress", hash: "learnmore", ids: ["progress-bar-fill", "progress-lesson-seg", "progress-gems", "start-lesson", "continue", "streak-open"] },
+    { k: "climb", label: "League climb", hash: "climb", ids: ["climb-xp-count", "climb-lift", "climb-move", "climb-pass-tick", "climb-pass-note", "climb-medal-turn", "climb-settle", "continue"] },
+    { k: "streak7", label: "Streak", hash: "streak7", ids: ["streak-open", "streak-coin", "continue"] },
+    { k: "rankup", label: "Rank-up", hash: "rankup", ids: ["rankup-unlock", "rankup-burst", "continue"] }
+  ]],
+  ["First run", [
+    { k: "ob-hello", label: "Hello", hash: "ob-hello", ids: ["ob-continue"] },
+    { k: "ob-taste", label: "Taste", hash: "ob-taste", ids: ["taste-tap", "taste-swap-lift", "taste-swap-land", "taste-equals", "taste-right", "ob-continue"] },
+    { k: "ob-level", label: "Level", hash: "ob-level", ids: ["ob-pick", "ob-continue"] },
+    { k: "ob-goal", label: "Goal", hash: "ob-goal", ids: ["ob-goal-pick", "ob-goal-wave", "ob-continue"] }
+  ]],
+  ["Tests", [
+    { k: "place", label: "Level test", hash: "place", ids: ["choice-select", "placement-answer", "placement-dont-know", "placement-complete", "start-lesson"] },
+    { k: "mocktest", label: "Mock exam", hash: "mocktest", ids: ["mock-select", "mock-flag", "mock-end-section", "mock-pass", "mock-fail"] }
+  ]],
+  ["Settings, sign-in", [
+    { k: "settings", label: "Settings", hash: "settings", ids: ["settings-toggle", "settings-segment", "settings-name-saved"] },
+    { k: "signin", label: "Sign-in wall", hash: "signin", ids: ["signin-step", "signin-later", "signin-done"] },
+    { k: "signin-how", label: "Ways in", hash: "signin-how", ids: ["signin-step", "signin-later", "signin-done"] },
+    { k: "signin-name", label: "Name step", hash: "signin-name", ids: ["signin-step", "signin-done"] }
+  ]]
+];
+const FLAT = SCREENS.flatMap(g => g[1]);
+let ALL = [], BY = {}, cur = FLAT[0], INFO = null;
+try { const s = localStorage.getItem("liveScreen"); const f = FLAT.find(x => x.k === s); if (f) cur = f; } catch (e) {}
+const hashScreen = FLAT.find(x => "#" + x.k === location.hash); if (hashScreen) cur = hashScreen;
+
+const kept = m => m.brilliant === "keep", none = m => m.brilliant === "none";
+const swappable = () => ALL.filter(m => !kept(m) && !none(m));
+function short(m) {
+  let s = m.moment.split(/[:(;]| — /)[0].trim();
+  return s.length > 90 ? s.slice(0, 88) + "…" : s;
+}
+
+/* the phones: 390 × 844, scaled to the room */
+function fit() {
+  const stacked = innerWidth <= 760;
+  const stage = document.querySelector(".stage");
+  const colW = stacked ? stage.clientWidth : (stage.clientWidth - (innerWidth <= 1180 ? 18 : 356)) / 2;
+  const byW = (colW - 18) / 390, byH = (innerHeight - 130) / 844;
+  const s = Math.max(.4, Math.min(1, byW, stacked ? 1 : byH));
+  [["scrNow", "fNow"], ["scrBri", "fBri"]].forEach(([w, f]) => {
+    const box = document.getElementById(w);
+    box.style.width = Math.round(390 * s) + "px"; box.style.height = Math.round(844 * s) + "px";
+    document.getElementById(f).style.transform = `scale(${s})`;
+  });
+}
+function load() {
+  const q = "&dev=1" + (cur.after ? "&after=" + cur.after : "") + "&r=" + Date.now() + "#" + cur.hash;
+  document.getElementById("fNow").src = "phone.html?snd=now" + q;
+  document.getElementById("fBri").src = "phone.html?snd=bri" + q;
+  heard.now = []; heard.bri = []; paintHeard("now"); paintHeard("bri");
+  document.getElementById("cur").textContent = "Showing: " + cur.label + " (preview.html#" + cur.hash + (cur.after ? ", first «" + cur.after + "» item" : "") + ")";
+  try { localStorage.setItem("liveScreen", cur.k); } catch (e) {}
+  try { history.replaceState(null, "", "#" + cur.k); } catch (e) {}
+  document.querySelectorAll(".sc").forEach(b => b.classList.toggle("on", b.dataset.k === cur.k));
+  drawList();
+}
+function drawPicker() {
+  const host = document.getElementById("picker");
+  host.innerHTML = SCREENS.map(([g, list]) => `<div class="grp"><em>${esc(g)}</em>${list.map(s => `<button class="sc" data-k="${s.k}">${esc(s.label)}</button>`).join("")}</div>`).join("");
+  host.querySelectorAll(".sc").forEach(b => b.onclick = () => { cur = FLAT.find(x => x.k === b.dataset.k); load(); });
+}
+
+/* what each phone just played */
+const heard = { now: [], bri: [] };
+function label(act) {
+  if (act === "app") return "our sound";
+  if (act === "silent") return "silent";
+  if (act === "bri:silent") return "silent (one Brilliant sound covers it)";
+  if (act === "bri:once") return "— (Brilliant's plays once)";
+  if (act === "bri:no-tap-yet") return "not played: tap the phone first";
+  if (act === "bri:muted") return "muted in the app's settings";
+  if (act.indexOf("bri:") === 0) return act.slice(4) + ".mp3";
+  return act;
+}
+function paintHeard(side) {
+  const host = document.getElementById(side === "now" ? "hNow" : "hBri"), list = heard[side];
+  host.innerHTML = list.length ? list.map(e => `<div><b>${esc(e.id)}</b><i>${esc(label(e.act))}</i></div>`).join("")
+    : `<div class="empty">Sounds this phone plays show up here.</div>`;
+}
+addEventListener("message", e => {
+  const d = e.data; if (!d || !d.qsnd) return;
+  if (d.qsnd === "ready" && d.info) { INFO = d.info; paintWire(); drawList(); return; }
+  if (d.qsnd !== "moment") return;
+  const side = d.mode === "bri" ? "bri" : "now";
+  if (d.act === "bri:once" && heard[side][0] && heard[side][0].id === d.id) return;
+  heard[side].unshift({ id: d.id, act: d.act }); heard[side] = heard[side].slice(0, 4); paintHeard(side);
+  const row = document.querySelector(`.mo[data-id="${d.id}"]`);
+  if (row) { row.classList.remove("hit"); void row.offsetWidth; row.classList.add("hit"); setTimeout(() => row.classList.remove("hit"), 60); }
+});
+function paintWire() {
+  const el = document.getElementById("wire");
+  if (!INFO) return;
+  const sw = swappable(), nw = Object.keys(INFO.notWired || {});
+  const wiredSw = sw.filter(m => INFO.wired.indexOf(m.id) >= 0).length;
+  el.innerHTML = `<b>${wiredSw} of ${sw.length}</b> moments that would change are wired into the phones.` +
+    (nw.length ? ` Not wired: ${nw.map(k => `<b>${esc(k)}</b> (${esc(INFO.notWired[k])})`).join(", ")}.` : " Nothing is missing.") +
+    ` The ${ALL.filter(kept).length} kept moments (our correct sound, Duolingo's files) and the ${ALL.filter(none).length} with no Brilliant match play the same on both.`;
+}
+
+/* the moments heard on this screen, with the pick */
+function drawList() {
+  const host = document.getElementById("list");
+  if (!ALL.length) { host.innerHTML = ""; return; }
+  const ms = cur.ids.map(id => BY[id]).filter(Boolean);
+  host.innerHTML = `<h3>Heard on “${esc(cur.label)}”</h3><p class="sub">Each row lights up when a phone plays it.</p>` + ms.map(m => {
+    const nw = INFO && INFO.notWired && INFO.notWired[m.id];
+    const right = kept(m) ? `<span class="tag stay">stays as it is</span>` : none(m) ? `<span class="tag">no Brilliant match, stays</span>`
+      : `<code>${esc(m.brilliant)}</code><button class="pl" data-f="${esc(m.brilliant)}">▶ listen</button>${nw ? `<span class="tag nw">not wired</span>` : ""}`;
+    const pick = kept(m) || none(m) ? "" : `<div class="pick" data-id="${m.id}"><button class="k">Keep ours</button><button class="b">Use Brilliant's</button></div>`;
+    return `<div class="mo" data-id="${m.id}"><b>${esc(short(m))}</b>${m.ar ? `<div class="ar">${esc(m.ar)}</div>` : ""}<div class="fl">${right}</div>${pick}</div>`;
+  }).join("");
+  host.querySelectorAll(".pick").forEach(pk => {
+    const id = pk.dataset.id;
+    const paint = () => { pk.querySelector(".k").classList.toggle("on", picks[id] === "k"); pk.querySelector(".b").classList.toggle("on", picks[id] === "b"); };
+    pk.querySelector(".k").onclick = () => { picks[id] = "k"; savePicks(); paint(); count(); };
+    pk.querySelector(".b").onclick = () => { picks[id] = "b"; savePicks(); paint(); count(); };
+    paint();
+  });
+  host.querySelectorAll(".pl").forEach(b => b.onclick = () => { try { const a = new Audio(b.dataset.f + ".mp3"); a.play().catch(() => {}); } catch (e) {} });
+}
+function count() {
+  const sw = swappable();
+  const b = sw.filter(m => picks[m.id] === "b").length, k = sw.filter(m => picks[m.id] === "k").length;
+  document.getElementById("count").textContent = `${b} to Brilliant, ${k} kept as ours, ${sw.length - b - k} not chosen yet (the right phone plays Brilliant's for those)`;
+}
+/* a pick made on another page (compare.html, screens.html) shows here too */
+addEventListener("storage", e => { if (e.key !== KEY) return; try { picks = JSON.parse(e.newValue || "{}") || {}; } catch (x) {} drawList(); count(); });
+
+(async () => {
+  drawPicker();
+  fit(); addEventListener("resize", fit);
+  document.getElementById("reload").onclick = load;
+  try {
+    const data = await (await fetch("moments.json?t=" + Date.now())).json();
+    ALL = Array.isArray(data) ? data : data.moments;
+    ALL.forEach(m => { BY[m.id] = m; });
+  } catch (e) { document.getElementById("wire").textContent = "Could not read moments.json: " + e.message; }
+  load(); count();
+  document.getElementById("copy").onclick = () => {
+    const txt = "Sound picks:\n" + swappable().map(m => `${m.id}: ${picks[m.id] === "b" ? "Brilliant " + m.brilliant : picks[m.id] === "k" ? "keep ours" : "not chosen"}`).join("\n");
+    const c = document.getElementById("copy");
+    const done = () => { c.textContent = "Copied ✓"; setTimeout(() => c.textContent = "Copy my picks", 1500); };
+    try { navigator.clipboard.writeText(txt).then(done, () => prompt("Copy this:", txt)); } catch (e) { prompt("Copy this:", txt); }
+  };
+})();
+</script>
+</body>
+</html>

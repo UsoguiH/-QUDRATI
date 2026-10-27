@@ -90,7 +90,7 @@ const LEAGUE_NAMES = [
   "أبو فهد", "أم يزيد", "أبو ناصر", "أم ريم",
   "طموح", "الفارس", "بنت الرياض", "مستعد", "قدرات ٩٩", "هدفي ١٠٠",
   "الصقر", "نجم القياس", "لا مستحيل", "مجتهد", "ابن القصيم",
-  "ريما ✨", "نايف ⚡", "جود 🌙", "سلطان 🦅", "أروى 🎯", "راكان 🔥"
+  "ريما", "نايف", "جود", "سلطان", "أروى", "راكان"
 ];
 const LEAGUE_SIZE = 29;   /* + you = 30, the size a real weekly league runs at */
 const LEAGUE_TIERS = [
@@ -271,7 +271,14 @@ const sndTick = () => beep([[1080, .05]]);
 const sndFreeze = () => beep([[1568, .07], [2093, .1], [1318, .18]]); // icy shimmer
 const sndFifty = () => beep([[880, .06], [587, .14]]);                 // two-snip
 const sndChest = () => beep([[392, .09], [523, .09], [659, .09], [784, .1], [1047, .14], [1568, .3]]); // treasure fanfare
-const sndRankUp = () => beep([[523, .1], [659, .1], [784, .12], [1047, .12], [1319, .16], [1047, .1], [1568, .42]]); // rank-up fanfare
+/* the rank-up is heard in Duolingo's own files (the user, 2026-10-26: «take the
+   sound of rank up from Duolingo itself»). Duolingo's promotion screen plays no
+   sound of its own (leaderboard_refresh_result.riv carries none; it only buzzes,
+   a faint two seconds and a 100ms pulse on the landing), so its league sounds
+   play on our beats: card_unlock as the padlock springs, the gold lock-in on
+   the burst, with that landing pulse */
+const sndRankUp = () => { sfxPlay("lbGold", 1, () => beep([[659, .09], [784, .09], [1047, .1], [1319, .26]])); buzz(100); };
+const sndRankUnlock = () => sfxPlay("lbUnlock", 1, () => beep([[392, .06], [523, .08]]));
 
 /* Correct-answer voice clip (real recorded chime). Preloaded once at boot
    and pooled (3 elements) so back-to-back correct answers can overlap
@@ -511,7 +518,7 @@ function renderSidebar() {
   ];
   el.innerHTML = `
     <div class="sb-logo">
-      <svg width="34" height="34" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46" fill="#58CC02"/><text x="50" y="68" font-size="54" text-anchor="middle">⭐</text></svg>
+      <img src="assets/app-icon/favicon-96.png" width="34" height="34" alt="" aria-hidden="true">
       <span>قدراتي</span>
     </div>
     <div class="sb-nav">
@@ -594,7 +601,7 @@ function go(v) { view = v; render(); window.scrollTo(0, 0); }
 const ICO_FILE = { "nav-exam": "nav-exam-64.png" }; // raster icons (user-provided art)
 const ico = (name, size) => `<img class="ic" src="assets/icons/${ICO_FILE[name] || name + ".svg"}" width="${size}" height="${size}" alt="">`;
 
-/* ---------------- قدّور (the mascot) ----------------
+/* ---------------- فهيم (the mascot) ----------------
    One flat PNG per emotional state. Only the states whose art actually exists
    are listed: a name that is not here renders nothing at all rather than a
    broken-image icon on a live site. Add a key the same day you add its file.
@@ -680,7 +687,7 @@ A.questBanner = function () {
     <div class="qb-txt"><b>اكتمل تمرين اليوم!</b><span>صندوقك بانتظارك في الرئيسية</span>
       <div class="qb-bar"><div class="duo-bar"><i style="width:${Math.round((dailyGoal() - 1) / dailyGoal() * 100)}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft)"></i></div><em>${toAr(dailyGoal() - 1)}/${toAr(dailyGoal())}</em></div>
     </div></div>`;
-  document.body.appendChild(el);
+  document.body.appendChild(el); snd("quest-banner");
   const fill = () => { el.querySelector(".duo-bar > i").style.width = "100%"; el.querySelector(".qb-bar em").textContent = `${toAr(dailyGoal())}/${toAr(dailyGoal())}`; el.classList.add("full"); };
   if (motionReduced()) fill(); else setTimeout(fill, 650);
   clearTimeout(questBannerT);
@@ -688,6 +695,7 @@ A.questBanner = function () {
 };
 let chestTipT = 0;
 function chestTip(msg) {
+  snd("chest-tip");
   const host = document.querySelector(".chest-float");
   if (!host) { toast(msg.replace(/<[^>]+>/g, "")); return; }
   host.querySelectorAll(".chest-tip").forEach(e => e.remove());
@@ -810,6 +818,7 @@ A.startStreakSave = function () {
 };
 
 A.startMix = function () {
+  snd("start-lesson");
   const acc = domAccuracy();
   const weights = {};
   Object.values(acc).forEach(x => { weights[x.key] = x.acc === null ? 1 : Math.max(0.12, 1 - x.acc); });
@@ -973,7 +982,7 @@ function plAnswer(skip, instant) {
     SES.idx >= SES.place.length ? placementComplete() : renderPlace();
   };
   if (instant) { go(); return; }
-  sndTap();
+  snd(skip ? "placement-dont-know" : "placement-answer", () => sndTap());
   document.querySelectorAll(".screen-place .choice, .pl-actions .btn").forEach(b => { b.disabled = true; });
   /* every answer lands with the lesson's jump — here on whatever was picked, so
      it says «taken», never «right» (the test gives no verdict) */
@@ -1022,6 +1031,7 @@ function levelIcon(i, size) {
   </svg>`;
 }
 function placementComplete() {
+  snd("placement-complete");
   const log = SES.plLog, items = SES.place;
   const asked = items.filter(x => log[x.q.id]);
   const right = asked.filter(x => log[x.q.id].ok).length;
@@ -1107,7 +1117,7 @@ A.placeGoLesson = function () {
   save();
   const [d, l] = PLACE_START.key.split(".");
   PLACE_START = null;
-  A.startLesson(d, l);
+  snd("start-lesson"); A.startLesson(d, l);
 };
 
 /* Duolingo's exit ramp, read from its «Is this lesson too hard?» sheet: a
@@ -1122,7 +1132,7 @@ function placeNudgeDue() {
   return ft.length >= 4 && ft.filter(Boolean).length / ft.length < .5;
 }
 function placeNudge() {
-  SES.nudged = true;
+  SES.nudged = true; snd("place-nudge");
   askConfirm("الدرس صعب عليك؟", "نقدر ننقلك لدرس أقرب لمستواك — وترجع لهنا بعدين.", "أكمل الدرس", "جرّب درس أسهل", placeStepDown);
 }
 /* The test can leave gaps, so «one step back» is by path order: the block of
@@ -1266,14 +1276,27 @@ function chestSVG(cls) { return chestArt(CHEST_PAINT).closed.replace('class="clo
 
 /* Floating daily chest (Duolingo style): fixed above the bottom nav
    on the path, stays put while scrolling. The pill under it shows
-   the n/10 count, a pulsing "افتح!" when ready, or a green ✓. */
+   the n/10 count, or a green ✓; when ready, Duolingo's «افتح» bubble over it. */
 function floatingQuest() {
   dailyReset();
   const n = S.daily.n, ready = n >= dailyGoal() && !S.daily.claimed;
-  return `<button class="chest-float ${ready ? "ready" : ""} ${S.daily.claimed ? "claimed" : ""}" onclick="A.chestTap()" aria-label="صندوق اليوم">
-    ${chestSVG("cf-chest" + (ready ? " qc-bounce" : n >= dailyGoal() - 2 && !S.daily.claimed ? " qc-excited" : ""))}
+  /* Ready, it knocks to be opened (2026-10-26: «creative … anyone see it
+     immediately»): every 2.6s it crouches and jumps, its lid pops open a crack
+     in the air with the gold light inside, two of our gems jump out and fall
+     back in, and it lands with a squash; a red «١» sits on its corner the way a
+     phone marks something waiting, and a gold «افتح!» button under it beats on
+     the landing. One CSS cycle (cfHop) keeps every part on the same beat. */
+  if (ready) return `<button class="chest-float ready" onclick="A.chestTap()" aria-label="صندوق اليوم — افتحه">
+    <span class="cf-box">
+      <i class="cf-gem cf-g1" aria-hidden="true">${CV_GEM}</i><i class="cf-gem cf-g2" aria-hidden="true">${CV_GEM}</i>
+      ${chestSVG("cf-chest cf-hop").replace('<g class="ch-lid">', '<ellipse class="cf-light" cx="130" cy="184" rx="88" ry="15"/><g class="ch-lid">')}
+      <span class="cf-badge" aria-hidden="true">١</span>
+    </span>
+    <span class="cf-open" aria-hidden="true">افتح!</span>
+  </button>`;
+  return `<button class="chest-float ${S.daily.claimed ? "claimed" : ""}" onclick="A.chestTap()" aria-label="صندوق اليوم">
+    ${chestSVG("cf-chest" + (n >= dailyGoal() - 2 && !S.daily.claimed ? " qc-excited" : ""))}
     ${S.daily.claimed ? `<span class="sc-pill sc-done">${CHECK_BADGE}</span>`
-      : ready ? `<span class="sc-pill sc-open">افتح!</span>`
         : `<span class="sc-pill sc-count">${toAr(n)}/${toAr(dailyGoal())}</span>`}
   </button>`;
 }
@@ -1388,6 +1411,7 @@ A.openChest = function () {
   dailyReset();
   if (S.daily.n < dailyGoal() || S.daily.claimed) return;
   if (CV) return;
+  sndWarm(SND_CHEST);
   const art = chestArt(CHEST_PAINT), gems = chestGems();
   const veil = document.createElement("div");
   veil.className = "chest-veil";
@@ -1495,13 +1519,13 @@ A.openChest = function () {
     dots[CV.taps - 1].classList.remove("active"); dots[CV.taps - 1].classList.add("used");
     if (CV.taps < 3) dots[CV.taps].classList.add("active", "pop");
     setCap(CV_CAPS[CV.taps]);
-    CV.arc = { t0: cvNow() }; startHop(CV_TAP_HOP); cvSnd.tap();
+    CV.arc = { t0: cvNow() }; startHop(CV_TAP_HOP); snd("chest-tap", () => cvSnd.tap(), "xp-tally-" + [1, 3, 5][CV.taps - 1]);   // three hits, three tallies a step up
     if (CV.taps === 3) setTimeout(() => { if (CV && CV.taps === 3 && !CV.open) { dotsRow.classList.add("hide"); setCap(CV_CAPS[3]); } }, 250);
   };
   const openChest = () => {
     CV.open = true; CV.openT0 = cvNow(); CV.hop = null; CV.arc = null; actx.clearRect(0, 0, 480, 1044);
     chest.classList.add("opened"); ttl.classList.add("hide"); capA.classList.add("hide"); capB.classList.add("hide");
-    body.style.transform = ""; cvSnd.open();
+    body.style.transform = ""; snd("chest-open", () => cvSnd.open());
     [[-62, -40], [-22, -84], [30, -66], [72, -34], [4, -22]].forEach((p, i) => {
       const e = document.createElement("span"); e.className = "cv-burst"; e.style.cssText = `left:130px;top:150px;--dx:${p[0]}px;--dy:${p[1]}px;--o:${i * .04}s;color:#fff`;
       e.innerHTML = CV_STAR; fx.appendChild(e);
@@ -1552,12 +1576,12 @@ function cvReward(instant) {
   const last = 0.05 + (art.length - 1) * stagger + 0.3;
   setTimeout(() => {
     if (!CV) return;
-    reward.classList.add("told"); cvSnd.gems();
+    reward.classList.add("told"); snd("chest-gems-reveal", () => cvSnd.gems());
     const t0 = cvNow(), steps = 12; let shown = from;
     (function step() {
       if (!CV) return;
       const u = cvClamp((cvNow() - t0) / 0.8, 0, 1), v = from + Math.round(Math.floor(u * steps + 1e-6) * n / steps);
-      if (v !== shown) { shown = v; num.textContent = toAr(v); counter.classList.remove("bump"); void counter.offsetWidth; counter.classList.add("bump"); cvSnd.tick(); }
+      if (v !== shown) { shown = v; num.textContent = toAr(v); counter.classList.remove("bump"); void counter.offsetWidth; counter.classList.add("bump"); snd("chest-gems-tick", () => cvSnd.tick()); }
       if (u < 1) requestAnimationFrame(step); else num.textContent = toAr(from + n);
     })();
   }, (last + 0.2) * 1000);
@@ -1568,7 +1592,7 @@ A.claimChest = function (gems) {
      screen for the 380ms the veil takes to fade, and a double tap in that window
      used to pay the chest twice — found by pressing Enter on it with a keyboard. */
   if (!S.daily || S.daily.claimed) return;
-  gainGems(gems); S.daily.claimed = true; save();
+  snd("continue"); gainGems(gems); S.daily.claimed = true; save();
   const v = document.querySelector(".chest-veil");
   if (CV) { CV.running = false; removeEventListener("resize", CV.fit); if (CV.untrap) CV.untrap(); CV = null; }
   if (v) { v.classList.add("out"); setTimeout(() => { v.remove(); render(); }, 380); }
@@ -1580,6 +1604,15 @@ A.claimChest = function (gems) {
    (2026-10-23, the user: «every time he finishes a single lesson»): set in
    lessonComplete, played once by pathPay when the path is next drawn */
 let PATH_PAY = null;
+/* «الدرس التالي» goes by the path: the node's ring fills there first, then
+   this lesson starts on its own (2026-10-27: the user never saw the beat,
+   because the button skipped the path) */
+let PATH_NEXT = null;
+function pathNext(ms) {
+  const nx = PATH_NEXT; PATH_NEXT = null;
+  if (!nx) return;
+  setTimeout(() => { if (view === "path" && !SES && !document.querySelector(".lesson-pop, .streak-veil, .chest-veil")) A.startLearn(nx.domKey, nx.lesKey, nx.next); }, ms);
+}
 /* Every lesson has its own sign in its node, where the path used to draw the
    same star 26 times (2026-10-23: «change stars to something else, and each
    level something different»). Drawn on a 40-unit square in the star's own
@@ -1618,13 +1651,49 @@ const LESSON_ICON = {
   solids: `<path class="s j" d="M20 4 35 12v16L20 36 5 28V12z"/><path class="s j" d="M5 12l15 8 15-8M20 20v16"/>`
 };
 const LESSON_ICON_STAR = `<path class="f" d="M18.27 6.05c1.06-2.36 4.4-2.36 5.47 0l2.22 4.91c.44.99 1.39 1.66 2.47 1.75l5.33.47c2.66.24 3.71 3.57 1.66 5.29l-3.8 3.18a3.2 3.2 0 0 0-1 2.99l1.15 4.85c.6 2.55-2.12 4.59-4.4 3.3l-4.89-2.76a3.2 3.2 0 0 0-2.95 0l-4.89 2.76c-2.28 1.29-5-.75-4.4-3.3l1.15-4.85a3.2 3.2 0 0 0-1-2.99l-3.8-3.18c-2.05-1.72-1-5.05 1.66-5.29l5.33-.47a3.2 3.2 0 0 0 2.47-1.75z"/>`;
+/* The path node is a hexagon (2026-10-26, the user: «دوائر الlevel تصير مضلع
+   … it must have the same animation as the circle exactly»). A hexagon is the
+   flat-top kind, so 71 × 58 is all but regular and it sits on the path like a
+   tile on the ground; its lip is the same hexagon 7px lower, its shine a
+   smaller one at the top, the way the coin's dome was. Everything that moved
+   the coin moves the button as before: only the shape and the colours it
+   paints changed, from the button's own background and shadow to the paths. */
+function roundPoly(pts, r, start) {           // start sits on the edge from the last point to the first
+  const n = pts.length, at = (p, q, d) => { const dx = q[0] - p[0], dy = q[1] - p[1], l = Math.hypot(dx, dy); return [p[0] + dx / l * d, p[1] + dy / l * d]; };
+  const f = p => p[0].toFixed(2) + " " + p[1].toFixed(2);
+  let d = "M" + f(start);
+  for (let k = 0; k < n; k++) {
+    const P = pts[k], A = pts[(k + n - 1) % n], B = pts[(k + 1) % n];
+    d += " L" + f(at(P, A, r)) + " Q" + f(P) + " " + f(at(P, B, r));
+  }
+  return d + " Z";
+}
+const hexPts = (x, y, w, h) => [[x + w * .25, y], [x, y + h / 2], [x + w * .25, y + h], [x + w * .75, y + h], [x + w, y + h / 2], [x + w * .75, y]];
+const NODE_HEX = roundPoly(hexPts(0, 0, 71, 58), 10, [35.5, 0]);
+const NODE_HEX_HI = roundPoly(hexPts(9, 4, 53, 40), 8, [35.5, 4]);
+const NODE_SHAPE = `<svg class="node-sh" viewBox="0 0 71 58" aria-hidden="true"><path class="nd-lip" d="${NODE_HEX}"/><path class="nd-face" d="${NODE_HEX}"/><path class="nd-hi" d="${NODE_HEX_HI}"/></svg>`;
+/* a finished lesson is our hexagon in the gold of Duolingo's finished node
+   (the user, 2026-10-27, with Duolingo's coin: «make the level i finished like
+   this», then «it must be the same shape not circle … like this but for our
+   shape»): the gold face on its darker lip, two bands of light across it rising
+   to the right, and the star in brown-gold instead of the lesson's sign. The
+   bands are clipped to the face by one shared clipPath (NODE_GOLD_DEFS, once on
+   the path) */
+const goldBand = (cx, w) => {
+  const ux = .5, uy = -.866, nx = .866, ny = .5, L = 44, f = n => n.toFixed(2);
+  const p = (t, o) => f(cx + ux * t + nx * o) + " " + f(29 + uy * t + ny * o);
+  return `M${p(-L, -w / 2)} L${p(L, -w / 2)} L${p(L, w / 2)} L${p(-L, w / 2)} Z`;
+};
+const NODE_GOLD = `<svg class="node-sh nd-gold" viewBox="0 0 71 58" aria-hidden="true"><path class="nd-lip" d="${NODE_HEX}"/><path class="nd-face" d="${NODE_HEX}"/><g class="nd-hi" clip-path="url(#ndGold)"><path d="${goldBand(20, 11)}"/><path d="${goldBand(47, 6)}"/></g></svg>`;
+const NODE_GOLD_DEFS = `<svg class="nd-defs" width="0" height="0" aria-hidden="true"><clipPath id="ndGold"><path d="${NODE_HEX}"/></clipPath></svg>`;
+const NODE_DONE_IC = `<svg class="node-ic" viewBox="0 0 40 40" aria-hidden="true">${LESSON_ICON_STAR}</svg>`;
 function lessonIcon(lesKey) {
   return `<svg class="node-ic" viewBox="0 0 40 40" aria-hidden="true">${LESSON_ICON[lesKey] || LESSON_ICON_STAR}</svg>`;
 }
 function renderPath() {
   const ds = domains();
   if (!ds.length) {
-    $app.innerHTML = statbar() + `<div class="screen"><div class="empty-note">⭐<br>بنك الأسئلة قيد التحميل…<br>تأكد من وجود ملفات js/data ثم حدّث الصفحة.</div></div>` + bottomnav("path");
+    $app.innerHTML = statbar() + `<div class="screen"><div class="empty-note">بنك الأسئلة قيد التحميل…<br>تأكد من وجود ملفات js/data ثم حدّث الصفحة.</div></div>` + bottomnav("path");
     return;
   }
   const flat = allLessons();
@@ -1656,20 +1725,26 @@ function renderPath() {
       const x = offsets[gi % offsets.length];
       /* the lesson's own sign (LESSON_ICON): white on its face, the star-done
          brown on a gold node so it reads against the gold */
-      const nodeIcon = lessonIcon(l.key);
+      const nodeIcon = done ? NODE_DONE_IC : lessonIcon(l.key);
       /* a node taught in short lessons fills its ring one lesson at a time */
       const LS = current && learnSet(key);
       const frac = LS ? learnRec(key).done.length / LS.lessons.length : 0;
       const ring = current ? ringSvg(LS ? LS.lessons.length : 1, LS ? learnRec(key).done.length : 0, u.c) : "";
-      // exact Figma "Level" colors per state: gold done / unit-color open / gray locked
-      const nc = done ? ["#FFC800", "#E6A000", "#FFE700"] : open ? [u.c, u.s, u.h] : ["#D2D2D2", "#ADADAD", "transparent"];
-      html += `<div class="path-row${current ? " row-tip" : ""}"><div class="node-col${current ? " bob" : ""}${stale ? " stale" : ""}" style="right:${x}px" data-key="${key}"${LS ? ` data-n="${LS.lessons.length}"` : ""}>
+      // gold done / unit-color open / locked in Duolingo's own (LevelOval.Locked:
+      // face Swan, the Rive file's #AFAFAF lip, the icon Hare in CSS)
+      const nc = done ? ["#FFC800", "#E6A000", "#FFE700"] : open ? [u.c, u.s, u.h] : ["#E5E5E5", "#AFAFAF", "transparent"];
+      /* the title stands beside the node, on the side towards the middle of the
+         path (2026-10-26: «make it left or right based on the location of the
+         level»); a node in the middle takes the side the path is not heading to */
+      const side = x > 0 ? "r" : x < 0 ? "l" : gi % offsets.length === 0 ? "l" : "r";
+      html += `<div class="path-row${current ? " row-tip" : ""}"><div class="node-col lbl-${side}${current ? " bob" : ""}${stale ? " stale" : ""}" style="right:${x}px;--ax:${Math.abs(x)}" data-key="${key}"${LS ? ` data-n="${LS.lessons.length}"` : ""}>
         ${ring}
         ${stale ? `<span class="node-refresh" title="حان وقت المراجعة" aria-hidden="true">${REFRESH_SVG}</span>` : ""}
         <button class="node ${cls}" style="--node-c:${nc[0]};--node-s:${nc[1]};--node-h:${nc[2]};--d:${(gi % 10) * 0.06}s" data-open="${u.c}|${u.s}|${u.h}"
           aria-label="${l.title} — ${done ? "مكتمل، " + arPlural(p.stars, "نجمة واحدة", "نجمتان", "نجوم", "نجمة") : current ? "الدرس الحالي" : "مقفل"}"
           ${open ? `onpointerdown="A.nodePress()" onclick="A.nodeTap(event,'${d.key}','${l.key}',${li})"` : "disabled"}>
-          ${current ? `<span class="node-tip" style="color:${u.c}">${frac > 0 ? "كمّل" : "ابدأ"}</span>` : ""}
+          ${done ? NODE_GOLD : NODE_SHAPE}
+          ${current && !(frac > 0) ? `<span class="node-tip" style="color:${u.c}">ابدأ</span>` : ""}
           ${nodeIcon}
         </button>
         ${done ? '<span class="node-stars" aria-hidden="true">' + [1, 2, 3].map(sn =>
@@ -1680,13 +1755,13 @@ function renderPath() {
     });
     html += `</div></section>`;
   });
-  $app.innerHTML = statbar() + `<div class="screen">${countdownCard()}${dueCard()}${html}<div class="path-tail"></div></div>` + floatingQuest() + bottomnav("path");
+  $app.innerHTML = statbar() + `<div class="screen">${NODE_GOLD_DEFS}${countdownCard()}${dueCard()}${html}<div class="path-tail"></div></div>` + floatingQuest() + PATH_FAB + bottomnav("path");
   requestAnimationFrame(() => {
-    drawTrails();
     pathReveal();
-    if (PATH_PAY) pathPay(); else nodeFlipLoop();
-    ["press", "release", "close"].forEach(sfxLoad);
+    /* a rank-up on top would hide the beat: it waits, and plays when the rank-up closes and repaints the path */
+    if (PATH_PAY && !document.querySelector(".rankup-veil")) pathPay(); else nodeFlipLoop();
     const cur = document.querySelector('.path-row .bob');
+    pathFabCheck();
     if (!cur) return;
     /* Only chase the node when it is genuinely out of reach. Centring it
        unconditionally threw a new player past the countdown and the daily
@@ -1696,6 +1771,40 @@ function renderPath() {
       cur.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 }
+
+/* Duolingo's «back to my lesson» button (fragment_path.xml autoscrollFab,
+   ArrowView, PathFragment; the user, 2026-10-26: «add a button for going up to
+   my level when i get very down — exactly from Duolingo»): a 52px white card
+   with a 2px grey rim and its 4px lip, radius 14, 16px off the screen's edge
+   above the tab bar, a blue arrow (4px round stroke on 20 × 24) pointing to the
+   current node. It shows the moment no part of the node is on screen — at once,
+   no animation — and when the node comes back it shrinks to nothing in 200ms.
+   A tap smooth-scrolls the node to the middle of the screen. Duolingo puts it on
+   the end side; ours stands on the other, because the chest floats there. */
+const PATH_FAB = `<button class="path-fab" id="pathFab" onclick="A.pathFab()" aria-label="ارجع لدرسك" tabindex="-1"><svg viewBox="0 0 20 24" aria-hidden="true"><path d="M10 4 L10 20 M16 9.6 L10 4 L4 9.6"/></svg></button>`;
+let pathFabRaf = 0;
+function pathFabCheck() {
+  const fab = document.getElementById("pathFab"), cur = document.querySelector(".path-row .bob .node");
+  if (!fab) return;
+  if (!cur) { fab.classList.remove("on"); return; }
+  const r = cur.getBoundingClientRect(), bar = document.querySelector(".statbar");
+  const top = bar ? bar.getBoundingClientRect().bottom : 0, bottom = innerHeight - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h")) || 80);
+  const above = r.bottom <= top, below = r.top >= bottom;
+  fab.classList.toggle("on", above || below);
+  fab.classList.toggle("down", below);
+  fab.tabIndex = above || below ? 0 : -1;
+}
+window.addEventListener("scroll", () => {
+  if (pathFabRaf) return;
+  pathFabRaf = requestAnimationFrame(() => { pathFabRaf = 0; pathFabCheck(); });
+}, { passive: true });
+window.addEventListener("resize", () => pathFabCheck());
+A.pathFab = function () {
+  const cur = document.querySelector(".path-row .bob");
+  if (!cur) return;
+  buzz(8);
+  cur.scrollIntoView({ behavior: motionReduced() ? "auto" : "smooth", block: "center" });
+};
 
 /* A node the student has not scrolled to yet rises in when they reach it. Once
    each, never the bobbing one (it owns its own animation), and not at all when
@@ -1771,8 +1880,15 @@ const DIA_SVG = `<svg viewBox="-12 -12 24 24"><path d="M0-9.5L9.5 0 0 9.5-9.5 0Z
    press and release of a node, the card closing, and node_complete (it starts
    on the take-off, swells through the flip and lands with the coin). The
    clicks are WAV: an mp3 frame is longer than the click itself */
-const SFX_SRC = { done: "assets/sounds/node-complete.mp3", press: "assets/sounds/node-press.wav",
-  release: "assets/sounds/node-release.wav", close: "assets/sounds/node-close.wav" };
+const SFX_SRC = { done: "assets/sounds/node-complete.mp3", right: "assets/sounds/right-answer.mp3",
+  lcDone: "assets/sounds/lesson-complete.mp3", lcPerfect: "assets/sounds/lesson-perfect.mp3",
+  stat1: "assets/sounds/stat-1.mp3", stat2: "assets/sounds/stat-2.mp3", stat3: "assets/sounds/stat-3.mp3" };
+/* Duolingo's quest-bar sounds (daily_quest_bar_*): by how far the bar jumps, and whether it fills */
+[25, 50, 75, 100].forEach(n => { SFX_SRC["barP" + n] = `assets/sounds/bar-partial-${n}.mp3`; SFX_SRC["barC" + n] = `assets/sounds/bar-complete-${n}.mp3`; });
+/* Duolingo's leaderboard sounds (leaderboard_*): the lift, the move up, the lock-in, and fifteen tick-ups */
+Object.assign(SFX_SRC, { lbUnlock: "assets/sounds/lb-unlock.mp3", lbMove: "assets/sounds/lb-moveup.mp3",
+  lbGold: "assets/sounds/lb-lockin-gold.mp3", lbGrey: "assets/sounds/lb-lockin-grey.mp3" });
+for (let k = 1; k <= 15; k++) SFX_SRC["lbTick" + k] = `assets/sounds/lb-tick-${String(k).padStart(2, "0")}.mp3`;
 const SFX_BUF = {}, SFX_P = {};
 function sfxLoad(k) {
   if (SFX_P[k] || !window.fetch) return;
@@ -1797,6 +1913,101 @@ function sfxPlay(k, gain, fallback) {
   sfxLoad(k);
   if (fallback) fallback();
 }
+/* Brilliant's sound effects (the user, 2026-10-27, after hearing every one in
+   tools/brilliant-sounds: «I love it all … for everything we will use
+   Brilliant voice effects»). Each moment that makes a sound names itself —
+   snd("pair-pick", ourOldSound) — and plays the Brilliant file SND_MAP gives
+   it from assets/sounds/bri/; a call site may hand its own file (a choice's
+   pitch, a tally a step higher) or "" for silence. Our correct-answer sound
+   and Duolingo's files are not in the map and never pass through here; a
+   moment without a Brilliant sound, or whose file is not decoded yet, plays
+   what it played before. The files come in three bites, so a first visit on
+   mobile data does not pay for all of them at once: the small everyday ones
+   on the first touch, the rest when a lesson starts (warmStreak), the chest's
+   own when it opens. */
+const SND_MAP = {
+  "choice-select": "assessment-click-option-1",
+  "wrong-answer": "incorrect",
+  "teach-check-wrong": "incorrect",
+  "time-up": "incorrect",
+  "timer-tick": "tutor-xp-countup-stop",
+  "answer-run": "streak-inlesson",
+  "continue": "continue",
+  "teach-chunk-done": "continue",
+  "help-open": "hint",
+  "lesson-failed": "lesson-failed",
+  "revive": "streak-charge",
+  "practice-complete": "lesson-complete",
+  "report-sent": "assessment-submit",
+  "tile-place": "lightweight-choice",
+  "tile-remove": "toggle-off",
+  "keypad-key": "assessment-click-option-1",
+  "pair-pick": "lightweight-choice",
+  "pair-match": "diagnostic-answer",
+  "pair-miss": "incorrect",
+  "rule-terms-light": "assessment-click-option-1",
+  "rule-said": "hint",
+  "rule-fill-miss": "incorrect",
+  "boost-toggle": "toggle-on",
+  "start-lesson": "start-lesson",
+  "ring-segment-pay": "highlight-node",
+  "chest-tip": "lightweight-choice",
+  "quest-banner": "endstate",
+  "chest-tap": "assessment-click-option-1",
+  "chest-open": "level-mastered",
+  "chest-gems-reveal": "xp-tally-final",
+  "chest-gems-tick": "tutor-xp-countup-start",
+  "climb-xp-count": "tutor-xp-countup-start",
+  "climb-pass-note": "xp-tally-1",
+  "progress-gems": "xp-tally-final",
+  "streak-open": "streak-celebration",
+  "streak-coin": "streak-charge",
+  "placement-answer": "diagnostic-answer",
+  "placement-dont-know": "assessment-dont-know",
+  "placement-complete": "diagnostic-complete",
+  "place-nudge": "router-koji-recommendation",
+  "mock-select": "assessment-click-option-1",
+  "mock-flag": "toggle-on",
+  "mock-end-section": "assessment-submit",
+  "mock-pass": "level-passed",
+  "mock-fail": "level-failed",
+  "ob-continue": "continue",
+  "ob-pick": "lightweight-choice",
+  "ob-goal-pick": "lightweight-choice",
+  "taste-tap": "assessment-click-option-1",
+  "taste-swap-lift": "drag-started",
+  "taste-swap-land": "drag-released",
+  "taste-equals": "highlight-node",
+  "exam-saved": "assessment-submit",
+  "signin-step": "continue",
+  "signin-later": "skip",
+  "signin-done": "diagnostic-complete",
+  "settings-toggle": "toggle-on",
+  "settings-segment": "lightweight-choice",
+  "settings-name-saved": "assessment-submit"
+};
+const SND_FILES = ["assessment-click-option-1","assessment-click-option-2","assessment-click-option-3","assessment-click-option-4","assessment-dont-know","assessment-submit","continue","diagnostic-answer","diagnostic-complete","drag-released","drag-started","endstate","highlight-node","hint","incorrect","lesson-complete","lesson-failed","level-failed","level-mastered","level-passed","lightweight-choice","router-koji-recommendation","skip","start-lesson","streak-celebration","streak-charge","streak-inlesson","toggle-off","toggle-on","tutor-xp-countup-start","tutor-xp-countup-stop","xp-tally-1","xp-tally-2","xp-tally-3","xp-tally-4","xp-tally-5","xp-tally-final"];
+const SND_ONCE = { "chest-gems-tick": 1500 };      // a counted-up number calls on every step; Brilliant's count-up is one sound
+const SND_DELAY = { "answer-run": 260 };           // the streak sting lands just after the correct sound
+const sndLast = {};
+SND_FILES.forEach(f => { SFX_SRC["b:" + f] = "assets/sounds/bri/" + f + ".mp3"; });
+function snd(id, fn, file) {
+  const f = file === undefined ? SND_MAP[id] : file;
+  if (f === undefined) { if (fn) fn(); return; }
+  if (!f || !S.sound) return;
+  if (SND_ONCE[id]) { const t = performance.now(); if (t - (sndLast[id] || -1e9) < SND_ONCE[id]) return; sndLast[id] = t; }
+  if (!SFX_BUF["b:" + f]) sndWarm();                 // one not ready yet: the rest come now, not when the phone is next idle
+  const go = () => sfxPlay("b:" + f, .9, fn);
+  if (SND_DELAY[id]) setTimeout(go, SND_DELAY[id]); else go();
+}
+const SND_FIRST = ["continue", "lightweight-choice", "assessment-click-option-1", "assessment-click-option-2", "assessment-click-option-3",
+  "assessment-click-option-4", "toggle-on", "toggle-off", "start-lesson", "skip", "drag-started", "drag-released", "highlight-node",
+  "incorrect", "streak-inlesson", "tutor-xp-countup-stop", "xp-tally-1", "diagnostic-answer"];
+const SND_CHEST = ["xp-tally-1", "xp-tally-3", "xp-tally-5", "level-mastered", "xp-tally-final", "tutor-xp-countup-start", "continue"];
+function sndWarm(list) { (Array.isArray(list) ? list : SND_FILES).forEach(f => sfxLoad("b:" + f)); }
+const sndFirst = () => sndWarm(SND_FIRST);
+addEventListener("pointerdown", sndFirst, { once: true, capture: true });
+addEventListener("keydown", sndFirst, { once: true, capture: true });
 /* any CSS colour as [r, g, b] */
 function rgbOf(c) {
   const x = (rgbOf.ctx = rgbOf.ctx || document.createElement("canvas").getContext("2d"));
@@ -1812,9 +2023,9 @@ const toWhite = (c, f) => "rgb(" + rgbOf(c).map(v => Math.round(v + (255 - v) * 
    right way — gold, if that was the node's last lesson — and drops onto its
    shadow. It plays when a node is finished */
 function coinPay(col, btn, pay, keep, end) {
-  const ic = btn.querySelector(".node-ic");
-  const cs = getComputedStyle(btn), root = getComputedStyle(document.documentElement);
-  const c0 = cs.backgroundColor, s0 = (cs.boxShadow.match(/rgba?\([^)]*\)|#\w+/) || [c0])[0];
+  const ic = btn.querySelector(".node-ic"), face = btn.querySelector(".nd-face"), lipEl = btn.querySelector(".nd-lip"), hi = btn.querySelector(".nd-hi");
+  const root = getComputedStyle(document.documentElement);
+  const c0 = getComputedStyle(face).fill, s0 = getComputedStyle(lipEl).fill;
   const c1 = pay.gold ? root.getPropertyValue("--gold").trim() : c0, s1 = pay.gold ? root.getPropertyValue("--gold-dk").trim() : s0;
   const k = 58 / 120, kx = 71 / 148, top0 = btn.offsetTop, at = t => t / PAY_MS, lin = { easing: "linear" };
   const ghost = document.createElement("span");
@@ -1834,18 +2045,22 @@ function coinPay(col, btn, pay, keep, end) {
     return el;
   });
   btn.style.transformOrigin = "50% 0";
-  btn.animate(PAY_COIN.map(([t, top, h, lip, w, p]) => {
-    const sy = h / 120;
-    return { offset: at(t), ...lin,
-      transform: `translateY(${((top - 163) * k).toFixed(2)}px) scale(${(w / 148).toFixed(3)},${sy.toFixed(3)})`,
-      background: p === 1 ? s1 : p ? c1 : c0,
-      boxShadow: `0 ${(lip * 7 / 16 / sy).toFixed(2)}px 0 ${p === 1 ? toWhite(c1, .15) : p ? s1 : s0}` };
-  }), { duration: PAY_MS });
+  btn.animate(PAY_COIN.map(([t, top, h, lip, w, p]) => ({ offset: at(t), ...lin,
+    transform: `translateY(${((top - 163) * k).toFixed(2)}px) scale(${(w / 148).toFixed(3)},${(h / 120).toFixed(3)})` })), { duration: PAY_MS });
+  /* the face's paint and the lip's paint and drop, frame for frame with it */
+  face.animate(PAY_COIN.map(([t, , , , , p]) => ({ offset: at(t), ...lin, fill: p === 1 ? s1 : p ? c1 : c0 })), { duration: PAY_MS });
+  lipEl.animate(PAY_COIN.map(([t, , h, lip, , p]) => ({ offset: at(t), ...lin,
+    fill: p === 1 ? toWhite(c1, .15) : p ? s1 : s0, transform: `translateY(${(lip * 7 / 16 / (h / 120)).toFixed(2)}px)` })), { duration: PAY_MS });
   if (ic) ic.animate(PAY_ICON.map(([t, o, s]) => ({ offset: at(t), ...lin, opacity: o, transform: `scale(${s})` })), { duration: PAY_MS });
-  try { btn.animate([{ opacity: 1 }, { opacity: 1, offset: at(662) }, { opacity: 0, offset: at(663) }, { opacity: 0, offset: at(688) }, { opacity: 1, offset: at(689) }, { opacity: 1 }],
-    { duration: PAY_MS, pseudoElement: "::before" }); } catch (e) { /* the shine stays */ }
+  if (hi) hi.animate([{ opacity: 1 }, { opacity: 1, offset: at(662) }, { opacity: 0, offset: at(663) }, { opacity: 0, offset: at(688) }, { opacity: 1, offset: at(689) }, { opacity: 1 }],
+    { duration: PAY_MS });
   ghost.animate(PAY_GHOST.map(([t, s]) => ({ offset: at(t), ...lin, transform: `scale(${s})` })), { duration: PAY_MS });
   setTimeout(() => sfxPlay("done", .8, () => beep(pay.gold ? [[784, .08], [1047, .1], [1319, .22]] : [[784, .08], [1047, .16]])), 136);
+  setTimeout(() => {
+    if (!pay.gold) return;
+    btn.querySelector(".node-sh").outerHTML = NODE_GOLD;
+    if (ic) ic.innerHTML = LESSON_ICON_STAR;
+  }, 670);
   setTimeout(() => { if (pay.gold) { btn.setAttribute("style", keep); btn.style.transformOrigin = "50% 0"; btn.classList.add("node-done"); } }, 688);
   setTimeout(() => {
     ghost.remove(); dias.forEach(x => x.remove());
@@ -1858,7 +2073,8 @@ function coinPay(col, btn, pay, keep, end) {
    colour and the rest grey, drawn from the top and round to the left, as
    Duolingo's is mirrored on an Arabic phone. A node without short lessons
    wears the whole ring, grey */
-const RING_D = "M44.5 3.5A41 38.5 0 1 0 44.5 80.5A41 38.5 0 1 0 44.5 3.5";
+/* the ring is the node's hexagon drawn round it, from the top centre */
+const RING_D = roundPoly(hexPts(3.5, 3.5, 82, 77), 12, [44.5, 3.5]);
 function ringSeg(n, i) { const g = n > 1 ? 2.5 : 0; return [i * 100 / n + g, 100 / n - 2 * g]; }
 function ringSvg(n, done, c) {
   n = Math.max(1, n);
@@ -1872,11 +2088,13 @@ function ringSvg(n, done, c) {
    .74 of its size with its segments fading in; half a second on, the
    segment just earned lets its grey go, the colour runs along it from its
    start to its end in 135ms, three diamonds pop off its end and drift out as
-   they fade, and the star turns over in the coin. On a node's last lesson the
-   ring then lets go and the coin plays node_complete (coinPay) instead */
+   they fade. Then the coin plays node_complete (coinPay) — every lesson done,
+   not only the last (the user, 2026-10-27, on Duolingo's «done» beat: «I want
+   the level to flip like this»); on the node's last lesson the ring lets go
+   first and the coin comes back gold */
 const RING_MAX = "scale(1.131,1.121)";                // Duolingo's 1.02, against our coin
 const RING_SPARKS = [[5.9, -2.9, 9.2, 480], [4.2, 6.7, 4.6, 220], [8.4, 2.5, 3, 300]];   // out, along, size, fade
-function ringPay(col, svg, seg, n, i, c, exit) {
+function ringPay(col, svg, seg, n, i, c, exit, coin) {
   const segs = [...svg.querySelectorAll(".ring-seg")], at = (ms, f) => setTimeout(f, ms);
   [svg, ...segs].forEach(x => { x.style.animation = "none"; });
   svg.animate([{ transform: "scale(.82,.791)" }, { transform: RING_MAX }], { duration: 750, easing: "cubic-bezier(.55,.21,.07,1)", fill: "forwards" });
@@ -1895,27 +2113,29 @@ function ringPay(col, svg, seg, n, i, c, exit) {
   at(1015, () => {
     fill.setAttribute("stroke-dasharray", `${len.toFixed(2)} ${(100 - len).toFixed(2)}`);
     seg.remove();
-    const th = (a + len) / 100 * 2 * Math.PI, sn = Math.sin(th), cs = Math.cos(th);
-    const ex = (44.5 - 41 * sn - 44.5) * 1.131, ey = 42 + (38.5 * -cs) * 1.121;
+    /* where the segment ends, on the hexagon, and which way is out from there */
+    const pt = fill.getPointAtLength(fill.getTotalLength() * (a + len) / 100);
+    const dx = pt.x - 44.5, dy = pt.y - 42, dl = Math.hypot(dx, dy) || 1, ux = dx / dl, uy = dy / dl;
+    const ex = dx * 1.131, ey = 42 + dy * 1.121;
     RING_SPARKS.forEach(([o, t, z, ms]) => {
       const el = document.createElement("span");
       el.className = "node-dia";
       el.style.cssText = `width:${z}px;height:${z}px;margin:${-z / 2}px 0 0 ${-z / 2}px;color:${c}`;
       el.innerHTML = DIA_SVG;
       col.appendChild(el);
-      const x = ex - sn * o - cs * t, y = ey - cs * o + sn * t;
+      const x = ex + ux * o + uy * t, y = ey + uy * o - ux * t;
       el.animate([{ transform: `translate(${x}px,${y}px) scale(.3)`, opacity: 1 }, { transform: `translate(${x}px,${y}px) scale(1)`, opacity: 1, offset: .12 },
-        { transform: `translate(${x - sn * 1.7}px,${y - cs * 1.7}px) scale(1)`, opacity: 0 }], { duration: ms, fill: "forwards" })
+        { transform: `translate(${x + ux * 1.7}px,${y + uy * 1.7}px) scale(1)`, opacity: 0 }], { duration: ms, fill: "forwards" })
         .onfinish = () => el.remove();
     });
-    beep([[784, .07], [1047, .14]]);
+    snd("ring-segment-pay", () => beep([[784, .07], [1047, .14]]));
     buzz(10);
   });
   if (exit) {
     at(1100, () => svg.animate([{ transform: RING_MAX, opacity: 1 }, { transform: "scale(1.3)", opacity: 0 }], { duration: 300, easing: "ease-in", fill: "forwards" }));
     return;
   }
-  at(1240, () => { const ic = col.querySelector(".node-ic"); if (ic) nodeFlip(ic); });
+  if (!coin) at(1240, () => { const ic = col.querySelector(".node-ic"); if (ic) nodeFlip(ic); });
   at(1800, () => [svg, ...svg.querySelectorAll(".ring-seg")].forEach(x => {
     x.getAnimations().forEach(an => { if (!an.animationName) an.cancel(); });
     x.style.animation = ""; x.style.animationDelay = "0s";    // breathing again, from its widest
@@ -1924,7 +2144,7 @@ function ringPay(col, svg, seg, n, i, c, exit) {
 function pathPay() {
   const pay = PATH_PAY; PATH_PAY = null;
   const col = document.querySelector('.node-col[data-key="' + pay.key + '"]');
-  if (!col || motionReduced()) { nodeFlipLoop(); return; }
+  if (!col || motionReduced()) { nodeFlipLoop(); pathNext(700); return; }
   const btn = col.querySelector(".node"), LS = learnSet(pay.key), n = LS ? LS.lessons.length : 0;
   const c = (btn.dataset.open || "").split("|")[0];
   clearTimeout(flipT); payRun = true;                // no star flip mid-beat, whoever asks for one
@@ -1945,6 +2165,8 @@ function pathPay() {
   if (pay.gold) {
     const [cc, sh, h] = (btn.dataset.open || "").split("|");
     btn.classList.remove("node-done");
+    btn.querySelector(".node-sh").outerHTML = NODE_SHAPE;     // it was a hexagon until this lesson: the flip makes it the coin
+    btn.querySelector(".node-ic").outerHTML = lessonIcon(pay.key.split(".")[1]);
     btn.style.setProperty("--node-c", cc); btn.style.setProperty("--node-s", sh); btn.style.setProperty("--node-h", h);
   }
   const r = col.getBoundingClientRect();
@@ -1954,12 +2176,12 @@ function pathPay() {
     if (tip) { tip.style.opacity = ""; tip.animate([{ opacity: 0, scale: .6 }, { opacity: 1, scale: 1.1, offset: .6 }, { opacity: 1, scale: 1 }], { duration: 320, easing: "ease-out" }); }
     payRun = false;
     nodeFlipLoop(2400);
+    pathNext(1000);
   };
   setTimeout(() => {
     if (svg) svg.style.transform = "";
-    if (seg) ringPay(col, svg, seg, n, pay.was, c, pay.gold);
-    if (pay.gold) setTimeout(() => { if (seg) svg.remove(); coinPay(col, btn, pay, keep, end); }, seg ? 1500 : 0);
-    else setTimeout(end, 1100);
+    if (seg) ringPay(col, svg, seg, n, pay.was, c, pay.gold, true);
+    setTimeout(() => { if (seg && pay.gold) svg.remove(); coinPay(col, btn, pay, keep, end); }, seg ? (pay.gold ? 1500 : 1240) : 0);
   }, 650);
 }
 /* press & open (Duolingo's node press and node select, measured off its file
@@ -1973,9 +2195,9 @@ function pathPay() {
 const RING_SEL = [[0, null], [22, 1.115, 1.104], [55, 1.044, 1.024], [89, .973, .945], [124, .929, .899], [157, .907, .865],
   [192, .896, .854], [227, .885, .842], [259, .885, .848], [294, .896, .854], [329, .907, .865], [395, .929, .888],
   [464, .94, .91], [532, .956, .927], [600, .962, .933], [667, .967, .939], [702, .973, .945]];
-A.nodePress = function () { sfxPlay("press"); buzz(8); };
-function nodeRelease(btn, quiet) {
-  if (!quiet) sfxPlay("release");
+/* a node press is felt, not heard (the user, 2026-10-26: «remove the sound of clicking level») */
+A.nodePress = function () { buzz(8); };
+function nodeRelease(btn) {
   if (motionReduced()) return;
   btn.animate([{ transform: "translateY(-.29px)" }, { transform: "translateY(-.29px)", offset: .37 },
     { transform: "translateY(.14px)", offset: .371 }, { transform: "translateY(.14px)", offset: .99 }, { transform: "none" }], { duration: 133 });
@@ -2004,31 +2226,81 @@ function ringResume(col) {
     x.style.animationDelay = "-1s";                  // the breathing picks up pulled in
   });
 }
-/* the star flip (Duolingo's star_flip on the current node): every few seconds
-   the icon lifts out of the coin over its own shadow and turns once, while
-   the ring stretches and shrinks */
+/* the star flip — Duolingo's star_flip_anim, measured off node_and_ring_119.riv
+   frame by frame (the user, 2026-10-27: «study pixel by pixel and in code
+   Duolingo's version … every 2 second the animation must work»). Rows every
+   17ms: [ms, rise in Duolingo's node units (− is up), scaleX, scaleY, turn in
+   degrees, shadow shown, shadow scale]. It squats on its base, springs up
+   7.3 units thin, hangs while it turns flat in the face, drops, lands in a
+   squash and stretches back: 1267ms. Its shadow — the sign's own shape in the
+   lip's colour, 2 units under its place — shows only while it is off the face.
+   Duolingo's star turns 70.2° and lands as the same star, a five-point star
+   repeating every 72°; our signs are not symmetric, so the same curve is
+   carried to a whole turn and every sign lands upright. The face and the ring
+   do nothing extra: the ring keeps breathing, and the flip starts on its
+   ring_extended_event, 1500ms into each two-second breath */
+const STAR_FLIP = [
+  [0,0,1,1,0,0,1], [17,0,1,1,0,0,1], [33,0,1,1,0,0,1], [50,0,1,1,0,0,1], [67,0,1,1,0,0,1], [83,0,1,1,0,0,1],
+  [100,0,1,1,0,0,1], [117,0,1,1,0,0,1], [133,0,1,1,0,0,1], [150,0,1,1,0,0,1], [167,0,1,1,0,0,1],
+  [183,0,1.001,.999,0,0,1], [200,0,1.004,.996,0,0,1], [217,0,1.011,.991,0,0,1], [233,0,1.022,.983,0,0,1],
+  [250,0,1.036,.974,0,0,1], [267,0,1.048,.964,0,0,1], [283,0,1.057,.956,0,0,1], [300,0,1.063,.95,0,0,1],
+  [317,0,1.067,.945,0,0,1], [333,0,1.068,.942,0,0,1], [350,0,1.066,.941,0,0,1], [367,0,1.061,.941,0,0,1],
+  [383,0,1.053,.946,0,0,1], [400,-.44,1.04,.959,0,0,1], [417,-1.16,1.022,.98,0,1,1], [433,-1.95,.999,.996,0,1,1],
+  [450,-2.76,.968,1,0,1,1], [467,-3.55,.969,1,9,1,.98], [483,-4.3,.97,1,15.5,1,.96], [500,-5,.974,1,20.6,1,.94],
+  [517,-5.64,.98,1,25,1,.92], [533,-6.19,.989,1,28.8,1,.9], [550,-6.64,.999,1,32.2,1,.9],
+  [567,-6.96,1.008,1,35.3,1,.9], [583,-7.12,1.014,1,38.1,1,.9], [600,-7.18,1.018,1,40.7,1,.9],
+  [617,-7.23,1.02,1,43,1,.9], [633,-7.27,1.02,1,45.3,1,.9], [650,-7.29,1.02,1,47.4,1,.9], [667,-7.31,1.02,1,49.3,1,.9],
+  [683,-7.3,1.02,1,51.2,1,.9], [700,-7.28,1.02,1,52.9,1,.9], [717,-7.24,1.019,1,54.6,1,.9],
+  [733,-7.19,1.018,1,56.1,1,.9], [750,-7.11,1.017,1,57.6,1,.9], [767,-7.01,1.016,1,59.1,1,.9],
+  [783,-6.88,1.014,1,60.4,1,.9], [800,-6.73,1.012,1,61.7,1,.9], [817,-6.54,1.009,1,63,1,.91],
+  [833,-6.31,1.006,1,64.2,1,.92], [850,-6.04,1.003,1,65.4,1,.93], [867,-5.71,1,1,66.6,1,.94],
+  [883,-5.31,1,1,67.7,1,.95], [900,-4.82,1,1,68.9,1,.96], [917,-4.2,1,1,70.3,1,.97], [933,-3.4,1,1,70.3,1,.98],
+  [950,-2.26,1,1,70.3,1,.99], [967,0,1.04,.943,.1,0,1], [983,0,1.038,.94,.1,0,1], [1000,0,1.029,.942,.1,0,1],
+  [1017,0,1.007,.953,.1,0,1], [1033,0,.98,.989,.1,0,1], [1050,0,.967,1.035,.1,0,1], [1067,0,.962,1.052,.1,0,1],
+  [1083,0,.96,1.058,.1,0,1], [1100,0,.961,1.06,.1,0,1], [1117,0,.963,1.058,.1,0,1], [1133,0,.969,1.05,.1,0,1],
+  [1150,0,.982,1.028,.1,0,1], [1167,0,.99,1.016,.1,0,1], [1183,0,.994,1.009,.1,0,1], [1200,0,.997,1.005,.1,0,1],
+  [1217,0,.998,1.002,.1,0,1], [1233,0,.999,1.001,.1,0,1], [1250,0,1,1,.1,0,1], [1267,0,1,1,.1,0,1]
+];
+const STAR_MS = 1267, STAR_TURN = 360 / 70.2, STAR_UNIT = 58 / 56.75, STAR_BASE = 13;
+/* Duolingo swaps in an unturned star as it lands (967ms); carried to a whole turn that is 360°, held */
+const starTurn = (t, r) => (t >= 967 ? 70.2 : r) * STAR_TURN;
 let flipT = 0, payRun = false;
 function nodeFlip(ic) {
-  const ring = ic.closest(".node-col").querySelector(".node-ring");
-  const P = "perspective(160px) ", sh = c => `drop-shadow(0 ${c}px 0 rgba(0,0,0,.2))`;
-  ic.animate([
-    { transform: P + "translateY(0) rotateY(0deg)", filter: sh(0) },
-    { transform: P + "translateY(-7px) rotateY(0deg)", filter: sh(7), offset: .18 },
-    { transform: P + "translateY(-7px) rotateY(360deg)", filter: sh(7), offset: .78 },
-    { transform: P + "translateY(0) rotateY(360deg)", filter: sh(0) }
-  ], { duration: 760, easing: "cubic-bezier(.4,0,.3,1)" });
-  if (ring) ring.animate([{ transform: "scale(1)" }, { transform: "scale(1.07)", offset: .35 }, { transform: "scale(.95)", offset: .7 }, { transform: "scale(1)" }],
-    { duration: 760, easing: "ease-in-out", composite: "add" });         // on top of the breathing
+  const btn = ic.closest(".node"), lip = btn && btn.querySelector(".nd-lip");
+  if (!btn) return;
+  const sh = ic.cloneNode(true);
+  sh.classList.add("node-ic-sh");
+  sh.style.color = lip ? getComputedStyle(lip).fill : "rgba(0,0,0,.2)";
+  ic.before(sh);
+  const at = t => t / STAR_MS, B = STAR_BASE;
+  /* the squash is about the sign's base, the turn about its middle */
+  ic.animate(STAR_FLIP.map(([t, dy, sx, sy, r]) => ({ offset: at(t), easing: "linear",
+    transform: `translateY(${(dy * STAR_UNIT).toFixed(2)}px) rotate(${starTurn(t, r).toFixed(1)}deg) translateY(${B}px) scale(${sx},${sy}) translateY(${-B}px)` })),
+    { duration: STAR_MS });
+  sh.animate(STAR_FLIP.map(([t, , , , r, on, ss]) => ({ offset: at(t), easing: "linear",
+    opacity: on, transform: `translateY(${(2 * STAR_UNIT).toFixed(2)}px) rotate(${starTurn(t, r).toFixed(1)}deg) scale(${ss})` })),
+    { duration: STAR_MS }).onfinish = () => sh.remove();
 }
-function nodeFlipLoop(delay) {
+/* one flip every two seconds, on the ring's breath: the next time its
+   two-second loop reaches 1500ms (never sooner than min) */
+function nodeFlipLoop(min) {
   clearTimeout(flipT);
   if (motionReduced() || payRun) return;           // pathPay restarts it when it lands
+  const next = () => {
+    const ring = document.querySelector(".path-row .bob .node-ring");
+    const an = ring && ring.getAnimations().find(x => x.animationName === "ringIdle");
+    if (!an || an.currentTime == null) return 2000;
+    return (1500 - an.currentTime % 2000 + 4000) % 2000 || 2000;
+  };
+  let wait = next();
+  while (wait < (min || 0)) wait += 2000;
   flipT = setTimeout(function go() {
     const ic = document.querySelector(".path-row .bob .node-ic");
     if (!ic) return;                                   // off the path: the loop ends
     if (!document.querySelector(".lesson-pop-veil")) nodeFlip(ic);
-    flipT = setTimeout(go, 6000);
-  }, delay || 1800);
+    let w = next(); if (w < 1000) w += 2000;
+    flipT = setTimeout(go, w);
+  }, wait);
 }
 A.debugClimb = function (n) {                        // dev harness only: a lesson that lifts you n places
   const at = Date.now(), lb = leagueStandings(at), from = lb.findIndex(e => e.you) + 1, ti = tierIndex();
@@ -2036,6 +2308,7 @@ A.debugClimb = function (n) {                        // dev harness only: a less
     const gain = lb[from - 1 - k].xp - (S.totalXp || 0) + 5, after = (S.totalXp || 0) + gain;
     if (tierIndexFor(after) !== ti) continue;
     S.totalXp = after;
+    climbSfxLoad();
     WIN = { climb: { from, to: leagueStandings(at).findIndex(e => e.you) + 1, list: lb, xp1: after }, goal: dailyGoal(), qd0: 3, qd1: 6, gems: 0 };
     A.winClimb();
     return;
@@ -2058,43 +2331,6 @@ A.debugPathPay = function (gold) {
 
 /* ---------------- LESSON SESSION ---------------- */
 let SES = null; // current session
-
-/* The winding path read as scattered dots because nothing joined them.
-   Node positions come from CSS offsets, so the trail is measured from the
-   rendered circles rather than recomputed - it stays correct at any width. */
-function drawTrails() {
-  const NS = "http://www.w3.org/2000/svg";
-  document.querySelectorAll(".path").forEach(path => {
-    const old = path.querySelector(".path-trail"); if (old) old.remove();
-    const nodes = [].slice.call(path.querySelectorAll(".node"));
-    if (nodes.length < 2) return;
-    const pr = path.getBoundingClientRect();
-    const svg = document.createElementNS(NS, "svg");
-    svg.setAttribute("class", "path-trail");
-    svg.setAttribute("viewBox", "0 0 " + Math.round(pr.width) + " " + Math.round(pr.height));
-    svg.setAttribute("preserveAspectRatio", "none");
-    svg.setAttribute("aria-hidden", "true");
-    const mid = el => {
-      const r = el.getBoundingClientRect();
-      return [r.left - pr.left + r.width / 2, r.top - pr.top + r.height / 2];
-    };
-    for (let i = 0; i < nodes.length - 1; i++) {
-      const a = mid(nodes[i]), b = mid(nodes[i + 1]);
-      const line = document.createElementNS(NS, "line");
-      line.setAttribute("x1", a[0].toFixed(1)); line.setAttribute("y1", a[1].toFixed(1));
-      line.setAttribute("x2", b[0].toFixed(1)); line.setAttribute("y2", b[1].toFixed(1));
-      line.setAttribute("class", nodes[i + 1].classList.contains("node-locked") ? "tl tl-locked" : "tl tl-open");
-      svg.appendChild(line);
-    }
-    path.insertBefore(svg, path.firstChild);
-  });
-}
-let trailT = null;
-window.addEventListener("resize", () => {
-  if (view !== "path" || SES) return;
-  clearTimeout(trailT);
-  trailT = setTimeout(drawTrails, 160);
-});
 
 function pickLessonQuestions(lesson, key, first) {
   const qs = trackFilter(lesson.questions);
@@ -2131,7 +2367,7 @@ function pickLessonQuestions(lesson, key, first) {
   return served.sort((a, b) => a.difficulty - b.difficulty).map(shuffleChoices);
 }
 
-A.go = function (v) { if (v === "review") reviewFrom = view; go(v); };
+A.go = function (v) { if (v === "review") reviewFrom = view; if (v === "settings") SET_PAGE = null; go(v); };
 
 /* Lesson-start popup (Figma "Select Lesson" purple sheet) */
 A.nodeTap = function (ev, domKey, lesKey, li) {
@@ -2165,7 +2401,6 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
     if (untrapPop) { untrapPop(); untrapPop = null; }
     veil.remove();
     if (selCol) ringResume(selCol);
-    if (start !== true) sfxPlay("close");
   };
   /* the node still shows through the veil: pressing it again presses it — the
      face drops and settles back — and closes the card, as Duolingo's does */
@@ -2175,7 +2410,7 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   veil.addEventListener("pointercancel", () => { downOn = false; btn.classList.remove("down"); });
   veil.onclick = e => {
     if (e.target !== veil) return;
-    if (downOn) { downOn = false; btn.classList.remove("down"); nodeRelease(btn, true); }
+    if (downOn) { downOn = false; btn.classList.remove("down"); nodeRelease(btn); }
     popClose();
   };
   let boost = false;
@@ -2186,9 +2421,9 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
     bb.classList.toggle("on", boost);
     const cost = bb.querySelector(".lpb-cost");
     if (cost) cost.innerHTML = boost ? `مفعّل ✓` : `${ico("gem", 13)} ${toAr(BOOST_COST)}`;
-    if (boost) sndGood();
+    if (boost) snd("boost-toggle", () => sndGood());
   };
-  veil.querySelector(".btn-white").onclick = () => { popClose(true); A.startLesson(domKey, lesKey, boost); };
+  veil.querySelector(".btn-white").onclick = () => { snd("start-lesson"); popClose(true); A.startLesson(domKey, lesKey, boost); };
   document.body.appendChild(veil);
   untrapPop = trapOverlay(veil, popClose, { label: l.title, focus: ".btn-white" });
   const pop = veil.querySelector(".lesson-pop");
@@ -2242,7 +2477,7 @@ A.startLesson = function (domKey, lesKey, boost) {
      is both shorter and unloseable */
   const safe = !Object.values(S.lessons).some(p => p.plays > 0);
   const qs = pickLessonQuestions(l, key, safe);
-  if (!qs.length) { showModal("⭐", "لا توجد أسئلة", "لا توجد أسئلة متاحة لهذا الدرس في مسارك الحالي.", "حسناً"); return; }
+  if (!qs.length) { showModal("", "لا توجد أسئلة", "لا توجد أسئلة متاحة لهذا الدرس في مسارك الحالي.", "حسناً"); return; }
   const prev = S.lessons[key];
   const replay = !!(prev && prev.stars > 0);            // already cleared → farm mode (+2/+2)
   /* A student who loses their first lesson does not come back, and there is
@@ -2292,7 +2527,7 @@ function teachArrange(T) {
   const need = [];
   SES.queue.forEach(q => { const ci = chunkOf[q.id]; if (ci !== undefined && need.indexOf(ci) < 0) need.push(ci); });
   const live = need.filter(ci => T.chunks[ci].steps.some(s => s.type === "rule" && !rec.taught.includes(s.n)));
-  SES.teach.steps = live.reduce((n, ci) => n + T.chunks[ci].steps.length, 0)
+  SES.teach.steps = live.reduce((n, ci) => n + teachSteps(T.chunks[ci]).length, 0)
     + (SES.teach.first && live.length ? 1 : 0);     // the one-off lead card: «قبل ما نبدأ», or the warm-up on a first lesson
 }
 function teachGate() {
@@ -2311,7 +2546,7 @@ function teachGate() {
   const lead = !t.first ? []
     : SES.safe && t.T.open ? [Object.assign({ type: "warm" }, t.T.open)]
     : [{ type: "title" }];
-  const steps = lead.concat(t.T.chunks[ci].steps);
+  const steps = lead.concat(teachSteps(t.T.chunks[ci]));
   t.cur = { ci, steps, i: 0, picked: null, revealed: false };
   return true;
 }
@@ -2322,6 +2557,8 @@ const TEACH_COACH = {
   warmBad: "ولا يهمك، هذا سؤال قبل الشرح مو بعده.",
   rule: ["اقرأ المثال مرة بصوتك — يثبت أسرع.", "غطِّ الصيغة بإصبعك وحاول تتذكرها قبل ما تكمل."],
   check: "جرّب قبل ما تشوف الحل — الغلط هنا مجاني.",
+  rfill: "قلها بصوتك وأنت ترتّبها — تنحفظ أسرع.",
+  rnum: "كل رقم مكانه كلمة من القاعدة.",
   good: "تذكّرته بنفسك، فراح يثبت أطول.",
   bad: "طبيعي. الغلط الآن أرخص من الغلط في الاختبار.",
   book: "دفترك كامل هنا. لا تحفظه — ارجع له وقت الحاجة.",
@@ -2361,6 +2598,13 @@ function renderTeach() {
     </div>`;
     coach = TEACH_COACH.rule[(k - 1) % 2];
     btn = `<button class="btn" onclick="A.teachNext()">${goLabel}</button>`;
+  } else if (step.type === "rfill" || step.type === "rnum") {
+    const c = tcCloze(cur, step), z = cur.cz;
+    body = `<div class="tc-rf">${rfBody(c, z.checked, "A.tcUnfill", "A.tcTile")}
+      ${z.checked ? `<div class="tc-why ${z.ok ? "good" : "bad"}">${z.ok ? "✓ بالضبط — " : "الصحيح: "}${esc(c.eq.split("_").map((p, j, all) => j === all.length - 1 ? p : p + c.a[j]).join("").replace(/\n/g, " ، "))}</div>` : ""}</div>`;
+    coach = step.type === "rfill" ? TEACH_COACH.rfill : TEACH_COACH.rnum;
+    btn = z.checked ? `<button class="btn" onclick="A.teachNext()">${goLabel}</button>`
+      : `<button class="btn" id="checkBtn" onclick="A.tcCheck()"${z.ui.slots.filter(k => k !== undefined).length === c.a.length ? "" : " disabled"}>تحقق</button>`;
   } else {
     /* The warm-up and the quick check are the same card underneath — a question
        with no hearts and no clock. The warm-up only wears a different hat: it
@@ -2394,6 +2638,56 @@ function renderTeach() {
   </div>`;
   window.scrollTo(0, 0);
 }
+/* the card's own state for the two screens after a rule: which tile sits in
+   which blank, and whether it was checked */
+function tcCloze(cur, step) {
+  if (!cur.cz || cur.cz.i !== cur.i) cur.cz = { i: cur.i, ui: { slots: [] }, _tiles: shuffle(step.tiles.map((x, k) => k)), checked: false, ok: false };
+  return Object.assign({}, step, { ui: cur.cz.ui, _tiles: cur.cz._tiles });
+}
+function tcPaint() {
+  const cur = SES.teach.cur, c = tcCloze(cur, cur.steps[cur.i]);
+  const eq = document.getElementById("lnEq"); if (eq) eq.innerHTML = learnFillEq(c, false, "A.tcUnfill");
+  document.querySelectorAll("#lnTiles .ln-tile").forEach(b => b.classList.toggle("used", c.ui.slots.indexOf(+b.dataset.k) >= 0));
+  const cb = document.getElementById("checkBtn");
+  if (cb) cb.disabled = c.ui.slots.filter(k => k !== undefined).length !== c.a.length;
+}
+A.tcTile = function (k) {
+  const cur = SES && SES.teach && SES.teach.cur; if (!cur || !cur.cz || cur.cz.checked) return;
+  const step = cur.steps[cur.i], sl = cur.cz.ui.slots;
+  if (sl.indexOf(k) >= 0) return;
+  let j = 0; while (sl[j] !== undefined) j++;
+  if (j >= step.a.length) return;
+  sl[j] = k; stampTile(cur.cz.ui, k);
+  snd("tile-place", () => sndTap());
+  tcPaint();
+};
+A.tcUnfill = function (j) {
+  const cur = SES && SES.teach && SES.teach.cur; if (!cur || !cur.cz || cur.cz.checked) return;
+  cur.cz.ui.slots[j] = undefined;
+  snd("tile-remove"); tcPaint();
+};
+/* a miss here is a miss on the rule: the guidebook floats it up, as a check's does */
+A.tcCheck = function () {
+  const cur = SES && SES.teach && SES.teach.cur; if (!cur || !cur.cz || cur.cz.checked) return;
+  const step = cur.steps[cur.i], c = tcCloze(cur, step);
+  const want = learnFillWant(c);
+  cur.cz.ok = want.every((x, j) => c.tiles[c.ui.slots[j]] === x);
+  cur.cz.checked = true;
+  const rec = teachRecord(), n = step.of && step.of.n;
+  if (n != null) { if (cur.cz.ok) rec.missed = rec.missed.filter(x => x !== n); else if (!rec.missed.includes(n)) rec.missed.push(n); }
+  if (cur.cz.ok) playCorrect(); else snd("wrong-answer", () => sndBad());
+  save();
+  /* drawn in place, so the card jumps where it stands instead of springing in again */
+  const eq = document.getElementById("lnEq");
+  if (eq) eq.innerHTML = learnFillEq(c, true, "A.tcUnfill");
+  document.querySelectorAll("#lnTiles .ln-tile").forEach(b => { b.disabled = true; });
+  const box = document.querySelector(".tc-rf");
+  if (box) box.insertAdjacentHTML("beforeend", `<div class="tc-why ${cur.cz.ok ? "good" : "bad"}">${cur.cz.ok ? "✓ بالضبط — " : "الصحيح: "}${esc(c.eq.split("_").map((p, j, all) => j === all.length - 1 ? p : p + c.a[j]).join("").replace(/\n/g, " ، "))}</div>`);
+  const cb = document.getElementById("checkBtn");
+  if (cb) cb.outerHTML = `<button class="btn" onclick="A.teachNext()">${cur.i === cur.steps.length - 1 ? "يلا نحلّ" : "التالي"}</button>`;
+  if (cur.cz.ok && eq) adWave(byPlaced(cur.cz.ui, eq.querySelectorAll(".ln-blank")));
+  else teachFx(eq, cur.cz.ok);
+};
 function teachRecord() { return S.teach[SES.key] = S.teach[SES.key] || { taught: [], missed: [] }; }
 /* A practice tap: no hearts, no timer, no XP, no qstats (qstats orders the
    real queue, and a practice miss must not poison it). The miss is remembered
@@ -2410,7 +2704,7 @@ A.teachPick = function (i) {
     if (cur.revealed) rec.missed = rec.missed.filter(n => !ns.includes(n));
     else ns.forEach(n => { if (!rec.missed.includes(n)) rec.missed.push(n); });
   }
-  if (cur.revealed) playCorrect();
+  if (cur.revealed) playCorrect(); else snd("teach-check-wrong");
   questTick();
   save();
   renderTeach();
@@ -2436,13 +2730,13 @@ function teachFx(card, ok) {
 }
 A.teachNext = function () {
   const t = SES && SES.teach, cur = t && t.cur; if (!cur) return;
-  if (cur.i < cur.steps.length - 1) { cur.i++; cur.picked = null; cur.revealed = false; renderTeach(); return; }
+  if (cur.i < cur.steps.length - 1) { snd("continue"); cur.i++; cur.picked = null; cur.revealed = false; renderTeach(); return; }
   const rec = teachRecord();
   t.T.chunks[cur.ci].steps.forEach(s => { if (s.type === "rule" && !rec.taught.includes(s.n)) rec.taught.push(s.n); });
   save();
   t.seen += cur.steps.length;           // banked, so the bar does not step back
   t.first = false; t.cur = null;
-  sndGood();                            // the chunk is finished; it was silent
+  snd("teach-chunk-done", () => sndGood());                            // the chunk is finished; it was silent
   renderSession();
 };
 A.teachBack = function () {
@@ -2610,7 +2904,7 @@ function formatExplain(text) {
 function questionBody(q, selIdx, lockHandlers, pickFn, method) {
   const isCmp = q.format === "comparison";
   const choices = isCmp ? CMP_CHOICES : q.choices;
-  let h = `<div class="q-top"><div class="q-kicker">${isCmp ? "قارن بين القيمتين ثم اختر:" : "اختر الإجابة الصحيحة:"}</div>${method ? `<button class="method-btn" onclick="A.showMethod()">${BULB_SVG} كيف أحلّها؟</button>` : ""}</div>`;
+  let h = `<div class="q-top"><div class="q-kicker">${isCmp ? "قارن بين القيمتين ثم اختر:" : "اختر الإجابة الصحيحة:"}</div></div>`;
   // 104 comparison questions carry a stem that just restates the kicker above it
   const echoesKicker = isCmp && /^قارن\s+بين\s+القيمتين/.test(String(q.stem || "").trim());
   if (q.stem && !echoesKicker) h += `<div class="q-stem">${q.stem}</div>`;
@@ -3138,6 +3432,7 @@ function answerFxFail(card) {
    it alone decides whether a strike rides along. Falls back to doing nothing
    if GSAP is unavailable — the answer still resolves, it just does not hop. */
 function answerFx(card, run) {
+  if (run >= 3) snd("answer-run");             // every answer that lights the bar (the user: «make it for every lighting»)
   if (!fxOn() || !window.gsap || !card) return;
   fxClear();
   /* Reduced motion gets a REDUCED VARIANT, not silence (brief trap 3): the
@@ -3298,7 +3593,7 @@ function learnMake(src, tag) {
 /* a long line steps its type down instead of wrapping mid-expression */
 function learnFs(s) { const n = String(s || "").replace(/\*/g, "").length; return n > 30 ? " fs-s" : n > 21 ? " fs-m" : ""; }
 /* *x* marks the one number or word the eye should land on */
-/* the rule card says its rule a word at a time, as قدّور's bubble does; then
+/* the rule card says its rule a word at a time, as فهيم's bubble does; then
    the things the rule is about (the *…* in learn.js: «العدد», «آخر عدد»,
    «الزيادة الأكبر») light up blue one after another, each on a note a step
    higher, and the card settles with a chime: the student reads the rule at the
@@ -3306,15 +3601,23 @@ function learnFs(s) { const n = String(s || "").replace(/\*/g, "").length; retur
    again. The signs (= × ÷ + − ←) land a size up so the formula's shape shows. */
 const RULE_OP = /^[=×÷+−←]$/, RULE_STEP = 110, RULE_LIT = 240;
 const RULE_AGAIN_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></svg>`;
+/* The rule is one row of tokens on one line (the user, 2026-10-26: «it must
+   be one line not 2 line»): a marked term is one chip however many words it
+   has, every other word, sign and bracket its own token, so the brackets face
+   the right way. An aside in brackets with no term in it — «(بالترتيب من
+   اليمين)» — leaves the line for a small note under it (ruleSplit). ruleFit
+   shrinks the row to the card; only a rule too long to read on one line wraps. */
+function ruleSplit(text) {
+  const notes = [];
+  const main = String(text).replace(/\s*\(([^()*٠-٩]+)\)/g, (m, a) => { notes.push(a.trim()); return ""; }).replace(/\s+/g, " ").trim();
+  return { main, note: notes.join(" — ") };
+}
 function ruleWords(text) {
-  /* a marked term is one chip, however many words it has; the rest goes word by word */
   let out = "", i = 0, t = 0;
   String(text).split("*").forEach((p, k) => {
     if (k % 2) { if (p) out += `<span class="rw rk" style="--i:${i++};--t:${t++}" aria-hidden="true">${esc(p)}</span>`; return; }
-    p.split(/(\s+)/).forEach(w => {
-      if (!w) return;
-      if (/^\s+$/.test(w)) { out += " "; return; }
-      out += `<span class="rw${RULE_OP.test(w) ? " op" : ""}" style="--i:${i++}" aria-hidden="true">${esc(w)}</span>`;
+    rfTokens(p).forEach(w => {
+      out += `<span class="rw${RULE_OP.test(w) ? " op" : /^[()]$/.test(w) ? " par" : ""}" style="--i:${i++}" aria-hidden="true">${esc(w)}</span>`;
     });
   });
   return out;
@@ -3338,16 +3641,171 @@ function rulePlay(again) {
   const d = parseFloat(card.style.getPropertyValue("--d")) * 1000 || 0;
   const said = d + 450 + n * RULE_STEP + 150;
   ruleT.push(setTimeout(() => card.classList.add("said"), said));
-  for (let k = 0; k < terms; k++) ruleT.push(setTimeout(() => { beep([[587 * Math.pow(2, Math.min(k, 7) * 2 / 12), .06]]); buzz(5); }, said + k * RULE_LIT + 60));
+  for (let k = 0; k < terms; k++) ruleT.push(setTimeout(() => { snd("rule-terms-light", () => beep([[587 * Math.pow(2, Math.min(k, 7) * 2 / 12), .06]])); buzz(5); }, said + k * RULE_LIT + 60));
   ruleT.push(setTimeout(() => {
     card.animate([{ transform: "scale(1)" }, { transform: "scale(1.035,.965)", offset: .35 }, { transform: "scale(.99,1.01)", offset: .7 }, { transform: "scale(1)" }],
       { duration: 360, easing: "ease-out" });
-    beep([[784, .07], [1175, .16]]);
+    snd("rule-said", () => beep([[784, .07], [1175, .16]]));
     buzz(10);
   }, said + terms * RULE_LIT + 200));
 }
 A.ruleAgain = function () { buzz(6); rulePlay(true); };
 function learnFmt(s) { return esc(s == null ? "" : s).replace(/\*([^*]+)\*/g, '<b class="ln-hl">$1</b>'); }
+
+/* After every rule, two screens (2026-10-26, the user: «لازم بعد كل قانون تجي
+   شاشه فيه القانون بس انا اعبيه القانون نفسه عشان تساعد بالحفظ وشاشه بعدها
+   فيها مثال حرفي واعبي القانون بس هالمره ارقام»): the rule itself with its
+   words taken out, filled back in from tiles, then a worked example where the
+   same rule is filled in with numbers, each number captioned with the word of
+   the rule it stands for. In a short lesson the words are the rule's *terms*
+   and the numbers its `num` (learn.js); on a teaching card both are cut from
+   the card's own `plain` and `example`. */
+const RF_STOP = new Set(["من", "إلى", "في", "على", "عن", "مع", "ثم", "أو", "و", "إذا", "لو", "هو", "هي", "كل", "بين", "بعد", "قبل", "اللي", "التي", "الذي", "أي", "لا", "ما", "عند", "حتى", "فقط"]);
+const RF_SWAP = { "أكبر": "أصغر", "أصغر": "أكبر", "الأكبر": "الأصغر", "الأصغر": "الأكبر", "الكبير": "الصغير", "الصغير": "الكبير",
+  "نصف": "ضعف", "ضعف": "نصف", "زوجي": "فردي", "فردي": "زوجي", "الزوجية": "الفردية", "الفردية": "الزوجية", "الأول": "الأخير", "الأخير": "الأول",
+  "المسافة": "الزمن", "الزمن": "المسافة", "السرعة": "المسافة", "الطول": "العرض", "العرض": "الطول", "البسط": "المقام", "المقام": "البسط",
+  "الربح": "الخسارة", "الخسارة": "الربح", "المحيط": "المساحة", "المساحة": "المحيط", "الضرب": "الجمع", "الجمع": "الضرب" };
+const RF_NUM = /[−-]?[٠-٩]+(?:[٫/،][٠-٩]+)*[٪°]?/g;
+const rfDigits = s => /[٠-٩]/.test(s);
+function rfTerms(rule) { return String(rule).split("*").filter((p, i) => i % 2 && p); }
+/* wrong numbers that look right: a step off, double, half, ten more */
+function rfNear(ans, n) {
+  const out = [], have = new Set(ans);
+  const add = x => { if (!have.has(x) && out.indexOf(x) < 0) out.push(x); };
+  ans.forEach(a => {
+    const f = /^([٠-٩]+)\/([٠-٩]+)$/.exec(a);
+    if (f) { add(f[2] + "/" + f[1]); add(arN(arabicToNum(f[1]) + 1) + "/" + f[2]); return; }
+    const m = /^([−-]?)([٠-٩]+(?:٫[٠-٩]+)?)(.*)$/.exec(a);
+    if (!m) return;
+    const v = arabicToNum(m[2]) * (m[1] ? -1 : 1), sfx = m[3], big = Math.abs(v) >= 20 && Number.isInteger(v);
+    (big ? [v + 10, v - 10, v * 2, v / 2] : [v + 1, v - 1, v * 2, v + 2]).forEach(w => {
+      if (w === v || (w < 0 && v >= 0) || !Number.isFinite(w) || (big && !Number.isInteger(w))) return;
+      add(arN(Math.round(w * 1000) / 1000) + sfx);
+    });
+  });
+  return shuffle(out).slice(0, n);
+}
+function arabicToNum(s) { return +String(s).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace("٫", "."); }
+/* The rule screens run in node 1's first seven short lessons while the user
+   judges them (2026-10-26: «lets say just the first 7 lesson only then i will
+   decide»); the teaching cards keep their old flow until then. A wrong answer
+   is tried again on the spot until it is right, with more help each time and
+   never the answer itself (rfHelp). */
+const RF_LESSONS = { "skills.bigsum": 7 }, RF_TEACH = false;
+/* a cloze: eq with _ for each blank, the answers in order, the tiles shuffled */
+function rfCloze(o) {
+  const tiles = o.a.concat(o.more || []);
+  return Object.assign({ tiles, lab: null }, o);
+}
+/* the wrong tiles: other rules' short terms, about as long as the shortest
+   right one, so no long phrase makes the line small for everyone (rfFit sizes
+   it for the widest tiles that could go in its blanks), shortest first when
+   there are not enough */
+function rfDecoys(pool, terms, n) {
+  const max = Math.min(...terms.map(t => t.length)) + 3;
+  const fit = shuffle(pool.filter(t => t.length <= max)), rest = pool.filter(t => t.length > max).sort((x, y) => x.length - y.length);
+  return fit.concat(rest).slice(0, n);
+}
+/* the short lesson's two screens, built from a `see` item that has a rule */
+function learnRuleWords(see, node) {
+  const terms = rfTerms(see.rule);
+  if (!terms.length) return null;
+  const pool = [];
+  node.lessons.forEach(L => L.items.forEach(x => { if (x && x.t === "see" && x.rule && x !== see) rfTerms(x.rule).forEach(t => { if (terms.indexOf(t) < 0 && pool.indexOf(t) < 0) pool.push(t); }); }));
+  /* the trick the card just showed, for the help after a miss */
+  const trick = (see.rows || []).map(r => String(r).replace(/^[~·!]\s*/, "")).filter(Boolean);
+  return rfCloze({ t: "fill", rf: "words", q: "عبّ القاعدة بكلماتها:", rule: see.rule, trick,
+    eq: String(see.rule).split("*").map((p, i) => i % 2 ? (p ? "_" : "") : p).join("").replace(/\s*\([^)_]*\)/g, "").replace(/\s+/g, " ").trim(),
+    a: terms, more: rfDecoys(pool, terms, terms.length > 2 ? 2 : 3 - terms.length + 1),
+    why: "القاعدة كاملة: " + see.rule.replace(/\*/g, ""), ok: "حفظتها بكلماتها" });
+}
+function learnRuleNums(see) {
+  const n = see.num;
+  if (!n) return null;
+  const a = [];
+  const eq = String(n.eq).replace(/\{([^}]+)\}/g, (m, v) => { a.push(v); return "_"; });
+  const terms = rfTerms(see.rule);
+  const lab = n.lab === false ? null : n.lab || (terms.length >= a.length ? terms.slice(0, a.length) : null);
+  return rfCloze({ t: "fill", rf: "nums", q: n.q, rule: see.rule, eq, a, lab, anyOrder: n.any || 0,
+    more: n.more || rfNear(a, 2), why: "القاعدة بالأرقام: " + n.eq.replace(/[{}]/g, "").replace(/\n/g, " ، "), ok: "طبّقت القاعدة بالأرقام" });
+}
+/* the teaching card's two screens, cut from its `plain` and `example` */
+function rfPhrases(plain) {
+  const parts = String(plain).split(/(\s*[=×÷+−←،()]\s*)/);
+  const cand = parts.map((p, i) => ({ p: p.trim(), i })).filter(x => x.p && /[ء-ي]/.test(x.p) && !rfDigits(x.p) && !RF_STOP.has(x.p) && x.p.split(/\s+/).length <= 4);
+  return { parts, cand };
+}
+function teachRuleWords(step, lesson) {
+  const plain = step.plain || "";
+  if (!plain) return null;
+  let { parts, cand } = rfPhrases(plain);
+  let eq, a;
+  if (/=/.test(plain) && cand.length) {
+    cand = cand.slice(0, 4);
+    const at = new Set(cand.map(x => x.i));
+    a = cand.map(x => x.p);
+    eq = parts.map((p, i) => at.has(i) ? p.replace(p.trim(), "_") : p).join("");
+  } else {
+    /* a rule in a sentence: its two weightiest words go */
+    const ws = plain.split(/(\s+)/);
+    const pick = ws.map((w, i) => ({ w, i })).filter(x => /^[ء-ي]{4,}$/.test(x.w) && !RF_STOP.has(x.w))
+      .sort((x, y) => y.w.length - x.w.length || x.i - y.i).slice(0, 2).sort((x, y) => x.i - y.i);
+    if (!pick.length) return null;
+    const at = new Set(pick.map(x => x.i));
+    a = pick.map(x => x.w);
+    eq = ws.map((w, i) => at.has(i) ? "_" : w).join("");
+  }
+  const pool = [];
+  /* the same phrase with one word turned round (أكبر ↔ أصغر) is the likeliest slip */
+  a.forEach(w => { const ws = w.split(" "); ws.forEach((x, i) => { if (RF_SWAP[x]) { const s = ws.map((y, j) => j === i ? RF_SWAP[x] : y).join(" "); if (a.indexOf(s) < 0 && pool.indexOf(s) < 0) pool.push(s); } }); });
+  (lesson.steps || []).forEach(s => { if (s !== step && s.type === "rule") rfPhrases(s.plain || "").cand.forEach(x => { if (a.indexOf(x.p) < 0 && pool.indexOf(x.p) < 0) pool.push(x.p); }); });
+  return rfCloze({ type: "rfill", of: step, q: "عبّ القاعدة بكلماتها:", eq, a, more: pool.slice(0, 2), why: plain });
+}
+function teachRuleNums(step) {
+  const ex = String(step.example || ""), plain = String(step.plain || "");
+  const segs = ex.split(/\s*(?:←|:)\s*/);
+  const nums = s => s.match(RF_NUM) || [];
+  let k = -1;
+  for (let i = segs.length - 1; i >= 0; i--) if (/=/.test(segs[i]) && nums(segs[i]).length >= 2) { k = i; break; }
+  if (k < 0) for (let i = segs.length - 1; i >= 0; i--) if (nums(segs[i]).length) { k = i; break; }
+  if (k < 0) return null;
+  /* the comma that closes a sentence stays out of the line */
+  const parts = segs[k].split(/\s+،\s+/);
+  let seg = parts.filter(x => /=/.test(x) && nums(x).length >= 2).pop() || parts.filter(x => nums(x).length).pop() || segs[k];
+  const consts = new Set(nums(plain));
+  const all = [];
+  seg.replace(RF_NUM, (m, off) => { all.push({ m, off }); return m; });
+  let blanks = all.filter(x => !consts.has(x.m));
+  if (!blanks.length) blanks = all.slice(-1);
+  blanks = blanks.slice(-4);
+  const at = new Set(blanks.map(x => x.off));
+  let eq = "", last = 0;
+  all.forEach(x => { eq += seg.slice(last, x.off) + (at.has(x.off) ? "_" : x.m); last = x.off + x.m.length; });
+  eq += seg.slice(last);
+  const a = blanks.map(x => x.m);
+  /* «الناتج = أ × ب» against «٣ × ٤ = ١٢»: the same signs in the same order
+     caption each number with its word */
+  let lab = null;
+  const ops = s => (s.match(/[×÷+−]/g) || []).join("");
+  const pe = plain.split("="), se = seg.split("=");
+  if (pe.length === 2 && se.length === 2 && ops(pe[1]) === ops(se[0])) {
+    const words = rfPhrases(pe[1]).cand.map(x => x.p), lhs = (se[0].match(RF_NUM) || []);
+    if (words.length === lhs.length && blanks.length === lhs.length + 1 && blanks[blanks.length - 1].off >= seg.indexOf("=")) lab = words.concat(pe[0].trim());
+  }
+  const before = ex.slice(0, ex.indexOf(segs[k])).replace(/[\s←:،]+$/, "");
+  const rest = ex.replace(seg, "…").trim();
+  return rfCloze({ type: "rnum", of: step, q: before.length > 2 ? before : rest.length > 2 ? rest : "", eq, a, lab, more: rfNear(a, 2), why: seg });
+}
+/* a chunk's steps with the two screens after each rule, built once */
+function teachSteps(chunk) {
+  if (!RF_TEACH) return chunk.steps;
+  if (chunk._rf) return chunk._rf;
+  return chunk._rf = chunk.steps.reduce((out, s) => {
+    out.push(s);
+    if (s.type === "rule") [teachRuleWords(s, chunk), teachRuleNums(s)].forEach(x => { if (x) out.push(x); });
+    return out;
+  }, []);
+}
 
 let LAST_LEARN = null;
 A.startLearn = function (domKey, lesKey, li, boost) {
@@ -3355,7 +3813,11 @@ A.startLearn = function (domKey, lesKey, li, boost) {
   if (!L) { A.startLesson(domKey, lesKey, boost); return; }
   if (li === undefined || li === null || li < 0 || li >= L.lessons.length) li = Math.max(0, learnAt(key));
   const les = L.lessons[li];
-  const queue = les.items.map(src => learnMake(src));
+  const queue = [];
+  les.items.forEach(src => {
+    queue.push(learnMake(src));
+    if (src && src.t === "see" && src.rule && li < (RF_LESSONS[key] || 0)) [learnRuleWords(src, L), learnRuleNums(src)].forEach(x => { if (x) queue.push(learnMake(x)); });
+  });
   /* One item from the lesson before opens this one: recalling it a day — or
      ten minutes — later is what makes it stay, and it is a free first win. */
   const prev = li > 0 ? L.lessons[li - 1] : null;
@@ -3424,18 +3886,127 @@ function learnFillWant(it) {
   for (let j = 0; j < k; j++) if (want[j] === undefined) want[j] = pool.shift();
   return want.concat(it.a.slice(k));
 }
-function learnFillEq(it, verdict) {
+/* A rule screen's line is a row of tokens — words, numbers, signs and each
+   bracket on its own, so Arabic brackets face the right way — that never
+   wraps (the user: «it must be one line not 2 line»): rfFit shrinks the whole
+   line, blanks and captions with it, until it fits the card. */
+function rfTokens(s) { return String(s).replace(/([()])/g, " $1 ").split(/\s+/).filter(Boolean); }
+/* On the numbers screen a chain of two or more «=» steps is written the way
+   a worked solution is, one step under the other, each new line opening on
+   its «=» (the user, 2026-10-27: «don't make it right to left … make it up and
+   down like this, just for this type of questions»); a line with one «=», or
+   one that names its steps in words, stays a line */
+function rfRows(eq, words) {
+  return String(eq).split("\n").flatMap(line => {
+    if (words || (line.match(/ = /g) || []).length < 2 || /[ء-ي]/.test(line)) return [line];
+    return line.split(/ (?== )/).map(x => x.trim()).filter(Boolean);
+  });
+}
+function rfEqHtml(it, verdict, unfill) {
+  let k = 0;
+  const want = verdict ? learnFillWant(it) : null;
+  const blank = () => {
+    const j = k++, tile = it.ui.slots[j], lab = it.lab && it.lab[j];
+    const st = verdict ? (it.tiles[tile] === want[j] ? " right" : " wrong") : "";
+    const b = tile === undefined
+      ? `<button class="ln-blank" aria-label="فراغ${lab ? ": " + esc(lab) : ""}"></button>`
+      : `<button class="ln-blank filled${st}" onclick="${unfill || "A.lUnfill"}(${j})">${esc(it.tiles[tile])}</button>`;
+    return b;
+  };
+  const tok = s => rfTokens(s).map(t => `<span class="rf-t${RULE_OP.test(t) ? " op" : /^[()]$/.test(t) ? " par" : ""}">${esc(t)}</span>`).join("");
+  const words = (it.rf || (it.type === "rfill" ? "words" : "nums")) === "words";
+  return rfRows(it.eq, words).map(line =>
+    `<div class="rf-line">${line.split("_").map((part, i, all) => tok(part) + (i < all.length - 1 ? blank() : "")).join("")}</div>`).join("");
+}
+/* a row's natural width from its tokens' layout widths: a token still
+   scaled down by its entrance animation must not read as narrow */
+function rowOver(row) {
+  const kids = Array.from(row.children);
+  if (!kids.length) return false;
+  const cs = getComputedStyle(row), gap = parseFloat(cs.columnGap) || 0;
+  const need = kids.reduce((s, k) => s + k.offsetWidth, 0) + gap * (kids.length - 1);
+  return need > row.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0) + 1;
+}
+/* The row's size never depends on what is in its blanks (the user,
+   2026-10-27: «why when I put it it shrink», then «fix this problem for
+   good»): it is measured with the widest tiles on offer in every blank —
+   the most any choice of tiles can take — so the size it gets on arrival
+   holds whatever the student places, right or wrong, and every repaint
+   measures the same thing and lands on the same size. */
+function rfFit(root, it) {
+  if (!root) return;
+  const lines = Array.from(root.querySelectorAll(".rf-line"));
+  if (!lines.length) return;
+  lines.forEach(l => { l.style.fontSize = ""; });
+  const blanks = Array.from(root.querySelectorAll(".ln-blank")), kept = blanks.map(b => [b.textContent, b.className]);
+  const texts = Array.from(new Set(((it && it.tiles) || []).concat((it && it.a) || []).map(String)));
+  if (blanks.length && texts.length) {
+    const g = blanks[0];
+    g.className = "ln-blank filled";
+    const wide = texts.map(t => { g.textContent = t; return [t, g.offsetWidth]; }).sort((x, y) => y[1] - x[1]).map(x => x[0]);
+    lines.forEach(l => Array.from(l.querySelectorAll(".ln-blank")).forEach((b, i) => { b.className = "ln-blank filled"; b.textContent = wide[Math.min(i, wide.length - 1)]; }));
+  }
+  let fs = parseFloat(getComputedStyle(lines[0]).fontSize);
+  const over = () => lines.some(rowOver);
+  for (let n = 0; n < 30 && fs > 12 && over(); n++) { fs -= 1; lines.forEach(l => { l.style.fontSize = fs + "px"; }); }
+  blanks.forEach((b, i) => { b.textContent = kept[i][0]; b.className = kept[i][1]; });
+}
+/* the see card's rule on one line when it fits at two thirds of its size or more, else balanced lines */
+function ruleFit(el) {
+  if (!el) return;
+  el.classList.remove("two"); el.style.fontSize = "";
+  el.querySelectorAll(".rw-br").forEach(x => x.remove());
+  let fs = parseFloat(getComputedStyle(el).fontSize);
+  const over = () => rowOver(el);
+  for (let n = 0; n < 30 && fs > 14 && over(); n++) { fs -= 1; el.style.fontSize = fs + "px"; }
+  if (!over()) return;
+  /* too long for one line: two lines, broken after the «=», «:», «،» or «←»
+     nearest the middle, so a bracket or a term is never cut in two */
+  el.style.fontSize = "";
+  const kids = Array.from(el.children), w = kids.map(k => k.offsetWidth), half = w.reduce((a, b) => a + b, 0) / 2;
+  let at = -1, best = Infinity, run = 0;
+  kids.forEach((k, i) => {
+    run += w[i];
+    const t = k.textContent.trim();
+    if (i < kids.length - 1 && !k.classList.contains("rk") && (/^[=←]$/.test(t) || /[:،]$/.test(t)) && Math.abs(run - half) < best) { best = Math.abs(run - half); at = i; }
+  });
+  el.classList.add("two");
+  if (at >= 0) kids[at].insertAdjacentHTML("afterend", '<i class="rw-br" aria-hidden="true"></i>');
+  fs = parseFloat(getComputedStyle(el).fontSize);
+  const lineOver = () => kids.some(k => k.offsetTop !== kids[0].offsetTop) && el.scrollWidth > el.clientWidth + 1;
+  for (let n = 0; n < 12 && fs > 14 && lineOver(); n++) { fs -= 1; el.style.fontSize = fs + "px"; }
+}
+function learnFillEq(it, verdict, unfill) {
+  if (it.rf || it.type) return rfEqHtml(it, verdict, unfill);
   let k = 0;
   const want = verdict ? learnFillWant(it) : null;
   const blank = () => {
     const j = k++, tile = it.ui.slots[j];
     const st = verdict ? (it.tiles[tile] === want[j] ? " right" : " wrong") : "";
-    return tile === undefined
-      ? `<button class="ln-blank" aria-label="فراغ"></button>`
-      : `<button class="ln-blank filled${st}" onclick="A.lUnfill(${j})">${esc(it.tiles[tile])}</button>`;
+    const b = tile === undefined
+      ? `<button class="ln-blank" aria-label="فراغ${it.lab && it.lab[j] ? ": " + esc(it.lab[j]) : ""}"></button>`
+      : `<button class="ln-blank filled${st}" onclick="${unfill || "A.lUnfill"}(${j})">${esc(it.tiles[tile])}</button>`;
+    /* a number in the rule-with-numbers screen wears the word it stands for */
+    return it.lab && it.lab[j] ? `<span class="ln-bw">${b}<small>${esc(it.lab[j])}</small></span>` : b;
   };
-  const lines = learnSteps(it.eq).map(line => learnFmt(line).split("_").map((part, i, all) => i === all.length - 1 ? part : part + blank()).join(""));
+  const rows = it.rf || it.type ? String(it.eq).split("\n") : learnSteps(it.eq);
+  const lines = rows.map(line => learnFmt(line).split("_").map((part, i, all) => i === all.length - 1 ? part : part + blank()).join(""));
   return lines.length > 1 ? lines.map(l => `<div class="ln-step">${l}</div>`).join("") : lines[0];
+}
+/* the two screens after a rule, drawn the way a fill is (the user,
+   2026-10-26, pointing at «كمّل الخطوة:»: «what i meant … is something like
+   this exactly»): the ask, the line in a white box with grey blanks that turn
+   blue, white tiles under it — the rule with its words taken out on the first,
+   the same rule worked on the example's numbers on the second */
+function rfBody(c, verdict, unfill, tile) {
+  const words = (c.rf || (c.type === "rfill" ? "words" : "nums")) === "words";
+  const tiles = `<div class="ln-tiles rf-tiles" id="lnTiles">${c._tiles.map(k =>
+    `<button class="ln-tile${c.ui.slots.indexOf(k) >= 0 ? " used" : ""}${c._out && c._out.indexOf(k) >= 0 ? " out" : ""}" data-k="${k}" onclick="${tile}(${k})"${verdict || (c._out && c._out.indexOf(k) >= 0) ? " disabled" : ""}>${esc(c.tiles[k])}</button>`).join("")}</div>`;
+  const hint = c._hint ? `<div class="rf-hint help" id="rfHint">${c._hint}</div>` : `<div class="rf-hint" id="rfHint"></div>`;
+  const ex = !words && c.q ? `<div class="ln-step rf-ex">${learnFmt(c.q)}</div>` : "";
+  return `<div class="ln-q rf-q">${words ? "كمّل القاعدة:" : "كمّل الخطوة:"}</div>
+    <div class="ln-eq rf-box${words ? " rf-words" : " rf-num"}">${ex}<div class="rf-lines" id="lnEq">${learnFillEq(c, verdict, unfill)}</div></div>
+    ${hint}${tiles}`;
 }
 function learnBody(it) {
   const q = it.q && it.t !== "bank" ? `<div class="ln-q">${learnFmt(it.q)}</div>` : "";
@@ -3457,7 +4028,9 @@ function learnBody(it) {
         <div class="ln-kick">${esc(it.kick || "الفكرة")}</div>
         ${it.h ? `<h1 class="ln-h">${learnFmt(it.h)}</h1>` : ""}
         ${fig}<div class="ln-rows">${rows}</div>
-        ${it.rule ? `<div class="ln-rule" id="lnRule" style="--d:${(0.3 + n * 0.5).toFixed(2)}s"><span class="ln-rule-ic">${BULB_SVG}</span><span class="ln-rule-body"><span class="ln-rule-tag">القاعدة<button class="ln-rule-again" onclick="A.ruleAgain()" aria-label="أعد القاعدة">${RULE_AGAIN_SVG}</button></span><span class="ln-rule-tx" aria-label="${esc(it.rule.replace(/\*/g, ""))}">${ruleWords(it.rule)}</span></span></div>` : ""}
+        ${it.rule ? (() => { const rs = ruleSplit(it.rule); return `<div class="ln-rule ln-rule-see" id="lnRule" style="--d:${(0.3 + n * 0.5).toFixed(2)}s">
+          <span class="rf-head"><span class="ln-rule-ic">${BULB_SVG}</span><span class="ln-rule-tag">القاعدة</span><button class="ln-rule-again" onclick="A.ruleAgain()" aria-label="أعد القاعدة">${RULE_AGAIN_SVG}</button></span>
+          <span class="ln-rule-tx" aria-label="${esc(it.rule.replace(/\*/g, ""))}">${ruleWords(rs.main)}</span>${rs.note ? `<span class="ln-rule-note">${esc(rs.note)}</span>` : ""}</div>`; })() : ""}
       </div>`;
     }
     case "pick": {
@@ -3470,6 +4043,7 @@ function learnBody(it) {
         `<span class="tf-ico ok">✓</span><span class="ch-txt">صح</span>`,
         `<span class="tf-ico no">✕</span><span class="ch-txt">خطأ</span>`], " ch-grid n2 ln-tf");
     case "fill":
+      if (it.rf) return rfBody(it, false, "A.lUnfill", "A.lTile");
       return q + fig + `<div class="ln-eq${learnSteps(it.eq).length > 1 ? " stacked" : learnFs(it.eq) + (it.eq.split("_").length > 4 ? " tight" : "")}" id="lnEq">${learnFillEq(it)}</div>
         <div class="ln-tiles" id="lnTiles">${it._tiles.map(k =>
           `<button class="ln-tile" data-k="${k}" onclick="A.lTile(${k})">${esc(it.tiles[k])}</button>`).join("")}</div>`;
@@ -3522,12 +4096,19 @@ function renderLearn() {
   fxBindPress();
   fxPaintBar(SES.run);
   if (it.t === "see" && it.rule) rulePlay(); else { ruleT.forEach(clearTimeout); ruleT = []; }
+  const fit = () => {
+    if (!SES || SES.queue[SES.idx] !== it) return;
+    if (it.rf) rfFit(document.getElementById("lnEq"), it);
+    if (it.t === "see" && it.rule) ruleFit(document.querySelector("#lnRule .ln-rule-tx"));
+  };
+  fit();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
   SES.qStart = Date.now();
 }
 function learnPaint() {
   const it = SES.queue[SES.idx];
   if (it.t === "fill") {
-    const eq = document.getElementById("lnEq"); if (eq) eq.innerHTML = learnFillEq(it);
+    const eq = document.getElementById("lnEq"); if (eq) { eq.innerHTML = learnFillEq(it); if (it.rf) rfFit(eq, it); }
     document.querySelectorAll("#lnTiles .ln-tile").forEach(b => b.classList.toggle("used", it.ui.slots.indexOf(+b.dataset.k) >= 0));
   }
   if (it.t === "order") {
@@ -3547,25 +4128,25 @@ A.lTile = function (k) {
     if (it.ui.slots.indexOf(k) >= 0) return;
     let j = 0; while (it.ui.slots[j] !== undefined) j++;
     if (j >= it.a.length) return;
-    it.ui.slots[j] = k;
+    it.ui.slots[j] = k; stampTile(it.ui, k);
   } else if (it.t === "order") {
     if (it.ui.seq.indexOf(k) >= 0) return;
     it.ui.seq.push(k);
   } else return;
-  sndTap();
+  snd("tile-place", () => sndTap());
   learnPaint();
 };
 A.lUnfill = function (j) {
   const it = SES && SES.queue[SES.idx]; if (!it || SES.locked) return;
   if (it.t === "fill") it.ui.slots[j] = undefined;
   else if (it.t === "order") it.ui.seq.splice(j, 1);
-  learnPaint();
+  snd("tile-remove"); learnPaint();
 };
 A.lKey = function (k) {
   const it = SES && SES.queue[SES.idx]; if (!it || it.t !== "type" || SES.locked) return;
   if (k === "⌫") it.ui.val = it.ui.val.slice(0, -1);
   else if (it.ui.val.length < 9) it.ui.val += k;
-  sndTap();
+  snd("keypad-key", () => sndTap());
   learnPaint();
 };
 /* Match pairs answers itself: a right pair locks green and goes quiet, a wrong
@@ -3581,21 +4162,11 @@ A.lKey = function (k) {
 /* fxAddJump's beats at a third of its height: the answer card is the width of
    the column, a pair tile is half that and sits two pixels from its neighbour,
    and the full jump landed it on the tile above */
-function pairHop(tl, el, at) {
-  const J = FX_JUMP;
-  tl.to(el, { keyframes: [
-    { y: -5, scaleX: FXA(.947), scaleY: FXA(1.056), duration: J.launch, ease: "power2.out" },
-    { y: -9, scaleX: 1, scaleY: 1, duration: J.rise, ease: "power2.out" },
-    { y: -9, duration: J.hang },
-    { y: -2, scaleX: FXA(.980), scaleY: FXA(1.070), duration: J.fall, ease: "power2.in" },
-    { y: 1, scaleX: FXA(1.024), scaleY: FXA(.926), duration: J.impact, ease: "power2.in" },
-    { y: 0, scaleX: 1, scaleY: 1, duration: J.settle, ease: "back.out(2.6)" }] }, at);
-}
-function pairFx(els, ok) {
+/* a wrong pair sinks and shakes */
+function pairMiss(els) {
   if (!fxOn() || !window.gsap || fxReduced()) return;
   const tl = gsap.timeline();
   els.forEach(el => {
-    if (ok) { pairHop(tl, el, 0); return; }
     tl.to(el, { keyframes: [
       { y: FXP(5), scaleX: FXA(1.02), scaleY: FXA(.95), duration: .07, ease: "power2.in" },
       { y: 0, scaleX: 1, scaleY: 1, duration: .10, ease: "power2.out" }] }, 0)
@@ -3612,7 +4183,7 @@ A.lPair = function (side, k) {
     if (p) el(p).classList.remove("sel");
     it.ui.pick = { side, k };
     el(it.ui.pick).classList.add("sel");
-    sndTap();
+    snd("pair-pick", () => sndTap());
     return;
   }
   const a = side === "a" ? k : p.k, b = side === "b" ? k : p.k;
@@ -3622,33 +4193,195 @@ A.lPair = function (side, k) {
   if (it.p[a][1] === it.p[b][1]) {
     it.ui.matched.push(a + "a", b + "b");
     [A1, B1].forEach(x => { x.classList.add("ok"); x.disabled = true; });
+    /* a matched pair plays Duolingo's right-answer wave, as the fill's chips do
+       (the user, 2026-10-27: «I don't see the animation … like law fill blank»):
+       the tile picked first jumps first, both green with their band and
+       sparkles, then they grey out */
+    const pair = p.side === "a" ? [A1, B1] : [B1, A1];
+    adWave(pair);
+    /* every pair greys out after its wave, the last one too — left green it
+       read as stuck (the user, 2026-10-27) */
+    setTimeout(() => [A1, B1].forEach(x => { x.classList.remove("ad-ok"); x.classList.add("gone"); }), 900);
     if (it.ui.matched.length === it.p.length * 2) {
       SES.locked = true;
-      /* the whole board takes the win jump (and the strike rides on it), the
-         last pair hops on top of it */
-      pairFx([A1, B1], true);
-      setTimeout(() => learnResolve(it, it.ui.miss === 0, "", document.querySelector(".ln-pairs") || B1, true), 260);
-    } else {
-      sndGood();
-      pairFx([A1, B1], true);
-      setTimeout(() => [A1, B1].forEach(x => x.classList.add("gone")), 560);
-    }
+      /* the last pair's wave, then the whole board takes the win jump (and the strike rides on it) */
+      setTimeout(() => learnResolve(it, it.ui.miss === 0, "", document.querySelector(".ln-pairs") || B1, true), 520);
+    } else snd("pair-match", () => sndGood(), "xp-tally-" + Math.min(it.ui.matched.length / 2, 5));   // each pair a tally higher
   } else {
     it.ui.miss++;
-    sndBad();
+    snd("pair-miss", () => sndBad());
     [A1, B1].forEach(x => { x.classList.remove("bad"); void x.offsetWidth; x.classList.add("bad"); });
-    pairFx([A1, B1], false);
+    pairMiss([A1, B1]);
     setTimeout(() => [A1, B1].forEach(x => x.classList.remove("bad")), 520);
   }
 };
 const sndTap = () => beep([[520, .04]]);
 
+/* A rule screen is answered until it is right (the user, 2026-10-26: «if i'm
+   wrong i want you to try help me but not giving me the answer»): a miss turns
+   the wrong chips red and shakes them, then sends them back to the tiles with
+   the right ones left in place, and the help under the rule grows with each
+   miss — never the answer itself (rfHelp):
+   1. the words screen brings back the trick the card just showed; the numbers
+      screen points at the word under the first wrong blank, in the example
+      and in the rule above it;
+   2. the tiles that belong nowhere in the rule go (rfSpare), so what is left
+      is all the rule's own;
+   3. after that, how many are still out of place, to swap round.
+   A right answer makes every chip in the rule jump in turn, as a right answer
+   card does. A miss counts against the first try; it costs no heart. */
+function rfShown(it) { return it.eq.split("_").map((part, j, all) => j === all.length - 1 ? part : part + it.a[j]).join("").replace(/\n/g, " ، "); }
+/* Duolingo's right answer on a tap-the-words challenge, copied from its files
+   (the user, 2026-10-26: «any question similar to this … the animation of
+   Duolingo itself, they jump after each other … green»): Compose TapInput's
+   AtomicDelightAnimation — r32 (jump, squash), s32 (the ground shadow), u32
+   (colour), gs0 / ys20 (shine, sparkles), all in dp, taken here as px. Each
+   chip starts 50ms after the one before it, in reading order:
+   - it crouches 7.3, springs to 23.6 over its place, lands 4.4 past it and
+     rebounds 7.3 before it settles (650ms), squashing and stretching on the
+     same beats (550ms; width and height in dp per side, AD_SQ);
+   - 100ms in it turns Duolingo's correct green at once (seaSponge face,
+     turtle lip, treeFrog text — .ad-ok) and a grey slab (swan) shows under it
+     where it stood, shrinking and spreading with its height (AD_SLAB, as
+     insets: sides k, top l + m, bottom l − m);
+   - at 105ms a pale band crosses its face, leaning back by half its height
+     (350ms), and two four-point sparkles, 12 top-left and 8 bottom-right, grow
+     to 1.15, turn 39° and go (400ms).
+   Under reduced motion the chips only turn green. */
+const AD_JUMP = [[0, 0, "cubic-bezier(.01,0,0,1)"], [.1277, 7.3, "linear"], [.1538, -12.7, "cubic-bezier(.1,.53,0,.92)"],
+  [.3585, -23.6, "cubic-bezier(1,-.05,.95,.65)"], [.6923, 4.4, "cubic-bezier(.09,.75,.4,.95)"], [.8723, -7.3, "cubic-bezier(.89,-.08,.95,.79)"], [1, 0]];
+const AD_SQ = [[0, 0, 0, "cubic-bezier(.01,0,0,1)"], [.1509, 2.9, -5.8, "linear"], [.1818, -5.7, 2.53, "cubic-bezier(.01,0,.15,1)"],
+  [.4236, 0, 0, "cubic-bezier(.85,0,.94,.72)"], [.7873, 0, 2.53, "linear"], [.8182, 1.96, -2.9, "cubic-bezier(.1,.47,.01,1)"], [1, 0, 0]];
+const AD_SLAB = { at: [0, .2418, .6364, .8491, 1], k: [5.9, 7.1, 1.27, 4.72, 3.64], l: [4.78, 6.36, 4.78, 5.45, 3.64], m: [4.5, 5, 4.3, 4.57, 3.64],
+  ease: ["cubic-bezier(.1,.53,0,.92)", "cubic-bezier(1,-.03,.95,.65)", "cubic-bezier(.09,.75,.4,.95)", "cubic-bezier(.89,-.08,.95,.79)"] };
+const AD_STAR = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C12.9 7.2 16.8 11.1 24 12 16.8 12.9 12.9 16.8 12 24 11.1 16.8 7.2 12.9 0 12 7.2 11.1 11.1 7.2 12 0Z"/></svg>`;
+function adWave(chips) {
+  chips = Array.from(chips || []).filter(Boolean);
+  if (!chips.length) return;
+  const still = !fxOn() || fxReduced() || !Element.prototype.animate;
+  chips.forEach((c, i) => {
+    c.classList.remove("right");
+    if (still) { c.classList.add("ad-ok"); return; }
+    const D = i * 50, W = c.offsetWidth || 1, H = c.offsetHeight || 1, par = c.parentElement;
+    const ease = e => (e ? { easing: e } : {});
+    if (getComputedStyle(par).position === "static") par.style.position = "relative";
+    c.classList.add("ad-go");
+    c.animate(AD_JUMP.map(([o, y, e]) => Object.assign({ offset: o, translate: `0 ${y}px` }, ease(e))), { duration: 650, delay: D });
+    c.animate(AD_SQ.map(([o, w, h, e]) => Object.assign({ offset: o, scale: `${(1 + 2 * w / W).toFixed(4)} ${(1 + 2 * h / H).toFixed(4)}` }, ease(e))), { duration: 550, delay: D });
+    const slab = document.createElement("i");
+    slab.className = "ad-slab";
+    Object.assign(slab.style, { left: c.offsetLeft + "px", top: c.offsetTop + "px", width: W + "px", height: H + "px", borderRadius: getComputedStyle(c).borderRadius });
+    par.insertBefore(slab, c);
+    slab.animate(AD_SLAB.at.map((o, j) => Object.assign({ offset: o, opacity: 1,
+      clipPath: `inset(${(AD_SLAB.l[j] + AD_SLAB.m[j]).toFixed(2)}px ${AD_SLAB.k[j]}px ${(AD_SLAB.l[j] - AD_SLAB.m[j]).toFixed(2)}px ${AD_SLAB.k[j]}px round ${getComputedStyle(c).borderRadius})` }, ease(AD_SLAB.ease[j]))),
+      { duration: 550, delay: D + 100 });
+    const sh = document.createElement("i");
+    sh.className = "ad-sh";
+    sh.innerHTML = "<b></b>";
+    c.appendChild(sh);
+    const band = sh.firstChild, bw = 38;
+    band.style.transform = `skewX(${(-Math.atan(.5) * 180 / Math.PI).toFixed(2)}deg)`;
+    const x = p => `${(-bw + (W + bw + H / 2) * p).toFixed(1)}px 0`;
+    band.animate([{ offset: 0, translate: x(0), easing: "linear" }, { offset: .0486, translate: x(.24), easing: "cubic-bezier(.17,.17,.32,.73)" },
+      { offset: .4286, translate: x(.47), easing: "cubic-bezier(.63,.17,.83,.83)" }, { offset: 1, translate: x(1) }], { duration: 350, delay: D + 105, fill: "backwards" });
+    [["ad-sp a", 12], ["ad-sp b", 8]].forEach(([cls, s]) => {
+      const sp = document.createElement("i");
+      sp.className = cls;
+      sp.style.width = sp.style.height = s + "px";
+      sp.innerHTML = AD_STAR;
+      c.appendChild(sp);
+      sp.animate([{ offset: 0, scale: 0, easing: "cubic-bezier(.17,.17,0,.89)" }, { offset: .5, scale: 1.1535, easing: "cubic-bezier(.8,-.09,.83,.83)" }, { offset: 1, scale: 0 }],
+        { duration: 400, delay: D + 100, fill: "both" });
+      sp.animate([{ rotate: "0deg" }, { rotate: "39.05deg" }], { duration: 400, delay: D + 100 });
+    });
+    setTimeout(() => c.classList.add("ad-ok"), D + 100);
+    setTimeout(() => { slab.remove(); sh.remove(); c.querySelectorAll(".ad-sp").forEach(x => x.remove()); c.classList.remove("ad-go"); }, D + 700);
+  });
+}
+/* a right rule screen: its chips play Duolingo's wave */
+function rfHop(eq, it) {
+  if (eq) adWave(byPlaced(it.ui, eq.querySelectorAll(".ln-blank")));
+}
+/* the wave runs in the order the chips were placed — the one picked first
+   jumps first, wherever it sits (the user, 2026-10-26: «the thing he choose
+   first if left then left if right then right»); a blank with no stamp keeps
+   its place in the line */
+function stampTile(ui, k) { ui.at = ui.at || {}; ui.at[k] = ui.n = (ui.n || 0) + 1; }
+function byPlaced(ui, chips) {
+  const at = (ui && ui.at) || {};
+  return Array.from(chips || []).map((c, j) => [c, at[ui.slots[j]] != null ? at[ui.slots[j]] : 1e6 + j])
+    .sort((a, b) => a[1] - b[1]).map(x => x[0]);
+}
+function rfSpare(it) {
+  const need = {};
+  learnFillWant(it).forEach(v => { need[v] = (need[v] || 0) + 1; });
+  const keep = new Set(it.ui.slots.filter(k => k !== undefined));
+  keep.forEach(k => { need[it.tiles[k]]--; });
+  return it.tiles.map((t, k) => k).filter(k => {
+    if (keep.has(k)) return false;
+    if (need[it.tiles[k]] > 0) { need[it.tiles[k]]--; return false; }
+    return true;
+  });
+}
+function rfHelp(it, bad) {
+  const ic = `<span class="rf-help-ic">${BULB_SVG}</span>`;
+  if (it._tries === 1) {
+    if (it.rf === "words" && it.trick && it.trick.length)
+      return `${ic}<span class="rf-help-tx"><b>تذكّر الحيلة:</b>${it.trick.map(r => `<span class="rf-tr">${learnFmt(r)}</span>`).join("")}</span>`;
+    const lab = it.lab && it.lab[bad[0]], rule = it.rule ? ruleSplit(it.rule).main : "";
+    const said = rule ? `<b>تذكّر القاعدة:</b><span class="rf-tr">${String(rule).split("*").map((p, k) => k % 2 ? (p ? `<b class="ln-hl">${esc(p)}</b>` : "") : esc(p)).join("")}</span>` : "";
+    if (lab) return `${ic}<span class="rf-help-tx">${said}<span>دوّر <b class="ln-hl">${esc(lab)}</b> في المثال — وحطّه مكانه</span></span>`;
+    return `${ic}<span class="rf-help-tx">${said || `<span>وش يجي قبل «=» ووش يجي بعده؟</span>`}</span>`;
+  }
+  if (it._tries === 2) return `${ic}<span class="rf-help-tx"><span>شلت لك الخيارات الزايدة — كل اللي باقي من القاعدة، بس رتّبه</span></span>`;
+  return `${ic}<span class="rf-help-tx"><span>${bad.length === 1 ? "باقي فراغ واحد — جرّب الخيار الثاني" : `باقي ${toAr(bad.length)} مو في مكانها — بدّلها بين بعض`}</span></span>`;
+}
+/* the pointer: on the first miss the first blank still to fill pulses */
+function rfPoint(it, bad) {
+  if (it._tries !== 1) return;
+  const b = document.querySelectorAll("#lnEq .ln-blank")[bad[0]];
+  if (b) b.classList.add("pt");
+}
+function rfCheck(it) {
+  SES.locked = true;
+  const want = learnFillWant(it), bad = [];
+  it.ui.slots.forEach((k, j) => { if (it.tiles[k] !== want[j]) bad.push(j); });
+  const eq = document.getElementById("lnEq"), hint = document.getElementById("rfHint");
+  const lock = () => document.querySelectorAll(".ln-tile, .ln-blank").forEach(x => { x.disabled = true; });
+  if (!bad.length) {
+    eq.innerHTML = learnFillEq(it, true); rfFit(eq, it); lock();
+    learnResolve(it, true, rfShown(it), null, false, it.why);
+    rfHop(eq, it);
+    return;
+  }
+  it._tries = (it._tries || 0) + 1;
+  if (learnGraded(it) && !(it.uid in SES.firstTry)) SES.firstTry[it.uid] = false;
+  eq.innerHTML = learnFillEq(it, true); rfFit(eq, it); lock();
+  const chips = eq.querySelectorAll(".ln-blank"), wrong = bad.map(j => chips[j]).filter(Boolean);
+  if (window.gsap && !fxReduced()) gsap.fromTo(wrong, { x: 0 }, { keyframes: [{ x: -8, duration: .06 }, { x: 7, duration: .07 }, { x: -5, duration: .07 }, { x: 3, duration: .06 }, { x: 0, duration: .06 }] });
+  snd("rule-fill-miss", () => sndBad()); buzz([30, 40, 30]);
+  it._hint = rfHelp(it, bad);
+  if (hint) { hint.innerHTML = it._hint; hint.className = "rf-hint help"; void hint.offsetWidth; hint.classList.add("go"); }
+  setTimeout(() => {
+    if (!SES || SES.queue[SES.idx] !== it) return;
+    bad.forEach(j => { it.ui.slots[j] = undefined; });
+    if (it._tries >= 2) it._out = rfSpare(it);
+    SES.locked = false;
+    document.querySelectorAll("#lnTiles .ln-tile").forEach(x => {
+      const out = !!it._out && it._out.indexOf(+x.dataset.k) >= 0;
+      x.disabled = out; x.classList.toggle("out", out);
+    });
+    learnPaint();
+    rfPoint(it, bad);
+  }, 950);
+}
 function learnCheck() {
   const it = SES.queue[SES.idx];
   if (SES.locked || !learnReady(it)) return;
+  if (it.rf) { rfCheck(it); return; }
   SES.locked = true;
   const choices = Array.from(document.querySelectorAll(".ln-area .choice"));
-  let ok = false, shown = "", card = null, why = it.why;
+  let ok = false, shown = "", card = null, why = it.why, wave = null;
   if (it.t === "pick" || it.t === "tf" || it.t === "bank") {
     const right = it.t === "pick" ? it._ch.indexOf(it.a) : it.t === "tf" ? (it.a ? 0 : 1) : it.q.answer;
     ok = SES.sel === right;
@@ -3667,8 +4400,9 @@ function learnCheck() {
     ok = learnFillWant(it).every((x, j) => it.tiles[it.ui.slots[j]] === x);
     const eq = document.getElementById("lnEq");
     eq.innerHTML = learnFillEq(it, true);
-    shown = it.eq.replace(/\*/g, "").split("_").map((part, j, all) => j === all.length - 1 ? part : part + it.a[j]).join("");
+    shown = it.eq.replace(/\*/g, "").split("_").map((part, j, all) => j === all.length - 1 ? part : part + it.a[j]).join("").replace(/\n/g, " ، ");
     card = eq;
+    if (ok) { wave = byPlaced(it.ui, eq.querySelectorAll(".ln-blank")); card = null; }
   } else if (it.t === "type") {
     const want = [].concat(it.a);
     ok = want.indexOf(it.ui.val) >= 0;
@@ -3679,10 +4413,11 @@ function learnCheck() {
     ok = it.ui.seq.every((k, j) => it.tiles[k] === it.tiles[j]);
     shown = it.tiles.join(" ← ").replace(/\*/g, "");
     card = document.getElementById("lnLine");
-    card.classList.add(ok ? "right" : "wrong");
+    if (ok) { wave = card.querySelectorAll(".ln-tile"); card = null; } else card.classList.add("wrong");
   }
   document.querySelectorAll(".ln-tile, .ln-key, .ln-blank").forEach(b => { b.disabled = true; });
   learnResolve(it, ok, shown, card, false, why);
+  if (wave) adWave(wave);
 }
 function learnRequeue(it) {
   SES.retried[it.uid] = (SES.retried[it.uid] || 0) + 1;
@@ -3727,7 +4462,7 @@ function learnResolve(it, ok, shown, card, pairs, why) {
       <button class="btn" onclick="A.next()">متابعة</button>`;
     answerFx(card, SES.run);
   } else {
-    sndBad();
+    snd("wrong-answer", () => sndBad());
     if (graded) { SES.run = 0; learnRequeue(it); paintProg(); loseHeart(); }
     const hLeft = SES.hearts;
     const heartLine = !graded || SES.safe ? ""
@@ -3774,10 +4509,16 @@ function learnFinish(acc) {
 /* «الدرس التالي» from the win screen: the same hand-offs متابعة makes (the
    streak flame first), then straight into the next three minutes */
 A.winNext = function () {
+  snd(LAST_LEARN && LAST_LEARN.next >= 0 ? "start-lesson" : "continue");
   wstStop(); wvStop();
   winHeroStop(); WIN = null;
   const L = LAST_LEARN;
-  const go = () => signGate(() => L && L.next >= 0 ? A.startLearn(L.domKey, L.lesKey, L.next) : A.go("path"));
+  const go = () => signGate(() => {
+    if (!(L && L.next >= 0)) { A.go("path"); return; }
+    if (!PATH_PAY) { A.startLearn(L.domKey, L.lesKey, L.next); return; }
+    PATH_NEXT = { domKey: L.domKey, lesKey: L.lesKey, next: L.next };
+    A.go("path");
+  });
   if (pendingStreak > 0) { const c = pendingStreak; pendingStreak = 0; showStreakCelebration(c, go); }
   else go();
 };
@@ -3828,7 +4569,7 @@ function qTick() {
   if (!SES || !SES.timer) return;
   const left = Math.round((SES.endsAt - Date.now()) / 1000);
   if (left === SES.left) return;                       // nothing to repaint
-  if (left < SES.left && left <= 5 && left > 0) sndTick();
+  if (left < SES.left && left <= 5 && left > 0) snd("timer-tick", () => sndTick());
   SES.left = left;
   const n = document.getElementById("qtNum"), w = document.getElementById("qtWrap");
   if (n) n.textContent = fmtClock(left);
@@ -3914,7 +4655,7 @@ function timeUp() {
   dailyTick();
   const isCmp = q.format === "comparison";
   const correctTxt = LETTERS[q.answer] + " — " + (isCmp ? CMP_CHOICES[q.answer] : q.choices[q.answer]);
-  sndBad();
+  snd("time-up", () => sndBad());
   const fb = document.getElementById("fb");
   fb.className = "feedback bad show";
   fb.innerHTML = `<div class="fb-head"><span class="fb-x fb-clock">${TIMER_SVG}</span> انتهى الوقت!</div>
@@ -3934,7 +4675,7 @@ function paintRadios(i) {
 A.pick = function (i) {
   if (SES.locked) return;
   const btn = document.querySelector(`.choice[data-ci="${i}"]`);
-  SES.sel = i;
+  SES.sel = i; snd("choice-select", null, "assessment-click-option-" + (Math.min(i, 3) + 1));
   document.querySelectorAll(".choice").forEach((b, j) => b.classList.toggle("sel", j === i));
   paintRadios(i);
   const cb = document.getElementById("checkBtn"); if (cb) cb.disabled = false;
@@ -4017,7 +4758,7 @@ A.check = function () {
        built. Same synchronous block, so nothing paints in between. */
     answerFx(document.querySelector(`.choice[data-ci="${q.answer}"]`), SES.run);
   } else {
-    sndBad();
+    snd("wrong-answer", () => sndBad());
     SES.run = 0;                         // one miss and the run is gone
     requeue(q);
     paintProg();                         // the queue just grew, so the bar gives ground
@@ -4058,6 +4799,7 @@ A.check = function () {
 
 A.toggleSol = function () {
   const s = document.getElementById("sol");
+  if (s.style.display === "none") snd("help-open");
   s.style.display = s.style.display === "none" ? "block" : "none";
 };
 
@@ -4075,6 +4817,7 @@ A.toggleSol = function () {
    method only if a question has no per-question hint. Slides up Duolingo-style. */
 A.showMethod = function () {
   if (!SES) return;
+  snd("help-open");
   stopQTimer();          // the sheet covers the clock; do not charge for reading
   const cur = SES.queue && SES.queue[SES.idx];
   const method = (cur && cur.method) || SES.method;
@@ -4088,7 +4831,7 @@ A.showMethod = function () {
   veil.innerHTML = `<div class="method-sheet">
     <div class="ms-grip"></div>
     <div class="ms-head"><span class="ms-bulb">${BULB_SVG}</span><h3>كيف أحلّها؟</h3></div>
-    <div class="ms-sub">⏸ الوقت متوقف — خذ راحتك. ${cur && cur.method ? "خطوات حلّ هذا السؤال بالذات" : chunk ? "القوانين اللي يحتاجها هذا السؤال" : "قوانين هذا الدرس وخدع الاختبار"} 👇</div>
+    <div class="ms-sub">الوقت متوقف — خذ راحتك. ${cur && cur.method ? "خطوات حلّ هذا السؤال بالذات" : chunk ? "القوانين اللي يحتاجها هذا السؤال" : "قوانين هذا الدرس وخدع الاختبار"} 👇</div>
     <div class="ms-body">${(cur && cur.method) || !chunk ? formatExplain(method) : teachRulesHtml(chunk)}</div>
     ${les && les.rules ? `<button class="btn btn-ghost ms-link" onclick="A.openBook('${SES.domKey}','${SES.lesKey}')">افتح دفتر القوانين كاملاً</button>` : ""}
     <button class="btn ms-close" onclick="A.closeMethod()">فهمت، بحاول</button>
@@ -4142,6 +4885,11 @@ A.debugLearnFinish = function (miss) {
     A.next();
   }
 };
+A.debugLearnGo = function (pred) {                                  // dev harness only: jump to the first item that matches
+  const i = SES ? SES.queue.findIndex(pred) : -1;
+  if (i < 0) return "none";
+  SES.idx = i; SES.locked = false; SES.sel = null; renderSession(); return i;
+};
 A.debugRun = function () { return SES ? (SES.run || 0) : 0; };                    // dev harness only
 A.debugRankUp = function (i) { showRankUp(i); };                    // dev harness only
 A.debugPool = function () {                                         // dev harness only
@@ -4176,6 +4924,7 @@ const NO_FAIL = { review: 1, place: 1, mix: 1 };  // 999 hearts: there is nothin
 A.next = function () {
   if (!SES) return;                    // a stray Enter after the win screen
   if (!NO_FAIL[SES.mode] && !SES.safe && SES.hearts <= 0) { sessionFailed(); return; }
+  snd("continue");
   if (placeNudgeDue()) placeNudge();   // offered over the next question, never in its way
   if (SES.mode === "learn") {
     const was = SES.queue[SES.idx];
@@ -4200,7 +4949,7 @@ function mixComplete() {
   const ft = Object.values(SES.firstTry), right = ft.filter(Boolean).length;
   const acc = ft.length ? Math.round(right / ft.length * 100) : 0;
   const xpWon = SES.xp;
-  gainXP(xpWon); gainGems(SES.gems); bumpStreak(); save(); sndWin();
+  gainXP(xpWon); gainGems(SES.gems); bumpStreak(); save(); snd("practice-complete", () => sndWin());
   LAST_MISSES = Object.keys(SES.firstTry).filter(k => SES.firstTry[k] === false);
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
     ${winHero()}
@@ -4258,7 +5007,7 @@ function sessionFailed() {
   bumpStreak(); save();
   const { domKey, lesKey, done, total, tSpent, tAnswered } = SES;
   const avgSecs = tAnswered ? Math.round(tSpent / tAnswered) : 0;
-  sndLose();
+  snd("lesson-failed", () => sndLose());
   const canRevive = S.xp >= REVIVE_COST;
   $app.innerHTML = `<div class="screen screen-full"><div class="complete fail-scene" id="failComp">
     ${brokenHeartHero()}
@@ -4288,7 +5037,7 @@ A.reviveLesson = function () {
      step past it rather than handing it back as a free point. */
   SES.idx++;
   SES.hearts = LEVEL_HEARTS; SES.sel = null; SES.locked = false;
-  save(); sndGood && sndGood();
+  save(); snd("revive", () => { sndGood && sndGood(); });
   if (SES.idx >= SES.queue.length) { lessonComplete(); return; }
   renderSession();
 };
@@ -4323,7 +5072,8 @@ function lessonComplete() {
      (a new tier is the rank-up's moment instead, and a new cohort) */
   const r0 = lb0.findIndex(e => e.you) + 1, r1 = leagueStandings(lbAt).findIndex(e => e.you) + 1;
   const climb = tierIndex() === ti0 && r1 < r0 ? { from: r0, to: r1, list: lb0, xp1: S.totalXp } : null;
-  const streakUp = bumpStreak(); save(); sndWin();
+  if (climb) climbSfxLoad();                         // decoded while the win screen plays
+  const streakUp = bumpStreak(); save();
   pendingStreak = streakUp ? S.streak.count : 0;   // show the fire-streak celebration after this win screen
   const xpWon = rankGain, gemsWon = SES.gems, boosted = SES.xpBoost, tTot = SES.tSpent;
   LAST_MISSES = learn
@@ -4332,7 +5082,7 @@ function lessonComplete() {
   const missCount = LAST_MISSES.length;
   /* The first lesson cannot be failed, which means it can no longer tell a
      struggling student the truth by ending the session. So the win screen says
-     it instead: the star and قدّور stay, because the student really did answer
+     it instead: the star and فهيم stay, because the student really did answer
      every question, but the line stops calling it a clean finish and the review
      button becomes the thing to do next rather than an afterthought. */
   const struggled = SES.safe && acc < 50 && missCount && !(learn && learn.k > 0);
@@ -4355,10 +5105,11 @@ function lessonComplete() {
         ["خلّصت؟!", "بهالسرعة؟ *هذا المستوى*!"]])
     : [pickOne(["أحسنت!", "تقدّم ممتاز!", "سوّيتها!", "شغل نظيف!"]),
        pickOne(["مهاراتك في الكمي *تتحسّن*.", "كل درس يقرّبك من *هدفك*.", "التقدّم *لابق* عليك."])];
+  const lcTitle = head.replace(/\*/g, ""), lcSub = String(say).replace(/\*/g, "");
   const accTag = acc === 100 ? "مذهل" : acc >= 90 ? "رائع" : acc >= 60 ? "جيد" : "الدقة";
   const timeTag = tTot < 90 ? "خاطف" : tTot < 180 ? "سريع" : tTot < 300 ? "منجز" : "ملتزم";
   const goal = dailyGoal(), qd1 = Math.min(goal, (S.daily && S.daily.n) || 0), qd0 = Math.max(0, qd1 - (SES.qd || 0));
-  WIN = { learn, title: SES.title, gems: gemsWon, boosted, goal, qd0, qd1, struggled, missCount, climb,
+  WIN = { learn, title: SES.title, lesKey: SES.lesKey, uc: (UNIT_COLORS[(window.QBANK[SES.domKey] || {}).color] || UNIT_COLORS.purple), gems: gemsWon, boosted, goal, qd0, qd1, struggled, missCount, climb,
     nxt: learn && LAST_LEARN.next >= 0 ? { t: LAST_LEARN.nextTitle, m: LAST_LEARN.mins } : null };
   const stat = (c, label, icon, id, extra) => `<div class="wst wst-${c}${extra || ""}">
       <div class="wst-pop">
@@ -4369,12 +5120,12 @@ function lessonComplete() {
       ${[1, 2, 3].map(i => `<i class="wst-gl wst-g${i}">${WST_GLINT}</i>`).join("")}
     </div>`;
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene wn" id="comp">
-    <div class="wv">
-      <div class="wv-hero" aria-hidden="true"><span class="wv-shadow"></span>
-        <div class="wv-man">${mascot("celebrate", "wv-qd")}<div class="wv-lot" id="wvCrown">${WV_CROWN}</div></div></div>
-      <h1 class="wn-title wv-title">${head}</h1>
+    <div class="wv-lc">
+      <canvas id="wvRive" class="wv-rive" aria-hidden="true"></canvas>
+      <div class="wv-fh" aria-hidden="true"><div class="wv-fh-in">${mascot("celebrate", "wv-qd")}</div></div>
+      <h1 class="wn-title wv-title">${esc(lcTitle)}</h1>
+      <p class="wv-sub">${esc(lcSub)}</p>
     </div>
-    <div class="wn-say ob-say">${sayHtml(say)}</div>
     <div class="wst-wrap">
     <canvas id="wstRive" class="wst-rive" width="750" height="268" aria-hidden="true"></canvas>
     <div class="wst-row">
@@ -4391,60 +5142,87 @@ function lessonComplete() {
     </div>
   </div></div>`;
   wstLoad({ xp: xpWon, acc, t: tTot, perfect, accTag, timeTag });
-  winPlay({ xp: xpWon, acc, t: tTot, perfect });
+  winPlay({ xp: xpWon, acc, t: tTot, perfect, head: head.replace(/\*/g, ""), title: lcTitle, sub: lcSub });
   SES = null;
 }
 
-/* The win screen, fourth version (2026-10-22: the user called the racing band
-   broken and asked for Duolingo's own animation, 100%). Every moving part is
-   Duolingo's, read from its files, and nothing is its character:
-   1. Duolingo's floating crown (floating_crown.json, assets/fx/crown.json)
-      comes in the way its lesson-complete hero does (lesson_complete_main_29:
-      in by 383ms held big, shrinks 1.05 → .65 over 800–1150ms with an
-      ease-in-out (1, 0, .27, 1) and rises), landing on its own shadow with a
-      hit; then it bobs and its shine crosses it, on its own loop.
-   2. The title in Duolingo's gold: on at 33ms, .85 → 1 and +32px → 0 over
-      33–967ms (ease .06, .19, 0, 1); squashes to .8 at 1017 and springs back
-      by 1167.
-   3. The subtitle types itself out under it.
-   4. Duolingo's stat cards from its own file at 1.53s (stats_trig), 0 / .6 /
-      1.267s apart (wstFire), or their HTML copy when the file is not ready.
-   5. The button fades in last, 500ms, and only then takes a tap.
-   A tap anywhere else jumps to the end. No confetti, no particles. */
-/* then he keeps hopping for joy, a small jump every couple of seconds, the
-   crown riding on his head; killed with the screen (wvStop) */
-function wvJoy() {
-  const man = document.querySelector(".wv-man"), shadow = document.querySelector(".wv-shadow");
-  if (!man || !window.gsap || motionReduced()) return;
-  if (wvIdle) wvIdle.kill();
-  wvIdle = gsap.timeline({ repeat: -1, repeatDelay: 1.6 })
-    .to(man, { scaleX: 1.1, scaleY: .88, duration: .12, ease: "power1.out" })
-    .to(man, { scaleX: .94, scaleY: 1.08, y: -26, duration: .22, ease: "power2.out" })
-    .to(shadow, { scaleX: .75, opacity: .7, duration: .22, ease: "power2.out" }, "<")
-    .to(man, { scaleX: 1, scaleY: 1, y: 0, duration: .22, ease: "power2.in" })
-    .to(shadow, { scaleX: 1, opacity: 1, duration: .22, ease: "power2.in" }, "<")
-    .to(man, { keyframes: [{ scaleX: 1.08, scaleY: .92, duration: .06 }, { scaleX: 1, scaleY: 1, duration: .3, ease: "elastic.out(1, .45)" }] });
+/* The win screen, fifth version (2026-10-27: «change the winning screen to
+   something like Duolingo style, exactly the same victory but for our
+   characters, use their files»). Duolingo's own lesson-complete file plays
+   everything but its character: lesson_complete_main_29.riv
+   (assets/fx/lesson-complete.riv, Rive 2.47.1), view model lesson_complete_vm,
+   set up the way its app sets it (vi00 / zi00): the phase-one headline, the
+   title under the hero and the subtitle in Arabic, right to left, beats and
+   background 0 — or 2 on a perfect run — then start_db_trig. Duo is switched
+   off (nested_char_vm.is_character_db_bool) and فهيم flies where Duo flies:
+   Duo's box measured off the file every 50ms (WV_PATH, artboard units — in
+   from the lower left held at 1.05, the dip, the shrink to .65 over
+   800–1150ms and the rise), then Duo's two-second hover. The file draws the
+   green band, the headline, the title, the subtitle and the sparkles on its
+   own clock, and its stats_db_trig starts the stat cards. Duolingo's
+   lesson_complete sound (its perfect-lesson one on a clean run) plays at the
+   start, its stats haptic on the cards. The artboard is laid out as Duolingo
+   lays it: 1.625 × min(2.2 W, 1.1 H) wide, centred, 32 up (li00). Without the
+   file (offline, reduced motion) فهيم stands at Duo's last place over the
+   HTML title. A tap anywhere jumps to the end. */
+const WV_PATH = [[40, 357, 705, 378], [100, 559, 611, 378], [150, 610, 607, 380], [200, 634, 604, 380], [250, 649, 599, 378],
+  [300, 658, 597, 380], [350, 664, 596, 380], [400, 668, 592, 380], [450, 671, 592, 378], [500, 674, 593, 380],
+  [550, 677, 590, 378], [600, 680, 589, 380], [650, 683, 590, 378], [700, 685, 589, 378], [750, 688, 589, 380],
+  [800, 691, 586, 378], [850, 693, 589, 378], [900, 696, 591, 376], [950, 696, 594, 368], [1000, 693, 600, 346],
+  [1050, 688, 605, 260], [1100, 686, 587, 240], [1150, 686, 579, 236], [1200, 685, 576, 234], [1250, 685, 569, 234],
+  [1350, 685, 565, 234], [1450, 685, 562, 234], [1550, 685, 561, 234]];
+/* a perfect run: the same flight, then the deeper shrink (.60 by 1183), the
+   dip to −71 at 1383 and the settle by 2217–2417 */
+const WV_PATH_PERFECT = WV_PATH.slice(0, 19).concat([[1000, 693, 598, 330], [1050, 690, 590, 280], [1100, 688, 575, 240],
+  [1183, 686, 560, 216], [1383, 685, 531, 216], [1800, 685, 552, 224], [2217, 685, 561, 230], [2417, 685, 561, 234]]);
+const WV_STATS = { normal: 1550, perfect: 2267 };
+/* Duolingo's haptics (.hla, on / off alternating from on): the stats start, and the perfect lesson's own */
+const WV_BUZZ = [30, 50, 250, 171, 30, 70, 30, 67, 30, 37, 30, 6, 30, 34, 30, 38, 30, 134, 442, 60, 30, 141, 430, 60, 30];
+const WV_BUZZ_PERFECT = [200, 25, 300, 504, 267, 15, 20, 15, 20, 15, 60];
+const WV_BOX = 330;                         // فهيم's square in artboard units at Duo's flight scale
+let wvRv = null, wvFontBytes = null, wvRun = null;
+function wvGeo(host) {
+  const W = host.clientWidth, H = host.clientHeight, s = 1.625 * Math.min(2.2 * W, 1.1 * H) / 1366;
+  const minX = 683 - W / (2 * s), minY = 688 - (H / 2 - 32) / s;
+  return { W, H, s, minX, minY, x: u => (u - minX) * s, y: v => (v - minY) * s, h: Math.round((787 - minY) * s) };
 }
-/* the crown drawn flat for the moment before the animation file arrives, and
-   for reduced motion: Duolingo's crown silhouette in its two golds */
-const WV_CROWN = `<svg class="wv-still" viewBox="0 0 250 219" aria-hidden="true"><path fill="#FFC800" d="M28 70l52 40 45-62 45 62 52-40-20 118a14 14 0 0 1-14 12H62a14 14 0 0 1-14-12z" stroke="#FFC800" stroke-width="16" stroke-linejoin="round"/><path fill="#FFDE00" d="M70 120l20-16 6 62a6 6 0 0 1-6 6H80a8 8 0 0 1-8-7z"/></svg>`;
-let wvLot = null, wvIdle = null;
-function wvCrownLoad() {
-  if (wvLot) { try { wvLot.destroy(); } catch (e) {} wvLot = null; }
-  const box = document.getElementById("wvCrown");
-  if (!box || motionReduced()) return;
-  loadStreakLibs().then(() => fetch("assets/fx/crown.json")).then(r => r.json()).then(data => {
-    const el = document.getElementById("wvCrown");
-    if (!el || wvLot) return;
-    const still = el.querySelector(".wv-still");
-    wvLot = lottie.loadAnimation({ container: el, renderer: "svg", loop: true, autoplay: false, animationData: data,
-      rendererSettings: { preserveAspectRatio: "xMidYMid meet" } });
-    wvLot.addEventListener("DOMLoaded", () => { if (still) still.remove(); wvLot.playSegments([50, 250], true); });
-  }).catch(() => {});
+function wvFontLoad() {
+  return (wvFontBytes ? Promise.resolve(wvFontBytes) : fetch("assets/fonts/baloo-bhaijaan-2.ttf").then(r => r.arrayBuffer()).then(b => (wvFontBytes = new Uint8Array(b))))
+    .then(b => rive.decodeFont(b));
+}
+/* the file, set up and waiting for start_db_trig; resolves false when it cannot play */
+function wvLoad(cv, g, txt, perfect) {
+  return loadStreakLibs().then(wvFontLoad).then(font => new Promise(done => {
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.round(g.W * dpr); cv.height = Math.round(g.H * dpr);
+    const k = g.s * dpr;
+    const rv = wvRv = new rive.Rive({
+      src: "assets/fx/lesson-complete.riv", canvas: cv, autoplay: true, autoBind: true,
+      artboard: "interstitial_main_artboard", stateMachines: "interstitial_main_statemachine",
+      layout: new rive.Layout({ fit: rive.Fit.Fill, minX: -g.minX * k, minY: -g.minY * k, maxX: (1366 - g.minX) * k, maxY: (1376 - g.minY) * k }),
+      assetLoader: asset => { if (!asset.isFont) return false; asset.setFont(font); if (font.unref) font.unref(); return true; },
+      onLoad: () => {
+        if (wvRv !== rv) return done(false);
+        try {
+          const vm = rv.viewModelInstance;
+          const str = (n, v) => { vm.string(n).value = v; }, bool = (n, v) => { try { vm.boolean(n).value = v; } catch (e) {} },
+                num = (n, v) => { try { vm.number(n).value = v; } catch (e) {} };
+          str("interstitial_db_str", txt.head); str("top_flavor_text_db_str", txt.title); str("bot_flavor_text_db_str", txt.sub);
+          bool("right_to_left_db_bool", true); bool("dark_mode_db_bool", false); bool("static_db_bool", false); bool("skip_anim_db_bool", false);
+          bool("perfect_lesson_db_bool", perfect); bool("combo_run_db_bool", perfect); bool("sparkles_on_db_bool", true); bool("char_hover_db_bool", true);
+          num("bg_color_db_num", perfect ? 2 : 0); num("beats_db_num", perfect ? 2 : 0);
+          vm.viewModel("nested_char_vm").boolean("is_character_db_bool").value = false;
+          rv.vm = vm;
+          done(true);
+        } catch (e) { done(false); }
+      },
+      onLoadError: () => done(false)
+    });
+  })).catch(() => false);
 }
 function wvStop() {
-  if (wvLot) { try { wvLot.destroy(); } catch (e) {} wvLot = null; }
-  if (wvIdle) { wvIdle.kill(); wvIdle = null; }
+  if (wvRun) { wvRun.timers.forEach(clearTimeout); wvRun.anims.forEach(a => { try { a.cancel(); } catch (e) {} }); wvRun = null; }
+  if (wvRv) { try { wvRv.cleanup(); } catch (e) {} wvRv = null; }
   if (wgRv) { try { wgRv.cleanup(); } catch (e) {} wgRv = null; }
 }
 /* «تقدّمك اليوم»'s gems are Duolingo's gem reveal (gems_reveal_v14.riv,
@@ -4557,7 +5335,7 @@ function wstFire(skip) {
     const hz = [196, 247, 294];
     WST_AT.forEach((a, k) => setTimeout(() => {
       if (wstRv !== rv) return;
-      cvTone(hz[k], hz[k] * .55, .16, "triangle", .22); cvHiss(.08, .05, 0, 3000, 1200); buzz(18);
+      sfxPlay("stat" + (k + 1), .5, () => { cvTone(hz[k], hz[k] * .55, .16, "triangle", .22); cvHiss(.08, .05, 0, 3000, 1200); }); buzz(18);
       setTimeout(() => buzz([10, 50, 10, 50, 10, 50, 10]), 250);
     }, (a + .167) * 1000));
   }
@@ -4600,73 +5378,90 @@ function statCardIn(tl, c, t0, k, count) {
   if (c.classList.contains("hi")) tl.fromTo(c.querySelector(".wst-shine i"), { x: 0, xPercent: -140 }, { x: 0, xPercent: 140, duration: 1.1, ease: "power2.inOut" }, t0 + 1);
 }
 function winPlay(v) {
+  wvStop();
   if (wnTl) { wnTl.kill(); wnTl = null; }
   const q = c => document.querySelector(c), qa = c => Array.from(document.querySelectorAll(c));
-  const host = q("#comp"), crown = q(".wv-hero"), shadow = q(".wv-shadow"), title = q(".wv-title"),
-        cards = qa(".wst"), cta = q(".wn-cta");
+  const host = q("#comp"), box = q(".wv-lc"), cv = q("#wvRive"), fh = q(".wv-fh"), inner = q(".wv-fh-in"),
+        title = q(".wv-title"), sub = q(".wv-sub"), cards = qa(".wst"), cta = q(".wn-cta");
+  if (!host || !box) { sndWin(); return; }
+  const g = wvGeo(host), B = WV_BOX * g.s, P = v.perfect ? WV_PATH_PERFECT : WV_PATH, END = P[P.length - 1][0], last = P[P.length - 1];
+  box.style.height = g.h + "px"; cv.style.height = g.H + "px";
+  fh.style.width = fh.style.height = B.toFixed(1) + "px";
+  title.style.top = g.y(721).toFixed(1) + "px"; title.style.fontSize = Math.max(24, 30 * g.s).toFixed(1) + "px";
+  sub.style.top = g.y(764).toFixed(1) + "px"; sub.style.fontSize = Math.max(16, 20 * g.s).toFixed(1) + "px";
+  const place = (u, y, w) => `translate(${(g.x(u) - B / 2).toFixed(1)}px, ${(g.y(y) - B / 2).toFixed(1)}px) scale(${(w / 378).toFixed(3)})`;
   const counts = () => {
     const x = document.getElementById("cv-xp"), a = document.getElementById("cv-acc"), t = document.getElementById("cv-time");
     return [() => x && countUp(x, v.xp, "", 450), () => a && countUp(a, v.acc, "٪", 450), () => t && countUpTime(t, v.t, 450)];
   };
-  wvCrownLoad();
-  if (!window.gsap || motionReduced() || !crown) {
-    sayPlay(0); counts().forEach(f => f());
-    return;
-  }
-  const lot = q(".wv-lot"), man = q(".wv-man");
-  gsap.set(man, { scaleX: .2, scaleY: .2, y: 0, opacity: 0, transformOrigin: "50% 100%" });
-  gsap.set(lot, { y: -150, opacity: 0, rotation: -24, transformOrigin: "50% 100%" });
-  gsap.set(shadow, { scaleX: .3, opacity: 0 });
-  gsap.set(title, { opacity: 0, scale: .85, y: 32 });
-  gsap.set(cards, { opacity: 0 });
-  gsap.set(cta, { opacity: 0, pointerEvents: "none" });
-  const duoTitle = "expo.out";
-  const tl = wnTl = gsap.timeline();
-  winSkippable(tl);
-  /* 1. قدّور leaps for joy (2026-10-22: the user wanted him back, and not
-     dropping from the sky): he pops up crouched on his shadow, springs into
-     the air stretched, hangs at the top, lands with a squash and a thump.
-     Nothing stands behind him (2026-10-22: the user called the gold sunburst
-     «very very very bad») — the white page is Duolingo's own */
-  tl.to(shadow, { scaleX: 1, opacity: 1, duration: .2, ease: "power2.out" }, .05)
-    .to(man, { opacity: 1, scaleX: 1.26, scaleY: .62, duration: .2, ease: "back.out(2.2)" }, .05)
-    .call(() => { cvTone(330, 0, .1, "triangle", .1); buzz(10); }, null, .05)
-    .call(() => cvHiss(.3, .07, 0, 500, 3800), null, .3)
-    .to(man, { scaleX: .86, scaleY: 1.18, y: -74, duration: .3, ease: "power2.out" }, .3)
-    .to(shadow, { scaleX: .55, opacity: .55, duration: .3, ease: "power2.out" }, .3)
-    .to(man, { scaleX: 1, scaleY: 1, y: -88, duration: .2, ease: "sine.out" }, .6)
-    .to(man, { y: 0, duration: .26, ease: "power2.in" }, .8)
-    .to(shadow, { scaleX: 1, opacity: 1, duration: .26, ease: "power2.in" }, .8)
-    .call(() => { cvTone(150, 60, .3, "sine", .32); cvTone(988, 0, .5, "triangle", .1, .02); cvTone(1319, 0, .4, "sine", .05, .06); buzz([30, 30, 20]); }, null, 1.06)
-    .to(man, { keyframes: [{ scaleX: 1.2, scaleY: .8, duration: .08, ease: "power1.out" }, { scaleX: 1, scaleY: 1, duration: .5, ease: "elastic.out(1.1, .4)" }] }, 1.06)
-    .to(shadow, { keyframes: [{ scaleX: 1.2, duration: .08 }, { scaleX: 1, duration: .45, ease: "elastic.out(1.1, .4)" }] }, 1.06);
-  /* 2. Duolingo's crown drops onto his head and clinks; he dips under it */
-  tl.to(lot, { y: 0, opacity: 1, rotation: 0, duration: .3, ease: "power2.in" }, 1.3)
-    .call(() => { cvTone(1568, 0, .25, "triangle", .08); cvTone(2093, 0, .35, "sine", .05, .05); buzz(15); }, null, 1.6)
-    .to(lot, { keyframes: [{ scaleY: .82, scaleX: 1.12, duration: .06 }, { scaleY: 1, scaleX: 1, rotation: 8, duration: .14 }, { rotation: -5, duration: .14 }, { rotation: 0, duration: .3, ease: "elastic.out(1, .4)" }] }, 1.6)
-    .to(man, { keyframes: [{ scaleY: .94, scaleX: 1.04, duration: .07 }, { scaleY: 1, scaleX: 1, duration: .35, ease: "elastic.out(1.1, .4)" }] }, 1.6)
-    .call(wvJoy, null, 2.6);
-  /* 2. the title: on at 33ms, grows and rises into place, then squashes and springs */
-  tl.set(title, { opacity: 1 }, .53)
-    .to(title, { scale: 1, y: 0, duration: .934, ease: duoTitle }, .53)
-    .to(title, { scaleY: .8, scaleX: 1.06, duration: .217, ease: "power2.in" }, 1.06)
-    .to(title, { scaleY: 1, scaleX: 1, duration: .15, ease: "back.out(3)" }, 1.277);
-  /* 3. his line */
-  const t = 1.45;
-  tl.call(() => sayPlay(0), null, t);
-  /* 4. Duolingo's three cards (A at 0, B at .6, C at 1.267): from its own file
-     when that is ready, else the HTML copy of them */
-  const T0 = 1.85, AT = WST_AT, run = counts();
-  tl.call(() => {
-    if (wstFire(tl.progress() === 1)) { run.forEach(f => f()); return; }   // the hidden HTML copy keeps the numbers for screen readers
-    const ft = gsap.timeline();
-    cards.forEach((c, k) => statCardIn(ft, c, AT[k], k, () => { run[k](); buzz([10, 50, 10, 50, 10, 50, 10]); }));
-    if (tl.progress() === 1) ft.progress(1);
-  }, null, T0);
-  /* 5. the button last, 500ms, and only then can it be pressed */
-  const end = T0 + AT[Math.max(0, cards.length - 1)] + 1.0;
-  tl.to(cta, { opacity: 1, duration: .5, ease: "none" }, end)
-    .set(cta, { pointerEvents: "auto" }, end + .1);
+  const showCta = ms => {
+    cta.style.pointerEvents = "auto";
+    cta.animate([{ opacity: 0 }, { opacity: 1 }], { duration: ms, fill: "forwards" });
+  };
+  /* without the file: فهيم at Duo's last place over the HTML title and subtitle */
+  const lcSound = () => sfxPlay(v.perfect ? "lcPerfect" : "lcDone", v.perfect ? 1 : .5, sndWin);   // Duolingo's win sound, ours when it is not loaded
+  const still = () => {
+    lcSound();
+    host.classList.remove("rv-wait", "rv-on");
+    fh.style.transform = place(last[1], last[2], last[3]); fh.style.opacity = 1;
+    counts().forEach(f => f()); cards.forEach(c => { c.style.opacity = ""; });
+    showCta(0);
+  };
+  fh.style.transform = place(P[0][1], P[0][2], P[0][3]);
+  if (motionReduced()) { still(); return; }
+  fh.style.opacity = 0; cta.style.opacity = 0; cta.style.pointerEvents = "none";
+  cards.forEach(c => { c.style.opacity = 0; });
+  host.classList.add("rv-wait");
+  const run = wvRun = { timers: [], anims: [], started: false, skipped: false, stats: false };
+  const later = (ms, f) => run.timers.push(setTimeout(() => { if (wvRun === run) f(); }, ms));
+  later(2500, () => { if (!run.started) { run.started = true; still(); } });   // the file never came: play nothing, lose nothing
+  const hover = () => {
+    run.anims.push(inner.animate([{ transform: "none" }, { transform: `translateY(${(10 * g.s).toFixed(1)}px)` }],
+      { duration: 1000, easing: "ease-in-out", direction: "alternate", iterations: Infinity }));
+  };
+  /* the stat cards on the file's stats_db_trig (Duolingo's own file when it is ready, else the HTML copy) */
+  const stats = skip => {
+    if (wvRun !== run || run.stats) return;
+    run.stats = true;
+    if (!skip) buzz(WV_BUZZ);
+    const fill = counts();
+    cards.forEach(c => { c.style.opacity = ""; });
+    if (wstFire(skip)) fill.forEach(f => f());
+    else if (window.gsap) {
+      const ft = gsap.timeline();
+      cards.forEach((c, k) => statCardIn(ft, c, WST_AT[k], k, () => { fill[k](); buzz([10, 50, 10, 50, 10, 50, 10]); }));
+      if (skip) ft.progress(1);
+    } else fill.forEach(f => f());
+    if (skip) showCta(0);
+    else later((WST_AT[WST_AT.length - 1] + 1) * 1000, () => showCta(500));
+  };
+  const skip = () => {
+    if (wvRun !== run || run.skipped || !run.started) return;
+    run.skipped = true;
+    try { wvRv.vm.boolean("skip_anim_db_bool").value = true; } catch (e) {}
+    run.anims.forEach(a => { try { a.finish(); } catch (e) {} });
+    fh.style.transform = place(last[1], last[2], last[3]); fh.style.opacity = 1;
+    hover();
+    stats(true);
+  };
+  host.addEventListener("pointerdown", e => { if (!e.target.closest("button")) skip(); });
+  const go = () => {
+    host.classList.remove("rv-wait"); host.classList.add("rv-on");
+    try { wvRv.vm.trigger("stats_db_trig").on(() => { if (wvRun === run) stats(run.skipped); }); } catch (e) {}
+    wvRv.vm.trigger("start_db_trig").trigger();
+    lcSound();
+    if (v.perfect) buzz(WV_BUZZ_PERFECT);
+    run.anims.push(fh.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 60, delay: 40, fill: "both" }));
+    const fly = fh.animate(P.map(([t, u, y, w]) => ({ offset: t / END, transform: place(u, y, w) })), { duration: END, easing: "linear", fill: "both" });
+    run.anims.push(fly);
+    fly.onfinish = () => { if (wvRun === run && !run.skipped) { fh.style.transform = place(last[1], last[2], last[3]); hover(); } };
+    later((v.perfect ? WV_STATS.perfect : WV_STATS.normal) + 250, () => stats(run.skipped));
+  };
+  wvLoad(cv, g, { head: v.head, title: v.title, sub: v.sub }, !!v.perfect).then(ok => {
+    if (wvRun !== run || run.started) return;
+    run.started = true;
+    if (ok) go(); else still();
+  });
 }
 
 /* Duolingo's second screen after a lesson is the quests: what the lesson did to
@@ -4675,38 +5470,78 @@ function winPlay(v) {
    swell to 1.06 while it lights up, and a settle. A bar's fill takes longer the
    further it has to go, so a big jump reads as big. */
 /* The league climb (Brilliant's: a lesson that lifts you past rivals plays the
-   overtaking itself). lessonComplete ranks you against the same rivals at the
-   same instant before and after the lesson's XP; when you moved up, this
-   screen sits between the win and «تقدّمك اليوم». Your row's XP counts up, it
-   lifts off the board, and it rises past each rival in turn: each one drops a
-   place under you with a bump, your number ticks over on a note a step higher,
-   and the window follows you. It lands with a squash and a shine, then the
-   headline and the gap to the next rival. Weight and light only — no confetti.
-   A tap anywhere jumps to the end. */
-const CLIMB_ROW = 62;
+   overtaking itself; asked back exactly on 2026-10-26 after a Duolingo-style
+   rebuild, «just the movement of me to be better»). lessonComplete ranks you
+   against the same rivals at the same instant before and after the lesson's
+   XP; when you moved up, this screen sits between the win and «تقدّمك اليوم».
+   The league on top, then «مركزك» — the number, or the medal in the top three
+   — then the board in a window that follows your row. Your XP counts up, the
+   row crouches and lifts off the board, then glides up past each rival (slow
+   off the mark, quick in the middle) and floats a little past its place before
+   it drops in with a squash; its shadow deepens with its speed. Each rival
+   drops a place under it with a dim, your number ticks over on Duolingo's
+   tick-ups, and the window follows you. Then the headline. XP wears the
+   league tab's gold «XP» tag (the user, 2026-10-26: «not the lightning»).
+   Weight and light only — no confetti. A tap anywhere jumps to the end.
+   «مركزك» is a medal (2026-10-26: «like first place, second place and third
+   place svg but make it for 4+», then «less good than bronze silver gold»):
+   the podium medals' own disc, and from fourth down a plain grey one with no
+   ribbon and no shine, its number rolling over inside the disc at every rival passed
+   while the medal pops; it turns over into bronze, silver and gold as you
+   enter the top three, and on the landing it jumps and a light crosses it.
+   Every rank number on the board rolls the same way — yours up, theirs down. */
+const CLIMB_ROW = 62, CLIMB_PAD = 16;
 const rankCell = r => r <= 3 ? MEDAL(r) : `<span class="lb-rank">${toAr(r)}</span>`;
+/* ribbon, disc, the disc's light side, the number, the ring — the podium
+   medals' own colours (MEDAL_SVGS), and under them a plain grey disc with no
+   ribbon, so fourth never looks as good as a medal */
+const CL_PAINT = [["#FFC800", "#FFD900", "#FEEA66", "#FF9600", "#FFC800"], ["#AAC1D4", "#C2D1DD", "#D6E4EF", "#849FB5", "#AAC1D4"],
+  ["#D7975D", "#E5AE7C", "#F7BE8B", "#CD7900", "#D7975D"], ["transparent", "#F2F2F2", "#F2F2F2", "#8A8A8A", "#DCDCDC"]];
+const clPaint = r => CL_PAINT[Math.min(r, 4) - 1];
+function clMedal(r) {
+  const [rb, disc, hi, ink, ring] = clPaint(r);
+  return `<div class="cl-medal${r > 3 ? " plain" : ""}" id="clMedal" style="--mi:${ink}" role="img" aria-label="مركزك ${toAr(r)}">
+    <svg viewBox="0 0 41 42" aria-hidden="true"><path class="m-rb" d="M8.31 18.47H31.88V38.41C31.88 39.84 30.46 40.85 29.1 40.37L20.09 37.19 11.08 40.37C9.73 40.85 8.31 39.84 8.31 38.41Z" fill="${rb}"/><circle class="m-disc" cx="20.09" cy="20.09" r="14.4" fill="${disc}"/><path class="m-hi" d="M11.7 31.8C18.17 36.43 27.16 34.95 31.8 28.49L8.39 11.7C3.76 18.17 5.24 27.16 11.7 31.8Z" fill="${hi}"/><circle class="m-ring" cx="20.09" cy="20.09" r="12.9" fill="none" stroke="${ring}" stroke-width="3"/></svg>
+    <span class="cl-mn"><b id="clRank">${toAr(r)}</b><i class="cl-msh"></i></span></div>`;
+}
+/* a number rolls over in its cell: the old one slides out, the new one in
+   (up when you climb, down for the rival you passed) */
+function clRoll(el, html, up) {
+  if (!el) return;
+  el._v = html;
+  const old = el._shown != null ? el._shown : el.innerHTML;
+  el._shown = html;
+  if (motionReduced() || !Element.prototype.animate) { el.innerHTML = html; return; }
+  el.innerHTML = `<span class="cl-roll"><span>${old}</span><span>${html}</span></span>`;
+  const [o, n] = el.firstChild.children, d = up ? -1 : 1;
+  o.animate([{ transform: "none", opacity: 1 }, { transform: `translateY(${d * 110}%)`, opacity: 0 }], { duration: 220, easing: "cubic-bezier(.5,0,.75,0)", fill: "forwards" });
+  n.animate([{ transform: `translateY(${-d * 110}%)`, opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 300, easing: "cubic-bezier(.3,1.6,.5,1)", fill: "backwards" });
+  setTimeout(() => { if (el._v === html && el.firstChild && el.firstChild.classList && el.firstChild.classList.contains("cl-roll")) el.innerHTML = html; }, 320);
+}
+const CL_SFX = ["lbUnlock", "lbMove", "lbGold", "lbGrey"];
+function climbSfxLoad() {
+  CL_SFX.forEach(sfxLoad);
+  for (let k = 1; k <= 15; k++) sfxLoad("lbTick" + k);
+}
 let climbRaf = 0, climbT = [];
 function climbStop() { cancelAnimationFrame(climbRaf); climbT.forEach(clearTimeout); climbT = []; }
-A.winOn = function () { if (WIN && WIN.climb) A.winClimb(); else A.winMore(); };
+A.winOn = function () { snd("continue"); if (WIN && WIN.climb) A.winClimb(); else A.winMore(); };
 A.winClimb = function () {
   wstStop(); wvStop(); winHeroStop(); climbStop();
   const C = WIN && WIN.climb;
   if (!C) { A.winMore(); return; }
   WIN.climb = null;                                  // once per win
+  climbSfxLoad();
   const tier = LEAGUE_TIERS[tierIndex()], n = C.from - C.to;
   const head = C.to === 1 ? "تصدّرت الدوري!" : `تقدّمت ${arPlural(n, "مركزاً واحداً", "مركزين", "مراكز", "مركزاً")}!`;
-  const above = C.to > 1 ? C.list.filter(e => !e.you)[C.to - 2] : null;
-  const sub = above ? `باقي <b>${toAr(above.xp - C.xp1 + 1)}</b> خبرة وتتخطّى ${esc(above.name)}` : "أنت في الصدارة — حافظ عليها!";
   $app.innerHTML = `<div class="screen screen-full"><div class="complete cl" id="comp">
     <div class="cl-kick">${rankImg(tier.key, 30)}<span>الدوري — المستوى ${tier.name}</span></div>
-    <div class="cl-rank"><span>مركزك</span><b id="clRank">${toAr(C.from)}</b></div>
+    <div class="cl-rank"><span>مركزك</span>${clMedal(C.from)}</div>
     <h1 class="cl-title" id="clHead">${head}</h1>
-    <div class="cl-sub" id="clSub">${sub}</div>
     <div class="cl-win" id="clWin"><div class="cl-list" id="clList">${C.list.map((e, i) => `<div class="lb-row cl-row${e.you ? " me" : ""}" style="top:${i * CLIMB_ROW}px">
         <span class="cl-rk">${rankCell(i + 1)}</span>${avatarFor(e.name, e.you)}
         <span class="lb-name">${esc(e.name)}${e.you && e.named ? " <b>(أنت)</b>" : ""}</span>
-        ${e.you ? `<span class="cl-gain" id="clGain">+${toAr(C.xp1 - e.xp)}</span>` : ""}
-        <span class="lb-xp"><span${e.you ? ` id="clXp"` : ""}>${toAr(e.xp)}</span> <i>خبرة</i></span>
+        <span class="lb-xp"><b${e.you ? ` id="clXp"` : ""}>${toAr(e.xp)}</b><i>XP</i></span>
         ${e.you ? `<span class="cl-shine"><i></i></span>` : ""}
       </div>`).join("")}</div></div>
     <div class="action-bar win-action wn-cta cl-cta" id="clCta"><button class="btn" onclick="A.winMore()">متابعة</button></div>
@@ -4717,10 +5552,44 @@ function climbPlay(C) {
   const win = document.getElementById("clWin"), box = document.getElementById("clList");
   if (!win || !box) return;
   const rows = [...box.children], me = rows[C.from - 1], H = CLIMB_ROW, n = C.from - C.to;
-  const winH = win.clientHeight, floor = Math.min(0, winH - rows.length * H);
-  const follow = y => { box.style.transform = `translateY(${Math.max(floor, Math.min(0, winH / 2 - H / 2 - y)).toFixed(1)}px)`; };
-  const rankOf = (row, r) => { row.querySelector(".cl-rk").innerHTML = rankCell(r); };
-  const xpEl = document.getElementById("clXp");
+  /* the board sits CLIMB_PAD inside the window, so your row's lift and its
+     float past the top place are never cut; each edge fades only while there
+     are rows beyond it (the user, 2026-10-26: at the top the fade sat on your
+     own row and your name could not be read) */
+  const winH = win.clientHeight, floor = Math.min(0, winH - rows.length * H - 2 * CLIMB_PAD);
+  const follow = y => {
+    const t = Math.max(floor, Math.min(0, winH / 2 - H / 2 - y - CLIMB_PAD));
+    box.style.transform = `translateY(${t.toFixed(1)}px)`;
+    win.style.setProperty("--ft", Math.min(40, -t).toFixed(1) + "px");
+    win.style.setProperty("--fb", Math.min(40, t - floor).toFixed(1) + "px");
+  };
+  const rankOf = (row, r, up) => { const c = row.querySelector(".cl-rk"); if (done) { c._shown = null; c.innerHTML = rankCell(r); } else clRoll(c, rankCell(r), up); };
+  const xpEl = document.getElementById("clXp"), big = document.getElementById("clRank"), medal = document.getElementById("clMedal");
+  /* the medal: its number rolls up inside the disc and it pops; crossing into
+     a new colour it turns over edge-on and comes back in the new one */
+  let paint = clPaint(C.from);
+  const repaint = p => {
+    if (!medal) return;
+    const [rb, disc, hi, ink, ring] = p;
+    medal.querySelector(".m-rb").setAttribute("fill", rb); medal.querySelector(".m-disc").setAttribute("fill", disc);
+    medal.querySelector(".m-hi").setAttribute("fill", hi); medal.querySelector(".m-ring").setAttribute("stroke", ring);
+    medal.style.setProperty("--mi", ink);
+    medal.classList.toggle("plain", p === CL_PAINT[3]);
+  };
+  const bigTo = r => {
+    if (!big) return;
+    if (medal) medal.setAttribute("aria-label", "مركزك " + toAr(r));
+    const p = clPaint(r), turn = p !== paint;
+    paint = p;
+    if (done) { big._shown = null; big.textContent = toAr(r); repaint(p); return; }
+    clRoll(big, toAr(r), true);
+    if (!medal) return;
+    if (turn) {
+      medal.animate([{ transform: "none" }, { transform: "perspective(400px) rotateY(90deg) scale(1.1)" }], { duration: 140, easing: "ease-in" })
+        .onfinish = () => { repaint(p); medal.animate([{ transform: "perspective(400px) rotateY(-90deg) scale(1.1)" }, { transform: "scale(1.18)", offset: .6 }, { transform: "none" }], { duration: 380, easing: "cubic-bezier(.3,1.5,.5,1)" }); };
+      sfxPlay("lbUnlock", .7);
+    } else medal.animate([{ transform: "scale(1)" }, { transform: "scale(1.13, 1.09) translateY(-3px)", offset: .35 }, { transform: "scale(1)" }], { duration: 260, easing: "cubic-bezier(.3,1.6,.5,1)" });
+  };
   follow((C.from - 1) * H);
   /* the rows nearest you come in first, the rest are already there */
   rows.forEach((r, i) => { const d = Math.abs(i - (C.from - 1)); r.style.animationDelay = (d < 4 ? d * .06 : 0) + "s"; });
@@ -4730,77 +5599,211 @@ function climbPlay(C) {
     if (passed.has(j)) return;
     passed.add(j);
     rows[j].style.top = (j + 1) * H + "px";
-    rankOf(rows[j], j + 2);
-    rankOf(me, j + 1);
-    const big = document.getElementById("clRank");
-    if (big) big.textContent = toAr(j + 1);
+    rankOf(rows[j], j + 2, false);
+    rankOf(me, j + 1, true);
+    bigTo(j + 1);
     if (!done) {
       rows[j].animate([{ opacity: 1 }, { opacity: .4, offset: .3 }, { opacity: 1 }], { duration: 480 });
-      if (big) big.animate([{ transform: "scale(1.25) translateY(-4px)" }, { transform: "none" }], { duration: 300, easing: "cubic-bezier(.3,1.6,.5,1)" });
       const k = passed.size;
-      beep([[523 * Math.pow(2, Math.min(k, 12) / 12) * 1.5, .07]]);
+      snd("climb-pass-note", () => beep([[523 * Math.pow(2, Math.min(k, 12) / 12) * 1.5, .07]]), "xp-tally-" + Math.min(k, 5));
+      sfxPlay("lbTick" + Math.min(k, 15), .9);
       buzz(6);
-      const rk = me.querySelector(".cl-rk");
-      rk.animate([{ transform: "scale(1.45)" }, { transform: "scale(1)" }], { duration: 260, easing: "cubic-bezier(.3,1.6,.5,1)" });
+      me.querySelector(".cl-rk").animate([{ transform: "scale(1.45)" }, { transform: "scale(1)" }], { duration: 260, easing: "cubic-bezier(.3,1.6,.5,1)" });
     }
   };
   const land = () => {
     me.style.top = (C.to - 1) * H + "px";
+    me.style.boxShadow = "";
     me.classList.remove("up");
-    for (let j = C.to - 1; j < C.from - 1; j++) pass(j);
+    for (let j = C.from - 2; j >= C.to - 1; j--) pass(j);   // bottom up, as the climb passes them, so your number ends on your place
+    rankOf(me, C.to, true); bigTo(C.to);
     follow((C.to - 1) * H);
     if (xpEl) xpEl.textContent = toAr(C.xp1);
     document.getElementById("clHead").classList.add("go");
-    document.getElementById("clSub").classList.add("go");
     document.getElementById("clCta").classList.add("go");
-    document.getElementById("clGain").classList.add("go");
   };
-  const end = () => { if (done) return; done = true; climbStop(); land(); };
+  /* the landing: the medal crouches, jumps, lands with a squash, and a light
+     crosses its disc */
+  const medalLand = () => {
+    if (!medal || motionReduced()) return;
+    medal.animate([{ transform: "none" }, { transform: "translateY(4px) scale(1.12, .86)", offset: .16 }, { transform: "translateY(-22px) scale(.94, 1.08)", offset: .45 },
+      { transform: "translateY(0) scale(1.14, .84)", offset: .72 }, { transform: "translateY(-3px) scale(.98, 1.03)", offset: .86 }, { transform: "none" }],
+      { duration: 640, easing: "ease-out" });
+    if (C.to <= 3) { medal.classList.remove("shine"); void medal.offsetWidth; medal.classList.add("shine"); }
+  };
+  const end = () => { if (done) return; done = true; climbStop(); me.getAnimations().forEach(x => x.cancel()); land(); };
   const host = document.getElementById("comp");
   host.addEventListener("pointerdown", e => { if (!e.target.closest("button")) end(); });
   if (motionReduced()) { end(); return; }
   const at = (ms, f) => climbT.push(setTimeout(f, ms));
   /* 1. your XP climbs on your row */
   at(450, () => {
-    document.getElementById("clGain").classList.add("go");
-    const x0 = C.list[C.from - 1].xp, t0 = performance.now();
+    if (!done) snd("climb-xp-count");
+    const x0 = C.list[C.from - 1].xp, t0 = performance.now(), tag = xpEl && xpEl.nextElementSibling;
+    let shown = x0;
     (function tick(now) {
       if (done || !xpEl) return;
-      const p = Math.min(1, (now - t0) / 650);
-      xpEl.textContent = toAr(Math.round(x0 + (C.xp1 - x0) * (1 - Math.pow(1 - p, 3))));
-      if (p < 1) requestAnimationFrame(tick);
+      const p = Math.min(1, (now - t0) / 650), v = Math.round(x0 + (C.xp1 - x0) * (1 - Math.pow(1 - p, 3)));
+      if (v !== shown) {
+        shown = v; xpEl.textContent = toAr(v);
+        xpEl.animate([{ transform: "translateY(-5px) scale(1.15)" }, { transform: "none" }], { duration: 140, easing: "ease-out" });
+      }
+      if (p < 1) { requestAnimationFrame(tick); return; }
+      if (tag) tag.animate([{ transform: "scale(1)" }, { transform: "scale(1.35) rotate(-6deg)", offset: .4 }, { transform: "scale(1)" }], { duration: 420, easing: "cubic-bezier(.3,1.6,.5,1)" });
+      buzz(10);
     })(t0);
   });
-  /* 2. the row lifts off the board */
+  /* 2. the row crouches, then lifts off the board: it grows, rounds its
+     corners and takes its shadow */
   at(1150, () => {
+    if (done) return;
     me.classList.add("up");
-    me.animate([{ transform: "scale(1)" }, { transform: "scale(.97, .9)", offset: .35 }, { transform: "scale(1.06)" }],
-      { duration: 260, easing: "cubic-bezier(.3,1.4,.5,1)", fill: "forwards" });
-    beep([[392, .06], [523, .08]]);
+    me.animate([{ transform: "scale(1)" }, { transform: "translateY(3px) scale(1.02, .9)", offset: .3 }, { transform: "translateY(-3px) scale(1.07)", offset: .72 }, { transform: "scale(1.06)" }],
+      { duration: 340, easing: "ease-out", fill: "forwards" });
+    sfxPlay("lbUnlock", .9, () => beep([[392, .06], [523, .08]]));
+    buzz([20, 0, 197]);
   });
-  /* 3. and rises past them, slow off the mark, quick in the middle, easing in */
-  const T = Math.max(800, Math.min(2600, 520 + n * 240));
-  at(1500, () => {
-    const t0 = performance.now(), y0 = (C.from - 1) * H;
+  /* 3. it moves off slowly and gathers speed as it goes (the user, 2026-10-26:
+     «move slow at first then fast»), arrives fast, floats a third of a row
+     past its place and drops back; its shadow deepens with its speed */
+  const T = Math.max(1100, Math.min(2800, 800 + n * 240)), OV = .3, y0 = (C.from - 1) * H, y1 = (C.to - 1) * H;
+  const glide = p => p < .85 ? Math.pow(p / .85, 3) * .9 : .9 + .1 * (1 - Math.pow(1 - (p - .85) / .15, 4.8));   // the brake matches the speed it arrives with
+  const shadow = (v, a) => `inset 0 0 0 2px var(--gold), 0 3px 0 var(--gold), 0 ${(10 + 10 * v).toFixed(1)}px ${(22 + 18 * v).toFixed(1)}px rgba(170, 120, 0, ${(a == null ? .2 + .14 * v : a).toFixed(3)})`;
+  at(1550, () => {
+    if (done) return;
+    if (n > 1) sfxPlay("lbMove", .9);
+    const t0 = performance.now(), dist = y0 - y1 + OV * H;
+    let last = y0;
     (function step(now) {
       if (done) return;
-      const p = Math.min(1, (now - t0) / T), e = p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
-      const pos = (C.from - 1) - n * e;
-      me.style.top = (pos * H).toFixed(1) + "px";
-      follow(pos * H);
+      const p = Math.min(1, (now - t0) / T), y = y0 - dist * glide(p);
+      const v = Math.min(1, Math.abs(last - y) / 9);
+      last = y;
+      me.style.top = y.toFixed(1) + "px";
+      me.style.boxShadow = shadow(v);
+      follow(Math.max(y, y1));
+      const pos = y / H;
       for (let j = C.from - 2; j >= C.to - 1; j--) if (pos < j + .5) pass(j);
       if (p < 1) { climbRaf = requestAnimationFrame(step); return; }
-      /* 4. it lands */
-      me.getAnimations().forEach(a => a.cancel());
-      me.animate([{ transform: "scale(1.06)" }, { transform: "scale(1.08, .86)", offset: .3 }, { transform: "scale(.98, 1.04)", offset: .65 }, { transform: "scale(1)" }],
-        { duration: 420, easing: "ease-out" });
-      me.classList.add("shine");
-      beep(C.to <= 3 ? [[659, .09], [784, .09], [1047, .1], [1319, .26]] : [[784, .09], [1047, .2]]);
-      buzz(18);
-      done = true;
-      land();
+      settle(performance.now());
     })(t0);
   });
+  /* 4. it drops back into its place with a squash, the lock-in and a shine */
+  function settle(t0) {
+    sfxPlay(C.to <= 3 ? "lbGold" : "lbGrey", .9, () => beep(C.to <= 3 ? [[659, .09], [784, .09], [1047, .1], [1319, .26]] : [[784, .09], [1047, .2]]));
+    buzz([30, 20, 150, 38, 30, 60, 30, 74, 30]);
+    me.getAnimations().forEach(x => x.cancel());
+    me.animate([{ transform: "scale(1.06)" }, { transform: "scale(1.09, .86)", offset: .34 }, { transform: "scale(.98, 1.04)", offset: .66 }, { transform: "scale(1)" }],
+      { duration: 460, easing: "ease-out" });
+    me.classList.add("shine");
+    const from = y1 - OV * H;
+    (function drop(now) {
+      if (done) return;
+      const p = Math.min(1, (now - t0) / 300), e = 1 - Math.pow(1 - p, 3);
+      me.style.top = (from + (y1 - from) * e).toFixed(1) + "px";
+      me.style.boxShadow = shadow(0, .2 * (1 - e));
+      if (p < 1) { climbRaf = requestAnimationFrame(drop); return; }
+      done = true;
+      land();
+      medalLand();
+    })(t0);
+  }
+}
+/* «تقدّمك اليوم»'s bars are Duolingo's quest bar (ChallengeProgressBarView,
+   view_challenge_progress_bar.xml; 2026-10-26: «البار زينه ويصير مثل ديلانجو
+   انميشن بالضبط»): the app's bar (.duo-bar) at Duolingo's 20, the count
+   «٧ / ١٠» centred inside it — juicyHare grey over the track and the fill's
+   own text colour over the fill, cut exactly at the fill's edge — and the
+   chest overlapping its far end. It fills (cpbFill) from where the lesson
+   found it in 283 / 367 / 450 / 533ms by how far it jumps, on Duolingo's
+   PathInterpolator(.74,.17,.69,.77), the count running with it, plays
+   Duolingo's bar sound for that jump, then Duolingo's yellow particle at the
+   fill's end — or, when it fills, the sparkles over the whole bar. */
+function cpbHtml(id, n0, n1, max, c, shine, ink, end, label) {
+  const p0 = Math.round(Math.min(1, n0 / max) * 100), tx = `${toAr(n0)} / ${toAr(max)}`;
+  return `<div class="cpb" id="${id}" data-n0="${n0}" data-n1="${n1}" data-max="${max}" style="--bar-c:${c};--bar-shine:${shine};--cpb-ink:${ink}" role="img" aria-label="${esc(label)}">
+    <span class="cpb-track"><span class="duo-bar cpb-bar"><i style="width:${p0}%"></i>
+      <span class="cpb-tx" aria-hidden="true">${tx}</span>
+      <span class="cpb-tx on" aria-hidden="true" style="clip-path:inset(0 0 0 ${100 - p0}%)">${tx}</span></span>
+      <span class="cpb-fx" aria-hidden="true" style="right:${p0}%"></span></span>
+    <span class="cpb-end" aria-hidden="true">${end}</span>
+  </div>`;
+}
+/* cubic-bezier(x1, y1, x2, y2) as a function of time, for GSAP */
+function bezEase(x1, y1, x2, y2) {
+  const B = (a, b, t) => 3 * a * t * (1 - t) * (1 - t) + 3 * b * t * t * (1 - t) + t * t * t;
+  return x => {
+    let lo = 0, hi = 1, t = x;
+    for (let i = 0; i < 24; i++) { t = (lo + hi) / 2; if (B(x1, x2, t) < x) lo = t; else hi = t; }
+    return B(y1, y2, t);
+  };
+}
+const CPB_EASE = bezEase(.74, .17, .69, .77);
+let cpbLottie = [];
+function cpbStop() { cpbLottie.forEach(a => { try { a.destroy(); } catch (e) {} }); cpbLottie = []; }
+/* Duolingo's particle and sparkles are drawn yellow and recoloured to the bar
+   at runtime (setSparklesAnimationColors); the same is done to the file here */
+const cpbFiles = {};
+function cpbFile(name, rgb) {
+  const k = name + rgb.join(",");
+  if (!cpbFiles[k]) cpbFiles[k] = fetch("assets/fx/" + name).then(r => r.json()).then(j => {
+    const c = rgb.map(v => v / 255).concat(1);
+    const drop = l => l.nm === "outline 2" || l.nm === "Shape Layer 1";
+    j.layers = j.layers.filter(l => !drop(l));
+    (j.assets || []).forEach(a => { if (a.layers) a.layers = a.layers.filter(l => !drop(l)); });
+    (function walk(o) {
+      if (Array.isArray(o)) return o.forEach(walk);
+      if (!o || typeof o !== "object") return;
+      if ((o.ty === "fl" || o.ty === "st") && o.c) o.c = { a: 0, k: c };
+      Object.keys(o).forEach(key => walk(o[key]));
+    })(j);
+    return j;
+  });
+  return cpbFiles[k];
+}
+function cpbFx(box, full, c) {
+  if (fxReduced() || !box) return;
+  const rgb = rgbOf(c);
+  loadStreakLibs().then(() => cpbFile(full ? "bar-sparkles.json" : "bar-particle.json", rgb)).then(data => {
+    const host = document.createElement("span");
+    host.className = full ? "cpb-spark" : "cpb-part";
+    if (full) {
+      /* the file is 884 × 392 with the bar's centre at y 183: as wide as the bar + 24 */
+      const w = box.clientWidth + 24, h = w * 392 / 884;
+      host.style.height = h.toFixed(1) + "px";
+      host.style.marginTop = (-h * 183 / 392).toFixed(1) + "px";
+    }
+    box.appendChild(host);
+    const a = lottie.loadAnimation({ container: host, renderer: "svg", loop: false, autoplay: true, animationData: data,
+      rendererSettings: { preserveAspectRatio: "xMidYMid meet" } });
+    cpbLottie.push(a);
+    a.addEventListener("complete", () => { host.remove(); });
+  }).catch(() => {});
+}
+function cpbFill(el, tl, at) {
+  if (!el) return 0;
+  const n0 = +el.dataset.n0, n1 = +el.dataset.n1, max = +el.dataset.max;
+  const f0 = Math.min(1, n0 / max), f1 = Math.min(1, n1 / max), jump = f1 - f0;
+  const fill = el.querySelector(".cpb-bar > i"), txs = el.querySelectorAll(".cpb-tx"), on = el.querySelector(".cpb-tx.on");
+  const fx = el.querySelector(".cpb-fx"), c = getComputedStyle(fill).backgroundColor;
+  const dur = jump < .25 ? .283 : jump < .5 ? .367 : jump < .75 ? .45 : .533;
+  const st = { f: f0 };
+  const paint = () => {
+    fill.style.width = (st.f * 100).toFixed(2) + "%";
+    on.style.clipPath = `inset(0 0 0 ${(100 - st.f * 100).toFixed(2)}%)`;
+    fx.style.right = (st.f * 100).toFixed(2) + "%";
+    const n = Math.round(n0 + (n1 - n0) * (f1 > f0 ? (st.f - f0) / (f1 - f0) : 1));
+    txs.forEach(t => { t.textContent = `${toAr(Math.min(n, n1))} / ${toAr(max)}`; });
+  };
+  if (!tl) { st.f = f1; paint(); return 0; }
+  tl.call(() => {
+    const big = jump >= .75 ? 100 : jump >= .5 ? 75 : jump >= .25 ? 50 : 25;
+    sfxPlay((f1 >= 1 ? "barC" : "barP") + big, .9, () => beep([[660, .05], [880, .08]]));
+    buzz(f1 >= 1 ? [20, 40, 30] : f1 >= .6 ? 18 : 10);
+  }, null, at);
+  tl.to(st, { f: f1, duration: dur, ease: CPB_EASE, onUpdate: paint }, at);
+  tl.call(() => cpbFx(f1 >= 1 ? el.querySelector(".cpb-track") : fx, f1 >= 1, c), null, at + dur);
+  return dur;
 }
 A.winMore = function () {
   climbStop();
@@ -4818,17 +5821,13 @@ A.winMore = function () {
         <span class="wn-tx">
           <b><span class="wn-name">${esc(W.title)}</span><span class="wn-count"><span id="wnN">${toAr(L.done - 1)}</span>/${toAr(L.n)}</span></b>
           <span class="wn-bar" role="img" aria-label="أنهيت ${toAr(L.done)} من ${toAr(L.n)} دروس في هذه المرحلة">${Array.from({ length: L.n }, (x, i) =>
-            `<i class="${i < L.done && i !== L.k ? "on" : ""}${i === L.k ? " now" : ""}"><u></u></i>`).join("")}</span>
+            `<i class="${i < L.done && i !== L.k ? "on" : ""}${i === L.k ? " now" : ""}"><u></u></i>`).join("")}<span class="wn-fx" aria-hidden="true"></span></span>
           <span class="wn-next">${nxt || (L.nodeDone ? "المرحلة التالية انفتحت لك" : "")}</span>
         </span>
       </div>` : ""}
       <div class="wp-card wp-quest${done && !justDone ? " full" : ""}">
-        ${chestSVG("wp-chest")}
-        <span class="wn-tx">
-          <b><span id="wpQt">${done && !justDone ? "هدف اليوم مكتمل" : "هدف اليوم"}</span><span class="wn-count" id="wpQ">${toAr(W.qd0)}/${toAr(W.goal)}</span></b>
-          <span class="duo-bar wp-bar"><i style="width:${pct(W.qd0)}%;--bar-c:var(--gold);--bar-shine:var(--gold-soft)" data-w="${pct(W.qd1)}"></i></span>
-          <span class="wn-next" id="wpQn">${done && !justDone ? "صندوقك بانتظارك في الرئيسية" : `باقي ${qCount(W.goal - W.qd0)} على صندوق اليوم`}</span>
-        </span>
+        <b class="wq-h" id="wpQt">${done && !justDone ? "اكتمل هدف اليوم" : `حلّ ${qCount(W.goal)}`}</b>
+        ${cpbHtml("wpBar", W.qd0, W.qd1, W.goal, "var(--gold)", "#FFE7A0", "#CD7900", chestSVG("wp-chest").replace('viewBox="0 0 260 290"', 'viewBox="12 75 236 192"'), `حللت ${toAr(W.qd1)} من ${toAr(W.goal)} أسئلة اليوم`)}
       </div>
       ${W.gems ? `<div class="wp-card wp-gems">
         <span class="wp-gem">${ico("gem", 34)}<canvas class="wp-gem-rv" id="wpGemRv" width="240" height="240" aria-hidden="true"></canvas></span>
@@ -4843,21 +5842,22 @@ A.winMore = function () {
   </div></div>`;
   window.scrollTo(0, 0);
   wgLoad();
+  Object.keys(SFX_SRC).filter(k => k.indexOf("bar") === 0).forEach(sfxLoad);
   wpPlay(W, justDone);
 };
 function wpPlay(W, justDone) {
   const q = c => document.querySelector(c), cards = Array.from(document.querySelectorAll(".wp-card"));
-  const bar = q(".wp-bar > i"), cta = q(".wp .wn-cta"), gEl = document.getElementById("wpG"), qEl = document.getElementById("wpQ");
-  const task = q(".wp .wn-task");
+  const cta = q(".wp .wn-cta"), gEl = document.getElementById("wpG");
+  const task = q(".wp .wn-task"), quest = q(".wp .wp-quest");
   const questWords = () => {
-    const t = document.getElementById("wpQt"), n = document.getElementById("wpQn");
-    if (justDone && t) { t.textContent = "اكتمل هدف اليوم!"; q(".wp-quest").classList.add("full"); }
-    if (n) n.textContent = W.qd1 >= W.goal ? "صندوقك بانتظارك في الرئيسية" : `باقي ${qCount(W.goal - W.qd1)} على صندوق اليوم`;
+    const t = document.getElementById("wpQt");
+    if (justDone && t) { t.textContent = "اكتمل هدف اليوم!"; quest.classList.add("full"); }
   };
-  const fillQuest = () => { if (bar) bar.style.width = bar.dataset.w + "%"; if (qEl) qEl.textContent = `${toAr(W.qd1)}/${toAr(W.goal)}`; questWords(); };
+  cpbStop();
   if (!window.gsap || motionReduced()) {
+    cpbFill(document.getElementById("wpBar"));
     if (task) { task.classList.add("done"); if (task.classList.contains("all")) task.classList.add("full"); const n = document.getElementById("wnN"); if (n) n.textContent = toAr(W.learn.done); }
-    fillQuest(); if (gEl) gEl.textContent = toAr(W.gems);
+    questWords(); if (gEl) gEl.textContent = toAr(W.gems);
     return;
   }
   gsap.set(cards, { opacity: 0, y: 26 });
@@ -4869,33 +5869,46 @@ function wpPlay(W, justDone) {
   let t = .3;
   cards.forEach(c => {
     tl.to(c, { opacity: 1, y: 0, duration: .35, ease: "back.out(1.8)" }, t);
+    /* Duolingo's card: it waits 517ms, swells to 1.06 and 1.05 while its
+       highlight face flashes, and settles back over 400ms */
     const at = t + .517;
-    tl.to(c, { keyframes: [{ scale: 1.06, duration: .2, ease: "power2.out" }, { scale: 1.05, duration: .2 }, { scale: 1, duration: .4, ease: "power2.inOut" }] }, at);
+    tl.to(c, { keyframes: [{ scale: 1.06, duration: .2, ease: "power2.out" }, { scale: 1.05, duration: .2 }, { scale: 1, duration: .4, ease: "power2.inOut" }] }, at)
+      .call(() => { c.classList.add("lit"); }, null, at)
+      .call(() => { c.classList.remove("lit"); }, null, at + .4);
+    let dur = 0;
     if (c === task) {
+      /* the lesson ticked off: the ring fills and its check draws, then this
+         lesson's segment fills on the quest bar's curve and sound, with its
+         particle at the segment's end, and the count turns over */
       const seg = c.querySelector(".wn-bar i.now u"), tick = c.querySelector(".wn-tick"), n = document.getElementById("wnN");
-      const len = tick.getTotalLength ? tick.getTotalLength() : 24;
+      const len = tick.getTotalLength ? tick.getTotalLength() : 24, segDur = .45;
       gsap.set(tick, { strokeDasharray: len, strokeDashoffset: len });
       if (seg) gsap.set(seg, { scaleX: 0 });
-      tl.call(() => { c.classList.add("done"); cvSnd.gems(); buzz(20); }, null, at)
+      tl.call(() => { c.classList.add("done"); buzz(20); }, null, at)
         .fromTo(c.querySelector(".wn-check"), { scale: .4 }, { scale: 1, duration: .5, ease: "elastic.out(1.2, .45)" }, at)
         .to(tick, { strokeDashoffset: 0, duration: .26, ease: "power2.out" }, at + .07);
-      if (seg) tl.to(seg, { scaleX: 1, duration: .5, ease: "power2.inOut" }, at + .17);
-      tl.call(() => { if (n) { n.textContent = toAr(W.learn.done); gsap.fromTo(n.parentNode, { scale: 1.45 }, { scale: 1, duration: .45, ease: "back.out(3)" }); } }, null, at + .6);
-      if (c.classList.contains("all")) tl.call(() => c.classList.add("full"), null, at + .7);
-    } else if (c.classList.contains("wp-quest")) {
-      const jump = (W.qd1 - W.qd0) / W.goal, dur = jump < .25 ? .283 : jump < .5 ? .367 : jump < .75 ? .45 : .533;
-      gsap.set(bar, { width: bar.style.width });
-      tl.to(bar, { width: bar.dataset.w + "%", duration: dur, ease: "power1.in" }, at)
-        .call(() => {
-          if (qEl) { qEl.textContent = `${toAr(W.qd1)}/${toAr(W.goal)}`; gsap.fromTo(qEl, { scale: 1.45 }, { scale: 1, duration: .45, ease: "back.out(3)" }); }
-          questWords();
-          if (justDone) { cvSnd.gems(); buzz([20, 60, 40]); gsap.fromTo(c.querySelector(".wp-chest"), { y: 0 }, { keyframes: [{ y: -14, scaleY: 1.08, duration: .16, ease: "power2.out" }, { y: 0, scaleY: .9, duration: .14, ease: "power2.in" }, { scaleY: 1, duration: .3, ease: "back.out(3)" }] }); }
-          else { cvSnd.tick(); buzz(12); }
-        }, null, at + dur);
+      if (seg) {
+        const full = W.learn.done >= W.learn.n;
+        tl.call(() => sfxPlay(full ? "barC100" : "barP25", .9, () => cvSnd.tick()), null, at + .17)
+          .to(seg, { scaleX: 1, duration: segDur, ease: CPB_EASE }, at + .17)
+          .call(() => {
+            const fx = c.querySelector(".wn-fx"), cell = seg.parentNode;
+            if (fx && cell) { fx.style.left = cell.offsetLeft + "px"; cpbFx(fx, false, getComputedStyle(seg).backgroundColor); }
+          }, null, at + .17 + segDur);
+      }
+      tl.call(() => { if (n) { n.textContent = toAr(W.learn.done); gsap.fromTo(n.parentNode, { scale: 1.45 }, { scale: 1, duration: .45, ease: "back.out(3)" }); } }, null, at + .17 + segDur);
+      if (c.classList.contains("all")) tl.call(() => c.classList.add("full"), null, at + .3 + segDur);
+      dur = .3 + segDur;
+    } else if (c === quest) {
+      dur = cpbFill(document.getElementById("wpBar"), tl, at);
+      tl.call(() => {
+        questWords();
+        if (justDone) gsap.fromTo(c.querySelector(".wp-chest"), { y: 0 }, { keyframes: [{ y: -14, scaleY: 1.08, duration: .16, ease: "power2.out" }, { y: 0, scaleY: .9, duration: .14, ease: "power2.in" }, { scaleY: 1, duration: .3, ease: "back.out(3)" }] });
+      }, null, at + dur);
     } else if (gEl) {
       /* the pile is fired as the card arrives and lands about a second later
          (Duolingo's file: shadow at .4s, the drop at .6s, the hit at 1s) */
-      const pay = () => { countUp(gEl, W.gems, "", 500); cvSnd.gems(); buzz([10, 50, 10, 50, 10]); };
+      const pay = () => { countUp(gEl, W.gems, "", 500); snd("progress-gems", () => cvSnd.gems()); buzz([10, 50, 10, 50, 10]); };
       tl.call(() => {
         if (wgFire(W.gems)) gsap.delayedCall(1, () => { if (document.getElementById("wpGemRv")) pay(); });
         else {
@@ -4904,7 +5917,7 @@ function wpPlay(W, justDone) {
         }
       }, null, at - .45);
     }
-    t = at + .55;
+    t = at + Math.max(.55, dur + .25);
   });
   tl.to(cta, { opacity: 1, y: 0, duration: .5, ease: "power2.out" }, t + .1)
     .set(cta, { pointerEvents: "auto" }, t + .2);
@@ -5033,11 +6046,12 @@ function renderMockHome() {
     ${mocks.length ? `<div class="tiles">
       <div class="tile">${ico("star-gold", 26)}<div><div class="t-v">${toAr(best)}٪</div><div class="t-l">أفضل نتيجة</div></div></div>
       <div class="tile">${ico("target", 26)}<div><div class="t-v">~${toAr(estOf(last))}</div><div class="t-l">آخر تقدير (من ١٠٠)</div></div></div>
-    </div>` : `<div class="card mock-first-note">أول محاكاة لك ستحدد خط البداية — لا تقلق من النتيجة، المهم أن تعرف أين أنت الآن 💪</div>`}
+    </div>` : `<div class="card mock-first-note">أول محاكاة لك ستحدد خط البداية — لا تقلق من النتيجة، المهم أن تعرف أين أنت الآن</div>`}
   </div></div>` + bottomnav("mock");
 }
 
 A.startMock = function (replace) {
+  snd("start-lesson");
   /* A held attempt is twenty minutes of somebody's exam, and mockClear() below
      takes it without a word — from a button that sits directly under a card
      saying the attempt is still waiting. Ask first, with the safe answer
@@ -5070,7 +6084,7 @@ A.startMock = function (replace) {
       left: MOCK_SECS
     });
   }
-  if (!sections[0].items.length) { showModal("⭐", "لا توجد أسئلة", "بنك الأسئلة غير متاح.", "حسناً"); return; }
+  if (!sections[0].items.length) { showModal("", "لا توجد أسئلة", "بنك الأسئلة غير متاح.", "حسناً"); return; }
   mockClear();                       // a new attempt replaces any held one
   MOCK = { sections, si: 0, qi: 0, timer: null };
   startMockSection();
@@ -5096,7 +6110,7 @@ function mockTick() {
   const n = document.getElementById("mkNum"), w = document.getElementById("mkWrap");
   if (n) n.textContent = fmtTime(left);
   if (w) { w.classList.toggle("low", left <= 120 && left > 30); w.classList.toggle("crit", left <= 30); }
-  if (left <= 0) { toast("⏰ انتهى وقت القسم"); endMockSection(true); }
+  if (left <= 0) { toast("انتهى وقت القسم"); endMockSection(true); }
 }
 
 /* a backgrounded tab stops firing intervals; recompute the moment we return */
@@ -5137,7 +6151,7 @@ function renderMockQ() {
       ${qnavStrip(sec)}
       <div class="q-area">${questionBody(q, sec.answers[MOCK.qi], false, "A.mockSelect")}</div>
       <div class="action-bar mock-bar">
-        <button class="mk-flag ${sec.flags[MOCK.qi] ? "on" : ""}" onclick="A.mockFlag()" aria-label="علّم السؤال للمراجعة">⚑<span>${sec.flags[MOCK.qi] ? "معلّم" : "علّم"}</span></button>
+        <button class="mk-flag ${sec.flags[MOCK.qi] ? "on" : ""}" onclick="A.mockFlag()" aria-label="علّم السؤال للمراجعة"><svg class="mk-flag-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 21V4" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path d="M6.5 4.5h11l-2.4 4.2 2.4 4.3h-11z" fill="currentColor"/></svg><span>${sec.flags[MOCK.qi] ? "معلّم" : "علّم"}</span></button>
         <button class="btn btn-ghost mk-side" onclick="A.mockGo(${MOCK.qi - 1})" ${MOCK.qi === 0 ? "disabled" : ""}>السابق</button>
         ${MOCK.qi === sec.items.length - 1
           ? `<button class="btn" onclick="A.mockEndSection()">إنهاء القسم</button>`
@@ -5153,6 +6167,7 @@ A.mockSelect = function (i) {
      quitting paid out the 50-gem chest in about fifteen seconds. The quest
      counts sealed answers now - see endMockSection. */
   sec.answers[MOCK.qi] = i;
+  snd("mock-select", null, "assessment-click-option-" + (Math.min(i, 3) + 1));
   document.querySelectorAll(".choice").forEach((b, j) => b.classList.toggle("sel", j === i));
   paintRadios(i);
   /* every answer jumps — here it says «taken», as in the level test: a mock gives no verdict */
@@ -5178,11 +6193,13 @@ A.mockGo = function (i) {
 A.mockFlag = function () {
   const sec = MOCK.sections[MOCK.si];
   sec.flags[MOCK.qi] = !sec.flags[MOCK.qi];
+  snd("mock-flag", null, sec.flags[MOCK.qi] ? "toggle-on" : "toggle-off");
   renderMockQ();
   mockSave();
 };
 
 A.mockEndSection = function () {
+  snd("mock-end-section");
   const sec = MOCK.sections[MOCK.si];
   const un = sec.answers.filter(a => a === null).length;
   if (un) {
@@ -5267,11 +6284,11 @@ function finishMock(timedOut) {
      distribution instead — mean ~65 — with a floor at the guessing rate. */
   const est = Math.round(estScore(score / (total || 1)));
   /* researched national bands: 81+ = top 5%, 85 ≈ top 2.5%, 90 = elite, 65 = mean */
-  const band = est >= 90 ? "ضمن النخبة — أعلى ٠.٥٪ من الطلاب 🏆"
-    : est >= 85 ? "ضمن أفضل ٢.٥٪ من الطلاب 🔥"
-      : est >= 81 ? "ضمن أفضل ٥٪ من الطلاب 🔥"
-        : est >= 75 ? "أعلى من ٨٤٪ من الطلاب 👏"
-          : est >= 70 ? "فوق المتوسط 👍"
+  const band = est >= 90 ? "ضمن النخبة — أعلى ٠.٥٪ من الطلاب"
+    : est >= 85 ? "ضمن أفضل ٢.٥٪ من الطلاب"
+      : est >= 81 ? "ضمن أفضل ٥٪ من الطلاب"
+        : est >= 75 ? "أعلى من ٨٤٪ من الطلاب"
+          : est >= 70 ? "فوق المتوسط"
             : est >= 65 ? "حول متوسط الطلاب"
               : "تحت المتوسط حالياً — التمرين اليومي يرفعك بسرعة";
   const mins = Math.round(secsUsed / 60);
@@ -5281,7 +6298,7 @@ function finishMock(timedOut) {
      thing in the app. Scaling with the score keeps it unfarmable. */
   gainXP(score * 6); gainGems(20 + score);
   bumpStreak(); save();
-  score / total >= 0.5 ? sndWin() : sndLose();
+  score / total >= 0.5 ? snd("mock-pass", () => sndWin()) : snd("mock-fail", () => sndLose());
 
   const domRows = DOMAIN_ORDER.map((k, i) => {
     const d = window.QBANK[k]; if (!d || !perDom[k].n) return "";
@@ -5486,7 +6503,7 @@ function lbRows(entries) {
       ${cell}${avatarFor(e.name, e.you)}
       <span class="lb-name">${esc(e.name)}${e.you && e.named ? " <b>(أنت)</b>" : ""}</span>
       ${gain > 0 ? `<span class="lb-gain">+${toAr(gain)}</span>` : ""}
-      <span class="lb-xp">${toAr(e.xp)} <i>خبرة</i></span>
+      <span class="lb-xp"><b>${toAr(e.xp)}</b><i>XP</i></span>
     </div>`;
   }).join("");
   LB_PREV = now;
@@ -5499,19 +6516,11 @@ function lbRows(entries) {
    neighbour and a +١٥ floating off it, is worth more than any amount of copy. */
 function lbTick() {
   if (view !== "league") { clearInterval(LB_TIMER); LB_TIMER = 0; return; }
-  const list = document.querySelector(".lb-list"), foot = document.querySelector(".lb-foot");
+  const list = document.querySelector(".lb-list");
   if (!list) { clearInterval(LB_TIMER); LB_TIMER = 0; return; }
   const entries = leagueStandings();
   list.classList.add("settled");
   list.innerHTML = lbRows(entries);
-  if (foot) foot.innerHTML = lbFoot(entries);
-}
-
-function lbFoot(entries) {
-  const r = entries.findIndex(function (e) { return e.you; }) + 1;
-  return `ترتيبك: <b>${toAr(r)}</b> من ${toAr(entries.length)} — ` +
-    (r === 1 ? "أنت المتصدّر! 🏆"
-             : "اكسب الخبرة لتتصدّر");
 }
 
 function renderLeague() {
@@ -5536,22 +6545,18 @@ function renderLeague() {
       <div class="lb-prog-sub">اكسب <b>${toAr(next.min - (S.totalXp || 0))}</b> خبرة للوصول إلى المستوى ${next.name}</div>
     </div>`;
   } else {
-    prog = `<div class="lb-prog lb-prog-max">👑 وصلت إلى أعلى مستوى — أنت من الأبطال!</div>`;
+    prog = `<div class="lb-prog lb-prog-max">وصلت إلى أعلى مستوى — أنت من الأبطال!</div>`;
   }
   $app.innerHTML = statbar() + `<div class="screen"><div class="page lb-page">
     <div class="lb-ladder">${ladder}</div>
     <div class="lb-hero">
-      <h1 class="lb-title lb-title-${tier.key}">المستوى ${tier.name}</h1>
-      <div class="lb-sub">مستواك دائم — تكسبه بالخبرة ولا ينخفض أبداً</div>
+      <h1 class="lb-banner lbb-${tier.key}"><i class="lbb-tail l" aria-hidden="true"></i><i class="lbb-tail r" aria-hidden="true"></i><i class="lbb-fold l" aria-hidden="true"></i><i class="lbb-fold r" aria-hidden="true"></i><span class="lbb-band"><span class="lbb-tx">المستوى ${tier.name}</span><i class="lbb-sh" aria-hidden="true"></i></span></h1>
     </div>
     ${prog}
     <div class="lb-listhead">
       ${ico("guide", 18)} المتصدّرون في مستواك
-      <span class="lb-live" aria-hidden="true"><i></i></span>
     </div>
     <div class="lb-list">${rows}</div>
-    <div class="lb-foot">${lbFoot(entries)}</div>
-    <div class="lb-note">منافسون افتراضيون يضبطون إيقاعك، لا أشخاص حقيقيون — ويتجدّدون كل اثنين</div>
   </div></div>` + bottomnav("league");
   clearInterval(LB_TIMER);
   LB_TIMER = setInterval(lbTick, 22000);
@@ -6001,9 +7006,52 @@ function ruScene(canvas, img, pal, reduced) {
   return S;
 }
 
+/* The rank-up (2026-10-26: «انميشن الranks غيره there is a league-animation.zip
+   use it»): the league row from league-animation.zip, played as it ships in
+   assets/league/ — the badges zoom and pan to the locked league, it rattles,
+   loses its padlock, charges and bursts open, and the league's name slams in.
+   It runs in its own frame (its stage is a fixed 884 × 1520 canvas) and says
+   when it is ready and when its «المتابعة» is tapped. Reduced motion, a
+   frame that never loads (offline before it was ever fetched), or bronze
+   (nothing to promote from) get the drawn screen below instead. */
 function showRankUp(tierIdx) {
   const tier = LEAGUE_TIERS[tierIdx];
   if (!tier) return;
+  sfxLoad("lbUnlock"); sfxLoad("lbGold");
+  if (tierIdx >= 1 && !motionReduced()) { rankUpLeague(tierIdx); return; }
+  rankUpDrawn(tierIdx);
+}
+function rankUpLeague(tierIdx) {
+  const veil = document.createElement("div");
+  veil.className = "rankup-veil ru-league";
+  veil.innerHTML = `<iframe class="ru-frame" title="ترقيت إلى المستوى ${esc(LEAGUE_TIERS[tierIdx].name)}"
+    src="assets/league/index.html?embed&tier=${tierIdx}&xp=${S.totalXp || 0}"></iframe>`;
+  document.body.appendChild(veil);
+  requestAnimationFrame(() => veil.classList.add("show"));
+  const frame = veil.querySelector("iframe");
+  let started = false;
+  const timers = [];
+  const onMsg = e => {
+    if (e.source !== frame.contentWindow || !e.data) return;
+    if (e.data.league === "ready" && !started) {
+      started = true;
+      frame.contentWindow.postMessage({ league: "play" }, "*");
+      /* its own beats (60 fps): the padlock springs at frame 146, the burst at 192, the name at 220 */
+      timers.push(setTimeout(() => { sndRankUnlock(); buzz(15); }, 2417));
+      timers.push(setTimeout(() => sndRankUp(), 3183));
+    }
+    if (e.data.league === "tap" && e.data.done) A.closeRankUp();
+  };
+  window.addEventListener("message", onMsg);
+  veil._ruOff = () => { window.removeEventListener("message", onMsg); timers.forEach(clearTimeout); };
+  timers.push(setTimeout(() => {                     // never came up: the drawn screen instead
+    if (started || !veil.isConnected) return;
+    veil._ruOff(); veil.remove();
+    rankUpDrawn(tierIdx);
+  }, 4000));
+}
+function rankUpDrawn(tierIdx) {
+  const tier = LEAGUE_TIERS[tierIdx];
   const reduced = motionReduced();
   const veil = document.createElement("div");
   veil.className = `rankup-veil ru-${tier.key}`;
@@ -6013,7 +7061,7 @@ function showRankUp(tierIdx) {
       <div class="ru-stage" aria-hidden="true"></div>
       <div class="ru-kicker">ترقّيت إلى مستوى جديد</div>
       <h1 class="ru-title">المستوى ${tier.name}</h1>
-      <p class="ru-sub">واصل التدريب — كل سؤال يقرّبك من القمة 💪</p>
+      <p class="ru-sub">واصل التدريب — كل سؤال يقرّبك من القمة</p>
     </div>
     <div class="ru-foot"><button class="btn" onclick="A.closeRankUp()">رائع، أكمل!</button></div>`;
   document.body.appendChild(veil);
@@ -6043,7 +7091,9 @@ function showRankUp(tierIdx) {
 A.closeRankUp = function () {
   const v = document.querySelector(".rankup-veil");
   if (!v) return;
+  snd("continue");
   if (v._ruScene) v._ruScene.stop();
+  if (v._ruOff) v._ruOff();
   if (v._ruFit) window.removeEventListener("resize", v._ruFit);
   v.classList.add("out");
   setTimeout(() => { v.remove(); render(); }, 360);
@@ -6063,7 +7113,13 @@ function loadStreakLibs() {
   if (streakLibsP) return streakLibsP;
   streakLibsP = new Promise((resolve, reject) => {
     let need = 2;
-    const done = () => { if (--need === 0) { try { rive.RuntimeLoader.setWasmUrl("assets/streak/rive.wasm"); } catch (e) {} resolve(); } };
+    const done = () => {
+      if (--need) return;
+      try { rive.RuntimeLoader.setWasmUrl("assets/streak/rive.wasm"); } catch (e) {}
+      /* the 2.47 runtime warns about the inputs and the stateMachines list our older files are driven by; they still work */
+      try { rive.Rive.suppressDeprecationWarnings = ["state-machines-param", "state-machine-inputs"]; } catch (e) {}
+      resolve();
+    };
     const add = src => { const s = document.createElement("script"); s.src = src; s.onload = done; s.onerror = () => reject(new Error("load " + src)); document.head.appendChild(s); };
     add("assets/streak/rive.js"); add("assets/streak/lottie.min.js");
   });
@@ -6074,6 +7130,7 @@ function loadStreakLibs() {
    ~2s for the Rive WASM to fetch + compile. Idempotent and non-blocking. */
 let streakWarmed = false;
 function warmStreak() {
+  sndWarm();                                          // every Brilliant sound, decoded while the lesson plays
   if (streakWarmed) return;
   streakWarmed = true;
   loadStreakLibs().then(() => {
@@ -6082,7 +7139,8 @@ function warmStreak() {
       else if (rive.RuntimeLoader.getInstance) rive.RuntimeLoader.getInstance(() => {});
     } catch (e) {}
   }).catch(() => { streakWarmed = false; });
-  ["assets/streak/rive.wasm", "assets/streak/big.riv", "assets/streak/daycheck.json"]
+  ["lcDone", "lcPerfect", "stat1", "stat2", "stat3"].forEach(sfxLoad);   // the win screen's sounds, so the first win is not silent
+  ["assets/streak/rive.wasm", "assets/streak/big.riv", "assets/streak/daycheck.json", "assets/fx/lesson-complete.riv", "assets/fonts/baloo-bhaijaan-2.ttf"]
     .forEach(u => { try { fetch(u).catch(() => {}); } catch (e) {} });   // warm the HTTP cache (wasm is the big one)
 }
 function streakDayLabel(c) {
@@ -6090,6 +7148,7 @@ function streakDayLabel(c) {
   return word + " من الحماس";
 }
 A.winContinue = function () {
+  snd("continue");
   wstStop(); wvStop();
   winHeroStop(); WIN = null;
   const next = () => signGate(() => {
@@ -6119,7 +7178,7 @@ function showStreakCelebration(count, onDone) {
   requestAnimationFrame(() => veil.classList.add("show"));
   const sub = veil.querySelector("#skSub"), cal = veil.querySelector("#skCal"), foot = veil.querySelector("#skFoot");
   streakInst = { flame: null, checks: [], flameIns: null, onDone, ran: false };
-  sndWin && sndWin();
+  snd("streak-open", () => { sndWin && sndWin(); });
   /* whatever the runtimes do, the way out must appear: if the flame has not fired
      within a few seconds, show the copy, the tracker and the button as they are */
   /* The count used to be drawn by flame.riv's odometer artboard, whose digit
@@ -6197,11 +7256,12 @@ function skCoinFlip(veil) {
   if (!t || !c) return false;
   c.parentElement.classList.add("coin");
   t.fire();
-  cvTone(660, 0, .12, "triangle", .08); cvTone(990, 0, .2, "triangle", .07, .55); cvTone(1320, 0, .3, "sine", .06, .62);
+  snd("streak-coin", () => { cvTone(660, 0, .12, "triangle", .08); cvTone(990, 0, .2, "triangle", .07, .55); cvTone(1320, 0, .3, "sine", .06, .62); });
   setTimeout(() => buzz(20), 600);
   return true;
 }
 A.closeStreak = function () {
+  snd("continue");
   const v = document.querySelector(".streak-veil"), done = streakInst.onDone;
   try {
     streakInst.flame && streakInst.flame.cleanup();
@@ -6223,7 +7283,8 @@ A.debugStreak = function (c) { showStreakCelebration(c || S.streak.count || 7, (
    ============================================================ */
 A.startReview = function (allOfThem) {
   const list = mistakeList();
-  if (!list.length) { toast("✨ لا توجد أخطاء للمراجعة"); return; }
+  if (!list.length) { toast("لا توجد أخطاء للمراجعة"); return; }
+  snd("start-lesson");
   /* the drill leads with what the schedule says is due; if nothing is, it takes
      the head of the list so a student who wants to practise early still can */
   const due = list.filter(x => x.due);
@@ -6238,14 +7299,14 @@ A.startReview = function (allOfThem) {
 function reviewComplete() {
   stopQTimer();
   const solved = SES.done, xpWon = SES.xp, fromWin = SES.fromWin && WIN;
-  gainXP(xpWon); gainGems(SES.gems); bumpStreak(); save(); sndWin();
+  gainXP(xpWon); gainGems(SES.gems); bumpStreak(); save(); snd("practice-complete", () => sndWin());
   /* only what is due counts as waiting: a mistake just fixed is pushed out by
      SRS_GAP, and counting it again sent the student round in a loop */
   const remaining = mistakeList().filter(x => x.due).length;
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene" id="comp">
     ${flameHero(160)}
     <h1 class="win-title">أحسنت!</h1>
-    <p class="win-sub">${remaining ? `صحّحت ${arPlural(solved, "خطأً واحداً", "خطأين", "أخطاء", "خطأً")} — باقٍ ${toAr(remaining)} للمراجعة` : "راجعت كل أخطائك — قائمتك نظيفة! 🎉"}</p>
+    <p class="win-sub">${remaining ? `صحّحت ${arPlural(solved, "خطأً واحداً", "خطأين", "أخطاء", "خطأً")} — باقٍ ${toAr(remaining)} للمراجعة` : "راجعت كل أخطائك — قائمتك نظيفة!"}</p>
     <div class="result-cards">
       <div class="rcard rc-gold"><div class="rc-t">الخبرة</div><div class="rc-v">${ico("lightning", 20)} <span id="cv-xp">٠</span></div></div>
       <div class="rcard rc-green"><div class="rc-t">صُحّحت</div><div class="rc-v">${ico("target", 22)} ${toAr(solved)}</div></div>
@@ -6397,9 +7458,24 @@ A.toggleMotion = function () {
   S.motion = motionReduced() ? "full" : "reduced";
   motionApply(); save(); render();
 };
-A.resetAll = function () {
-  askConfirm("تحذف كل تقدمك؟", "الدروس والجواهر والسلسلة كلها راح تروح، وما فيه رجعة.",
-    "خلّه مثل ما هو", "احذف كل شيء", () => { localStorage.removeItem("qudratState"); location.reload(); });
+/* Deleting the account (App Store 5.1.1(v): an app that lets you make an
+   account lets you delete it from inside the app, and easy to find): one red
+   row at the foot of the settings hub, on the account page and on «بياناتك»,
+   a sheet that says exactly what goes, and everything the app keeps on the
+   phone removed — the save, a mock in progress, the effect switches. There is
+   no server copy to delete; a Google sign-in kept no email and no token, and
+   the sheet says where to remove the app from the Google account too. */
+const ACCOUNT_KEYS = ["qudratState", MOCK_KEY, "qudratiFx", FX_LITE_KEY];
+const DELETED_FLAG = "qudratDeleted";
+A.deleteAccount = function () {
+  const guest = !S.user || S.user.guest, g = !guest && S.user.google;
+  askConfirm(guest ? "تحذف بياناتك؟" : "تحذف حسابك؟",
+    `راح ينحذف نهائياً من هذا الجهاز: ${guest ? "" : "اسمك وملفك، "}دروسك وتقدّمك كله، الجواهر والسلسلة ومركزك في الدوري، وأي اختبار تجريبي ما كمّلته.<br><br>ما عندنا سيرفر ولا نحتفظ بأي نسخة، فما فيه رجعة إلا من نسخة احتياطية أخذتها أنت.${g ? "<br><br>ولو تبي تشيل قدراتي من حساب Google نفسه: myaccount.google.com/permissions" : ""}`,
+    "لا، خلّه", guest ? "احذف بياناتي" : "احذف حسابي", () => {
+      ACCOUNT_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+      try { sessionStorage.setItem(DELETED_FLAG, guest ? "data" : "account"); } catch (e) {}
+      location.reload();
+    });
 };
 
 /* Ask before something irreversible, in the app's own voice. The primary
@@ -6589,7 +7665,7 @@ A.reportQ = function (id) {
   sheet.veil.querySelectorAll(".rp-opt").forEach(b => b.onclick = () => {
     S.reports = S.reports || {};
     S.reports[id] = { w: +b.dataset.i, at: todayKey(), les: rec.lesTitle };
-    save(); sndGood(); sheet.close();
+    save(); snd("report-sent", () => sndGood()); sheet.close();
     const btn = document.querySelector(".fb-report");
     if (btn) btn.textContent = "وصلتنا ملاحظتك على هذا السؤال ✓";
     toast("سجّلنا ملاحظتك ✓");
@@ -6643,11 +7719,11 @@ function askConfirm(title, body, stayText, goText, onGo) {
 }
 
 /* `hero` is raw HTML, not text: the slot has always been injected unescaped, and it
-   now carries قدّور rather than the ⭐ every caller used to pass. */
+   now carries فهيم rather than the ⭐ every caller used to pass. */
 function showModal(hero, title, bodyHtml, btnText, onclose) {
   const veil = document.createElement("div");
   veil.className = "modal-veil";
-  veil.innerHTML = `<div class="modal"><div class="m-owl">${hero}</div><h2>${title}</h2><p>${bodyHtml}</p>
+  veil.innerHTML = `<div class="modal">${hero ? `<div class="m-owl">${hero}</div>` : ""}<h2>${title}</h2><p>${bodyHtml}</p>
     <button class="btn" id="mOk">${btnText}</button></div>`;
   document.body.appendChild(veil);
   veil.querySelector("#mOk").onclick = () => { veil.remove(); if (onclose) onclose(); };
@@ -7109,7 +8185,7 @@ A.saveExam = function () {
   if (!EP.sel) return;
   const d = EP.sel;
   S.exam = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
-  S.examAsked = true; save(); sndGood();
+  S.examAsked = true; save(); snd("exam-saved", () => sndGood());
 
   /* confirm in place rather than snapping away: the count-up and the landing
      have just finished selling the date, and cutting the screen at that exact
@@ -7190,7 +8266,7 @@ const INTRO_VALUE = [
     s: () => "هدف يومي وسلسلة أيام" }
 ];
 const INTRO_PROMISE = ["مجاني بالكامل", "بدون حساب ولا إيميل", "تقدّمك محفوظ في جهازك"];
-/* Each answer carries قدّور's reaction to it, the way Duolingo's onboarding
+/* Each answer carries فهيم's reaction to it, the way Duolingo's onboarding
    answers do ("Okay, we'll start fresh!") — the bubble that asked the question
    says it the moment the answer is picked. */
 const OB_LEVELS = [
@@ -7201,7 +8277,7 @@ const OB_LEVELS = [
   { k: "good",  t: "أحل حتى الصعبة",            say: "قوي! خلّنا نشوف وش تعرف." }
 ];
 /* a short lesson grades about eight answers, so the goal reads in lessons.
-   قدّور answers a pick with encouragement only — never what it pays (the user,
+   فهيم answers a pick with encouragement only — never what it pays (the user,
    2026-10-22: no chest or gem talk on this screen) */
 const OB_GOALS = {
   5:  ["هادئ", "قرابة نص درس", "بداية حلوة! *خطوة صغيرة* كل يوم تفرق."],
@@ -7214,7 +8290,7 @@ const goalSay = g => OB_GOALS[g][2];
    with its own rising tick (glWave) */
 function obGoalFx(v) {
   const i = GOALS.indexOf(+v);
-  [523, 659, 784].slice(0, i + 1).forEach((f, k) => cvTone(f, 0, .28, "triangle", .1, k * .08));
+  snd("ob-goal-pick", () => [523, 659, 784].slice(0, i + 1).forEach((f, k) => cvTone(f, 0, .28, "triangle", .1, k * .08)));
   buzz([[14], [14, 40, 14], [14, 40, 14, 40, 28]][i] || 12);
   glWave(v);
 }
@@ -7250,6 +8326,7 @@ const OB_STEPS = ["hello", "taste", "value", "journey", "level", "goal", "start"
 const OB_ASKS = { level: 1, goal: 1, start: 1 };
 let OB = null;
 A.obStart = function () {
+  snd("ob-continue");
   const known = !!S.user;          // a save that already has a name resumes at the questions
   OB = { steps: OB_STEPS.filter(k => !(known && (k === "hello" || k === "taste" || k === "journey")) && !(k === "value" && S.introSeen)),
     i: 0, dir: 1, pct: 0, level: S.level || null, goal: S.goal || DAILY_GOAL, name: "", start: null, taste: null };
@@ -7286,7 +8363,7 @@ function sayPlay(delay) {
     SAY_T = setInterval(() => { if (k >= ws.length) { clearInterval(SAY_T); return; } ws[k++].classList.add("on"); }, SAY_STEP);
   }, delay == null ? SAY_AT : delay);
 }
-const buzz = ms => { try { if (navigator.vibrate && S.sound !== false) navigator.vibrate(ms); } catch (e) { } };
+const buzz = ms => { try { if (navigator.vibrate && (S.haptic === undefined ? S.sound !== false : S.haptic)) navigator.vibrate(ms); } catch (e) { } };
 /* he answers the pick: the bubble says his reaction and he gives a small hop —
    Duolingo's Duo "writes down" the answer at this beat */
 function obReact(text) {
@@ -7317,7 +8394,7 @@ const obCta = v => `<button class="btn" id="obGo" onclick="A.obNext()" ${v == nu
 const OB_GO = `<button class="btn" onclick="A.obNext()">المتابعة</button>`;
 const OB_VIEW = {
   hello: () => ({ top: true, cta: OB_GO,
-    html: obTop("wave", "أهلاً! أنا *قدّور* — بعلّمك القسم الكمي بحيل تختصر عليك الوقت.") }),
+    html: obTop("wave", "أهلاً! أنا *فهيم* — بعلّمك القسم الكمي بحيل تختصر عليك الوقت.") }),
   journey: () => {
     const n = OB.steps.filter(k => OB_ASKS[k]).length;
     return { top: true, cta: OB_GO, html: obTop("cheer", `بس *${qCount(n)} سريعة* ونبدأ!`) };
@@ -7337,12 +8414,13 @@ const OB_VIEW = {
      it with no arithmetic at all. Nothing here is written to the save. */
   taste: () => {
     const done = OB.taste != null;
-    return { cta: done ? OB_GO : `<button class="btn" id="obGo" disabled>اختر إجابة</button>`,
+    sfxLoad("right");
+    return { cta: done ? tasteSheet(true) : `<button class="btn" id="obGo" disabled>اختر إجابة</button>`,
       html: `${obSide(done ? "cheer" : "encourage", done ? tasteSay() : "سؤال بأسلوب *القدرات* — خمّن بدون ما تحسب:")}
       <div class="ts${done ? " shown" : ""}">
         <div class="ts-cmp">
           <div class="cmp-box ts-box"><div class="cmp-t">القيمة الأولى</div><div class="cmp-v"><span class="ts-n">${toAr(done ? TASTE.b : TASTE.a)}</span><span class="ts-p">٪</span> من <span class="ts-n">${toAr(done ? TASTE.a : TASTE.b)}</span></div></div>
-          <span class="ts-eq" aria-hidden="true">=</span>
+          <span class="ts-eq" aria-hidden="true"><i class="ts-q">؟</i><i class="ts-bar"></i><i class="ts-bar"></i></span>
           <div class="cmp-box ts-box"><div class="cmp-t">القيمة الثانية</div><div class="cmp-v">${toAr(TASTE.b)}٪ من ${toAr(TASTE.a)}</div></div>
         </div>
         <div class="ts-opts" role="radiogroup" aria-label="الإجابة">${CMP_CHOICES.map((c, i) =>
@@ -7359,7 +8437,7 @@ const OB_VIEW = {
      and pace bars too busy): each draws its goal as a grid of question tiles
      (glTiles), the tag as a chip, and the middle one carries «الأكثر اختياراً» (the user's
      wording, 2026-10-22). A
-     bigger pick sounds and feels bigger (obGoalFx); قدّور answers with
+     bigger pick sounds and feels bigger (obGoalFx); فهيم answers with
      encouragement only (goalSay). */
   goal: () => ({ cta: obCta(OB.goal),
     html: `${obSide("encourage", "كم سؤال تبي تحل يومياً؟")}
@@ -7422,6 +8500,7 @@ function renderOb() {
   obFrame(v.html, v.cta, pct, OB.i > 0 || !S.user ? "A.obBack()" : "", "ob-" + step, !v.top);
   if (OB_BUZZ[step]) setTimeout(() => buzz(OB_BUZZ[step]), 250);
   if (step === "goal" && OB.goal != null) setTimeout(() => glWave(OB.goal), 700);
+  if (step === "taste" && OB.taste != null) { document.querySelector(".ob-cta").classList.add("ts-up"); fxDrawCrest(); }
 }
 /* An answer to a question in the first run (the taste item) lands with the
    lesson's own jump (fxAddJump) — the same launch, hang, fall, squash and
@@ -7438,7 +8517,7 @@ function obJump(card) {
 }
 A.obPick = function (field, v) {
   OB[field] = field === "goal" ? +v : v;
-  if (field === "goal") obGoalFx(v); else { sndTap(); buzz(12); }
+  if (field === "goal") obGoalFx(v); else { snd("ob-pick", () => sndTap()); buzz(12); }
   document.querySelectorAll(".ob-opt, .ob-fork").forEach(b => {
     const on = b.dataset.v === String(v);
     b.classList.toggle("sel", on); b.setAttribute("aria-checked", on);
@@ -7457,57 +8536,93 @@ const tasteSay = () => OB.taste === 2 ? "صح! وبدون ولا عملية حس
 /* The answer is taken, and then the trick is shown rather than told: the two
    numbers of the first value lift, cross over each other and land swapped, the
    first value now reads exactly as the second, an «=» slams down between them
-   and both jump together. Right or wrong, nobody is marked red here. */
+   and both jump together. Right or wrong, nobody is marked red here.
+   The tap itself only selects — no jump (the user, 2026-10-26: the one
+   exception to «every answer jumps»); the jump, Duolingo's own right-answer
+   sound and the green sheet come with the answer, the sheet a short one that
+   only takes the foot of the screen. */
+const tasteSheet = still => `<div class="feedback good show has-crest ts-fb${still ? " still" : ""}" id="fb" role="status" aria-live="polite">
+    <svg class="fb-crest" viewBox="0 0 380 90" preserveAspectRatio="none" aria-hidden="true">
+      <path class="fb-crest-fill"></path>
+      <path class="fb-crest-line" fill="none" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"></path>
+    </svg><div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> ${OB.taste === 2 ? "صح!" : "الجواب: القيمتان متساويتان"}</div>
+    <button class="btn" onclick="A.obNext()">المتابعة</button>
+  </div><div class="storm" id="storm" aria-hidden="true"></div>`;
 A.obTaste = function (i) {
   if (!OB || OB.taste != null || !document.querySelector(".ts")) return;
   OB.taste = i;
-  sndTap(); buzz(12);
+  snd("taste-tap", () => sndTap()); buzz(12); sfxLoad("right");
   const opts = document.querySelectorAll(".ts-opt");
   opts.forEach(b => { b.disabled = true; b.classList.toggle("sel", +b.dataset.v === i); });
-  obJump(Array.from(opts).find(b => +b.dataset.v === i));
   const ns = Array.from(document.querySelectorAll(".ts-n")), boxes = document.querySelectorAll(".ts-box"),
-        eq = document.querySelector(".ts-eq"), wrap = document.querySelector(".ts"), go = document.getElementById("obGo");
+        eq = document.querySelector(".ts-eq"), wrap = document.querySelector(".ts"), cta = document.querySelector(".ob-cta");
   const finish = () => {
     opts.forEach(b => { const v = +b.dataset.v; b.classList.remove("sel"); b.classList.toggle("ok", v === 2); b.classList.toggle("dim", v === i && v !== 2); });
-    obJump(Array.from(opts).find(b => +b.dataset.v === 2));   // the answer lands with the lesson's jump, as every answer does
     wrap.classList.add("shown");
     obReact(tasteSay());
     const duo = document.querySelector(".obs-duo"); if (duo) duo.src = "assets/mascot/qaddour-cheer.png";
-    if (go) { go.disabled = false; go.textContent = "المتابعة"; go.setAttribute("onclick", "A.obNext()"); }
+    sfxPlay("right", 1, playCorrect); buzz(20);
+    if (cta) { cta.classList.add("ts-up"); cta.innerHTML = tasteSheet(false); fxDrawCrest(); }
+    const ok = Array.from(opts).find(b => +b.dataset.v === 2);
+    if (window.gsap && fxOn()) answerFx(ok, 1);
   };
-  if (!window.gsap || fxReduced() || ns.length < 2) {
+  if (fxReduced() || ns.length < 2) {
     if (ns.length === 2) { ns[0].textContent = toAr(TASTE.b); ns[1].textContent = toAr(TASTE.a); }
-    sndGood(); finish(); return;
+    finish(); return;
   }
+  tasteSwap(ns, boxes, eq, finish);
+};
+/* the swap, in the star flip's grammar (the user, 2026-10-27: «make the
+   animation … better and more amazing like what you did with star flipping …
+   the same level, and replace the = with better UI not this 3D»). The two
+   numbers of the first value trade places on STAR_FLIP's own beats: each squats
+   on its base, springs off thin, flies to the other's place — one over the top,
+   one underneath, leaning as it goes — while a pale copy of it waits where it
+   will land, and lands in Duolingo's squash and stretch. Then the grey «؟»
+   between the values pops out and a flat «=» draws itself in, bar by bar, the
+   values turn green and hop. */
+function tasteSwap(ns, boxes, eq, finish) {
+  /* the two numbers are not the same width in this font: hold both at the wider so «٪» and «من» never move */
+  const wd = Math.max(...ns.map(n => n.getBoundingClientRect().width));
+  ns.forEach(n => { n.style.width = wd.toFixed(1) + "px"; n.style.textAlign = "center"; });
   const r0 = ns.map(n => n.getBoundingClientRect());
   ns[0].textContent = toAr(TASTE.b); ns[1].textContent = toAr(TASTE.a);
   const r1 = ns.map(n => n.getBoundingClientRect());
-  /* each number starts where the other one ends up, so the swap is a crossing */
-  const tl = gsap.timeline({ delay: .35 });
+  const T0 = 350, at = t => t / STAR_MS, io = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+  const fly = p => io(Math.min(1, Math.max(0, (p - 383) / (967 - 383))));
   ns.forEach((n, k) => {
-    const dx = r0[1 - k].left - r1[k].left, lift = k ? 26 : -30;
-    gsap.set(n, { x: dx });
-    tl.to(n, { keyframes: [
-        { y: lift * .25, scaleX: 1.12, scaleY: .88, duration: .12, ease: "power2.out" },
-        { x: dx * .5, y: lift, scaleX: .94, scaleY: 1.08, rotation: k ? -10 : 10, duration: .2, ease: "power2.out" },
-        { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0, duration: .22, ease: "power2.in" },
-        { scaleX: 1.18, scaleY: .84, duration: .06 },
-        { scaleX: 1, scaleY: 1, duration: .3, ease: "back.out(3)" }] }, 0);
+    const dx = r0[1 - k].left - r1[k].left, H = k ? -2.3 : 4, lean = k ? 11 : -11;
+    /* the copy that marks where it will land */
+    const g = n.cloneNode(true);
+    g.className = "ts-ghost";
+    g.style.left = n.offsetLeft + "px"; g.style.top = n.offsetTop + "px";
+    n.parentNode.insertBefore(g, n);
+    n.style.transformOrigin = "50% 100%";
+    n.animate(STAR_FLIP.map(([t, dy, sx, sy, r]) => ({ offset: at(t), easing: "linear",
+      transform: `translate(${(dx * (1 - fly(t))).toFixed(2)}px,${(dy * H).toFixed(2)}px) rotate(${(lean * Math.sin(Math.PI * Math.min(r, 70.2) / 70.2)).toFixed(2)}deg) scale(${sx},${sy})` })),
+      { duration: STAR_MS, delay: T0, fill: "backwards" });
+    g.animate(STAR_FLIP.map(([t, , , , , on, ss]) => ({ offset: at(t), easing: "linear", opacity: on * .9, transform: `scale(${ss})` })),
+      { duration: STAR_MS, delay: T0 }).onfinish = () => g.remove();
   });
-  tl.call(() => { cvHiss(.3, .06, 0, 1200, 3800); }, null, .1)
-    .call(() => { cvSnd.tick(); buzz(10); }, null, .54)
-    .call(() => { boxes.forEach(b => b.classList.add("same")); }, null, .62)
-    .fromTo(eq, { scale: 3.4, rotation: -30, opacity: 0 }, { scale: 1, rotation: 0, opacity: 1, duration: .22, ease: "power4.in" }, .78)
-    .call(() => { cvTone(170, 60, .22, "sine", .3); cvTone(900, 400, .08, "triangle", .06); buzz(28); }, null, 1)
-    .fromTo(eq, { scale: 1.25 }, { scale: 1, duration: .45, ease: "elastic.out(1.2, .4)" }, 1);
-  boxes.forEach((b, k) => tl.to(b, { keyframes: [
-      { y: 4, scaleX: 1.04, scaleY: .94, duration: .07, ease: "power1.out" },
-      { y: -16, scaleX: .97, scaleY: 1.04, duration: .18, ease: "power2.out" },
-      { y: 0, scaleX: 1, scaleY: 1, duration: .16, ease: "power2.in" },
-      { scaleX: 1.03, scaleY: .96, duration: .05 },
-      { scaleX: 1, scaleY: 1, duration: .25, ease: "back.out(3)" }] }, 1.02 + k * .06));
-  tl.call(() => { sndGood(); finish(); }, null, 1.25);
-};
+  const q = eq.querySelector(".ts-q"), bars = eq.querySelectorAll(".ts-bar"), T = ms => setTimeout(ms[1], T0 + ms[0]);
+  T([383, () => snd("taste-swap-lift", () => cvHiss(.3, .05, 0, 1200, 3800))]);
+  T([967, () => { snd("taste-swap-land", () => cvSnd.tick()); buzz(10); }]);
+  T([1000, () => boxes.forEach(b => b.classList.add("same"))]);
+  /* «؟» out, «=» in: each bar grows from the middle and overshoots */
+  q.animate([{ transform: "scale(1)", opacity: 1 }, { transform: "scale(1.25) rotate(-8deg)", opacity: 1, offset: .35 }, { transform: "scale(0) rotate(20deg)", opacity: 0 }],
+    { duration: 220, delay: T0 + 1010, easing: "cubic-bezier(.5,0,.75,0)", fill: "forwards" });
+  bars.forEach((bar, k) => bar.animate([{ transform: "scaleX(0)" }, { transform: "scaleX(1.25)", offset: .6 }, { transform: "scaleX(.94)", offset: .82 }, { transform: "scaleX(1)" }],
+    { duration: 300, delay: T0 + 1150 + k * 70, easing: "cubic-bezier(.2,.8,.3,1)", fill: "both" }));
+  T([1150, () => { snd("taste-equals", () => cvTone(520, 780, .07, "triangle", .07)); buzz(14); }]);
+  T([1220, () => { snd("taste-equals", () => cvTone(780, 1170, .09, "triangle", .07), ""); buzz(20); }]);
+  /* both values hop on the «=», on the star flip's landing */
+  boxes.forEach((bx, k) => bx.animate([
+      { transform: "none" }, { transform: "translateY(3px) scale(1.04,.94)", offset: .12 },
+      { transform: "translateY(-14px) scale(.97,1.04)", offset: .4 }, { transform: "none", offset: .66 },
+      { transform: "scale(1.03,.96)", offset: .76 }, { transform: "none" }],
+    { duration: 620, delay: T0 + 1260 + k * 60, easing: "ease-out" }));
+  T([1660, () => { ns.forEach(n => { n.style.width = ""; n.style.textAlign = ""; }); finish(); }]);
+}
 A.obNext = function () {
   const step = OB.steps[OB.i];
   if (step === "level" && !OB.level) return;
@@ -7516,7 +8631,7 @@ A.obNext = function () {
   if (step === "level") S.level = OB.level;
   if (step === "goal") S.goal = OB.goal;
   S.joined = S.joined || todayKey();
-  save(); buzz(8);
+  save(); buzz(8); snd("ob-continue");
   OB.i++; OB.dir = 1; renderOb();
 };
 
@@ -7527,7 +8642,7 @@ A.obNext = function () {
    progress! Let's create a profile.» and two buttons; Brilliant then lays the
    ways in as big buttons under a title. So: the win screen's exits pass through
    signGate once, for whoever has no name yet (S.profileAsked), and the flow is
-     wall — قدّور among Brilliant's flat shapes: «لا تضيّع تقدّمك!», what the
+     wall — فهيم among Brilliant's flat shapes: «لا تضيّع تقدّمك!», what the
             first win earned (streak, XP, league), «سوّ ملفي» / «لاحقاً»;
      how  — «سوّ ملفك»: «المتابعة مع Google» and «أكمل باسمي» as Duolingo's
             white 3D buttons, and what happens to their data;
@@ -7585,7 +8700,7 @@ function siGo(step) {
   SI.step = step;
   renderSign();
 }
-A.siTo = function (step) { sndTap(); buzz(8); siGo(step); };
+A.siTo = function (step) { snd("signin-step", () => sndTap()); buzz(8); siGo(step); };
 A.siBack = function () {
   if (SI.step === "name") { siGo("how"); return; }
   if (SI.step === "how" && SI.from !== "settings") { siGo("wall"); return; }
@@ -7653,7 +8768,7 @@ function renderSign() {
     const av = document.querySelector(".si-av-wrap");
     if (av) av.animate([{ transform: "scale(1)" }, { transform: "scale(1.12,.86)", offset: .25 }, { transform: "scale(.94,1.08)", offset: .55 }, { transform: "scale(1)" }], { duration: 520, easing: "ease-out" });
     const d = document.querySelector(".si-done"); if (d) d.classList.add("sealed");
-    cvTone(784, 0, .5, "triangle", .12); cvTone(1175, 0, .4, "sine", .06, .06); buzz(28);
+    snd("signin-done", () => { cvTone(784, 0, .5, "triangle", .12); cvTone(1175, 0, .4, "sine", .06, .06); }); buzz(28);
   });
 }
 A.siName = function (v) {
@@ -7672,11 +8787,11 @@ function siKeep(name, google) {
 A.siSave = function () {
   if (!SI || SI.step !== "name") return;
   if (!siKeep(SI.name)) { const n = document.getElementById("siName"); if (n) { n.classList.remove("err"); void n.offsetWidth; n.classList.add("err"); } return; }
-  sndTap(); siGo("done");
+  snd("signin-step", () => sndTap()); siGo("done");
 };
 A.siLater = function (back) {
   if (SI && SI.from !== "settings") { S.user = S.user || { name: "ضيف", guest: true }; S.profileAsked = true; save(); }
-  if (!back) sndTap();
+  if (!back) snd("signin-later", () => sndTap());
   A.siDone();
 };
 A.siDone = function () {
@@ -7704,7 +8819,7 @@ A.siGoogle = function () {
     buzz(12);
     return;
   }
-  sndTap();
+  snd("signin-step", () => sndTap());
   google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CLIENT_ID, scope: "openid profile",
     callback: r => {
@@ -7754,7 +8869,7 @@ function renderObSplash(kind) {
 }
 function renderPlaceIntro() { renderObSplash("find"); }
 A.placeIntroBack = function () { if (!OB) { go("path"); return; } OB.dir = -1; renderOb(); };
-A.placeBegin = function () { OB = null; S.placeAsked = true; save(); A.startPlacement(); };
+A.placeBegin = function () { snd("start-lesson"); OB = null; S.placeAsked = true; save(); A.startPlacement(); };
 A.placeScratch = function () { S.placeAsked = true; save(); obFirstLesson(); };
 
 function afterLogin() {
@@ -7778,7 +8893,7 @@ A.placeIntroReplay = function () { A.obReplay("pintro"); };
 /* A strong student three weeks from the exam should not have to grind lesson one.
    Offered once, and never nagged: either answer is remembered.
 
-   قدّور is not here: he talks in the first run and the level test, celebrates
+   فهيم is not here: he talks in the first run and the level test, celebrates
    wins and stands on the mock home, and anywhere else he is decoration. */
 function renderPlaceOffer() {
   $app.innerHTML = `<div class="screen screen-full tp-screen">
@@ -7863,125 +8978,229 @@ document.addEventListener("keydown", e => {
 /* ============================================================
    SETTINGS — the fifth tab
    ------------------------------------------------------------
-   One screen that reads like a phone's own settings: who you
-   are on top, then short grouped lists — the track, the exam
-   date, two switches, the disclaimer — and the reset at the
-   bottom in red. Only what the game actually uses is here: the
-   daily goal was a control wired to nothing (the chest counts
-   dailyGoal()), «تبديل المستخدم» only re-asked the name, and the
-   stats tab already owns the numbers, so the profile page that
-   repeated them under a gear is gone with the two-way menu that
-   led to it.
+   The fifth tab: a hub of short pages (below). Only what the game
+   actually reads is here.
    ============================================================ */
 let SET_EDIT = false;
+
+/* The settings hub (the user, 2026-10-27: «fix our settings screen it feels
+   like a demo app, make it like real settings … if you want to add more tabs
+   add»). The main page reads like a phone's own settings: your card on top,
+   then rows with a coloured icon, each opening its own page — الحساب، التدريب،
+   الصوت والحركة، بياناتك، عن قدراتي — with a back arrow. Every row still does
+   something the game reads; nothing here is decoration. */
+let SET_PAGE = null, SET_DIR = 0;
+const SET_TITLES = { profile: "الحساب", train: "التدريب", prefs: "الصوت والحركة", data: "بياناتك", about: "عن قدراتي" };
+const SET_IC = {
+  user: `<circle cx="12" cy="8.5" r="3.6"/><path d="M5 19.5c1.2-3.6 3.8-5.4 7-5.4s5.8 1.8 7 5.4"/>`,
+  target: `<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".9" class="f"/>`,
+  sound: `<path d="M4.5 9.5h3l4.5-4v13l-4.5-4h-3z" class="f"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/>`,
+  data: `<path d="M12 4v10m-4-4 4 4 4-4"/><path d="M5 15v3.5h14V15"/>`,
+  info: `<circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r="1.1" class="f"/>`,
+  cal: `<rect x="4.5" y="6" width="15" height="13.5" rx="2.5"/><path d="M4.5 10.5h15M9 4v4M15 4v4"/>`,
+  gauge: `<path d="M5 16.5a7 7 0 1 1 14 0"/><path d="M12 16.5 15.5 11"/>`,
+  track: `<path d="M5 18.5V12M10 18.5V8M15 18.5V10.5M20 18.5V5.5"/>`,
+  buzz: `<rect x="8" y="4.5" width="8" height="15" rx="2"/><path d="M4.5 9v6M19.5 9v6"/>`,
+  motion: `<path d="M4 15c2.5 0 2.5-6 5-6s2.5 6 5 6 2.5-6 5-6"/>`,
+  restore: `<path d="M5.5 12a6.5 6.5 0 1 0 2-4.7"/><path d="M5 4.5v3.8h3.8"/>`,
+  flag: `<path d="M6.5 20V4.5"/><path d="M6.5 5h10.5l-2.2 3.8L17 12.5H6.5" class="f"/>`,
+  share: `<path d="M12 14.5V4m-4 4 4-4 4 4"/><path d="M6 12v6.5h12V12"/>`,
+  phone: `<rect x="7" y="3.5" width="10" height="17" rx="2.4"/><path d="M12 8v6m-2.5-2.5L12 14l2.5-2.5"/>`,
+  lock: `<rect x="5.5" y="10.5" width="13" height="9.5" rx="2.4"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>`,
+  trash: `<path d="M5 7.5h14M9.5 7.5V5h5v2.5M7 7.5l.8 12h8.4l.8-12"/>`
+};
+const SET_LIP = { gray: "gray-shadow", red: "red-dk2" };
+const setIc = (k, c) => `<span class="set-ic" style="--ic:var(--${c});--ic-dk:var(--${SET_LIP[c] || c + "-dk"})" aria-hidden="true"><svg viewBox="0 0 24 24">${SET_IC[k]}</svg></span>`;
+const setChev = () => `<span class="set-chev" aria-hidden="true">${CHEV_SVG}</span>`;
+function setRow(o) {
+  const tag = o.on ? "button" : "div";
+  return `<${tag}${o.on ? ` type="button" onclick="${o.on}"` : ""} class="set-item${o.on ? " set-link" : ""}${o.cls ? " " + o.cls : ""}">
+    ${o.ic ? setIc(o.ic, o.c || "blue") : ""}
+    <span class="set-item-tx"><b>${o.t}</b>${o.s ? `<small>${o.s}</small>` : ""}</span>
+    ${o.v ? `<span class="set-val">${o.v}</span>` : ""}${o.end || ""}${o.on && !o.noChev ? setChev() : ""}
+  </${tag}>`;
+}
+const setDeleteRow = guest => setRow({ ic: "trash", c: "red", t: guest ? "حذف بياناتي" : "حذف الحساب", s: guest ? "يحذف كل تقدّمك من هذا الجهاز نهائياً" : "يحذف ملفك وكل تقدّمك نهائياً", on: "A.deleteAccount()", cls: "set-danger" });
+const setToggle = (on, call, lab) => `<button type="button" class="toggle ${on ? "on" : ""}" role="switch" aria-checked="${!!on}" aria-label="${lab}" onclick="${call}"></button>`;
 
 /* todayKey() emits an unpadded y-m-d, which fmtExamDate cannot parse. */
 function fmtDayKey(k) {
   const a = String(k || "").split("-");
   return a.length === 3 ? toAr(+a[2]) + " / " + toAr(+a[1]) + " / " + toAr(+a[0]) : "";
 }
-
-function renderSettings() {
-  const guest = !S.user || S.user.guest;
-  const name = guest ? "" : ((S.user && S.user.name) || "");
+function setExamVal() {
   const days = examDaysLeft();
-  const chev = `<span class="set-chev" aria-hidden="true">${CHEV_SVG}</span>`;
-  const seg = (on, call, label) =>
-    `<button type="button" class="${on ? "on" : ""}" role="radio" aria-checked="${on}" onclick="${call}">${label}</button>`;
-  const examVal = days === null ? "غير محدّد"
-    : days < 0 ? "انتهى" : days === 0 ? "اليوم"
+  return days === null ? "غير محدّد" : days < 0 ? "انتهى" : days === 0 ? "اليوم"
     : days === 1 ? "غداً" : "باقٍ " + toAr(days) + (days <= 10 ? " أيام" : " يوماً");
+}
+const setHapticOn = () => S.haptic === undefined ? S.sound !== false : !!S.haptic;
+const setCanBuzz = () => !!(navigator && navigator.vibrate);
+const setVersion = () => {
+  const s = document.querySelector('script[src*="js/app.js"]'), m = s && /[?&]v=(\d+)/.exec(s.getAttribute("src"));
+  return m ? toAr(m[1]) : "";
+};
+function setAvatar(name, cls) {
+  const nm = name || "قدراتي";
+  return `<span class="set-av${cls ? " " + cls : ""}" style="${pvPaint(nm)}" aria-hidden="true"><span>${esc((name || "").trim().charAt(0) || "ق")}</span></span>`;
+}
 
-  $app.innerHTML = statbar() + `<div class="screen"><div class="page set-page">
+function setMain(guest, name) {
+  const done = Object.values(S.lessons || {}).filter(l => l && l.stars > 0).length;
+  const tier = LEAGUE_TIERS[tierIndex()];
+  return `
     <h1>الإعدادات</h1>
+    <button type="button" class="set-me" onclick="A.setPage('profile')">
+      ${setAvatar(name)}
+      <span class="set-me-tx">
+        <b>${guest ? "ضيف" : esc(name)}</b>
+        <small>${guest ? "سوّ ملفك واحفظ تقدّمك باسمك" : (S.joined ? "بدأ معنا " + fmtDayKey(S.joined) : "عضو جديد")}</small>
+        <span class="set-me-stats">
+          <i class="sm-fire">${toAr((S.streak && S.streak.count) || 0)} يوم</i>
+          <i class="sm-xp">${toAr(S.totalXp || 0)} XP</i>
+          <i class="sm-tier">${rankImg(tier.key, 16)}${tier.name}</i>
+        </span>
+      </span>
+      ${setChev()}
+    </button>
 
-    <div class="set-me${SET_EDIT ? " editing" : ""}">
-      <div class="set-av" aria-hidden="true"><span>${esc(name.trim().charAt(0) || "ق")}</span></div>
+    <div class="set-lab">التدريب</div>
+    <div class="set-list">
+      ${setRow({ ic: "target", c: "green", t: "التدريب", s: `${qCount(dailyGoal())} يومياً — ${S.track === "lit" ? "أدبي / نظري" : "علمي"}`, on: "A.setPage('train')" })}
+      ${setRow({ ic: "cal", c: "blue", t: "موعد الاختبار", v: setExamVal(), on: "A.examSetup()" })}
+      ${setRow({ ic: "gauge", c: "orange", t: "تحديد المستوى", v: S.placed ? fmtDayKey(S.placed) : "لم يُجرَ", on: "A.placeAgain()" })}
+    </div>
+
+    <div class="set-lab">التطبيق</div>
+    <div class="set-list">
+      ${setRow({ ic: "sound", c: "purple", t: "الصوت والحركة", v: S.sound ? "الأصوات تعمل" : "صامت", on: "A.setPage('prefs')" })}
+      ${setRow({ ic: "data", c: "gold", t: "بياناتك", s: `${toAr(done)} درس مكتمل — محفوظ على جهازك`, on: "A.setPage('data')" })}
+      ${window.__qInstall ? setRow({ ic: "phone", c: "green", t: "ثبّت التطبيق", v: "يعمل بلا اتصال", on: "A.installApp()" }) : ""}
+    </div>
+
+    <div class="set-lab">قدراتي</div>
+    <div class="set-list">
+      ${setRow({ ic: "share", c: "blue", t: "شارك قدراتي مع صاحبك", on: "A.shareApp()" })}
+      ${setRow({ ic: "info", c: "gray", t: "عن قدراتي", v: setVersion() ? "الإصدار " + setVersion() : "", on: "A.setPage('about')" })}
+    </div>
+
+    <div class="set-list">${setDeleteRow(guest)}</div>
+    <p class="set-foot">قدراتي أداة تدريب مستقلة، غير تابعة لهيئة تقويم التعليم والتدريب (قياس)</p>`;
+}
+
+function setProfile(guest, name) {
+  const answered = Object.values(S.qstats || {}).reduce((n, q) => n + (q.r || 0) + (q.w || 0), 0);
+  const done = Object.values(S.lessons || {}).filter(l => l && l.stars > 0).length;
+  const tier = LEAGUE_TIERS[tierIndex()];
+  const stat = (v, l, c) => `<div class="set-stat" style="--st:var(--${c})"><b>${v}</b><small>${l}</small></div>`;
+  return `
+    <div class="set-hero">
+      ${setAvatar(name, "big")}
       ${SET_EDIT ? `
       <div class="set-me-edit">
-        <input id="setName" class="login-input" type="text" maxlength="20" placeholder="ما اسمك؟"
-          autocomplete="off" value="${esc(name)}"
+        <input id="setName" class="login-input" type="text" maxlength="20" placeholder="وش اسمك؟" autocomplete="off" value="${esc(name)}"
           onkeydown="if(event.key==='Enter')A.setSaveName();if(event.key==='Escape')A.setEditName(false)">
         <div class="set-me-btns">
           <button type="button" class="btn" onclick="A.setSaveName()">حفظ</button>
           <button type="button" class="btn btn-ghost" onclick="A.setEditName(false)">إلغاء</button>
         </div>
       </div>` : `
-      <div class="set-me-tx">
-        <b>${guest ? "ضيف" : esc(name)}</b>
-        <span>${guest ? "سجّل باسمك أو بحساب Google" : (S.joined ? "بدأ معنا " + fmtDayKey(S.joined) : "عضو جديد")}</span>
-      </div>
-      <button type="button" class="set-edit" onclick="${guest ? "A.signIn()" : "A.setEditName(true)"}">${guest ? "سوّ ملفك" : "تعديل"}</button>`}
+      <b class="set-hero-name">${guest ? "ضيف" : esc(name)}</b>
+      <small class="set-hero-sub">${guest ? "تقدّمك محفوظ على جهازك، بدون اسم" : (S.joined ? "بدأ معنا " + fmtDayKey(S.joined) : "عضو جديد")}</small>
+      <button type="button" class="btn ${guest ? "" : "btn-ghost "}set-hero-btn" onclick="${guest ? "A.signIn()" : "A.setEditName(true)"}">${guest ? "سوّ ملفك" : "عدّل اسمك"}</button>`}
     </div>
-
-    <div class="set-lab">التدريب</div>
-    <div class="set-list">
-      <div class="set-item">
-        <span class="set-item-tx">هدفي اليومي</span>
-        <div class="set-seg set-seg-goal" role="radiogroup" aria-label="الهدف اليومي">
-          ${GOALS.map(g => seg(dailyGoal() === g, `A.setGoal(${g})`, toAr(g))).join("")}
-        </div>
-      </div>
-      <div class="set-item">
-        <span class="set-item-tx">المسار</span>
-        <div class="set-seg set-seg-track" role="radiogroup" aria-label="المسار">
-          ${seg(S.track === "sci", "A.setTrackM('sci')", "علمي")}
-          ${seg(S.track === "lit", "A.setTrackM('lit')", "أدبي / نظري")}
-        </div>
-      </div>
-      <button type="button" class="set-item set-link" onclick="A.examSetup()">
-        <span class="set-item-tx">موعد الاختبار</span>
-        <span class="set-val">${examVal}</span>${chev}
-      </button>
-      <button type="button" class="set-item set-link" onclick="A.placeAgain()">
-        <span class="set-item-tx">تحديد المستوى</span>
-        <span class="set-val">${S.placed ? "أُجري " + fmtDayKey(S.placed) : "لم يُجرَ"}</span>${chev}
-      </button>
+    <div class="set-stats">
+      ${stat(toAr((S.streak && S.streak.count) || 0), "أيام متتالية", "orange")}
+      ${stat(toAr(S.totalXp || 0), "XP", "gold")}
+      ${stat(toAr(done), "دروس مكتملة", "green")}
+      ${stat(toAr(answered), "سؤال حلّيته", "blue")}
     </div>
-
-    <div class="set-lab">التفضيلات</div>
     <div class="set-list">
-      <div class="set-item">
-        <span class="set-item-tx" id="setSoundLab">الأصوات</span>
-        <button type="button" class="toggle ${S.sound ? "on" : ""}" role="switch" aria-checked="${!!S.sound}"
-          aria-labelledby="setSoundLab" onclick="A.setSound(this)"></button>
-      </div>
-      <div class="set-item">
-        <span class="set-item-tx" id="setMotionLab">الحركات</span>
-        <button type="button" class="toggle ${motionReduced() ? "" : "on"}" role="switch" aria-checked="${!motionReduced()}"
-          aria-labelledby="setMotionLab" onclick="A.setMotion(this)"></button>
-      </div>
+      ${setRow({ ic: "track", c: "purple", t: "الدوري", v: tier.name, end: rankImg(tier.key, 26) })}
+      ${!guest ? setRow({ ic: "lock", c: "gray", t: S.user && S.user.google ? "مربوط بحساب Google" : "حساب باسمك", s: "ما نحفظ إيميلك ولا نرسل بياناتك لأي مكان" }) : ""}
+    </div>
+    <div class="set-list">${setDeleteRow(guest)}</div>`;
+}
+
+function setTrain() {
+  const goal = dailyGoal();
+  const tag = { 5: "هادئ", 10: "معتاد", 20: "جدّي" };
+  return `
+    <div class="set-lab">هدفك اليومي</div>
+    <div class="set-goals" role="radiogroup" aria-label="الهدف اليومي">
+      ${GOALS.map(g => `<button type="button" class="set-goal${goal === g ? " on" : ""}" role="radio" aria-checked="${goal === g}" onclick="A.setGoal(${g})">
+        <span class="set-goal-tx"><b>${qCount(g)} يومياً</b><small>${tag[g] || ""} — صندوق ${toAr(Math.round(CHEST_GEMS * g / DAILY_GOAL))} جوهرة</small></span>
+        ${glTiles(g)}
+      </button>`).join("")}
+    </div>
+    <div class="set-lab">المسار</div>
+    <div class="set-tracks" role="radiogroup" aria-label="المسار">
+      ${[["sci", "علمي", "لطلاب المسار العلمي"], ["lit", "أدبي / نظري", "لطلاب المسار النظري"]].map(([k, l, s]) => `
+        <button type="button" class="set-track${S.track === k ? " on" : ""}" role="radio" aria-checked="${S.track === k}" onclick="A.setTrackM('${k}')"><b>${l}</b><small>${s}</small></button>`).join("")}
+    </div>
+    <div class="set-list">
+      ${setRow({ ic: "cal", c: "blue", t: "موعد الاختبار", v: setExamVal(), on: "A.examSetup()" })}
+      ${setRow({ ic: "gauge", c: "orange", t: "تحديد المستوى", s: "من ٨ إلى ١٦ سؤالاً — يفتح لك ما تتقنه", v: S.placed ? fmtDayKey(S.placed) : "", on: "A.placeAgain()" })}
+    </div>`;
+}
+
+function setPrefs() {
+  return `
+    <div class="set-list">
+      ${setRow({ ic: "sound", c: "purple", t: "الأصوات", s: "صوت الإجابة الصحيحة والمؤثرات", end: setToggle(S.sound, "A.setSound(this)", "الأصوات") })}
+      ${setCanBuzz() ? setRow({ ic: "buzz", c: "blue", t: "الاهتزاز", s: "نبضة خفيفة مع كل إجابة", end: setToggle(setHapticOn(), "A.setHaptic(this)", "الاهتزاز") }) : ""}
+      ${setRow({ ic: "motion", c: "green", t: "الحركات", s: "القفزات والاحتفالات", end: setToggle(!motionReduced(), "A.setMotion(this)", "الحركات") })}
     </div>
     ${osPrefersReduce() && !motionReduced()
-      ? `<p class="set-hint">نظامك يطلب تقليل الحركة، واللعبة ما زالت بحركتها الكاملة — أوقفها من هنا إن أردت.</p>`
-      : ""}
+      ? `<p class="set-hint">نظامك يطلب تقليل الحركة، واللعبة ما زالت بحركتها الكاملة — أوقفها من هنا إن أردت.</p>` : ""}`;
+}
 
-    <div class="set-lab">تقدّمك</div>
+function setData() {
+  const reps = Object.keys(S.reports || {}).length;
+  return `
+    <div class="set-note">${setIc("lock", "green")}<span><b>تقدّمك على هذا الجهاز</b><small>ما فيه سيرفر ولا حساب — لو بتغيّر جوالك، خذ نسخة احتياطية قبل.</small></span></div>
     <div class="set-list">
-      ${window.__qInstall ? `<button type="button" class="set-item set-link" onclick="A.installApp()">
-        <span class="set-item-tx">ثبّت التطبيق على جهازك</span>
-        <span class="set-val">يعمل بلا اتصال</span>${chev}
-      </button>` : ""}
-      <button type="button" class="set-item set-link" onclick="A.backupShow()">
-        <span class="set-item-tx">نسخة احتياطية</span>
-        <span class="set-val">رمز تحفظه</span>${chev}
-      </button>
-      <button type="button" class="set-item set-link" onclick="A.restoreShow()">
-        <span class="set-item-tx">استعادة من رمز</span>${chev}
-      </button>
-      ${Object.keys(S.reports || {}).length ? `<button type="button" class="set-item set-link" onclick="A.reportsShow()">
-        <span class="set-item-tx">ملاحظاتك على الأسئلة</span>
-        <span class="set-val">${toAr(Object.keys(S.reports).length)}</span>${chev}
-      </button>` : ""}
+      ${setRow({ ic: "data", c: "gold", t: "نسخة احتياطية", s: "رمز واحد فيه كل تقدّمك", on: "A.backupShow()" })}
+      ${setRow({ ic: "restore", c: "blue", t: "استعادة من رمز", s: "رجّع تقدّمك على جهاز جديد", on: "A.restoreShow()" })}
+      ${reps ? setRow({ ic: "flag", c: "orange", t: "ملاحظاتك على الأسئلة", v: toAr(reps), on: "A.reportsShow()" }) : ""}
     </div>
+    <div class="set-lab set-lab-danger">منطقة الخطر</div>
+    <div class="set-list">${setDeleteRow(!S.user || S.user.guest)}</div>`;
+}
 
-    <button type="button" class="set-reset" onclick="A.resetAll()">إعادة تعيين التقدّم</button>
-    <p class="set-foot">قدراتي أداة تدريب مستقلة، غير تابعة لهيئة تقويم التعليم والتدريب (قياس)</p>
+function setAbout() {
+  const v = setVersion();
+  return `
+    <div class="set-app">
+      <img src="assets/app-icon/icon-192.png" width="84" height="84" alt="" onerror="this.style.display='none'">
+      <b>قدراتي</b>
+      <small>${v ? "الإصدار " + v : ""}</small>
+    </div>
+    <div class="set-list">
+      ${setRow({ ic: "lock", c: "green", t: "خصوصيتك", s: "تقدّمك محفوظ في جهازك فقط. لا إعلانات، لا تتبّع، ولا نطلب إيميلك." })}
+      ${setRow({ ic: "share", c: "blue", t: "شارك قدراتي مع صاحبك", on: "A.shareApp()" })}
+    </div>
+    <p class="set-foot">قدراتي أداة تدريب مستقلة، غير تابعة لهيئة تقويم التعليم والتدريب (قياس). كل الأسئلة مؤلَّفة للتدريب وليست من اختبارات حقيقية.</p>`;
+}
 
-  </div></div>` + bottomnav("settings");
-
+function renderSettings() {
+  const guest = !S.user || S.user.guest;
+  const name = guest ? "" : ((S.user && S.user.name) || "");
+  if (SET_PAGE && !SET_TITLES[SET_PAGE]) SET_PAGE = null;
+  const body = !SET_PAGE ? setMain(guest, name)
+    : SET_PAGE === "profile" ? setProfile(guest, name)
+    : SET_PAGE === "train" ? setTrain()
+    : SET_PAGE === "prefs" ? setPrefs()
+    : SET_PAGE === "data" ? setData() : setAbout();
+  const head = SET_PAGE ? `<div class="set-head"><button type="button" class="set-back" onclick="A.setPage(null)" aria-label="رجوع">${BACK_SVG}</button><h1>${SET_TITLES[SET_PAGE]}</h1></div>` : "";
+  $app.innerHTML = statbar() + `<div class="screen"><div class="page set-page${SET_DIR ? (SET_DIR > 0 ? " set-in-fwd" : " set-in-back") : ""}">${head}${body}</div></div>` + bottomnav("settings");
+  SET_DIR = 0;
   if (SET_EDIT) { const i = document.getElementById("setName"); if (i) { i.focus(); i.select(); } }
 }
+A.setPage = function (p) {
+  SET_DIR = p ? 1 : -1; SET_PAGE = p || null; SET_EDIT = false;
+  render();
+  const sc = document.querySelector(".screen"); if (sc) sc.scrollTop = 0;
+};
 
 /* Re-running it can only place lessons the student has not already cleared — it
    never takes a star away — so the confirmation says exactly that. */
@@ -7995,36 +9214,47 @@ A.setSaveName = function () {
   const inp = document.getElementById("setName");
   const name = (inp.value || "").trim();
   if (!name) { inp.classList.remove("err"); void inp.offsetWidth; inp.classList.add("err"); inp.focus(); return; }
-  S.user = { name: name.slice(0, 20), guest: false };
-  SET_EDIT = false; save(); sndGood(); toast("تم حفظ اسمك ✓");
+  S.user = Object.assign({}, S.user, { name: name.slice(0, 20), guest: false });
+  SET_EDIT = false; save(); snd("settings-name-saved", () => sndGood()); toast("تم حفظ اسمك ✓");
   render();
 };
 /* The chest scales with the goal, so the confirmation says what changed rather
    than letting a student discover a smaller chest on their own. */
 A.setGoal = function (g) {
-  if (GOALS.indexOf(g) < 0) return;
-  S.goal = g; save();
-  document.querySelectorAll(".set-seg-goal button").forEach((b, i) => {
-    const on = GOALS[i] === g;
-    b.classList.toggle("on", on); b.setAttribute("aria-checked", on);
-  });
+  if (GOALS.indexOf(g) < 0 || S.goal === g) return;
+  S.goal = g; save(); snd("settings-segment", () => sndTap()); buzz(8);
+  render();
   toast(`${qCount(g)} يومياً، صندوق ${toAr(chestGems())} جوهرة`);
 };
 A.setTrackM = function (t) {
-  S.track = t; save();
-  document.querySelectorAll(".set-seg-track button").forEach((b, i) => {
-    const on = (i === 0 ? "sci" : "lit") === t;
-    b.classList.toggle("on", on); b.setAttribute("aria-checked", on);
-  });
+  if (S.track === t) return;
+  S.track = t; save(); snd("settings-segment", () => sndTap()); buzz(8);
+  render();
 };
 A.setSound = function (btn) {
+  if (S.sound) snd("settings-toggle", null, "toggle-off");
   S.sound = !S.sound; save();
   btn.classList.toggle("on", S.sound); btn.setAttribute("aria-checked", S.sound);
+  if (S.sound) snd("settings-toggle", () => sndTap(), "toggle-on");
+};
+A.setHaptic = function (btn) {
+  S.haptic = !setHapticOn(); save();
+  btn.classList.toggle("on", S.haptic); btn.setAttribute("aria-checked", S.haptic);
+  if (S.haptic) buzz(20);
 };
 A.setMotion = function (btn) {
   S.motion = motionReduced() ? "full" : "reduced";
-  motionApply(); save();
+  motionApply(); save(); snd("settings-toggle", null, motionReduced() ? "toggle-off" : "toggle-on");
   btn.classList.toggle("on", !motionReduced()); btn.setAttribute("aria-checked", !motionReduced());
+};
+/* the phone's own share sheet, or the link copied where there is none */
+A.shareApp = function () {
+  const data = { title: "قدراتي", text: "تدرّب على القسم الكمي في القدرات — درس بعد درس، مجاناً:", url: "https://qudrati.xyz/" };
+  try {
+    if (navigator.share) { navigator.share(data).catch(() => {}); return; }
+  } catch (e) {}
+  const done = () => toast("نسخت الرابط ✓");
+  try { navigator.clipboard.writeText(data.url).then(done, () => toast("qudrati.xyz")); } catch (e) { toast("qudrati.xyz"); }
 };
 
 /* ---------------- installing, and losing the network ----------------
@@ -8066,6 +9296,9 @@ function boot() {
   initCorrectVoice(); // preload the correct-answer clip so the first play is instant
   if (!S.user) renderWelcome();
   else afterLogin();
+  let gone = null;
+  try { gone = sessionStorage.getItem(DELETED_FLAG); sessionStorage.removeItem(DELETED_FLAG); } catch (e) {}
+  if (gone) toast(gone === "account" ? "انحذف حسابك وكل بياناتك" : "انحذفت كل بياناتك");
 }
 /* The dev harnesses drive the app through A.debug* and A.fxDemo. On the live
    page they are a console cheat menu — free gems, a forced rank-up — so they

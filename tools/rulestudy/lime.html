@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>قدراتي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&display=swap">
+<style>
+  :root {
+    --green: #58CC02;        --green-dk: #58A700;
+    --blue: #1CB0F6;         --blue-dk: #1899D6;
+    --blue-light: #DDF4FF;   --blue-border: #63C9F9;
+    --purple: #CE82FF;       --purple-dk: #A568CC;
+    --purple-tint: #EDD1FF;  --purple-pale: #DBC3EB;  --purple-shine: #DAA0FF;
+    --gold: #FFC800;         --gold-dk: #E6A000;
+    --gold-shine: #FFE700;   --gold-soft: #FBE56D;    --brown: #AA572A;    --brown-dk: #7A3B12;
+    --red: #FF4B4B;          --red-soft: #FFB2B2;
+    --orange: #FF9600;       --orange-dk: #E07800;    --orange-bg: #FFEFD6;    --gold-bg: #FFF4BF;
+    --ink: #4B4B4B;          --gray: #777777;         --gray-icon: #AFAFAF;
+    --gray-shadow: #B7B7B7;  --line: #E5E5E5;         --divider: #D9D9D9;
+    --disabled: #D9D9D9;     --snow: #FFFFFF;       --surface-hover: #F7F7F7;
+    --green-lip: #478700;
+    --green-pale: #A5ED6E;   --green-pale-lip: #79C83A;
+    --green-bg: #D6FFB8;     --red-bg: #FFDFE0;       --red-dk2: #EA2B2B;
+    --purple-bg: #F6E8FF;
+    --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #fff; }
+  body { font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; overflow: hidden; }
+  button { font-family: var(--font); -webkit-tap-highlight-color: transparent; cursor: pointer; }
+  .app { position: relative; height: 100%; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; overflow: hidden; background: #fff; }
+
+  /* top bar */
+  .top { display: flex; align-items: center; gap: 12px; padding: 16px 16px 4px; min-height: 56px; }
+  .bar { flex: 1; height: 16px; border-radius: 8px; background: var(--line); overflow: hidden; position: relative; }
+  .bar i { position: absolute; inset: 0 auto 0 0; right: 0; left: auto; width: 0; border-radius: 8px; background: var(--green); transition: width .45s cubic-bezier(.3,1.3,.5,1); }
+  .bar i::after { content: ""; position: absolute; top: 4px; left: 8px; right: 8px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.3); }
+  .top.calm .bar { visibility: hidden; }
+  .xp { display: inline-flex; align-items: center; gap: 4px; font-weight: 800; font-size: 17px; color: var(--orange); white-space: nowrap; }
+  .xp svg { width: 22px; height: 22px; }
+
+  /* body */
+  .main { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 8px 16px 0; overflow-y: auto; overflow-x: hidden; }
+  .kick { font-size: 14px; font-weight: 800; color: var(--purple-dk); min-height: 20px; margin-top: 6px; }
+  .head { font-size: 22px; font-weight: 800; line-height: 1.35; margin: 2px 0 0; }
+  .head b { color: var(--blue); }
+  .stage { position: relative; flex: 1; display: flex; flex-direction: column; margin-top: 14px; min-height: 0; }
+
+  /* footer and sheet */
+  .foot { position: relative; padding: 14px 16px 22px; border-top: 2px solid var(--line); display: flex; gap: 10px; background: #fff; }
+  .btn {
+    flex: 1; height: 50px; border: 0; border-radius: 16px; font: 800 17px var(--font); color: #fff;
+    background: var(--green); box-shadow: 0 4px 0 var(--green-lip); letter-spacing: 0;
+  }
+  .btn:not(:disabled):active { translate: 0 4px; box-shadow: 0 0 0 var(--green-lip); }
+  .btn:disabled { background: var(--line); box-shadow: 0 4px 0 var(--divider); color: var(--gray-icon); cursor: default; }
+  .btn.red { background: var(--red); box-shadow: 0 4px 0 var(--red-dk2); }
+  .btn.red:active { box-shadow: 0 0 0 var(--red-dk2); }
+  .btn.blue { background: var(--blue); box-shadow: 0 4px 0 var(--blue-dk); }
+  .btn.blue:active { box-shadow: 0 0 0 var(--blue-dk); }
+  .btn.ghost { flex: 0 0 auto; padding: 0 18px; background: #fff; color: var(--gray-icon); border: 2px solid var(--line); box-shadow: 0 4px 0 var(--line); }
+  .btn.ghost:active { box-shadow: 0 0 0 var(--line); }
+  .foot.hide > .btn { visibility: hidden; }
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 20; padding: 16px 16px 22px;
+    background: var(--green-bg); transform: translateY(105%); transition: transform .26s cubic-bezier(.3,1.2,.5,1);
+  }
+  .sheet.in { transform: none; }
+  .sheet.no { background: var(--red-bg); }
+  .sh-h { display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; }
+  .sh-ic { width: 34px; height: 34px; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: none; color: var(--green); }
+  .sheet.no .sh-ic { color: var(--red); }
+  .sh-ic svg { width: 20px; height: 20px; }
+  .sh-t { font-size: 21px; font-weight: 800; color: var(--green-dk); white-space: nowrap; }
+  .sheet.no .sh-t { color: var(--red-dk2); }
+  .sh-tags { margin-inline-start: auto; display: flex; gap: 5px; }
+  .tag { display: inline-flex; align-items: center; gap: 3px; border-radius: 10px; padding: 2px 8px 0; font-size: 13px; font-weight: 800; background: #fff; color: var(--green-dk); white-space: nowrap; }
+  .tag svg { width: 14px; height: 14px; }
+  .tag.gold { color: var(--orange-dk); }
+  .sh-s { margin: 6px 0 12px; font-size: 16px; font-weight: 700; color: var(--green-dk); line-height: 1.5; min-height: 4px; }
+  .sheet.no .sh-s { color: var(--red-dk2); }
+  .sh-s .ln { white-space: nowrap; font-size: 19px; font-weight: 800; }
+  .sheet .btn { width: 100%; display: block; }
+  .mem { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 14px; font-weight: 800; }
+  .mem .mp { min-width: 40px; text-align: center; background: #fff; border-radius: 8px; padding: 1px 4px 0; }
+  .mem .mb { flex: 1; height: 10px; border-radius: 5px; background: rgba(255,255,255,.8); overflow: hidden; }
+  .mem .mb i { display: block; height: 100%; border-radius: 5px; background: var(--green); transition: width .7s cubic-bezier(.3,1.2,.5,1) .15s; }
+
+  /* colours of terms */
+  .k-blue   { --c: #1CB0F6; --cd: #1899D6; --cl: #DDF4FF; --cb: #84D8FF; --ct: #1899D6; }
+  .k-purple { --c: #CE82FF; --cd: #A568CC; --cl: #F6E8FF; --cb: #E3B6FF; --ct: #A568CC; }
+  .k-orange { --c: #FF9600; --cd: #E07800; --cl: #FFEFD6; --cb: #FFC778; --ct: #E07800; }
+  .k-green  { --c: #58CC02; --cd: #58A700; --cl: #D7FFB8; --cb: #A5ED6E; --ct: #58A700; }
+  .k-red    { --c: #FF4B4B; --cd: #EA2B2B; --cl: #FFDFE0; --cb: #FFB2B2; --ct: #EA2B2B; }
+
+  .row { display: flex; align-items: center; justify-content: center; gap: .3em; white-space: nowrap; font-size: 19px; min-width: 0; }
+  .row > * { flex: none; }
+  .op { font-size: 1.15em; font-weight: 800; color: var(--gray-icon); line-height: 1; }
+  .w { font-weight: 800; }
+  .pre { font-size: 15px; font-weight: 800; color: var(--gray); text-align: center; margin-bottom: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; justify-content: center; padding: .2em .6em .06em;
+    border-radius: .72em; background: var(--c); box-shadow: 0 .2em 0 var(--cd); color: #fff; font-weight: 800; line-height: 1.45; white-space: nowrap;
+  }
+  .chip.soft { background: var(--cl); box-shadow: 0 .16em 0 var(--cb); color: var(--ct); }
+  .bk {
+    display: inline-grid; place-items: center; min-width: 3.4em; height: 2.05em; padding: 0 .5em; border-radius: .65em;
+    border: 2px dashed #CFCFCF; background: #F7F7F7; font-weight: 800; color: var(--blue-dk); white-space: nowrap;
+  }
+  .bk.sm { min-width: 2em; }
+  .bk.f { border: 2px solid var(--blue-border); border-bottom-width: 3px; background: var(--blue-light); cursor: pointer; }
+  .bk.no { border-color: var(--red); background: var(--red-bg); color: var(--red-dk2); }
+  .ok-g { border-color: var(--green-pale) !important; background: var(--green-bg) !important; color: var(--green-dk) !important; }
+
+  /* rule card */
+  .card { background: #fff; border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 20px; padding: 12px 12px 16px; display: flex; flex-direction: column; gap: 12px; }
+  .card-h { display: flex; align-items: center; gap: 8px; min-height: 34px; }
+  .ic { width: 34px; height: 34px; border-radius: 11px; background: var(--gold); box-shadow: 0 3px 0 var(--gold-dk); display: grid; place-items: center; flex: none; }
+  .ic.p { background: var(--purple); box-shadow: 0 3px 0 var(--purple-dk); }
+  .ic svg { width: 24px; height: 24px; }
+  .card-t { font-size: 15px; font-weight: 800; color: var(--gray); }
+  .card-n { font-size: 17px; font-weight: 800; color: var(--purple-dk); background: var(--purple-bg); border-radius: 10px; padding: 2px 10px 0; white-space: nowrap; }
+  .stars { margin-inline-start: auto; display: flex; gap: 3px; }
+  .stars svg { width: 20px; height: 20px; }
+  .stars .s0 { fill: var(--line); }
+  .stars .s1 { fill: var(--gold); }
+
+  /* the name sticker */
+  .name {
+    display: inline-flex; align-items: center; gap: 10px; padding: 8px 18px 6px 10px; border-radius: 18px; border: 3px solid #fff;
+    background: var(--purple); box-shadow: 0 5px 0 var(--purple-dk), 0 0 0 2px var(--purple-tint); color: #fff; font: 800 22px/1.3 var(--font); white-space: nowrap;
+  }
+  .name .ni { width: 38px; height: 38px; border-radius: 12px; background: #fff; display: grid; place-items: center; flex: none; }
+  .name .ni svg { width: 28px; height: 28px; }
+  .name.big { font-size: 28px; padding: 10px 22px 8px 12px; border-radius: 22px; }
+  .name.big .ni { width: 48px; height: 48px; border-radius: 14px; }
+  .name.big .ni svg { width: 34px; height: 34px; }
+  .name.sm { font-size: 16px; padding: 4px 12px 2px 6px; gap: 7px; border-radius: 14px; border-width: 2px; box-shadow: 0 3px 0 var(--purple-dk); }
+  .name.sm .ni { width: 26px; height: 26px; border-radius: 8px; }
+  .name.sm .ni svg { width: 19px; height: 19px; }
+  .name.tilt { rotate: -3deg; }
+  .name.bob { animation: bob 1.6s ease-in-out infinite; }
+  @keyframes bob { 50% { translate: 0 -5px; } }
+  .cue { display: flex; justify-content: center; align-items: center; gap: 8px; }
+  .cue .stars { margin-inline-start: 4px; }
+  .cue .stars svg { width: 18px; height: 18px; }
+
+  /* big type */
+  .big { text-align: center; font-size: 28px; font-weight: 800; line-height: 1.5; white-space: nowrap; }
+  .ans { color: var(--green-dk); }
+  .note { text-align: center; font-size: 15.5px; font-weight: 700; color: var(--gray); line-height: 1.5; }
+  .note b { color: var(--purple-dk); }
+
+  /* choices */
+  .opts { display: grid; gap: 10px; }
+  .opts.c3 { grid-template-columns: repeat(3, 1fr); }
+  .opt {
+    min-height: 56px; border-radius: 16px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff;
+    font: 800 22px/1.3 var(--font); color: var(--ink); padding: 8px 10px; text-align: center;
+  }
+  .opt.txt { font-size: 16.5px; font-weight: 700; text-align: start; padding: 12px 16px; min-height: 54px; }
+  .opt:not(:disabled):active { border-bottom-width: 2px; translate: 0 2px; }
+  .opt.sel { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+  .opt.ok { border-color: var(--green-pale); background: var(--green-bg); color: var(--green-dk); }
+  .opt.no { border-color: var(--red-soft); background: var(--red-bg); color: var(--red-dk2); }
+  .opt.dim { opacity: .45; }
+  .opt:disabled { cursor: default; }
+  .opt.namec { display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 800; padding: 10px 14px; }
+  .opt.namec .ni { width: 34px; height: 34px; border-radius: 10px; background: var(--purple); box-shadow: 0 3px 0 var(--purple-dk); display: grid; place-items: center; flex: none; }
+  .opt.namec .ni svg { width: 24px; height: 24px; }
+
+  /* tiles */
+  .box { background: #fff; border: 2px solid var(--line); border-radius: 18px; box-shadow: 0 2px 0 var(--line); padding: 16px 10px; }
+  .tiles { display: flex; flex-wrap: wrap; justify-content: center; gap: 9px; margin-top: 18px; }
+  .tl {
+    display: inline-grid; place-items: center; min-width: 50px; height: 48px; padding: 0 13px 2px; border-radius: 13px;
+    background: #fff; border: 2px solid var(--line); border-bottom-width: 4px; font: 800 18px/1 var(--font); color: var(--ink); white-space: nowrap;
+  }
+  .tl:active { border-bottom-width: 2px; translate: 0 2px; }
+  .tl.used { background: var(--line); border-color: var(--line); color: transparent; pointer-events: none; }
+
+  /* keypad */
+  .kpw { margin-top: auto; padding-bottom: 12px; }
+  .kin {
+    display: flex; align-items: center; justify-content: center; gap: 2px; height: 58px; margin: 0 auto 12px; width: 70%;
+    border-radius: 16px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font: 800 30px/1 var(--font); color: var(--ink);
+  }
+  .kin.no { border-color: var(--red-soft); background: var(--red-bg); color: var(--red-dk2); }
+  .car { width: 2px; height: 30px; background: var(--blue); animation: car 1s steps(1) infinite; }
+  .kin.lock .car { display: none; }
+  @keyframes car { 50% { opacity: 0; } }
+  .kp { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .kp button {
+    height: 48px; border-radius: 13px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff;
+    font: 800 23px/1 var(--font); color: var(--ink); padding: 0 0 2px;
+  }
+  .kp button:active { border-bottom-width: 2px; translate: 0 2px; }
+  .kp button.del { color: var(--gray); }
+  .kp button.del svg { width: 26px; height: 26px; }
+  .hint { align-self: center; margin-top: 12px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 14px; background: #fff; padding: 4px 14px 2px; font: 800 15px var(--font); color: var(--purple-dk); display: inline-flex; gap: 6px; align-items: center; }
+  .hint:active { border-bottom-width: 2px; translate: 0 2px; }
+  .hint svg { width: 18px; height: 18px; }
+
+  /* discovering screens */
+  .sum { display: flex; justify-content: center; align-items: center; gap: 5px; white-space: nowrap; font-size: 32px; font-weight: 800; margin-top: 18px; }
+  .sum > * { flex: none; }
+  .sum .nt { position: relative; display: inline-grid; place-items: center; min-width: 1.5em; height: 1.6em; padding: 0 .2em; border-radius: .4em; transition: background .2s, color .2s; }
+  .sum .nt.on { background: var(--blue-light); color: var(--blue-dk); }
+  .sum .nt sub { position: absolute; bottom: -1.05em; left: 50%; translate: -50% 0; min-width: 1.2em; height: 1.2em; border-radius: .6em; background: var(--purple); color: #fff; font-size: .5em; line-height: 1.3em; text-align: center; }
+  .sum .p { color: var(--gray-icon); }
+  .q2 { text-align: center; font-size: 17px; font-weight: 800; color: var(--gray); margin: 40px 0 14px; }
+  .res { margin-top: 26px; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .res .row { font-size: 28px; }
+  .eqc { display: flex; justify-content: center; align-items: flex-start; gap: 10px; font-size: 28px; font-weight: 800; }
+  .eqc .op { line-height: 1.7; }
+  .cc { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .cc em { font-style: normal; font-size: 14px; border-radius: 9px; padding: 1px 8px 0; background: var(--cl); color: var(--ct); white-space: nowrap; }
+  .lbls { display: flex; justify-content: center; gap: 10px; font-size: 14px; font-weight: 800; }
+  .lbls span { border-radius: 9px; padding: 1px 8px 0; background: var(--cl); color: var(--ct); }
+  .gt-row { display: flex; gap: 4px; justify-content: center; margin-top: 8px; }
+  .gt { width: 32px; height: 46px; flex: 0 1 32px; min-width: 0; border-radius: 10px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; display: grid; place-items: center; font: 800 17px var(--font); color: var(--ink); padding: 0; }
+  .gt.p { background: var(--cl); border-color: var(--cb); color: var(--ct); cursor: default; }
+  .gt.idle { animation: bob 1.6s ease-in-out infinite; }
+  .pairs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 18px; min-height: 76px; align-content: flex-start; }
+  .pairs .chip { font-size: 16px; }
+  .why-q { text-align: center; font-size: 21px; font-weight: 800; line-height: 1.5; margin: 6px 0 16px; }
+  .why-q .ln { white-space: nowrap; display: block; }
+  .skip { align-self: center; margin-top: 14px; border: 0; background: none; font: 800 15px var(--font); color: var(--gray-icon); padding: 6px 12px; }
+
+  /* later */
+  .cal { align-self: center; width: 132px; border-radius: 22px; overflow: hidden; border: 2px solid var(--line); border-bottom-width: 6px; background: #fff; margin-top: 10px; text-align: center; }
+  .cal .ct { background: var(--red); color: #fff; font-size: 15px; font-weight: 800; padding: 6px 0 3px; }
+  .cal .cd { font-size: 54px; font-weight: 800; line-height: 1.25; padding: 4px 0 0; }
+  .cal .cs { font-size: 14px; font-weight: 800; color: var(--gray); padding-bottom: 8px; }
+  .notif { display: flex; align-items: center; gap: 10px; background: #fff; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 18px; padding: 10px 12px; margin-top: 18px; }
+  .notif .nl { width: 40px; height: 40px; border-radius: 12px; background: var(--green); box-shadow: 0 3px 0 var(--green-lip); display: grid; place-items: center; flex: none; color: #fff; font-weight: 800; font-size: 20px; }
+  .notif b { display: block; font-size: 14px; color: var(--gray); }
+  .notif span { font-size: 16px; font-weight: 800; }
+  .mcards { display: grid; gap: 10px; margin-top: 16px; }
+  .mc { display: flex; align-items: center; gap: 10px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 18px; padding: 10px 12px; background: #fff; }
+  .mc .mi { width: 36px; height: 36px; border-radius: 11px; background: var(--purple); box-shadow: 0 3px 0 var(--purple-dk); display: grid; place-items: center; flex: none; }
+  .mc .mi svg { width: 25px; height: 25px; }
+  .mc .mx { flex: 1; min-width: 0; }
+  .mc .mn { font-size: 16.5px; font-weight: 800; white-space: nowrap; display: flex; justify-content: space-between; gap: 8px; }
+  .mc .mn small { font-size: 14px; color: var(--gray); }
+  .mc .mb { height: 12px; border-radius: 6px; background: var(--line); overflow: hidden; margin-top: 4px; }
+  .mc .mb i { display: block; height: 100%; border-radius: 6px; background: var(--green); width: 100%; transition: width 1.4s cubic-bezier(.4,0,.3,1), background .4s; }
+  .mc .mb i.lo { background: var(--orange); }
+  .mc .nx { font-size: 13.5px; font-weight: 800; color: var(--green-dk); margin-top: 3px; min-height: 18px; }
+  .tline { display: flex; align-items: flex-start; justify-content: space-between; margin: 26px 4px 0; position: relative; }
+  .tline::before { content: ""; position: absolute; top: 13px; left: 14px; right: 14px; height: 6px; border-radius: 3px; background: var(--line); }
+  .tline div { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 800; color: var(--gray); min-width: 30px; }
+  .tline i { width: 32px; height: 32px; border-radius: 50%; background: #fff; border: 3px solid var(--line); display: grid; place-items: center; font-style: normal; font-size: 13px; color: var(--gray-icon); }
+  .tline .d i { background: var(--green); border-color: var(--green); color: #fff; box-shadow: 0 3px 0 var(--green-lip); }
+  .tline .n i { border-color: var(--blue); color: var(--blue-dk); background: var(--blue-light); }
+  .tline .x i { border-color: var(--red); background: var(--red); color: #fff; box-shadow: 0 3px 0 var(--red-dk2); }
+  .tline .n { color: var(--blue-dk); }
+  .tline i svg { width: 16px; height: 16px; }
+
+  /* end */
+  .end-h { text-align: center; font-size: 30px; font-weight: 800; color: var(--gold-dk); margin-top: 6px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+  .st { border-radius: 16px; border: 2px solid var(--c); overflow: hidden; text-align: center; background: var(--c); }
+  .st b { display: block; color: #fff; font-size: 13px; font-weight: 800; padding: 3px 0 1px; }
+  .st span { display: flex; align-items: center; justify-content: center; gap: 4px; background: #fff; border-radius: 13px; font-size: 21px; font-weight: 800; color: var(--ct); padding: 8px 0 6px; }
+  .st span svg { width: 20px; height: 20px; }
+  .chest { align-self: center; margin-top: 18px; border: 0; background: none; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .chest svg { width: 112px; height: 98px; display: block; }
+  .chest .cl { font-size: 15px; font-weight: 800; color: var(--gray); }
+  .chest:disabled { cursor: default; }
+  .chest:disabled svg { pointer-events: none; }
+  .coll { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .cm { display: flex; align-items: center; gap: 8px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 16px; padding: 8px 10px; background: #fff; min-width: 0; }
+  .cm .mi { width: 32px; height: 32px; border-radius: 10px; background: var(--purple); box-shadow: 0 3px 0 var(--purple-dk); display: grid; place-items: center; flex: none; }
+  .cm .mi svg { width: 22px; height: 22px; }
+  .cm b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cm .stars { margin: 0; }
+  .cm .stars svg { width: 16px; height: 16px; }
+  .chest.idle svg { animation: knock 2s ease-in-out infinite; transform-origin: 50% 100%; }
+  @keyframes knock { 0%, 60%, 100% { transform: none; } 68% { transform: scale(1.08, .9); } 76% { transform: translateY(-14px) scale(.95, 1.06); } 86% { transform: scale(1.06, .94); } }
+  .gems { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 26px; font-weight: 800; color: var(--blue-dk); }
+  .gems svg { width: 28px; height: 28px; }
+  .tmr { display: flex; align-items: center; gap: 10px; border-radius: 18px; padding: 10px 12px; margin-top: 16px; background: var(--purple-bg); }
+  .tmr .lk { width: 40px; height: 40px; border-radius: 12px; background: #fff; display: grid; place-items: center; flex: none; }
+  .tmr .lk svg { width: 22px; height: 22px; }
+  .tmr b { display: block; font-size: 13.5px; color: var(--purple-dk); }
+  .tmr span { font-size: 17px; font-weight: 800; }
+  .tmr .fl { margin-inline-start: auto; text-align: center; font-size: 13px; font-weight: 800; color: var(--orange-dk); line-height: 1.2; }
+  .tmr .fl svg { width: 28px; height: 30px; display: block; margin: 0 auto 2px; }
+  @media (max-height: 740px) { .head { font-size: 20px; } .kp button { height: 42px; } .kin { height: 50px; } .cal .cd { font-size: 44px; } .stats { margin-top: 10px; } .chest { margin-top: 10px; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="top" id="top">
+    <div class="bar"><i id="barFill"></i></div>
+    <span class="xp" id="xp"></span>
+  </div>
+  <div class="main" id="main">
+    <div class="kick" id="kick"></div>
+    <h2 class="head" id="head"></h2>
+    <div class="stage" id="stage"></div>
+  </div>
+  <div class="foot" id="foot">
+    <button class="btn" id="go"></button>
+  </div>
+</div>
+<script>
+(function () {
+  const ar = n => String(n).replace(/-/g, '−').replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+  const num = s => +String(s).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const shuf = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function anim(el, kf, o) {
+    if (!el || !el.animate) return null;
+    o = Object.assign({ fill: 'none' }, o);
+    if (RM) { o.duration = 1; o.delay = 0; }
+    return el.animate(kf, o);
+  }
+  const popIn = (el, d = 0) => anim(el, [{ opacity: 0, scale: '.3' }, { opacity: 1, scale: '1.14', offset: .55 }, { scale: '.96', offset: .8 }, { opacity: 1, scale: '1' }], { duration: 420, delay: d, easing: 'ease-out', fill: 'backwards' });
+  const rise = (el, d = 0) => anim(el, [{ opacity: 0, translate: '0 14px' }, { opacity: 1, translate: '0 0' }], { duration: 340, delay: d, easing: 'cubic-bezier(.3,1.4,.5,1)', fill: 'backwards' });
+  const shake = el => anim(el, [{ translate: '0 0' }, { translate: '-8px 0' }, { translate: '7px 0' }, { translate: '-5px 0' }, { translate: '3px 0' }, { translate: '0 0' }], { duration: 360 });
+  const hop = (el, h = 14, d = 0) => anim(el, [
+    { translate: '0 0', scale: '1 1' }, { translate: '0 2px', scale: '1.08 .9', offset: .14 },
+    { translate: `0 -${h}px`, scale: '.95 1.06', offset: .46 }, { translate: '0 1px', scale: '1.07 .92', offset: .78 },
+    { translate: '0 0', scale: '1 1' }], { duration: 500, delay: d, easing: 'ease-out' });
+  const stamp = (el, d = 0) => anim(el, [
+    { opacity: 0, scale: '1.7', translate: '0 -10px' }, { opacity: 1, scale: '.9 1.04', translate: '0 0', offset: .5 },
+    { scale: '1.06 .9', offset: .72 }, { opacity: 1, scale: '1', translate: '0 0' }], { duration: 440, delay: d, easing: 'ease-in', fill: 'backwards' });
+  const JUMP_Y = [[0, 0, 'cubic-bezier(.01,0,0,1)'], [.1277, 7.3, 'linear'], [.1538, -12.7, 'cubic-bezier(.1,.53,0,.92)'],
+    [.3585, -23.6, 'cubic-bezier(1,-.05,.95,.65)'], [.6923, 4.4, 'cubic-bezier(.09,.75,.4,.95)'], [.8723, -7.3, 'cubic-bezier(.89,-.08,.95,.79)'], [1, 0]];
+  const JUMP_S = [[0, 1, 1, 'cubic-bezier(.01,0,0,1)'], [.1509, 1.08, .86, 'linear'], [.1818, .9, 1.06, 'cubic-bezier(.01,0,.15,1)'],
+    [.4236, 1, 1, 'cubic-bezier(.85,0,.94,.72)'], [.7873, 1, 1.06, 'linear'], [.8182, 1.05, .93, 'cubic-bezier(.1,.47,.01,1)'], [1, 1, 1]];
+  function wave(els, cls = 'ok-g') {
+    els.filter(Boolean).forEach((c, i) => {
+      const D = i * 50;
+      if (RM) { if (cls) c.classList.add(cls); return; }
+      anim(c, JUMP_Y.map(([o, y, e]) => Object.assign({ offset: o, translate: `0 ${y}px` }, e ? { easing: e } : {})), { duration: 650, delay: D });
+      anim(c, JUMP_S.map(([o, x, y, e]) => Object.assign({ offset: o, scale: `${x} ${y}` }, e ? { easing: e } : {})), { duration: 550, delay: D });
+      if (cls) setTimeout(() => c.classList.add(cls), D + 100);
+    });
+  }
+  function fit(row) {
+    if (!row) return;
+    row.style.fontSize = '';
+    const avail = row.clientWidth; if (!avail) return;
+    const cs = getComputedStyle(row), kids = Array.from(row.children);
+    const need = cs.display.includes('flex') && kids.length
+      ? kids.reduce((a, k) => a + k.offsetWidth, 0) + (parseFloat(cs.columnGap) || 0) * (kids.length - 1)
+      : row.scrollWidth;
+    if (need > avail + 1) row.style.fontSize = (parseFloat(cs.fontSize) * avail / need * .95).toFixed(2) + 'px';
+  }
+  const fitAll = r => $$('.row, .big, .sum, .ln', r).forEach(fit);
+
+  /* sound */
+  let AC = null;
+  function ac() { if (!AC) { try { AC = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } } if (AC.state === 'suspended') AC.resume(); return AC; }
+  function tone(f, d = .12, type = 'sine', g = .1, at = 0) {
+    const a = ac(); if (!a) return;
+    const t = a.currentTime + at, o = a.createOscillator(), v = a.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    v.gain.setValueAtTime(0, t); v.gain.linearRampToValueAtTime(g, t + .01); v.gain.exponentialRampToValueAtTime(.0001, t + d);
+    o.connect(v); v.connect(a.destination); o.start(t); o.stop(t + d + .03);
+  }
+  const SCALE = [523, 587, 659, 784, 880, 1047, 1175, 1319, 1568, 1760, 2093];
+  const note = k => tone(SCALE[clamp(k, 0, SCALE.length - 1)], .18, 'triangle', .09);
+  const tick = () => tone(720, .05, 'square', .025);
+  const thud = () => { tone(150, .14, 'sine', .2); tone(90, .1, 'triangle', .08); };
+  const bad = () => { tone(230, .14, 'sawtooth', .04); tone(190, .2, 'sawtooth', .04, .09); };
+  const good = k => { const b = clamp(k || 0, 0, 4); [0, 2, 4].forEach((s, i) => tone(SCALE[b + s], .2, 'triangle', .08, i * .07)); };
+  const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+
+  /* glyphs */
+  const SVG = {
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    cross: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    bulb: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 2.5a7 7 0 0 0-4.2 12.6c.7.5 1.2 1.3 1.2 2.2v.7h6v-.7c0-.9.5-1.7 1.2-2.2A7 7 0 0 0 12 2.5z"/><rect x="9" y="19" width="6" height="2.6" rx="1.3"/></svg>',
+    bolt: '<svg viewBox="0 0 24 24"><path d="M13.5 2L4.5 13.5h6L9.5 22l9-11.5h-6z" fill="#FFC800" stroke="#E6A000" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+    star: c => `<svg viewBox="0 0 24 24"><path class="${c}" d="M12 2.6l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" stroke-linejoin="round"/></svg>`,
+    del: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"><path d="M21 6H9l-6 6 6 6h12z" transform="translate(24 0) scale(-1 1)"/><path d="M10 9.5l5 5M15 9.5l-5 5"/></svg>',
+    fire: '<svg viewBox="0 0 20 24"><path d="M10 1c1 4 6 6.5 6 13a6 6 0 0 1-12 0c0-3 1.5-5 3-6.5 0 2 1 3.4 2.4 3.6C8.4 8 9 4.5 10 1z" fill="currentColor"/><path d="M10 13c.6 2 3 2.8 3 5.2a3 3 0 0 1-6 0c0-1.6 1-2.6 2-3.4.2.9.6 1.4 1 1.4 0-1 .1-2 0-3.2z" fill="#FFC800"/></svg>',
+    gem: '<svg viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 12L2 9z" fill="#1CB0F6"/><path d="M2 9h20L12 21z" fill="#1899D6"/><path d="M8 3l-2 6h12l-2-6z" fill="#84D8FF"/></svg>',
+    target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>',
+    lock: '<svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="12" rx="3.5" fill="#CE82FF"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10" fill="none" stroke="#A568CC" stroke-width="2.6"/><circle cx="12" cy="16" r="1.8" fill="#fff"/></svg>',
+    tag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"><path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.4" fill="currentColor"/></svg>'
+  };
+  const ICON = {
+    rep: '<svg viewBox="0 0 24 24" fill="#CE82FF">' + [6, 12, 18].map(y => [6, 12, 18].map(x => `<circle cx="${x}" cy="${y}" r="2.6"/>`).join('')).join('') + '</svg>',
+    gauss: '<svg viewBox="0 0 24 24" fill="none" stroke="#CE82FF" stroke-width="2.6" stroke-linecap="round"><path d="M4 18Q12 0 20 18"/><path d="M8 18Q12 8 16 18"/><circle cx="4" cy="19" r="1.6" fill="#CE82FF"/><circle cx="20" cy="19" r="1.6" fill="#CE82FF"/></svg>',
+    odd: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="5" height="5" rx="1.4" fill="#CE82FF"/><path d="M10 3h4v11H3v-4h7z" fill="#E3B6FF"/><path d="M16 3h5v18H3v-5h13z" fill="#CE82FF"/></svg>'
+  };
+  const iconWhite = k => ICON[k].replace(/#CE82FF/g, '#fff').replace(/#E3B6FF/g, '#F6E8FF');
+
+  /* the two rules */
+  const T = (k, t) => ({ k, t });
+  const longSum = list => list.length <= 7 ? list.map(ar).join(' + ') : [list[0], list[1], list[2]].map(ar).join(' + ') + ' + … + ' + ar(list[list.length - 1]);
+  const RULES = {
+    rep: {
+      key: 'rep', name: 'العدد × مرّاته',
+      col: { s: 'orange', a: 'blue', n: 'purple', x: 'orange' },
+      toks: [T('s', 'المجموع'), '=', T('a', 'العدد'), '×', T('n', 'عدد مرات تكراره')],
+      decoys: ['آخر عدد', 'عدد الأزواج'],
+      decoys2: ['آخر عدد', '٢'],
+      swap: [2, 4],
+      gen() {
+        const a = pick([6, 7, 8, 9, 12, 15, 20, 25]);
+        let n = rnd(4, 7); if (n === a) n--;
+        const list = Array(n).fill(a);
+        return { a, n, ans: a * n, long: longSum(list), fast: `${ar(a)} × ${ar(n)}` };
+      },
+      why: {
+        q: () => ['ليش ٧ + ٧ + ٧ + ٧', 'تساوي ٧ × ٤؟'],
+        ch: ['لأن «× ٤» يعني اجمعه ٤ مرات', 'لأن ٧ و ٤ قريبين من بعض', 'صدفة — بس في هالمثال'],
+        more: '«× ٤» = «اجمعه ٤ مرات» — الضرب جمع مختصر',
+        hint: 'فكّر: وش معنى «× ٤» أصلاً؟'
+      }
+    },
+    gauss: {
+      key: 'gauss', name: 'حيلة الطرفين',
+      col: { L: 'blue', o: 'green', t: 'orange' },
+      pre: 'من ١ إلى أي عدد:',
+      toks: [T('L', 'آخر عدد'), '×', '(', T('L', 'آخر عدد'), '+', T('o', '١'), ')', '÷', T('t', '٢')],
+      decoys: ['العدد', '٣'],
+      decoys2: ['العدد', 'عدد مرات تكراره', '٣'],
+      gen() {
+        const L = pick([20, 30, 40, 50, 100]);
+        const list = Array.from({ length: L }, (_, i) => i + 1);
+        return { L, ans: L * (L + 1) / 2, long: longSum(list), fast: `${ar(L)} × ${ar(L + 1)} ÷ ٢` };
+      },
+      why: {
+        q: () => ['ليش ١ + ٢ + … + ١٠', 'تساوي ١٠ × ١١ ÷ ٢؟'],
+        ch: ['لأن كل طرفين مع بعض = ١١', 'لأن الأعداد كلها زوجية', 'لأن ÷ ٢ تصغّر الناتج وبس'],
+        more: '١ + ١٠ = ٢ + ٩ = ٣ + ٨ = ١١ … والأزواج نص العدد',
+        hint: 'جرّب: ١ + ١٠ = ؟ و ٢ + ٩ = ؟'
+      }
+    }
+  };
+
+  /* state for one run */
+  let G;
+  function fresh() {
+    G = {
+      xp: 0, combo: 0, best: 0, first: 0, graded: 0,
+      stars: { rep: [0, 0, 0], gauss: [0, 0, 0] },
+      mem: { rep: 100, gauss: 100 }, memStart: { rep: 100, gauss: 100 },
+      miss: { rep: 0, gauss: 0 }, rmiss: { rep: 0, gauss: 0 },
+      named: { rep: false, gauss: false }
+    };
+  }
+
+  /* rule rows */
+  const opGlyph = tk => `<span class="op">${tk}</span>`;
+  function rowHtml(R, mode) {
+    return `<div class="row">${R.toks.map((tk, i) => {
+      if (typeof tk === 'string') return opGlyph(tk);
+      const col = R.col[tk.k];
+      if (mode === 'blank') return `<span class="bk k-${col}${tk.t.length < 3 ? ' sm' : ''}" data-i="${i}"></span>`;
+      return tk.t.length < 3 && /[٠-٩]/.test(tk.t) ? `<span class="op">${tk.t}</span>` : `<span class="chip k-${col}" data-i="${i}">${tk.t}</span>`;
+    }).join('')}</div>`;
+  }
+  const preHtml = R => R.pre ? `<div class="pre">${R.pre}</div>` : '';
+  const starsHtml = k => `<span class="stars">${G.stars[k].map(s => SVG.star(s ? 's1' : 's0')).join('')}</span>`;
+  function cardHtml(R, named) {
+    return `<div class="card">
+      <div class="card-h">${named ? `<span class="ic p">${iconWhite(R.key)}</span><span class="card-n">${R.name}</span>` : `<span class="ic">${SVG.bulb}</span><span class="card-t">القاعدة</span>`}${starsHtml(R.key)}</div>
+      <div>${preHtml(R)}${rowHtml(R, 'chip')}</div></div>`;
+  }
+  const nameHtml = (R, cls = '') => `<span class="name ${cls}"><span class="ni">${ICON[R.key]}</span>${R.name}</span>`;
+  const cueHtml = R => `<div class="cue">${nameHtml(R, 'sm')}${starsHtml(R.key)}</div>`;
+  function starOn(k, i, host) {
+    if (G.stars[k][i]) return;
+    G.stars[k][i] = 1;
+    const s = host && $$('.stars', host).pop();
+    if (s) { const svgs = $$('svg', s); const el = svgs[i]; if (el) { $('path', el).setAttribute('class', 's1'); hop(el, 10); note(6 + i); } }
+  }
+
+  /* chrome */
+  const $go = $('#go'), $foot = $('#foot');
+  let handler = null, gen = 0, timers = [];
+  function hud() {
+    $('#xp').innerHTML = SVG.bolt + ar(G.xp);
+  }
+  function addXp(n) {
+    G.xp += n; hud(); hop($('#xp'), 10);
+  }
+  function btn(label, fn, o = {}) {
+    $go.textContent = label; $go.disabled = !!o.off; $go.className = 'btn' + (o.kind ? ' ' + o.kind : '');
+    handler = fn;
+    $$('.btn.ghost', $foot).forEach(b => b.remove());
+    if (o.skip) {
+      const s = document.createElement('button'); s.className = 'btn ghost'; s.textContent = o.skip.label;
+      s.addEventListener('click', () => { tick(); o.skip.fn(); }); $foot.insertBefore(s, $go);
+    }
+  }
+  const enable = on => { $go.disabled = !on; };
+  $go.addEventListener('click', () => { if (!$go.disabled && handler) { tick(); handler(); } });
+  function later(fn, ms) { const my = gen; timers.push(setTimeout(() => { if (my === gen) fn(); }, RM ? Math.min(ms, 60) : ms)); }
+
+  function sheet(ok, title, sub, onCont, o = {}) {
+    $$('.sheet', $foot).forEach(s => s.remove());
+    $$('.btn.ghost', $foot).forEach(b => b.remove());
+    const tags = [];
+    if (o.xp) tags.push(`<span class="tag gold">${SVG.bolt}<bdi dir="ltr">+${ar(o.xp)}</bdi></span>`);
+    if (o.combo >= 2) tags.push(`<span class="tag">${ar(o.combo)} ورا بعض</span>`);
+    if (o.fast) tags.push(`<span class="tag gold">سريع</span>`);
+    const s = document.createElement('div');
+    s.className = 'sheet' + (ok ? '' : ' no');
+    s.innerHTML = `<div class="sh-h"><span class="sh-ic">${ok ? SVG.check : SVG.cross}</span><span class="sh-t">${title}</span><span class="sh-tags">${tags.join('')}</span></div>
+      <div class="sh-s">${sub || ''}</div><button class="btn${ok ? '' : ' red'}">${o.label || (ok ? 'المتابعة' : 'فهمت')}</button>`;
+    $foot.appendChild(s); $foot.classList.add('hide');
+    requestAnimationFrame(() => requestAnimationFrame(() => s.classList.add('in')));
+    fitAll(s);
+    $$('.tag', s).forEach((t, i) => popIn(t, 220 + i * 120));
+    if (o.mem) {
+      const k = o.mem; const i = $('.mem i', s);
+      if (i) setTimeout(() => { i.style.width = G.mem[k] + '%'; }, 60);
+    }
+    let used = false;
+    $('.btn', s).addEventListener('click', () => { if (used) return; used = true; tick(); onCont(); });
+  }
+  function memLine(k, before) {
+    return `<div class="mem"><span>قوة الحفظ</span><span class="mb"><i style="width:${before}%"></i></span><span class="mp">${ar(G.mem[k])}٪</span></div>`;
+  }
+
+  const gain = (k, first) => clamp(G.mem[k] + (first ? Math.ceil((100 - G.memStart[k]) / 2) + 1 : Math.ceil((100 - G.memStart[k]) / 4)), 0, 100);
+  /* grading */
+  function graded(ok, first, k) {
+    if (first) G.graded++;
+    if (ok && first) { G.first++; G.combo++; G.best = Math.max(G.best, G.combo); }
+    if (!ok) { G.combo = 0; if (k) G.miss[k]++; }
+  }
+  const xpFor = (first, fast) => (first ? 10 : 5) + (fast ? 5 : 0);
+  const PRAISE = ['ممتاز!', 'كفو!', 'صح!', 'رهيب!', 'بالضبط!'];
+  const praise = () => G.combo >= 4 ? 'ما توقفك!' : G.combo === 3 ? 'نار!' : pick(PRAISE);
+
+  /* widgets */
+  function keypad(box, onChange) {
+    box.insertAdjacentHTML('beforeend', `<div class="kpw"><div class="kin"><span class="kv"></span><i class="car"></i></div>
+      <div class="kp" dir="ltr">${['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩', '', '٠', 'del'].map(k => k === 'del' ? `<button data-k="del" class="del" aria-label="امسح">${SVG.del}</button>` : k ? `<button data-k="${k}">${k}</button>` : '<span></span>').join('')}</div></div>`);
+    const wrap = box.lastElementChild, inp = $('.kin', wrap), val = $('.kv', wrap);
+    let s = '', locked = false;
+    wrap.addEventListener('click', e => {
+      const b = e.target.closest('button[data-k]'); if (!b || locked) return;
+      const k = b.dataset.k;
+      if (k === 'del') s = s.slice(0, -1); else if (s.length < 6) s += k;
+      inp.classList.remove('no'); val.textContent = s; tick(); onChange && onChange(s);
+    });
+    return { n: () => num(s), get: () => s, lock() { locked = true; inp.classList.add('lock'); }, inp };
+  }
+  function builder(box, R, decoys, onFull) {
+    const terms = R.toks.map((tk, i) => typeof tk === 'string' ? null : { i, t: tk.t }).filter(Boolean);
+    const tiles = shuf(terms.map(x => x.t).concat(decoys));
+    box.insertAdjacentHTML('beforeend', `<div class="box">${preHtml(R)}${rowHtml(R, 'blank')}</div>
+      <div class="tiles">${tiles.map((t, k) => `<button class="tl" data-k="${k}">${t}</button>`).join('')}</div>`);
+    const blanks = $$('.bk', box), tl = $$('.tl', box), put = {}, order = [];
+    const row = $('.row', box);
+    const refresh = () => { tl.forEach(b => b.classList.toggle('used', Object.values(put).includes(+b.dataset.k))); onFull(blanks.every(b => put[b.dataset.i] != null)); fit(row); };
+    let done = false;
+    box.addEventListener('click', e => {
+      if (done) return;
+      const t = e.target.closest('.tl');
+      if (t) {
+        const b = blanks.find(x => put[x.dataset.i] == null); if (!b) return;
+        put[b.dataset.i] = +t.dataset.k; order.push(b);
+        b.textContent = tiles[+t.dataset.k]; b.classList.add('f'); b.classList.remove('no'); tick(); popIn(b); refresh(); return;
+      }
+      const b = e.target.closest('.bk');
+      if (b && put[b.dataset.i] != null) { delete put[b.dataset.i]; b.textContent = ''; b.classList.remove('f', 'no'); order.splice(order.indexOf(b), 1); tick(); refresh(); }
+    });
+    return {
+      check() {
+        const got = i => tiles[put[i]];
+        let wrongs = blanks.filter(b => got(b.dataset.i) !== R.toks[+b.dataset.i].t);
+        if (R.swap) {
+          const [x, y] = R.swap;
+          if (got(x) === R.toks[y].t && got(y) === R.toks[x].t) wrongs = wrongs.filter(b => ![x, y].includes(+b.dataset.i));
+        }
+        if (!wrongs.length) { done = true; tl.forEach(b => b.disabled = true); blanks.forEach(b => b.style.cursor = 'default'); wave(order.slice()); return true; }
+        wrongs.forEach(b => { b.classList.add('no'); shake(b); });
+        setTimeout(() => { if (done) return; wrongs.filter(b => b.classList.contains('no')).forEach(b => { delete put[b.dataset.i]; b.textContent = ''; b.classList.remove('f', 'no'); order.splice(order.indexOf(b), 1); }); refresh(); }, 850);
+        return false;
+      },
+      reveal() {
+        done = true;
+        blanks.forEach(b => { b.textContent = R.toks[+b.dataset.i].t; b.classList.remove('no'); b.classList.add('f'); });
+        const need = terms.map(x => x.t);
+        tl.forEach(b => { const j = need.indexOf(tiles[+b.dataset.k]); b.classList.toggle('used', j >= 0); if (j >= 0) need.splice(j, 1); b.disabled = true; }); fit(row);
+      }
+    };
+  }
+
+  /* screens */
+  function setHead(k, h) { $('#kick').textContent = k; $('#head').innerHTML = h; rise($('#head')); }
+
+  /* see the first rule: count, then collapse */
+  function seeRep(c) {
+    const a = pick([7, 8, 9]), n = pick([5, 6]);
+    setHead('قاعدة جديدة', `كم مرة تكرر الـ<b>${ar(a)}</b>؟`);
+    c.stage.innerHTML = `<div class="sum">${Array.from({ length: n }, (_, i) => `${i ? '<span class="p">+</span>' : ''}<span class="nt">${ar(a)}</span>`).join('')}</div>
+      <div class="q2">عدّها بعينك</div>
+      <div class="opts c3">${shuf([n - 1, n, n + 1]).map(x => `<button class="opt" data-v="${x}">${ar(x)}</button>`).join('')}</div><div class="resw"></div>`;
+    fitAll(c.stage);
+    btn('المتابعة', null, { off: true });
+    let first = true, done = false;
+    c.stage.addEventListener('click', e => {
+      const b = e.target.closest('.opt'); if (!b || b.disabled || done) return;
+      if (+b.dataset.v !== n) {
+        first = false; bad(); b.classList.add('no'); b.disabled = true; shake(b); buzz(40);
+        $$('.nt', c.stage).forEach((t, i) => { if (!$('sub', t)) { t.insertAdjacentHTML('beforeend', `<sub>${ar(i + 1)}</sub>`); popIn($('sub', t), i * 90); } });
+        $('.q2', c.stage).textContent = 'عدّها معنا — وجرّب مرة ثانية';
+        return;
+      }
+      done = true;
+      $$('.opt', c.stage).forEach(x => { x.disabled = true; x.classList.toggle('dim', x !== b); });
+      wave([b], ''); b.classList.add('ok'); good(); buzz(20);
+      if (first) addXp(5);
+      const nts = $$('.nt', c.stage);
+      nts.forEach((t, i) => later(() => { t.classList.add('on'); hop(t, 10); note(i); }, 250 + i * 110));
+      later(() => {
+        $('.q2', c.stage).remove(); $('.opts', c.stage).remove();
+        const r = $('.resw', c.stage);
+        r.innerHTML = `<div class="res"><div class="eqc"><span class="cc"><span class="chip k-blue">${ar(a)}</span><em class="k-blue">العدد</em></span><span class="op">×</span><span class="cc"><span class="chip k-purple">${ar(n)}</span><em class="k-purple">مرّاته</em></span><span class="op">=</span><span class="cc"><span class="chip k-orange">${ar(a * n)}</span><em class="k-orange">المجموع</em></span></div></div>
+          <div style="margin-top:22px">${cardHtml(RULES.rep, false)}</div>`;
+        fitAll(r);
+        stamp($('.eqc', r)); thud(); $$('.eqc em', r).forEach((e, i) => popIn(e, 300 + i * 120)); rise($('.card', r), 600);
+        later(() => { $$('.card .chip', r).forEach((ch, i) => hop(ch, 10, i * 90)); note(4); }, 900);
+        setHead('بدل ما تجمع', 'اضربها — <b>بضغطة وحدة</b>');
+        btn('المتابعة', () => c.next()); hop($go, 6);
+      }, 250 + n * 110 + 300);
+    });
+  }
+
+  /* see the second rule: pair the ends */
+  function seeGauss(c) {
+    const L = 10;
+    setHead('قاعدة جديدة', `١ + ٢ + … + ١٠ — <b>زوّج الأطراف</b>`);
+    c.stage.innerHTML = `<div class="gt-row">${Array.from({ length: L }, (_, i) => `<button class="gt idle" data-x="${i + 1}">${ar(i + 1)}</button>`).join('')}</div>
+      <div class="note" style="margin-top:14px">اضغط أي رقم</div><div class="pairs"></div><div class="resw"></div>`;
+    btn('المتابعة', null, { off: true });
+    const cols = ['k-purple', 'k-orange', 'k-green', 'k-blue', 'k-red'];
+    let i = 0;
+    c.stage.addEventListener('click', e => {
+      if (!e.target.closest('.gt') || i >= L / 2) return;
+      const a = $(`.gt[data-x="${i + 1}"]`, c.stage), b = $(`.gt[data-x="${L - i}"]`, c.stage), col = cols[i % cols.length];
+      [a, b].forEach(x => { x.classList.remove('idle'); x.classList.add('p', col); hop(x, 12); });
+      $('.pairs', c.stage).insertAdjacentHTML('beforeend', `<span class="chip soft ${col}">${ar(i + 1)} + ${ar(L - i)} = ${ar(L + 1)}</span>`);
+      popIn($('.pairs', c.stage).lastChild); note(i * 2); buzz(10);
+      i++;
+      if (i === L / 2) {
+        $$('.gt', c.stage).forEach(x => { x.classList.remove('idle'); x.disabled = true; });
+        $('.note', c.stage).innerHTML = `كل زوج = <b>${ar(L + 1)}</b> — و<b>${ar(L / 2)}</b> أزواج`;
+        later(() => {
+          const r = $('.resw', c.stage);
+          r.innerHTML = `<div class="res" style="margin-top:4px"><div class="row"><span class="chip k-blue">${ar(L)}</span><span class="op">×</span><span class="chip k-orange">${ar(L + 1)}</span><span class="op">÷</span><span class="op">٢</span><span class="op">=</span><span class="chip k-green">${ar(L * (L + 1) / 2)}</span></div></div>
+            <div style="margin-top:20px">${cardHtml(RULES.gauss, false)}</div>`;
+          fitAll(r); stamp($('.res .row', r)); thud(); good(1); addXp(5);
+          rise($('.card', r), 450);
+          later(() => { $$('.card .chip', r).forEach((ch, j) => hop(ch, 10, j * 90)); note(4); }, 800);
+          setHead('بدل ما تجمع عشرة أعداد', 'آخر عدد × <b>اللي بعده</b> ÷ ٢');
+          btn('المتابعة', () => c.next()); hop($go, 6);
+        }, 500);
+      }
+    });
+  }
+
+  /* give it its name */
+  function nameIt(c, R) {
+    setHead('لها اسم', `اضغط الاسم — <b>يلصق عليها</b>`);
+    c.stage.innerHTML = `<div style="margin-top:4px">${cardHtml(R, false)}</div>
+      <div style="display:flex;justify-content:center;margin-top:44px"><button class="name big tilt bob" id="nm"><span class="ni">${ICON[R.key]}</span>${R.name}</button></div>
+      <div class="note nn" style="margin-top:24px">اسم قصير = مفتاح القاعدة كلها</div>`;
+    fitAll(c.stage); popIn($('#nm'), 150);
+    btn('المتابعة', null, { off: true });
+    $('#nm').addEventListener('click', () => {
+      const tag = $('#nm'), head = $('.card-h', c.stage);
+      tag.classList.remove('bob');
+      const a = tag.getBoundingClientRect(), b = head.getBoundingClientRect();
+      const dx = (b.right - 90) - (a.left + a.width / 2), dy = (b.top + b.height / 2) - (a.top + a.height / 2);
+      tick();
+      anim(tag, [{ translate: '0 0', scale: '1', rotate: '-3deg' }, { translate: `${dx * .6}px ${dy * .6 - 40}px`, scale: '1.12', rotate: '4deg', offset: .55 },
+        { translate: `${dx}px ${dy}px`, scale: '.45', rotate: '0deg', opacity: .2 }], { duration: 460, easing: 'cubic-bezier(.45,0,.35,1)', fill: 'forwards' });
+      later(() => {
+        tag.parentElement.style.display = 'none';
+        G.named[R.key] = true;
+        $('.card', c.stage).outerHTML = cardHtml(R, true);
+        fitAll(c.stage);
+        stamp($('.card-n', c.stage)); stamp($('.ic', c.stage)); thud(); buzz(25);
+        anim($('.card', c.stage), [{ scale: '1' }, { scale: '1.04 .95', offset: .3 }, { scale: '1' }], { duration: 320, delay: 150 });
+        later(() => starOn(R.key, 0, c.stage), 450);
+        addXp(5);
+        const nn = $('.nn', c.stage);
+        nn.innerHTML = `تسمع «<b>${R.name}</b>»؟<br>القاعدة كلها تطلع معك`;
+        rise(nn, 200);
+        setHead('صار لها اسم', `«${R.name}»`);
+        btn('المتابعة', () => c.next()); hop($go, 6);
+      }, 450);
+    }, { once: true });
+  }
+
+  /* one tap: why does it work? (optional) */
+  function whyIt(c, R) {
+    const W = R.why, order = shuf([0, 1, 2]), q = W.q();
+    setHead('سؤال سريع', 'ليش <b>تشتغل</b>؟');
+    c.stage.innerHTML = `${cueHtml(R)}<div class="why-q" style="margin-top:18px"><span class="ln">${q[0]}</span><span class="ln">${q[1]}</span></div>
+      <div class="opts">${order.map(i => `<button class="opt txt" data-i="${i}">${W.ch[i]}</button>`).join('')}</div><div class="note wh" style="margin-top:12px;min-height:24px"></div>`;
+    fitAll(c.stage);
+    let first = true, done = false;
+    btn('اختر سبب', null, { off: true, skip: { label: 'تخطّ', fn: () => { G.combo = 0; c.next(); } } });
+    c.stage.addEventListener('click', e => {
+      const b = e.target.closest('.opt'); if (!b || b.disabled || done) return;
+      if (b.dataset.i === '0') {
+        done = true;
+        $$('.opt', c.stage).forEach(x => { x.disabled = true; x.classList.toggle('dim', x !== b); });
+        b.classList.add('ok'); wave([b], ''); buzz(20);
+        graded(true, first); good(G.combo);
+        const xp = xpFor(first); addXp(xp);
+        later(() => starOn(R.key, 1, c.stage), 300);
+        sheet(true, first ? 'فاهمها مو حافظها!' : 'هذا هو!', W.more, () => c.next(), { xp, combo: G.combo });
+      } else {
+        if (first) graded(false, true);
+        first = false; bad(); b.classList.add('no'); b.disabled = true; shake(b); buzz(40);
+        $('.wh', c.stage).textContent = W.hint; rise($('.wh', c.stage));
+      }
+    });
+  }
+
+  /* fresh numbers with the name as the cue */
+  function applyIt(c, R, o = {}) {
+    const v = R.gen();
+    const showCue = !o.hint;
+    setHead(o.kick || 'طبّقها', o.h || `احسبها <b>بالقاعدة</b>`);
+    c.stage.innerHTML = `${showCue ? cueHtml(R) : ''}<div class="big" style="margin-top:${showCue ? 18 : 6}px">${v.long} = ؟</div>${o.hint ? `<button class="hint">${SVG.tag}تلميح: اسمها</button>` : ''}`;
+    fitAll(c.stage);
+    const t0 = performance.now();
+    let hinted = false;
+    if (o.hint) {
+      $('.hint', c.stage).addEventListener('click', e => {
+        hinted = true; tick();
+        const h = e.currentTarget; const span = document.createElement('div');
+        span.className = 'cue'; span.style.marginTop = '12px'; span.innerHTML = nameHtml(R, 'sm');
+        h.replaceWith(span); popIn(span);
+      }, { once: true });
+    }
+    const kp = keypad(c.stage, s => enable(!!s));
+    btn('تحقق', () => {
+      const secs = (performance.now() - t0) / 1000;
+      const okk = kp.n() === v.ans;
+      kp.lock(); enable(false);
+      const hb = $('.hint', c.stage); if (hb) hb.disabled = true;
+      const first = !o.retry;
+      graded(okk, first, R.key);
+      if (okk) {
+        kp.inp.classList.add('ok-g'); wave([kp.inp], ''); good(G.combo); buzz(20);
+        $('.big', c.stage).innerHTML = `${v.long} = <span class="ans">${ar(v.ans)}</span>`; fitAll(c.stage);
+        const fast = secs < 8 && !hinted;
+        const xp = hinted ? 5 : xpFor(first, fast); addXp(xp);
+        let sub = `<span class="ln">${v.fast} = ${ar(v.ans)}</span>`;
+        let memK = null, before = 0;
+        if (o.review) { before = G.mem[R.key]; G.mem[R.key] = gain(R.key, !o.retry); sub += memLine(R.key, before); memK = R.key; }
+        sheet(true, praise(), sub, () => c.next(), { xp, combo: G.combo, fast, mem: memK });
+      } else {
+        kp.inp.classList.add('no'); shake(kp.inp); bad(); buzz([40, 40, 40]);
+        if (o.review) G.rmiss[R.key]++;
+        c.requeue({ f: applyIt, R, o: Object.assign({}, o, { retry: true }) });
+        sheet(false, 'الجواب الصحيح:', `<span class="ln">${v.fast} = ${ar(v.ans)}</span><div style="font-size:15px">ترجع لك بأرقام ثانية بعد شوي</div>`, () => c.next());
+      }
+    }, { off: true });
+  }
+
+  /* the name is the cue: build the whole rule from it */
+  function callIt(c, R, o = {}) {
+    setHead(o.kick || 'نادِها باسمها', `وش تقول <b>القاعدة</b>؟`);
+    c.stage.innerHTML = `<div class="cue" style="margin:2px 0 16px">${nameHtml(R, 'tilt')}${o.review ? '' : starsHtml(R.key)}</div>`;
+    popIn($('.name', c.stage));
+    const bd = builder(c.stage, R, o.review ? R.decoys2 : R.decoys, full => enable(full));
+    fitAll(c.stage);
+    let tries = 0;
+    btn('تحقق', () => {
+      if (bd.check()) {
+        enable(false);
+        const first = tries === 0 && !o.retry;
+        graded(true, first); good(G.combo); buzz(20);
+        const xp = xpFor(first); addXp(xp);
+        if (!o.review) later(() => starOn(R.key, 2, c.stage), 350);
+        let sub = first ? 'من الاسم للقاعدة كاملة — من راسك' : 'المرة الجاية من أول ضغطة';
+        let memK = null;
+        if (o.review) { const before = G.mem[R.key]; G.mem[R.key] = gain(R.key, first); sub += memLine(R.key, before); memK = R.key; }
+        sheet(true, first ? praise() : 'طلّعتها!', sub, () => c.next(), { xp, combo: G.combo, mem: memK });
+      } else {
+        tries++; bad(); buzz(40);
+        if (tries === 1) { if (!o.retry) graded(false, true, R.key); if (o.review) G.rmiss[R.key]++; enable(false); return; }
+        enable(false); bd.reveal();
+        c.requeue({ f: callIt, R, o: Object.assign({}, o, { retry: true }) });
+        sheet(false, 'هذي هي:', `<div class="row" style="font-size:17px;margin-top:4px">${R.toks.map(tk => typeof tk === 'string' ? opGlyph(tk) : `<span class="w">${tk.t}</span>`).join('')}</div><div style="font-size:15px;margin-top:4px">نناديها لك مرة ثانية بعد شوي</div>`, () => c.next());
+      }
+    }, { off: true });
+  }
+
+  /* a problem: which name solves it? */
+  function whichName(c, R, o = {}) {
+    const v = R.gen(), other = R.key === 'rep' ? RULES.gauss : RULES.rep;
+    setHead(o.kick || 'أي اسم؟', `أي قاعدة <b>تحلها</b>؟`);
+    c.stage.innerHTML = `<div class="big" style="margin-top:6px">${v.long}</div>
+      <div class="opts" style="margin-top:26px">${shuf([R, other]).map(X => `<button class="opt namec" data-k="${X.key}"><span class="ni">${iconWhite(X.key)}</span>${X.name}</button>`).join('')}</div>`;
+    fitAll(c.stage);
+    btn('تحقق', null, { off: true });
+    let sel = null;
+    c.stage.addEventListener('click', e => {
+      const b = e.target.closest('.opt'); if (!b || b.disabled) return;
+      $$('.opt', c.stage).forEach(x => x.classList.toggle('sel', x === b)); sel = b; tick(); enable(true);
+    });
+    btn('تحقق', () => {
+      if (!sel) return;
+      $$('.opt', c.stage).forEach(x => x.disabled = true);
+      const okk = sel.dataset.k === R.key, first = !o.retry;
+      graded(okk, first, R.key);
+      if (okk) {
+        sel.classList.replace('sel', 'ok'); wave([sel], ''); good(G.combo); buzz(20);
+        const xp = xpFor(first); addXp(xp);
+        const before = G.mem[R.key]; G.mem[R.key] = gain(R.key, !o.retry);
+        sheet(true, praise(), `<span class="ln">«${R.name}»: ${v.fast} = ${ar(v.ans)}</span>${memLine(R.key, before)}`, () => c.next(), { xp, combo: G.combo, mem: R.key });
+      } else {
+        sel.classList.replace('sel', 'no'); shake(sel); bad(); buzz([40, 40, 40]);
+        const rt = $(`.opt[data-k="${R.key}"]`, c.stage); if (rt) rt.classList.add('ok');
+        G.rmiss[R.key]++;
+        c.requeue({ f: whichName, R, o: Object.assign({}, o, { retry: true }) });
+        sheet(false, `هذي «${R.name}»`, `<span class="ln">${v.fast} = ${ar(v.ans)}</span><div style="font-size:15px">${R.key === 'rep' ? 'نفس العدد يتكرر' : 'أعداد متتالية من ١'}</div>`, () => c.next());
+      }
+    }, { off: true });
+  }
+
+  /* days later */
+  function daysLater(c) {
+    $('#top').classList.add('calm');
+    G.memStart = { rep: Math.max(25, 61 - G.miss.rep * 4), gauss: Math.max(25, 57 - G.miss.gauss * 4) };
+    G.mem = Object.assign({}, G.memStart);
+    setHead('', 'بعد ٣ أيام…');
+    c.stage.innerHTML = `<div class="cal"><div class="ct">بعد</div><div class="cd">١</div><div class="cs">يوم</div></div>
+      <div class="mcards">${['rep', 'gauss'].map(k => `<div class="mc" data-k="${k}"><span class="mi">${iconWhite(k)}</span><div class="mx"><div class="mn">${RULES[k].name}<small class="pc">١٠٠٪</small></div><div class="mb"><i></i></div></div></div>`).join('')}</div>
+      <div class="notif" style="visibility:hidden"><span class="nl">ق</span><div><b>قدراتي — الحين</b><span>«حيلة الطرفين» تناديك — دقيقة وحدة</span></div></div>`;
+    btn('رجّعها بدقيقة', null, { off: true });
+    const cd = $('.cd', c.stage), cs = $('.cs', c.stage);
+    const steps = [[600, '٢', 'يومين'], [1300, '٣', 'أيام']];
+    steps.forEach(([t, d, s], i) => later(() => {
+      cd.textContent = d; cs.textContent = s; anim(cd, [{ rotate: 'x 90deg' }, { rotate: 'x 0deg' }], { duration: 260 }); tone(500 + i * 120, .08, 'square', .03);
+    }, t));
+    later(() => {
+      ['rep', 'gauss'].forEach(k => {
+        const card = $(`.mc[data-k="${k}"]`, c.stage), i = $('.mb i', card), pc = $('.pc', card);
+        i.style.width = G.memStart[k] + '%'; i.classList.add('lo');
+        let p = 100; const target = G.memStart[k];
+        const iv = setInterval(() => { p = Math.max(target, p - 3); pc.textContent = ar(p) + '٪'; if (p === target) clearInterval(iv); }, 45);
+      });
+      setHead('بعد ٣ أيام…', 'القاعدتين <b>بدت تبهت</b>');
+    }, 300);
+    later(() => {
+      const n = $('.notif', c.stage); n.style.visibility = ''; rise(n); tone(880, .1, 'sine', .07); tone(1320, .14, 'sine', .06, .1); buzz([20, 60, 20]);
+      btn('رجّعها بدقيقة', () => { $('#top').classList.remove('calm'); c.next(); }); hop($go, 6);
+    }, 1900);
+  }
+
+  /* after the review: kept, and when it comes back */
+  function kept(c) {
+    $('#top').classList.add('calm');
+    setHead('رجعت أقوى', 'ثبتت — <b>والمراجعة تبعد</b>');
+    const nextGap = k => G.rmiss[k] ? 3 : 7;
+    c.stage.innerHTML = `<div class="mcards" style="margin-top:4px">${['rep', 'gauss'].map(k => `<div class="mc" data-k="${k}"><span class="mi">${iconWhite(k)}</span><div class="mx"><div class="mn">${RULES[k].name}<small class="pc">${ar(G.memStart[k])}٪</small></div><div class="mb"><i class="lo" style="width:${G.memStart[k]}%"></i></div><div class="nx"></div></div></div>`).join('')}</div>
+      <div class="tline">${(() => { const g = Math.min(nextGap('rep'), nextGap('gauss')), d2 = 3 + g, d3 = d2 + 2 * g, d4 = d3 + 21;
+        return [['البداية', 'd'], ['يوم ٣', 'd'], ['يوم ' + ar(d2), 'n'], ['يوم ' + ar(d3), ''], ['يوم ' + ar(d4), ''], ['الاختبار', 'x']]; })().map(([t, s]) => `<div class="${s}"><i>${s === 'd' ? SVG.check : s === 'x' ? SVG.target : ''}</i>${t}</div>`).join('')}</div>
+      <div class="note" style="margin-top:20px">كل ما تتذكرها صح، تبعد المراجعة اللي بعدها<br>دقيقة كل مرة — وتوصل معك للاختبار</div>`;
+    btn('المتابعة', null, { off: true });
+    ['rep', 'gauss'].forEach((k, j) => later(() => {
+      const card = $(`.mc[data-k="${k}"]`, c.stage), i = $('.mb i', card), pc = $('.pc', card), nx = $('.nx', card);
+      const to = G.mem[k];
+      i.style.width = to + '%'; if (to >= 90) i.classList.remove('lo');
+      let p = G.memStart[k];
+      const iv = setInterval(() => { p = Math.min(to, p + 3); pc.textContent = ar(p) + '٪'; if (p === to) { clearInterval(iv); hop(card, 8); note(4 + j * 2); nx.textContent = `ترجع لك بعد ${ar(nextGap(k))} أيام`; rise(nx); } }, 40);
+    }, 300 + j * 500));
+    const tl = $$('.tline > div', c.stage);
+    tl.forEach((d, i) => popIn(d, 200 + i * 90));
+    later(() => { btn('المتابعة', () => c.next()); hop($go, 6); }, 1600);
+  }
+
+  /* the end */
+  const CHEST = '<svg viewBox="0 0 120 104"><ellipse cx="60" cy="98" rx="44" ry="5" fill="#E5E5E5"/><rect x="14" y="46" width="92" height="48" rx="10" fill="#1E3A8A"/><rect x="14" y="46" width="92" height="12" fill="#172E6E"/><rect x="52" y="46" width="16" height="48" fill="#FFC800"/><rect class="inner" x="18" y="34" width="84" height="14" rx="4" fill="#FFC800" opacity="0"/><g class="lid"><path d="M14 46V36c0-12 10-20 22-20h48c12 0 22 8 22 20v10z" fill="#2747A8"/><rect x="52" y="16" width="16" height="30" fill="#FFC800"/></g><rect x="50" y="42" width="20" height="18" rx="5" fill="#FFE9A8" stroke="#E6A000" stroke-width="2.5"/></svg>';
+  function theEnd(c) {
+    $('#top').classList.add('calm');
+    const acc = G.graded ? Math.round(G.first / G.graded * 100) : 100;
+    setHead('', '');
+    $('#kick').style.display = 'none'; $('#head').style.display = 'none';
+    c.stage.style.marginTop = '0';
+    c.stage.innerHTML = `<div class="end-h">قاعدتين في جيبك!</div>
+      <div class="stats">
+        <div class="st k-orange"><b>XP</b><span>${SVG.bolt}<em class="cx" style="font-style:normal">٠</em></span></div>
+        <div class="st k-green"><b>الدقة</b><span>${ar(acc)}٪</span></div>
+        <div class="st k-blue"><b>أطول سلسلة</b><span>${ar(G.best)}</span></div>
+      </div>
+      <div class="coll">${['rep', 'gauss'].map(k => `<div class="cm"><span class="mi">${iconWhite(k)}</span><div style="min-width:0"><b>${RULES[k].name}</b>${starsHtml(k)}</div></div>`).join('')}</div>
+      <button class="chest idle" id="chest">${CHEST}<span class="cl">صندوقك — اضغطه</span></button>
+      <div class="gems" style="display:none">${SVG.gem}<bdi dir="ltr">+٠</bdi></div>
+      <div class="tmr"><span class="lk">${SVG.lock}</span><div><b>بكرة ينفتح</b><span>«عددها في نفسها»</span></div><div class="fl">${SVG.fire}<span>لا تطفّيها</span></div></div>`;
+    $$('.st', c.stage).forEach((s, i) => popIn(s, 150 + i * 120));
+    $$('.cm', c.stage).forEach((s, i) => rise(s, 500 + i * 120));
+    rise($('.tmr', c.stage), 600);
+    const cx = $('.cx', c.stage); let x = 0; const target = G.xp;
+    later(() => { const iv = setInterval(() => { x = Math.min(target, x + Math.max(1, Math.round(target / 25))); cx.textContent = ar(x); if (x === target) clearInterval(iv); }, 30); }, 300);
+    btn('العب مرة ثانية', () => start());
+    $('#chest').addEventListener('click', e => {
+      const ch = e.currentTarget; ch.classList.remove('idle'); ch.disabled = true;
+      const tierBase = acc >= 90 ? 30 : acc >= 70 ? 20 : 12;
+      const gems = tierBase + rnd(0, 10);
+      const lid = $('.lid', ch);
+      anim($('svg', ch), [{ transform: 'none' }, { transform: 'scale(1.1,.86)', offset: .25 }, { transform: 'translateY(-16px) scale(.94,1.08)', offset: .55 }, { transform: 'scale(1.05,.95)', offset: .8 }, { transform: 'none' }], { duration: 520 });
+      later(() => { lid.style.transition = 'transform .3s cubic-bezier(.3,1.5,.5,1)'; lid.style.transformBox = 'view-box'; lid.style.transformOrigin = '14px 46px'; lid.style.transform = 'translate(0,-3px) rotate(-12deg)'; $('.inner', ch).setAttribute('opacity', '1'); thud(); buzz(30); }, 280);
+      $('.cl', ch).textContent = acc >= 90 ? 'صندوق ذهبي — على دقتك' : acc >= 70 ? 'صندوق فضي — على دقتك' : 'صندوق — دقتك تكبّره';
+      const g = $('.gems', c.stage);
+      later(() => {
+        g.style.display = ''; popIn(g);
+        let k = 0; const sp = $('bdi', g);
+        const iv = setInterval(() => { k++; sp.textContent = '+' + ar(k); if (k % 3 === 0) tone(1000 + k * 12, .04, 'square', .02); if (k >= gems) { clearInterval(iv); good(3); hop(g, 10); } }, 30);
+      }, 520);
+    }, { once: true });
+  }
+
+  /* the run */
+  let Q = [], qi = 0;
+  function plan() {
+    const L = 'learn', V = 'review';
+    Q = [
+      { f: seeRep, ph: L }, { f: nameIt, R: RULES.rep, ph: L }, { f: whyIt, R: RULES.rep, ph: L }, { f: applyIt, R: RULES.rep, ph: L, o: { h: `احسبها <b>باسمها</b>` } }, { f: callIt, R: RULES.rep, ph: L },
+      { f: seeGauss, ph: L }, { f: nameIt, R: RULES.gauss, ph: L }, { f: whyIt, R: RULES.gauss, ph: L }, { f: applyIt, R: RULES.gauss, ph: L, o: { h: `احسبها <b>باسمها</b>` } }, { f: callIt, R: RULES.gauss, ph: L },
+      { f: daysLater, ph: 'gap' },
+      { f: callIt, R: RULES.gauss, ph: V, o: { review: true, kick: 'مراجعة — من الاسم' } },
+      { f: whichName, R: RULES.rep, ph: V, o: { kick: 'مراجعة — أي اسم؟' } },
+      { f: callIt, R: RULES.rep, ph: V, o: { review: true, kick: 'مراجعة — من الاسم' } },
+      { f: applyIt, R: RULES.gauss, ph: V, o: { review: true, hint: true, kick: 'مراجعة — أرقام جديدة', h: `احسبها <b>من راسك</b>` } },
+      { f: kept, ph: 'end' }, { f: theEnd, ph: 'end' }
+    ];
+  }
+  function bar() {
+    const ph = Q[qi].ph;
+    const idx = Q.map((s, i) => [s, i]).filter(([s]) => s.ph === ph);
+    const done = idx.filter(([, i]) => i < qi).length;
+    $('#barFill').style.width = (ph === 'learn' || ph === 'review' ? Math.round(done / idx.length * 100) : 100) + '%';
+  }
+  function show() {
+    gen++; timers.forEach(clearTimeout); timers = [];
+    $$('.sheet', $foot).forEach(s => s.remove()); $foot.classList.remove('hide');
+    $('#kick').style.display = ''; $('#head').style.display = '';
+    const old = $('#stage'), st = old.cloneNode(false); st.style.marginTop = ''; old.replaceWith(st);
+    $('#main').scrollTop = 0;
+    const step = Q[qi];
+    bar();
+    const c = {
+      stage: st,
+      next() { if (qi < Q.length - 1) { qi++; show(); } },
+      requeue(s) {
+        s.ph = step.ph;
+        let end = qi + 1; while (end < Q.length && Q[end].ph === step.ph) end++;
+        Q.splice(end, 0, s);
+      }
+    };
+    step.f(c, step.R, step.o || {});
+    rise(st);
+    requestAnimationFrame(() => fitAll(st));
+  }
+  function start() {
+    fresh(); plan(); qi = 0; hud();
+    $('#top').classList.remove('calm');
+    show();
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitAll($('#stage')));
+  start();
+})();
+</script>
+</body>
+</html>

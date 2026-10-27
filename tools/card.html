@@ -16,7 +16,7 @@
        colour block with its own course icons;
      — everything personal is a die-cut sticker (white outline, a lifted
        shadow, a tilt of its own) slapped on with a squash;
-     — the character breaks the frame: قدّور peeks over the top edge and
+     — the character breaks the frame: فهيم peeks over the top edge and
        points at the card;
      — the back is a collection: one sticker per unit, coloured once begun.
    Motion is weight and light only — a drop and a squash, slaps, a shine.
@@ -51,7 +51,7 @@ body { margin: 0; min-height: 100vh; background: var(--page); color: var(--snow)
 .hint { margin-top: 30px; font-size: 15px; font-weight: 700; color: var(--gray-icon); opacity: 0; transition: opacity .4s; }
 .hint.on { opacity: 1; }
 .wrap { position: relative; width: 310px; height: 450px; perspective: 1200px; }
-/* قدّور behind the card: only what is above its top edge shows */
+/* فهيم behind the card: only what is above its top edge shows */
 .peek { position: absolute; top: -118px; inset-inline-end: -26px; width: 210px; height: 210px; z-index: 0; pointer-events: none; transform-origin: 50% 100%; }
 .peek img { width: 100%; height: 100%; display: block; }
 .card { position: absolute; inset: 0; z-index: 1; transform-style: preserve-3d; cursor: pointer; }
@@ -146,7 +146,7 @@ body { margin: 0; min-height: 100vh; background: var(--page); color: var(--snow)
 
 <div class="ctl">
   <h1>Card lab</h1>
-  <p>Not in the app. A new card in Duolingo's design language: a chunky slab of flat colour on its lip, maths glyphs as its pattern, everything personal as a die-cut sticker, قدّور breaking the frame, and a back that collects one sticker per unit. Tap the card to turn it over; move the pointer over it to tilt it.</p>
+  <p>Not in the app. A new card in Duolingo's design language: a chunky slab of flat colour on its lip, maths glyphs as its pattern, everything personal as a die-cut sticker, فهيم breaking the frame, and a back that collects one sticker per unit. Tap the card to turn it over; move the pointer over it to tilt it.</p>
   <div><label>Name</label><input id="nameIn" value="سارة" maxlength="20" oninput="setName(this.value)"></div>
   <div><label>Colour</label><div class="row" id="cols"></div></div>
   <button class="play" onclick="play()">Play it again</button>
@@ -231,7 +231,7 @@ function play() {
   at(1080, () => { snd("unlock"); buzz(14); });
   $("nm").animate([{ opacity: 0, transform: "translateY(18px) scale(.8)" }, { opacity: 1, transform: "translateY(-4px) scale(1.06, .96)", offset: .6 }, { transform: "none" }],
     { duration: 420, delay: 1150, easing: "cubic-bezier(.3,1.4,.5,1)", fill: "backwards" });
-  /* 4. قدّور comes up over the edge and points */
+  /* 4. فهيم comes up over the edge and points */
   peek.animate([{ transform: "translateY(220px)" }, { transform: "translateY(-12px) scale(.96, 1.05)", offset: .65 }, { transform: "translateY(0) scale(1.03, .97)", offset: .85 }, { transform: "none" }],
     { duration: 620, delay: 1400, easing: "cubic-bezier(.3,1.2,.5,1)", fill: "backwards" });
   at(1450, () => tone(523, .12, "triangle", .12));
