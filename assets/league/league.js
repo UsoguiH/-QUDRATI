@@ -2284,6 +2284,7 @@
     buzzTimers = [];
     // browsers only allow it once the page has been tapped
     if (!navigator.vibrate || (navigator.userActivation && !navigator.userActivation.hasBeenActive)) return;
+    if (new URLSearchParams(location.search).get('haptic') === '0') return;   // the student turned vibration off in the app
     const at = (f, pattern) => buzzTimers.push(setTimeout(() => navigator.vibrate(pattern), ((f - 1) / FPS) * 1000));
     at(BREAK, 20);
     if (SPARK) {

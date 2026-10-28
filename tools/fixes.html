@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Audit Fixes</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  /* dev page: the 22 problems the 2026-10-28 audit found, each with what a
+     student met before and after the fix — screenshots from the same script run
+     on the last commit (37ba1cd) and on the working tree; shots in tools/fixes/ */
+  :root {
+    --bg: #F7F7F7; --card: #FFFFFF; --ink: #3C3C3C; --mute: #777777; --line: #E5E5E5;
+    --green: #58CC02; --green-bg: #D7FFB8; --green-ink: #3E8B00; --red: #FF4B4B; --red-bg: #FFDFE0; --red-ink: #C62828;
+    --blue: #1CB0F6; --blue-bg: #DDF4FF; --gold-bg: #FFF4BF; --gold-ink: #9A6A00; --gray-bg: #F0F0F0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #131F24; --card: #1B2B32; --ink: #F1F7FB; --mute: #9AA9B1; --line: #37464F;
+      --green-bg: #2B4A12; --green-ink: #A6E36E; --red-bg: #4A1D1F; --red-ink: #FF9A9A; --blue-bg: #12384A; --gold-bg: #4A3B0A; --gold-ink: #FFD666; --gray-bg: #26363D;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #131F24; --card: #1B2B32; --ink: #F1F7FB; --mute: #9AA9B1; --line: #37464F;
+    --green-bg: #2B4A12; --green-ink: #A6E36E; --red-bg: #4A1D1F; --red-ink: #FF9A9A; --blue-bg: #12384A; --gold-bg: #4A3B0A; --gold-ink: #FFD666; --gray-bg: #26363D;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Baloo Bhaijaan 2', 'Segoe UI', sans-serif; line-height: 1.5; }
+  header, .part { max-width: 1000px; margin: 0 auto; padding: 0 16px; }
+  header { padding-top: 32px; }
+  h1 { margin: 0 0 4px; font-size: 30px; }
+  header p { margin: 0 0 6px; color: var(--mute); }
+  .sum { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 4px; }
+  .pill { font-weight: 800; font-size: 14px; padding: 3px 12px; border-radius: 99px; }
+  .p-ok { background: var(--green-bg); color: var(--green-ink); }
+  .p-no { background: var(--gold-bg); color: var(--gold-ink); }
+  .p-reg { background: var(--blue-bg); color: var(--ink); }
+  .part h2 { font-size: 21px; margin: 30px 0 10px; }
+  .fx { background: var(--card); border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 18px; padding: 18px; margin-bottom: 14px; }
+  .fx-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .num { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--green); color: #fff; font-weight: 800; flex-shrink: 0; }
+  .fx.open .num { background: #FFC800; color: #6B4A00; }
+  .fx h3 { margin: 0; font-size: 19px; flex: 1; min-width: 200px; }
+  .ba { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .ba > div { border-radius: 12px; padding: 10px 12px; font-size: 15px; }
+  .b { background: var(--red-bg); }
+  .a { background: var(--green-bg); }
+  .ba b.l { display: block; font-size: 12.5px; letter-spacing: .04em; text-transform: uppercase; }
+  .b b.l { color: var(--red-ink); }
+  .a b.l { color: var(--green-ink); }
+  .ba ul { margin: 2px 0 0; padding-inline-start: 18px; }
+  .m { margin-top: 10px; font-size: 14px; color: var(--mute); }
+  .m code, .ba code { font-family: Consolas, monospace; font-size: 13px; }
+  .shots { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 14px; }
+  .pair { display: flex; gap: 8px; }
+  figure { margin: 0; width: 170px; }
+  figure img { width: 170px; display: block; border-radius: 14px; border: 2px solid var(--line); background: #fff; }
+  figure.bf img { border-color: var(--red); }
+  figure.af img { border-color: var(--green); }
+  figcaption { font-size: 12.5px; font-weight: 800; margin-top: 4px; text-align: center; }
+  .bf figcaption { color: var(--red-ink); }
+  .af figcaption { color: var(--green-ink); }
+  .gone { width: 170px; height: 368px; border-radius: 14px; border: 2px dashed var(--red); display: grid; place-items: center; text-align: center; padding: 14px; color: var(--red-ink); font-weight: 700; font-size: 14px; }
+  .note { background: var(--blue-bg); border-radius: 14px; padding: 12px 16px; margin: 14px 0; }
+  footer { max-width: 1000px; margin: 30px auto 50px; padding: 0 16px; color: var(--mute); font-size: 14px; }
+  @media (max-width: 620px) {
+    .ba { grid-template-columns: 1fr; }
+    figure, figure img, .gone { width: 140px; }
+    .gone { height: 303px; }
+    .shots { gap: 12px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Audit fixes: before and after</h1>
+  <p>The 22 problems from the 2026-10-28 check-up. "Before" is the last commit (37ba1cd) and "after" is the working tree. Both are played by the same test script on the same phone size.</p>
+  <div class="sum">
+    <span class="pill p-ok">21 fixed</span>
+    <span class="pill p-ok">18 shown by a test on both copies</span>
+    <span class="pill p-reg">3 checked in the code</span>
+    <span class="pill p-no">1 not doable here (APK)</span>
+    <span class="pill p-reg">1 slip of mine caught and fixed</span>
+  </div>
+</header>
+
+<div class="part">
+<h2>Serious</h2>
+
+<div class="fx"><div class="fx-h"><span class="num">1</span><h3>The phone's back button left the app, even mid-lesson</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b>Back in a lesson went to the previous website (or closed the installed app), and the lesson was lost.</div>
+    <div class="a"><b class="l">After</b>Back takes one step inside the app:
+      <ul><li>in a lesson it asks «تبي توقف الدرس؟»;</li><li>a sheet or popup closes;</li><li>a screen with a back arrow goes back;</li><li>other tabs go to the path;</li><li>only the path itself lets the phone leave.</li></ul>
+      A running mock exam and a win screen stay put.</div>
+  </div>
+  <div class="shots"><div class="pair">
+    <div class="gone">Back in a lesson: the app is gone (the test landed on about:blank)</div>
+    <figure class="af"><img src="fixes/after-back.jpg" alt="The stop-lesson sheet after pressing back"><figcaption>After: back asks first</figcaption></figure>
+  </div></div>
+</div>
+
+<div class="fx open"><div class="fx-h"><span class="num">2</span><h3>The Android APK is months old</h3><span class="pill p-no">Not done here</span></div>
+  <div class="ba">
+    <div class="b"><b class="l">Now</b><code>Qudrati.apk</code> still has the June app and curriculum.</div>
+    <div class="a"><b class="l">What it needs</b>
+      <ul>
+        <li>A rebuild on your build machine. The Capacitor project isn't in this repo.</li>
+        <li>Optionally, Capacitor's <code>@capacitor/app</code> back-button plugin.</li>
+      </ul>
+      The web back-button fix in item 1 also works inside the app's web view.</div>
+  </div>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">3</span><h3>A new student's first sounds were silent on mobile data</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b>
+      <ul><li>Test on a slow network (1.6 Mbps): <b>0 of 11</b> typing clicks on فهيم's first bubble were heard.</li><li>The first missing sound downloaded all of them at once.</li><li>The Brilliant files took 2.82 MB, at 320 kbps.</li></ul></div>
+    <div class="a"><b class="l">After</b>
+      <ul><li>Same test: <b>10 of 10</b> heard.</li><li>The first-run sounds are fetched while the welcome screen shows, and a missing sound loads only itself.</li><li>The files now take 0.80 MB at 128 kbps, and sound the same on a phone.</li></ul></div>
+  </div>
+  <p class="m">Still true in both copies: the sound of the very first tap («ابدأ الآن») can't play, because a browser only allows sound to start after that first touch.</p>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">4</span><h3>A double tap on «المتابعة» skipped a first-run screen</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b>Two quick taps on the level question jumped straight to «يلا نلقى أفضل مكان». The daily-goal question was never asked.</div>
+    <div class="a"><b class="l">After</b>The second tap is ignored while the screen slides in, and the student lands on the goal question.</div>
+  </div>
+  <div class="shots"><div class="pair">
+    <figure class="bf"><img src="fixes/before-dbl.jpg" alt=""><figcaption>Before: goal skipped</figcaption></figure>
+    <figure class="af"><img src="fixes/after-dbl.jpg" alt=""><figcaption>After: the goal question</figcaption></figure>
+  </div></div>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">5</span><h3>On small phones the bottom bar hid answers</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before (320 px)</b><ul>
+      <li>The keypad's ٠ and ⌫ were under «تحقق».</li>
+      <li>After a mistake on a write-the-rule screen, the needed tile was behind the bar.</li>
+      <li>The mock exam's number grid pushed the choices off the screen.</li>
+      <li>The 4th choice was hidden, with no sign there was more.</li></ul></div>
+    <div class="a"><b class="l">After</b><ul>
+      <li>The question area ends at the bar.</li>
+      <li>The keypad shrinks a little.</li>
+      <li>The tiles scroll into view after a miss.</li>
+      <li>The mock grid is one row that scrolls sideways.</li>
+      <li>A hidden choice peeks out under a fade.</li></ul></div>
+  </div>
+  <div class="shots">
+    <div class="pair"><figure class="bf"><img src="fixes/before-learn-type-320.jpg" alt=""><figcaption>Before: ٠ ⌫ under the button</figcaption></figure><figure class="af"><img src="fixes/after-learn-type-320.jpg" alt=""><figcaption>After</figcaption></figure></div>
+    <div class="pair"><figure class="bf"><img src="fixes/before-rulenums-rnmiss-320.jpg" alt=""><figcaption>Before: tiles cut off</figcaption></figure><figure class="af"><img src="fixes/after-rulenums-rnmiss-320.jpg" alt=""><figcaption>After</figcaption></figure></div>
+    <div class="pair"><figure class="bf"><img src="fixes/before-mocktest-320.jpg" alt=""><figcaption>Before: choices pushed down</figcaption></figure><figure class="af"><img src="fixes/after-mocktest-320.jpg" alt=""><figcaption>After</figcaption></figure></div>
+    <div class="pair"><figure class="bf"><img src="fixes/before-place-320.jpg" alt=""><figcaption>Before: no 4th choice in sight</figcaption></figure><figure class="af"><img src="fixes/after-place-320.jpg" alt=""><figcaption>After: it peeks out</figcaption></figure></div>
+  </div>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">6</span><h3>«اكتمل تمرين اليوم!» could drop over the first win</h3><span class="pill p-reg">Checked in the code</span></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b>The banner's timer kept running when the lesson ended, so it could land on the win screen.</div>
+    <div class="a"><b class="l">After</b>When a lesson ends, the banner and its timer are cleared before the win screen draws.</div>
+  </div>
+  <p class="m">The timing is too narrow to trigger in a test, and neither copy showed the banner in 3 tries. The fix is in <code>questBannerOff()</code>.</p>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">7</span><h3>Turning sound off also turned vibration off</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b>After «الأصوات» was switched off, the vibration switch still showed on, but the phone stopped vibrating.</div>
+    <div class="a"><b class="l">After</b>Vibration keeps its own setting. Sound off leaves it on, as the switch says.</div>
+  </div>
+  <div class="shots"><div class="pair">
+    <figure class="bf"><img src="fixes/before-haptic.jpg" alt=""><figcaption>Before: shows on, doesn't vibrate</figcaption></figure>
+    <figure class="af"><img src="fixes/after-haptic.jpg" alt=""><figcaption>After: on and vibrates</figcaption></figure>
+  </div></div>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">8</span><h3>The timer's last-5-seconds tick was silent</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b>It played about 21 dB quieter than the app's other clicks, so it was inaudible on a phone.</div>
+    <div class="a"><b class="l">After</b>It is raised by 20 dB, to the level of the other clicks.</div>
+  </div>
+</div>
+</div>
+
+<div class="part">
+<h2>Smaller</h2>
+
+<div class="fx"><div class="fx-h"><span class="num">9</span><h3>Emoji on exam day</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b>🎯 on the path's exam card and in the date picker, and 👇 in the «كيف أحلّها؟» sheet.</div>
+    <div class="a"><b class="l">After</b>A drawn target icon in both places, and the 👇 is gone.</div>
+  </div>
+  <div class="shots"><div class="pair">
+    <figure class="bf"><img src="fixes/before-examday.jpg" alt=""><figcaption>Before: emoji</figcaption></figure>
+    <figure class="af"><img src="fixes/after-examday.jpg" alt=""><figcaption>After: drawn icon</figcaption></figure>
+  </div></div>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">10</span><h3>Two content mistakes</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b><ul>
+      <li>The triangle lesson's check «أيّ المجموعات لا تصلح أضلاعاً لمثلث؟» asked <b>٣ ، ٤ ، ٨</b>, the same as the real question right after it.</li>
+      <li>Node 1, lesson 5: the "wrong" tile «آخر عدد» was also a correct answer.</li></ul></div>
+    <div class="a"><b class="l">After</b><ul>
+      <li>The check now uses its own numbers: <b>٢ ، ٥ ، ٨</b> / ٤ ، ٥ ، ٧ / ٧ ، ٧ ، ١٣.</li>
+      <li>A rule's wrong tiles never include a phrase that means the same as a right one.</li></ul>
+      <code>validate_teach</code> passes.</div>
+  </div>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">11</span><h3>Praise after a retried rule screen</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b>Getting it right after a mistake showed «صحيح!» and kept the streak counting. That counting led to «ثلاث على التوالي!» and the gems for it.</div>
+    <div class="a"><b class="l">After</b>The screen says «صحّحتها!». The streak resets, and the lesson bar's streak glow goes out.</div>
+  </div>
+  <div class="shots"><div class="pair">
+    <figure class="bf"><img src="fixes/before-praise.jpg" alt=""><figcaption>Before</figcaption></figure>
+    <figure class="af"><img src="fixes/after-praise.jpg" alt=""><figcaption>After</figcaption></figure>
+  </div></div>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">12</span><h3>A broken save</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b><ul><li>A save that no longer reads was silently replaced by a new student, and the old one was lost.</li><li>One broken answer record made every tab fail: 4 errors across stats, settings and league.</li></ul></div>
+    <div class="a"><b class="l">After</b><ul><li>The unreadable save is kept aside in the phone, and a note says so.</li><li>Broken records are repaired: 0 errors.</li></ul></div>
+  </div>
+  <div class="shots"><div class="pair">
+    <figure class="bf"><img src="fixes/before-corrupt.jpg" alt=""><figcaption>Before: silent restart</figcaption></figure>
+    <figure class="af"><img src="fixes/after-corrupt.jpg" alt=""><figcaption>After: kept, and told</figcaption></figure>
+  </div></div>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">13</span><h3>A streak could drop to zero after travelling west</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b>The test played a student whose last day counts as "tomorrow" on the phone's new clock. Their 5-day streak was saved as <b>0</b>.</div>
+    <div class="a"><b class="l">After</b>The streak stays at <b>5</b>.</div>
+  </div>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">14</span><h3>Time ran out on a picked answer</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b>The right answer was picked, then time ran out: «انتهى الوقت!», marked wrong, and a heart lost.</div>
+    <div class="a"><b class="l">After</b>The picked answer is graded, as the real exam does: «ممتاز!».</div>
+  </div>
+  <div class="shots"><div class="pair">
+    <figure class="bf"><img src="fixes/before-timeup.jpg" alt=""><figcaption>Before: thrown away</figcaption></figure>
+    <figure class="af"><img src="fixes/after-timeup.jpg" alt=""><figcaption>After: graded</figcaption></figure>
+  </div></div>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">15</span><h3>Names</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b><ul><li>«عبدالرحمن بن محمد العتيبي» was cut to «عبدالرحمن بن محمد ال», and the greeting read «أهلاً يا عبدالرحمن بن محمد ال!».</li><li>Editing «نورة "نونو"» in Settings showed «نورة ».</li><li>A long Latin name pushed the account page sideways.</li></ul></div>
+    <div class="a"><b class="l">After</b><ul><li>Names up to 30 letters are kept, and the greeting uses the first name: «أهلاً يا عبدالرحمن!».</li><li>The quote survives editing.</li><li>A long name wraps.</li></ul></div>
+  </div>
+  <div class="shots"><div class="pair">
+    <figure class="bf"><img src="fixes/before-names.jpg" alt=""><figcaption>Before</figcaption></figure>
+    <figure class="af"><img src="fixes/after-names.jpg" alt=""><figcaption>After</figcaption></figure>
+  </div></div>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">16</span><h3>The league badge's shine never drew</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b>The league tab asked for <code>/css/assets/icons/ranks/rank-silver.png</code>, a wrong path that returned 404.</div>
+    <div class="a"><b class="l">After</b>No 404s on the league tab, and the shine draws.</div>
+  </div>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">17</span><h3>320 px phones: chips off the edge, buttons below the fold</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b><ul><li>The sign-in wall's chips ran off the sides.</li><li>First-run and sign-in buttons sat below the fold.</li><li>A row of three choices was cut off.</li></ul></div>
+    <div class="a"><b class="l">After</b><ul><li>The chips wrap.</li><li>The first run's button stays at the foot of the screen.</li><li>The three choices fit.</li><li>The climb, «تقدّمك اليوم» and level-test result keep their button in view.</li></ul></div>
+  </div>
+  <div class="shots">
+    <div class="pair"><figure class="bf"><img src="fixes/before-signin-320.jpg" alt=""><figcaption>Before</figcaption></figure><figure class="af"><img src="fixes/after-signin-320.jpg" alt=""><figcaption>After</figcaption></figure></div>
+    <div class="pair"><figure class="bf"><img src="fixes/before-signin-how-320.jpg" alt=""><figcaption>Before</figcaption></figure><figure class="af"><img src="fixes/after-signin-how-320.jpg" alt=""><figcaption>After</figcaption></figure></div>
+    <div class="pair"><figure class="bf"><img src="fixes/before-ob-value-320.jpg" alt=""><figcaption>Before</figcaption></figure><figure class="af"><img src="fixes/after-ob-value-320.jpg" alt=""><figcaption>After</figcaption></figure></div>
+    <div class="pair"><figure class="bf"><img src="fixes/before-ob-goal-320.jpg" alt=""><figcaption>Before</figcaption></figure><figure class="af"><img src="fixes/after-ob-goal-320.jpg" alt=""><figcaption>After</figcaption></figure></div>
+    <div class="pair"><figure class="bf"><img src="fixes/before-ob-level-320.jpg" alt=""><figcaption>Before</figcaption></figure><figure class="af"><img src="fixes/after-ob-level-320.jpg" alt=""><figcaption>After</figcaption></figure></div>
+    <div class="pair"><figure class="bf"><img src="fixes/before-ob-start-320.jpg" alt=""><figcaption>Before</figcaption></figure><figure class="af"><img src="fixes/after-ob-start-320.jpg" alt=""><figcaption>After</figcaption></figure></div>
+    <div class="pair"><figure class="bf"><img src="fixes/before-ob-taste-taste-320.jpg" alt=""><figcaption>Before</figcaption></figure><figure class="af"><img src="fixes/after-ob-taste-taste-320.jpg" alt=""><figcaption>After</figcaption></figure></div>
+    <div class="pair"><figure class="bf"><img src="fixes/before-learn-skills-cycles-1-320.jpg" alt=""><figcaption>Before: «الجمعة» cut</figcaption></figure><figure class="af"><img src="fixes/after-learn-skills-cycles-1-320.jpg" alt=""><figcaption>After</figcaption></figure></div>
+    <div class="pair"><figure class="bf"><img src="fixes/before-climb-long-320.jpg" alt=""><figcaption>Before</figcaption></figure><figure class="af"><img src="fixes/after-climb-long-320.jpg" alt=""><figcaption>After</figcaption></figure></div>
+    <div class="pair"><figure class="bf"><img src="fixes/before-learnmore-long-320.jpg" alt=""><figcaption>Before</figcaption></figure><figure class="af"><img src="fixes/after-learnmore-long-320.jpg" alt=""><figcaption>After</figcaption></figure></div>
+  </div>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">18</span><h3>Sounds too quiet, and a climb too loud</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b><ul><li>The level test's "answer taken" sound and the «جرّب» number swap were hard to hear.</li><li>A big league climb stacked <b>11</b> notes on top of each other.</li></ul></div>
+    <div class="a"><b class="l">After</b><ul><li>Both are raised to the app's level.</li><li>The climb plays at most <b>5</b> notes, plus Duolingo's quiet ticks under them as before.</li></ul></div>
+  </div>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">19</span><h3>فهيم kept typing after «يلا نبدأ»</h3><span class="pill p-reg">Checked in the code</span></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b>A tap mid-sentence left the rest of his typing clicks playing into the first lesson.</div>
+    <div class="a"><b class="l">After</b>His typing stops whenever the screen changes or a lesson starts. Long sounds still playing fade out over a quarter second.</div>
+  </div>
+  <p class="m">The test tapped after his line had finished, so it found no leftover clicks in either copy.</p>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">20</span><h3>«بأرقام جديدة» with the same numbers</h3><span class="pill p-reg">Checked in the code</span></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b>A missed item could come back at the end of the lesson with the very same numbers.</div>
+    <div class="a"><b class="l">After</b>The item is regenerated until its numbers differ, up to 12 tries. Items with fixed numbers come back as they are.</div>
+  </div>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">21</span><h3>Five small ones</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b><ul>
+      <li>Once a student had reached the splash, the hello screen had no back arrow.</li>
+      <li>Back during the «جرّب» animation put «هذي تطيّح ناس كثير!…» in فهيم's hello bubble.</li>
+      <li>The climb's «متابعة» made no sound.</li>
+      <li>Settings promised a vibration on every answer, but answers never vibrated.</li>
+      <li>Reduced motion also muted the celebrations: the gold flip played nothing.</li></ul></div>
+    <div class="a"><b class="l">After</b><ul>
+      <li>The back arrow is there.</li>
+      <li>The hello bubble says its own line.</li>
+      <li>«متابعة» plays Brilliant's continue sound.</li>
+      <li>A right and a wrong answer each vibrate.</li>
+      <li>Reduced motion keeps the sounds: the gold flip plays <code>level-passed</code>.</li></ul></div>
+  </div>
+  <div class="shots"><div class="pair">
+    <figure class="bf"><img src="fixes/before-tasteback.jpg" alt=""><figcaption>Before: wrong bubble</figcaption></figure>
+    <figure class="af"><img src="fixes/after-tasteback.jpg" alt=""><figcaption>After</figcaption></figure>
+  </div></div>
+</div>
+
+<div class="fx"><div class="fx-h"><span class="num">22</span><h3>Offline after one visit</h3></div>
+  <div class="ba">
+    <div class="b"><b class="l">Before</b>With the network off, فهيم was an empty space beside his bubble, and the correct-answer sound was missing.</div>
+    <div class="a"><b class="l">After</b>His seven pictures, both correct-answer sounds and the first run's Brilliant sounds are saved on the first visit, about 400 KB.</div>
+  </div>
+  <div class="shots"><div class="pair">
+    <figure class="bf"><img src="fixes/before-offline.jpg" alt=""><figcaption>Before: no فهيم</figcaption></figure>
+    <figure class="af"><img src="fixes/after-offline.jpg" alt=""><figcaption>After</figcaption></figure>
+  </div></div>
+</div>
+
+<div class="note"><b>Caught during this check:</b> my fix that keeps «—» from starting a line had put a stray «*» after فهيم's name on the hello screen («أنا فهيم* —»). It's fixed, and his name is blue again. I scanned 26 first-run, sign-in, lesson and result screens and found no stray «*».</div>
+</div>
+
+<footer>
+  Checks: <code>validate.js</code>, <code>validate_learn.js</code> and <code>validate_teach.js</code> pass, and the 62 preview screens open with no page errors.
+  Not committed. <code>sw.js</code> VERSION is still 89. It has to be bumped when this ships, or students with the app already installed won't get these fixes.
+</footer>
+</body>
+</html>

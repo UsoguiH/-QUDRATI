@@ -160,6 +160,14 @@
         /* the two screens after a short lesson's rule: its terms to fill back in, then the rule as numbers */
         A.startLearn("skills", "bigsum", 0);
         A.debugLearnGo(it => it && it.rf === (h === "rulewords" ? "words" : "nums"));
+      } else if (h === "learnpairs") {
+        /* the first «وصّل» of lesson 1: a tally per pair, then the correct sound */
+        A.startLearn("skills", "bigsum", 0);
+        A.debugLearnGo(it => it && it.t === "pairs");
+      } else if (h === "learntype") {
+        /* the first «اكتب الناتج» of lesson 1: the answer typed on the Arabic keypad */
+        A.startLearn("skills", "bigsum", 0);
+        A.debugLearnGo(it => it && it.t === "type");
       } else if (h === "warm" || h === "warmdone") {
         /* the very first screen a new student ever sees: the warm-up question,
            asked before any rule (the seed above gave this hash an unplayed

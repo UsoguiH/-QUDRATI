@@ -65,7 +65,7 @@ function shuffleChoices(q) {
   });
 }
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
-function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }   // quotes too: a name with «"» was cut at it inside value="…" (the audit, 2026-10-28)
 
 /* ---------------- state ---------------- */
 const DEFAULT_STATE = { v: 1, disclaimer: false, introSeen: false, trackAsked: false, placeAsked: false, profileAsked: false, placed: null, user: null, track: "sci", sound: true, motion: "full", goal: 10, joined: null, days: {}, xp: 0, totalXp: 0, tierSeen: 0, streak: { count: 0, last: null }, lessons: {}, qstats: {}, exam: null, examAsked: false, daily: null, mocks: [], league: null, mistakes: {}, teach: {}, learn: {}, reports: {} };
@@ -155,7 +155,19 @@ function migrate(s) {
 }
 let S;
 try { S = migrate(Object.assign({}, DEFAULT_STATE, JSON.parse(localStorage.getItem("qudratState") || "{}"))); }
-catch (e) { S = Object.assign({}, DEFAULT_STATE); }
+catch (e) {
+  S = Object.assign({}, DEFAULT_STATE);
+  /* a save that no longer reads used to be replaced, silently, by a new
+     student's on the first save (the audit, 2026-10-28): it is kept aside
+     first, and the student is told */
+  try {
+    const raw = localStorage.getItem("qudratState");
+    if (raw) {
+      localStorage.setItem("qudratState.unread", raw);
+      setTimeout(() => toast("تعذّرت قراءة تقدّمك المحفوظ فبدأنا من جديد — النسخة القديمة باقية في جهازك"), 1200);
+    }
+  } catch (e2) {}
+}
 /* migrate pre-rank-system saves: seed lifetime XP from current gems, and mark
    the current tier as already-seen so we don't fire a celebration on load */
 if (S.totalXp == null) S.totalXp = Math.max(0, S.xp || 0);
@@ -171,11 +183,21 @@ if (S.tierSeen == null) S.tierSeen = tierIndex();
     const ok = Array.isArray(want) ? Array.isArray(got) : (got && typeof got === "object");
     if (!ok) S[k] = Array.isArray(want) ? [] : Object.assign({}, want);
   }
+  /* and the entries inside them: one null answer record threw on every tab,
+     Settings included, so neither restore nor delete could be reached */
+  ["qstats", "lessons", "learn", "teach"].forEach(k => {
+    const o = S[k];
+    if (o && typeof o === "object" && !Array.isArray(o)) for (const id in o) if (!o[id] || typeof o[id] !== "object") delete o[id];
+  });
+  for (const id in S.qstats) { const q = S.qstats[id]; q.r = +q.r || 0; q.w = +q.w || 0; }
   /* a streak whose last day is neither today nor yesterday is already broken;
      show 0 rather than a number that can never be extended */
   const t = todayKey(), d = new Date(Date.now() - 864e5);
   const y = d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
-  if (S.streak.last !== t && S.streak.last !== y) S.streak.count = 0;
+  /* a last day later than today is not broken: it was counted in a time zone
+     further east (a student who flew west kept a streak of ٥ and was shown ٠) */
+  const lt = dayKeyTime(S.streak.last);
+  if (!lt || lt < dayKeyTime(y)) S.streak.count = 0;
 })();
 
 /* --------------------------------------------------------------------------
@@ -216,6 +238,7 @@ const save = () => {
 function bumpStreak() {
   const t = todayKey();
   if (S.streak.last === t) return false;   // already counted today
+  if (dayKeyTime(S.streak.last) > dayKeyTime(t)) return false;   // counted on a later date in a time zone further east: today is already in it
   const y = new Date(Date.now() - 864e5);
   const yk = y.getFullYear() + "-" + (y.getMonth() + 1) + "-" + y.getDate();
   S.streak.count = (S.streak.last === yk) ? S.streak.count + 1 : 1;
@@ -241,10 +264,10 @@ function audioCtx() {
 }
 /* and take the first real tap as permission, so the context is already
    running by the time anything wants to make a noise */
-["pointerdown", "keydown"].forEach(evt =>
+["pointerdown", "keydown", "touchend", "click"].forEach(evt =>
   document.addEventListener(evt, function unlock() {
-    ["pointerdown", "keydown"].forEach(e2 => document.removeEventListener(e2, unlock));
     try { audioCtx(); loadCorrectBuffer(); } catch (e) {}
+    if (AC && AC.state === "running") ["pointerdown", "keydown", "touchend", "click"].forEach(e2 => document.removeEventListener(e2, unlock));
   }, { once: false, passive: true }));
 
 function beep(seq) {
@@ -478,7 +501,7 @@ function questBump() {
   if (S.daily.n >= dailyGoal()) return;
   S.daily.n++;
   if (SES) SES.qd = (SES.qd || 0) + 1;   // the progress screen fills the day's bar from where this lesson found it
-  if (S.daily.n === dailyGoal()) setTimeout(A.questBanner, 1200);
+  if (S.daily.n === dailyGoal()) { clearTimeout(QB_T); QB_T = setTimeout(A.questBanner, 1200); }
 }
 /* A quick check is a question the student answered, and counting it is what
    puts the chest inside the first session at all: the goal is ten and a lesson
@@ -596,9 +619,12 @@ function render() {
   renderSidebar();
   renderAside();
 }
-function go(v) { view = v; render(); window.scrollTo(0, 0); }
+function go(v) { sfxHush(); sayStop(); view = v; render(); window.scrollTo(0, 0); }
 
 const ICO_FILE = { "nav-exam": "nav-exam-64.png" }; // raster icons (user-provided art)
+/* exam day: the target drawn, not the emoji it was (the audit, 2026-10-28;
+   the user, 2026-10-27: no emoji a student sees) */
+const TARGET_IC = '<img class="ic-target" src="assets/icons/target.svg" width="30" height="28" alt="">';
 const ico = (name, size) => `<img class="ic" src="assets/icons/${ICO_FILE[name] || name + ".svg"}" width="${size}" height="${size}" alt="">`;
 
 /* ---------------- فهيم (the mascot) ----------------
@@ -1205,7 +1231,7 @@ function countdownCard() {
   const dateTxt = EP_DAYNAMES[when.getDay()] + " " + toAr(when.getDate()) + " " + AR_MONTHS[when.getMonth()];
 
   const numBlock = days === 0
-    ? `<span class="ec2-num"><b class="ec2-today-ic">\ud83c\udfaf</b></span>`
+    ? `<span class="ec2-num"><b class="ec2-today-ic">${TARGET_IC}</b></span>`
     : `<span class="ec2-num"><b>${toAr(days)}</b><i>${days === 1 ? "\u064a\u0648\u0645" : days === 2 ? "\u064a\u0648\u0645\u0627\u0646" : "\u064a\u0648\u0645\u0627\u064b"}</i></span>`;
 
   const headline = days === 0
@@ -1454,7 +1480,7 @@ A.openChest = function () {
     e.innerHTML = CV_STAR; sparks.appendChild(e);
   });
 
-  if (motionReduced()) { cvReward(true); return; }
+  if (motionReduced()) { snd("chest-open"); cvReward(true); return; }
 
   const setCap = text => {
     const hide = CV.capOnB ? capB : capA, show = CV.capOnB ? capA : capB;
@@ -1519,7 +1545,7 @@ A.openChest = function () {
     dots[CV.taps - 1].classList.remove("active"); dots[CV.taps - 1].classList.add("used");
     if (CV.taps < 3) dots[CV.taps].classList.add("active", "pop");
     setCap(CV_CAPS[CV.taps]);
-    CV.arc = { t0: cvNow() }; startHop(CV_TAP_HOP); snd("chest-tap", () => cvSnd.tap(), "xp-tally-" + [1, 3, 5][CV.taps - 1]);   // three hits, three tallies a step up
+    CV.arc = { t0: cvNow() }; startHop(CV_TAP_HOP); snd("chest-tap", () => cvSnd.tap(), "assessment-click-option-1", [1, 1.12, 1.26][CV.taps - 1]);   // three hits, one short click a step higher each (the user, 2026-10-28: «make the three click sounds better and simpler»; the tallies rang for 1.6s and ran into each other)
     if (CV.taps === 3) setTimeout(() => { if (CV && CV.taps === 3 && !CV.open) { dotsRow.classList.add("hide"); setCap(CV_CAPS[3]); } }, 250);
   };
   const openChest = () => {
@@ -1603,7 +1629,9 @@ A.claimChest = function (gems) {
 /* A finished lesson is paid out on the path, not only on the win screen
    (2026-10-23, the user: «every time he finishes a single lesson»): set in
    lessonComplete, played once by pathPay when the path is next drawn */
-let PATH_PAY = null;
+/* kept for the tab too, so a reload on the win screen still fills the node's
+   ring on the path (the audit, 2026-10-28: the reload skipped it) */
+let PATH_PAY = (() => { try { return JSON.parse(sessionStorage.getItem("qPathPay")); } catch (e) { return null; } })();
 /* «الدرس التالي» goes by the path: the node's ring fills there first, then
    this lesson starts on its own (2026-10-27: the user never saw the beat,
    because the button skipped the path) */
@@ -1611,7 +1639,7 @@ let PATH_NEXT = null;
 function pathNext(ms) {
   const nx = PATH_NEXT; PATH_NEXT = null;
   if (!nx) return;
-  setTimeout(() => { if (view === "path" && !SES && !document.querySelector(".lesson-pop, .streak-veil, .chest-veil")) A.startLearn(nx.domKey, nx.lesKey, nx.next); }, ms);
+  setTimeout(() => { if (view === "path" && !SES && !document.querySelector(".lesson-pop, .streak-veil, .chest-veil")) { snd("start-lesson"); A.startLearn(nx.domKey, nx.lesKey, nx.next); } }, ms);
 }
 /* Every lesson has its own sign in its node, where the path used to draw the
    same star 26 times (2026-10-23: «change stars to something else, and each
@@ -1737,14 +1765,13 @@ function renderPath() {
          path (2026-10-26: «make it left or right based on the location of the
          level»); a node in the middle takes the side the path is not heading to */
       const side = x > 0 ? "r" : x < 0 ? "l" : gi % offsets.length === 0 ? "l" : "r";
-      html += `<div class="path-row${current ? " row-tip" : ""}"><div class="node-col lbl-${side}${current ? " bob" : ""}${stale ? " stale" : ""}" style="right:${x}px;--ax:${Math.abs(x)}" data-key="${key}"${LS ? ` data-n="${LS.lessons.length}"` : ""}>
+      html += `<div class="path-row"><div class="node-col lbl-${side}${current ? " bob" : ""}${stale ? " stale" : ""}" style="right:${x}px;--ax:${Math.abs(x)}" data-key="${key}"${LS ? ` data-n="${LS.lessons.length}"` : ""}>
         ${ring}
         ${stale ? `<span class="node-refresh" title="حان وقت المراجعة" aria-hidden="true">${REFRESH_SVG}</span>` : ""}
         <button class="node ${cls}" style="--node-c:${nc[0]};--node-s:${nc[1]};--node-h:${nc[2]};--d:${(gi % 10) * 0.06}s" data-open="${u.c}|${u.s}|${u.h}"
           aria-label="${l.title} — ${done ? "مكتمل، " + arPlural(p.stars, "نجمة واحدة", "نجمتان", "نجوم", "نجمة") : current ? "الدرس الحالي" : "مقفل"}"
           ${open ? `onpointerdown="A.nodePress()" onclick="A.nodeTap(event,'${d.key}','${l.key}',${li})"` : "disabled"}>
           ${done ? NODE_GOLD : NODE_SHAPE}
-          ${current && !(frac > 0) ? `<span class="node-tip" style="color:${u.c}">ابدأ</span>` : ""}
           ${nodeIcon}
         </button>
         ${done ? '<span class="node-stars" aria-hidden="true">' + [1, 2, 3].map(sn =>
@@ -1889,18 +1916,39 @@ const SFX_SRC = { right: "assets/sounds/right-answer.mp3",
 Object.assign(SFX_SRC, { lbUnlock: "assets/sounds/lb-unlock.mp3", lbMove: "assets/sounds/lb-moveup.mp3",
   lbGold: "assets/sounds/lb-lockin-gold.mp3", lbGrey: "assets/sounds/lb-lockin-grey.mp3" });
 for (let k = 1; k <= 15; k++) SFX_SRC["lbTick" + k] = `assets/sounds/lb-tick-${String(k).padStart(2, "0")}.mp3`;
-const SFX_BUF = {}, SFX_P = {};
+const SFX_BUF = {}, SFX_P = {}, SFX_RAW = {};
+/* a file's bytes, fetched once; fetching needs no AudioContext, so the first
+   sounds can be on the phone before the first tap, which then only decodes */
+function sfxFetch(k) {
+  return SFX_RAW[k] || (SFX_RAW[k] = fetch(SFX_SRC[k]).then(r => { if (!r.ok) throw new Error(r.status); return r.arrayBuffer(); })
+    .catch(e => { delete SFX_RAW[k]; throw e; }));
+}
 function sfxLoad(k) {
   if (SFX_P[k] || !window.fetch) return;
   const ac = audioCtx();
   if (!ac) return;
-  SFX_P[k] = fetch(SFX_SRC[k]).then(r => r.arrayBuffer())
-    .then(ab => new Promise((res, rej) => ac.decodeAudioData(ab, res, rej)))
+  SFX_P[k] = sfxFetch(k)
+    .then(ab => new Promise((res, rej) => ac.decodeAudioData(ab.slice(0), res, rej)))
     .then(b => { SFX_BUF[k] = b; })
-    .catch(() => { delete SFX_P[k]; });
+    .catch(() => { delete SFX_P[k]; delete SFX_RAW[k]; });
 }
+/* the long sounds still ringing (a chest opening, the streak's celebration):
+   leaving the screen fades them out in a quarter second rather than letting
+   four seconds of them play over the next one (the audit, 2026-10-28). One
+   started in the last .6s belongs to the screen being opened and plays on. */
+var SFX_LIVE = [];   // var: go() may run before this line is reached
+function sfxHush() {
+  if (!AC || !SFX_LIVE.length) return;
+  const t = AC.currentTime;
+  SFX_LIVE.slice().forEach(e => {
+    if (t - e.at < .6) return;
+    try { e.g.gain.cancelScheduledValues(t); e.g.gain.setValueAtTime(e.g.gain.value, t); e.g.gain.linearRampToValueAtTime(0, t + .25); e.src.stop(t + .26); } catch (x) {}
+    SFX_LIVE.splice(SFX_LIVE.indexOf(e), 1);
+  });
+}
+var SFX_HOLD = false;   // set while a skipped timeline jumps to its end
 function sfxPlay(k, gain, fallback, rate, end) {
-  if (!S.sound) return;
+  if (!S.sound || SFX_HOLD) return;
   const ac = audioCtx();
   if (SFX_BUF[k] && ac) {
     try {
@@ -1908,6 +1956,11 @@ function sfxPlay(k, gain, fallback, rate, end) {
       src.buffer = SFX_BUF[k]; g.gain.value = gain || 1;
       if (rate) src.playbackRate.value = rate;
       src.connect(g); g.connect(ac.destination); src.start();
+      if (src.buffer.duration > 1.5) {
+        const e = { src, g, at: ac.currentTime };
+        SFX_LIVE.push(e);
+        src.onended = () => { const i = SFX_LIVE.indexOf(e); if (i >= 0) SFX_LIVE.splice(i, 1); };
+      }
       if (end) { const t = ac.currentTime + end; g.gain.setValueAtTime(gain || 1, t - .12); g.gain.linearRampToValueAtTime(0, t); src.stop(t); }
       return;
     } catch (e) { /* the fallback below */ }
@@ -1963,11 +2016,10 @@ const SND_MAP = {
   "quest-banner": "endstate",
   "chest-tap": "assessment-click-option-1",
   "chest-open": "level-mastered",
-  "chest-gems-reveal": "xp-tally-final",
-  "chest-gems-tick": "tutor-xp-countup-start",
+  "chest-gems-reveal": "",                       // silent, as the gems on «تقدّمك اليوم»: the user, 2026-10-28, still heard «the last part … at opening the chest»
+  "chest-gems-tick": "",
   "climb-xp-count": "tutor-xp-countup-start",
   "climb-pass-note": "xp-tally-1",
-  "progress-gems": "xp-tally-final",
   "streak-open": "streak-celebration",
   "streak-coin": "streak-charge",
   "placement-answer": "diagnostic-answer",
@@ -1997,8 +2049,15 @@ const SND_MAP = {
 const SND_FILES = ["assessment-click-option-1","assessment-click-option-2","assessment-click-option-3","assessment-click-option-4","assessment-dont-know","assessment-submit","continue","diagnostic-answer","diagnostic-complete","drag-released","drag-started","endstate","highlight-node","hint","incorrect","lesson-complete","lesson-failed","level-failed","level-mastered","level-passed","lightweight-choice","router-koji-recommendation","skip","start-lesson","streak-celebration","streak-charge","streak-inlesson","toggle-off","toggle-on","tutor-xp-countup-start","tutor-xp-countup-stop","welcome-to-leagues","xp-tally-1","xp-tally-2","xp-tally-3","xp-tally-4","xp-tally-5","xp-tally-final"];
 const SND_ONCE = { "chest-gems-tick": 1500 };      // a counted-up number calls on every step; Brilliant's count-up is one sound
 const SND_DELAY = { "answer-run": 260 };           // the streak sting lands just after the correct sound
-const SND_END = { "node-gold-turn": 1.25 };          // level-passed keeps only its first hit, stopping before the second (1.28s): the user, 2026-10-28, «remove the last part of the sound», twice
-const SND_GAIN = { "say-word": .31 };              // فهيم's typing (the user's pick, 2026-10-28, option ٢ on tools/brilliant-sounds/type.html, no bell at the end) at −22 dB, a little under the app's other clicks: the file peaks at −11.9
+const SND_END = { "node-gold-turn": 1.25,            // level-passed keeps only its first hit, stopping before the second (1.28s): the user, 2026-10-28, «remove the last part of the sound», twice
+  "chest-open": 2.4 };                                // level-mastered stops before its last hit (2.42s): the user, 2026-10-28, «the last part in voice at opening the chest»
+/* files Brilliant made much quieter or louder than its clicks, brought to the
+   clicks' level (about −19 dBFS as played; the audit, 2026-10-28): the clock's
+   last five seconds and the level test's «taken» were 20 dB under it and never
+   heard, the taste's swap 6–14 dB under; the chest's opening was the loudest
+   sound in the app and sat 8 LU over a right answer */
+const SND_LEVEL = { "timer-tick": 10, "placement-answer": 6, "taste-swap-lift": 3.4, "taste-swap-land": 2, "taste-equals": 2.4, "chest-open": .5 };
+const SND_GAIN = Object.assign({ "say-word": .31 }, SND_LEVEL);              // فهيم's typing (the user's pick, 2026-10-28, option ٢ on tools/brilliant-sounds/type.html, no bell at the end) at −22 dB, a little under the app's other clicks: the file peaks at −11.9
 const sndLast = {};
 SND_FILES.forEach(f => { SFX_SRC["b:" + f] = "assets/sounds/bri/" + f + ".mp3"; });
 function snd(id, fn, file, rate) {
@@ -2006,18 +2065,22 @@ function snd(id, fn, file, rate) {
   if (f === undefined) { if (fn) fn(); return; }
   if (!f || !S.sound) return;
   if (SND_ONCE[id]) { const t = performance.now(); if (t - (sndLast[id] || -1e9) < SND_ONCE[id]) return; sndLast[id] = t; }
-  if (!SFX_BUF["b:" + f]) sndWarm();                 // one not ready yet: the rest come now, not when the phone is next idle
   const go = () => sfxPlay("b:" + f, SND_GAIN[id] || .9, fn, rate, SND_END[id]);
   if (SND_DELAY[id]) setTimeout(go, SND_DELAY[id]); else go();
 }
 const SND_FIRST = ["continue", "lightweight-choice", "assessment-click-option-1", "assessment-click-option-2", "assessment-click-option-3",
   "assessment-click-option-4", "toggle-on", "toggle-off", "start-lesson", "skip", "drag-started", "drag-released", "highlight-node",
   "incorrect", "streak-inlesson", "tutor-xp-countup-stop", "xp-tally-1", "diagnostic-answer"];
-const SND_CHEST = ["xp-tally-1", "xp-tally-3", "xp-tally-5", "level-mastered", "xp-tally-final", "tutor-xp-countup-start", "continue"];
+const SND_CHEST = ["assessment-click-option-1", "level-mastered", "continue"];
 function sndWarm(list) { (Array.isArray(list) ? list : SND_FILES).forEach(f => sfxLoad("b:" + f)); }
 const sndFirst = () => sndWarm(SND_FIRST);
 addEventListener("pointerdown", sndFirst, { once: true, capture: true });
 addEventListener("keydown", sndFirst, { once: true, capture: true });
+/* the first run's sounds are fetched as the app opens (about 70 KB), so a new
+   student's first taps and فهيم's first words are not silent on mobile data;
+   a sound still missing later loads on its own, never all of them at once
+   (the audit, 2026-10-28: the first tap used to pull all 2.8 MB) */
+if (window.fetch && S.sound) setTimeout(() => { SND_FIRST.concat(["welcome-to-leagues"]).forEach(f => sfxFetch("b:" + f).catch(() => {})); sfxFetch("right").catch(() => {}); }, 0);
 /* any CSS colour as [r, g, b] */
 function rgbOf(c) {
   const x = (rgbOf.ctx = rgbOf.ctx || document.createElement("canvas").getContext("2d"));
@@ -2159,8 +2222,9 @@ function ringPay(col, svg, seg, n, i, c, exit, coin) {
 }
 function pathPay() {
   const pay = PATH_PAY; PATH_PAY = null;
+  try { sessionStorage.removeItem("qPathPay"); } catch (e) {}
   const col = document.querySelector('.node-col[data-key="' + pay.key + '"]');
-  if (!col || motionReduced()) { nodeFlipLoop(); pathNext(700); return; }
+  if (!col || motionReduced()) { if (col) snd(pay.gold ? "node-gold-turn" : "ring-segment-pay"); nodeFlipLoop(); pathNext(700); return; }
   const btn = col.querySelector(".node"), LS = learnSet(pay.key), n = LS ? LS.lessons.length : 0;
   const c = (btn.dataset.open || "").split("|")[0];
   clearTimeout(flipT); payRun = true;                // no star flip mid-beat, whoever asks for one
@@ -2173,8 +2237,6 @@ function pathPay() {
   const seg = svg && n ? svg.querySelectorAll(".ring-seg")[pay.was] : null;
   if (seg) { seg.classList.replace("ring-arc", "ring-track"); seg.style.stroke = ""; }
   if (svg && n) svg.style.transform = "scale(.82,.791)";
-  const tip = btn.querySelector(".node-tip");
-  if (tip) tip.style.opacity = 0;
   const keep = btn.getAttribute("style");
   const stars = pay.gold && col.querySelector(".node-stars");
   if (stars) stars.style.opacity = 0;                // earned on the landing, not before
@@ -2189,7 +2251,6 @@ function pathPay() {
   if (r.top < 90 || r.bottom > innerHeight - 110) col.scrollIntoView({ block: "center", behavior: "smooth" });
   const end = () => {
     if (stars) { stars.style.opacity = ""; [...stars.children].forEach((x, i) => x.animate([{ transform: "scale(0)" }, { transform: "scale(1.3)", offset: .6 }, { transform: "none" }], { duration: 380, delay: i * 90, easing: "ease-out", fill: "backwards" })); }
-    if (tip) { tip.style.opacity = ""; tip.animate([{ opacity: 0, scale: .6 }, { opacity: 1, scale: 1.1, offset: .6 }, { opacity: 1, scale: 1 }], { duration: 320, easing: "ease-out" }); }
     payRun = false;
     nodeFlipLoop(2400);
     pathNext(1000);
@@ -2486,6 +2547,8 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
 };
 
 A.startLesson = function (domKey, lesKey, boost) {
+  sayStop(); sfxHush();
+  sndWarm();   // every Brilliant sound as the lesson opens, not after its first answer
   const d = window.QBANK[domKey], l = d.lessons.find(x => x.key === lesKey);
   const key = domKey + "." + lesKey;
   if (learnSet(key) && !lessonProg(key).stars) { A.startLearn(domKey, lesKey, null, boost); return; }
@@ -2721,7 +2784,9 @@ A.teachPick = function (i) {
     else ns.forEach(n => { if (!rec.missed.includes(n)) rec.missed.push(n); });
   }
   if (cur.revealed) playCorrect(); else snd("teach-check-wrong");
-  questTick();
+  /* once per check: back and forward again let one check count three times toward the day (the audit, 2026-10-28) */
+  const tk = cur.ci + ":" + cur.i; SES.teachTicked = SES.teachTicked || {};
+  if (!SES.teachTicked[tk]) { SES.teachTicked[tk] = 1; questTick(); }
   save();
   renderTeach();
   teachFx(document.querySelector(`.tc-choices .choice[data-ci="${i}"]`), cur.revealed);
@@ -2735,6 +2800,7 @@ A.teachPick = function (i) {
    pick, the drop-and-shake on a wrong one. No strike, no confetti, no streak
    tag — a practice tap is not a run. */
 function teachFx(card, ok) {
+  ansBuzz(ok);
   if (!fxOn() || !window.gsap || !card) return;
   fxClear();
   fxTl = gsap.timeline();
@@ -3436,6 +3502,9 @@ function fxAddFail(tl, card, at) {
   }
 }
 
+/* the vibration setting promises «نبضة خفيفة مع كل إجابة», and no answer ever
+   vibrated (the audit, 2026-10-28): a right answer taps once, a miss twice */
+const ansBuzz = ok => buzz(ok ? 14 : [24, 60, 24]);
 function answerFxFail(card) {
   if (!fxOn() || !window.gsap || !card) return;
   fxClear();
@@ -3666,7 +3735,10 @@ function rulePlay(again) {
   }, said + terms * RULE_LIT + 200));
 }
 A.ruleAgain = function () { buzz(6); rulePlay(true); };
-function learnFmt(s) { return esc(s == null ? "" : s).replace(/\*([^*]+)\*/g, '<b class="ln-hl">$1</b>'); }
+function learnFmt(s) {
+  return esc(s == null ? "" : s).replace(/\*([^*]+)\*/g, '<b class="ln-hl">$1</b>')
+    .replace(/[٠-٩]+(?:[.,٫][٠-٩]+)?(?: ?[+\-−×÷=] ?[٠-٩]+(?:[.,٫][٠-٩]+)?){1,3}/g, m => `<span class="nw">${m}</span>`);   // a short sum keeps its line (the audit, 2026-10-28)
+}
 
 /* After every rule, two screens (2026-10-26, the user: «لازم بعد كل قانون تجي
    شاشه فيه القانون بس انا اعبيه القانون نفسه عشان تساعد بالحفظ وشاشه بعدها
@@ -3717,7 +3789,13 @@ function rfCloze(o) {
    right one, so no long phrase makes the line small for everyone (rfFit sizes
    it for the widest tiles that could go in its blanks), shortest first when
    there are not enough */
+/* a wrong tile must not be a right answer said another way: in a run of odd
+   numbers «آخر عدد» is «آخر فردي», and «رقم» is what most people call a
+   number (the audit, 2026-10-28: «آخر عدد» was offered, and marked wrong, on
+   «عددها = (آخر فردي + ١) ÷ ٢»). A term lists the tiles never offered with it. */
+const RF_NOT = { "آخر فردي": ["آخر عدد", "آخر رقم"], "آخر عدد": ["آخر رقم"], "عدد مرات تكراره": ["عددها"] };
 function rfDecoys(pool, terms, n) {
+  pool = pool.filter(t => !terms.some(u => (RF_NOT[u] || []).indexOf(t) >= 0));
   const max = Math.min(...terms.map(t => t.length)) + 3;
   const fit = shuffle(pool.filter(t => t.length <= max)), rest = pool.filter(t => t.length > max).sort((x, y) => x.length - y.length);
   return fit.concat(rest).slice(0, n);
@@ -3825,6 +3903,8 @@ function teachSteps(chunk) {
 
 let LAST_LEARN = null;
 A.startLearn = function (domKey, lesKey, li, boost) {
+  sayStop(); sfxHush();
+  sndWarm();   // every Brilliant sound as the lesson opens: a «وصّل» before the first answer played the old beeps (the user, 2026-10-28: «it's the old sound»)
   const key = domKey + "." + lesKey, L = learnSet(key);
   if (!L) { A.startLesson(domKey, lesKey, boost); return; }
   if (li === undefined || li === null || li < 0 || li >= L.lessons.length) li = Math.max(0, learnAt(key));
@@ -4246,11 +4326,12 @@ A.lPair = function (side, k) {
     /* every pair greys out after its wave, the last one too — left green it
        read as stuck (the user, 2026-10-27) */
     setTimeout(() => [A1, B1].forEach(x => { x.classList.remove("ad-ok"); x.classList.add("gone"); }), 900);
+    snd("pair-match", () => sndGood(), "xp-tally-" + Math.min(it.ui.matched.length / 2, 5));   // each pair a tally higher, the last one too, then the correct sound (the user, 2026-10-28: «we want 4 voices and then» the correct one)
     if (it.ui.matched.length === it.p.length * 2) {
       SES.locked = true;
       /* the last pair's wave, then the whole board takes the win jump (and the strike rides on it) */
       setTimeout(() => learnResolve(it, it.ui.miss === 0, "", document.querySelector(".ln-pairs") || B1, true), 520);
-    } else snd("pair-match", () => sndGood(), "xp-tally-" + Math.min(it.ui.matched.length / 2, 5));   // each pair a tally higher
+    }
   } else {
     it.ui.miss++;
     snd("pair-miss", () => sndBad());
@@ -4400,6 +4481,7 @@ function rfCheck(it) {
   }
   it._tries = (it._tries || 0) + 1;
   if (learnGraded(it) && !(it.uid in SES.firstTry)) SES.firstTry[it.uid] = false;
+  SES.run = 0; fxPaintBar(0);
   eq.innerHTML = learnFillEq(it, true); rfFit(eq, it); lock();
   const chips = eq.querySelectorAll(".ln-blank"), wrong = bad.map(j => chips[j]).filter(Boolean);
   if (window.gsap && !fxReduced()) gsap.fromTo(wrong, { x: 0 }, { keyframes: [{ x: -8, duration: .06 }, { x: 7, duration: .07 }, { x: -5, duration: .07 }, { x: 3, duration: .06 }, { x: 0, duration: .06 }] });
@@ -4417,6 +4499,8 @@ function rfCheck(it) {
     });
     learnPaint();
     rfPoint(it, bad);
+    const tl = document.getElementById("lnTiles");
+    if (tl) tl.scrollIntoView({ block: "nearest", behavior: fxReduced() ? "auto" : "smooth" });
   }, 950);
 }
 function learnCheck() {
@@ -4466,7 +4550,12 @@ function learnCheck() {
 function learnRequeue(it) {
   SES.retried[it.uid] = (SES.retried[it.uid] || 0) + 1;
   if (SES.retried[it.uid] >= 3) { SES.got++; return; }     // let go of for this lesson, so the bar can still fill
-  const again = learnMake(it.src, it.tag);
+  /* «بيرجع لك آخر الدرس بأرقام جديدة» is a promise: a generator with few
+     values gave the same numbers back one time in four (the audit, 2026-10-28),
+     so it is asked again until they differ — the order of the choices aside */
+  const sig = x => JSON.stringify(x, (k, v) => k && (k[0] === "_" || ["ui", "uid", "tiles", "again"].indexOf(k) >= 0) ? undefined : v);
+  let again = learnMake(it.src, it.tag);
+  for (let n = 0; typeof it.src === "function" && n < 12 && sig(again) === sig(it); n++) again = learnMake(it.src, it.tag);
   again.uid = it.uid; again.again = true;
   SES.queue.push(again);
 }
@@ -4488,14 +4577,14 @@ function learnResolve(it, ok, shown, card, pairs, why) {
     playCorrect();
     let gain = 0;
     if (graded) {
-      SES.run = (SES.run || 0) + 1; SES.done++;
+      SES.run = first && !(pairs && !ok) ? (SES.run || 0) + 1 : 0; SES.done++;
       const d = it.t === "bank" ? (it.q.difficulty || 2) : 0;
       gain = !first || SES.replay ? 1 : d ? [0, 3, 5, 8][d] : 2;
       SES.gems += gain;
       SES.xp += !first || SES.replay ? 2 : d ? [0, 6, 10, 16][d] : 5;
     }
     paintProg(SES.idx + 1);
-    const head = pairs ? (ok ? "وصّلتها كلها!" : "وصّلتها — في المرة الجاية بدون غلط") : it.free ? (it.head || "صح!") : praiseFor();
+    const head = pairs ? (ok ? "وصّلتها كلها!" : "وصّلتها — في المرة الجاية بدون غلط") : it.free ? (it.head || "صح!") : praiseFor(graded ? first : undefined);
     fb.className = "feedback good show has-crest";
     fb.innerHTML = `<svg class="fb-crest" viewBox="0 0 380 90" preserveAspectRatio="none" aria-hidden="true">
         <path class="fb-crest-fill"></path>
@@ -4504,10 +4593,10 @@ function learnResolve(it, ok, shown, card, pairs, why) {
         ${gain ? `<span class="fb-gain">${ico("gem", 15)} +${toAr(gain)}</span>` : ""}</div>
       ${it.ok ? `<div class="ln-fb-note">${learnFmt(it.ok)}</div>` : ""}
       <button class="btn" onclick="A.next()">متابعة</button>`;
-    answerFx(card, SES.run);
+    answerFx(card, SES.run); ansBuzz(true);
   } else {
     snd("wrong-answer", () => sndBad());
-    if (graded) { SES.run = 0; learnRequeue(it); paintProg(); loseHeart(); }
+    if (graded) { SES.run = 0; fxPaintBar(0); learnRequeue(it); paintProg(); loseHeart(); }
     const hLeft = SES.hearts;
     const heartLine = !graded || SES.safe ? ""
       : hLeft === 0 ? `<div class="fb-hearts out">${ico("heart", 15)} لم يتبقَّ لك قلوب</div>`
@@ -4521,7 +4610,7 @@ function learnResolve(it, ok, shown, card, pairs, why) {
       ${sol}
       ${graded && !it.again && SES.retried[it.uid] < 3 ? `<div class="ln-back">${typeof it.src === "function" ? "بيرجع لك آخر الدرس بأرقام جديدة" : "بيرجع لك آخر الدرس"}</div>` : ""}
       <button class="btn btn-red" onclick="A.next()">${graded && hLeft === 0 && !SES.safe ? "شوف النتيجة" : "فهمت"}</button>`;
-    answerFxFail(card);
+    answerFxFail(card); ansBuzz(false);
   }
   setTimeout(() => (window.requestIdleCallback || (f => f()))(warmStreak), 1400);
   save();
@@ -4553,7 +4642,7 @@ function learnFinish(acc) {
 /* «الدرس التالي» from the win screen: the same hand-offs متابعة makes (the
    streak flame first), then straight into the next three minutes */
 A.winNext = function () {
-  snd(LAST_LEARN && LAST_LEARN.next >= 0 ? "start-lesson" : "continue");
+  snd("continue");   // the start sound waits for the lesson itself (pathNext): here it played over the streak's celebration, twelve seconds before anything started (the audit, 2026-10-28)
   wstStop(); wvStop();
   winHeroStop(); WIN = null;
   const L = LAST_LEARN;
@@ -4682,6 +4771,10 @@ function requeue(q) {
 
 function timeUp() {
   if (!SES || SES.locked) return;
+  /* an answer picked but not yet checked when the clock runs out is graded, as
+     the real exam grades it — it used to be thrown away and cost a heart even
+     when it was right (the audit, 2026-10-28) */
+  if (SES.sel !== null && SES.sel !== undefined && SES.mode !== "learn" && SES.mode !== "place") { A.check(); return; }
   SES.locked = true;
   SES.tSpent += Q_SECS; SES.tAnswered++;
   const q = SES.queue[SES.idx];
@@ -4729,11 +4822,12 @@ A.pick = function (i) {
    student is instead: the halfway mark, a run that is getting away from them, the last
    question. The run count itself is already on the bar's tag, so the run line here says
    something else. */
-function praiseFor() {
+function praiseFor(first) {
   const n = SES.queue.length, at = SES.idx + 1;
+  if (first === false) return ["صحّحتها!", "كذا تمام!", "هذي هي!"][at % 3];   // right after a miss: no «أول وحدة صح» or «على التوالي»
   /* the first question anyone ever gets right deserves better than the fifth
      entry in a rotation */
-  if (SES.safe && SES.done === 1 && !SES.li) return "أول وحدة صح — يلا كمّل!";
+  if (SES.safe && SES.done === 1 && !SES.li) return "أول وحدة صح — يلا\u00a0كمّل!";
   if (at >= n && SES.done >= SES.total) return "أنهيتها!";
   if (SES.run >= 5) return "لا شيء يوقفك!";
   if (SES.run === 3) return "ثلاث على التوالي!";
@@ -4800,7 +4894,7 @@ A.check = function () {
     /* after the sheet exists, never before: the timeline slides the sheet and
        animates the crest inside it, so both have to be in the DOM when it is
        built. Same synchronous block, so nothing paints in between. */
-    answerFx(document.querySelector(`.choice[data-ci="${q.answer}"]`), SES.run);
+    answerFx(document.querySelector(`.choice[data-ci="${q.answer}"]`), SES.run); ansBuzz(true);
   } else {
     snd("wrong-answer", () => sndBad());
     SES.run = 0;                         // one miss and the run is gone
@@ -4830,7 +4924,7 @@ A.check = function () {
       <button type="button" class="fb-report" onclick="A.reportQ('${q.id}')">${(S.reports || {})[q.id] ? "وصلتنا ملاحظتك على هذا السؤال ✓" : "أبلغ عن هذا السؤال"}</button>
       <button class="btn btn-red" onclick="A.next()">${hLeft === 0 ? "شوف النتيجة" : "متابعة"}</button>`;
     /* after the sheet exists: the miss timeline slides it and snaps the cross */
-    answerFxFail(document.querySelector(`.choice[data-ci="${SES.sel}"]`));
+    answerFxFail(document.querySelector(`.choice[data-ci="${SES.sel}"]`)); ansBuzz(false);
   }
   /* The fire-streak runtimes (two libraries and a 1.3MB wasm) used to start
      loading the moment a lesson began, which on a slow phone put their parse
@@ -4875,7 +4969,7 @@ A.showMethod = function () {
   veil.innerHTML = `<div class="method-sheet">
     <div class="ms-grip"></div>
     <div class="ms-head"><span class="ms-bulb">${BULB_SVG}</span><h3>كيف أحلّها؟</h3></div>
-    <div class="ms-sub">الوقت متوقف — خذ راحتك. ${cur && cur.method ? "خطوات حلّ هذا السؤال بالذات" : chunk ? "القوانين اللي يحتاجها هذا السؤال" : "قوانين هذا الدرس وخدع الاختبار"} 👇</div>
+    <div class="ms-sub">الوقت متوقف — خذ راحتك. ${cur && cur.method ? "خطوات حلّ هذا السؤال بالذات" : chunk ? "القوانين اللي يحتاجها هذا السؤال" : "قوانين هذا الدرس وخدع الاختبار"}</div>
     <div class="ms-body">${(cur && cur.method) || !chunk ? formatExplain(method) : teachRulesHtml(chunk)}</div>
     ${les && les.rules ? `<button class="btn btn-ghost ms-link" onclick="A.openBook('${SES.domKey}','${SES.lesKey}')">افتح دفتر القوانين كاملاً</button>` : ""}
     <button class="btn ms-close" onclick="A.closeMethod()">فهمت، بحاول</button>
@@ -5090,7 +5184,13 @@ A.quitFailed = function () { SES = null; A.go("path"); };
 /* A true five-point star: sharp points, then a same-shape stroke on top to
    round every corner by half its width - the Duolingo star is chunky, not
    a blob. Drawn at 44x44 with room for the 5px rim. */
+/* the day's goal met on a lesson's last answer: the banner timed for 1.2s
+   later landed on the win screen, over the first victory (the audit,
+   2026-10-28) — the win screen takes it off and tells the goal itself */
+var QB_T = null;
+function questBannerOff() { clearTimeout(QB_T); document.querySelectorAll(".quest-banner").forEach(e => e.remove()); }
 function lessonComplete() {
+  questBannerOff();
   if (S.placeNudge && SES && SES.key === S.placeNudge.key) S.placeNudge = null;   // they got through it
   stopQTimer();
   const ft = Object.values(SES.firstTry);
@@ -5109,6 +5209,7 @@ function lessonComplete() {
   else if (learn.nodeDone) p.stars = Math.max(p.stars, learn.nodeStars);
   p.last = todayKey();               // so the path can say when a lesson is going stale
   PATH_PAY = SES.replay || (learn && learn.done === wasDone) ? null : { key: SES.key, was: wasDone, gold: !wasStars && p.stars > 0 };
+  try { PATH_PAY ? sessionStorage.setItem("qPathPay", JSON.stringify(PATH_PAY)) : sessionStorage.removeItem("qPathPay"); } catch (e) {}
   const rankGain = SES.xp * (SES.xpBoost ? 2 : 1);   // 2× boost doubles RANK XP only (gems unaffected)
   const lbAt = Date.now(), lb0 = leagueStandings(lbAt), ti0 = tierIndex();
   gainXP(rankGain); gainGems(SES.gems);
@@ -5303,7 +5404,9 @@ function winSkippable(tl) {
   if (!host || !tl) return;
   host.addEventListener("pointerdown", e => {
     if (e.target.closest("button")) return;
-    if (tl.progress() < 1) tl.progress(1);
+    /* a skip runs every beat at once: their sounds are held, or both bars and
+       the tally played in the same millisecond (the audit, 2026-10-28) */
+    if (tl.progress() < 1) { SFX_HOLD = true; try { tl.progress(1); } finally { SFX_HOLD = false; } }
   });
 }
 /* Duolingo's stat cards are played from Duolingo's own file (2026-10-21: the
@@ -5317,11 +5420,16 @@ function winSkippable(tl) {
    (assets/fonts/stat-font.ttf: Baloo Bhaijaan 2 at 800, cut to Arabic, its
    0–9 and % drawn as ٠–٩ and ٪ so the file's own digit ticker rolls in Eastern
    Arabic). Nested events do not reach the page, so the hit on each card is
-   played on the file's own beats (+.167s into cards at 0 / .6 / 1.267s). The
+   played on the file's own beats: cards at 0 / .6 / 1.267s, each popping in
+   .54s into its beat, so its hit starts at +.48s and peaks on the pop (it was
+   at +.167s, a third of a second early, and the first one drowned in the win
+   jingle — the user, 2026-10-28: «not synchronised … I just hear 2»). The
    HTML cards (statCardIn) stay underneath for screen readers, and play
    instead whenever the file is not ready — offline, or reduced motion. */
 let wstRv = null;
 const WST_AT = [0, .6, 1.267];
+const WST_HIT = .48;                 // into each card's beat: the hit's peak (60ms in) lands on the card's pop
+const WST_GAIN = [.6, .9, .65];      // each card's hit at the same loudness (stat-2 peaks 4 dB under the others)
 function wstStop() {
   if (wstRv) { try { wstRv.cleanup(); } catch (e) {} wstRv = null; }
 }
@@ -5379,9 +5487,9 @@ function wstFire(skip) {
     const hz = [196, 247, 294];
     WST_AT.forEach((a, k) => setTimeout(() => {
       if (wstRv !== rv) return;
-      sfxPlay("stat" + (k + 1), .5, () => { cvTone(hz[k], hz[k] * .55, .16, "triangle", .22); cvHiss(.08, .05, 0, 3000, 1200); }); buzz(18);
+      sfxPlay("stat" + (k + 1), WST_GAIN[k], () => { cvTone(hz[k], hz[k] * .55, .16, "triangle", .22); cvHiss(.08, .05, 0, 3000, 1200); }); buzz(18);
       setTimeout(() => buzz([10, 50, 10, 50, 10, 50, 10]), 250);
-    }, (a + .167) * 1000));
+    }, (a + WST_HIT) * 1000));
   }
   return true;
 }
@@ -5407,7 +5515,7 @@ function statCardIn(tl, c, t0, k, count) {
     .to(body, { width: "calc(100% - 4px)", height: 66, duration: .35, ease: "expo.out" }, t0)
     .to(body, { "--ha": 1, duration: .12, ease: "power1.out" }, t0 + .05)
     .to(inner, { keyframes: [{ scale: 1.25, duration: .117, ease: "power3.out" }, { scale: 1, duration: .2, ease: "power2.inOut" }] }, t0)
-    .call(() => { cvTone(hitHz, hitHz * .55, .16, "triangle", .22); cvHiss(.08, .05, 0, 3000, 1200); buzz(18); }, null, t0 + .167)
+    .call(() => { sfxPlay("stat" + (k + 1), WST_GAIN[k] || .6, () => { cvTone(hitHz, hitHz * .55, .16, "triangle", .22); cvHiss(.08, .05, 0, 3000, 1200); }); buzz(18); }, null, t0 + .06)   // the copy pops at once: its hit peaks on the pop's top (.117s)
     /* the card opens: the strip rises from behind the body inside the halo */
     .to(bg, { opacity: 1, y: 0, scaleX: 1, duration: .266, ease: "expo.out" }, t0 + .317)
     .to(body, { "--ha": 0, duration: .2, ease: "power1.out" }, t0 + .317)
@@ -5569,6 +5677,7 @@ function climbSfxLoad() {
 }
 let climbRaf = 0, climbT = [];
 function climbStop() { cancelAnimationFrame(climbRaf); climbT.forEach(clearTimeout); climbT = []; }
+A.climbOn = function () { snd("continue"); A.winMore(); };   // the climb's «متابعة» was the only silent one (the audit, 2026-10-28)
 A.winOn = function () { snd("continue"); if (WIN && WIN.climb) A.winClimb(); else A.winMore(); };
 A.winClimb = function () {
   wstStop(); wvStop(); winHeroStop(); climbStop();
@@ -5588,7 +5697,7 @@ A.winClimb = function () {
         <span class="lb-xp"><b${e.you ? ` id="clXp"` : ""}>${toAr(e.xp)}</b><i>XP</i></span>
         ${e.you ? `<span class="cl-shine"><i></i></span>` : ""}
       </div>`).join("")}</div></div>
-    <div class="action-bar win-action wn-cta cl-cta" id="clCta"><button class="btn" onclick="A.winMore()">متابعة</button></div>
+    <div class="action-bar win-action wn-cta cl-cta" id="clCta"><button class="btn" onclick="A.climbOn()">متابعة</button></div>
   </div></div>`;
   climbPlay(C);
 };
@@ -5649,7 +5758,7 @@ function climbPlay(C) {
     if (!done) {
       rows[j].animate([{ opacity: 1 }, { opacity: .4, offset: .3 }, { opacity: 1 }], { duration: 480 });
       const k = passed.size;
-      snd("climb-pass-note", () => beep([[523 * Math.pow(2, Math.min(k, 12) / 12) * 1.5, .07]]), "xp-tally-" + Math.min(k, 5));
+      if (k <= 5) snd("climb-pass-note", () => beep([[523 * Math.pow(2, Math.min(k, 12) / 12) * 1.5, .07]]), "xp-tally-" + k);   // past the fifth, the 2.7s tallies piled into a roar (11 at once on #climbtop): the ticks carry on alone
       sfxPlay("lbTick" + Math.min(k, 15), .9);
       buzz(6);
       me.querySelector(".cl-rk").animate([{ transform: "scale(1.45)" }, { transform: "scale(1)" }], { duration: 260, easing: "cubic-bezier(.3,1.6,.5,1)" });
@@ -5678,7 +5787,7 @@ function climbPlay(C) {
   const end = () => { if (done) return; done = true; climbStop(); me.getAnimations().forEach(x => x.cancel()); land(); };
   const host = document.getElementById("comp");
   host.addEventListener("pointerdown", e => { if (!e.target.closest("button")) end(); });
-  if (motionReduced()) { end(); return; }
+  if (motionReduced()) { end(); sfxPlay(C.to <= 3 ? "lbGold" : "lbGrey", .9); return; }
   const at = (ms, f) => climbT.push(setTimeout(f, ms));
   /* 1. your XP climbs on your row */
   at(450, () => {
@@ -5899,6 +6008,7 @@ function wpPlay(W, justDone) {
   };
   cpbStop();
   if (!window.gsap || motionReduced()) {
+    sfxPlay(justDone ? "barC100" : "barP50", .9);
     cpbFill(document.getElementById("wpBar"));
     if (task) { task.classList.add("done"); if (task.classList.contains("all")) task.classList.add("full"); const n = document.getElementById("wnN"); if (n) n.textContent = toAr(W.learn.done); }
     questWords(); if (gEl) gEl.textContent = toAr(W.gems);
@@ -5951,8 +6061,9 @@ function wpPlay(W, justDone) {
       }, null, at + dur);
     } else if (gEl) {
       /* the pile is fired as the card arrives and lands about a second later
-         (Duolingo's file: shadow at .4s, the drop at .6s, the hit at 1s) */
-      const pay = () => { countUp(gEl, W.gems, "", 500); snd("progress-gems", () => cvSnd.gems()); buzz([10, 50, 10, 50, 10]); };
+         (Duolingo's file: shadow at .4s, the drop at .6s, the hit at 1s);
+         silent — the user, 2026-10-28: «gem sounds remove it» */
+      const pay = () => { countUp(gEl, W.gems, "", 500); buzz([10, 50, 10, 50, 10]); };
       tl.call(() => {
         if (wgFire(W.gems)) gsap.delayedCall(1, () => { if (document.getElementById("wpGemRv")) pay(); });
         else {
@@ -6202,6 +6313,9 @@ function renderMockQ() {
           : `<button class="btn" onclick="A.mockGo(${MOCK.qi + 1})">التالي</button>`}
       </div>
     </div>`;
+  /* on a short phone the numbers are one row that scrolls sideways: keep the current one in view */
+  const cur = document.querySelector(".qnav .qn-chip.cur");
+  if (cur && cur.parentNode.scrollWidth > cur.parentNode.clientWidth) cur.scrollIntoView({ inline: "center", block: "nearest" });
 }
 
 A.mockSelect = function (i) {
@@ -6610,7 +6724,10 @@ function renderLeague() {
    left it, the way Duolingo's league trophy glints. CSS only; still under
    reduced motion. */
 function lbShine(key) {
-  return `<span class="lb-shine" style="--src:url(assets/icons/ranks/rank-${key}.png)" aria-hidden="true"></span><i class="lb-glint" aria-hidden="true">${WST_GLINT}</i><i class="lb-glint lb-glint2" aria-hidden="true">${WST_GLINT}</i>`;
+  /* a full address: a url() carried in a custom property resolves against the
+     stylesheet that uses it, so a relative one asked for css/assets/… (a 404,
+     and a mask that fails to load hides the shine) — the audit, 2026-10-28 */
+  return `<span class="lb-shine" style="--src:url(&quot;${new URL("assets/icons/ranks/rank-" + key + ".png", document.baseURI).href}&quot;)" aria-hidden="true"></span><i class="lb-glint" aria-hidden="true">${WST_GLINT}</i><i class="lb-glint lb-glint2" aria-hidden="true">${WST_GLINT}</i>`;
 }
 
 /* ============================================================
@@ -7069,7 +7186,7 @@ function rankUpLeague(tierIdx) {
   const veil = document.createElement("div");
   veil.className = "rankup-veil ru-league";
   veil.innerHTML = `<iframe class="ru-frame" title="ترقيت إلى المستوى ${esc(LEAGUE_TIERS[tierIdx].name)}"
-    src="assets/league/index.html?embed&tier=${tierIdx}&xp=${S.totalXp || 0}"></iframe>`;
+    src="assets/league/index.html?embed&tier=${tierIdx}&xp=${S.totalXp || 0}${setHapticOn() ? "" : "&haptic=0"}"></iframe>`;
   document.body.appendChild(veil);
   requestAnimationFrame(() => veil.classList.add("show"));
   const frame = veil.querySelector("iframe");
@@ -7674,7 +7791,8 @@ A.restoreShow = function () {
     close();
     askConfirm("نستعيد هذه النسخة؟", backupSummary(s) + " — تقدّمك الحالي على هذا الجهاز سيُستبدل.",
       "لا، رجوع", "نعم، استعد", () => {
-        try { localStorage.setItem("qudratState", JSON.stringify(s)); } catch (e) { }
+        try { localStorage.setItem("qudratState", JSON.stringify(s)); }
+        catch (e) { toast("تعذّر حفظ النسخة على هذا الجهاز — مساحة المتصفح ممتلئة أو الحفظ معطّل"); return; }   // it used to reload the old progress as if it had worked (the audit, 2026-10-28)
         mockClear();
         location.reload();
       });
@@ -8074,7 +8192,7 @@ function epCount() {
   card.classList.remove("empty");
   save.disabled = false;
   const unit = document.getElementById("epUnit");
-  if (n === 0) { epSetBadge("\ud83c\udfaf"); unit.textContent = "\u0627\u062e\u062a\u0628\u0627\u0631\u0643 \u0627\u0644\u064a\u0648\u0645 \u2014 \u0628\u0627\u0644\u062a\u0648\u0641\u064a\u0642"; }
+  if (n === 0) { epSetBadge(""); document.getElementById("epBadge").innerHTML = TARGET_IC; unit.textContent = "\u0627\u062e\u062a\u0628\u0627\u0631\u0643 \u0627\u0644\u064a\u0648\u0645 \u2014 \u0628\u0627\u0644\u062a\u0648\u0641\u064a\u0642"; }
   else if (n === 1) { epCountTo(1); unit.textContent = "\u063a\u062f\u0627\u064b \u0627\u062e\u062a\u0628\u0627\u0631\u0643"; }
   else {
     epCountTo(n);
@@ -8385,18 +8503,26 @@ function obRecommend() { return OB.level === "new" || OB.level === "basic" ? "sc
    *…* marks the words he leans on. */
 function sayHtml(text) {
   let bold = false;
-  return String(text).split(" ").map(w => {
+  text = String(text).replace(/ —/g, "\u00a0—").replace(/(^|\s)(\*?[٠-٩]+) (?=\S)/g, "$1$2\u00a0");
+  return text.split(" ").map(w => {
     /* the closing mark may sit before the punctuation: «*الوحدة ٣*!» */
     const open = w.startsWith("*");
     if (open) { bold = true; w = w.slice(1); }
     const close = /\*[!.،؟:]*$/.test(w);
     if (close) w = w.replace(/\*([!.،؟:]*)$/, "$1");
-    const h = `<span class="w${bold ? " hl" : ""}">${esc(w)}</span>`;
+    /* a word glued to what follows it («*فهيم*» + « —») closes mid-token:
+       only the part before the mark is blue */
+    const mid = bold && !close ? w.indexOf("*") : -1;
+    if (mid >= 0) { bold = false; return `<span class="w hl-w"><span class="hl">${esc(w.slice(0, mid))}</span>${esc(w.slice(mid + 1))}</span>`; }
+    const h =`<span class="w${bold ? " hl" : ""}">${esc(w)}</span>`;
     if (close) bold = false;
     return h;
   }).join(" ");
 }
-let SAY_T = null, SAY_D = null;
+var SAY_T = null, SAY_D = null;   // var: go() may run before this line is reached
+/* فهيم stops typing when his screen goes: a tap on «يلا نبدأ» mid-sentence
+   left six more clicks playing into the first lesson (the audit, 2026-10-28) */
+function sayStop() { clearTimeout(SAY_D); clearInterval(SAY_T); }
 const SAY_AT = 550, SAY_STEP = 75;   // the first word lands with the bubble; then one every 75ms
 function sayPlay(delay) {
   clearTimeout(SAY_D); clearInterval(SAY_T);
@@ -8408,7 +8534,7 @@ function sayPlay(delay) {
       if (k >= ws.length) { clearInterval(SAY_T); return; }
       const w = ws[k++];
       w.classList.add("on");
-      snd("say-word", null, undefined, (w.classList.contains("hl") ? 1.16 : 1) * (.92 + Math.random() * .16));
+      snd("say-word", null, undefined, (w.classList.contains("hl") || w.classList.contains("hl-w") ? 1.16 : 1) * (.92 + Math.random() * .16));
     }, SAY_STEP);
   }, delay == null ? SAY_AT : delay);
 }
@@ -8516,7 +8642,14 @@ const OB_VIEW = {
   }
 };
 /* the bar is hidden while he only talks, as Duolingo's is on its intro screens */
+/* a screen of the first run or the sign-in takes no tap for its first .42s,
+   while it slides in: a double tap on «المتابعة» used to land the second tap
+   on the next screen's button and skip it whole — the goal question, «وش هو
+   قدراتي؟», the splash (the audit, 2026-10-28) */
+var obLockUntil = 0;
+const obLocked = () => performance.now() < obLockUntil;
 function obFrame(html, cta, pct, back, cls, bar) {
+  obLockUntil = performance.now() + 420;
   const from = OB ? OB.pct : 0;
   $app.innerHTML = `<div class="screen screen-full ob-screen ${cls}">
     <div class="ob-top">
@@ -8546,7 +8679,9 @@ function renderOb() {
   const v = OB_VIEW[step]();
   /* the bar never fills on the last question: the student is not in yet */
   const pct = Math.round((OB.i + 1) / (OB.steps.length + 1) * 100);
-  obFrame(v.html, v.cta, pct, OB.i > 0 || !S.user ? "A.obBack()" : "", "ob-" + step, !v.top);
+  /* a run that began at hello can always step back to the welcome screen, even
+     once the splash has made them a guest (it lost its arrow, the audit, 2026-10-28) */
+  obFrame(v.html, v.cta, pct, OB.i > 0 || !S.user || OB.steps[0] === "hello" ? "A.obBack()" : "", "ob-" + step, !v.top);
   if (OB_BUZZ[step]) setTimeout(() => buzz(OB_BUZZ[step]), 250);
   if (step === "goal" && OB.goal != null) setTimeout(() => glWave(OB.goal), 700);
   if (step === "taste" && OB.taste != null) { document.querySelector(".ob-cta").classList.add("ts-up"); fxDrawCrest(); }
@@ -8601,17 +8736,23 @@ A.obTaste = function (i) {
   if (!OB || OB.taste != null || !document.querySelector(".ts")) return;
   OB.taste = i;
   snd("taste-tap", () => sndTap()); buzz(12); sfxLoad("right");
+  const go = document.getElementById("obGo"); if (go) go.style.visibility = "hidden";   // «اختر إجابة» read wrong for the 1.5s swap after an answer was picked (the audit, 2026-10-28)
   const opts = document.querySelectorAll(".ts-opt");
   opts.forEach(b => { b.disabled = true; b.classList.toggle("sel", +b.dataset.v === i); });
   const ns = Array.from(document.querySelectorAll(".ts-n")), boxes = document.querySelectorAll(".ts-box"),
         eq = document.querySelector(".ts-eq"), wrap = document.querySelector(".ts"), cta = document.querySelector(".ob-cta");
   const finish = () => {
+    if (!wrap.isConnected) return;   // left with the back arrow mid-swap: its reaction used to land in the hello bubble (the audit, 2026-10-28)
     opts.forEach(b => { const v = +b.dataset.v; b.classList.remove("sel"); b.classList.toggle("ok", v === 2); b.classList.toggle("dim", v === i && v !== 2); });
     wrap.classList.add("shown");
     obReact(tasteSay());
     const duo = document.querySelector(".obs-duo"); if (duo) duo.src = "assets/mascot/qaddour-cheer.png";
     sfxPlay("right", 1, playCorrect); buzz(20);
-    if (cta) { cta.classList.add("ts-up"); cta.innerHTML = tasteSheet(false); fxDrawCrest(); }
+    if (cta) {
+      cta.classList.add("ts-up"); cta.innerHTML = tasteSheet(false); fxDrawCrest();
+      /* a short phone (320×568) had the sheet and its «المتابعة» below the fold with no cue: bring it up */
+      requestAnimationFrame(() => { if (cta.getBoundingClientRect().bottom > innerHeight + 2) cta.scrollIntoView({ block: "end", behavior: fxReduced() ? "auto" : "smooth" }); });
+    }
     const ok = Array.from(opts).find(b => +b.dataset.v === 2);
     if (window.gsap && fxOn()) answerFx(ok, 1);
   };
@@ -8673,6 +8814,7 @@ function tasteSwap(ns, boxes, eq, finish) {
   T([1660, () => { ns.forEach(n => { n.style.width = ""; n.style.textAlign = ""; }); finish(); }]);
 }
 A.obNext = function () {
+  if (obLocked()) return;
   const step = OB.steps[OB.i];
   if (step === "level" && !OB.level) return;
   if (step === "start") { if (OB.start) obFinish(); return; }
@@ -8749,7 +8891,7 @@ function siGo(step) {
   SI.step = step;
   renderSign();
 }
-A.siTo = function (step) { snd("signin-step", () => sndTap()); buzz(8); siGo(step); };
+A.siTo = function (step) { if (obLocked()) return; snd("signin-step", () => sndTap()); buzz(8); siGo(step); };
 A.siBack = function () {
   if (SI.step === "name") { siGo("how"); return; }
   if (SI.step === "how" && SI.from !== "settings") { siGo("wall"); return; }
@@ -8764,7 +8906,7 @@ function renderSign() {
         <div class="si-hero">${siShapes()}${mascot("cheer", "si-duo")}</div>
         <div class="si-earn">
           <span style="--k:0">${ico("streak", 22)}<b>${toAr(Math.max(1, st))}</b> ${Math.max(1, st) === 1 ? "يوم حماس" : "أيام حماس"}</span>
-          <span style="--k:1">${ico("lightning", 22)}<b>${toAr(S.totalXp || 0)}</b> خبرة</span>
+          <span style="--k:1">${ico("lightning", 22)}<b>${toAr(S.totalXp || 0)}</b> XP</span>
           <span style="--k:2">${rankImg(tier.key, 22)}<b>${tier.name}</b></span>
         </div>
       </div>`,
@@ -8793,7 +8935,7 @@ function renderSign() {
     obFrame(`<div class="si si-name">
         <h1 class="si-title">وش اسمك؟</h1>
         <p class="si-sub">يظهر على ملفك وفي الدوري — ويبقى في جهازك بس.</p>
-        <input id="siName" class="login-input si-input" type="text" maxlength="20" placeholder="الاسم" autocomplete="given-name" enterkeyhint="done"
+        <input id="siName" class="login-input si-input" type="text" maxlength="30" placeholder="الاسم" autocomplete="given-name" enterkeyhint="done"
           value="${esc(SI.name)}" oninput="A.siName(this.value)" onkeydown="if(event.key==='Enter')A.siSave()">
       </div>`,
       `<button class="btn" id="siGo" onclick="A.siSave()" ${SI.name.trim() ? "" : "disabled"}>المتابعة</button>`, 0, "A.siBack()", "si-screen si-s-name", false);
@@ -8807,7 +8949,7 @@ function renderSign() {
         <span class="si-av-wrap"><svg class="si-ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="56" pathLength="100"/></svg>
           <span class="si-av"><span>${esc(Array.from(nm)[0] || "")}</span></span><span class="si-tick" aria-hidden="true">${SI_TICK}</span></span>
       </div>
-      <h1 class="si-title si-hi">أهلاً يا ${esc(nm)}!</h1>
+      <h1 class="si-title si-hi">أهلاً يا ${esc(String(nm).trim().split(/\s+/)[0])}!</h1>
       <p class="si-sub">ملفك جاهز${S.user && S.user.google ? " — دخلت بحساب Google" : ""}. تقدّمك محفوظ باسمك.</p>
     </div>`,
     `<button class="btn" onclick="A.siDone()">يلا نكمل</button>`, 0, "", "si-screen si-s-done", false);
@@ -8825,7 +8967,7 @@ A.siName = function (v) {
   const go = document.getElementById("siGo"); if (go) go.disabled = !SI.name.trim();
 };
 function siKeep(name, google) {
-  const n = String(name || "").replace(/[*<>]/g, "").trim().slice(0, 20);
+  const n = String(name || "").replace(/[*<>]/g, "").trim().slice(0, 30);
   if (!n) return false;
   SI.name = n;
   S.user = { name: n, guest: false }; if (google) S.user.google = true;
@@ -8834,11 +8976,12 @@ function siKeep(name, google) {
   return true;
 }
 A.siSave = function () {
-  if (!SI || SI.step !== "name") return;
+  if (!SI || SI.step !== "name" || obLocked()) return;
   if (!siKeep(SI.name)) { const n = document.getElementById("siName"); if (n) { n.classList.remove("err"); void n.offsetWidth; n.classList.add("err"); } return; }
   snd("signin-step", () => sndTap()); siGo("done");
 };
 A.siLater = function (back) {
+  if (obLocked()) return;
   if (SI && SI.from !== "settings") { S.user = S.user || { name: "ضيف", guest: true }; S.profileAsked = true; save(); }
   if (!back) snd("signin-later", () => sndTap());
   A.siDone();
@@ -8886,6 +9029,7 @@ A.debugSignIn = function (step) {
   if (step === "done") { siKeep("سارة"); siGo("done"); }
 };
 A.obBack = function () {
+  if (obLocked()) return;
   if (!OB || OB.i === 0) { OB = null; renderWelcome(); return; }
   OB.i--; OB.dir = -1;
   renderOb();
@@ -8919,11 +9063,11 @@ function renderObSplash(kind) {
 }
 function renderPlaceIntro() { renderObSplash("find"); }
 A.placeIntroBack = function () { if (!OB) { go("path"); return; } OB.dir = -1; renderOb(); };
-A.placeBegin = function () { snd("start-lesson"); OB = null; S.placeAsked = true; save(); A.startPlacement(); };
+A.placeBegin = function () { if (obLocked()) return; snd("start-lesson"); OB = null; S.placeAsked = true; save(); A.startPlacement(); };
 /* entering the very first lesson has a sound no other moment uses: Brilliant's
    «welcome» opening (the user's pick, 2026-10-28, option ٤ on
    tools/brilliant-sounds/enter.html); every later lesson start plays start-lesson */
-A.placeScratch = function () { snd("first-lesson-enter"); S.placeAsked = true; save(); obFirstLesson(); };
+A.placeScratch = function () { if (obLocked()) return; snd("first-lesson-enter"); S.placeAsked = true; save(); obFirstLesson(); };
 
 function afterLogin() {
   S.joined = S.joined || todayKey();
@@ -9150,7 +9294,7 @@ function setProfile(guest, name) {
       ${setAvatar(name, "big")}
       ${SET_EDIT ? `
       <div class="set-me-edit">
-        <input id="setName" class="login-input" type="text" maxlength="20" placeholder="وش اسمك؟" autocomplete="off" value="${esc(name)}"
+        <input id="setName" class="login-input" type="text" maxlength="30" placeholder="وش اسمك؟" autocomplete="off" value="${esc(name)}"
           onkeydown="if(event.key==='Enter')A.setSaveName();if(event.key==='Escape')A.setEditName(false)">
         <div class="set-me-btns">
           <button type="button" class="btn" onclick="A.setSaveName()">حفظ</button>
@@ -9265,9 +9409,9 @@ A.placeAgain = function () {
 A.setEditName = function (on) { SET_EDIT = !!on; render(); };
 A.setSaveName = function () {
   const inp = document.getElementById("setName");
-  const name = (inp.value || "").trim();
+  const name = (inp.value || "").replace(/[*<>]/g, "").trim();
   if (!name) { inp.classList.remove("err"); void inp.offsetWidth; inp.classList.add("err"); inp.focus(); return; }
-  S.user = Object.assign({}, S.user, { name: name.slice(0, 20), guest: false });
+  S.user = Object.assign({}, S.user, { name: name.slice(0, 30), guest: false });
   SET_EDIT = false; save(); snd("settings-name-saved", () => sndGood()); toast("تم حفظ اسمك ✓");
   render();
 };
@@ -9285,6 +9429,7 @@ A.setTrackM = function (t) {
   render();
 };
 A.setSound = function (btn) {
+  if (S.haptic === undefined) S.haptic = setHapticOn();   // pinned first: turning sounds off silently stopped the vibration while its switch still read on (the audit, 2026-10-28)
   if (S.sound) snd("settings-toggle", null, "toggle-off");
   S.sound = !S.sound; save();
   btn.classList.toggle("on", S.sound); btn.setAttribute("aria-checked", S.sound);
@@ -9375,6 +9520,44 @@ if ("serviceWorker" in navigator && !DEV
   };
   if (document.readyState === "complete") swGo();
   else { addEventListener("load", swGo); setTimeout(swGo, 4000); }
+}
+
+/* The phone's back button (the audit, 2026-10-28: the app kept no history,
+   so back left the site — or closed the installed app — even mid-lesson, and
+   the lesson was lost). One entry is kept above the page; back spends it, the
+   app takes one step back itself and keeps a new one. The step is what Escape
+   already does, then what is on screen: an overlay closes (a held one, the
+   chest's reward, stays), a question asks «تبي توقف الدرس؟», a back arrow or a
+   ✕ is pressed, a celebration or a running mock stays put, another tab goes
+   to the path. Only the path with nothing open lets the phone leave. The
+   entry is kept after a tap, so the browser never treats it as one the page
+   added on its own. Off on the dev harnesses, which steer by the hash. */
+var BACK_ARMED = false;
+function backArm() {
+  if (BACK_ARMED) return;
+  try { history.pushState({ qb: 1 }, ""); BACK_ARMED = true; } catch (e) {}
+}
+function backStep() {
+  const ov = Array.from(document.querySelectorAll(OVERLAY_SEL));
+  if (ov.length) { ov[ov.length - 1].dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); return true; }
+  if (SES && document.querySelector(".q-area")) { A.quitSession(); return true; }
+  if (MOCK && document.querySelector(".qnav")) return true;                 // a timed exam: back does not walk out of it
+  if (document.getElementById("comp")) return true;                         // a win, a result: its own button moves on
+  const b = Array.from(document.querySelectorAll(".ob-back:not(.off), .set-back, .rv-back, .x-btn")).find(x => x.offsetParent !== null);
+  if (b) { b.click(); return true; }
+  if (!SES && !OB && view !== "path") { go("path"); return true; }
+  return false;
+}
+if (!DEV || /[?&]backtest=1(&|$)/.test(location.search)) {
+  addEventListener("popstate", () => {
+    if (!BACK_ARMED) return;
+    BACK_ARMED = false;
+    let stay = false;
+    try { stay = backStep(); } catch (e) { stay = true; }
+    if (stay) backArm(); else history.back();
+  });
+  addEventListener("pointerdown", backArm, { capture: true, passive: true });
+  addEventListener("keydown", backArm, { capture: true, passive: true });
 }
 
 boot();

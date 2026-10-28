@@ -378,7 +378,6 @@ svg.ic { display: block; }
    ============================================================ */
 .path { display: flex; flex-direction: column; align-items: center; padding: 38px 0 6px; position: relative; }
 .path-row { position: relative; height: 160px; width: 100%; display: flex; justify-content: center; }
-.path-row.row-tip { margin-top: 70px; }
 /* room under the last node so its start bubble can always scroll it up into view */
 .path-tail { height: 200px; }
 .node-col { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
@@ -388,7 +387,7 @@ svg.ic { display: block; }
    keeps its proportions; its title and the «ابدأ» bubble are zoomed back and
    stay the size they were */
 .node-col { --nz: 1.2; zoom: var(--nz); }
-.node-col .node-label, .node-col .node-tip { zoom: calc(1 / var(--nz)); }
+.node-col .node-label { zoom: calc(1 / var(--nz)); }
 
 /* the node is a hexagon (NODE_SHAPE in app.js): face, its lip 7px under it and
    a smaller hexagon of shine, painted from the same --node-* colours the coin
@@ -474,22 +473,6 @@ svg.ic { display: block; }
   position: absolute; top: 0; left: 50%; margin-left: -44.5px;
   width: 89px; height: 84px; pointer-events: none;
 }
-.node-tip { /* Duolingo's «START» bubble: above the ring, never on the coin */
-  position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
-  background: #fff; color: var(--node-c, var(--purple));
-  border: 2px solid var(--line);
-  font-size: 17px; font-weight: 800; text-transform: uppercase;
-  border-radius: 11px; padding: 5px 16px 3px; white-space: nowrap;
-  animation: tipFloat 1.6s ease-in-out infinite; z-index: 5;
-}
-.node-tip::after { /* a whole arrow, centred: the square's lower corner, its border on the two lower edges */
-  content: ''; position: absolute; bottom: -8px; left: 50%; margin-left: -7px; transform: rotate(45deg);
-  width: 14px; height: 14px; background: #fff; box-sizing: border-box;
-  border-right: 2px solid var(--line); border-bottom: 2px solid var(--line);
-  border-radius: 0 0 3px 0;
-  clip-path: polygon(100% 0, 100% 100%, 0 100%);
-}
-@keyframes tipFloat { 0%,100% { transform: translate(-50%,0);} 50% { transform: translate(-50%,-5px);} }
 
 /* ============================================================
    Bottom nav — Figma "Bottom Nav": white, 1px #E5E5E5 top line,
@@ -2330,6 +2313,13 @@ button.dom-stat:active { transform: scale(.99); }
   display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px;
   justify-items: center; flex-shrink: 0; padding: 8px 12px 6px;
 }
+/* a short phone: the 24 numbers took 150px as a grid and left the question
+   one or two choices (320×568, the audit, 2026-10-28); one row that scrolls
+   sideways takes 46 */
+@media (max-height: 740px) and (max-width: 767px) {
+  .qnav { display: flex; gap: 6px; overflow-x: auto; justify-items: initial; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .qnav::-webkit-scrollbar { display: none; }
+}
 .qn-chip {
   min-width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0;
   border: 2px solid var(--line); background: #fff; position: relative;
@@ -3166,12 +3156,19 @@ button.dom-stat:active { transform: scale(.99); }
   overscroll-behavior: contain; scrollbar-width: none;
 }
 .screen-session .q-area::-webkit-scrollbar { display: none; }
-/* a fade at the bottom edge so a clipped answer reads as "there is more"
-   rather than as a rendering fault. Only where it can actually clip. */
-@media (max-height: 700px), (max-width: 330px) {
+/* On a phone the question scrolls in the space ABOVE the action bar (98px:
+   16 + the 58px button + 24), not under it: on a short phone the keypad's
+   last row, a fourth choice or a tile sat behind «تحقق», where a tap on ⌫
+   submitted the answer (the audit, 2026-10-28). Margin + padding still add up
+   to the old 144px, so the block centres exactly where it did. The fade now
+   sits on the bar's edge, where it can be seen: a clipped answer reads as
+   "there is more". When nothing overflows, the faded strip is empty padding. */
+@media (max-width: 767px) {
   .screen-session .q-area {
-    -webkit-mask-image: linear-gradient(to top, transparent 0, #000 26px);
-    mask-image: linear-gradient(to top, transparent 0, #000 26px);
+    margin-bottom: calc(98px + env(safe-area-inset-bottom));
+    padding-bottom: 46px;
+    -webkit-mask-image: linear-gradient(to top, transparent 0, #000 22px);
+    mask-image: linear-gradient(to top, transparent 0, #000 22px);
   }
 }
 body:has(.screen-session) { overflow: hidden; }
@@ -3660,7 +3657,7 @@ body:has(.screen-session) { overflow: hidden; }
 .set-hero .set-av.big { margin-bottom: 10px; animation: setPop .4s var(--ease) both; }
 @keyframes setPop { from { transform: scale(.7); opacity: 0; } }
 [data-motion="reduced"] .set-hero .set-av.big { animation: none; }
-.set-hero-name { font-size: 22px; font-weight: 800; color: var(--ink); }
+.set-hero-name { font-size: 22px; font-weight: 800; color: var(--ink); overflow-wrap: anywhere; min-width: 0; }   /* a long Latin name pushed the page sideways */
 .set-hero-sub { font-size: 13.5px; font-weight: 600; color: var(--gray); }
 .set-hero-btn { width: auto; min-width: 150px; height: 44px; margin-top: 10px; padding: 0 22px; font-size: 15px; }
 .set-hero .set-me-edit { width: 100%; }
@@ -4377,7 +4374,8 @@ body:has(.screen-session) { overflow: hidden; }
 
 /* short answers sit in a grid: numbers are read at a glance, not down a list */
 .ln-choices.ch-grid { display: grid; gap: 10px; grid-template-columns: repeat(2, 1fr); }
-.ln-choices.ch-grid.n3 { grid-template-columns: repeat(3, 1fr); }
+.ln-choices.ch-grid.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 340px) { .ln-choices.ch-grid.n3 .choice { font-size: 16px; padding-inline: 4px; } }
 .screen-session .ln-choices.ch-grid .choice { justify-content: center; text-align: center; font-size: 25px; font-weight: 700; min-height: 68px; }
 .screen-session .ln-choices .choice .ch-txt { line-height: 1.4; }
 .screen-session .ln-tf .choice { flex-direction: column; gap: 4px; min-height: 92px; font-size: 21px; }
@@ -4398,6 +4396,11 @@ body:has(.screen-session) { overflow: hidden; }
 .ln-eq.stacked { font-size: 24px; line-height: 1.9; padding: 10px 14px; }
 .ln-eq.stacked .ln-step + .ln-step { border-top: 1px dashed var(--line); }
 .ln-eq.stacked .ln-blank { height: 44px; min-width: 56px; font-size: 22px; }
+/* a placed chip shrinks with its line (rfFit) to 26px tall: its tap area stays
+   at least 42 by reaching 8px above and below it (the audit, 2026-10-28) */
+.ln-eq .ln-blank { position: relative; }
+.ln-eq .ln-blank::after { content: ""; position: absolute; left: 0; right: 0; top: -8px; bottom: -8px; }
+.nw { white-space: nowrap; }
 /* four blanks on one line: narrower boxes so «_ × _ × _ = _» never breaks after an operator */
 .ln-eq.tight { font-size: 24px; padding-inline: 6px; }
 .ln-eq.tight .ln-blank { min-width: 46px; margin: 0 2px; padding: 0 6px; font-size: 22px; }
@@ -4527,6 +4530,11 @@ body:has(.screen-session) { overflow: hidden; }
 }
 .ln-key:active { transform: translateY(2px); border-bottom-width: 2px; }
 .ln-key.del { color: var(--gray); font-size: 21px; }
+/* a short phone (320×568) fits the whole keypad above the bar */
+@media (max-height: 640px) {
+  .ln-pad { gap: 6px; margin-top: 8px; }
+  .ln-key { height: 40px; font-size: 22px; }
+}
 .ln-key:disabled { opacity: .5; }
 
 /* match pairs */
@@ -4677,6 +4685,13 @@ body:has(.screen-session) { overflow: hidden; }
   font-size: 12.5px; font-weight: 800; letter-spacing: .3px;
 }
 .ob-cta { display: flex; flex-direction: column; gap: 6px; padding-top: 14px; flex-shrink: 0; }
+.ob-cta:not(.ts-up) {
+  position: sticky; bottom: 0; z-index: 3; background: var(--snow);
+  margin: 0 -20px calc(-20px - env(safe-area-inset-bottom)); padding: 14px 20px calc(20px + env(safe-area-inset-bottom));
+}
+@media (max-height: 700px) {
+  .ob-cta:not(.ts-up)::before { content: ""; position: absolute; left: 0; right: 0; top: -14px; height: 14px; background: linear-gradient(transparent, var(--snow)); pointer-events: none; }
+}
 .ob-cta .btn { height: 50px; font-size: 17px; }
 .ob-value .ob-stage { padding-top: 0; }
 .iv-red .iv-ic { background: var(--red-bg); }
@@ -4741,6 +4756,7 @@ body:has(.screen-session) { overflow: hidden; }
 .pl-unit { display: flex; align-items: center; gap: 8px; padding: 0 18px; margin-top: 2px; font-size: 14px; font-weight: 700; color: var(--gray); }
 .pl-unit b { color: var(--blue-dk); }
 .pl-unit > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-unit > :not(:last-child) { white-space: nowrap; flex-shrink: 0; }
 /* the exam's own name for what is being asked: حساب / هندسة / جبر */
 .pl-tag { flex-shrink: 0; padding: 2px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 800; }
 .pl-ar  { background: var(--blue-light); color: var(--blue-dk); }
@@ -4864,7 +4880,7 @@ body:has(.screen-session) { overflow: hidden; }
 .si-say { position: relative; margin: 0 auto; }
 .si-hero { position: relative; width: 100%; max-width: 340px; height: 230px; display: flex; justify-content: center; align-items: flex-end; }
 .si-duo { position: relative; height: 210px; transform-origin: 50% 100%; animation: obDuoIn .5s .15s cubic-bezier(.3, 1.5, .5, 1) backwards; }
-.si-earn { display: flex; justify-content: center; gap: 6px; margin-top: 18px; }
+.si-earn { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin-top: 18px; }
 .si-earn span {
   display: inline-flex; align-items: center; gap: 5px; padding: 7px 10px 6px; border: 2px solid var(--line); border-radius: 14px; white-space: nowrap;
   font-size: 13px; font-weight: 700; color: var(--gray); animation: fadeUp .4s calc(.8s + var(--k) * .1s) cubic-bezier(.3, 1.4, .5, 1) backwards;
@@ -5000,6 +5016,8 @@ body:has(.screen-session) { overflow: hidden; }
 
 /* «تقدّمك اليوم»: what the lesson did to the day, a card at a time */
 .wp { justify-content: flex-start; padding-top: 48px; }
+/* a short phone: «المسار» sat under the fold on «تقدّمك اليوم» (320×568) */
+@media (max-height: 620px) { .wp { padding-top: 18px; } .wp-list { gap: 10px; } }
 .cl { justify-content: flex-start; padding-top: 44px; }
 /* the league climb (A.winClimb): the board in a window that follows your row */
 .cl-kick { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 15px; color: var(--gray); animation: fadeUp .4s cubic-bezier(.3,1.2,.5,1) backwards; }
@@ -5033,6 +5051,11 @@ body:has(.screen-session) { overflow: hidden; }
   mask-image: linear-gradient(transparent, #000 var(--ft, 0px), #000 calc(100% - var(--fb, 40px)), transparent);
 }
 .cl-list { position: absolute; top: 16px; left: 12px; right: 12px; }
+@media (max-height: 620px) {
+  .cl { padding-top: 16px; }
+  .cl-win { height: 202px; }
+  .cl-medal { width: 72px; height: 73.7px; }
+}
 .cl-row.me .lb-name { color: var(--brown-dk); }
 .cl-row.me .lb-name b { color: var(--brown); }
 .cl-row { position: absolute; left: 4px; right: 4px; height: 58px; background: var(--snow); transition: top .36s cubic-bezier(.3, 1.5, .5, 1); }

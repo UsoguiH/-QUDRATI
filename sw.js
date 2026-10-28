@@ -19,10 +19,12 @@
      time it worked. None of it is needed to answer a question, so precaching
      megabytes of it would make a first visit slower for nothing.
 
-   BUMP VERSION WHENEVER A SHELL FILE CHANGES — including the data files, which
-   carry no ?v= of their own. A student with an active worker reads the shell
-   from the cache, so a new question bank reaches them when the cache name
-   changes and not before. Keep the two ?v= numbers identical to index.html's.
+   BUMP VERSION WHENEVER A SHELL FILE CHANGES, the data files included. A
+   student with an active worker reads the shell from the cache, so a new
+   question bank reaches them when the cache name changes and not before. The
+   data files carry the same ?v= as the app now (2026-10-28): without it, the
+   first load after a deploy paired the new app with last deploy's data. Keep
+   every ?v= in index.html identical to VERSION.
 
    The dev harnesses are never served from a cache, neither the page nor
    anything it loads: they exist to show the file on disk right now. */
@@ -37,13 +39,13 @@ const CORE = [
   "css/style.css?v=" + VERSION,
   "js/app.js?v=" + VERSION,
   "assets/vendor/gsap.min.js?v=40",
-  "js/data/skills.js",
-  "js/data/numbers.js",
-  "js/data/ratios.js",
-  "js/data/geometry.js",
-  "js/data/teach.js",
-  "js/data/teach-figures.js",
-  "js/data/learn.js",
+  "js/data/skills.js?v=" + VERSION,
+  "js/data/numbers.js?v=" + VERSION,
+  "js/data/ratios.js?v=" + VERSION,
+  "js/data/geometry.js?v=" + VERSION,
+  "js/data/teach.js?v=" + VERSION,
+  "js/data/teach-figures.js?v=" + VERSION,
+  "js/data/learn.js?v=" + VERSION,
   "manifest.webmanifest",
   "favicon.ico",
   /* the interface's own glyphs: without these a lesson still works but reads as
@@ -77,7 +79,28 @@ const CORE = [
   "assets/icons/target.svg",
   "assets/icons/timer.svg",
   "assets/icons/video.svg",
-  "assets/icons/video-locked.svg"
+  "assets/icons/video-locked.svg",
+  /* a new student's first minutes, so they work offline after one visit (the
+     audit, 2026-10-28: فهيم was an empty space beside his bubble): his seven
+     states, the right-answer sounds and the first run's Brilliant sounds, ~400 KB */
+  "assets/mascot/qaddour-wave.png",
+  "assets/mascot/qaddour-encourage.png",
+  "assets/mascot/qaddour-cheer.png",
+  "assets/mascot/qaddour-teach.png",
+  "assets/mascot/qaddour-celebrate.png",
+  "assets/mascot/qaddour-point.png",
+  "assets/mascot/qaddour-strong.png",
+  "assets/sounds/correct.mp3",
+  "assets/sounds/right-answer.mp3",
+  "assets/sounds/bri/continue.mp3",
+  "assets/sounds/bri/lightweight-choice.mp3",
+  "assets/sounds/bri/assessment-click-option-1.mp3",
+  "assets/sounds/bri/assessment-click-option-2.mp3",
+  "assets/sounds/bri/assessment-click-option-3.mp3",
+  "assets/sounds/bri/assessment-click-option-4.mp3",
+  "assets/sounds/bri/incorrect.mp3",
+  "assets/sounds/bri/start-lesson.mp3",
+  "assets/sounds/bri/welcome-to-leagues.mp3"
 ];
 
 /* the font stylesheet and the faces it pulls: opaque cross-origin responses,
@@ -119,11 +142,12 @@ self.addEventListener("fetch", e => {
     e.respondWith((async () => {
       try {
         const fresh = await fetch(req);
-        const c = await caches.open(SHELL);
-        c.put(req, fresh.clone());
+        /* only a page that worked is kept, under its address without the query:
+           a 5xx used to overwrite the precached page, and every ?utm= was a new entry */
+        if (fresh.ok) { const c = await caches.open(SHELL); c.put(url.origin + url.pathname, fresh.clone()); }
         return fresh;
       } catch (err) {
-        return (await caches.match(req)) || (await caches.match("index.html")) ||
+        return (await caches.match(req, { ignoreSearch: true })) || (await caches.match("index.html")) ||
                (await caches.match("./")) || Response.error();
       }
     })());
