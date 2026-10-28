@@ -160,6 +160,10 @@
         /* the two screens after a short lesson's rule: its terms to fill back in, then the rule as numbers */
         A.startLearn("skills", "bigsum", 0);
         A.debugLearnGo(it => it && it.rf === (h === "rulewords" ? "words" : "nums"));
+      } else if (h === "learnfrac") {
+        /* the probability node's first card: its fractions drawn as the exam prints them */
+        A.startLearn("skills", "probstats", 0);
+        A.debugLearnGo(it => it && it.t === "see");
       } else if (h === "learnpairs") {
         /* the first «وصّل» of lesson 1: a tally per pair, then the correct sound */
         A.startLearn("skills", "bigsum", 0);

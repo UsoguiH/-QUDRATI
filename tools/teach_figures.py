@@ -235,7 +235,7 @@ TEACH_FIGURES = {
                 for i in range(8))
         + "".join(t(258 - 32 * i, 54, s) for i, s in enumerate(
             ["١", "٢", "٣", "٤", "٥", "٦", "٧", "٨"]))
-        + t(146, 96, "٤ زوجية من ٨ ← ٤/٨ = ١/٢", 12)),
+        + t(146, 96, "٤ زوجية من ٨ — نص البطاقات", 12)),
 
     # rule 7 -- three shirts across, two trousers down, one dot per outfit: six
     "skills.probstats:7": svg(260, 130,

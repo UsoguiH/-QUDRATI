@@ -65,6 +65,20 @@ function shuffleChoices(q) {
   });
 }
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+/* a fraction as the exam prints it, the top number over a bar over the bottom
+   one, not «١/٢» on the line (the user, 2026-10-28: «this is not like qudrati
+   كسور … make it like qudrati exam كسور»). Only text between tags is touched,
+   never the inside of an <svg>; «٢٠٢٦/١٠/٢٨» and other runs of slashes stay.
+   A screen reader hears «١ على ٢». */
+const FRAC_RE = /(^|[^٠-٩/])([٠-٩]+)\/([٠-٩]+)(?![٠-٩/])/g;
+function fracs(html) {
+  let svg = 0;
+  return String(html == null ? "" : html).split(/(<[^>]*>)/).map(p => {
+    if (p[0] === "<") { if (/^<svg[\s>]/i.test(p)) svg++; else if (/^<\/svg/i.test(p)) svg = Math.max(0, svg - 1); return p; }
+    return svg ? p : p.replace(FRAC_RE, (m, b, n, d) =>
+      `${b}<span class="fr"><span class="fr-n">${n}</span><span class="fr-sr"> على </span><span class="fr-d">${d}</span></span>`);
+  }).join("");
+}
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }   // quotes too: a name with «"» was cut at it inside value="…" (the audit, 2026-10-28)
 
 /* ---------------- state ---------------- */
@@ -683,9 +697,19 @@ function winHeroPlay() {
   tl.add(idle, 1.1);
 }
 
+/* the exam's days, at the right of the bar once a date is set (the user,
+   2026-10-28: «my date of exam will be top right»): the card that held them
+   gave its place to فهيم's challenge. A tap opens the date picker, as the card did. */
+const CAL_SVG = `<svg class="cal-ic" viewBox="0 0 24 24" aria-hidden="true"><rect class="ci-b" x="2.5" y="4.5" width="19" height="17" rx="4.5"/><path class="ci-h" d="M2.5 9.6V9a4.5 4.5 0 0 1 4.5-4.5h10A4.5 4.5 0 0 1 21.5 9v.6z"/><path class="ci-r" d="M8 2.6v4M16 2.6v4"/></svg>`;
+function statExam() {
+  const days = examDaysLeft();
+  if (days === null || days < 0) return "";
+  return `<button class="stat stat-exam ec2-${examTone(days)}" onclick="A.examSetup()" aria-label="${days ? "باقي على اختبارك " + dayPhrase(days) : "اختبارك اليوم"}">${CAL_SVG}<span>${days ? toAr(days) : "اليوم"}</span></button>`;
+}
 function statbar() {
   const t = LEAGUE_TIERS[tierIndex()];
   return `<div class="statbar">
+    ${statExam()}
     <div class="stat stat-streak${S.streak.count ? "" : " zero"}" title="سلسلة الأيام" aria-label="سلسلة الأيام: ${toAr(S.streak.count)}">${ico("streak", 23)}${toAr(S.streak.count)}</div>
     <button class="stat stat-rank" onclick="A.go('league')" title="المستوى ${t.name}" aria-label="مستواك: ${t.name}">
       ${rankImg(t.key, 25)}<span>${t.name}</span>
@@ -801,6 +825,95 @@ function dueCard() {
     <span class="due-go">ابدأ</span>
   </button>`;
 }
+
+/* «فهيم يتحدّاك» (the user, 2026-10-28, picked from tools/home-top.html round 4
+   and asked for it in the app, which puts فهيم on the path for the first time):
+   one quick mental-maths question of the exam's kind in his bubble, two answers,
+   endless, with a run of right answers in a row. Nothing is saved and nothing is
+   paid — it is a warm-up the student plays with, not a lesson. Every question's
+   numbers keep the answer whole and the wrong choice positive and different. */
+const FQ = { run: 0, Q: null, busy: false, last: "" };
+function fqMake() {
+  const r = n => Math.floor(Math.random() * n);
+  for (let tries = 0; tries < 8; tries++) {
+    const k = r(5);
+    let q, a, w;
+    if (k === 0) { const x = 3 + r(7), y = 3 + r(7); q = `${toAr(x)} × ${toAr(y)}`; a = x * y; w = a + (r(2) ? x : -y); }
+    else if (k === 1) { const y = [4, 8, 12, 16, 24][r(5)]; q = `${toAr(25)} × ${toAr(y)}`; a = 25 * y; w = a + (r(2) ? 25 : -25); }
+    else if (k === 2) { const p = [10, 20, 25, 50][r(4)], b = [40, 60, 80, 120, 200][r(5)]; q = `${toAr(p)}٪ من ${toAr(b)}`; a = p * b / 100; w = a * 2; }
+    else if (k === 3) { const x = 12 + r(30), y = 9 + r(20); q = `${toAr(x)} + ${toAr(y)}`; a = x + y; w = a + (r(2) ? 10 : -10); }
+    else { const y = 3 + r(6), a0 = 4 + r(8); q = `${toAr(a0 * y)} ÷ ${toAr(y)}`; a = a0; w = a0 + (r(2) ? 1 : -1) * (1 + r(2)); }
+    if (q === FQ.last) continue;
+    FQ.last = q;
+    return { q, a, ch: r(2) ? [a, w] : [w, a] };
+  }
+  return { q: `${toAr(25)} × ${toAr(4)}`, a: 100, ch: [100, 75] };
+}
+/* his words a word at a time, as he speaks in the first run; *…* in blue */
+function fqSay(t) {
+  let blue = false;
+  return String(t).split(" ").filter(Boolean).map((w, i) => {
+    const open = w.startsWith("*"), close = w.replace(/[!.،؟:]+$/, "").endsWith("*");
+    if (open) blue = true;
+    const txt = esc(w.replace(/\*/g, "")), on = blue;
+    if (close) blue = false;
+    return `<span class="fq-w" style="--i:${i}">${on ? `<em>${txt}</em>` : txt}</span>`;
+  }).join(" ");
+}
+function fqBub(first) {
+  return `<div class="fq-top"><span class="fq-q">${FQ.Q.q} = ؟</span><span class="fq-run${FQ.run > 1 ? " on" : ""}" aria-label="${toAr(FQ.run)} ورا بعض">${ico("streak", 16)}<b>${toAr(FQ.run)}</b></span></div>
+    <div class="fq-ch">${FQ.Q.ch.map((c, i) => `<button type="button" class="fq-b" onclick="A.fqPick(${i})">${toAr(c)}</button>`).join("")}</div>
+    <div class="fq-say" aria-live="polite">${first ? fqSay("حلّها بدون ورقة!") : ""}</div>`;
+}
+function fqCard() {
+  if (!FQ.Q) FQ.Q = fqMake();
+  sndWarm(["incorrect", "toggle-on", "streak-celebration"]);
+  return `<section class="fq" aria-label="فهيم يتحدّاك">
+    <button type="button" class="fq-guy" onclick="A.fqPoke()" aria-label="فهيم">${mascot("teach")}</button>
+    <div class="fq-bub">${fqBub(!FQ.busy)}</div>
+  </section>`;
+}
+function fqHop(el, cls) { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+function fqPose(state) { const img = document.querySelector(".fq-guy img"); if (img && MASCOT_STATES[state]) img.src = `assets/mascot/qaddour-${state}.png`; }
+A.fqPick = function (i) {
+  if (FQ.busy || !FQ.Q) return;
+  const bub = document.querySelector(".fq-bub"); if (!bub) return;
+  FQ.busy = true;
+  const btns = Array.from(bub.querySelectorAll(".fq-b")), b = btns[i], right = FQ.Q.ch[i] === FQ.Q.a;
+  const ok = btns[FQ.Q.ch.indexOf(FQ.Q.a)], say = bub.querySelector(".fq-say"), run = bub.querySelector(".fq-run");
+  const guy = document.querySelector(".fq-guy");
+  if (right) {
+    FQ.run++;
+    const five = FQ.run % 5 === 0;
+    b.classList.add("ok"); btns.forEach(x => x !== b && x.classList.add("dim"));
+    obJump(b);
+    fqPose(five ? "celebrate" : "cheer"); fqHop(guy, "hop");
+    say.innerHTML = fqSay(five ? `*${toAr(FQ.run)}* ورا بعض! أسطورة` : ["صح!", "كفو!", "سريع!", "ما شاء الله!", "عليك نور!"][FQ.run % 5]);
+    run.querySelector("b").textContent = toAr(FQ.run);
+    if (FQ.run > 1) { run.classList.add("on"); fqHop(run, "bump"); }
+    playCorrect(); buzz(10);
+    if (five) setTimeout(() => snd("fq-five"), 300);
+  } else {
+    FQ.run = 0;
+    b.classList.add("bad"); setTimeout(() => { if (ok) { ok.classList.add("ok"); obJump(ok); } }, 380);
+    fqPose("encourage"); fqHop(guy, "sad");
+    say.innerHTML = fqSay(`الجواب *${toAr(FQ.Q.a)}*، الجاية لك!`);
+    run.classList.remove("on");
+    snd("fq-wrong", () => sndBad()); buzz([12, 40, 12]);
+  }
+  setTimeout(() => {
+    FQ.Q = fqMake(); FQ.busy = false;
+    const host = document.querySelector(".fq-bub");
+    if (!host) return;
+    host.innerHTML = fqBub(false); host.firstElementChild.classList.add("fq-in");
+    fqPose("teach");
+  }, right ? 1100 : 1700);
+};
+A.fqPoke = function () {
+  const say = document.querySelector(".fq-say");
+  fqHop(document.querySelector(".fq-guy"), "hop"); snd("fq-poke"); buzz(6);
+  if (say && !FQ.busy) say.innerHTML = fqSay("ركّز! جاوب أول");
+};
 
 /* ---- practice aimed where it is needed ------------------------------------
    Every lesson is a single difficulty, so there is nothing to adapt *inside* one.
@@ -1782,7 +1895,7 @@ function renderPath() {
     });
     html += `</div></section>`;
   });
-  $app.innerHTML = statbar() + `<div class="screen">${NODE_GOLD_DEFS}${countdownCard()}${dueCard()}${html}<div class="path-tail"></div></div>` + floatingQuest() + PATH_FAB + bottomnav("path");
+  $app.innerHTML = statbar() + `<div class="screen">${NODE_GOLD_DEFS}${examDaysLeft() !== null && examDaysLeft() >= 0 ? fqCard() : countdownCard()}${dueCard()}${html}<div class="path-tail"></div></div>` + floatingQuest() + PATH_FAB + bottomnav("path");
   requestAnimationFrame(() => {
     pathReveal();
     /* a rank-up on top would hide the beat: it waits, and plays when the rank-up closes and repaints the path */
@@ -2000,6 +2113,9 @@ const SND_MAP = {
   "pair-pick": "lightweight-choice",
   "pair-match": "diagnostic-answer",
   "pair-miss": "incorrect",
+  "fq-wrong": "incorrect",                           // فهيم's challenge: a wrong answer
+  "fq-five": "streak-celebration",                   // every fifth right answer in a row
+  "fq-poke": "toggle-on",                            // tapping فهيم
   "rule-terms-light": "assessment-click-option-1",
   "rule-said": "hint",
   "rule-fill-miss": "incorrect",
@@ -2669,11 +2785,11 @@ function renderTeach() {
     body = `<div class="teach-card">
       <div class="tc-kicker">${esc(chunk.title)}، قانون ${toAr(k)} من ${toAr(rules.length)}</div>
       <div class="tc-head"><span class="li-num">${toAr(k)}</span><h2 class="tc-title">${esc(step.title)}</h2></div>
-      <p class="tc-say">${esc(step.say)}</p>
+      <p class="tc-say">${fracs(esc(step.say))}</p>
       ${fig ? `<div class="tc-fig">${fig}</div>` : ""}
-      <div class="tc-formula">${esc(step.plain || step.formula)}</div>
-      <div class="tc-eg"><span class="tc-eg-l">مثال</span>${esc(step.example)}</div>
-      ${step.hook ? `<div class="tc-hook"><span class="tc-eg-l">تذكّر</span>${esc(step.hook)}</div>` : ""}
+      <div class="tc-formula">${fracs(esc(step.plain || step.formula))}</div>
+      <div class="tc-eg"><span class="tc-eg-l">مثال</span>${fracs(esc(step.example))}</div>
+      ${step.hook ? `<div class="tc-hook"><span class="tc-eg-l">تذكّر</span>${fracs(esc(step.hook))}</div>` : ""}
     </div>`;
     coach = TEACH_COACH.rule[(k - 1) % 2];
     btn = `<button class="btn" onclick="A.teachNext()">${goLabel}</button>`;
@@ -2696,10 +2812,10 @@ function renderTeach() {
     body = `${warm
       ? `<div class="tc-warm-lead"><div class="tc-kicker">أول سؤال</div><h1 class="tc-warm-h">جاوب قبل أي شرح</h1></div>`
       : `<div class="tc-practice">تمرين سريع — بدون قلوب ولا وقت</div>`}
-      <div class="tc-q${warm ? " tc-q-warm" : ""}">${esc(step.q)}</div>
+      <div class="tc-q${warm ? " tc-q-warm" : ""}">${fracs(esc(step.q))}</div>
       <div class="choices tc-choices${p === null ? "" : " answered"}">${step.choices.map((c, i) =>
-        `<div class="slot"><span class="base" aria-hidden="true"></span><button class="choice ${cls(i)}" data-ci="${i}" style="--d:${0.05 + i * 0.07}s" onclick="A.teachPick(${i})" ${p === null ? "" : "disabled"}><span class="ch-shine" aria-hidden="true"></span><i class="ch-spk k1" aria-hidden="true"></i><i class="ch-spk k2" aria-hidden="true"></i><i class="ch-spk k3" aria-hidden="true"></i><span class="ch-letter">${LETTERS[i]}</span><span class="ch-txt">${esc(c)}</span></button></div>`).join("")}</div>
-      ${p === null ? "" : `<div class="tc-why ${ok ? "good" : "bad"}">${ok ? (warm ? "✓ صح — " : "✓ بالضبط — ") : ""}${esc(verdict)}</div>`}`;
+        `<div class="slot"><span class="base" aria-hidden="true"></span><button class="choice ${cls(i)}" data-ci="${i}" style="--d:${0.05 + i * 0.07}s" onclick="A.teachPick(${i})" ${p === null ? "" : "disabled"}><span class="ch-shine" aria-hidden="true"></span><i class="ch-spk k1" aria-hidden="true"></i><i class="ch-spk k2" aria-hidden="true"></i><i class="ch-spk k3" aria-hidden="true"></i><span class="ch-letter">${LETTERS[i]}</span><span class="ch-txt">${fracs(esc(c))}</span></button></div>`).join("")}</div>
+      ${p === null ? "" : `<div class="tc-why ${ok ? "good" : "bad"}">${ok ? (warm ? "✓ صح — " : "✓ بالضبط — ") : ""}${fracs(esc(verdict))}</div>`}`;
     coach = warm ? (p === null ? TEACH_COACH.warm : ok ? TEACH_COACH.warmGood : TEACH_COACH.warmBad)
           : p === null ? TEACH_COACH.check : ok ? TEACH_COACH.good : TEACH_COACH.bad;
     const label = warm ? "وريني الأسرع" : goLabel;
@@ -2833,7 +2949,7 @@ A.teachExit = function () {
   A.quitSession();
 };
 function teachRulesHtml(chunk) {
-  return chunk.steps.filter(s => s.type === "rule").map(s => `<div class="tc-mini"><b>${esc(s.title)}</b><div class="tc-formula">${esc(s.plain || s.formula)}</div><div class="tc-eg"><span class="tc-eg-l">مثال</span>${esc(s.example)}</div>${s.hook ? `<div class="tc-hook"><span class="tc-eg-l">تذكّر</span>${esc(s.hook)}</div>` : ""}</div>`).join("");
+  return chunk.steps.filter(s => s.type === "rule").map(s => `<div class="tc-mini"><b>${esc(s.title)}</b><div class="tc-formula">${fracs(esc(s.plain || s.formula))}</div><div class="tc-eg"><span class="tc-eg-l">مثال</span>${fracs(esc(s.example))}</div>${s.hook ? `<div class="tc-hook"><span class="tc-eg-l">تذكّر</span>${fracs(esc(s.hook))}</div>` : ""}</div>`).join("");
 }
 /* «دفتر القوانين»: every rule of the lesson, on demand. Rules the student
    missed in a check come first, taught ones next with a tick, the rest under
@@ -2854,7 +2970,7 @@ A.openBook = function (domKey, lesKey) {
     if (anyTaught && !st && !divided) { divided = true; rows += `<div class="bk-sep">باقي القوانين</div>`; }
     rows += bookRow(r, st);
   });
-  const tips = (l.notes || []).concat(l.tricks || []).map(x => `<div class="ex-tip">${BULB_SVG}<span>${esc(x)}</span></div>`).join("");
+  const tips = (l.notes || []).concat(l.tricks || []).map(x => `<div class="ex-tip">${BULB_SVG}<span>${fracs(esc(x))}</span></div>`).join("");
   const old = document.querySelector(".book-veil"); if (old) old.remove();
   const veil = document.createElement("div");
   veil.className = "method-veil book-veil";
@@ -2879,7 +2995,7 @@ A.closeBook = function () {
   v.classList.remove("show"); setTimeout(() => v.remove(), 320);
 };
 function bookRow(r, st) {
-  return `<div class="li-step bk-row ${st}"><span class="li-num">${st === "done" ? "✓" : st === "miss" ? "!" : toAr(r.n)}</span><span class="li-txt"><b class="li-lead">${esc(r.name)}</b><span class="li-formula">${esc(r.formula)}</span><span class="li-when">${esc(r.when)}</span></span></div>`;
+  return `<div class="li-step bk-row ${st}"><span class="li-num">${st === "done" ? "✓" : st === "miss" ? "!" : toAr(r.n)}</span><span class="li-txt"><b class="li-lead">${esc(r.name)}</b><span class="li-formula">${fracs(esc(r.formula))}</span><span class="li-when">${fracs(esc(r.when))}</span></span></div>`;
 }
 /* «القوانين»: the whole unit in one book, from the banner. Every lesson in
    order with its rules, each marked as the lesson book marks it, so the
@@ -2959,7 +3075,7 @@ function introRules(l) {
   let h = l.figure ? `<div class="li-fig">${l.figure}</div>` : "";
   h += l.rules.map((r, i) => `<div class="li-step" style="--d:${(i * 0.06).toFixed(2)}s">
       <span class="li-num">${toAr(i + 1)}</span>
-      <span class="li-txt"><b class="li-lead">${esc(r.name)}</b><span class="li-formula">${esc(r.formula)}</span><span class="li-when">${esc(r.when)}</span></span>
+      <span class="li-txt"><b class="li-lead">${esc(r.name)}</b><span class="li-formula">${fracs(esc(r.formula))}</span><span class="li-when">${fracs(esc(r.when))}</span></span>
     </div>`).join("");
   return h + (l.notes || []).concat(l.tricks || []).map(t => `<div class="ex-tip">${BULB_SVG}<span>${esc(t)}</span></div>`).join("");
 }
@@ -2977,7 +3093,7 @@ function formatExplain(text) {
     const t = line.trim();
     if (!t) return "";
     const warn = /^💡|^الخطأ|^خطأ شائع|^انتبه|^ملاحظة|^تنبيه|^احذر|^تذكّر|الخطأ الشائع/.test(t);
-    const body = esc(t.replace(/^💡\s*/, ""));
+    const body = fracs(esc(t.replace(/^💡\s*/, "")));
     if (warn) return `<div class="ex-tip">${BULB_SVG}<span>${body}</span></div>`;
     return `<div class="ex-step">${body}</div>`;
   }).join("");
@@ -2989,11 +3105,11 @@ function questionBody(q, selIdx, lockHandlers, pickFn, method) {
   let h = `<div class="q-top"><div class="q-kicker">${isCmp ? "قارن بين القيمتين ثم اختر:" : "اختر الإجابة الصحيحة:"}</div></div>`;
   // 104 comparison questions carry a stem that just restates the kicker above it
   const echoesKicker = isCmp && /^قارن\s+بين\s+القيمتين/.test(String(q.stem || "").trim());
-  if (q.stem && !echoesKicker) h += `<div class="q-stem">${q.stem}</div>`;
+  if (q.stem && !echoesKicker) h += `<div class="q-stem">${fracs(q.stem)}</div>`;
   if (q.figure) h += `<div class="q-figure">${q.figure}</div>`;
   if (isCmp) h += `<div class="cmp-wrap">
-      <div class="cmp-box"><div class="cmp-t">القيمة الأولى</div><div class="cmp-v">${q.value1}</div></div>
-      <div class="cmp-box"><div class="cmp-t">القيمة الثانية</div><div class="cmp-v">${q.value2}</div></div></div>`;
+      <div class="cmp-box"><div class="cmp-t">القيمة الأولى</div><div class="cmp-v">${fracs(q.value1)}</div></div>
+      <div class="cmp-box"><div class="cmp-t">القيمة الثانية</div><div class="cmp-v">${fracs(q.value2)}</div></div></div>`;
   /* .slot + .base is the reference's structure: the grey base stays put so the
      card has something to hop off, which is what makes the jump read. */
   /* A radio group, not four unrelated buttons: a screen reader is told these are
@@ -3006,7 +3122,7 @@ function questionBody(q, selIdx, lockHandlers, pickFn, method) {
        style="--d:${0.05 + i * 0.07}s" ${lockHandlers ? "" : `onclick="${pickFn || "A.pick"}(${i})"`}>
        <span class="ch-shine" aria-hidden="true"></span>
        <i class="ch-spk k1" aria-hidden="true"></i><i class="ch-spk k2" aria-hidden="true"></i><i class="ch-spk k3" aria-hidden="true"></i>
-       <span class="ch-letter">${LETTERS[i]}</span><span class="ch-txt">${c}</span><span class="ch-key" aria-hidden="true">${toAr(i + 1)}</span></button></div>`).join("") + `</div>`;
+       <span class="ch-letter">${LETTERS[i]}</span><span class="ch-txt">${fracs(c)}</span><span class="ch-key" aria-hidden="true">${toAr(i + 1)}</span></button></div>`).join("") + `</div>`;
   return h;
 }
 
@@ -3736,8 +3852,8 @@ function rulePlay(again) {
 }
 A.ruleAgain = function () { buzz(6); rulePlay(true); };
 function learnFmt(s) {
-  return esc(s == null ? "" : s).replace(/\*([^*]+)\*/g, '<b class="ln-hl">$1</b>')
-    .replace(/[٠-٩]+(?:[.,٫][٠-٩]+)?(?: ?[+\-−×÷=] ?[٠-٩]+(?:[.,٫][٠-٩]+)?){1,3}/g, m => `<span class="nw">${m}</span>`);   // a short sum keeps its line (the audit, 2026-10-28)
+  return fracs(esc(s == null ? "" : s).replace(/\*([^*]+)\*/g, '<b class="ln-hl">$1</b>')
+    .replace(/[٠-٩]+(?:[.,٫/][٠-٩]+)?(?: ?[+\-−×÷=] ?[٠-٩]+(?:[.,٫/][٠-٩]+)?){1,3}/g, m => `<span class="nw">${m}</span>`));   // a short sum keeps its line (the audit, 2026-10-28), a fraction in it too
 }
 
 /* After every rule, two screens (2026-10-26, the user: «لازم بعد كل قانون تجي
@@ -4796,7 +4912,7 @@ function timeUp() {
   const fb = document.getElementById("fb");
   fb.className = "feedback bad show";
   fb.innerHTML = `<div class="fb-head"><span class="fb-x fb-clock">${TIMER_SVG}</span> انتهى الوقت!</div>
-    <div class="fb-correct">الإجابة الصحيحة: ${correctTxt}</div>
+    <div class="fb-correct">الإجابة الصحيحة: ${fracs(correctTxt)}</div>
     <div class="fb-solution" id="sol">${formatExplain(q.solution)}</div>
     <button class="btn btn-red" onclick="A.next()">متابعة</button>`;
   save();
@@ -4919,7 +5035,7 @@ A.check = function () {
        path through a wrong answer taught the letter, not the maths. */
     fb.innerHTML = `<div class="fb-head"><span class="fb-x">✕</span> إجابة غير صحيحة</div>
       ${heartLine}
-      <div class="fb-correct">الإجابة الصحيحة: ${correctTxt}</div>
+      <div class="fb-correct">الإجابة الصحيحة: ${fracs(correctTxt)}</div>
       <div class="fb-solution" id="sol">${formatExplain(q.solution)}</div>
       <button type="button" class="fb-report" onclick="A.reportQ('${q.id}')">${(S.reports || {})[q.id] ? "وصلتنا ملاحظتك على هذا السؤال ✓" : "أبلغ عن هذا السؤال"}</button>
       <button class="btn btn-red" onclick="A.next()">${hLeft === 0 ? "شوف النتيجة" : "متابعة"}</button>`;
@@ -6518,11 +6634,11 @@ A.mockDetail = function (i) {
   const ch = isCmp ? CMP_CHOICES : r.q.choices;
   const ok = r.picked === r.q.answer;
   box.innerHTML = `<div class="review-item mock-detail">
-    <div class="ri-q">${toAr(i + 1)}. ${r.q.stem || "قارن بين القيمتين"}</div>
-    ${isCmp && r.q.value1 ? `<div class="ri-row" style="color:var(--gray)">القيمة الأولى: ${r.q.value1} — القيمة الثانية: ${r.q.value2}</div>` : ""}
-    ${ok ? `<div class="ri-row" style="color:var(--green-dk)">✓ إجابتك صحيحة: ${ch[r.picked]}</div>`
-      : `<div class="ri-row" style="color:var(--red)">✕ إجابتك: ${r.picked === null ? "لم تُجب" : ch[r.picked]}</div>
-         <div class="ri-row" style="color:var(--green-dk)">✓ الصحيحة: ${ch[r.q.answer]}</div>`}
+    <div class="ri-q">${toAr(i + 1)}. ${fracs(r.q.stem || "قارن بين القيمتين")}</div>
+    ${isCmp && r.q.value1 ? `<div class="ri-row" style="color:var(--gray)">القيمة الأولى: ${fracs(r.q.value1)} — القيمة الثانية: ${fracs(r.q.value2)}</div>` : ""}
+    ${ok ? `<div class="ri-row" style="color:var(--green-dk)">✓ إجابتك صحيحة: ${fracs(ch[r.picked])}</div>`
+      : `<div class="ri-row" style="color:var(--red)">✕ إجابتك: ${r.picked === null ? "لم تُجب" : fracs(ch[r.picked])}</div>
+         <div class="ri-row" style="color:var(--green-dk)">✓ الصحيحة: ${fracs(ch[r.q.answer])}</div>`}
     <button class="fb-solution-toggle" onclick="A.toggleEl('mdSol')">اعرض الحل</button>
     <div class="fb-solution" id="mdSol" style="display:none">${formatExplain(r.q.solution)}</div>
   </div>`;
@@ -7505,13 +7621,13 @@ function renderReview() {
     const u = UNIT_COLORS[x.rec.color] || UNIT_COLORS.purple;
     return `<div class="review-item" style="--d:${(0.05 + i * 0.04).toFixed(2)}s">
       <div class="ri-tag" style="color:${u.s}">${esc(x.rec.domTitle)}، ${esc(x.rec.lesTitle)}</div>
-      <div class="ri-q">${q.stem || "قارن بين القيمتين"}</div>
-      ${isCmp && q.value1 ? `<div class="ri-row" style="color:var(--gray)">القيمة الأولى: ${q.value1} — القيمة الثانية: ${q.value2}</div>` : ""}
+      <div class="ri-q">${fracs(q.stem || "قارن بين القيمتين")}</div>
+      ${isCmp && q.value1 ? `<div class="ri-row" style="color:var(--gray)">القيمة الأولى: ${fracs(q.value1)} — القيمة الثانية: ${fracs(q.value2)}</div>` : ""}
       <div class="ri-acts">
         <button class="fb-solution-toggle" onclick="A.toggleEl('rvAns${i}')">أظهر الإجابة</button>
         <button class="fb-solution-toggle" onclick="A.toggleEl('rvSol${i}')">اعرض الحل</button>
       </div>
-      <div class="ri-row" id="rvAns${i}" style="display:none;color:var(--green-dk)">✓ الإجابة الصحيحة: ${ch[q.answer]}</div>
+      <div class="ri-row" id="rvAns${i}" style="display:none;color:var(--green-dk)">✓ الإجابة الصحيحة: ${fracs(ch[q.answer])}</div>
       <div class="fb-solution" id="rvSol${i}" style="display:none">${formatExplain(q.solution)}</div>
     </div>`;
   }).join("");

@@ -4,7 +4,7 @@ Decisions that wait on you, and work put off until later. Newest first.
 
 ## Waiting on you
 
-- **The home screen's top** (`tools/home-top.html`, 2026-10-28, round 4): فهيم alone, one row in place of the exam card and the review card — ١ he peeks and talks, ٢ a toy with seven moves to collect, ٣ an endless mental-maths challenge. Pick one; any of them puts فهيم on the path for the first time.
+- **The home screen's top** (`tools/home-top.html`): round 4's «فهيم يتحدّاك» shipped on 2026-10-28 (once an exam date is set; the days moved to the stat bar). Rounds 6–9 stay in the lab — the scratch card, the selfie, the trend memes and the rest — in case one of them is wanted later, for example in place of the review card.
 - **Two sounds that are neither Brilliant nor Duolingo:**
   - the chest's hop while it waits for a tap;
   - the rising ticks on the goal screen's tiles.

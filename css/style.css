@@ -2299,6 +2299,12 @@ button.dom-stat:active { transform: scale(.99); }
   transition: background .3s, color .3s;
 }
 .frac { unicode-bidi: isolate; }
+/* a fraction as the exam prints it: the top number over a bar over the bottom one (fracs() in app.js) */
+.fr { display: inline-flex; flex-direction: column; align-items: stretch; vertical-align: middle; position: relative;
+  font-size: .82em; line-height: 1.08; text-align: center; margin: 0 .12em; unicode-bidi: isolate; white-space: nowrap; }
+.fr-n { padding: 0 .22em .08em; border-bottom: .11em solid currentColor; }
+.fr-d { padding: .1em .22em 0; }
+.fr-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .mock-timer .mk-clock { display: flex; width: 19px; height: 19px; }
 .mock-timer .mk-clock svg { width: 100%; height: 100%; }
 .mock-timer.low  { background: var(--orange-bg); color: var(--orange); }
@@ -5247,3 +5253,57 @@ body:has(.screen-session) { overflow: hidden; }
 .wst-blue  { --wc: var(--blue);  --wt: #DDF4FF; --wg: #6CCBF8; }
 .wst-gray  { --wc: var(--gray-icon); --wt: #F0F0F0; --wg: #D0D0D0; }
 .wst-gray .wst-v .ic { filter: grayscale(1); }
+
+/* ============================================================
+   «فهيم يتحدّاك» — the path's top once an exam date is set (fqCard
+   in app.js; the user picked it from tools/home-top.html round 4):
+   فهيم beside a bubble with one quick question and two answers.
+   The exam's days moved to the stat bar (.stat-exam).
+   ============================================================ */
+.fq { position: relative; display: flex; align-items: flex-end; gap: 8px; width: calc(100% - 32px); margin: 0 16px 14px; min-height: 112px; animation: fqRise .45s cubic-bezier(.25,1.1,.4,1) backwards; }
+.fq-guy { flex: none; width: 92px; height: 112px; padding: 0; margin: 0; background: none; border: 0; cursor: pointer; transform-origin: 50% 100%;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation; animation: fqIn .5s .1s cubic-bezier(.3,1.5,.5,1) backwards; }
+.fq-guy .mascot { display: block; width: 100%; height: 100%; object-fit: contain; object-position: bottom; pointer-events: none; transform-origin: 50% 100%; animation: fqBreath 3s 1s ease-in-out infinite; }
+.fq-guy:active .mascot { transform: scale(1.05, .92); animation: none; }
+.fq-guy:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; border-radius: 12px; }
+.fq-guy.hop { animation: fqHop .45s cubic-bezier(.3,1.4,.5,1); }
+.fq-guy.sad { animation: fqNo .45s ease-in-out; }
+.fq-bub { flex: 1; min-width: 0; position: relative; align-self: center; background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 18px; padding: 8px 12px 10px; }
+.fq-bub::after { content: ""; position: absolute; right: -9px; top: 26px; width: 13px; height: 13px; background: var(--snow);
+  border-right: 2px solid var(--line); border-top: 2px solid var(--line); transform: rotate(45deg); border-radius: 0 3px 0 0; }
+.fq-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.fq-q { font-size: 22px; font-weight: 800; color: var(--ink); white-space: nowrap; }
+.fq-run { display: flex; align-items: center; gap: 2px; font-size: 14px; font-weight: 800; color: var(--orange); opacity: 0; transition: opacity .2s; }
+.fq-run.on { opacity: 1; }
+.fq-run img { width: 16px; height: 16px; }
+.fq-run.bump { animation: fqHop .4s ease-out; }
+.fq-ch { display: flex; gap: 8px; margin-top: 6px; }
+.fq-b { flex: 1; font: 800 19px/1 var(--font); color: var(--ink); background: var(--snow); border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 12px;
+  padding: 9px 0 7px; cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; transition: opacity .2s; }
+.fq-b:active { transform: translateY(2px); border-bottom-width: 2px; }
+.fq-b:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+.fq-b.ok { background: var(--green-bg); border-color: var(--green-pale); color: var(--green-dk); }
+.fq-b.bad { background: var(--red-bg); border-color: var(--red-soft); color: var(--red-dk2); animation: fqShake .4s; }
+.fq-b.dim { opacity: .4; }
+.fq-say { font-size: 13px; font-weight: 800; color: var(--gray); margin-top: 6px; min-height: 18px; }
+.fq-say em { font-style: normal; color: var(--green-dk); }
+.fq-w { display: inline-block; opacity: 0; transform: translateY(3px); animation: fqWord .2s calc(var(--i) * .09s) ease-out forwards; }
+.fq-in { animation: fqRise .3s ease-out; }
+@keyframes fqRise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes fqWord { to { opacity: 1; transform: none; } }
+@keyframes fqIn { from { transform: translateY(30px) scale(.8); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fqHop { 0% { transform: none; } 22% { transform: scale(1.06, .88); } 52% { transform: translateY(-18px) scale(.96, 1.06); } 78% { transform: scale(1.04, .94); } 100% { transform: none; } }
+@keyframes fqNo { 0%, 100% { transform: none; } 25% { transform: rotate(-5deg); } 75% { transform: rotate(5deg); } }
+@keyframes fqShake { 0%, 100% { transform: none; } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-4px); } }
+@keyframes fqBreath { 0%, 100% { transform: none; } 50% { transform: scaleY(1.025) translateY(-1px); } }
+:root[data-motion="reduced"] .fq, :root[data-motion="reduced"] .fq * { animation: none !important; transition: none !important; }
+:root[data-motion="reduced"] .fq-w { opacity: 1; transform: none; }
+
+/* the exam's days in the stat bar, coloured as the old card was by how near it is */
+.stat-exam { background: none; border: 0; padding: 0; margin: 0; font: inherit; font-weight: 700; line-height: 1; color: var(--tone-ink); cursor: pointer; gap: 5px; }
+.stat-exam:active { transform: translateY(1px); }
+.stat-exam:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; border-radius: 8px; }
+.cal-ic { width: 23px; height: 23px; flex: none; }
+.cal-ic .ci-b { fill: var(--snow); stroke: var(--tone); stroke-width: 2.2; }
+.cal-ic .ci-h { fill: var(--tone); }
+.cal-ic .ci-r { fill: none; stroke: var(--tone-dk); stroke-width: 2.4; stroke-linecap: round; }
