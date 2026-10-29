@@ -2979,19 +2979,88 @@ A.openBook = function (domKey, lesKey) {
     <div class="ms-head"><span class="ms-bulb bk-bulb"><img src="assets/icons/book.svg" width="22" height="22" alt=""></span><h3>دفتر القوانين</h3></div>
     <div class="ms-sub">${esc(l.title)}، ${countAr(l.rules.length, N_RULES)}</div>
     ${firstOpen ? `<div class="tc-coach bk-coach">${BULB_SVG}<span>${TEACH_COACH.book}</span></div>` : ""}
-    ${l.figure ? `<div class="li-fig">${l.figure}</div>` : ""}
-    <div class="ms-body bk-body">${rows}${tips}</div>
+    <div class="ms-body bk-body">${l.figure ? `<div class="li-fig">${l.figure}</div>` : ""}${rows}${tips}</div>
+    <div class="bk-pager" hidden></div>
     <button class="btn ms-close" onclick="A.closeBook()">رجوع</button>
   </div>`;
   veil.onclick = e => { if (e.target === veil) A.closeBook(); };
   document.body.appendChild(veil);
+  bookPages(veil);
   requestAnimationFrame(() => veil.classList.add("show"));
   BK_UNTRAP = trapOverlay(veil, () => A.closeBook(), { label: "دفتر القوانين", focus: ".ms-close" });
 };
 let BK_UNTRAP = null;
+/* a book taller than its sheet is turned into pages that fit it, swiped sideways, with dots
+   and arrows under them: nothing in it scrolls (the user, 2026-10-29: «no scrolling at all»).
+   The pages are cut by measuring, a lesson's heading never left at the foot of a page, and cut
+   again when the phone turns. A book that fits stays one sheet, as it was. */
+function bookPages(veil) {
+  const sheet = veil.querySelector(".book-sheet"), body = sheet && sheet.querySelector(".bk-body"), pager = sheet && sheet.querySelector(".bk-pager");
+  if (!body || !pager) return;
+  const items = body._items || (body._items = Array.from(body.children));
+  const at = body._at || 0, hasIx = !!sheet.querySelector(".bk-ix");
+  const jump = (b, go) => { const h = sheet.querySelector(`.bk-les[data-les="${b.dataset.les}"]`); if (h) go(h); };
+  sheet.classList.remove("bk-paged"); body.classList.remove("bk-track"); pager.hidden = true; pager.innerHTML = "";
+  body.replaceChildren(...items);
+  sheet.querySelectorAll(".bk-ix").forEach(b => b.onclick = () => jump(b, h => h.scrollIntoView({ block: "start" })));
+  if (sheet.scrollHeight <= sheet.clientHeight + 1) return;
+  sheet.classList.add("bk-paged"); pager.hidden = false;
+  pager.innerHTML = `<button class="bk-arrow bk-prev" aria-label="الصفحة السابقة"></button><div class="bk-dots"></div><button class="bk-arrow bk-next" aria-label="الصفحة التالية"></button>`;
+  body.replaceChildren(); body.classList.add("bk-track");
+  const H = body.clientHeight, pages = [];
+  let pg = null;
+  const page = () => { pg = document.createElement("div"); pg.className = "bk-page"; body.appendChild(pg); pages.push(pg); };
+  const head = n => n && (n.classList.contains("bk-les") || n.classList.contains("bk-sep"));
+  page();
+  items.forEach(it => {
+    /* in the unit book every lesson opens its own page, where its contents row lands */
+    if (it.classList.contains("bk-les") && Array.from(pg.children).some(k => !head(k))) page();
+    pg.appendChild(it);
+    /* a page that would hold only headings keeps the item and reads smaller instead */
+    if (pg.scrollHeight > H + 1 && Array.from(pg.children).some(k => k !== it && !head(k))) {
+      const prev = it.previousElementSibling, carry = head(prev) ? [prev, it] : [it];
+      page(); carry.forEach(n => pg.appendChild(n));
+    }
+  });
+  /* what is still taller than its page reads smaller rather than cut: zoom changes how it wraps, so it is searched */
+  pages.forEach(p => {
+    if (p.scrollHeight <= p.clientHeight + 1) return;
+    let lo = .5, hi = 1;
+    for (let i = 0; i < 7; i++) { const z = (lo + hi) / 2; p.style.zoom = z; if (p.scrollHeight <= p.clientHeight + 1) lo = z; else hi = z; }
+    p.style.zoom = lo.toFixed(3);
+  });
+  /* a short book shows a dot a page; a long one «٣ من ٤٥», which goes back to its contents */
+  const many = pages.length > 7, rtl = getComputedStyle(body).direction === "rtl" ? -1 : 1;
+  const dots = pager.querySelector(".bk-dots");
+  dots.innerHTML = many
+    ? `<button class="bk-count" aria-label="${hasIx ? "الفهرس" : "الصفحة الأولى"}"></button>`
+    : pages.map((_, i) => `<button class="bk-dot" aria-label="صفحة ${toAr(i + 1)} من ${toAr(pages.length)}"></button>`).join("");
+  const now = () => Math.min(pages.length - 1, Math.round(Math.abs(body.scrollLeft) / Math.max(1, body.clientWidth)));
+  const to = (i, smooth) => body.scrollTo({ left: rtl * Math.max(0, Math.min(pages.length - 1, i)) * body.clientWidth, behavior: smooth && !fxReduced() ? "smooth" : "auto" });
+  const mark = () => {
+    const i = body._at = now();
+    if (many) dots.firstChild.innerHTML = `${hasIx ? '<i class="bk-ix-ic" aria-hidden="true"></i>' : ""}${toAr(i + 1)} من ${toAr(pages.length)}`;
+    else dots.querySelectorAll(".bk-dot").forEach((d, j) => { d.classList.toggle("on", j === i); d.setAttribute("aria-current", j === i ? "true" : "false"); });
+    pager.querySelector(".bk-prev").disabled = i === 0; pager.querySelector(".bk-next").disabled = i === pages.length - 1;
+  };
+  if (many) dots.firstChild.onclick = () => to(0, true);
+  else dots.querySelectorAll(".bk-dot").forEach((d, j) => d.onclick = () => to(j, true));
+  pager.querySelector(".bk-prev").onclick = () => to(now() - 1, true);
+  pager.querySelector(".bk-next").onclick = () => to(now() + 1, true);
+  sheet.querySelectorAll(".bk-ix").forEach(b => b.onclick = () => jump(b, h => to(pages.indexOf(h.closest(".bk-page")), true)));
+  body.onscroll = mark;
+  to(Math.min(at, pages.length - 1), false); mark();
+  /* cut again when the phone turns, or when a late font changes how tall the rules are */
+  if (!veil._rs) {
+    veil._rs = () => { if (veil.isConnected) bookPages(veil); };
+    addEventListener("resize", veil._rs);
+    if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", veil._rs);
+  }
+}
 A.closeBook = function () {
   if (BK_UNTRAP) { BK_UNTRAP(); BK_UNTRAP = null; }
   const v = document.querySelector(".book-veil"); if (!v) return;
+  if (v._rs) { removeEventListener("resize", v._rs); if (document.fonts && document.fonts.removeEventListener) document.fonts.removeEventListener("loadingdone", v._rs); }
   v.classList.remove("show"); setTimeout(() => v.remove(), 320);
 };
 function bookRow(r, st) {
@@ -3004,12 +3073,13 @@ A.openUnitBook = function (domKey) {
   const d = window.QBANK[domKey]; if (!d) return;
   const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
   const firstOpen = !S.bookSeen; S.bookSeen = true; save();
-  let rows = "", total = 0;
+  let rows = "", index = "", total = 0;
   d.lessons.forEach((l, li) => {
     if (!l.rules) return;
     const rec = (S.teach || {})[domKey + "." + l.key] || { taught: [], missed: [] };
     total += l.rules.length;
-    rows += `<div class="bk-les"><span>الدرس ${toAr(li + 1)}، ${esc(l.title)}</span><span class="bk-les-c">${countAr(l.rules.length, N_RULES)}</span></div>`;
+    index += `<button class="bk-ix" data-les="${li}"><span>الدرس ${toAr(li + 1)}، ${esc(l.title)}</span><span class="bk-les-c">${countAr(l.rules.length, N_RULES)}</span></button>`;
+    rows += `<div class="bk-les" data-les="${li}"><span>الدرس ${toAr(li + 1)}، ${esc(l.title)}</span><span class="bk-les-c">${countAr(l.rules.length, N_RULES)}</span></div>`;
     l.rules.forEach(r => rows += bookRow(r, rec.missed.includes(r.n) ? "miss" : rec.taught.includes(r.n) ? "done" : ""));
   });
   const old = document.querySelector(".book-veil"); if (old) old.remove();
@@ -3020,11 +3090,13 @@ A.openUnitBook = function (domKey) {
     <div class="ms-head"><span class="ms-bulb bk-bulb"><img src="assets/icons/book.svg" width="22" height="22" alt=""></span><h3>القوانين</h3></div>
     <div class="ms-sub">${esc(d.title)}، ${countAr(total, N_RULES)} في ${toAr(d.lessons.length)} دروس</div>
     ${firstOpen ? `<div class="tc-coach bk-coach">${BULB_SVG}<span>${TEACH_COACH.book}</span></div>` : ""}
-    <div class="ms-body bk-body">${rows}</div>
+    <div class="ms-body bk-body">${index}${rows}</div>
+    <div class="bk-pager" hidden></div>
     <button class="btn ms-close" onclick="A.closeBook()">رجوع</button>
   </div>`;
   veil.onclick = e => { if (e.target === veil) A.closeBook(); };
   document.body.appendChild(veil);
+  bookPages(veil);
   requestAnimationFrame(() => veil.classList.add("show"));
   BK_UNTRAP = trapOverlay(veil, () => A.closeBook(), { label: "دفتر القوانين", focus: ".ms-close" });
 };
@@ -4173,8 +4245,29 @@ function rowOver(row) {
    the most any choice of tiles can take — so the size it gets on arrival
    holds whatever the student places, right or wrong, and every repaint
    measures the same thing and lands on the same size. */
+/* a line fitted to its width is fitted again when that width changes: a step zoomed to fit the
+   phone (no step scrolls) lays its body out wider or narrower as the zoom moves, and a line sized
+   at one width overflowed the other (the see card's rule ran past its card at 320 wide) */
+const REFIT = new WeakMap();
+function refitOnWidth(el, fn) {
+  if (!el || !window.ResizeObserver) return;
+  const had = REFIT.get(el);
+  if (had) { had.fn = fn; had.w = el.clientWidth; return; }
+  const st = { fn, w: el.clientWidth, raf: 0 };
+  st.ro = new ResizeObserver(() => {
+    if (st.raf) return;
+    st.raf = requestAnimationFrame(() => {
+      st.raf = 0;
+      if (!el.isConnected) { st.ro.disconnect(); REFIT.delete(el); return; }
+      const w = el.clientWidth;
+      if (Math.abs(w - st.w) > 1) { st.w = w; st.fn(); }
+    });
+  });
+  st.ro.observe(el); REFIT.set(el, st);
+}
 function rfFit(root, it) {
   if (!root) return;
+  refitOnWidth(root, () => rfFit(root, it));
   const lines = Array.from(root.querySelectorAll(".rf-line"));
   if (!lines.length) return;
   lines.forEach(l => { l.style.fontSize = ""; });
@@ -4194,6 +4287,7 @@ function rfFit(root, it) {
 /* the see card's rule on one line when it fits at two thirds of its size or more, else balanced lines */
 function ruleFit(el) {
   if (!el) return;
+  refitOnWidth(el, () => ruleFit(el));
   el.classList.remove("two"); el.style.fontSize = "";
   el.querySelectorAll(".rw-br").forEach(x => x.remove());
   let fs = parseFloat(getComputedStyle(el).fontSize);
@@ -8870,7 +8964,9 @@ A.obTaste = function (i) {
       requestAnimationFrame(() => { if (cta.getBoundingClientRect().bottom > innerHeight + 2) cta.scrollIntoView({ block: "end", behavior: fxReduced() ? "auto" : "smooth" }); });
     }
     const ok = Array.from(opts).find(b => +b.dataset.v === 2);
-    if (window.gsap && fxOn()) answerFx(ok, 1);
+    /* the lesson's card settles lifted off its base; here the cards sit in a tight grid and a lifted
+       card touched the one above it, so after its jump it comes back down to its place */
+    if (window.gsap && fxOn()) { answerFx(ok, 1); if (fxTl) fxTl.to(ok, { y: 0, duration: .24, ease: "power2.inOut" }, Object.values(FX_JUMP).reduce((a, b) => a + b, 0) + .15); }
   };
   if (fxReduced() || ns.length < 2) {
     if (ns.length === 2) { ns[0].textContent = toAr(TASTE.b); ns[1].textContent = toAr(TASTE.a); }
@@ -9730,7 +9826,9 @@ function fitSettled(scr, f) {
 }
 function fitNow(glide) {
   const scr = $app.querySelector(":scope > .screen");
-  if (!scr || $app.querySelector(":scope > .bottomnav") || scr.querySelector(".wl-in:not(.wl-landed)") || scr.matches(".wl-in:not(.wl-landed)")) return;
+  /* a screen may opt out (data-fit="off") while something else places it, or ask to be fitted without
+     a glide (data-fit="still") when it glides its own moves and a zoom glide on top would fight it */
+  if (!scr || $app.querySelector(":scope > .bottomnav") || scr.matches('[data-fit="off"]') || scr.querySelector('[data-fit="off"]')) return;
   fitSettled(scr, () => { fitScreen(scr, glide); fitSheet(scr); });
 }
 /* an answer's sheet shows its whole solution, never a box to scroll: a long one is zoomed
@@ -9750,8 +9848,12 @@ function fitScreen(scr, glide) {
   const t = fitTarget(scr);
   if (!t.els.length) return;
   const z0 = parseFloat(t.els[0].style.zoom) || 1;
+  /* a glide under way lands on the size it was set for; refitting mid-glide would cut it */
+  if (t.els.some(e => e.getAnimations && e.getAnimations().some(a => a.id === "fit" && a.playState === "running"))) return;
   let o = t.over();
-  if (o <= .5 && (z0 >= 1 || o > -24)) return;
+  /* an overflow never reads below zero, so a zoomed body that fits is searched again from full size:
+     once something tall went (a late font, a sheet), it grows back instead of staying small */
+  if (o <= .5 && z0 >= 1) return;
   t.els.forEach(e => { e.getAnimations().forEach(a => { if (a.id === "fit") a.cancel(); }); e.style.zoom = ""; if (t.page) e.style.minHeight = ""; });
   let z = 1;
   o = t.over();
@@ -9769,7 +9871,7 @@ function fitScreen(scr, glide) {
       z = lo; set();
     } else if (oMin > o - 1) { z = 1; set(); }   /* what overflows is not this body: shrinking it would only cost size */
   }
-  if (glide && Math.abs(z - z0) > .004 && !fxReduced())
+  if (glide && Math.abs(z - z0) > .004 && !fxReduced() && !scr.matches('[data-fit="still"]'))
     t.els.forEach(e => { if (e.animate) e.animate([{ zoom: z0 }, { zoom: z }], { id: "fit", duration: 260, easing: "cubic-bezier(.3,.7,.4,1)" }); });
 }
 function fitWire() {

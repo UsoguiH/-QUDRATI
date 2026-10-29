@@ -305,6 +305,54 @@ svg.ic { display: block; }
 }
 .bk-les:first-child { margin-top: 0; }
 .bk-les-c { font-size: 12.5px; font-weight: 700; color: var(--gray); white-space: nowrap; }
+/* a book taller than its sheet comes in pages (bookPages): the sheet takes its full height, the
+   pages sit side by side and snap as they are swiped, dots and arrows under them; nothing scrolls up and down */
+/* above the tab bar, so «رجوع» at its foot is never under it */
+.method-veil.book-veil { z-index: 340; }
+.book-sheet.bk-paged { display: flex; flex-direction: column; height: 90vh; height: 90dvh; max-height: none; overflow: hidden; }
+.book-sheet.bk-paged > :not(.bk-body) { flex: none; }
+.bk-paged .bk-body { flex: 1; min-height: 0; margin-bottom: 10px; }
+.bk-body.bk-track {
+  display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.bk-body.bk-track::-webkit-scrollbar { display: none; }
+.bk-page { flex: 0 0 100%; height: 100%; overflow: hidden; scroll-snap-align: start; scroll-snap-stop: always; box-sizing: border-box; }
+.bk-page > .bk-les:first-child { margin-top: 0; }
+.bk-page > :last-child { margin-bottom: 0; }
+/* paged, the sheet's head is a little tighter so each page holds more */
+.bk-paged .ms-grip { margin: 2px auto 8px; }
+.bk-paged .ms-sub { margin: 4px 2px 8px; }
+.bk-paged .bk-coach { margin-bottom: 8px; }
+.bk-pager { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 0 0 12px; }
+.bk-pager[hidden] { display: none; }
+.bk-dots { display: flex; align-items: center; gap: 4px; }
+.bk-dot { width: 22px; height: 22px; padding: 0; border: 0; background: none; display: flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.bk-dot::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--line); transition: width .2s, background .2s; }
+.bk-dot.on::before { width: 20px; border-radius: 4px; background: var(--li-c, var(--green)); }
+.bk-count {
+  min-width: 96px; height: 34px; padding: 0 12px; border: 0; border-radius: 999px; background: var(--hair);
+  font: inherit; font-size: 14px; font-weight: 800; color: var(--ink); display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer;
+}
+.bk-ix-ic { width: 14px; height: 11px; flex: none; color: var(--li-c, var(--green));
+  background: linear-gradient(currentColor 0 0) 0 0 / 100% 2.4px no-repeat, linear-gradient(currentColor 0 0) 0 50% / 100% 2.4px no-repeat, linear-gradient(currentColor 0 0) 0 100% / 100% 2.4px no-repeat; }
+/* the unit book's contents: one row per lesson, a tap goes to its page */
+.bk-ix {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; margin: 0 0 8px; padding: 10px 14px;
+  border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 14px; background: var(--snow); font: inherit; text-align: start;
+  font-size: 14.5px; font-weight: 800; line-height: 1.4; color: var(--li-c, var(--green)); cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.bk-ix:active { border-bottom-width: 2px; transform: translateY(2px); }
+.bk-arrow {
+  width: 40px; height: 40px; flex: none; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px;
+  background: var(--snow); display: flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.bk-arrow::before { content: ""; width: 9px; height: 9px; border: solid var(--li-c, var(--green)); border-width: 3px 3px 0 0; border-radius: 1px; }
+/* right to left: back points right, on to the next page points left */
+.bk-prev::before { transform: translateX(-2px) rotate(45deg); }
+.bk-next::before { transform: translateX(2px) rotate(-135deg); }
+.bk-arrow:active:not(:disabled) { border-bottom-width: 2px; transform: translateY(2px); }
+.bk-arrow:disabled { opacity: .35; cursor: default; }
 
 :root[data-motion="reduced"] .screen-teach .choice,
 :root[data-motion="reduced"] .teach-card,
@@ -3183,6 +3231,10 @@ button.dom-stat:active { transform: scale(.99); }
     mask-image: linear-gradient(to top, transparent 0, #000 22px);
   }
 }
+/* a question that never gets a verdict sheet (the mock, the level test) keeps no room for one */
+@media (max-width: 767px) {
+  .screen-session:has(.mock-bar) .q-area, .screen-place .q-area, .screen-session .q-area.lt-see { padding-bottom: 12px; }
+}
 body:has(.screen-session) { overflow: hidden; }
 /* a ceremony or a sheet over the path holds the page still under it: nothing scrolls behind it (the user, 2026-10-29) */
 body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .modal-veil, .rankup-veil) { overflow: hidden; }
@@ -3394,6 +3446,7 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
     transition: transform .28s cubic-bezier(.25,1.1,.4,1), opacity .22s ease;
   }
   .method-veil.show .method-sheet { transform: none; opacity: 1; }
+  .book-sheet.bk-paged { height: 78dvh; }
   .ms-grip { display: none; }
 }
 
@@ -4332,6 +4385,13 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
   font-size: 30px; color: var(--green-dk); background: var(--green-bg);
   border-radius: 16px; padding: 6px 18px;
 }
+/* a shorter phone: the reveal's rows a step closer and smaller, so the card reads at full size */
+@media (max-height: 660px) {
+  .ln-h { font-size: 23px; margin-bottom: 10px; }
+  .ln-rows { gap: 6px; }
+  .ln-row { font-size: 23px; }
+  .ln-row.win { font-size: 26px; padding: 4px 16px; }
+}
 /* the rule the card lands on, in Duolingo's own yellow (2026-10-23: «make the
    law yellow — not the last yellow, the regular Duolingo yellow — and the
    things in the law in blue»): pale bee yellow on a bee-yellow border and lip,
@@ -4965,6 +5025,13 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 .complete h1.pl-say { margin: 4px 0 2px; font-size: 19px; color: var(--ink); letter-spacing: 0; }
 .place-scene .pl-say + * { margin-top: 6px; }
 .complete.place-scene { justify-content: flex-start; overflow: hidden; padding-top: 18px; }
+.place-scene .pl-units { gap: 6px; margin: 10px auto 12px; }
+.place-scene .pl-urow { padding: 8px 12px; }
+/* the button stays in reach under the unit list, as it does on every win screen */
+.place-scene .action-bar.pl-cta {
+  position: sticky; bottom: 0; max-width: 360px; margin-top: auto;
+  padding: 12px 0 calc(14px + env(safe-area-inset-bottom)); background: var(--snow);
+}
 /* a shorter phone: فهيم a size down and the rows closer, so the result reads at full size (nothing scrolls) */
 @media (max-height: 780px) {
   .complete.place-scene { padding-top: 8px; }
@@ -4978,12 +5045,13 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
   .place-scene .pl-facts p { font-size: 13px; line-height: 1.45; }
   .place-scene .action-bar.pl-cta { padding-top: 8px; }
 }
-.place-scene .pl-units { gap: 6px; margin: 10px auto 12px; }
-.place-scene .pl-urow { padding: 8px 12px; }
-/* the button stays in reach under the unit list, as it does on every win screen */
-.place-scene .action-bar.pl-cta {
-  position: sticky; bottom: 0; max-width: 360px; margin-top: auto;
-  padding: 12px 0 calc(14px + env(safe-area-inset-bottom)); background: var(--snow);
+@media (max-height: 660px) {
+  .complete.place-scene { padding-bottom: 12px; }
+  .place-scene .qd-hero { --wh: 72px !important; }
+  .place-scene .obt-bubble.pl-say { padding: 10px 14px; }
+  .place-scene .pl-units { gap: 4px; margin: 6px auto 6px; }
+  .place-scene .pl-urow { padding: 4px 12px; }
+  .place-scene .pl-facts p { font-size: 12.5px; line-height: 1.4; }
 }
 
 :root[data-motion="reduced"] .obt-duo, :root[data-motion="reduced"] .obs-duo, :root[data-motion="reduced"] .obt-bubble,
@@ -5078,6 +5146,9 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
   mask-image: linear-gradient(transparent, #000 var(--ft, 0px), #000 calc(100% - var(--fb, 40px)), transparent);
 }
 .cl-list { position: absolute; top: 16px; left: 12px; right: 12px; }
+/* a shorter phone: the board starts higher, then shows four rows instead of five (nothing scrolls) */
+@media (max-height: 700px) { .cl { padding-top: 20px; } }
+@media (max-height: 660px) { .cl-win { height: 264px; } }
 @media (max-height: 620px) {
   .cl { padding-top: 16px; }
   .cl-win { height: 202px; }
@@ -5328,3 +5399,59 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 .cal-ic .ci-b { fill: var(--snow); stroke: var(--tone); stroke-width: 2.2; }
 .cal-ic .ci-h { fill: var(--tone); }
 .cal-ic .ci-r { fill: none; stroke: var(--tone-dk); stroke-width: 2.4; stroke-linecap: round; }
+
+/* ---- shorter phones: last in the file, so they win over every rule they tighten ---- */
+/* a shorter phone: «كم سؤال تبي تحل يومياً؟» brings its rows a step closer (nothing scrolls) */
+@media (max-height: 660px) {
+  .ob-stage { padding-top: 6px; }
+  .obs { margin-bottom: 10px; }
+  .gl-list { gap: 10px; }
+  .gl-list .ob-opt { min-height: 78px; padding: 10px 16px; }
+  .ob-note { margin-top: 8px; }
+}
+/* the smallest phones (320×568 and the like): every step a size more compact, so it fits
+   at or near full size instead of being zoomed small (nothing scrolls, the user, 2026-10-29) */
+@media (max-height: 600px) {
+  /* a question */
+  .q-top { margin: 4px 0 8px; }
+  .q-stem { font-size: 18px; line-height: 1.55; margin-bottom: 10px; }
+  .screen-session .choices { gap: 8px; }
+  .screen-session .slot { min-height: 52px; }
+  .screen-session .choice { padding: 8px 12px; font-size: 17px; }
+  .cmp-wrap { margin: 4px 0 8px; }
+  .cmp-box { padding: 8px; }
+  .cmp-box .cmp-v { font-size: 18px; }
+  /* the first run: فهيم at the side a size down, the rows closer */
+  .obs-duo { height: 92px; }
+  .obs-say { padding-bottom: 16px; }
+  .ob-list { gap: 8px; }
+  .ob-opt { min-height: 50px; padding: 8px 14px; }
+  .gl-list { gap: 8px; }
+  .gl-list .ob-opt { min-height: 66px; padding: 8px 14px; }
+  .gl-list .ob-opt:nth-child(2) { margin-top: 4px; }
+  .ob-cta { padding-top: 8px; }
+  /* «وش هو قدراتي؟» */
+  .iv-top { margin: 0 0 8px; }
+  .iv-mascot { height: 120px; }
+  .iv-row { padding: 9px 4px; }
+  .iv-tx b { font-size: 15.5px; }
+  .iv-tx span { font-size: 13px; line-height: 1.45; }
+  .iv-promise { margin-top: 8px; }
+  /* the reveal */
+  .ln-h { font-size: 21px; margin-bottom: 8px; }
+  .ln-row { font-size: 21px; }
+  .ln-row.win { font-size: 24px; }
+  .ln-big { padding: 10px; margin-bottom: 10px; }
+  .ln-area { padding-top: 4px; }
+  .ln-rule.ln-rule-see { padding: 8px 10px 10px; }
+  /* signing in: فهيم a size down on the wall */
+  .si-hero { height: 164px; }
+  .si-duo { height: 150px; }
+  .si-earn { margin-top: 8px; }
+  /* the level test's result */
+  .place-scene .qd-hero { --wh: 60px !important; }
+  .complete h1.pl-say { font-size: 15.5px; }
+  .place-scene .pl-urow { padding: 3px 10px; }
+  .place-scene .pl-utx b { font-size: 13.5px; }
+  .place-scene .pl-utx span { font-size: 12px; }
+}

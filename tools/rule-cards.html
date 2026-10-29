@@ -47,6 +47,8 @@ header p { font-size: 15.5px; font-weight: 600; color: var(--gray); margin-top: 
   body.one .bar { grid-column: 1; grid-row: 2; align-content: start; margin: 0; padding: 10px 0 0; max-width: none; }
   body.one .grid { grid-column: 2; grid-row: 1 / span 2; margin: 0; padding: 14px 0 24px; grid-template-columns: auto; }
   body.one .frame { width: max(300px, calc((100vh - 110px) * 390 / 800)); }
+  body.two .grid { max-width: 1100px; }
+  body.two .frame { width: min(100%, max(270px, calc((100vh - 345px) * 390 / 800))); }
 }
 @media (max-width: 900px) {
   header { padding: 16px 16px 0; } header h1 { font-size: 22px; }
@@ -70,8 +72,11 @@ header p { font-size: 15.5px; font-weight: 600; color: var(--gray); margin-top: 
 (function () {
   'use strict';
   const RULES = [['prob', 'الاحتمال'], ['mean', 'الوسط الحسابي'], ['hand', 'المصافحات'], ['last', 'رقم الآحاد'], ['tri', 'مجموع ١ إلى ن'], ['queue', 'الترتيب من الطرفين'], ['clock', 'زاوية الساعة'], ['ways', 'مبدأ العدّ']];
-  const ALL = /[?&]old\b/.test(location.search), PREV = /[?&]prev\b/.test(location.search);
-  const V = !ALL && !PREV ? [
+  const ALL = /[?&]old\b/.test(location.search), PREV = /[?&]prev\b/.test(location.search), FIVE = /[?&]five\b/.test(location.search);
+  const V = !ALL && !PREV && !FIVE ? [
+    { c: 13, tag: 'بخط قدراتي وألوانه', name: 'الكلمة تصير رقم — قدراتي', what: 'نفس بطاقة Brilliant ونفس الحركة، بس بخط التطبيق وألوانه: البطاقة البيضاء بإطارها وحافتها، وكل جزء من القانون في المربع الأزرق اللي في الدروس، والجواب يصير أخضر مثل الإجابة الصح عندنا. بالمراجعة المربعات فاضية متقطّعة مثل فراغات «كمّل القانون».' },
+    { c: 12, tag: 'بواجهة Brilliant', name: 'الكلمة تصير رقم — Brilliant', what: 'نفس الفكرة بواجهة Brilliant بالضبط، بألوانهم ومقاساتهم من ملفاتهم: بطاقة بيضاء بإطار رمادي، وكل جزء من القانون في مربع أزرق فاتح مثل متغيّراتهم. الكلمة تطلع من داخل مربعها، وكل رقم يدفّها لفوق ويصير المربع على مقاسه، والجواب يصير أخضر مثل الإجابة الصح في Brilliant. بالمراجعة المربعات فاضية متقطّعة لين تضغط.' },
+  ] : FIVE ? [
     { c: 7, tag: 'فكرة ١', name: 'لوحة المطار', what: 'لوحة إعلانات مثل المطار: كل كلمة في القانون تتقلّب حروفها لين تثبت، بصوت الطقطقة. الأرقام تتقلّب تحت كلماتها، ولما يطلع الجواب تولّع اللمبة خضرا ويصير القانون «محلول».' },
     { c: 8, tag: 'فكرة ٢', name: 'مربعات ملوّنة', what: 'كل جزء من القانون مربع بلونه، فيه اسمه ومكان رقمه. الرقم يطير من الرسم بلون مربعه ويدور مثل العدّاد لين يوقف، والجواب يقلب مربعه أخضر. بالمراجعة الكلمات تختفي مثل التحميل.' },
     { c: 9, tag: 'فكرة ٣', name: 'الكلمة تصير رقم', what: 'خط كبير وحركة نظيفة: الكلمات تطلع من تحت، وخط يمرّ تحت كل جزء. كل رقم يجي يدفّ كلمته لفوق ويطلع مكانها، والكلمة تنزل صغيرة تحته، لين يصير القانون كله أرقام.' },
@@ -86,11 +91,14 @@ header p { font-size: 15.5px; font-weight: 600; color: var(--gray); margin-top: 
     { c: 5, tag: 'من دروس Brilliant', name: 'توهّج Brilliant', what: 'بطاقة بيضاء وكلمات القانون في مربعات زرقا فاتحة، مثل Brilliant. نقطة نعناعية تطير من الرسم للكلمة، تتوهّج، وتنزل بسهم للرقم.' },
     { c: 6, tag: 'من ملفات دولينجو', name: 'بطاقة دولينجو', what: 'بطاقة الجملة من تمرين القواعد في دولينجو، بألوان دولينجو للرياضيات، وفوقها «قانون جديد». الأرقام تجي في حبات زرقا، والجواب يقلب البطاقة خضرا ويمر عليها اللمعان.' },
   ];
+  if (!ALL && !PREV && !FIVE) { document.getElementById('h1').textContent = 'الكلمة تصير رقم: قدراتي أو Brilliant'; document.getElementById('hp').textContent = 'اليمين بخط التطبيق وألوانه، واليسار بواجهة Brilliant. اختر قانون، واضغط «شغّل الثنتين».'; }
+  if (FIVE) { document.getElementById('h1').textContent = 'خمس أفكار جديدة للقانون'; }
   if (ALL) { document.getElementById('h1').textContent = 'القانون بثلاث نسخ'; document.getElementById('hp').textContent = 'النسخ الثلاث الأولى.'; }
   if (PREV) { document.getElementById('h1').textContent = 'القانون من Brilliant ودولينجو'; document.getElementById('hp').textContent = 'النسخ الثلاث اللي قبل.'; }
   const SHOWTXT = !PREV;
   document.getElementById('tabs').innerHTML = V.map((x, i) => `<button data-i="${i}"${i ? '' : ' class="on"'}>${x.name}</button>`).join('');
   document.getElementById('grid').style.setProperty('--n', V.length);
+  document.body.classList.toggle('two', V.length === 2);
   const HANDS = [['marhey', 'خط مرهي'], ['ruqaa', 'خط الرقعة'], ['baloo', 'خط التطبيق']];
   let hand = 'marhey';
   const KEY = 'qudrati.rulecards.pick';
@@ -98,7 +106,7 @@ header p { font-size: 15.5px; font-weight: 600; color: var(--gray); margin-top: 
   let rule = 'prob', mode = 'new';
   const bar = document.getElementById('bar'), grid = document.getElementById('grid');
   bar.innerHTML = RULES.map(([k, n]) => `<button class="chipb" data-r="${k}">${n}</button>`).join('') +
-    (!PREV ? '' : '<span class="sep"></span>' + HANDS.map(([k, n]) => `<button class="chipb" data-h="${k}">${n}</button>`).join('')) + '<span class="sep"></span><button class="chipb" data-m="new">أول مرة</button><button class="chipb" data-m="review">مراجعة</button><span class="sep"></span><button class="play" id="all">' + (V.length === 3 ? 'شغّل الثلاث' : 'شغّل الكل') + '</button>';
+    (!PREV ? '' : '<span class="sep"></span>' + HANDS.map(([k, n]) => `<button class="chipb" data-h="${k}">${n}</button>`).join('')) + '<span class="sep"></span><button class="chipb" data-m="new">أول مرة</button><button class="chipb" data-m="review">مراجعة</button><span class="sep"></span><button class="play" id="all">' + (V.length === 3 ? 'شغّل الثلاث' : V.length === 2 ? 'شغّل الثنتين' : 'شغّل الكل') + '</button>';
   grid.innerHTML = V.map((x, i) => `<section class="col${i ? '' : ' on'}" data-i="${i}">
       ${SHOWTXT ? `<span class="tag">${x.tag}</span><h2>${x.name}</h2><p class="what">${x.what}</p>` : ''}
       <div class="frame"><iframe title="${x.name}" allow="autoplay"></iframe></div>

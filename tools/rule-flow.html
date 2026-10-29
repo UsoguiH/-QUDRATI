@@ -427,6 +427,58 @@ html[data-hand="baloo"] .duo .wb-fx { font-weight: 800; }
 .ne-hint { position: absolute; left: 0; right: 0; bottom: 22px; text-align: center; font: 600 13px var(--nf); color: #6D74A8; opacity: 0; }
 .ne11.hide .k:not(.ca) .ne-on { opacity: 0; }
 
+/* 12. the word becomes a number, in Brilliant's lesson UI (2026-10-29, the user on 9: «great for now, but … with absolute Brilliant UI from them exactly»).
+   Every value is Brilliant's own, read off their stylesheet (--panda-colors-*, --panda-radii-*): the card white on a 2px gray-200 rim at radius 2xl,
+   each term in a blue-100 box with blue-700 ink (their variable box), the unknown in a gray-100 box, blanks dashed gray-300 on gray-50, correct in green */
+.kb12 { --kf: 'IBM Plex Sans Arabic', 'Baloo Bhaijaan 2', sans-serif; position: relative; }
+.kb12 .k { background: none; border: 0; border-radius: 0; padding: 0; box-shadow: none; color: inherit; }
+.kb-card { position: relative; box-sizing: border-box; border: 2px solid #E5E5E5; border-radius: 20px; background: #fff; padding: 70px 10px 62px; }
+.kb-tag { position: absolute; top: 16px; right: 0; left: 0; text-align: center; font: 700 15px/1 var(--kf); letter-spacing: .02em; color: #294BC6; }
+.kb-fx { display: flex; justify-content: safe center; align-items: center; gap: .26em; white-space: nowrap; font: 500 34px/1.3 var(--kf); color: #141414; }
+.kb12 .k { position: relative; display: inline-block; vertical-align: middle; }
+.kb-m { position: relative; display: inline-block; vertical-align: middle; overflow: hidden; padding: .04em .3em .1em; border-radius: 6px; background: #ECF0FF; color: #294BC6; text-align: center; transition: background-color .35s, color .35s, box-shadow .35s; }
+.kb12 .k.ca .kb-m { background: #F2F2F2; color: #141414; }
+.kb-w { position: relative; display: inline-block; }
+.kb-n { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #294BC6; transform: translateY(115%); }
+.kb-n .fr { font-size: .92em; }
+.kb12 .k.ca .kb-n { font-size: 1.12em; }
+.kb-u { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: #456DFF; transform: scaleX(0); }
+.kb-c { position: absolute; top: 100%; left: 50%; margin-top: 8px; transform: translateX(-50%); font: 500 15px/1.3 var(--kf); color: #666; white-space: nowrap; opacity: 0; }
+.kb12 .fq-n .kb-c { top: auto; bottom: 100%; margin: 0 0 8px; }
+.kb12 .k.ok .kb-m { background: #D4F5DD; color: #009B2B; box-shadow: inset 0 0 0 2px #29CC57; }
+.kb12 .k.ok .kb-n { color: #009B2B; }
+.kb12 .op { font-weight: 400; color: #141414; }
+.kb12 .pl { color: #141414; }
+.kb12 .fq { display: inline-flex; flex-direction: column; align-items: center; gap: 8px; }
+.kb12 .fq-bar { display: block; align-self: stretch; height: 2px; border-radius: 1px; background: #141414; }
+.kb12.hide .k:not(.ca) .kb-m { background: #F8F8F8; }
+.kb12.hide .k:not(.ca) .kb-m::before { content: ""; position: absolute; inset: 0; border-radius: 6px; border: 2px dashed #CCC; }
+.kb12.hide .k:not(.ca) .kb-w { transform: translateY(115%); }
+.kb-hint { position: absolute; left: 0; right: 0; bottom: 18px; text-align: center; font: 500 14px var(--kf); color: #999; opacity: 0; }
+
+/* 13. card 12's layout in the app's own grammar (2026-10-29, the user said yes to «keep Brilliant's layout and boxes, but give it our app's font and blues»):
+   the card is the app's white card on its 2px --line rim and 4px lip, the words Baloo at 800, each term the lesson's blue chip
+   (--blue-light on a --blue-border rim with its 3px lip), the unknown the white chip, the answer the green of Duolingo's correct wave,
+   and a review's blanks the fill's own dashed blank */
+.kb12.kb13 { --kf: var(--font); }
+.kb13 .kb-card { border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 18px; padding: 62px 10px 56px; }
+.kb13 .kb-tag { font: 800 15px/1 var(--kf); letter-spacing: 0; color: var(--blue-dk); }
+.kb13 .kb-fx { font: 800 26px/1.35 var(--kf); color: var(--ink); }
+.kb13 .kb-m { padding: .02em .3em .06em; border-radius: 12px; background: var(--blue-light); color: var(--blue-dk); box-shadow: inset 0 0 0 2px var(--blue-border), inset 0 -3px 0 var(--blue-border); }
+.kb13 .k.ca .kb-m { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 2px var(--line), inset 0 -3px 0 var(--line); }
+.kb13 .kb-n { font-weight: 800; color: var(--blue-dk); }
+.kb13 .kb-u { left: 8px; right: 8px; bottom: 5px; height: 3px; border-radius: 2px; background: var(--blue); }
+.kb13 .kb-c { margin-top: 7px; font: 700 13px/1.3 var(--kf); color: var(--gray); }
+.kb13 .fq-n .kb-c { margin: 0 0 7px; }
+.kb13 .k.ok .kb-m { background: var(--green-bg); color: var(--green-dk); box-shadow: inset 0 0 0 2px var(--green-pale), inset 0 -3px 0 var(--green-pale); }
+.kb13 .k.ok .kb-n { color: var(--green-dk); }
+.kb13 .op { font-weight: 800; color: var(--gray-icon); }
+.kb13 .pl { color: var(--ink); }
+.kb13 .fq-bar { height: 3px; border-radius: 2px; background: var(--ink); }
+.kb13.hide .k:not(.ca) .kb-m { background: #F7F7F7; box-shadow: none; }
+.kb13.hide .k:not(.ca) .kb-m::before { border-radius: 12px; border-color: var(--gray-icon); }
+.kb13 .kb-hint { font: 700 15px var(--kf); color: var(--gray-icon); }
+
 /* the fill, drawn as the app draws it (rfBody) */
 .ln-eq { font-weight: 800; text-align: center; color: var(--ink); background: #fff; border: 2px solid var(--line); border-radius: 16px; box-shadow: 0 2px 0 var(--line); }
 .ln-eq.rf-box { width: 100%; min-width: 0; padding: 14px 10px; line-height: 1.2; }
@@ -930,7 +982,7 @@ svg.d text { font-family: var(--font); font-weight: 800; }
   /* ───── the rule, three ways (?card=1|2|3; 0 is the yellow card). Each draws the formula as the exam prints it —
      a «÷» rule stacked over its bar — and takes the proof's numbers its own way: html, intro (a promise that ends
      when the proof may start), review (hidden until the student taps), reset (before a proof replays), val ───── */
-  const CV = (location.search.match(/[?&]card=(1[01]|[0-9])\b/) || [])[1] || '0';
+  const CV = (location.search.match(/[?&]card=(1[0-3]|[0-9])\b/) || [])[1] || '0';
   const HAND = (location.search.match(/[?&]hand=(marhey|ruqaa|baloo)\b/) || [])[1] || 'marhey';
   document.documentElement.dataset.hand = HAND;
   const parseF = R => {
@@ -1764,6 +1816,103 @@ svg.d text { font-family: var(--font); font-weight: 800; }
       });
     },
   };
+
+  /* 12. the word becomes a number, drawn in Brilliant's lesson UI: each term a blue-100 box that is also its mask —
+     the word rises inside it, a blue-500 line runs along its foot, and each number pushes its word up and out while the box
+     grows or shrinks to the number; the word comes back small under it, and the answer's box turns Brilliant's correct green */
+  const KBT = {
+    term: (x, l) => `<span class="k${l ? ' ca' : ''}" data-s="${x.s}"><span class="kb-m"><span class="kb-w">${x.t}</span><span class="kb-n"></span><i class="kb-u"></i></span><span class="kb-c">${x.t}</span></span>`,
+    plain: p => `<span class="pl">${fx(p)}</span>`, op: p => `<span class="op">${opTxt(p)}</span>`, frac: FRAC };
+  function kbIn(fc, t, only) {
+    const line = fc.querySelector('.kb-fx'), kids = [...line.querySelectorAll('.k, .op, .pl, .fq-bar')].filter(e => !only || only(e));
+    kids.forEach((e, i) => {
+      const d = t + i * 85;
+      if (e.classList.contains('k')) {
+        anim(e.querySelector('.kb-m'), [{ opacity: 0, transform: 'scale(.86)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: d, easing: XO, fill: 'backwards' });
+        anim(e.querySelector('.kb-w'), [{ transform: 'translateY(115%)' }, { transform: 'none' }], { duration: 720, delay: d + 60, easing: XO, fill: 'backwards' });
+        later(d, () => snd('tap', 1.1 + i * .06, .22));
+      }
+      else if (e.classList.contains('fq-bar')) anim(e, [{ transform: 'scaleX(0)' }, { transform: 'none' }], { duration: 640, delay: d, easing: XO, fill: 'backwards' });
+      else anim(e, [{ opacity: 0, transform: 'translateY(.3em)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: d, easing: XO, fill: 'backwards' });
+    });
+    const e2 = t + kids.length * 85 + 260, terms = [...line.querySelectorAll('.k:not(.ca)')].filter(e => !only || only(e));
+    terms.forEach((k, j) => {
+      const d = e2 + j * 280;
+      anim(k.querySelector('.kb-u'), [{ transform: 'scaleX(0)', transformOrigin: '100% 50%' }, { transform: 'scaleX(1)', transformOrigin: '100% 50%', offset: .5 }, { transform: 'scaleX(1)', transformOrigin: '0 50%', offset: .501 }, { transform: 'scaleX(0)', transformOrigin: '0 50%' }], { duration: 640, delay: d, easing: 'cubic-bezier(.65,0,.35,1)' });
+      later(d, () => snd('click', up(j * 2), .26));
+    });
+    return e2 + terms.length * 280 + 320;
+  }
+  function kbGrow(fc) {
+    /* the card keeps its height, so nothing under it moves: the rule grows into the card's own empty foot and no further */
+    const line = fc.querySelector('.kb-fx'), card = line.closest('.kb-card'), from = parseFloat(getComputedStyle(line).fontSize);
+    const k = scaleOf(card), cr = card.getBoundingClientRect();
+    card.style.height = (cr.height / k) + 'px';
+    fit(line, 15);
+    let to = parseFloat(getComputedStyle(line).fontSize);
+    const low = () => Math.max(line.getBoundingClientRect().bottom, ...[...line.querySelectorAll('.kb-c')].map(c => c.getBoundingClientRect().bottom));
+    while (to > from && low() > cr.bottom - 18 * k) { to -= .5; line.style.fontSize = to + 'px'; }
+    line.style.fontSize = from + 'px';
+    if (to - from < 1) return;
+    anim(line, [{ fontSize: from + 'px' }, { fontSize: to + 'px' }], { duration: 640, easing: XIO });
+    line.style.fontSize = to + 'px';
+  }
+  CARDS[12] = {
+    html(R) { return `<div class="kb12"><div class="kb-card"><span class="kb-tag">القانون</span><div class="kb-fx">${fAll(parseF(R), KBT)}</div><span class="kb-hint">اضغط تشوف القانون</span></div></div>`; },
+    intro(fc, R, t) {
+      fit(fc.querySelector('.kb-fx'), 15);
+      const t0 = Math.max(0, t - 450);
+      anim(fc.querySelector('.kb-card'), [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: t0, easing: XO, fill: 'backwards' });
+      anim(fc.querySelector('.kb-tag'), [{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: t0 + 120, fill: 'backwards' });
+      return at$(kbIn(fc, t0 + 220));
+    },
+    review(fc, R, go) {
+      const w = fc.querySelector('.kb12'), card = fc.querySelector('.kb-card'), hint = fc.querySelector('.kb-hint'); fit(fc.querySelector('.kb-fx'), 15);
+      w.classList.add('hide');
+      anim(card, [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: 200, easing: XO, fill: 'backwards' });
+      kbIn(fc, 300, e => !e.matches('.k:not(.ca)'));
+      fadeHint(hint, 1300);
+      onTap(card, hint, () => { w.classList.remove('hide'); snd('on', 1, .35); later(kbIn(fc, 0, e => e.matches('.k:not(.ca)')), go); });
+    },
+    reset(fc) {
+      fc.querySelectorAll('.kb12 .k').forEach(k => {
+        const m = k.querySelector('.kb-m');
+        stopA(m, k.querySelector('.kb-w'), k.querySelector('.kb-n'), k.querySelector('.kb-c'));
+        k.classList.remove('ok'); m.style.width = ''; m.style.height = ''; k.querySelector('.kb-n').innerHTML = '';
+      });
+      const card = fc.querySelector('.kb-card'); if (card) { card.style.height = ''; stopA(fc.querySelector('.kb-fx')); fit(fc.querySelector('.kb-fx'), 15); }
+    },
+    val(fc, slot, text, src) {
+      const k = fc.querySelector(`.k[data-s="${slot}"]`); if (!k) return;
+      const m = k.querySelector('.kb-m'), w = k.querySelector('.kb-w'), n = k.querySelector('.kb-n'), c = k.querySelector('.kb-c');
+      if (src) pulse(src);
+      stopA(m, w, n, c);
+      n.innerHTML = `<span>${fx(text)}</span>`;
+      /* the box takes the number's width, never narrower than the word under it, so two captions never touch */
+      const pad = parseFloat(getComputedStyle(m).paddingLeft) * 2, w0 = m.getBoundingClientRect().width / scaleOf(m);
+      const w1 = Math.max(n.firstChild.offsetWidth + pad * 1.4, c.offsetWidth + 6, pad + 14), em = parseFloat(getComputedStyle(m).fontSize);
+      /* and grows taller when the number is a fraction, so it is printed at full size, top over bottom */
+      const h0 = m.getBoundingClientRect().height / scaleOf(m), h1 = Math.max(h0, n.firstChild.offsetHeight + pad * .7);
+      m.style.width = (w1 / em) + 'em'; m.style.height = (h1 / em) + 'em';
+      anim(m, [{ width: (w0 / em) + 'em', height: (h0 / em) + 'em' }, { width: (w1 / em) + 'em', height: (h1 / em) + 'em' }], { duration: 560, delay: 80, easing: XIO, fill: 'backwards' });
+      anim(w, [{ transform: 'none' }, { transform: 'translateY(-115%)' }], { duration: 540, easing: XIO, fill: 'forwards' });
+      anim(n, [{ transform: 'translateY(115%)' }, { transform: 'none' }], { duration: 580, delay: 60, easing: XIO, fill: 'both' });
+      anim(c, [{ opacity: 0, transform: 'translate(-50%, -5px)' }, { opacity: 1, transform: 'translateX(-50%)' }], { duration: 420, delay: 420, easing: XO, fill: 'forwards' });
+      later(40, () => snd('tap', 1.5, .2)); later(420, () => { tick(slot); buzz(6); });
+      if (slot === 0) later(560, () => {
+        k.classList.add('ok'); snd('right', 1, .38); buzz(12);
+        anim(m, [{ transform: 'none' }, { transform: 'scale(1.08)', offset: .4 }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.3,1.4,.5,1)' });
+      });
+      /* a long rule was shrunk to fit its words; once the answer is in, the numbers take less room, so the line grows back */
+      if (slot === 0) later(1000, () => kbGrow(fc));
+    },
+  };
+
+  /* 13. card 12 in the app's own font and colours: the same card, the same motion, only the paint differs (.kb13) */
+  CARDS[13] = Object.assign({}, CARDS[12], {
+    html(R) { return CARDS[12].html(R).replace('<div class="kb12">', '<div class="kb12 kb13">'); },
+  });
+
   const CARD = CARDS[CV];
 
   /* ───── progress: a ladder of reviews, kept in this browser ───── */
@@ -1991,11 +2140,11 @@ svg.d text { font-family: var(--font); font-weight: 800; }
     ov.onclick = start;
     addEventListener('message', e => { if (e.data && e.data.go) start(); });
   }
-  const CNAME = ['', 'الصبورة', 'سطر الحل', 'بطاقة الحفظ', 'سبورة دولينجو', 'توهّج Brilliant', 'بطاقة دولينجو', 'لوحة المطار', 'مربعات ملوّنة', 'الكلمة تصير رقم', 'زجاج', 'نيون'][CV];
+  const CNAME = ['', 'الصبورة', 'سطر الحل', 'بطاقة الحفظ', 'سبورة دولينجو', 'توهّج Brilliant', 'بطاقة دولينجو', 'لوحة المطار', 'مربعات ملوّنة', 'الكلمة تصير رقم', 'زجاج', 'نيون', 'الكلمة تصير رقم — Brilliant', 'الكلمة تصير رقم — قدراتي'][CV];
   if (CNAME) document.querySelector('.side .kick').textContent = 'قوانين القدرات — ' + CNAME;
   const boot = () => { if (EMB && RULE0) embStart(); else deck(); };
   /* a version's own fonts load before it is measured */
-  const CF = { 7: ['700 22px "IBM Plex Sans Arabic"'], 8: ['700 26px "Readex Pro"', '600 15px "Readex Pro"'], 9: ['800 30px "Cairo"', '700 12px "Cairo"'], 10: ['600 23px "IBM Plex Sans Arabic"', '700 19px "IBM Plex Sans Arabic"'], 11: ['700 26px "Baloo Bhaijaan 2"'] }[CV];
+  const CF = { 7: ['700 22px "IBM Plex Sans Arabic"'], 8: ['700 26px "Readex Pro"', '600 15px "Readex Pro"'], 9: ['800 30px "Cairo"', '700 12px "Cairo"'], 10: ['600 23px "IBM Plex Sans Arabic"', '700 19px "IBM Plex Sans Arabic"'], 11: ['700 26px "Baloo Bhaijaan 2"'], 12: ['500 24px "IBM Plex Sans Arabic"', '700 24px "IBM Plex Sans Arabic"', '500 12px "IBM Plex Sans Arabic"'], 13: ['800 26px "Baloo Bhaijaan 2"', '700 13px "Baloo Bhaijaan 2"'] }[CV];
   const cfR = CF && document.fonts ? Promise.race([Promise.all(CF.map(f => document.fonts.load(f, 'الاحتمال عدد ٠١٢٣٤٥٦٧٨٩'))), new Promise(r => setTimeout(r, 2500))]).catch(() => {}) : Promise.resolve();
   if (document.fonts && document.fonts.ready) cfR.then(() => document.fonts.ready).then(boot); else boot();
 })();
