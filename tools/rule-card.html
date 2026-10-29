@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مختبر بطاقة القاعدة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&display=swap">
+<style>
+/* Round 3 of the rule card. Round 1 (seven paints) was turned down; round 2 (seven ways for a rule to stick) was
+   «getting somewhere», and the ask now is «even better and animated … each one animated and with sounds, and add 3 laws».
+   So: the same seven ways, each with its own motion and a sound on every beat, on four rules from learn.js —
+   الاحتمال، الوسط، المصافحات، آخر رقم في الناتج — with each way's content written for each rule. */
+:root {
+  --green: #58CC02; --green-dk: #58A700; --green-lip: #478700; --green-bg: #D6FFB8; --green-pale: #A5ED6E;
+  --blue: #1CB0F6; --blue-dk: #1899D6; --blue-light: #DDF4FF; --blue-border: #63C9F9;
+  --purple: #CE82FF; --purple-dk: #A568CC; --purple-tint: #EDD1FF;
+  --gold: #FFC800; --gold-dk: #E6A000; --gold-soft: #FBE56D; --gold-bg: #FFF4BF; --brown: #AA572A; --brown-dk: #7A3B12;
+  --orange: #FF9600; --orange-dk: #E07800; --orange-bg: #FFEFD6;
+  --red: #FF4B4B; --red-dk: #EA2B2B; --red-bg: #FFDFE0; --red-soft: #FFB2B2;
+  --ink: #4B4B4B; --gray: #777777; --gray-icon: #AFAFAF; --line: #E5E5E5; --snow: #FFFFFF; --wash: #F7F7F7;
+  --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--wash); color: var(--ink); font-family: var(--font); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1290px; margin: 0 auto; padding-inline: 16px; padding-block: 26px 56px; }
+h1, h2, h3, p { margin: 0; }
+.kick { font-weight: 800; font-size: 15px; color: var(--purple-dk); }
+h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.2; margin: 2px 0 6px; font-weight: 800; text-wrap: balance; }
+.lede { font-size: 17px; color: var(--gray); font-weight: 600; max-width: 68ch; }
+.bar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 16px -16px 0; padding: 10px 16px; background: rgba(247,247,247,.94); backdrop-filter: blur(6px); }
+.bar .lbl { font-weight: 800; color: var(--gray); font-size: 14px; }
+.rb { height: 40px; padding: 0 14px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font: 800 15px var(--font); color: var(--ink); cursor: pointer; }
+.rb.on { background: var(--blue-light); border-color: var(--blue-border); color: var(--blue-dk); }
+.rb.all { background: var(--green); border-color: var(--green-lip); color: #fff; margin-inline-start: auto; }
+.picks { margin-top: 10px; background: #fff; border: 2px solid var(--line); border-radius: 14px; padding: 8px 14px; font-weight: 700; color: var(--gray); }
+.picks b { color: var(--green-dk); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 34px 22px; margin-top: 22px; }
+.card { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.c-head { display: flex; align-items: center; gap: 10px; }
+.c-n { width: 40px; height: 40px; flex: none; border-radius: 12px; display: grid; place-items: center; font-weight: 800; font-size: 20px; color: #fff; background: var(--blue); box-shadow: 0 4px 0 var(--blue-dk); }
+.c-head h3 { font-size: 21px; font-weight: 800; line-height: 1.25; }
+.c-head small { display: block; font-weight: 700; font-size: 13px; color: var(--purple-dk); }
+.c-what { font-size: 15px; color: var(--ink); font-weight: 600; }
+.c-why { font-size: 13.5px; color: var(--gray); font-weight: 600; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 6px 10px; }
+.c-why b { color: var(--ink); }
+.rate { display: flex; gap: 6px; }
+.rate button { flex: 1; height: 40px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font: 800 15px var(--font); color: var(--gray); cursor: pointer; }
+.rate button.on[data-v="yes"] { background: var(--green-bg); border-color: var(--green-pale); color: var(--green-dk); }
+.rate button.on[data-v="meh"] { background: var(--blue-light); border-color: var(--blue-border); color: var(--blue-dk); }
+.rate button.on[data-v="no"] { background: var(--red-bg); border-color: var(--red-soft); color: var(--red-dk); }
+button { font-family: var(--font); }
+button:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+/* the phone: the see screen as the app draws it */
+.phone { width: min(410px, 100%); height: 740px; margin: 0 auto; background: #fff; border: 10px solid #1F1F1F; border-radius: 40px; position: relative; overflow: hidden; box-shadow: 0 16px 36px rgba(0,0,0,.13); user-select: none; -webkit-user-select: none; }
+.ph-in { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 18px 16px 16px; text-align: center; }
+.p-prog { height: 14px; border-radius: 64px; background: var(--line); overflow: hidden; margin-bottom: 12px; flex: none; }
+.p-prog i { display: block; height: 100%; width: 38%; background: var(--green); border-radius: 64px; }
+.ln-kick { font-size: 13.5px; font-weight: 800; color: var(--green); margin-bottom: 2px; }
+.ln-h { font-size: 19px; font-weight: 700; line-height: 1.35; margin: 0 0 8px; text-wrap: balance; }
+.ln-rows { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.ln-row { font-size: 17px; font-weight: 800; line-height: 1.4; }
+.ln-row.win { font-size: 19px; color: var(--green-dk); background: var(--green-bg); border-radius: 14px; padding: 2px 16px; }
+.ln-hl { color: var(--blue-dk); background: var(--blue-light); border-radius: 8px; padding: 0 5px; }
+.slot { margin-top: auto; padding-top: 10px; }
+.btn-go { margin-top: 12px; width: 100%; height: 50px; border: 0; border-radius: 16px; background: var(--green); box-shadow: 0 4px 0 var(--green-lip); color: #fff; font: 800 17px var(--font); }
+
+/* the card, its head (bulb, «القاعدة», ↻) and one line of tokens */
+.rc { position: relative; background: #fff; border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 20px; padding: 10px 12px 14px; text-align: center; }
+.rc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.rc-ic { flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--gold); box-shadow: 0 3px 0 var(--gold-dk); display: grid; place-items: center; }
+.rc-ic svg { width: 17px; height: 17px; color: #fff; }
+.rc-tag { font-size: 14px; font-weight: 800; color: var(--brown); }
+.rc-again { margin-inline-start: auto; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: transparent; color: var(--gray-icon); cursor: pointer; }
+.rc-again svg { width: 18px; height: 18px; }
+.rc-again:active { transform: scale(.88) rotate(-40deg); }
+.line { display: flex; flex-wrap: nowrap; justify-content: safe center; align-items: center; gap: .25em; white-space: nowrap; font-size: 19px; font-weight: 800; line-height: 1.5; min-width: 0; }
+.line > * { flex: none; }
+.op { color: var(--gold-dk); font-size: 1.15em; display: inline-block; }
+.par { color: var(--gray-icon); font-weight: 700; }
+.pw { color: var(--ink); }
+.ca { background: var(--green-bg); color: var(--green-dk); }
+.cb { background: var(--blue-light); color: var(--blue-dk); }
+.cc { background: var(--purple-tint); color: var(--purple-dk); }
+.pill { display: inline-block; margin-top: 10px; height: 36px; padding: 0 14px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 14px; font-weight: 800; color: var(--blue-dk); cursor: pointer; }
+.pill:active { transform: translateY(2px); border-bottom-width: 2px; }
+.note { font-size: 13.5px; font-weight: 700; color: var(--gray); margin-top: 8px; min-height: 22px; }
+.say { margin-top: 8px; font-size: 18px; font-weight: 800; color: var(--ink); opacity: 0; }
+.say b { color: var(--blue-dk); }
+.say b.d { color: var(--purple-dk); }
+
+/* ═════ ١ من مثالك ═════ */
+.v1 .s { position: relative; display: inline-grid; overflow: hidden; border-radius: 10px; padding: 0 .3em; height: 1.55em; }
+.v1 .s > b { grid-area: 1 / 1; display: block; text-align: center; transition: transform .4s cubic-bezier(.3, 1.4, .5, 1), opacity .25s; }
+.v1 .s .w { transform: translateY(110%); opacity: 0; }
+.v1 .s.on .n { transform: translateY(-110%); opacity: 0; }
+.v1 .s.on .w { transform: none; opacity: 1; }
+.v1 .caps { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 13.5px; font-weight: 700; color: var(--gray); min-height: 22px; }
+.v1 .caps span { opacity: 0; }
+.v1 .caps i { font-style: normal; font-weight: 800; }
+
+/* ═════ ٢ الصورة ═════ */
+.pic { position: relative; }
+/* الاحتمال: the fraction */
+.pp .fr { display: flex; align-items: center; justify-content: center; gap: 8px; }
+.pp .fr-l { font-size: 19px; font-weight: 800; border-radius: 10px; padding: 0 8px; }
+.pp .fr-box { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.pp .row { display: flex; gap: 3px; justify-content: center; min-height: 30px; }
+.mc { width: 22px; height: 29px; border-radius: 6px; background: #fff; border: 2px solid var(--line); border-bottom-width: 3px; font-size: 13px; font-weight: 800; line-height: 22px; color: var(--ink); transition: background .2s, border-color .2s, color .2s; }
+.mc.pk { background: var(--blue); border-color: var(--blue-dk); color: #fff; }
+.pp .top .mc { opacity: 0; background: var(--blue); border-color: var(--blue-dk); color: #fff; }
+.pp .lab { font-size: 13.5px; font-weight: 800; opacity: 0; }
+.pp .lab.t { color: var(--blue-dk); } .pp .lab.b { color: var(--purple-dk); }
+.pp .lab b { display: inline-block; min-width: 1.4em; border-radius: 7px; color: #fff; padding: 0 4px; margin-inline-start: 4px; }
+.pp .lab.t b { background: var(--blue); } .pp .lab.b b { background: var(--purple); }
+.pp .bar5 { display: block; width: 210px; height: 5px; border-radius: 3px; background: var(--ink); transform: scaleX(0); }
+/* الوسط: level the towers */
+.pm { display: flex; justify-content: center; align-items: flex-end; gap: 22px; height: 168px; position: relative; padding-top: 6px; }
+.pm .tw { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.pm .col { display: flex; flex-direction: column-reverse; gap: 1px; width: 30px; }
+.pm .blk { width: 30px; height: 10px; border-radius: 3px; background: var(--blue); box-shadow: inset 0 -2px 0 var(--blue-dk); }
+.pm .blk.mv { background: var(--orange); box-shadow: inset 0 -2px 0 var(--orange-dk); }
+.pm .tl { font-size: 16px; font-weight: 800; min-width: 2em; }
+.pm .lvl { position: absolute; left: 10px; right: 10px; height: 0; border-top: 3px dashed var(--green); opacity: 0; }
+.pm .lvl span { font-style: normal; position: absolute; left: 0; top: -24px; font-size: 13px; font-weight: 800; color: var(--green-dk); background: var(--green-bg); border-radius: 7px; padding: 0 6px; }
+/* المصافحات: lines between people */
+.ph svg { width: 230px; height: 150px; overflow: visible; display: block; margin: 0 auto; }
+.ph .pp-c { fill: var(--blue); stroke: #fff; stroke-width: 3; transform-box: fill-box; transform-origin: center; }
+.ph .pp-l { stroke: var(--purple); stroke-width: 4; stroke-linecap: round; fill: none; }
+.ph .bd circle { fill: var(--gold); stroke: #fff; stroke-width: 2; }
+.ph .bd text { font: 800 13px var(--font); fill: var(--brown-dk); text-anchor: middle; dominant-baseline: central; }
+.ph .cnt { font-size: 15px; font-weight: 800; color: var(--purple-dk); min-height: 24px; }
+/* آخر رقم: the last digits do the work */
+.pl .lr1 { font-size: 40px; font-weight: 800; display: flex; justify-content: center; align-items: center; gap: 12px; }
+.num { display: inline-flex; direction: ltr; }
+.num .d { display: inline-block; transition: color .3s, opacity .3s; }
+.pl .ten { color: var(--ink); }
+.pl.dim .ten { color: var(--line); }
+.pl .one { border-radius: 8px; }
+.pl.glow .one { color: var(--blue-dk); }
+.pl .lr2 { font-size: 26px; font-weight: 800; display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 6px; min-height: 40px; }
+.pl .tg { display: inline-block; opacity: 0; color: var(--blue-dk); }
+.pl .lr2 .rest { opacity: 0; display: inline-flex; gap: 8px; align-items: center; }
+.pl .lr3 { font-size: 17px; font-weight: 800; margin-top: 6px; min-height: 30px; opacity: 0; }
+.pl .lr3 .tg { color: #fff; background: var(--green); border-radius: 9px; padding: 0 9px; box-shadow: 0 3px 0 var(--green-lip); }
+
+/* ═════ ٣ النبضة ═════ */
+.v3 .beat { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0 2px; cursor: pointer; touch-action: manipulation; border-radius: 16px; }
+.v3 .b1, .v3 .b3 { font-size: 32px; font-weight: 800; line-height: 1.25; opacity: 0; white-space: nowrap; }
+.v3 .b1 { color: var(--blue-dk); } .v3 .b3 { color: var(--purple-dk); }
+.v3 .b2 { position: relative; width: 200px; height: 26px; display: grid; place-items: center; }
+.v3 .b2 i { position: absolute; inset: 10px 0 auto 0; height: 6px; border-radius: 3px; background: var(--ink); transform: scaleX(0); }
+.v3 .b2 em { position: relative; font-style: normal; font-size: 15px; font-weight: 800; color: var(--gold-dk); background: #fff; padding: 0 8px; border-radius: 8px; opacity: 0; }
+.v3 .b2.nobar i { display: none; }
+.v3 .ring { position: absolute; inset: 0; border-radius: 16px; border: 3px solid var(--gold); opacity: 0; pointer-events: none; }
+.v3 .formal { font-size: 14px; font-weight: 700; color: var(--gray); opacity: 0; margin-top: 4px; }
+.v3 .tapme { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13.5px; font-weight: 800; color: var(--blue-dk); margin-top: 6px; opacity: 0; min-height: 26px; }
+.v3 .dots { display: inline-flex; gap: 4px; }
+.v3 .dots i { width: 12px; height: 12px; border-radius: 50%; background: var(--line); transition: background .2s; }
+.v3 .dots i.on { background: var(--green); }
+
+/* ═════ ٤ غطّها وقلها ═════ */
+.v4 .t { position: relative; display: inline-grid; border-radius: 10px; padding: 0 .32em; cursor: default; }
+.v4 .t > b { grid-area: 1 / 1; text-align: center; }
+.v4 .t .cv { opacity: 0; color: var(--gray-icon); }
+.v4 .t.cov { background: #fff; color: transparent; box-shadow: inset 0 0 0 2px var(--line), inset 0 -4px 0 var(--line); cursor: pointer; }
+.v4 .t.cov .f { opacity: 0; }
+.v4 .t.cov .cv { opacity: 1; }
+.v4 .t.done { background: var(--green-bg); color: var(--green-dk); }
+.v4 .timer { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; margin: 12px 30px 0; }
+.v4 .timer i { display: block; height: 100%; width: 100%; background: var(--gold); border-radius: 4px; transform-origin: right; }
+.v4 .ask { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+.v4 .ask button { height: 40px; padding: 0 18px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 15px; font-weight: 800; cursor: pointer; }
+.v4 .ask .y { color: var(--green-dk); } .v4 .ask .n { color: var(--red-dk); }
+.v4.ok { border-color: var(--green-pale); }
+
+/* ═════ ٥ جرّبها فوراً ═════ */
+.v5 .k { position: relative; display: inline-block; border-radius: 10px; padding: 0 .3em; }
+.v5 .val { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 3px; font-size: 15px; font-weight: 800; font-style: normal; color: #fff; border-radius: 8px; padding: 0 8px; line-height: 1.5; opacity: 0; white-space: nowrap; }
+.v5 .ca .val { background: var(--green); } .v5 .cb .val { background: var(--blue); } .v5 .cc .val { background: var(--purple); }
+.v5 .qz { margin-top: 32px; background: var(--wash); border-radius: 16px; padding: 10px; }
+.v5 .qz-q { font-size: 15.5px; font-weight: 800; line-height: 1.45; min-height: 46px; display: grid; place-items: center; }
+.v5 .qz-ch { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
+.v5 .qz-ch button { flex: 1; height: 44px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 18px; font-weight: 800; color: var(--ink); cursor: pointer; }
+.v5 .qz-ch button.ok { background: var(--green-bg); border-color: var(--green-pale); color: var(--green-dk); }
+.v5 .qz-ch button.no { background: var(--red-bg); border-color: var(--red-soft); color: var(--red-dk); }
+.v5 .qz-ch button:disabled { cursor: default; }
+.v5 .qz-f { font-size: 13.5px; font-weight: 800; min-height: 22px; margin-top: 6px; color: var(--gray); }
+.v5 .qz-f.ok { color: var(--green-dk); } .v5 .qz-f.no { color: var(--red-dk); }
+.v5 .qz-run { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 4px; min-height: 40px; }
+.v5 .qz-run .pill { margin-top: 0; }
+.v5 .streak { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 800; color: var(--orange-dk); }
+.v5 .streak svg { width: 18px; height: 18px; }
+
+/* ═════ ٦ قاعدة تجمعها ═════ */
+.v6 .tc-wrap { display: grid; place-items: center; padding: 2px 0 4px; }
+.v6 .tc { width: 262px; height: 154px; border-radius: 16px; position: relative; cursor: pointer; }
+.v6 .tc .face { position: absolute; inset: 0; border-radius: 16px; display: flex; flex-direction: column; overflow: hidden; }
+.v6 .tc .fr { background: #fff; border: 2px solid var(--purple); border-bottom-width: 5px; }
+.v6 .tc .fr .band { display: flex; align-items: center; gap: 6px; background: var(--purple); color: #fff; padding: 4px 10px; font-size: 13px; font-weight: 800; }
+.v6 .tc .fr .band svg { width: 18px; height: 18px; }
+.v6 .tc .fr .band .no { margin-inline-start: auto; background: rgba(255,255,255,.25); border-radius: 7px; padding: 0 6px; }
+.v6 .tc .fr .nm { font-size: 22px; font-weight: 800; color: var(--purple-dk); margin-top: 4px; }
+.v6 .tc .fr .ru { font-size: 14px; font-weight: 800; color: var(--ink); padding: 0 8px; white-space: nowrap; }
+.v6 .tc .fr .ru i { font-style: normal; color: var(--gold-dk); }
+.v6 .tc .fr .ft { margin-top: auto; font-size: 11.5px; font-weight: 700; color: var(--gray-icon); padding-bottom: 4px; }
+.v6 .tc .bk { background: var(--purple) repeating-linear-gradient(45deg, rgba(255,255,255,.12) 0 10px, transparent 10px 20px); border: 2px solid var(--purple-dk); border-bottom-width: 5px; display: grid; place-items: center; color: #fff; font-size: 56px; font-weight: 800; }
+.v6 .tc .ex { background: var(--gold-bg); border: 2px solid var(--gold); border-bottom-width: 5px; justify-content: center; gap: 2px; }
+.v6 .tc .ex p { font-size: 14.5px; font-weight: 800; color: var(--brown-dk); padding: 0 8px; }
+.v6 .tc .ex .big { font-size: 25px; color: var(--ink); }
+.v6 .tc .ex small { font-size: 12px; color: var(--brown); font-weight: 700; }
+.v6 .tc .shine { position: absolute; inset: 0; border-radius: 16px; overflow: hidden; pointer-events: none; }
+.v6 .tc .shine b { position: absolute; inset: 0; background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.8) 50%, transparent 65%); transform: translateX(120%); }
+.v6 .deck { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 14px; font-weight: 800; color: var(--gray); }
+.v6 .deck .dk-ic { width: 28px; height: 28px; flex: none; }
+.v6 .deck .dk-t b { color: var(--purple-dk); display: inline-block; min-width: 1.3em; }
+.v6 .dbar { flex: 1; height: 14px; border-radius: 64px; background: var(--line); overflow: hidden; }
+.v6 .dbar i { display: block; height: 100%; border-radius: 64px; background: var(--purple); transition: width .5s cubic-bezier(.3, 1.4, .5, 1); }
+.v6 .fly { position: absolute; width: 34px; height: 22px; border-radius: 5px; background: var(--purple); border: 2px solid var(--purple-dk); pointer-events: none; z-index: 3; }
+
+/* ═════ ٧ الفخ ═════ */
+.v7 .tp-k { font-size: 14px; font-weight: 800; color: var(--red-dk); min-height: 22px; }
+.v7.fixed .tp-k { color: var(--green-dk); }
+.v7 .line { margin-top: 6px; }
+.v7 .w { display: inline-block; border-radius: 10px; padding: 0 .3em; }
+.v7 .sw { position: relative; display: inline-grid; }
+.v7 .sw > span { grid-area: 1 / 1; border-radius: 10px; padding: 0 .3em; text-align: center; }
+.v7 .sw .bad { background: var(--red-bg); color: var(--red-dk); }
+.v7 .sw .bad.empty { background: #fff; box-shadow: inset 0 0 0 2px var(--red-soft); color: var(--red-soft); }
+.v7 .sw .good { background: var(--purple-tint); color: var(--purple-dk); opacity: 0; }
+.v7 .sw .bad s { text-decoration-thickness: 3px; text-decoration-color: transparent; transition: text-decoration-color .2s; }
+.v7.strike .sw .bad s { text-decoration-color: var(--red-dk); }
+.v7 .ex { margin-top: 10px; font-size: 16px; font-weight: 800; min-height: 56px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.v7 .ex .eb { color: var(--red-dk); opacity: 0; text-decoration-thickness: 2px; }
+.v7 .ex .eg { color: var(--green-dk); background: var(--green-bg); border-radius: 10px; padding: 0 12px; opacity: 0; }
+.v7 .stamp { position: absolute; top: 6px; left: 50px; font-size: 18px; font-weight: 800; color: var(--red-dk); border: 3px solid var(--red-dk); border-radius: 10px; padding: 0 8px; transform: rotate(-12deg); opacity: 0; background: #fff; }
+.v7.fixed .stamp { color: var(--green-dk); border-color: var(--green-dk); }
+@media (prefers-reduced-motion: reduce) { .rc *, .rc { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="kick">مختبر بطاقة القاعدة — الجولة الثالثة</p>
+  <h1>سبع طرق تخلّي القاعدة تعلق، على أربع قواعد</h1>
+  <p class="lede">نفس الطرق السبع، بس كل وحدة صارت لها حركتها وأصواتها مع كل خطوة. وصارت أربع قواعد: الاحتمال، والوسط، والمصافحات، وآخر رقم في الناتج. كل طريقة مكتوبة لكل قاعدة: صورتها، ونبضتها، وأسئلتها، وغلطتها الشائعة. الصوت يشتغل بعد أول ضغطة في الصفحة.</p>
+  <div class="bar" id="rules"><span class="lbl">القاعدة:</span></div>
+  <p class="picks" id="picks">ما فيه تقييم للحين.</p>
+  <div class="cards" id="cards"></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const BULB = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z" fill="#fff"/></svg>';
+  const AGAIN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></svg>';
+  const DECK = '<svg class="dk-ic" viewBox="0 0 26 26"><rect x="7" y="2" width="15" height="20" rx="3" fill="#EDD1FF"/><rect x="4" y="4" width="15" height="20" rx="3" fill="#CE82FF" stroke="#A568CC" stroke-width="1.5"/></svg>';
+  const FLAME = '<svg viewBox="0 0 24 24"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-4-1-6 1-9z" fill="#FF9600"/><path d="M12 13c1 1.5 3 2.5 3 5a3 3 0 0 1-6 0c0-1.5 1-2.5 1.5-3 0 1 .5 1.5 1 1.5 0-1.5 0-2.5.5-3.5z" fill="#FFC800"/></svg>';
+  const ICON = {
+    prob: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="#fff"/><circle cx="8.5" cy="8.5" r="1.7" fill="#A568CC"/><circle cx="15.5" cy="15.5" r="1.7" fill="#A568CC"/><circle cx="12" cy="12" r="1.7" fill="#A568CC"/></svg>',
+    mean: '<svg viewBox="0 0 24 24"><rect x="3" y="11" width="5" height="10" rx="1.5" fill="#fff"/><rect x="9.5" y="11" width="5" height="10" rx="1.5" fill="#fff"/><rect x="16" y="11" width="5" height="10" rx="1.5" fill="#fff"/><path d="M2 9h20" stroke="#fff" stroke-width="2" stroke-dasharray="3 2"/></svg>',
+    hand: '<svg viewBox="0 0 24 24"><path d="M6 6L18 18M18 6L6 18M6 6h12M6 18h12" stroke="#fff" stroke-width="2"/><circle cx="6" cy="6" r="3" fill="#fff"/><circle cx="18" cy="6" r="3" fill="#fff"/><circle cx="6" cy="18" r="3" fill="#fff"/><circle cx="18" cy="18" r="3" fill="#fff"/></svg>',
+    last: '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="8" height="14" rx="2" fill="none" stroke="#fff" stroke-width="2" opacity=".55"/><rect x="13" y="5" width="8" height="14" rx="2" fill="#fff"/></svg>',
+  };
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const AR = '٠١٢٣٤٥٦٧٨٩', toAr = n => String(n).replace(/\d/g, d => AR[d]);
+  const OP = /^[=×÷+−←]$/;
+  const head = '<div class="rc-head"><span class="rc-ic">' + BULB + '</span><span class="rc-tag">القاعدة</span><button class="rc-again" aria-label="من الأول">' + AGAIN + '</button></div>';
+
+  /* ───── the four rules, each with the content every way needs ───── */
+  const RULES = [
+    { key: 'prob', name: 'الاحتمال', kick: 'القانون', h: 'الاحتمال = اللي *تبيه* ÷ *الكل*', rows: ['بطاقات من ١ إلى ٨ ← الكل ٨', 'الزوجية ٤ ← اللي تبيه', '!٤ ÷ ٨ = ١/٢'],
+      tok: [{ t: 'الاحتمال', n: '١/٢', c: 'ca', cap: '١/٢' }, '=', { t: 'عدد المطلوب', n: '٤', c: 'cb', cap: '٤ زوجية' }, '÷', { t: 'عدد كل النواتج', n: '٨', c: 'cc', cap: '٨ بطاقات' }],
+      chant: ['اللي تبيه', 'على', 'الكل'],
+      say: 'اللي تبيه <b>فوق</b>، والكل <b class="d">تحت</b>',
+      card: { no: 26, unit: 'الوحدة ١ — مهارات', ex: ['بطاقات من ١ إلى ٨، والمطلوب الزوجية', '٤ ÷ ٨ = ١/٢'] },
+      trap: { k: 'أكثر غلط في الاحتمال:', fix: 'الصح: تقسم على الكل، مو على الباقي', tok: [{ t: 'الاحتمال', c: 'ca' }, '=', { t: 'عدد المطلوب', c: 'cb' }, '÷', { swap: { bad: 'الباقي', good: 'عدد كل النواتج' } }], bad: '٤ زوجية ÷ ٤ فردية = ١ ← يعني أكيد؟!', good: '٤ ÷ ٨ = ١/٢' },
+      qs: [
+        { q: 'نرد واحد: احتمال يطلع ٥ أو ٦؟', r: '٢/٦', ch: ['٢/٦', '١/٦', '٢/٤'], v: { ca: '٢/٦', cb: '٢', cc: '٦' } },
+        { q: 'كيس فيه ٣ كرات حمراء و ٥ زرقاء: احتمال حمراء؟', r: '٣/٨', ch: ['٣/٨', '٣/٥', '٥/٨'], v: { ca: '٣/٨', cb: '٣', cc: '٨' } },
+        { q: 'الأعداد من ١ إلى ١٠: احتمال عدد أكبر من ٧؟', r: '٣/١٠', ch: ['٣/١٠', '٧/١٠', '٣/٧'], v: { ca: '٣/١٠', cb: '٣', cc: '١٠' } },
+        { q: 'أيام الأسبوع: احتمال يكون اليوم جمعة أو سبت؟', r: '٢/٧', ch: ['٢/٧', '١/٧', '٢/٥'], v: { ca: '٢/٧', cb: '٢', cc: '٧' } },
+      ] },
+    { key: 'mean', name: 'الوسط', kick: 'الوسط الحسابي', h: 'اجمعهم، واقسم على *عددهم*', rows: ['٤ ، ٦ ، ١١ ← المجموع ٢١', 'عددهم ٣', '!٢١ ÷ ٣ = ٧'],
+      tok: [{ t: 'الوسط', n: '٧', c: 'ca', cap: '٧' }, '=', { t: 'المجموع', n: '٢١', c: 'cb', cap: '٤ + ٦ + ١١ = ٢١' }, '÷', { t: 'العدد', n: '٣', c: 'cc', cap: '٣ أعداد' }],
+      chant: ['اجمعهم', 'على', 'عددهم'],
+      say: 'الوسط = <b>طولهم لو تساووا</b>',
+      card: { no: 32, unit: 'الوحدة ١ — مهارات', ex: ['٤ ، ٦ ، ١١ ← مجموعهم ٢١، وعددهم ٣', '٢١ ÷ ٣ = ٧'] },
+      trap: { k: 'أكثر غلط في الوسط:', fix: 'الصح: تقسم على عددهم، مو على ٢', tok: [{ t: 'الوسط', c: 'ca' }, '=', { t: 'المجموع', c: 'cb' }, '÷', { swap: { bad: '٢', good: 'العدد' } }], bad: '٢١ ÷ ٢ = ١٠٫٥ ← وسط أكبر من ٦ و ٤ مع بعض؟!', good: '٢١ ÷ ٣ = ٧' },
+      qs: [
+        { q: 'الأعداد ٢ ، ٤ ، ٩: كم وسطها؟', r: '٥', ch: ['٥', '٧٫٥', '٣'], v: { ca: '٥', cb: '١٥', cc: '٣' } },
+        { q: 'الأعداد ١٠ ، ٢٠ ، ٣٠ ، ٤٠: كم وسطها؟', r: '٢٥', ch: ['٢٥', '٥٠', '٢٠'], v: { ca: '٢٥', cb: '١٠٠', cc: '٤' } },
+        { q: 'الأعداد ٣ ، ٥ ، ٧ ، ٩ ، ١١: كم وسطها؟', r: '٧', ch: ['٧', '٨', '٥'], v: { ca: '٧', cb: '٣٥', cc: '٥' } },
+      ] },
+    { key: 'hand', name: 'المصافحات', kick: 'الحيلة', h: 'كل واحد يصافح *الباقين*… والمصافحة بين اثنين', rows: ['٤ أشخاص: كل واحد يصافح ٣', '٤ × ٣ = ١٢ ، بس كل مصافحة انحسبت *مرتين*', '!١٢ ÷ ٢ = ٦ مصافحات'],
+      tok: [{ t: 'المصافحات', n: '٦', c: 'ca', cap: '٦' }, '=', { t: 'العدد', n: '٤', c: 'cb', cap: '٤ أشخاص' }, '×', { t: '(العدد − ١)', n: '٣', c: 'cc', cap: '٣ يصافحهم كل واحد' }, '÷', '٢'],
+      chant: ['العدد × اللي قبله', 'على', 'اثنين'],
+      say: 'كل مصافحة <b>لها طرفين</b>، فتقسم على <b class="d">٢</b>',
+      card: { no: 16, unit: 'الوحدة ١ — مهارات', ex: ['٤ أشخاص، كل واحد يصافح الباقين', '٤ × ٣ ÷ ٢ = ٦'] },
+      trap: { k: 'أكثر غلط في المصافحات:', fix: 'الصح: كل مصافحة انحسبت مرتين، فتقسم على ٢', tok: [{ t: 'المصافحات', c: 'ca' }, '=', { t: 'العدد', c: 'cb' }, '×', { t: '(العدد − ١)', c: 'cc' }, { swap: { bad: 'نسيتها', good: '÷ ٢', empty: true } }], bad: '٤ × ٣ = ١٢ ← ٤ أشخاص يتصافحون ١٢ مرة؟!', good: '٤ × ٣ ÷ ٢ = ٦' },
+      qs: [
+        { q: '٥ أشخاص، كل واحد صافح الباقين: كم مصافحة؟', r: '١٠', ch: ['١٠', '٢٠', '٩'], v: { ca: '١٠', cb: '٥', cc: '٤' } },
+        { q: '٦ لاعبين، كل واحد صافح الباقين: كم مصافحة؟', r: '١٥', ch: ['١٥', '٣٠', '١٢'], v: { ca: '١٥', cb: '٦', cc: '٥' } },
+        { q: '١٠ أشخاص في اجتماع، كلهم تصافحوا: كم مصافحة؟', r: '٤٥', ch: ['٤٥', '٩٠', '٥٠'], v: { ca: '٤٥', cb: '١٠', cc: '٩' } },
+      ] },
+    { key: 'last', name: 'آخر رقم', kick: 'الحيلة', h: 'الخيارات تختلف في الآخر؟ اضرب *آخر رقمين* بس', rows: ['٣٧ × ٢٣', '٧ × ٣ = ٢١', '!الناتج ينتهي بـ ١'],
+      tok: [{ t: 'آخر رقم في الناتج', n: '١', c: 'ca', cap: '١' }, '=', 'آخر رقم من', { t: 'آحاد', n: '٧', c: 'cb', cap: '٧ من ٣٧' }, '×', { t: 'آحاد', n: '٣', c: 'cc', cap: '٣ من ٢٣' }],
+      chant: ['آحاد × آحاد', 'وخذ', 'آخر رقم'],
+      say: '<b>الآخر</b> بس يقرر <b class="d">الآخر</b>',
+      card: { no: 10, unit: 'الوحدة ١ — مهارات', ex: ['٣٧ × ٢٣: آخر رقمين ٧ و ٣', '٧ × ٣ = ٢١ ← ١'] },
+      trap: { k: 'أكثر غلط في آخر رقم:', fix: 'الصح: تضرب الآحاد، ما تجمعها', tok: [{ t: 'آخر رقم في الناتج', c: 'ca' }, '=', 'آخر رقم من', { t: 'آحاد', c: 'cb' }, { swap: { bad: '+', good: '×' } }, { t: 'آحاد', c: 'cc' }], bad: '٧ + ٣ = ١٠ ← ينتهي بـ ٠؟!', good: '٧ × ٣ = ٢١ ← ينتهي بـ ١' },
+      qs: [
+        { q: 'وش آخر رقم في ٤٨ × ٢٧؟', r: '٦', ch: ['٦', '٥', '٤'], v: { ca: '٦', cb: '٨', cc: '٧' } },
+        { q: 'وش آخر رقم في ١٣ × ١٩؟', r: '٧', ch: ['٧', '٢', '٩'], v: { ca: '٧', cb: '٣', cc: '٩' } },
+        { q: 'وش آخر رقم في ٢٤ × ٣٦؟', r: '٤', ch: ['٤', '٠', '٢'], v: { ca: '٤', cb: '٤', cc: '٦' } },
+      ] },
+  ];
+
+  /* ───── sounds: the app's own files through Web Audio, so a step can rise in pitch ───── */
+  const SB = '../assets/sounds/';
+  const FILES = { tap: 'bri/lightweight-choice', click: 'bri/assessment-click-option-1', hint: 'bri/hint', on: 'bri/toggle-on', off: 'bri/toggle-off', t1: 'bri/xp-tally-1', t2: 'bri/xp-tally-2', t3: 'bri/xp-tally-3', t4: 'bri/xp-tally-4', t5: 'bri/xp-tally-5', right: 'correct', wrong: 'bri/incorrect', done: 'bri/level-passed', start: 'bri/start-lesson', drag: 'bri/drag-started', drop: 'bri/drag-released', streak: 'bri/streak-inlesson', node: 'bri/highlight-node' };
+  let ctx = null; const bufs = {};
+  function audio() {
+    if (ctx) return;
+    try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+    Object.entries(FILES).forEach(([k, f]) => fetch(SB + f + '.mp3').then(r => r.arrayBuffer()).then(b => ctx.decodeAudioData(b)).then(d => { bufs[k] = d; }).catch(() => {}));
+  }
+  addEventListener('pointerdown', () => { audio(); if (ctx && ctx.state === 'suspended') ctx.resume(); }, true);
+  function snd(k, rate = 1, vol = .5) {
+    if (!ctx || ctx.state !== 'running' || !bufs[k]) return;
+    const s = ctx.createBufferSource(), g = ctx.createGain();
+    s.buffer = bufs[k]; s.playbackRate.value = rate; g.gain.value = vol; s.connect(g); g.connect(ctx.destination); s.start();
+  }
+  const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+  const up = k => Math.pow(2, Math.min(k, 9) * 2 / 12);
+
+  /* ───── motion helpers: every timer and animation belongs to its card, so ↻ wipes them ───── */
+  const later = (c, ms, f) => { (c._t = c._t || []).push(setTimeout(f, reduce ? 0 : ms)); };
+  const wipe = c => { (c._t || []).forEach(clearTimeout); c._t = []; (c._a || []).forEach(a => { try { a.cancel(); } catch (e) {} }); c._a = []; };
+  const anim = (c, el, kf, o) => { if (reduce || !el) return null; const a = el.animate(kf, o); (c._a = c._a || []).push(a); return a; };
+  const SLAM = [{ opacity: 0, transform: 'scale(1.7)' }, { opacity: 1, transform: 'scale(.92, 1.06)', offset: .5 }, { transform: 'scale(1.04, .96)', offset: .78 }, { opacity: 1, transform: 'none' }];
+  const POP = [{ opacity: 0, transform: 'translateY(10px) scale(.8)' }, { opacity: 1, transform: 'none' }];
+  const HOP = [{ transform: 'none' }, { transform: 'translateY(-9px) scale(.95, 1.06)', offset: .35 }, { transform: 'translateY(1px) scale(1.05, .94)', offset: .7 }, { transform: 'none' }];
+  const SHAKE = [{ transform: 'none' }, { transform: 'translateX(-7px)' }, { transform: 'translateX(6px)' }, { transform: 'translateX(-3px)' }, { transform: 'none' }];
+  const show = (el, on = true) => { if (el) el.style.opacity = on ? 1 : 0; };
+  const slam = (c, el, ms = 330) => { show(el); anim(c, el, SLAM, { duration: ms, easing: 'ease-out' }); };
+  const hop = (c, el, d = 0) => anim(c, el, HOP, { duration: 420, delay: d, easing: 'ease-out' });
+  /* the card arrives: it rises and squashes, the bulb wobbles in and lights */
+  function intro(c) {
+    anim(c, c, [{ opacity: 0, transform: 'translateY(26px) scale(.94)' }, { opacity: 1, transform: 'translateY(-4px) scale(1.02, .98)', offset: .6 }, { opacity: 1, transform: 'none' }], { duration: 480, easing: 'ease-out' });
+    anim(c, c.querySelector('.rc-ic'), [{ transform: 'scale(.3) rotate(-30deg)' }, { transform: 'scale(1.2) rotate(12deg)', offset: .55 }, { transform: 'scale(.95) rotate(-4deg)', offset: .8 }, { transform: 'none' }], { duration: 600, delay: 150, easing: 'ease-out', fill: 'backwards' });
+    snd('start', 1, .3);
+  }
+  const settle = c => { anim(c, c, [{ transform: 'none' }, { transform: 'scale(1.03, .97)', offset: .35 }, { transform: 'scale(.99, 1.01)', offset: .7 }, { transform: 'none' }], { duration: 360, easing: 'ease-out' }); anim(c, c.querySelector('.rc-ic'), [{ boxShadow: '0 3px 0 #E6A000, 0 0 0 0 rgba(255,200,0,.7)' }, { boxShadow: '0 3px 0 #E6A000, 0 0 0 14px rgba(255,200,0,0)' }], { duration: 650 }); snd('hint', 1, .45); buzz(10); };
+  /* fly el from where src is to where el sits */
+  function flyFrom(c, el, src, ms = 440, lift = 28) {
+    const a = src.getBoundingClientRect(), b = el.getBoundingClientRect(), dx = (a.left + a.width / 2) - (b.left + b.width / 2), dy = (a.top + a.height / 2) - (b.top + b.height / 2);
+    return anim(c, el, [{ opacity: 1, transform: `translate(${dx}px, ${dy}px)` }, { opacity: 1, transform: `translate(${dx * .5}px, ${dy * .5 - lift}px) scale(1.2)`, offset: .5 }, { opacity: 1, transform: 'none' }], { duration: ms, easing: 'cubic-bezier(.4,0,.3,1)' });
+  }
+  function fit(line) {
+    if (!line) return;
+    line.style.fontSize = '';
+    let fs = parseFloat(getComputedStyle(line).fontSize);
+    while (line.scrollWidth > line.clientWidth + 1 && fs > 12) { fs -= .5; line.style.fontSize = fs + 'px'; }
+  }
+  function lineHtml(tok, kind) {
+    return '<div class="line">' + tok.map(x => {
+      if (typeof x === 'string') return OP.test(x) ? `<span class="op">${x}</span>` : /^[()]$/.test(x) ? `<span class="par">${x}</span>` : `<span class="pw">${x}</span>`;
+      if (x.swap) return `<span class="sw"><span class="bad${x.swap.empty ? ' empty' : ''}"><s>${x.swap.bad}</s></span><span class="good">${x.swap.good}</span></span>`;
+      if (kind === 'v1') return `<span class="s ${x.c}"><b class="n">${x.n}</b><b class="w">${x.t}</b></span>`;
+      if (kind === 'v4') return `<span class="t ${x.c}"><b class="f">${x.t}</b><b class="cv">؟</b></span>`;
+      if (kind === 'v5') return `<span class="k ${x.c}" data-c="${x.c}">${x.t}<i class="val"></i></span>`;
+      return `<span class="w ${x.c}">${x.t}</span>`;
+    }).join('') + '</div>';
+  }
+  const plain = tok => tok.map(x => typeof x === 'string' ? (OP.test(x) ? `<i>${x}</i>` : x) : x.t).join(' ').replace(/\( /g, '(').replace(/ \)/g, ')');
+  const COLOR = { ca: 'var(--green-dk)', cb: 'var(--blue-dk)', cc: 'var(--purple-dk)' };
+
+  /* ═════ ١ من مثالك ═════ */
+  const V1 = {
+    name: 'من مثالك', mech: 'الربط بين المثال والقاعدة',
+    what: 'السطر يطلع بأرقام المثال اللي شافها الطالب للتو، والأرقام تعدّ لين توصل. بعدها كل رقم ينقلب لكلمته في مكانه بنغمة أعلى من اللي قبلها، وتحت كل كلمة يبقى رقمها. الزر يقلّبها رايح جاي.',
+    why: '<b>ليش تعلق:</b> القاعدة ما تجي كلام جديد، تجي من أرقام الطالب نفسه، فكل كلمة تنربط بشي شافه. الكلمة والرقم مع بعض يحفظون أقوى من وحدة منهم لحالها.',
+    html: R => head + lineHtml(R.tok, 'v1') + `<div class="caps">${R.tok.filter(x => x.t).map(x => `<span><i style="color:${COLOR[x.c]}">${x.t.replace(/[()]/g, '')}</i> ${x.cap}</span>`).join('')}</div><button class="pill sw">كلمات ⇄ أرقام</button>`,
+    mount(c) {
+      const S = [...c.querySelectorAll('.s')], caps = [...c.querySelectorAll('.caps span')], line = c.querySelector('.line');
+      let words = false;
+      const order = S.map((s, i) => i).slice(1).concat(0);
+      const flip = (on, gap) => { words = on; order.forEach((i, k) => later(c, k * gap, () => { S[i].classList.toggle('on', on); hop(c, S[i]); snd(on ? 't' + Math.min(k + 2, 5) : 'tap', 1, .5); buzz(6); if (on) { show(caps[i]); anim(c, caps[i], POP, { duration: 280 }); } else show(caps[i], false); })); };
+      c.querySelector('.sw').addEventListener('click', () => flip(!words, 110));
+      return () => {
+        wipe(c); intro(c); S.forEach(s => s.classList.remove('on')); caps.forEach(x => show(x, false)); words = false;
+        S.forEach((s, i) => later(c, 350 + i * 140, () => { anim(c, s, [{ opacity: 0, transform: 'translateY(-16px) scale(.7)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: 'cubic-bezier(.3,1.6,.5,1)', fill: 'backwards' }); snd('tap', up(i), .35); }));
+        later(c, 1250, () => flip(true, 430));
+        later(c, 1250 + order.length * 430 + 120, () => settle(c));
+      };
+    },
+  };
+
+  /* ═════ ٢ الصورة: a picture per rule ═════ */
+  const PIC = {
+    prob: {
+      html: R => `<div class="pic pp"><div class="fr"><span class="fr-l ca">الاحتمال</span><span class="op">=</span><div class="fr-box">
+          <div class="row top">${[2, 4, 6, 8].map(n => `<span class="mc">${toAr(n)}</span>`).join('')}</div>
+          <span class="lab t">عدد المطلوب<b>٤</b></span><i class="bar5"></i>
+          <div class="row bot">${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<span class="mc">${toAr(n)}</span>`).join('')}</div>
+          <span class="lab b">عدد كل النواتج<b>٨</b></span></div></div></div>`,
+      play(c) {
+        const top = [...c.querySelectorAll('.top .mc')], bot = [...c.querySelectorAll('.bot .mc')], bar = c.querySelector('.bar5'), labs = [...c.querySelectorAll('.lab')];
+        top.forEach(t => show(t, false)); bot.forEach(b => { b.classList.remove('pk'); show(b, false); }); labs.forEach(l => show(l, false)); bar.style.transform = 'scaleX(0)';
+        later(c, 300, () => { bar.style.transform = 'none'; anim(c, bar, [{ transform: 'scaleX(0)' }, { transform: 'none' }], { duration: 320, easing: 'cubic-bezier(.3,1.4,.5,1)' }); snd('on', 1, .4); });
+        bot.forEach((b, i) => later(c, 600 + i * 80, () => { show(b); anim(c, b, [{ opacity: 0, transform: 'translateY(-30px) rotate(-12deg)' }, { opacity: 1, transform: 'translateY(2px) scale(1.12, .88)', offset: .6 }, { opacity: 1, transform: 'none' }], { duration: 320, easing: 'ease-out' }); snd('tap', up(i) * .8, .3); }));
+        later(c, 1350, () => { show(labs[1]); anim(c, labs[1], POP, { duration: 260 }); snd('click', .9, .35); });
+        top.forEach((t, k) => later(c, 1700 + k * 340, () => { bot[2 * k + 1].classList.add('pk'); show(t); flyFrom(c, t, bot[2 * k + 1]); snd('t' + (k + 2), 1, .5); buzz(6); }));
+        later(c, 3150, () => { show(labs[0]); anim(c, labs[0], POP, { duration: 260 }); snd('click', 1.2, .35); });
+        return 3500;
+      },
+    },
+    mean: {
+      html: R => `<div class="pic pm">${[4, 6, 11].map(n => `<div class="tw"><div class="col">${'<i class="blk"></i>'.repeat(n)}</div><span class="tl">${toAr(n)}</span></div>`).join('')}<i class="lvl"><span>الوسط ٧</span></i></div>`,
+      play(c) {
+        const pm = c.querySelector('.pm'), cols = [...c.querySelectorAll('.col')], tls = [...c.querySelectorAll('.tl')], lvl = c.querySelector('.lvl');
+        [4, 6, 11].forEach((n, i) => { cols[i].innerHTML = '<i class="blk"></i>'.repeat(n); tls[i].textContent = toAr(n); });
+        show(lvl, false);
+        const blocks = cols.map(cl => [...cl.children]);
+        blocks.forEach(bs => bs.forEach(b => show(b, false)));
+        blocks.forEach((bs, i) => bs.forEach((b, j) => later(c, 300 + i * 260 + j * 45, () => { show(b); anim(c, b, [{ opacity: 0, transform: 'translateY(-14px)' }, { opacity: 1, transform: 'none' }], { duration: 180 }); if (j === bs.length - 1) snd('tap', up(i), .4); })));
+        const moves = [0, 0, 0, 1];
+        moves.forEach((to, m) => later(c, 1500 + m * 420, () => {
+          const src = cols[2].lastElementChild, nb = document.createElement('i');
+          nb.className = 'blk mv'; cols[to].appendChild(nb);
+          const a = src.getBoundingClientRect(); src.remove();
+          const b = nb.getBoundingClientRect();
+          anim(c, nb, [{ transform: `translate(${a.left - b.left}px, ${a.top - b.top}px)` }, { transform: `translate(${(a.left - b.left) / 2}px, ${(a.top - b.top) / 2 - 34}px) rotate(-15deg)`, offset: .5 }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.4,0,.3,1)' });
+          tls[2].textContent = toAr(11 - m - 1); tls[to].textContent = toAr(cols[to].children.length);
+          hop(c, tls[to]); snd('t' + Math.min(m + 2, 5), 1, .5); buzz(6);
+        }));
+        later(c, 3300, () => {
+          const t = cols[0].lastElementChild.getBoundingClientRect(), p = pm.getBoundingClientRect();
+          lvl.style.top = (t.top - p.top - 2) + 'px'; show(lvl);
+          anim(c, lvl, [{ transform: 'scaleX(0)' }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.3,1.3,.5,1)' }); snd('on', 1.1, .45);
+          tls.forEach((x, i) => { x.style.color = 'var(--green-dk)'; hop(c, x, i * 60); });
+        });
+        return 3700;
+      },
+    },
+    hand: {
+      html: R => {
+        const P = [[195, 25], [35, 25], [35, 125], [195, 125]];
+        return `<div class="pic ph"><svg viewBox="0 0 230 150">
+          ${[[0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3]].map(([a, b]) => `<line class="pp-l" x1="${P[a][0]}" y1="${P[a][1]}" x2="${P[b][0]}" y2="${P[b][1]}"/>`).join('')}
+          ${P.map(p => `<circle class="pp-c" cx="${p[0]}" cy="${p[1]}" r="16"/>`).join('')}
+          ${P.map(p => `<g class="bd" transform="translate(${p[0] + (p[0] > 100 ? 18 : -18)} ${p[1] - 14})"><circle r="11"/><text>٣</text></g>`).join('')}
+        </svg><p class="cnt"></p></div>`;
+      },
+      play(c) {
+        const L = [...c.querySelectorAll('.pp-l')], C = [...c.querySelectorAll('.pp-c')], B = [...c.querySelectorAll('.bd')], T = B.map(b => b.querySelector('text')), cnt = c.querySelector('.cnt');
+        const ends = [[0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3]], left = [3, 3, 3, 3];
+        L.forEach(l => { const n = l.getTotalLength(); l.style.strokeDasharray = n; l.style.strokeDashoffset = n; });
+        C.forEach(x => show(x, false)); B.forEach(x => show(x, false)); T.forEach(t => t.textContent = '٣'); cnt.textContent = '';
+        C.forEach((x, i) => later(c, 300 + i * 140, () => { show(x); anim(c, x, [{ transform: 'scale(0)' }, { transform: 'scale(1.25)', offset: .6 }, { transform: 'none' }], { duration: 300, easing: 'ease-out' }); snd('tap', up(i), .35); }));
+        B.forEach((x, i) => later(c, 1000 + i * 160, () => { show(x); snd('t' + (i + 1), 1, .45); buzz(5); }));
+        later(c, 1700, () => { cnt.textContent = '٤ × ٣ = ١٢ طرف'; slam(c, cnt, 300); snd('click', 1, .4); });
+        ends.forEach(([a, b], i) => later(c, 2300 + i * 360, () => {
+          const l = L[i], n = l.getTotalLength();
+          l.style.strokeDashoffset = 0; anim(c, l, [{ strokeDashoffset: n + 'px' }, { strokeDashoffset: '0px' }], { duration: 280, easing: 'ease-out' });
+          left[a]--; left[b]--; T[a].textContent = toAr(left[a]); T[b].textContent = toAr(left[b]);
+          [a, b].forEach(e => { if (!left[e]) B[e].style.opacity = .25; });
+          cnt.textContent = `المصافحات: ${toAr(i + 1)}`; snd('t' + Math.min(i + 1, 5), 1.1, .45); buzz(5);
+        }));
+        later(c, 2300 + 6 * 360 + 150, () => { cnt.textContent = '١٢ طرف ÷ ٢ = ٦ مصافحات'; slam(c, cnt, 320); snd('right', 1, .4); });
+        return 2300 + 6 * 360 + 500;
+      },
+    },
+    last: {
+      html: R => `<div class="pic pl">
+          <div class="lr1"><span class="num"><b class="d ten">٣</b><b class="d one">٧</b></span><span class="op">×</span><span class="num"><b class="d ten">٢</b><b class="d one">٣</b></span></div>
+          <div class="lr2"><b class="tg ta">٧</b><span class="op">×</span><b class="tg tb">٣</b><span class="rest"><span class="op">=</span><span class="num"><b class="d r2t">٢</b><b class="d r2o">١</b></span></span></div>
+          <p class="lr3">الناتج ينتهي بـ <b class="tg tc">١</b></p></div>`,
+      play(c) {
+        const pl = c.querySelector('.pl'), r1 = c.querySelector('.lr1'), ones = [...c.querySelectorAll('.one')], ta = c.querySelector('.ta'), tb = c.querySelector('.tb'), mul = c.querySelector('.lr2 > .op'), rest = c.querySelector('.rest'), r2t = c.querySelector('.r2t'), r2o = c.querySelector('.r2o'), r3 = c.querySelector('.lr3'), tc = c.querySelector('.tc');
+        pl.classList.remove('dim', 'glow'); [ta, tb, mul, rest, r3, tc].forEach(x => show(x, false)); r2t.style.opacity = 1; r2t.style.transform = '';
+        later(c, 300, () => { anim(c, r1, SLAM, { duration: 360, easing: 'ease-out' }); snd('click', 1, .4); });
+        later(c, 1000, () => { pl.classList.add('dim'); snd('off', 1, .4); });
+        later(c, 1400, () => { pl.classList.add('glow'); ones.forEach((o, i) => hop(c, o, i * 80)); snd('t2', 1, .5); buzz(6); });
+        later(c, 1900, () => { show(ta); flyFrom(c, ta, ones[0], 460, 30); snd('drag', 1, .45); });
+        later(c, 2150, () => { show(tb); flyFrom(c, tb, ones[1], 460, 30); show(mul); snd('drop', 1, .45); });
+        later(c, 2700, () => { slam(c, rest, 320); snd('t4', 1, .5); });
+        later(c, 3200, () => { r2t.style.opacity = .15; r2t.style.transform = 'translateY(16px) rotate(18deg)'; anim(c, r2t, [{ opacity: 1, transform: 'none' }, { opacity: .15, transform: 'translateY(16px) rotate(18deg)' }], { duration: 360, easing: 'ease-in' }); snd('tap', .8, .4); });
+        later(c, 3500, () => { show(r3); anim(c, r3, POP, { duration: 260 }); show(tc); flyFrom(c, tc, r2o, 460, 24); snd('t5', 1, .55); buzz(10); });
+        return 3900;
+      },
+    },
+  };
+  const V2 = {
+    name: 'الصورة', mech: 'القاعدة صورة، مو سطر',
+    what: 'كل قاعدة لها صورة تتحرّك قدامه وهي تشتغل: الاحتمال كسر من بطاقات، والوسط أبراج تتساوى، والمصافحات خطوط بين أشخاص تاكل طرفين كل مرة، وآخر رقم أرقام تطفي ويبقى الآخر. وبعدها جملة وحدة تقولها.',
+    why: '<b>ليش تعلق:</b> الصورة تنحفظ أكثر من الكلام بكثير، وهنا الصورة نفسها هي الحسبة. يوم الاختبار يتذكّر الصورة قبل الكلمات، والكلمات تجي معها.',
+    html: R => head + PIC[R.key].html(R) + `<p class="say">${R.say}</p>`,
+    mount(c, R) {
+      const say = c.querySelector('.say');
+      return () => { wipe(c); intro(c); show(say, false); const end = PIC[R.key].play(c); later(c, end + 200, () => { slam(c, say); settle(c); }); };
+    },
+  };
+
+  /* ═════ ٣ النبضة ═════ */
+  const V3 = {
+    name: 'النبضة', mech: 'إيقاع ينقال',
+    what: 'القاعدة جملة من ثلاث نبضات، والنبضة الوسطى هي خط الكسر. تنقال مرتين، الثانية أسرع، وكل نبضة لها ضربتها وحلقة تنبض حول البطاقة. وبعدها كل ضغطة على البطاقة نبضة، وكل مرة يكملها تنوّر نقطة، والثالثة تقفلها.',
+    why: '<b>ليش تعلق:</b> الجملة اللي لها إيقاع تنحفظ مثل الأغنية، وإعادتها بالإصبع ثلاث مرات تحطها في الراس بدون ما يحس إنه يذاكر.',
+    html: R => head + `<div class="beat"><i class="ring"></i><span class="b1">${R.chant[0]}</span><span class="b2${R.key === 'last' ? ' nobar' : ''}"><i></i><em>${R.chant[1]}</em></span><span class="b3">${R.chant[2]}</span></div>
+      <p class="formal">${plain(R.tok).replace(/<i>/g, '').replace(/<\/i>/g, '')}</p>
+      <p class="tapme"><span class="tl">ضغطة على البطاقة = نبضة</span><span class="dots"><i></i><i></i><i></i></span></p>`,
+    mount(c) {
+      const b1 = c.querySelector('.b1'), bar = c.querySelector('.b2 i'), mid = c.querySelector('.b2 em'), b3 = c.querySelector('.b3'), ring = c.querySelector('.ring'), formal = c.querySelector('.formal'), tap = c.querySelector('.tapme'), tl = c.querySelector('.tapme .tl'), dots = [...c.querySelectorAll('.dots i')];
+      fit(b1); b3.style.fontSize = b1.style.fontSize;
+      let k = 0, said = 0;
+      const pulse = s => anim(c, ring, [{ opacity: .9, transform: 'scale(.97)' }, { opacity: 0, transform: `scale(${s})` }], { duration: 420, easing: 'ease-out' });
+      const beat = (i, fast) => {
+        const d = fast ? 220 : 300;
+        if (i === 0) { [b1, mid, b3].forEach(e => show(e, false)); bar.style.transform = 'scaleX(0)'; slam(c, b1, d); snd('t2', 1, .55); buzz(8); pulse(1.04); }
+        if (i === 1) { bar.style.transform = 'none'; anim(c, bar, [{ transform: 'scaleX(0)' }, { transform: 'none' }], { duration: d * .7, easing: 'cubic-bezier(.3,1.4,.5,1)' }); show(mid); anim(c, mid, POP, { duration: d * .75 }); snd('t1', 1, .5); buzz(6); pulse(1.03); }
+        if (i === 2) { slam(c, b3, d); snd('t5', 1, .6); buzz([10, 30, 14]); pulse(1.08); anim(c, c, [{ transform: 'none' }, { transform: 'scale(1.03, .97)', offset: .4 }, { transform: 'none' }], { duration: 260 }); }
+      };
+      c.querySelector('.beat').addEventListener('click', () => {
+        if (said >= 3) { said = 0; dots.forEach(d => d.classList.remove('on')); tl.textContent = 'ضغطة على البطاقة = نبضة'; }
+        beat(k, true); k = (k + 1) % 3;
+        if (k === 0) {
+          dots[said].classList.add('on'); hop(c, dots[said]); said++;
+          if (said === 3) { tl.textContent = 'ثلاث مرات. علقت.'; later(c, 260, () => { snd('done', 1, .45); settle(c); }); }
+          else { snd('streak', up(said), .35); tl.textContent = said === 1 ? 'مرة… كمان' : 'مرتين… وحدة بعد'; }
+        }
+      });
+      return () => {
+        wipe(c); intro(c); k = 0; said = 0; dots.forEach(d => d.classList.remove('on')); tl.textContent = 'ضغطة على البطاقة = نبضة'; show(formal, false); show(tap, false);
+        [[350, 0], [830, 1], [1310, 2], [1950, 0, 1], [2250, 1, 1], [2550, 2, 1]].forEach(([t, i, f]) => later(c, t, () => beat(i, f)));
+        later(c, 3050, () => { show(formal); anim(c, formal, POP, { duration: 300 }); settle(c); });
+        later(c, 3550, () => { show(tap); anim(c, tap, POP, { duration: 300 }); anim(c, dots[0], HOP, { duration: 420, iterations: 2 }); });
+      };
+    },
+  };
+
+  /* ═════ ٤ غطّها وقلها ═════ */
+  const V4 = {
+    name: 'غطّها وقلها', mech: 'الاسترجاع في نفس اللحظة',
+    what: 'القاعدة تظهر وتحتها شريط ينزل، ولما يخلص كلماتها المهمة تنقلب وتنقفل وحدة ورا وحدة. الطالب يقولها في باله ويفتح كل وحدة بضغطة، وكل فتحة بنغمة أعلى. وبعدين يقول هل طلعت معه: إيه، فتتموّج الكلمات وتخضر.',
+    why: '<b>ليش تعلق:</b> أقوى شي معروف للحفظ إنك تطلّع المعلومة من راسك، مو إنك تعيد قراءتها. أول محاولة استرجاع تصير هنا، قبل ما يطلع من الشاشة.',
+    html: R => head + lineHtml(R.tok, 'v4') + `<div class="timer"><i></i></div><p class="note">احفظها…</p><div class="ask" hidden><button class="y">إيه، طلعت</button><button class="n">لا، مرة ثانية</button></div>`,
+    mount(c) {
+      const T = [...c.querySelectorAll('.t')], timer = c.querySelector('.timer'), bar = c.querySelector('.timer i'), note = c.querySelector('.note'), ask = c.querySelector('.ask'), line = c.querySelector('.line');
+      let opened = 0, live = false;
+      const flipTo = (t, cls, on) => { const a = anim(c, t, [{ transform: 'none' }, { transform: 'scaleY(0)' }], { duration: 120, easing: 'ease-in' }); const f = () => { t.classList.toggle(cls, on); anim(c, t, [{ transform: 'scaleY(0)' }, { transform: 'scaleY(1.15)', offset: .6 }, { transform: 'none' }], { duration: 240, easing: 'ease-out' }); }; if (a) a.onfinish = f; else f(); };
+      T.forEach(t => t.addEventListener('click', () => {
+        if (!live || !t.classList.contains('cov')) return;
+        flipTo(t, 'cov', false); snd('t' + Math.min(opened + 2, 5), 1, .55); buzz(6); opened++;
+        if (opened === T.length) { live = false; later(c, 300, () => { note.textContent = 'طلعت معك كلها قبل ما تفتحها؟'; ask.hidden = false; anim(c, ask, POP, { duration: 260 }); }); }
+      }));
+      const cover = () => {
+        timer.hidden = true; opened = 0;
+        T.forEach((t, i) => later(c, i * 170, () => { flipTo(t, 'cov', true); snd('off', up(i), .4); }));
+        later(c, T.length * 170 + 220, () => { live = true; note.textContent = 'قلها في بالك، وبعدين الكشف بضغطة على كل وحدة'; anim(c, note, POP, { duration: 260 }); T.forEach((t, i) => hop(c, t, i * 90)); });
+      };
+      ask.querySelector('.y').addEventListener('click', () => {
+        ask.hidden = true; c.classList.add('ok'); note.textContent = 'ثبتت. بكرة نسألك عنها مرة وحدة.';
+        T.forEach((t, i) => later(c, i * 70, () => { t.classList.add('done'); hop(c, t); snd('t' + Math.min(i + 3, 5), 1, .45); }));
+        later(c, T.length * 70 + 200, () => { snd('right', 1, .5); settle(c); });
+      });
+      ask.querySelector('.n').addEventListener('click', () => { ask.hidden = true; note.textContent = 'شوفها مرة ثانية، على راحتك…'; snd('tap'); anim(c, line, HOP, { duration: 400 }); later(c, 2000, cover); });
+      return () => {
+        wipe(c); intro(c); live = false; ask.hidden = true; c.classList.remove('ok'); timer.hidden = false; note.textContent = 'احفظها…';
+        T.forEach(t => t.classList.remove('cov', 'done')); bar.style.transform = '';
+        T.forEach((t, i) => later(c, 300 + i * 140, () => { anim(c, t, [{ opacity: 0, transform: 'translateY(-14px) scale(.7)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: 'cubic-bezier(.3,1.6,.5,1)', fill: 'backwards' }); snd('tap', up(i), .35); }));
+        later(c, 650, () => { bar.style.transform = 'scaleX(0)'; anim(c, bar, [{ transform: 'scaleX(1)' }, { transform: 'scaleX(0)' }], { duration: 2600, easing: 'linear' }); });
+        later(c, 3300, cover);
+      };
+    },
+  };
+
+  /* ═════ ٥ جرّبها فوراً ═════ */
+  const V5 = {
+    name: 'جرّبها فوراً', mech: 'التطبيق بعد ثواني',
+    what: 'تحت القاعدة سؤال سريع جديد. لما يجاوب، الأرقام تطير من الجواب وتنزل تحت كلمات القاعدة: كم هذا، وكم هذا. «سؤال ثاني» يجيب واحد جديد، والصح ورا بعض يشعل عدّاد بنغمة تطلع.',
+    why: '<b>ليش تعلق:</b> القاعدة تنحفظ لما تنستخدم، والاستخدام على أرقام جديدة هو اللي ينفع في الاختبار. وكل سؤال قصير وينتهي، فيبي الواحد يجرّب واحد ثاني.',
+    html: R => head + lineHtml(R.tok, 'v5') + `<div class="qz"><p class="qz-q"></p><div class="qz-ch"></div><p class="qz-f"></p><div class="qz-run"><span class="streak"></span><button class="pill nx" hidden>سؤال ثاني</button></div></div>`,
+    mount(c, R) {
+      const K = [...c.querySelectorAll('.k')], qq = c.querySelector('.qz-q'), ch = c.querySelector('.qz-ch'), fb = c.querySelector('.qz-f'), nx = c.querySelector('.nx'), st = c.querySelector('.streak'), qz = c.querySelector('.qz');
+      let qi = 0, run = 0;
+      function ask(first) {
+        const Q = R.qs[qi % R.qs.length]; qi++;
+        K.forEach(k => show(k.querySelector('.val'), false)); fb.textContent = ''; fb.className = 'qz-f'; nx.hidden = true;
+        qq.textContent = Q.q;
+        ch.innerHTML = Q.ch.slice().sort(() => Math.random() - .5).map(o => `<button>${o}</button>`).join('');
+        anim(c, qq, POP, { duration: 280, delay: first ? 500 : 0, fill: 'backwards' });
+        [...ch.children].forEach((b, i) => anim(c, b, [{ opacity: 0, transform: 'translateY(16px) scale(.85)' }, { opacity: 1, transform: 'none' }], { duration: 300, delay: (first ? 650 : 120) + i * 70, easing: 'cubic-bezier(.3,1.5,.5,1)', fill: 'backwards' }));
+        [...ch.children].forEach(b => b.addEventListener('click', () => {
+          [...ch.children].forEach(x => x.disabled = true);
+          const ok = b.textContent === Q.r, right = [...ch.children].find(x => x.textContent === Q.r);
+          right.classList.add('ok');
+          if (!ok) { b.classList.add('no'); anim(c, b, SHAKE, { duration: 350 }); snd('wrong', 1, .4); buzz([20, 30, 20]); run = 0; fb.className = 'qz-f no'; fb.textContent = 'شوف وين تنزل الأرقام في القاعدة'; }
+          else { hop(c, b); snd('right', 1, .5); run++; fb.className = 'qz-f ok'; fb.textContent = run > 2 ? 'ولا غلطة!' : 'صح'; }
+          st.innerHTML = run > 1 ? `${FLAME}${toAr(run)} ورا بعض` : '';
+          if (run > 1) { hop(c, st); later(c, 350, () => snd('streak', up(run), .4)); }
+          const order = K.slice(1).concat(K[0]);
+          order.forEach((k, j) => later(c, 300 + j * 280, () => { const v = k.querySelector('.val'); v.textContent = Q.v[k.dataset.c]; show(v); const a = right.getBoundingClientRect(), r = v.getBoundingClientRect(); anim(c, v, [{ opacity: 0, transform: `translate(calc(-50% + ${a.left + a.width / 2 - r.left - r.width / 2}px), ${a.top - r.top}px) scale(.6)` }, { opacity: 1, transform: 'translate(-50%, -8px) scale(1.15)', offset: .7 }, { opacity: 1, transform: 'translate(-50%, 0)' }], { duration: 420, easing: 'cubic-bezier(.4,0,.3,1)' }); hop(c, k); snd('t' + Math.min(j + 2, 5), 1, .45); }));
+          later(c, 300 + order.length * 280 + 150, () => { nx.hidden = false; anim(c, nx, POP, { duration: 260 }); });
+        }));
+      }
+      nx.addEventListener('click', () => { anim(c, qz, [{ transform: 'none' }, { transform: 'translateX(-14px)', opacity: .4, offset: .4 }, { transform: 'none' }], { duration: 320 }); snd('tap'); later(c, 130, () => ask(false)); });
+      return () => {
+        wipe(c); intro(c); qi = 0; run = 0; st.textContent = '';
+        K.forEach((k, i) => later(c, 250 + i * 120, () => { anim(c, k, POP, { duration: 280, easing: 'cubic-bezier(.3,1.6,.5,1)' }); snd('tap', up(i), .3); }));
+        ask(true);
+      };
+    },
+  };
+
+  /* ═════ ٦ قاعدة تجمعها ═════ */
+  const V6 = {
+    name: 'قاعدة تجمعها', mech: 'تصير ملكه',
+    what: 'البطاقة تطيح مقلوبة وتلف، تنقلب على القاعدة، وتلمع، وتطير نسخة منها لمجموعته والعدّاد يزيد: «#١٦، ومجموعتك ١٦ من ٥٧». ضغطة على البطاقة تقلبها على المثال، وضغطة ثانية ترجعها.',
+    why: '<b>ليش تعلق:</b> الشي اللي صار ملكك ترجع له وتهتم فيه، والمجموعة الناقصة تشد الواحد يكملها. هذي تشغّل الرجعة للمراجعة أكثر من الحفظ نفسه، فهي تنفع مع وحدة من الباقيات.',
+    html: R => head + `<div class="tc-wrap"><div class="tc">
+        <div class="face bk">؟</div>
+        <div class="face fr" hidden><div class="band">${ICON[R.key]}<span>${R.card.unit}</span><span class="no">#${toAr(R.card.no)}</span></div><p class="nm">${R.name}</p><p class="ru">${plain(R.tok)}</p><p class="ft">ضغطة تقلبها على المثال</p></div>
+        <div class="face ex" hidden><p>${R.card.ex[0]}</p><p class="big">${R.card.ex[1]}</p><small>ضغطة ترجعها</small></div>
+        <i class="shine"><b></b></i></div></div>
+      <div class="deck">${DECK}<span class="dk-t">مجموعتك: <b class="dk-n"></b> من ٥٧</span><span class="dbar"><i></i></span></div>`,
+    mount(c, R) {
+      const tc = c.querySelector('.tc'), bk = c.querySelector('.bk'), fr = c.querySelector('.fr'), ex = c.querySelector('.ex'), sh = c.querySelector('.shine'), dn = c.querySelector('.dk-n'), db = c.querySelector('.dbar i'), dk = c.querySelector('.dk-ic');
+      const N = R.card.no;
+      fit(c.querySelector('.ru'));
+      let side = 'bk', busy = false;
+      const turn = to => {
+        busy = true;
+        const swap = () => { [bk, fr, ex].forEach(f => f.hidden = true); ({ bk, fr, ex })[to].hidden = false; side = to; anim(c, tc, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1.08)', offset: .7 }, { transform: 'none' }], { duration: 280, easing: 'ease-out' }); busy = false; };
+        const a = anim(c, tc, [{ transform: 'none' }, { transform: 'scaleX(0)' }], { duration: 170, easing: 'ease-in' });
+        if (a) a.onfinish = swap; else swap();
+      };
+      tc.addEventListener('click', () => { if (busy || side === 'bk') return; turn(side === 'fr' ? 'ex' : 'fr'); snd(side === 'fr' ? 'on' : 'off', 1, .45); buzz(6); });
+      return () => {
+        wipe(c); intro(c); busy = false; [fr, ex].forEach(f => f.hidden = true); bk.hidden = false; side = 'bk'; dn.textContent = toAr(N - 1); db.style.width = ((N - 1) / 57 * 100) + '%';
+        anim(c, tc, [{ opacity: 0, transform: 'translateY(-90px) rotate(-200deg) scale(.5)' }, { opacity: 1, transform: 'translateY(8px) rotate(6deg) scale(1.02)', offset: .65 }, { opacity: 1, transform: 'translateY(-3px) rotate(-2deg)', offset: .85 }, { opacity: 1, transform: 'none' }], { duration: 700, easing: 'ease-out' });
+        later(c, 150, () => snd('drag', 1, .45)); later(c, 560, () => { snd('drop', 1, .5); buzz(8); });
+        later(c, 1100, () => { turn('fr'); snd('hint', 1, .5); buzz(10); });
+        later(c, 1550, () => { anim(c, sh.firstElementChild, [{ transform: 'translateX(120%)' }, { transform: 'translateX(-120%)' }], { duration: 750, easing: 'ease-in-out' }); snd('node', 1, .4); });
+        later(c, 2300, () => {
+          const f = document.createElement('i'); f.className = 'fly'; c.appendChild(f);
+          const a = tc.getBoundingClientRect(), b = dk.getBoundingClientRect(), p = c.getBoundingClientRect();
+          f.style.left = (a.left - p.left + a.width / 2 - 17) + 'px'; f.style.top = (a.top - p.top + a.height / 2 - 11) + 'px';
+          const dx = (b.left + b.width / 2) - (a.left + a.width / 2), dy = (b.top + b.height / 2) - (a.top + a.height / 2);
+          const fl = anim(c, f, [{ transform: 'scale(3)', opacity: .9 }, { transform: `translate(${dx * .5}px, ${dy * .5 - 40}px) scale(1.4) rotate(-20deg)`, offset: .5 }, { transform: `translate(${dx}px, ${dy}px) scale(.6)`, opacity: 1 }], { duration: 560, easing: 'cubic-bezier(.4,0,.3,1)' });
+          snd('drag', 1.2, .4);
+          const land = () => { f.remove(); dn.textContent = toAr(N); hop(c, dn); hop(c, dk); db.style.width = (N / 57 * 100) + '%'; snd('t5', 1, .5); later(c, 250, () => { snd('done', 1, .4); buzz([10, 40, 14]); }); };
+          if (fl) fl.onfinish = land; else land();
+        });
+      };
+    },
+  };
+
+  /* ═════ ٧ الفخ ═════ */
+  const V7 = {
+    name: 'الفخ', mech: 'الغلط الشائع جنب الصح',
+    what: 'قبل القاعدة يطلع الغلط اللي يطيح فيه أغلب الناس، ومثاله اللي يبيّن إنه مستحيل. ينختم «غلط» والبطاقة تهتز، والكلمة الغلط تنشطب وتطيح، والصح ينزل مكانها، والختم ينقلب «صح».',
+    why: '<b>ليش تعلق:</b> شوف الغلط جنب الصح يعلّم الفرق اللي يسأل عنه الاختبار، والمفاجأة («يعني أكيد؟!») تحفر اللحظة. والطالب اللي كان بيغلط يعرف إنه انمسك قبل الاختبار.',
+    html: R => head + `<p class="tp-k">${R.trap.k}</p>` + lineHtml(R.trap.tok, 'v7') + `<div class="ex"><span class="eb">${R.trap.bad}</span><span class="eg">${R.trap.good}</span></div><span class="stamp">غلط</span>`,
+    mount(c, R) {
+      const k = c.querySelector('.tp-k'), bad = c.querySelector('.sw .bad'), good = c.querySelector('.sw .good'), eb = c.querySelector('.eb'), eg = c.querySelector('.eg'), stamp = c.querySelector('.stamp'), toks = [...c.querySelectorAll('.line > *')];
+      return () => {
+        wipe(c); intro(c); c.classList.remove('fixed', 'strike'); k.textContent = R.trap.k;
+        show(bad); bad.style.transform = ''; show(good, false); show(eb, false); show(eg, false); show(stamp, false); stamp.textContent = 'غلط'; eb.style.textDecoration = ''; eb.style.opacity = 0;
+        toks.forEach((t, i) => later(c, 300 + i * 110, () => { anim(c, t, [{ opacity: 0, transform: 'translateY(-14px) scale(.7)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: 'cubic-bezier(.3,1.6,.5,1)', fill: 'backwards' }); if (t.classList.contains('sw')) snd('t1', .8, .4); else snd('tap', up(i), .3); }));
+        const t0 = 300 + toks.length * 110;
+        later(c, t0 + 300, () => { show(eb); anim(c, eb, POP, { duration: 300 }); snd('click', .8, .4); });
+        later(c, t0 + 1200, () => { show(stamp); anim(c, stamp, [{ opacity: 0, transform: 'rotate(-12deg) scale(2.4)' }, { opacity: 1, transform: 'rotate(-12deg) scale(.88)', offset: .6 }, { opacity: 1, transform: 'rotate(-12deg)' }], { duration: 300, easing: 'ease-out' }); snd('wrong', 1, .45); buzz([20, 30, 20]); anim(c, c, SHAKE, { duration: 380 }); });
+        later(c, t0 + 1950, () => { c.classList.add('strike'); snd('off', .8, .45); });
+        later(c, t0 + 2300, () => { show(bad, false); bad.style.transform = 'translateY(46px) rotate(18deg)'; anim(c, bad, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(46px) rotate(18deg)' }], { duration: 400, easing: 'ease-in' }); eb.style.textDecoration = 'line-through'; snd('tap', .7, .4); });
+        later(c, t0 + 2650, () => { slam(c, good, 340); snd('right', 1, .5); buzz(10); c.classList.add('fixed'); k.textContent = R.trap.fix; anim(c, k, POP, { duration: 260 }); stamp.textContent = 'صح'; anim(c, stamp, [{ transform: 'rotate(-12deg) scale(1.5)' }, { transform: 'rotate(-12deg)' }], { duration: 280 }); });
+        later(c, t0 + 3100, () => { eb.style.opacity = .4; show(eg); anim(c, eg, POP, { duration: 300 }); snd('t5', 1, .45); });
+        later(c, t0 + 3600, () => settle(c));
+      };
+    },
+  };
+
+  const VS = [V1, V2, V3, V4, V5, V6, V7];
+
+  /* ratings stay in this browser */
+  const RK = 'ruleCardLab2'; let rates = {};
+  try { rates = JSON.parse(localStorage.getItem(RK) || '{}') || {}; } catch (e) { rates = {}; }
+  const RL = { yes: 'عجبتني', meh: 'عادي', no: 'لا' };
+  function showPicks() {
+    const by = v => VS.filter((s, i) => rates[i + 1] === v).map(s => s.name).join('، ');
+    const parts = [];
+    if (by('yes')) parts.push(`عجبتك: <b>${by('yes')}</b>`);
+    if (by('meh')) parts.push(`عادي: ${by('meh')}`);
+    if (by('no')) parts.push(`لا: ${by('no')}`);
+    document.getElementById('picks').innerHTML = parts.length ? parts.join(' — ') : 'ما فيه تقييم للحين.';
+  }
+
+  const fmt = s => s.replace(/\*([^*]+)\*/g, '<b class="ln-hl">$1</b>');
+  const host = document.getElementById('cards');
+  let cur = 0, io = null;
+  function build() {
+    const R = RULES[cur];
+    if (io) io.disconnect();
+    host.innerHTML = VS.map((v, i) => `
+      <article class="card" data-v="${i + 1}">
+        <div class="c-head"><span class="c-n">${toAr(i + 1)}</span><div><h3>${v.name}</h3><small>${v.mech}</small></div></div>
+        <div class="phone"><div class="ph-in">
+          <div class="p-prog"><i></i></div>
+          <p class="ln-kick">${R.kick}</p>
+          <h2 class="ln-h">${fmt(R.h)}</h2>
+          <div class="ln-rows">${R.rows.map(r => r[0] === '!' ? `<div class="ln-row win">${fmt(r.slice(1))}</div>` : `<div class="ln-row">${fmt(r)}</div>`).join('')}</div>
+          <div class="slot"><div class="rc v${i + 1}">${v.html(R)}</div><button class="btn-go" tabindex="-1">فهمت</button></div>
+        </div></div>
+        <p class="c-what">${v.what}</p>
+        <p class="c-why">${v.why}</p>
+        <div class="rate">${Object.keys(RL).map(r => `<button data-v="${r}" class="${rates[i + 1] === r ? 'on' : ''}">${RL[r]}</button>`).join('')}</div>
+      </article>`).join('');
+    host.querySelectorAll('.card').forEach((el, i) => {
+      const c = el.querySelector('.rc');
+      c.querySelectorAll('.line').forEach(fit);
+      const play = VS[i].mount(c, R); c._play = play;
+      c.querySelector('.rc-again').addEventListener('click', () => { buzz(6); play(); });
+      el.querySelectorAll('.rate button').forEach(b => b.addEventListener('click', () => {
+        const v = i + 1;
+        rates[v] = rates[v] === b.dataset.v ? undefined : b.dataset.v;
+        el.querySelectorAll('.rate button').forEach(x => x.classList.toggle('on', rates[v] === x.dataset.v));
+        try { localStorage.setItem(RK, JSON.stringify(rates)); } catch (e) {}
+        showPicks();
+      }));
+    });
+    io = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting && !e.target._seen) { e.target._seen = true; e.target._play(); } }), { threshold: .55 }) : null;
+    host.querySelectorAll('.rc').forEach(c => { if (io) io.observe(c); else c._play(); });
+  }
+  const bar = document.getElementById('rules');
+  bar.insertAdjacentHTML('beforeend', RULES.map((r, i) => `<button class="rb${i === cur ? ' on' : ''}" data-i="${i}">${r.name}</button>`).join('') + '<button class="rb all" id="all">شغّل الكل</button>');
+  bar.querySelectorAll('.rb[data-i]').forEach(b => b.addEventListener('click', () => {
+    cur = +b.dataset.i; bar.querySelectorAll('.rb[data-i]').forEach(x => x.classList.toggle('on', x === b));
+    snd('tap'); build();
+  }));
+  document.getElementById('all').addEventListener('click', () => host.querySelectorAll('.rc').forEach(c => { c._seen = true; c._play(); }));
+  const start = () => { build(); showPicks(); };
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(start); else start();
+  addEventListener('resize', () => host.querySelectorAll('.rc .line').forEach(fit));
+  window.__lab = { playAll: () => host.querySelectorAll('.rc').forEach(c => c._play()), rule: i => bar.querySelector(`.rb[data-i="${i}"]`).click() };
+})();
+</script>
+</body>
+</html>

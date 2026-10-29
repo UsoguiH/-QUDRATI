@@ -1,0 +1,2004 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>قوانين القدرات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&family=Aref+Ruqaa:wght@400;700&family=Marhey:wght@500;600;700&family=IBM+Plex+Sans+Arabic:wght@500;600;700&family=Cairo:wght@700;800&family=Readex+Pro:wght@600;700&display=swap">
+<style>
+/* The rule, complete — round 4 (2026-10-29). Round 3 (a study tool) opened its practice on exam questions straight
+   after the rule; the user: «its false to add right away, it must be this screen» — the app's own «كمّل الحل خطوة
+   خطوة» — «and make the flow and laws has فهيم in it, i want simplicity … so the user doesnt see a lot of components».
+   So one rule is a short lesson in the app's layout, one thing a screen: فهيم says the rule beside his bubble over
+   the formula and its proof; «كمّل القانون» (the words from tiles); «كمّل الحل خطوة خطوة» (an example's numbers, the
+   fill screen exactly); only then three exam-style questions; فهيم again on a miss and at the end. */
+:root {
+  --green: #58CC02; --green-dk: #58A700; --green-lip: #478700; --green-bg: #D7FFB8; --green-pale: #A5ED6E;
+  --blue: #1CB0F6; --blue-dk: #1899D6; --blue-light: #DDF4FF; --blue-border: #84D8FF;
+  --purple: #CE82FF; --purple-dk: #A568CC; --purple-tint: #F3E0FF; --purple-border: #E2B6FF;
+  --gold: #FFC800; --gold-dk: #E6A000; --gold-bg: #FFF4BF; --brown: #AA572A; --brown-dk: #7A3B12;
+  --orange: #FF9600; --orange-dk: #E07800; --orange-bg: #FFEFD6;
+  --red: #FF4B4B; --red-dk: #EA2B2B; --red-dk2: #EA2B2B; --red-bg: #FFDFE0; --red-soft: #FFB2B2;
+  --ink: #3C3C3C; --ink2: #4B4B4B; --gray: #777777; --gray-icon: #AFAFAF; --line: #E5E5E5; --wash: #F7F7F7; --snow: #fff;
+  --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: #EFEFEF; color: var(--ink); font-family: var(--font); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+button { font-family: var(--font); cursor: pointer; -webkit-tap-highlight-color: transparent; color: inherit; }
+button:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+h1, h2, h3, p { margin: 0; }
+.wrap { max-width: 1060px; margin: 0 auto; padding: 22px 16px 40px; display: grid; grid-template-columns: minmax(0, 1fr) 410px; gap: 30px; align-items: start; }
+.side { padding-top: 6px; }
+.side .kick { font-weight: 800; font-size: 15px; color: var(--blue-dk); }
+.side h1 { font-size: 32px; font-weight: 800; line-height: 1.2; margin: 2px 0 8px; }
+.side p.lede { font-size: 16px; color: var(--gray); font-weight: 600; }
+.beats { list-style: none; padding: 0; margin: 16px 0 0; display: grid; gap: 8px; }
+.beats li { background: #fff; border: 2px solid var(--line); border-radius: 14px; padding: 9px 12px; font-size: 15px; font-weight: 600; }
+.beats li b { color: var(--blue-dk); }
+.reset { margin-top: 14px; height: 40px; padding: 0 14px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 14px; font-weight: 800; color: var(--gray); }
+@media (max-width: 900px) { .wrap { grid-template-columns: minmax(0, 1fr); } .side { order: 2; } }
+
+/* ───────── the phone ───────── */
+.phone { position: relative; width: min(410px, 100%); height: min(820px, calc(100svh - 32px)); min-height: 680px; margin: 0 auto; background: #fff; border: 10px solid #1F1F1F; border-radius: 42px; overflow: hidden; box-shadow: 0 18px 40px rgba(0,0,0,.16); user-select: none; -webkit-user-select: none; position: sticky; top: 16px; }
+@media (max-width: 520px) { .wrap { padding: 0; } .phone { width: 100%; height: 100svh; min-height: 0; border: 0; border-radius: 0; box-shadow: none; position: relative; top: 0; } }
+.app { position: absolute; inset: 0; overflow: hidden; }
+.scr { position: absolute; inset: 0; display: flex; flex-direction: column; background: #fff; }
+.body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 8px 18px 12px; scrollbar-width: none; }
+.body::-webkit-scrollbar { display: none; }
+.foot { flex: none; padding: 12px 16px 22px; display: grid; gap: 10px; }
+.btn { width: 100%; height: 54px; border: 0; border-radius: 16px; background: var(--green); box-shadow: 0 5px 0 var(--green-lip); color: #fff; font-size: 18px; font-weight: 800; }
+.btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--green-lip); }
+.btn.red { background: var(--red); box-shadow: 0 5px 0 var(--red-dk); }
+.btn.ghost { background: #fff; color: var(--blue-dk); border: 2px solid var(--line); box-shadow: 0 4px 0 var(--line); }
+.btn:disabled { background: var(--line); box-shadow: none; color: var(--gray-icon); transform: none; cursor: default; }
+.ltop { flex: none; display: flex; align-items: center; gap: 12px; padding: 18px 16px 6px; }
+.x { flex: none; width: 34px; height: 34px; border: 0; background: none; color: var(--gray-icon); display: grid; place-items: center; padding: 0; }
+.x svg { width: 22px; height: 22px; }
+.duo-bar { position: relative; flex: 1; height: 16px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.duo-bar i { position: absolute; top: 0; bottom: 0; inset-inline-start: 0; border-radius: 99px; background: var(--green); transition: width .5s cubic-bezier(.3, 1.3, .5, 1); }
+.duo-bar i::after { content: ""; position: absolute; top: 4px; height: 4px; inset-inline: 8px; border-radius: 2px; background: rgba(255,255,255,.3); }
+
+/* فهيم beside his bubble, as in the first run when he asks */
+.obs { display: flex; align-items: flex-end; gap: 4px; margin-bottom: 14px; }
+.obs-say { flex: 1; min-width: 0; padding-bottom: 22px; }
+.obs-bubble { position: relative; margin: 0; background: var(--snow); border: 2px solid var(--line); border-radius: 16px; padding: 11px 14px; font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.55; text-wrap: balance; transform-origin: 0% 80%; }
+.obs-bubble::before, .obs-bubble::after { content: ""; position: absolute; bottom: 14px; inset-inline-end: -19px; border: 9px solid transparent; }
+.obs-bubble::before { border-inline-start-color: var(--line); }
+.obs-bubble::after { border-inline-start-color: var(--snow); margin-inline-end: 3px; }
+.obs-bubble .w { display: inline-block; }
+.obs-bubble em { font-style: normal; color: var(--blue-dk); }
+.obs-duo { height: 112px; width: 112px; flex-shrink: 0; object-fit: contain; transform-origin: 50% 100%; }
+.obt { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 10px; }
+.obt .obs-bubble { text-align: center; font-size: 21px; padding: 14px 18px; }
+.obt .obs-bubble::before, .obt .obs-bubble::after { bottom: auto; top: 100%; inset-inline-end: auto; left: 50%; margin-left: -9px; border: 10px solid transparent; }
+.obt .obs-bubble::before { border-top-color: var(--line); border-inline-start-color: transparent; }
+.obt .obs-bubble::after { border-top-color: var(--snow); border-inline-start-color: transparent; margin-top: -3px; margin-inline-end: 0; }
+.obt-duo { width: min(230px, 60vw); height: auto; margin-top: 18px; }
+
+/* the rule: the regular yellow card */
+.fcard { position: relative; background: var(--gold-bg); border: 2px solid var(--gold); border-bottom-width: 5px; border-radius: 20px; padding: 10px 10px 34px; }
+.fcard.tall { padding-bottom: 48px; }
+.line { display: flex; flex-wrap: nowrap; justify-content: safe center; align-items: center; gap: .25em; white-space: nowrap; font-size: 20px; font-weight: 800; line-height: 1.5; min-width: 0; }
+.line > * { flex: none; }
+.op { color: var(--brown); font-size: 1.15em; display: inline-block; }
+.pw { color: var(--brown-dk); }
+.k { position: relative; display: inline-block; border-radius: 10px; padding: 0 .32em; background: var(--blue-light); color: var(--blue-dk); border: 2px solid var(--blue-border); border-bottom-width: 3px; transition: box-shadow .2s; }
+.val { position: absolute; top: 100%; left: 0; right: 0; width: max-content; margin: 5px auto 0; font-size: 15px; font-weight: 800; font-style: normal; color: #fff; border-radius: 8px; padding: 0 8px; line-height: 1.5; opacity: 0; background: var(--blue); box-shadow: 0 2px 0 var(--blue-dk); }
+.k.ca .val { background: var(--green); box-shadow: 0 2px 0 var(--green-lip); }
+.dv { display: inline-block; position: relative; width: .62em; height: .62em; vertical-align: middle; margin: 0 .04em; }
+.dv::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: .11em; margin-top: -.055em; border-radius: .06em; background: currentColor; }
+.dv::after { content: ""; position: absolute; left: 50%; top: 0; width: .15em; height: .15em; margin-left: -.075em; border-radius: 50%; background: currentColor; box-shadow: 0 .47em 0 currentColor; }
+.fr { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.02; font-size: .8em; margin: 0 .08em; }
+.fr b { display: block; font-weight: inherit; }
+.fr i { display: block; align-self: stretch; height: .11em; min-height: 2px; margin: .1em -.12em; border-radius: 2px; background: currentColor; }
+.val .fr { font-size: .85em; padding: 2px 0; }
+/* the proof under it, plain, no frame */
+.stage { position: relative; height: 210px; margin-top: 10px; cursor: pointer; }
+.stage > .dg { position: absolute; left: 50%; top: 50%; transform-origin: center; }
+.dcap { font-size: 14px; font-weight: 700; color: var(--gray); text-align: center; min-height: 22px; }
+
+/* ───── the rule, three ways (?card=1|2|3; ?card=0 is the yellow card above). The user, 2026-10-29: the yellow
+   card is «10% only … create 3 different versions and one … is صبوره with handwriting effects». A «÷» rule is
+   stacked over its bar, as the exam prints a fraction ───── */
+.fq { display: inline-flex; flex-direction: column; align-items: stretch; vertical-align: middle; }
+.fq-n, .fq-d { display: flex; justify-content: center; align-items: center; gap: .22em; white-space: nowrap; }
+.fq-n .val { top: auto; bottom: 100%; margin: 0 auto 5px; }
+.wb .k, .sl .k, .c3 .k { background: none; border: 0; border-radius: 0; padding: 0; box-shadow: none; color: inherit; }
+
+/* 1. the whiteboard: the teacher writes the rule in Ruqʿah with the blue marker, the numbers with the red one */
+.wbw { position: relative; padding-bottom: 6px; }
+.wb { position: relative; padding: 7px; border-radius: 13px; background: linear-gradient(180deg, #F2F4F6 0%, #C8CDD4 50%, #DDE1E6 100%); box-shadow: inset 0 1px 0 #fff, 0 2px 0 #A7AEB7, 0 14px 22px -14px rgba(30,40,55,.5); }
+.wb-s { position: relative; overflow: hidden; border-radius: 7px; padding: 40px 10px 46px; background: radial-gradient(55% 45% at 20% 25%, rgba(110,122,140,.06), transparent 70%), radial-gradient(45% 35% at 82% 78%, rgba(110,122,140,.05), transparent 70%), linear-gradient(162deg, #FFFFFF 0%, #F4F6F8 46%, #FFFFFF 60%, #F1F3F6 100%); box-shadow: inset 0 0 0 1px rgba(0,0,0,.07), inset 0 10px 14px -14px rgba(0,0,0,.35); }
+.wb-s::before { content: ""; position: absolute; inset: -30% -20%; background: linear-gradient(112deg, transparent 38%, rgba(255,255,255,.9) 46%, transparent 54%); pointer-events: none; }
+.wb-ghost { position: absolute; left: 8px; top: 8px; width: calc(100% - 16px); height: calc(100% - 16px); fill: none; stroke: rgba(96,108,126,.07); stroke-width: 10; stroke-linecap: round; }
+.wb-fx { position: relative; display: flex; justify-content: safe center; align-items: center; gap: .24em; white-space: nowrap; font: 700 31px/1.35 'Aref Ruqaa', serif; color: #2150C8; filter: url(#ink); }
+.wb .hw-t { display: inline-block; padding: .28em .1em; margin: -.28em -.1em; }
+.wb .op1 { display: inline-block; flex: none; width: .66em; height: .66em; }
+.wb .op1 svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.wb .op1 path, .wb .fq-bar path, .wb-circ path { fill: none; stroke: currentColor; stroke-width: 2.7; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 2; }
+.wb .op1 .dot { fill: currentColor; }
+.wb .fq-bar { display: block; width: 100%; height: 10px; overflow: visible; margin: 0 0 2px; }
+.wb .fq-bar path { stroke-width: 2.5; }
+.wb .val { position: absolute; left: 0; right: 0; top: 100%; width: max-content; margin: -.16em auto 0; font: 700 26px/1.2 'Aref Ruqaa', serif; color: #D7262B; background: none; box-shadow: none; border-radius: 0; opacity: 1; }
+.wb .k.ca .val { background: none; box-shadow: none; color: #D7262B; }
+.wb .fq-n .val { top: auto; bottom: 100%; margin: 0 auto -.12em; }
+.wb .val .fr { font-size: .8em; }
+.wb-circ { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; color: #D7262B; filter: url(#ink); }
+.wb-circ path { stroke-width: 2.4; }
+.wb-hint { position: absolute; left: 0; right: 0; bottom: 9px; text-align: center; font-size: 15px; font-weight: 800; color: #9AA3AE; opacity: 0; }
+.wb-tray { position: relative; height: 11px; margin: -1px 12% 0; border-radius: 0 0 7px 7px; background: linear-gradient(#D5DAE0, #A2A9B2); box-shadow: 0 4px 5px -3px rgba(0,0,0,.35); }
+.mk { position: absolute; top: -6px; width: 58px; height: 10px; border-radius: 3px 5px 5px 3px; background: linear-gradient(#FFFFFF, #DDE1E6); box-shadow: 0 1px 1px rgba(0,0,0,.28); }
+.mk::before { content: ""; position: absolute; left: -2px; top: -1px; bottom: -1px; width: 17px; border-radius: 4px 2px 2px 4px; background: var(--mc); }
+.mk::after { content: ""; position: absolute; left: 27px; top: 0; bottom: 0; width: 12px; background: var(--mc); opacity: .9; }
+.mk.b { --mc: #2150C8; right: 14%; } .mk.r { --mc: #D7262B; right: 50%; }
+.pen { position: absolute; left: 0; top: 0; width: 0; height: 0; pointer-events: none; z-index: 4; opacity: 0; --mk: #2150C8; }
+.pen svg { position: absolute; left: 0; top: 0; overflow: visible; filter: drop-shadow(0 7px 5px rgba(0,0,0,.2)); }
+
+/* 2. the line of working: the rule clean on the page, each thing in its colour, then the example put into it a
+   line at a time until the answer */
+.sl { padding: 12px 0 4px; }
+.sl-g { display: grid; grid-template-columns: max-content max-content max-content; justify-content: safe center; align-items: center; column-gap: .32em; row-gap: 12px; font-size: 24px; font-weight: 800; line-height: 1.35; color: var(--ink); white-space: nowrap; }
+.sl-r { display: flex; align-items: center; gap: .26em; }
+.sl-e { color: var(--gray-icon); }
+.sl .k { color: var(--kc); background: linear-gradient(var(--kh), var(--kh)) no-repeat 100% 90% / 100% .44em; padding: 0 .08em; }
+.c0 { --kc: var(--green-dk); --kh: var(--green-bg); } .c1 { --kc: var(--blue-dk); --kh: var(--blue-light); } .c2 { --kc: var(--purple-dk); --kh: var(--purple-tint); }
+.sl .op { color: var(--gray-icon); font-size: 1em; }
+.sl .fq-bar, .c3 .fq-bar { display: block; height: 3px; border-radius: 2px; background: currentColor; margin: 5px -.1em; }
+.sl .fq-bar { color: var(--ink); }
+.sl .r2, .sl .r3 { opacity: 0; }
+.sl-r.r2 { font-size: .92em; }
+.sv { display: inline-block; min-width: .8em; text-align: center; color: var(--kc); }
+.sv:empty { height: 1.05em; border-bottom: 2.5px dashed var(--line); }
+.sv.res { color: #fff; background: var(--green); box-shadow: 0 3px 0 var(--green-lip); border-radius: 12px; padding: 0 .42em; }
+.sv.res:empty { background: none; box-shadow: none; }
+.sv .fr { font-size: .82em; }
+
+/* 3. the flashcard: the rule's name on one side, the rule on the other */
+.c3w { perspective: 1100px; padding: 2px 0 10px; }
+.c3t { transform-style: preserve-3d; transition: transform .25s ease-out; }
+.c3 { position: relative; transform-style: preserve-3d; }
+.c3-f { position: relative; border-radius: 22px; color: #fff; box-shadow: 0 6px 0 #141E48; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  background: #24346F url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='84' fill='none' stroke='%23fff' stroke-opacity='.07' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M16 9v13M9.5 15.5h13M52 46l11 11M63 46L52 57M10 60h13M10 66.5h13M47 13h14'/%3E%3Ccircle cx='54' cy='7' r='.6'/%3E%3Ccircle cx='54' cy='19' r='.6'/%3E%3C/svg%3E"); }
+.c3-clip { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.c3-clip::before { content: ""; position: absolute; top: 11px; inset-inline-end: 16px; width: 24px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.4); }
+.c3-clip::after { content: ""; position: absolute; inset: 7px; border: 1.5px solid rgba(255,200,0,.4); border-radius: 16px; }
+.c3-front { padding: 28px 12px 42px; }
+.c3-front.has-fq { padding-top: 44px; }
+.c3-back { position: absolute; inset: 0; transform: rotateY(180deg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; text-align: center; }
+.c3-e { font-size: 13px; font-weight: 800; color: rgba(255,200,0,.8); }
+.c3-q { font-size: 32px; font-weight: 800; color: #FFC800; line-height: 1.25; }
+.c3-h { font-size: 14px; font-weight: 700; color: rgba(255,255,255,.75); display: none; }
+.c3-back.rv .c3-h { display: block; }
+.c3-sheen { position: absolute; top: -30%; bottom: -30%; right: -45%; width: 38%; background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent); transform: skewX(-14deg); }
+.c3-fx { position: relative; display: flex; justify-content: safe center; align-items: center; gap: .26em; white-space: nowrap; font-size: 23px; font-weight: 800; line-height: 1.4; }
+.c3 .kt { display: inline-block; }
+.c3 .k.ca .kt { color: #FFC800; }
+.c3 .op { color: #84D8FF; font-size: 1em; }
+.c3 .pl { color: #84D8FF; }
+.c3 .fq-bar { color: rgba(255,255,255,.92); }
+.c3 .val { background: #FFC800; color: #7A3B12; box-shadow: 0 2px 0 #CC9200; }
+.c3 .k.ca .val { background: var(--green); color: #fff; box-shadow: 0 2px 0 var(--green-lip); }
+
+/* inside tools/rule-cards.html: the phone only, and a cover to start it */
+html.embed body { background: #fff; }
+html.embed .wrap { display: block; max-width: none; padding: 0; }
+html.embed .side { display: none; }
+html.embed .phone { width: 100%; height: 100vh; min-height: 0; border: 0; border-radius: 0; box-shadow: none; position: relative; top: 0; }
+.emb-go { position: absolute; inset: 0; z-index: 20; border: 0; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; }
+.emb-go img { width: 150px; }
+.emb-go b { font-size: 24px; font-weight: 800; color: var(--ink); }
+.emb-go span { height: 54px; padding: 0 40px; border-radius: 16px; background: var(--green); box-shadow: 0 5px 0 var(--green-lip); color: #fff; font-size: 18px; font-weight: 800; display: grid; place-items: center; }
+
+/* 4. the whiteboard in Duolingo's grammar: flat faces on darker lips, hard-edged shine, chunky flat markers */
+.wbw.duo { --hw: 'Marhey', 'Baloo Bhaijaan 2', sans-serif; padding: 14px 0 8px; }
+html[data-hand="ruqaa"] .wbw.duo { --hw: 'Aref Ruqaa', serif; }
+html[data-hand="baloo"] .wbw.duo { --hw: 'Baloo Bhaijaan 2', sans-serif; }
+.duo .wb { padding: 9px; border-radius: 22px; background: #1CB0F6; box-shadow: 0 6px 0 #1899D6; }
+.duo .wb-s { border-radius: 14px; padding: 42px 12px 50px; background: #fff; box-shadow: inset 0 4px 0 rgba(0,0,0,.05); }
+.duo .wb-s::before { inset: 0; background: linear-gradient(118deg, transparent 58%, #EEF8FE 58%, #EEF8FE 69%, transparent 69%, transparent 73%, #EEF8FE 73%, #EEF8FE 76%, transparent 76%); }
+.duo .wb-fx { font: 700 30px/1.45 var(--hw); color: #2B70C9; filter: none; }
+html[data-hand="baloo"] .duo .wb-fx { font-weight: 800; }
+.duo .wb .val, .duo .wb .k.ca .val { font: 700 25px/1.2 var(--hw); color: #EA2B2B; }
+.duo .wb .op1 path, .duo .wb .fq-bar path, .duo .wb-circ path { stroke-width: 3.1; }
+.duo .wb-circ { color: #58CC02; filter: none; }
+.duo .wb-circ path { stroke-width: 3.6; }
+.duo .wb-hint { left: 0; right: 0; width: max-content; margin: 0 auto; bottom: 11px; padding: 3px 14px 2px; border: 2px solid #E5E5E5; border-bottom-width: 4px; border-radius: 12px; background: #fff; color: #1CB0F6; font-size: 14px; }
+.db-tag { position: absolute; top: -15px; right: 20px; z-index: 2; padding: 2px 13px 1px; border-radius: 10px; background: #FFC800; box-shadow: 0 3px 0 #E5A400; color: #8A5300; font-size: 14px; font-weight: 800; line-height: 1.6; transform: rotate(-4deg); }
+.db-mag { position: absolute; top: -7px; left: 26px; z-index: 2; width: 20px; height: 20px; border-radius: 50%; background: #FF4B4B; box-shadow: 0 3px 0 #EA2B2B; }
+.db-mag::after { content: ""; position: absolute; left: 4px; top: 4px; width: 6px; height: 4px; border-radius: 3px; background: rgba(255,255,255,.55); transform: rotate(-30deg); }
+.duo .wb-tray { height: 12px; margin: 5px 7% 0; border-radius: 4px 4px 10px 10px; background: #1CB0F6; box-shadow: 0 5px 0 #1899D6; }
+.duo .mk { top: -12px; width: 60px; height: 14px; border-radius: 0; background: none; box-shadow: none; }
+.duo .mk::before, .duo .mk::after { content: none; }
+.duo .mk svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.duo .mk.b { right: 10%; } .duo .mk.r { right: 40%; } .duo .mk.g { right: 70%; }
+.duo .pen svg { filter: drop-shadow(0 5px 0 rgba(0,0,0,.08)); }
+.db-sp { position: absolute; z-index: 5; width: 18px; height: 18px; margin: -9px 0 0 -9px; fill: #FFC800; pointer-events: none; }
+
+/* 5. Brilliant's guided glow: a white card, black type, terms in pale-blue boxes; a mint light carries each number
+   from the drawing onto its term, which glows, then drops it down a mint line into a white tile */
+.bg5 { position: relative; --bf: 'IBM Plex Sans Arabic', 'Baloo Bhaijaan 2', sans-serif; }
+.bg5 .k, .gs6 .k { background: none; border: 0; border-radius: 0; padding: 0; box-shadow: none; color: inherit; }
+.bg-card { position: relative; border: 1.5px solid #E5E5E5; border-radius: 24px; background: #fff; padding: 58px 12px 62px; }
+.bg-fx { position: relative; display: flex; justify-content: safe center; align-items: center; gap: .3em; white-space: nowrap; font: 600 23px/1.35 var(--bf); color: #1F1F1F; }
+.bg-t { display: inline-block; padding: .06em .34em .12em; border-radius: 7px; background: #ECF0FF; color: #294BC6; transition: background .35s, color .35s, box-shadow .35s; }
+.bg5 .k.ca .bg-t { background: #F2F2F2; color: #1F1F1F; }
+.bg5 .k.glow .bg-t { background: #fff; color: #1F1F1F; box-shadow: 0 0 0 1.5px #AAF7D9, 0 0 18px 7px rgba(92,240,182,.42); }
+.bg5 .op { font-weight: 500; color: #1F1F1F; }
+.bg5 .pl { color: #1F1F1F; }
+.bg5 .fq { display: inline-flex; flex-direction: column; align-items: center; gap: 8px; }
+.bg5 .fq-bar { display: block; align-self: stretch; height: 2px; border-radius: 1px; background: #1F1F1F; }
+.bg-v { position: absolute; left: 50%; top: calc(100% + 18px); z-index: 2; min-width: 38px; padding: 1px 10px 0; border: 2px solid #E5E5E5; border-bottom-width: 4px; border-radius: 9px; background: #fff; font: 700 19px/1.45 var(--bf); color: #1F1F1F; text-align: center; white-space: nowrap; opacity: 0; transform: translateX(-50%); }
+.bg5 .fq-n .bg-v { top: auto; bottom: calc(100% + 18px); }
+.bg-v.ans { border-color: #5ED981; border-bottom-color: #15B441; background: #D4F5DD; color: #009B2B; }
+.bg-v .fr { font-size: .85em; }
+.bg-ln { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 1; }
+.bg-ln path { fill: none; stroke: #53D8A4; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: stroke .5s; }
+.bg-ln path.tip { fill: #53D8A4; stroke-width: 1; transition: stroke .5s, fill .5s; }
+.bg-ln.dim path { stroke: #D9D9D9; } .bg-ln.dim path.tip { fill: #D9D9D9; }
+.bg-dot { position: absolute; left: 0; top: 0; z-index: 6; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #5CF0B6; box-shadow: 0 0 10px 5px rgba(92,240,182,.55), 0 0 26px 12px rgba(170,247,217,.45); pointer-events: none; }
+.bg-hint { position: absolute; left: 0; right: 0; bottom: 18px; text-align: center; font: 600 14px var(--bf); color: #9A9A9A; opacity: 0; }
+.bg5.hide .bg-t { background: #F8F8F8; color: transparent; box-shadow: inset 0 0 0 1.5px #CFCFCF; }
+.bg5.hide .bg-t { background-image: none; }
+
+/* 6. Duolingo's grammar card: a white sentence card at the top of a deck, the rule's terms as blue words on their
+   underline and its signs and bar in Macaw (Duolingo Math's colours); a «قانون جديد» tag pops in; the numbers come
+   as Iguana pills, and the answer turns the whole card green with the band crossing it */
+.gs6 { position: relative; padding-top: 40px; --gf: 'Baloo Bhaijaan 2', sans-serif; }
+.gs-tag { position: absolute; top: 0; right: 4px; display: flex; align-items: center; gap: 8px; font: 800 16px/1 var(--gf); color: #CE82FF; }
+.gs-tag.rv { color: #FF9600; }
+.gs-disc { flex: none; width: 30px; height: 30px; border-radius: 50%; background: #CE82FF; display: grid; place-items: center; }
+.gs-tag.rv .gs-disc { background: #FF9600; }
+.gs-disc svg { width: 18px; height: 18px; }
+.gs-tag b { display: inline-block; letter-spacing: .02em; }
+.gs-deck { position: relative; }
+.gs-p1, .gs-p2 { position: absolute; left: 14px; right: 14px; top: -8px; height: 40px; border-radius: 18px; background: #F7F7F7; border: 2px solid #E5E5E5; }
+.gs-p2 { left: 30px; right: 30px; top: -16px; }
+.gs-card { position: relative; overflow: hidden; border: 2px solid #E5E5E5; border-radius: 18px; background: #fff; padding: 54px 12px 58px; transition: background .25s, border-color .25s; }
+.gs-fx { position: relative; display: flex; justify-content: safe center; align-items: center; gap: .26em; white-space: nowrap; font: 700 27px/1.4 var(--gf); color: #4B4B4B; transition: color .25s; }
+.gs-t { display: inline-block; color: #1CB0F6; padding: 0 .06em; background: linear-gradient(currentColor, currentColor) no-repeat 50% 100% / var(--ul, 100%) 2px; }
+.gs6 .k.ca .gs-t { color: #4B4B4B; background-size: 0 0; }
+.gs6 .fq-n .gs-t { background-size: 0 0; }
+.gs6 .op { color: #1CB0F6; transition: color .25s; }
+.gs6 .pl { color: #4B4B4B; }
+.gs6 .fq { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; }
+.gs6 .fq-bar { display: block; align-self: stretch; height: 3px; border-radius: 2px; background: #1CB0F6; transition: background .25s; }
+.gs-v { position: absolute; left: 50%; top: calc(100% + 8px); min-width: 38px; padding: 0 10px; border: 3px solid #84D8FF; border-radius: 10px; background: #DDF4FF; font: 800 20px/1.5 var(--gf); color: #1CB0F6; text-align: center; white-space: nowrap; opacity: 0; transform: translateX(-50%); transition: background .25s, border-color .25s, color .25s; }
+.gs6 .fq-n .gs-v { top: auto; bottom: calc(100% + 8px); }
+.gs-v .fr { font-size: .85em; }
+.gs-gh { position: absolute; inset: -3px; display: grid; place-items: center; color: #58CC02; font: inherit; pointer-events: none; }
+.gs-band { position: absolute; top: -10%; bottom: -10%; left: 0; width: 34%; background: rgba(255,255,255,.55); transform: translateX(-140%) skewX(-22deg); pointer-events: none; }
+.gs-card.ok { background: #D7FFB8; border-color: #A5ED6E; }
+.gs-card.ok .gs-fx, .gs-card.ok .gs-t, .gs-card.ok .op, .gs-card.ok .pl, .gs-card.ok .k.ca .gs-t { color: #58A700; }
+.gs-card.ok .fq-bar { background: #58A700; }
+.gs-card.ok .gs-v { background: #fff; border-color: #A5ED6E; color: #58A700; }
+.gs6.hide .k:not(.ca) .gs-t { color: transparent; background: #DDF4FF; border-radius: .15em; box-shadow: inset 0 0 0 3px #84D8FF; }
+.gs-hint { position: absolute; left: 0; right: 0; bottom: 16px; text-align: center; font: 800 14px var(--gf); color: #AFAFAF; opacity: 0; }
+
+/* ───── five more (2026-10-29: the user turned 4–6 down too — «i dont like them create 5 more versions with new ideas»):
+   7 a split-flap board, 8 coloured tiles with a rolling counter, 9 kinetic type where each word turns into its number,
+   10 liquid glass over a moving sky, 11 neon tubes ───── */
+.sf7 .k, .bn8 .k, .kt9 .k, .gl10 .k, .ne11 .k { background: none; border: 0; border-radius: 0; padding: 0; box-shadow: none; color: inherit; }
+.sf7, .bn8, .kt9, .gl10w, .ne11 { position: relative; }
+
+/* 7. the split-flap board */
+.sf7 { --sf: 'IBM Plex Sans Arabic', 'Baloo Bhaijaan 2', sans-serif; }
+.sf-board { position: relative; border-radius: 20px; padding: 80px 10px 66px; background: linear-gradient(#1C1D22, #121317); box-shadow: inset 0 0 0 1px #2C2E35, 0 16px 30px -14px rgba(0,0,0,.5); }
+.sf-head { position: absolute; top: 14px; right: 16px; left: 16px; display: flex; justify-content: space-between; align-items: center; font: 700 13px var(--sf); }
+.sf-lab { color: #FFB020; letter-spacing: .03em; }
+.sf-st { display: flex; align-items: center; gap: 8px; }
+.sf-lamp { width: 8px; height: 8px; border-radius: 50%; background: #FFB020; box-shadow: 0 0 8px #FFB020; animation: sfBlink 1.1s steps(1) infinite; }
+@keyframes sfBlink { 50% { opacity: .25; } }
+.sf-board.ok .sf-lamp { background: #3EE07F; box-shadow: 0 0 9px #3EE07F; animation: none; }
+.sf-fx { display: flex; justify-content: safe center; align-items: center; gap: .26em; white-space: nowrap; font: 700 22px/1 var(--sf); color: #F4F0E6; }
+.fl { position: relative; display: inline-block; vertical-align: middle; height: 1.8em; line-height: 1.8em; padding: 0 .36em; border-radius: .22em; color: #F4F0E6; perspective: 260px; box-shadow: 0 .12em 0 #07080A; white-space: nowrap; }
+.fl-s { visibility: hidden; display: inline-block; }
+.fl-h { position: absolute; left: 0; right: 0; height: 50%; overflow: hidden; background: #2E3038; }
+.fl-h.t { top: 0; border-radius: .22em .22em 0 0; }
+.fl-h.b { bottom: 0; border-radius: 0 0 .22em .22em; background: #282A31; }
+.fl-x { position: absolute; left: 0; right: 0; top: 0; height: 200%; display: flex; align-items: center; justify-content: center; white-space: nowrap; }
+.fl-h.b .fl-x { top: -100%; }
+.fl-h.fa { transform-origin: 50% 100%; z-index: 2; }
+.fl-h.fb { transform-origin: 50% 0; z-index: 2; }
+.fl::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1px; margin-top: -.5px; background: #0B0C0F; z-index: 3; }
+.fl .fr { font-size: .7em; }
+.sf7 .op { color: #FFB020; font-weight: 600; }
+.sf7 .pl { color: #FFB020; }
+.sf7 .fq { display: inline-flex; flex-direction: column; align-items: center; gap: 10px; }
+.sf7 .fq-bar { display: block; align-self: stretch; height: 3px; border-radius: 2px; background: #FFB020; }
+.sf-v { position: absolute; left: 50%; top: calc(100% + 12px); transform: translateX(-50%); visibility: hidden; font-size: 19px; z-index: 2; }
+.sf7 .fq-n .sf-v { top: auto; bottom: calc(100% + 12px); }
+.sf-v.on { visibility: visible; }
+.sf-v .fl { color: #1C1305; }
+.sf-v .fl-h { background: #FFBC33; } .sf-v .fl-h.b { background: #F5AC14; } .sf-v .fl::after { background: rgba(0,0,0,.28); }
+.sf-v.ans .fl { color: #052611; }
+.sf-v.ans .fl-h { background: #43DB78; } .sf-v.ans .fl-h.b { background: #2FCB65; }
+.fl.st { font-size: 12px; color: #D4D0C4; }
+.sf-board.ok .fl.st { color: #3EE07F; }
+.sf-hint { position: absolute; left: 0; right: 0; bottom: 22px; text-align: center; font: 600 13px var(--sf); color: #74767F; opacity: 0; }
+
+/* 8. coloured tiles, each with its number rolling in */
+.bn8 { --bf2: 'Readex Pro', 'IBM Plex Sans Arabic', sans-serif; }
+.bn-panel { position: relative; border-radius: 26px; background: #F3F4F7; padding: 46px 8px 44px; }
+.bn-lab { position: absolute; top: 15px; right: 18px; font: 600 13px var(--bf2); color: #6B7080; }
+.bn-fx { display: flex; justify-content: safe center; align-items: center; gap: .24em; white-space: nowrap; font: 700 26px/1 var(--bf2); color: #16181D; }
+.bt { position: relative; display: inline-flex; flex-direction: column; align-items: center; gap: .14em; padding: .44em .5em .3em; min-width: 2.5em; border-radius: .62em; background: var(--cb); overflow: hidden; box-shadow: 0 1px 1px rgba(16,24,40,.05), 0 12px 22px -14px var(--c); transition: background .35s, box-shadow .35s; }
+.bt-w { font: 600 .56em/1.25 var(--bf2); color: var(--c); white-space: nowrap; padding: 0 .1em; transition: color .3s; }
+.k.ca .bt-w { color: rgba(255,255,255,.7); }
+.bt-n { position: relative; align-self: stretch; height: 1.5em; overflow: hidden; color: #16181D; text-align: center; }
+.k.ca .bt-n { color: #fff; }
+.bt-r { display: block; }
+.bt-r b { display: flex; align-items: center; justify-content: center; height: 1.5em; font-weight: 700; white-space: nowrap; }
+.bt-r b.q { color: var(--c); opacity: .3; }
+.k.ca .bt-r b.q { color: #fff; }
+.bt-r .fr { font-size: .56em; }
+.bt.ok { background: #16A34A; box-shadow: 0 14px 26px -12px rgba(22,163,74,.75); }
+.bt-band { position: absolute; top: -20%; bottom: -20%; right: 0; width: 40%; background: rgba(255,255,255,.45); transform: translateX(130%) skewX(-20deg); pointer-events: none; }
+.bn8 .op { color: #A2A7B1; font-weight: 500; font-size: .9em; }
+.bn8 .pl { font: 600 .56em var(--bf2); color: #6B7080; }
+.bn8 .pl.nm { font: 700 1em var(--bf2); color: #16181D; }
+.bn8 .fq { display: inline-flex; flex-direction: column; align-items: center; gap: 9px; }
+.bn8 .fq-bar { display: block; align-self: stretch; height: 3px; border-radius: 2px; background: #16181D; }
+.bn-dot { position: absolute; left: 0; top: 0; z-index: 6; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,.2); pointer-events: none; }
+.bn-hint { position: absolute; left: 0; right: 0; bottom: 14px; text-align: center; font: 600 13px var(--bf2); color: #8A8F9C; opacity: 0; }
+.bn8.hide .k:not(.ca) .bt { background: #fff; box-shadow: 0 1px 2px rgba(16,24,40,.07); }
+.bn8.hide .k:not(.ca) .bt-w { color: transparent; border-radius: .35em; background: linear-gradient(90deg, #ECEEF2 0 30%, #F8F9FB 50%, #ECEEF2 70%) 0 0 / 300% 100%; animation: bnSk 1.3s linear infinite; }
+.bn8.hide .k:not(.ca) .bt-r b.q { color: #C9CCD3; opacity: 1; }
+@keyframes bnSk { from { background-position: 100% 0; } to { background-position: 0 0; } }
+
+/* 9. kinetic type: each word turns into its number */
+.kt9 { --kf: 'Cairo', 'Baloo Bhaijaan 2', sans-serif; --acc: #4433FF; padding: 54px 4px 50px; }
+.kt-eye { position: absolute; top: 12px; right: 8px; display: flex; align-items: center; gap: 8px; font: 800 13px var(--kf); color: var(--acc); }
+.kt-eye i { width: 18px; height: 3px; border-radius: 2px; background: currentColor; }
+.kt-fx { display: flex; justify-content: safe center; align-items: center; gap: .24em; white-space: nowrap; font: 800 30px/1.5 var(--kf); color: #0E0F12; }
+.kt-m { position: relative; display: inline-block; vertical-align: middle; overflow: hidden; }
+.kt-w { position: relative; z-index: 1; display: inline-block; padding: 0 .04em; }
+.kt9 .k:not(.ca) .kt-w { color: var(--acc); }
+.kt-n { position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center; color: var(--acc); transform: translateY(108%); }
+.kt-n.ans { color: #00A86B; }
+.kt-n .fr { font-size: .62em; }
+.kt-hl { position: absolute; left: 0; right: 0; top: .2em; bottom: .14em; border-radius: .14em; background: #D5F8E8; transform: scaleX(0); transform-origin: 100% 50%; }
+.kt-c { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: -.1em; font: 700 12px/1.3 var(--kf); color: #8C919B; white-space: nowrap; opacity: 0; }
+.kt9 .fq-n .kt-c { top: auto; bottom: 100%; margin: 0 0 -.1em; }
+.kt-u { position: absolute; left: .04em; right: .04em; bottom: .1em; height: .1em; border-radius: .05em; background: var(--acc); transform: scaleX(0); }
+.kt9 .op { color: #B6BAC3; font-weight: 600; }
+.kt9 .pl { color: #0E0F12; }
+.kt9 .fq { display: inline-flex; flex-direction: column; align-items: center; gap: 10px; }
+.kt9 .fq-bar { display: block; align-self: stretch; height: 3px; border-radius: 2px; background: #0E0F12; transform-origin: 50% 50%; }
+.kt9.hide .k:not(.ca) .kt-w { transform: translateY(108%); }
+.kt9.hide .k:not(.ca) .kt-m::after { content: ""; position: absolute; left: .1em; right: .1em; bottom: .28em; height: 3px; border-radius: 2px; background: #DCDFE5; }
+.kt-hint { position: absolute; left: 0; right: 0; bottom: 12px; text-align: center; font: 700 13px var(--kf); color: #9CA0A9; opacity: 0; }
+
+/* 10. liquid glass over a slowly moving sky */
+.gl10 { position: relative; border-radius: 28px; overflow: hidden; padding: 12px; background: #ECEBFF; --gl: 'IBM Plex Sans Arabic', 'Baloo Bhaijaan 2', sans-serif; }
+.gl-sky { position: absolute; inset: 0; }
+.gl-sky i { position: absolute; width: 62%; aspect-ratio: 1; border-radius: 50%; filter: blur(26px); opacity: .9; }
+.gl-sky .b1 { background: #A78BFA; top: -20%; right: -12%; animation: glA 11s ease-in-out infinite alternate; }
+.gl-sky .b2 { background: #67E8F9; bottom: -28%; left: -14%; animation: glB 13s ease-in-out infinite alternate; }
+.gl-sky .b3 { background: #F9A8D4; top: 26%; left: 20%; width: 46%; animation: glC 9s ease-in-out infinite alternate; }
+.gl-sky .b4 { background: #FDE68A; bottom: -22%; right: 8%; width: 40%; animation: glA 15s ease-in-out infinite alternate-reverse; }
+@keyframes glA { to { transform: translate(-30%, 25%) scale(1.15); } }
+@keyframes glB { to { transform: translate(35%, -20%) scale(.9); } }
+@keyframes glC { to { transform: translate(-25%, -30%) scale(1.2); } }
+.gl-card { position: relative; overflow: hidden; border-radius: 22px; padding: 64px 8px 64px; background: rgba(255,255,255,.42); -webkit-backdrop-filter: blur(20px) saturate(170%); backdrop-filter: blur(20px) saturate(170%); box-shadow: inset 0 0 0 1px rgba(255,255,255,.75), inset 0 1px 0 rgba(255,255,255,.95), 0 18px 40px -18px rgba(60,40,160,.45); }
+.gl-card::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(160deg, rgba(255,255,255,.6), rgba(255,255,255,0) 42%); pointer-events: none; }
+.gl-lab { position: absolute; top: 16px; right: 18px; font: 700 13px var(--gl); color: #5B4BC4; }
+.gl-fx { position: relative; display: flex; justify-content: safe center; align-items: center; gap: .28em; white-space: nowrap; font: 600 23px/1.4 var(--gl); color: #1B1840; }
+.gl-t { display: inline-block; padding: .04em .42em .1em; border-radius: .7em; background: rgba(255,255,255,.62); box-shadow: inset 0 0 0 1px rgba(255,255,255,.95), inset 0 1px 1px #fff, 0 6px 14px -8px rgba(76,47,224,.55); color: #3F27C9; }
+.gl10 .k.ca .gl-t { background: none; box-shadow: none; padding: 0; color: #1B1840; }
+.gl10 .op { color: #5B5585; font-weight: 500; }
+.gl10 .pl { color: #1B1840; }
+.gl10 .fq { display: inline-flex; flex-direction: column; align-items: center; gap: 9px; }
+.gl10 .fq-bar { display: block; align-self: stretch; height: 2px; border-radius: 1px; background: #1B1840; opacity: .85; }
+.gl-v { position: absolute; left: 50%; top: calc(100% + 14px); z-index: 2; min-width: 40px; padding: 1px 12px; border-radius: 14px; background: rgba(255,255,255,.66); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: inset 0 0 0 1px rgba(255,255,255,.95), inset 0 1px 0 #fff, 0 8px 18px -8px rgba(76,47,224,.5); font: 700 19px/1.45 var(--gl); color: #4C2FE0; text-align: center; white-space: nowrap; opacity: 0; transform: translateX(-50%); }
+.gl10 .fq-n .gl-v { top: auto; bottom: calc(100% + 14px); }
+.gl-v.ans { background: linear-gradient(135deg, #34D399, #10B981); color: #fff; box-shadow: inset 0 0 0 1px rgba(255,255,255,.55), inset 0 1px 0 rgba(255,255,255,.7), 0 8px 18px -6px rgba(16,185,129,.6); }
+.gl-v .fr { font-size: .85em; }
+.gl-ring { position: absolute; inset: 0; border-radius: inherit; padding: 2.5px; background: conic-gradient(from var(--ga, 0deg), #8B5CF6, #22D3EE, #34D399, #FBBF24, #F472B6, #8B5CF6); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0; pointer-events: none; }
+.gl-sweep { position: absolute; top: -30%; bottom: -30%; right: 0; width: 34%; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.75), rgba(255,255,255,0)); transform: translateX(130%) skewX(-18deg); pointer-events: none; }
+.gl-drop { position: absolute; left: 0; top: 0; z-index: 6; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #fff 0 16%, rgba(255,255,255,.75) 30%, rgba(167,139,250,.6) 66%, rgba(99,102,241,.5)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.85), 0 6px 16px rgba(99,102,241,.45); pointer-events: none; }
+.gl-hint { position: absolute; left: 0; right: 0; bottom: 20px; text-align: center; font: 600 13px var(--gl); color: #5E5A8C; opacity: 0; }
+.gl10.hide .k:not(.ca) .gl-t { filter: blur(6px); opacity: .7; }
+
+/* 11. neon tubes on a night board */
+.ne11 { --nf: 'Baloo Bhaijaan 2', sans-serif; }
+.ne-card { position: relative; border-radius: 24px; padding: 64px 8px 66px; background: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1.3px) 0 0 / 14px 14px, radial-gradient(120% 80% at 50% 0%, #1B2253 0, #0B0F2A 62%); box-shadow: inset 0 0 0 1px #262E62, 0 16px 30px -12px rgba(11,15,42,.6); }
+.ne-lab { position: absolute; top: 14px; right: 18px; font: 700 14px var(--nf); color: #FF4FA8; text-shadow: 0 0 6px #FF4FA8, 0 0 16px rgba(255,79,168,.6); }
+.ne-fx { position: relative; display: flex; justify-content: safe center; align-items: center; gap: .28em; white-space: nowrap; font: 700 26px/1.45 var(--nf); color: #F2F4FF; }
+.ne-t { position: relative; display: inline-block; }
+.ne-off { color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,.17); }
+.ne-on { position: absolute; inset: 0; color: var(--nc); text-shadow: 0 0 3px var(--nc), 0 0 12px var(--nc), 0 0 26px color-mix(in srgb, var(--nc) 55%, transparent); white-space: nowrap; }
+.ne11 .k.ca .ne-on { transition: color .3s; }
+.ne11 .op { color: #A3ABE0; font-weight: 600; text-shadow: 0 0 8px rgba(163,171,224,.65); }
+.ne11 .pl { color: #A3ABE0; text-shadow: 0 0 8px rgba(163,171,224,.65); }
+.ne11 .fq { display: inline-flex; flex-direction: column; align-items: center; gap: 9px; }
+.ne11 .fq-bar { display: block; align-self: stretch; height: 2.5px; border-radius: 2px; background: #A3ABE0; box-shadow: 0 0 8px rgba(163,171,224,.8); }
+.ne-v { position: absolute; left: 50%; top: calc(100% + 14px); z-index: 2; min-width: 40px; padding: 0 10px; border-radius: 10px; border: 1.5px solid var(--nc); background: rgba(10,14,40,.7); color: var(--nc); text-shadow: 0 0 8px var(--nc); box-shadow: 0 0 12px -2px var(--nc), inset 0 0 10px -3px var(--nc); font: 700 19px/1.5 var(--nf); text-align: center; white-space: nowrap; opacity: 0; transform: translateX(-50%); }
+.ne11 .k.ca .ne-v { --nc: #3DFFA2; }
+.ne11 .fq-n .ne-v { top: auto; bottom: calc(100% + 14px); }
+.ne-v .fr { font-size: .85em; }
+.ne-ln { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 5; }
+.ne-ln path { fill: none; stroke-width: 3; stroke-linecap: round; filter: drop-shadow(0 0 4px currentColor); }
+.ne-head { position: absolute; left: 0; top: 0; z-index: 6; width: 10px; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 0 6px 2px var(--nc), 0 0 16px 6px var(--nc); offset-rotate: 0deg; pointer-events: none; }
+.ne-hint { position: absolute; left: 0; right: 0; bottom: 22px; text-align: center; font: 600 13px var(--nf); color: #6D74A8; opacity: 0; }
+.ne11.hide .k:not(.ca) .ne-on { opacity: 0; }
+
+/* the fill, drawn as the app draws it (rfBody) */
+.ln-eq { font-weight: 800; text-align: center; color: var(--ink); background: #fff; border: 2px solid var(--line); border-radius: 16px; box-shadow: 0 2px 0 var(--line); }
+.ln-eq.rf-box { width: 100%; min-width: 0; padding: 14px 10px; line-height: 1.2; }
+.rf-ex { font-size: 22px; font-weight: 800; line-height: 1.5; color: var(--ink); white-space: nowrap; padding: 0 4px 10px; margin-bottom: 12px; border-bottom: 1px dashed var(--line); }
+.rf-line { display: flex; flex-wrap: nowrap; justify-content: safe center; align-items: center; gap: .26em; width: 100%; min-width: 0; font-size: 28px; font-weight: 800; line-height: 1.2; color: var(--ink); white-space: nowrap; --bh: 1.8em; }
+.rf-words .rf-line { font-size: 22px; gap: .2em; }
+.rf-num .rf-line + .rf-line { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.rf-t { display: inline-flex; align-items: center; height: var(--bh); flex: none; }
+.rf-t.op2 { color: var(--ink); }
+.ln-blank { position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center; height: var(--bh); min-width: 2.2em; margin: 0; padding: 0 .4em; font: inherit; font-size: .86em; border-radius: 12px; border: 2px dashed var(--gray-icon); background: #F7F7F7; color: var(--blue-dk); white-space: nowrap; }
+.rf-words .ln-blank { min-width: 3.6em; }
+.ln-blank.filled { border: 2px solid var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+.ln-blank.right { border: 2px solid var(--green-pale); background: var(--green-bg); color: var(--green-dk); }
+.ln-blank.wrong { border: 2px solid var(--red); background: var(--red-bg); color: var(--red-dk2); }
+.ln-blank.next { border-color: var(--blue); }
+.ln-tiles { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 24px; }
+.ln-tile { min-width: 58px; padding: 8px 16px; border-radius: 13px; background: #fff; border: 2px solid var(--line); border-bottom-width: 4px; font: inherit; font-size: 22px; font-weight: 700; color: var(--ink); }
+.rf-words + .ln-tiles .ln-tile, .ln-tiles.wd .ln-tile { font-size: 18px; padding: 8px 12px; }
+.ln-tile:active { transform: translateY(2px); border-bottom-width: 2px; }
+.ln-tile.used { background: var(--line); color: transparent; border-color: var(--line); pointer-events: none; }
+.ln-tile .fr, .ln-blank .fr { font-size: .78em; }
+
+/* the questions */
+.qq { font-size: 21px; font-weight: 800; line-height: 1.55; text-wrap: pretty; margin: 4px 0 18px; }
+.qq .w { display: inline-block; }
+.opts { display: grid; gap: 10px; }
+.opt { width: 100%; min-height: 58px; padding: 8px 16px; border-radius: 16px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 21px; font-weight: 800; text-align: center; }
+.opt:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; }
+.opt.sel { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+.opt.ok { background: var(--green-bg); border-color: var(--green-pale); color: var(--green-dk); }
+.opt.no { background: var(--red-bg); border-color: var(--red-soft); color: var(--red-dk); }
+.opt:disabled { cursor: default; }
+.opt .fr { font-size: .8em; }
+
+/* the verdict: Duolingo's sheet; on a miss فهيم says the trap */
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; padding: 18px 16px 22px; z-index: 6; transform: translateY(105%); display: flex; flex-direction: column; gap: 10px; }
+.sheet.ok { background: var(--green-bg); color: var(--green-dk); }
+.sheet.no { background: var(--red-bg); color: var(--red-dk); }
+.sh-h { display: flex; align-items: center; gap: 10px; font-size: 22px; font-weight: 800; }
+.sh-i { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: none; }
+.sh-i svg { width: 19px; height: 19px; }
+.sh-d { font-size: 16px; font-weight: 700; }
+.sh-d .fr { font-size: .8em; margin: 0 .25em; }
+.sh-tip { display: flex; align-items: flex-end; gap: 8px; }
+.sh-tip img { width: 64px; height: 64px; object-fit: contain; flex: none; }
+.sh-tip p { flex: 1; background: #fff; border-radius: 14px; padding: 8px 12px; font-size: 15.5px; font-weight: 800; color: var(--ink); position: relative; }
+
+/* the list */
+.dk-top { display: flex; justify-content: flex-start; padding: 18px 18px 0; }
+.exam { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 800; color: var(--red-dk); background: var(--red-bg); border-radius: 99px; padding: 2px 12px; }
+.exam svg { width: 16px; height: 16px; }
+.rows { display: grid; gap: 10px; }
+.row { display: flex; align-items: center; gap: 12px; width: 100%; text-align: start; padding: 12px 14px; border-radius: 16px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; }
+.row:active { transform: translateY(2px); border-bottom-width: 2px; }
+.row b { flex: 1; font-size: 18px; font-weight: 800; }
+.chip { flex: none; font-size: 13px; font-weight: 800; border-radius: 8px; padding: 0 9px; line-height: 1.8; }
+.chip.new { background: var(--blue-light); color: var(--blue-dk); }
+.chip.due { background: var(--orange-bg); color: var(--orange-dk); }
+.chip.ok { background: var(--green-bg); color: var(--green-dk); }
+
+/* the diagrams: plain, the way a good textbook draws */
+.dg { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.dlab { display: flex; gap: 6px; justify-content: center; font-size: 13.5px; font-weight: 800; flex-wrap: nowrap; }
+.dlab span { border: 2px solid var(--line); border-radius: 10px; padding: 0 8px; color: var(--gray); white-space: nowrap; }
+.dlab b { color: var(--blue-dk); margin-inline-start: 4px; }
+.dlab .l3 b { color: var(--green-dk); }
+.cells { display: flex; gap: 6px; }
+.cell { width: 32px; height: 38px; border-radius: 9px; border: 2px solid var(--line); display: grid; place-items: center; font-size: 18px; font-weight: 800; color: var(--ink2); transition: background .2s, border-color .2s, color .2s; }
+.cell.on { background: var(--blue); border-color: var(--blue-dk); color: #fff; }
+.cell.ring { border-color: var(--blue-border); }
+.bars { position: relative; display: flex; align-items: flex-end; gap: 20px; padding: 0 24px; }
+.bc { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.bv { font-size: 14px; font-weight: 800; color: var(--ink2); }
+.bu { display: flex; flex-direction: column-reverse; gap: 1px; }
+.bu i { display: block; width: 36px; height: 9px; border-radius: 2px; background: var(--blue); transition: background .2s; }
+.bu i.mv { background: var(--orange); } .bu i.lv { background: var(--green); } .bu i.hl { background: var(--blue-dk); }
+.ml { position: absolute; left: 0; right: 0; height: 0; border-top: 2px dashed var(--green-dk); opacity: 0; }
+svg.d { display: block; overflow: visible; direction: ltr; }
+svg.d text { font-family: var(--font); font-weight: 800; }
+.mul { direction: ltr; display: grid; grid-template-columns: 26px 30px 30px 30px; row-gap: 2px; font-size: 30px; font-weight: 800; line-height: 1.2; text-align: center; color: var(--ink2); position: relative; }
+.mul .d { transition: color .3s, opacity .3s; }
+.mul.dim .t { opacity: .25; }
+.mul .op2 { color: var(--gray-icon); }
+.mul .bar2 { grid-column: 1 / -1; height: 3px; border-radius: 2px; background: var(--ink2); margin: 2px 0; }
+.mul .u { color: var(--blue-dk); }
+.mul .band { position: absolute; top: -4px; right: -3px; width: 36px; height: 82px; border-radius: 10px; background: var(--blue-light); z-index: -1; opacity: 0; }
+.mul .pr { opacity: 0; }
+.mul .lastc { position: relative; color: var(--green-dk); }
+.mul .lastc::after { content: ""; position: absolute; inset: 2px -2px; border: 3px solid var(--green); border-radius: 50%; opacity: 0; transition: opacity .2s; }
+.mul .lastc.on::after { opacity: 1; }
+.dl { flex-direction: row; gap: 22px; align-items: center; }
+.step { display: flex; flex-direction: column; gap: 6px; font-size: 20px; font-weight: 800; }
+.step > * { opacity: 0; white-space: nowrap; }
+.step .s2 { color: var(--green-dk); }
+.qrow { display: flex; align-items: center; gap: 7px; direction: rtl; }
+.qd { position: relative; width: 26px; height: 26px; border-radius: 50%; border: 2.5px solid var(--ink2); background: #fff; }
+.qd.me { background: var(--gold); border-color: var(--gold-dk); }
+.qd.twice { box-shadow: 0 0 0 4px var(--red-soft); }
+.qd i { position: absolute; left: 50%; width: 22px; margin-left: -11px; text-align: center; font-style: normal; font-size: 12px; font-weight: 800; line-height: 1.5; border-radius: 6px; color: #fff; opacity: 0; }
+.qd .f { bottom: calc(100% + 6px); background: var(--blue); }
+.qd .b { top: calc(100% + 6px); background: var(--purple); }
+.qhead, .qends { display: flex; justify-content: space-between; width: 100%; font-size: 12px; font-weight: 800; color: var(--gray-icon); }
+.qhead { margin-bottom: 22px; } .qends { margin-top: 22px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="ink" x="-10%" y="-80%" width="120%" height="260%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.5" xChannelSelector="R" yChannelSelector="G"/></filter>
+  <linearGradient id="penb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".6" stop-color="#E6E9ED"/><stop offset="1" stop-color="#C3C9D0"/></linearGradient>
+</defs></svg>
+<div class="wrap">
+  <div class="side">
+    <p class="kick">قوانين القدرات — النسخة ٤</p>
+    <h1>فهيم يشرح، أنت تكمّل، وبعدها الاختبار</h1>
+    <p class="lede">كل قانون درس قصير بشكل التطبيق: شاشة وحدة لكل خطوة، وزر واحد.</p>
+    <ul class="beats">
+      <li><b>فهيم يشرح:</b> القانون بسطر في فقاعته، والقانون مكتوب، ورسم قصير يبنيه من مثال. وبعدها يقول لك متى يجيك في الاختبار.</li>
+      <li><b>كمّل القانون:</b> كلمات القانون من البطاقات، و«تحقق».</li>
+      <li><b>كمّل الحل خطوة خطوة:</b> مثال تحطّ أرقامه بنفسك، نفس شاشة التطبيق.</li>
+      <li><b>بعدها بس:</b> ثلاث أسئلة بأسلوب القدرات. لو غلطت، فهيم يقول لك الفخ.</li>
+      <li><b>النهاية:</b> فهيم يحتفل ويقول لك متى ترجع للقانون.</li>
+    </ul>
+    <button class="reset" id="reset">صفّر التقدّم</button>
+  </div>
+  <div class="phone" id="phone"><div class="app" id="app"></div></div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const reduce = /[?&]calm\b/.test(location.search) && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const AR = '٠١٢٣٤٥٦٧٨٩', toAr = n => String(n).replace(/\d/g, d => AR[d]).replace('.', '٫'), A = toAr;
+  const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const shuffle = a => a.map(x => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map(x => x[1]);
+  const fx = s => String(s).replace(/([٠-٩]+)\/([٠-٩]+)/g, '<span class="fr"><b>$1</b><i></i><b>$2</b></span>').replace(/÷/g, '<i class="dv"></i>');
+  const gcd = (a, b) => b ? gcd(b, a % b) : a;
+  const fr = (a, b) => { const g = gcd(a, b); return A(a / g) + '/' + A(b / g); };
+  const OP = /^[=×÷+−←]$/;
+  const $ = id => document.getElementById(id);
+  const FH = s => `../assets/mascot/qaddour-${s}.png`;
+  const X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>';
+  const CHECK = c => `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+  const CROSS = '<svg viewBox="0 0 24 24" fill="none" stroke="#EA2B2B" stroke-width="3.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  const CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>';
+
+  /* ───── sounds ───── */
+  const SB = '../assets/sounds/';
+  const FILES = { tap: SB + 'bri/lightweight-choice', click: SB + 'bri/assessment-click-option-1', hint: SB + 'bri/hint', on: SB + 'bri/toggle-on', off: SB + 'bri/toggle-off',
+    t1: SB + 'bri/xp-tally-1', t2: SB + 'bri/xp-tally-2', t3: SB + 'bri/xp-tally-3', t4: SB + 'bri/xp-tally-4', t5: SB + 'bri/xp-tally-5',
+    right: SB + 'correct', wrong: SB + 'bri/incorrect', start: SB + 'bri/start-lesson', drop: SB + 'bri/drag-released', done: SB + 'lesson-complete' };
+  let ctx = null; const bufs = {};
+  function audio() {
+    if (ctx) return;
+    try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return; }
+    Object.entries(FILES).forEach(([k, f]) => fetch(f + '.mp3').then(r => r.arrayBuffer()).then(b => ctx.decodeAudioData(b)).then(d => { bufs[k] = d; }).catch(() => {}));
+  }
+  addEventListener('pointerdown', () => { audio(); if (ctx && ctx.state === 'suspended') ctx.resume(); }, true);
+  function snd(k, rate = 1, vol = .5) {
+    if (!ctx || ctx.state !== 'running' || !bufs[k]) return;
+    const s = ctx.createBufferSource(), g = ctx.createGain();
+    s.buffer = bufs[k]; s.playbackRate.value = rate; g.gain.value = vol; s.connect(g); g.connect(ctx.destination); s.start();
+  }
+  /* a felt marker on a whiteboard: filtered noise that rises and falls with the strokes */
+  function scratch(ms, vol = .05) {
+    if (!ctx || ctx.state !== 'running') return;
+    const sr = ctx.sampleRate, n = Math.max(1, Math.floor(sr * ms / 1000)), buf = ctx.createBuffer(1, n, sr), d = buf.getChannelData(0);
+    let ph = 0, f = 11;
+    for (let i = 0; i < n; i++) { if (i % 900 === 0) f = 7 + Math.random() * 10; ph += 2 * Math.PI * f / sr; const env = Math.min(1, i / (sr * .015), (n - i) / (sr * .03)); d[i] = (Math.random() * 2 - 1) * (.4 + .6 * Math.abs(Math.sin(ph))) * env; }
+    const src = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), hp = ctx.createBiquadFilter(), g = ctx.createGain();
+    src.buffer = buf; bp.type = 'bandpass'; bp.frequency.value = 2300 + Math.random() * 700; bp.Q.value = .8; hp.type = 'highpass'; hp.frequency.value = 900; g.gain.value = vol;
+    src.connect(bp); bp.connect(hp); hp.connect(g); g.connect(ctx.destination); src.start();
+  }
+  const buzz = p => { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} };
+  const up = k => Math.pow(2, Math.min(k, 11) * 2 / 12);
+
+  /* ───── motion ───── */
+  const TL = { t: [], a: [] };
+  let RUN = 0;
+  const later = (ms, f) => { TL.t.push(setTimeout(f, ms)); };
+  const wipe = () => { RUN++; TL.t.forEach(clearTimeout); TL.t = []; TL.a.forEach(a => { try { a.cancel(); } catch (e) {} }); TL.a = []; };
+  const anim = (el, kf, o) => { if (reduce || !el) return null; const a = el.animate(kf, o); TL.a.push(a); return a; };
+  const show = (el, on = true) => { if (el) el.style.opacity = on ? 1 : 0; };
+  const RISE = [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }];
+  const POP = [{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1.08)', offset: .7 }, { opacity: 1, transform: 'none' }];
+  const PULSE = [{ transform: 'none' }, { transform: 'scale(1.18)', offset: .4 }, { transform: 'none' }];
+  const SHAKE = [{ transform: 'none' }, { transform: 'translateX(-8px)' }, { transform: 'translateX(7px)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(2px)' }, { transform: 'none' }];
+  /* Duolingo's right-answer jump (adWave's curve): crouch, spring, land past, rebound */
+  const JUMP = [{ transform: 'none' }, { transform: 'translateY(4px) scale(1.04, .94)', offset: .12 }, { transform: 'translateY(-20px) scale(.97, 1.04)', offset: .42 }, { transform: 'translateY(3px) scale(1.03, .96)', offset: .75 }, { transform: 'none' }];
+  const pulse = (el, d = 0) => anim(el, PULSE, { duration: 320, delay: d, easing: 'ease-out' });
+  const pop = (el, ms = 300) => { show(el); anim(el, POP, { duration: ms, easing: 'ease-out' }); };
+  const jump = (el, d = 0) => anim(el, JUMP, { duration: 560, delay: d, easing: 'ease-out' });
+  const scaleOf = el => { const p = el.closest && el.closest('.dg'); return (p && p._s) || 1; };
+  function flyFrom(el, src, ms = 480, lift = 26) {
+    if (!src) return null;
+    const k = scaleOf(el), a = src.getBoundingClientRect(), b = el.getBoundingClientRect(), dx = ((a.left + a.width / 2) - (b.left + b.width / 2)) / k, dy = ((a.top + a.height / 2) - (b.top + b.height / 2)) / k;
+    return anim(el, [{ opacity: 1, transform: `translate(${dx}px, ${dy}px) scale(.8)` }, { opacity: 1, transform: `translate(${dx * .5}px, ${dy * .5 - lift / k}px) scale(1.12)`, offset: .5 }, { opacity: 1, transform: 'none' }], { duration: ms, easing: 'cubic-bezier(.4,0,.3,1)' });
+  }
+  function fit(line, min = 12) {
+    line.style.fontSize = '';
+    let fs = parseFloat(getComputedStyle(line).fontSize);
+    while (line.scrollWidth > line.clientWidth + 1 && fs > min) { fs -= .5; line.style.fontSize = fs + 'px'; }
+  }
+  /* فهيم's words arrive one at a time, each on Brilliant's tap, as his bubble does in the app */
+  const wsplit = t => t.split(' ').map(w => `<span class="w">${fx(w.replace(/\*([^*]+)\*/g, '<em>$1</em>'))}</span>`).join(' ');
+  function sayInto(el, text, d0 = 250) {
+    el.innerHTML = wsplit(text.replace(/\*(\S+) (\S+)\*/g, '*$1* *$2*'));
+    const ws = [...el.querySelectorAll('.w')];
+    anim(el.closest('.obs-bubble'), [{ opacity: 0, transform: 'scale(.1)' }, { opacity: 1, transform: 'none' }], { duration: 250, delay: d0 - 200 > 0 ? d0 - 200 : 0, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'backwards' });
+    ws.forEach((w, i) => { anim(w, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 200, delay: d0 + i * 85, fill: 'backwards' }); later(d0 + i * 85, () => snd('tap', 1.25 + (i % 3) * .06, .2)); });
+    return d0 + ws.length * 85;
+  }
+
+  /* ───── the proofs (kept from round 3): a small example, its numbers handed to the formula ───── */
+  const NS = 'http://www.w3.org/2000/svg';
+  const pts = (n, cx, cy, rx, ry) => { const o = []; for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + i * 2 * Math.PI / n; o.push([+(cx + Math.cos(a) * rx).toFixed(1), +(cy + Math.sin(a) * ry).toFixed(1)]); } return o; };
+  const DIA = {
+    prob: {
+      html: () => `<div class="dg"><div class="cells">${[1, 2, 3, 4, 5, 6, 7, 8].map(i => `<span class="cell">${A(i)}</span>`).join('')}</div>
+        <div class="dlab"><span>المطلوب (زوجي)<b class="n1">٠</b></span><span>الكل<b class="n2">٠</b></span><span class="l3">الاحتمال<b class="n3">؟</b></span></div></div>`,
+      async run(st, c) {
+        const cells = [...st.querySelectorAll('.cell')], n1 = st.querySelector('.n1'), n2 = st.querySelector('.n2'), n3 = st.querySelector('.n3');
+        cells.forEach((x, i) => anim(x, RISE, { duration: 260, delay: i * 40, fill: 'backwards' }));
+        await c.wait(520); let k = 0;
+        for (const i of [1, 3, 5, 7]) { cells[i].classList.add('on'); pulse(cells[i]); n1.textContent = A(++k); c.s('t' + k, 1, .45); await c.wait(300); }
+        c.val(1, '٤', n1); await c.wait(500);
+        for (let i = 0; i < 8; i++) { cells[i].classList.add('ring'); n2.textContent = A(i + 1); c.s('tap', up(i) * .8, .28); await c.wait(70); }
+        pulse(n2); c.val(2, '٨', n2); await c.wait(500);
+        n3.innerHTML = fx('٤/٨'); pulse(n3); c.s('hint', 1, .45); await c.wait(500);
+        n3.innerHTML = fx('١/٢'); pulse(n3); c.val(0, '١/٢', n3); await c.wait(300);
+      },
+    },
+    mean: {
+      html: () => `<div class="dg"><div class="bars">${[4, 6, 11].map(v => `<div class="bc"><span class="bv">${A(v)}</span><div class="bu">${'<i></i>'.repeat(v)}</div></div>`).join('')}<span class="ml"></span></div>
+        <div class="dlab"><span>المجموع<b class="n1">٠</b></span><span>العدد<b class="n2">٠</b></span><span class="l3">الوسط<b class="n3">؟</b></span></div></div>`,
+      async run(st, c) {
+        const V = [4, 6, 11], M = 7, bc = [...st.querySelectorAll('.bc')], cols = bc.map(b => b.querySelector('.bu')), bv = bc.map(b => b.querySelector('.bv')), ml = st.querySelector('.ml'), box = st.querySelector('.bars'), n1 = st.querySelector('.n1'), n2 = st.querySelector('.n2'), n3 = st.querySelector('.n3');
+        bc.forEach((b, i) => anim(b, [{ opacity: 0, transform: 'scaleY(.2)', transformOrigin: 'bottom' }, { opacity: 1, transform: 'none', transformOrigin: 'bottom' }], { duration: 380, delay: i * 90, easing: 'cubic-bezier(.3,1.3,.5,1)', fill: 'backwards' }));
+        await c.wait(560); let sum = 0;
+        for (let i = 0; i < 3; i++) { const u = [...cols[i].children]; u.forEach(x => x.classList.add('hl')); sum += V[i]; n1.textContent = A(sum); pulse(n1); pulse(bv[i]); c.s('t' + (i + 1), 1, .45); await c.wait(320); u.forEach(x => x.classList.remove('hl')); }
+        c.val(1, '٢١', n1); await c.wait(460);
+        n2.textContent = '٣'; bv.forEach((x, i) => pulse(x, i * 60)); pulse(n2); c.s('click', 1, .4); await c.wait(240);
+        c.val(2, '٣', n2); await c.wait(460);
+        const h = V.slice(); let m = 0;
+        for (;;) {
+          let hi = -1, lo = -1; h.forEach((v, i) => { if (v > M && (hi < 0 || v > h[hi])) hi = i; if (v < M && (lo < 0 || v < h[lo])) lo = i; });
+          if (hi < 0) break; h[hi]--; h[lo]++;
+          const src = cols[hi].lastElementChild, nb = document.createElement('i'); nb.className = 'mv'; cols[lo].appendChild(nb);
+          const a = src.getBoundingClientRect(); src.remove(); const b = nb.getBoundingClientRect(), k = scaleOf(nb), x = (a.left - b.left) / k, y = (a.top - b.top) / k;
+          anim(nb, [{ transform: `translate(${x}px, ${y}px)` }, { transform: `translate(${x / 2}px, ${y / 2 - 26}px)`, offset: .5 }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.4,0,.3,1)' });
+          bv[hi].textContent = A(h[hi]); bv[lo].textContent = A(h[lo]); c.s('drop', up(m) * .9, .35); m++;
+          await c.wait(250);
+        }
+        await c.wait(200);
+        const tp = cols[0].lastElementChild.getBoundingClientRect(), bx = box.getBoundingClientRect();
+        ml.style.top = ((tp.top - bx.top) / scaleOf(ml) - 2) + 'px'; show(ml);
+        anim(ml, [{ clipPath: 'inset(0 0 0 100%)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 420, easing: 'ease-out' });
+        cols.forEach(col => [...col.children].forEach(x => x.classList.add('lv')));
+        n3.textContent = '٧'; pulse(n3); c.s('on', 1.1, .45); await c.wait(300); c.val(0, '٧', n3); await c.wait(300);
+      },
+    },
+    hand: {
+      html: () => {
+        const P = pts(5, 150, 92, 104, 74), L = [];
+        for (let a = 0; a < 5; a++) for (let b = a + 1; b < 5; b++) L.push([a, b]);
+        return `<div class="dg"><svg class="d" width="300" height="184" viewBox="0 0 300 184">${L.map(([a, b]) => `<line data-a="${a}" x1="${P[a][0]}" y1="${P[a][1]}" x2="${P[b][0]}" y2="${P[b][1]}" stroke="#84D8FF" stroke-width="3" stroke-linecap="round" style="opacity:0"/>`).join('')}
+          ${P.map(q => `<circle cx="${q[0]}" cy="${q[1]}" r="10" fill="#fff" stroke="#4B4B4B" stroke-width="3" style="opacity:0"/>`).join('')}</svg>
+          <div class="dlab"><span>الأشخاص<b class="n1">٠</b></span><span>كل واحد يصافح<b class="n2">٠</b></span><span class="l3">المصافحات<b class="n3">٠</b></span></div></div>`;
+      },
+      async run(st, c) {
+        const C = [...st.querySelectorAll('circle')], L = [...st.querySelectorAll('line')], n1 = st.querySelector('.n1'), n2 = st.querySelector('.n2'), n3 = st.querySelector('.n3');
+        for (let i = 0; i < 5; i++) { pop(C[i], 260); n1.textContent = A(i + 1); c.s('tap', up(i), .3); await c.wait(130); }
+        pulse(n1); c.val(1, '٥', n1); await c.wait(440);
+        C[0].setAttribute('fill', '#1CB0F6'); C[0].setAttribute('stroke', '#1899D6');
+        const draw = (l, col) => { const n = l.getTotalLength(); l.setAttribute('stroke', col); l.style.opacity = 1; l.style.strokeDasharray = n; anim(l, [{ strokeDashoffset: n + 'px' }, { strokeDashoffset: '0px' }], { duration: 260, easing: 'ease-out' }); };
+        const first = L.filter(l => l.dataset.a === '0'), rest = L.filter(l => l.dataset.a !== '0');
+        let tot = 0;
+        for (let j = 0; j < first.length; j++) { draw(first[j], '#1899D6'); tot++; n2.textContent = A(j + 1); n3.textContent = A(tot); c.s('t' + Math.min(j + 1, 5), 1, .4); await c.wait(230); }
+        pulse(n2); c.val(2, '٤', n2); await c.wait(520);
+        for (let j = 0; j < rest.length; j++) { draw(rest[j], '#84D8FF'); tot++; n3.textContent = A(tot); c.s('tap', up(j + 4) * .8, .3); await c.wait(160); }
+        c.cap('٥ × ٤ = ٢٠، وكل خط انحسب مرتين ← ٢٠ ÷ ٢ = ١٠'); pulse(n3); c.s('hint', 1, .45);
+        await c.wait(380); c.val(0, '١٠', n3); await c.wait(300);
+      },
+    },
+    last: {
+      html: () => `<div class="dg dl"><div class="mul"><span class="band"></span>
+          <span></span><span></span><span class="d t">٣</span><span class="d u u1">٧</span>
+          <span class="op2">×</span><span></span><span class="d t">٢</span><span class="d u u2">٣</span>
+          <i class="bar2"></i>
+          <span></span><span class="d pr">٨</span><span class="d pr">٥</span><span class="d pr lastc">١</span></div>
+          <div class="step"><span class="s1">٧ × ٣ = ٢١</span><span class="s2">آخر رقم: ١</span></div></div>`,
+      async run(st, c) {
+        const mul = st.querySelector('.mul'), band = st.querySelector('.band'), u1 = st.querySelector('.u1'), u2 = st.querySelector('.u2'), pr = [...st.querySelectorAll('.pr')], last = st.querySelector('.lastc'), s1 = st.querySelector('.s1'), s2 = st.querySelector('.s2');
+        anim(mul, RISE, { duration: 320 }); await c.wait(500);
+        mul.classList.add('dim'); show(band); anim(band, [{ transform: 'scaleY(0)', transformOrigin: 'top' }, { transform: 'none', transformOrigin: 'top' }], { duration: 360, easing: 'ease-out' }); c.s('off', 1, .4);
+        c.cap('العشرات ما تأثّر على آخر رقم'); await c.wait(650);
+        pulse(u1); c.val(1, '٧', u1); await c.wait(400);
+        pulse(u2); c.val(2, '٣', u2); await c.wait(520);
+        pop(s1); c.s('t3', 1, .45); await c.wait(480);
+        pop(s2); c.s('t4', 1, .45); await c.wait(460);
+        c.cap('تأكيد: ٣٧ × ٢٣ = ٨٥١');
+        pr.forEach((x, i) => { show(x); anim(x, RISE, { duration: 280, delay: i * 90, fill: 'backwards' }); });
+        await c.wait(420); last.classList.add('on'); pulse(last); c.s('hint', 1, .45);
+        await c.wait(280); c.val(0, '١', last); await c.wait(300);
+      },
+    },
+    tri: {
+      html: () => {
+        let d = '';
+        for (let r = 0; r < 5; r++) for (let k = 0; k < 6; k++) { const blue = k <= r; d += `<circle class="${blue ? 'b' : 'o'}" data-r="${r}" cx="${232 - k * 30}" cy="${22 + r * 30}" r="10" fill="${blue ? '#1CB0F6' : '#FF9600'}" style="opacity:0"/>`; }
+        return `<div class="dg"><svg class="d" width="290" height="160" viewBox="0 0 290 160">${d}
+          <text class="lw" x="157" y="-8" font-size="15" fill="#A568CC" text-anchor="middle" style="opacity:0">٦</text>
+          <text class="lh" x="262" y="86" font-size="15" fill="#1899D6" text-anchor="middle" style="opacity:0">٥</text></svg>
+          <div class="dlab"><span>آخر عدد<b class="n1">٠</b></span><span>آخر عدد + ١ =<b class="n2">؟</b></span><span class="l3">المجموع<b class="n3">٠</b></span></div></div>`;
+      },
+      async run(st, c) {
+        const B = [...st.querySelectorAll('circle.b')], O = [...st.querySelectorAll('circle.o')], lw = st.querySelector('.lw'), lh = st.querySelector('.lh'), n1 = st.querySelector('.n1'), n2 = st.querySelector('.n2'), n3 = st.querySelector('.n3');
+        let sum = 0;
+        for (let r = 0; r < 5; r++) { B.filter(x => +x.dataset.r === r).forEach((x, i) => { show(x); anim(x, [{ opacity: 0 }, { opacity: 1 }], { duration: 240, delay: i * 40, fill: 'backwards' }); }); sum += r + 1; n1.textContent = A(r + 1); n3.textContent = A(sum); c.s('t' + (r + 1), 1, .42); await c.wait(320); }
+        pulse(n1); pop(lh); c.val(1, '٥', n1); await c.wait(500);
+        c.cap('نسخة ثانية مقلوبة تكمّل الدرج مستطيل');
+        O.forEach((x, i) => { show(x); anim(x, [{ opacity: 0, transform: 'translate(-40px, -40px)' }, { opacity: 1, transform: 'none' }], { duration: 360, delay: i * 25, easing: 'cubic-bezier(.3,1.2,.5,1)', fill: 'backwards' }); });
+        c.s('drop', 1, .4); await c.wait(680);
+        pop(lw); n2.textContent = '٦'; pulse(n2); c.s('click', 1.1, .4); c.val(2, '٦', lw); await c.wait(540);
+        c.cap('المستطيل ٥ × ٦ = ٣٠، والدرج نصّه'); n3.textContent = '٣٠'; pulse(n3); await c.wait(600);
+        O.forEach(x => { x.style.opacity = .15; anim(x, [{ opacity: 1 }, { opacity: .15 }], { duration: 420 }); });
+        n3.textContent = '١٥'; pulse(n3); c.s('hint', 1, .45); c.cap('٣٠ ÷ ٢ = ١٥');
+        await c.wait(360); c.val(0, '١٥', n3); await c.wait(300);
+      },
+    },
+    queue: {
+      html: () => `<div class="dg"><div style="width:280px"><div class="qhead"><span>الأمام</span><span>الخلف</span></div>
+          <div class="qrow" style="justify-content:space-between">${Array.from({ length: 7 }, (_, i) => `<span class="qd${i === 2 ? ' me' : ''}"><i class="f">${A(i + 1)}</i><i class="b">${A(7 - i)}</i></span>`).join('')}</div><div class="qends"></div></div>
+          <div class="dlab"><span>من الأمام<b class="n1">٠</b></span><span>من الخلف<b class="n2">٠</b></span><span class="l3">العدد<b class="n3">؟</b></span></div></div>`,
+      async run(st, c) {
+        const D = [...st.querySelectorAll('.qd')], me = D[2], n1 = st.querySelector('.n1'), n2 = st.querySelector('.n2'), n3 = st.querySelector('.n3');
+        D.forEach((x, i) => anim(x, POP, { duration: 260, delay: i * 50, fill: 'backwards' }));
+        await c.wait(540);
+        for (let i = 0; i < 3; i++) { pop(D[i].querySelector('.f'), 240); n1.textContent = A(i + 1); c.s('tap', up(i), .32); await c.wait(210); }
+        pulse(n1); c.val(1, '٣', me.querySelector('.f')); await c.wait(440);
+        for (let j = 0; j < 5; j++) { pop(D[6 - j].querySelector('.b'), 240); n2.textContent = A(j + 1); c.s('t' + (j + 1), 1, .4); await c.wait(210); }
+        pulse(n2); c.val(2, '٥', me.querySelector('.b')); await c.wait(500);
+        me.classList.add('twice'); anim(me, SHAKE, { duration: 400 }); n3.textContent = '٨'; pulse(n3); c.s('off', 1, .45); c.cap('٣ + ٥ = ٨، لكنك انحسبت مرتين');
+        await c.wait(880);
+        me.classList.remove('twice'); n3.textContent = '٧'; pulse(n3); c.s('hint', 1, .45); c.cap('٨ − ١ = ٧');
+        await c.wait(320); c.val(0, '٧', n3); await c.wait(300);
+      },
+    },
+    clock: {
+      html: () => {
+        const pt = (k, R) => { const a = k * Math.PI / 6; return [100 + R * Math.sin(a), 100 - R * Math.cos(a)].map(v => v.toFixed(1)); };
+        const H = Array.from({ length: 12 }, (_, i) => i + 1);
+        return `<div class="dg"><svg class="d" width="186" height="186" viewBox="0 0 200 200"><circle cx="100" cy="100" r="88" fill="#fff" stroke="#4B4B4B" stroke-width="4"/>
+          <path class="wg" d="" fill="rgba(28,176,246,.16)" stroke="#1CB0F6" stroke-width="2"/>
+          ${H.map(k => { const [a, b] = pt(k, 80), [x, y] = pt(k, 86); return `<line x1="${a}" y1="${b}" x2="${x}" y2="${y}" stroke="#4B4B4B" stroke-width="${k % 3 ? 2 : 4}" stroke-linecap="round"/>`; }).join('')}
+          ${H.map(k => { const [x, y] = pt(k, 64); return `<text class="hn" x="${x}" y="${y}" font-size="16" fill="#AFAFAF" text-anchor="middle" dominant-baseline="central">${A(k)}</text>`; }).join('')}
+          <g class="tags"></g><line x1="100" y1="100" x2="100" y2="28" stroke="#4B4B4B" stroke-width="5" stroke-linecap="round"/>
+          <line class="hh" x1="100" y1="100" x2="100" y2="52" stroke="#A568CC" stroke-width="7" stroke-linecap="round" style="transform-origin:100px 100px"/><circle cx="100" cy="100" r="6" fill="#4B4B4B"/></svg>
+          <div class="dlab"><span>الساعة<b class="n1">٠</b></span><span class="l3">الزاوية<b class="n3">٠°</b></span></div></div>`;
+      },
+      async run(st, c) {
+        const hh = st.querySelector('.hh'), wg = st.querySelector('.wg'), tags = st.querySelector('.tags'), hn = [...st.querySelectorAll('.hn')], n1 = st.querySelector('.n1'), n3 = st.querySelector('.n3');
+        const wd = Ag => { const R = 44, r = Ag * Math.PI / 180; return `M100 100 L100 ${100 - R} A${R} ${R} 0 ${Ag > 180 ? 1 : 0} 1 ${(100 + R * Math.sin(r)).toFixed(2)} ${(100 - R * Math.cos(r)).toFixed(2)}Z`; };
+        c.cap('٣٦٠° على ١٢ ساعة ← كل ساعة ٣٠°'); await c.wait(850);
+        for (let h = 1; h <= 3; h++) {
+          hh.style.transform = `rotate(${h * 30}deg)`; anim(hh, [{ transform: `rotate(${(h - 1) * 30}deg)` }, { transform: `rotate(${h * 30}deg)` }], { duration: 300, easing: 'cubic-bezier(.3,1.3,.5,1)' });
+          wg.setAttribute('d', wd(h * 30)); hn[h - 1].setAttribute('fill', '#1899D6');
+          const a = (h - .5) * 30 * Math.PI / 180, t = document.createElementNS(NS, 'text'); t.setAttribute('x', (100 + 30 * Math.sin(a)).toFixed(1)); t.setAttribute('y', (100 - 30 * Math.cos(a)).toFixed(1)); t.setAttribute('font-size', '10'); t.setAttribute('fill', '#1899D6'); t.setAttribute('text-anchor', 'middle'); t.setAttribute('dominant-baseline', 'central'); t.textContent = '٣٠'; tags.appendChild(t); pop(t, 260);
+          n1.textContent = A(h); n3.textContent = A(h * 30) + '°'; pulse(n3); c.s('t' + h, 1, .45); await c.wait(500);
+        }
+        pulse(n1); c.val(1, '٣', hn[2]); await c.wait(460);
+        c.cap('٣ × ٣٠ = ٩٠°'); pulse(n3); c.s('hint', 1, .45); await c.wait(320); c.val(0, '٩٠°', n3); await c.wait(300);
+      },
+    },
+    ways: {
+      html: () => {
+        const L1 = [60, 150, 240], lv = [];
+        L1.forEach((x, i) => [x - 24, x + 24].forEach((y, j) => lv.push([x, y, i, j])));
+        return `<div class="dg"><svg class="d" width="300" height="170" viewBox="0 0 300 170">
+          ${L1.map(x => `<line class="e1" x1="150" y1="18" x2="${x}" y2="78" stroke="#84D8FF" stroke-width="3" stroke-linecap="round" style="opacity:0"/>`).join('')}
+          ${lv.map(([x, y, i]) => `<line class="e2" data-i="${i}" x1="${x}" y1="78" x2="${y}" y2="140" stroke="#E2B6FF" stroke-width="3" stroke-linecap="round" style="opacity:0"/>`).join('')}
+          <circle cx="150" cy="18" r="8" fill="#4B4B4B"/>
+          ${L1.map((x, i) => `<g class="n1g" style="opacity:0"><circle cx="${x}" cy="78" r="13" fill="#1CB0F6"/><text x="${x}" y="79" font-size="12" fill="#fff" text-anchor="middle" dominant-baseline="central">ق${A(i + 1)}</text></g>`).join('')}
+          ${lv.map(([x, y, i, j]) => `<g class="n2g" data-i="${i}" style="opacity:0"><circle cx="${y}" cy="146" r="12" fill="#CE82FF"/><text x="${y}" y="147" font-size="11" fill="#fff" text-anchor="middle" dominant-baseline="central">ب${A(j + 1)}</text></g>`).join('')}</svg>
+          <div class="dlab"><span>القمصان<b class="n1">٠</b></span><span>لكل قميص<b class="n2">٠</b></span><span class="l3">الطرق<b class="n3">٠</b></span></div></div>`;
+      },
+      async run(st, c) {
+        const E1 = [...st.querySelectorAll('.e1')], E2 = [...st.querySelectorAll('.e2')], G1 = [...st.querySelectorAll('.n1g')], G2 = [...st.querySelectorAll('.n2g')], n1 = st.querySelector('.n1'), n2 = st.querySelector('.n2'), n3 = st.querySelector('.n3');
+        const draw = l => { const n = l.getTotalLength(); l.style.opacity = 1; l.style.strokeDasharray = n; anim(l, [{ strokeDashoffset: n + 'px' }, { strokeDashoffset: '0px' }], { duration: 260, easing: 'ease-out' }); };
+        await c.wait(300);
+        for (let i = 0; i < 3; i++) { draw(E1[i]); later(200, () => pop(G1[i], 260)); n1.textContent = A(i + 1); c.s('tap', up(i), .32); await c.wait(290); }
+        pulse(n1); c.val(1, '٣', n1); await c.wait(440);
+        let tot = 0;
+        for (let i = 0; i < 3; i++) {
+          const e = E2.filter(x => +x.dataset.i === i), g = G2.filter(x => +x.dataset.i === i);
+          for (let j = 0; j < 2; j++) { draw(e[j]); later(200, () => pop(g[j], 240)); tot++; n3.textContent = A(tot); if (i === 0) n2.textContent = A(j + 1); c.s('t' + Math.min(tot, 5), 1, .4); await c.wait(i ? 190 : 290); }
+          if (i === 0) { pulse(n2); c.val(2, '٢', n2); await c.wait(480); }
+        }
+        c.cap('كل قميص مع كل بنطلون ← ٣ × ٢ = ٦'); pulse(n3); c.s('hint', 1, .45); await c.wait(360); c.val(0, '٦', n3); await c.wait(300);
+      },
+    },
+  };
+
+  /* ───── exam-style questions (kept from round 3) ───── */
+  const four = (ans, ds) => {
+    const out = [ans]; ds.forEach(d => { if (out.length < 4 && d != null && !out.includes(d)) out.push(d); });
+    const base = +String(ans).replace(/[٠-٩]/g, x => AR.indexOf(x)).replace(/\D/g, '') || 1, suf = /°$/.test(ans) ? '°' : '';
+    for (let k = 1; out.length < 4 && k < 40; k++) { const n = base + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 2; if (n > 0) { const v = A(n) + suf; if (!out.includes(v)) out.push(v); } }
+    return shuffle(out);
+  };
+  const G = {
+    prob(i) {
+      const kind = ['dice', 'bag', 'range'][i % 3]; let q, w, n;
+      if (kind === 'dice') { const c = pick([['عدد أكبر من ٤', v => v > 4], ['عدد زوجي', v => v % 2 === 0], ['عدد أقل من ٣', v => v < 3], ['عدد أولي', v => [2, 3, 5].includes(v)]]); n = 6; w = [1, 2, 3, 4, 5, 6].filter(c[1]).length; q = `رُمي حجر نرد مرة واحدة. ما احتمال ظهور ${c[0]}؟`; }
+      else if (kind === 'bag') { const r = rnd(3, 7), b = rnd(3, 7), blue = Math.random() < .5; n = r + b; w = blue ? b : r; q = `صندوق فيه ${A(r)} كرات حمراء و${A(b)} كرات زرقاء، سُحبت منه كرة عشوائياً. ما احتمال أن تكون ${blue ? 'زرقاء' : 'حمراء'}؟`; }
+      else { const [N, m] = pick([[20, 4], [20, 5], [30, 5], [24, 6], [30, 6], [12, 3], [40, 8]]); n = N; w = N / m; q = `اختير عدد عشوائياً من الأعداد ١ إلى ${A(N)}. ما احتمال أن يكون من مضاعفات ${A(m)}؟`; }
+      const ans = fr(w, n);
+      return { q, ans, ch: four(ans, [n - w !== w ? fr(w, n - w) : null, fr(n - w, n), fr(1, n), fr(w + 1, n), fr(w, n + 1)]), sol: `المطلوب ${A(w)} من ${A(n)} ← ${A(w)}/${A(n)}${gcd(w, n) > 1 ? ' = ' + ans : ''}` };
+    },
+    mean(i) {
+      const kind = ['direct', 'sum', 'miss'][i % 3];
+      if (kind === 'direct') { const k = rnd(4, 5), m = rnd(8, 15), v = Array(k).fill(m); for (let g = 0; g < 16; g++) { const a = rnd(0, k - 1), b = rnd(0, k - 1), d = rnd(1, 4); if (a !== b && v[b] - d > 1) { v[a] += d; v[b] -= d; } } const s = k * m; return { q: `ما الوسط الحسابي للأعداد: ${v.map(A).join('، ')}؟`, ans: A(m), ch: four(A(m), [A(m + 1), A(m - 1), A(m + 2), A(Math.round(s / 2))]), sol: `المجموع ${A(s)} ÷ العدد ${A(k)} = ${A(m)}` }; }
+      if (kind === 'sum') { const k = rnd(4, 7), m = rnd(9, 18), s = k * m; return { q: `الوسط الحسابي لـ ${A(k)} أعداد يساوي ${A(m)}. ما مجموع هذه الأعداد؟`, ans: A(s), ch: four(A(s), [A(m + k), A(s - m), A(s + k), A(k * (m + 1))]), sol: `المجموع = الوسط × العدد = ${A(m)} × ${A(k)} = ${A(s)}` }; }
+      let m, a, b, c, d; do { m = rnd(9, 14); a = rnd(m - 5, m + 4); b = rnd(m - 5, m + 4); c = rnd(m - 5, m + 4); d = 4 * m - a - b - c; } while (d < 2 || [a, b, c].includes(d) || d === m);
+      return { q: `الوسط الحسابي لأربعة أعداد يساوي ${A(m)}. إذا كانت ثلاثة منها ${A(a)} و${A(b)} و${A(c)}، فما العدد الرابع؟`, ans: A(d), ch: four(A(d), [A(m), A(d + 2), A(Math.abs(d - 3)), A(Math.round((a + b + c) / 3))]), sol: `المجموع = ${A(m)} × ٤ = ${A(4 * m)} ← ${A(4 * m)} − ${A(a + b + c)} = ${A(d)}` };
+    },
+    hand(i) {
+      const kind = ['people', 'league', 'points'][i % 3]; let n, q;
+      if (kind === 'people') { n = rnd(6, 10); q = `في اجتماع حضره ${A(n)} أشخاص، صافح كل واحد منهم جميع الآخرين مرة واحدة. كم عدد المصافحات؟`; }
+      else if (kind === 'league') { n = rnd(10, 16); q = `دوري فيه ${A(n)} ${n === 10 ? 'فرق' : 'فريقاً'}، لعب كل فريق مع كل فريق آخر مباراة واحدة. كم عدد مباريات الدوري؟`; }
+      else { n = rnd(6, 10); q = `كم قطعة مستقيمة يمكن رسمها بين ${A(n)} نقاط، لا تقع أي ثلاث منها على استقامة واحدة؟`; }
+      const r = n * (n - 1) / 2;
+      return { q, ans: A(r), ch: four(A(r), [A(n * (n - 1)), A(n * (n + 1) / 2), A((n - 1) * (n - 1)), A(r - 1)]), sol: `${A(n)} × ${A(n - 1)} ÷ ٢ = ${A(r)}` };
+    },
+    last(i) {
+      const kind = ['two', 'three', 'triple'][i % 3], u = () => rnd(2, 9); let q, ua, ub, r, sol;
+      if (kind === 'triple') { const a = rnd(1, 9) * 10 + u(), b = rnd(1, 9) * 10 + u(), c = rnd(1, 9) * 10 + u(); ua = a % 10; ub = b % 10; const uc = c % 10; r = (ua * ub * uc) % 10; q = `ما رقم الآحاد في ناتج ${A(a)} × ${A(b)} × ${A(c)}؟`; sol = `${A(ua)} × ${A(ub)} = ${A(ua * ub)} ← ${A((ua * ub) % 10)} × ${A(uc)} = ${A((ua * ub) % 10 * uc)} ← آخر رقم ${A(r)}`; }
+      else { const big = kind === 'three', a = (big ? rnd(10, 99) * 10 : rnd(1, 9) * 10) + u(), b = (big ? rnd(10, 99) * 10 : rnd(1, 9) * 10) + u(); ua = a % 10; ub = b % 10; r = (ua * ub) % 10; q = `ما رقم الآحاد في ناتج ${A(a)} × ${A(b)}؟`; sol = `${A(ua)} × ${A(ub)} = ${A(ua * ub)} ← آخر رقم ${A(r)}`; }
+      return { q, ans: A(r), ch: four(A(r), [A((ua + ub) % 10), A(Math.floor(ua * ub / 10) % 10), A((r + 5) % 10), A((r + 2) % 10), A((r + 4) % 10)]), sol };
+    },
+    tri(i) {
+      const n = [30, 40, 50, 25, 60, 100][(i + rnd(0, 5)) % 6], r = n * (n + 1) / 2;
+      const q = [`ما مجموع الأعداد الصحيحة من ١ إلى ${A(n)}؟`, `١ + ٢ + ٣ + … + ${A(n)} = ؟`, `ما مجموع أول ${A(n)} عدداً صحيحاً موجباً؟`][i % 3];
+      return { q, ans: A(r), ch: four(A(r), [A(n * (n - 1) / 2), A(n * n / 2), A(n * (n + 1))]), sol: `${A(n)} × ${A(n + 1)} ÷ ٢ = ${A(r)}` };
+    },
+    queue(i) {
+      const f = rnd(5, 15), b = rnd(5, 15), n = f + b - 1;
+      const q = [`في طابور، ترتيب أحد الأشخاص ${A(f)} من الأمام و${A(b)} من الخلف. كم عدد الأشخاص في الطابور؟`, `ترتيب طالب في صفّه ${A(f)} من الأعلى و${A(b)} من الأسفل حسب الدرجات. كم عدد طلاب الصف؟`, `شقة في الطابق ${A(f)} من الأسفل، وهي نفسها في الطابق ${A(b)} من الأعلى. كم عدد طوابق المبنى؟`][i % 3];
+      return { q, ans: A(n), ch: four(A(n), [A(f + b), A(f + b - 2), A(f + b + 1)]), sol: `${A(f)} + ${A(b)} − ١ = ${A(n)}` };
+    },
+    clock(i) {
+      const h = [4, 2, 6, 1][(i + rnd(0, 3)) % 4], a = h * 30, dg = x => A(x) + '°';
+      const q = [`ما قياس الزاوية بين عقربي الساعة عند الساعة ${A(h)} تماماً؟`, `كم درجة الزاوية بين عقربي الساعة عندما تشير إلى ${A(h)}:٠٠؟`][i % 2];
+      return { q, ans: dg(a), ch: four(dg(a), [a + 30, h * 5 === a ? null : h * 5, 360 - a === a ? null : 360 - a, a - 30 > 0 ? a - 30 : null, h * 60 <= 360 ? h * 60 : null].filter(x => x != null && x > 0).map(dg)), sol: `${A(h)} × ٣٠ = ${dg(a)}` };
+    },
+    ways(i) {
+      const kind = ['clothes', 'roads', 'menu'][i % 3], a = rnd(3, 6), b = rnd(3, 5), r = a * b;
+      const q = kind === 'clothes' ? `عند شخص ${A(a)} قمصان و${A(b)} بناطيل. بكم طريقة يمكنه اختيار قميص وبنطال؟`
+        : kind === 'roads' ? `توجد ${A(a)} طرق من المدينة (أ) إلى (ب)، و${A(b)} طرق من (ب) إلى (ج). بكم طريقة يمكن الذهاب من (أ) إلى (ج) مروراً بـ(ب)؟`
+        : `مطعم يقدّم ${A(a)} أطباق رئيسية و${A(b)} أنواع من العصير. بكم طريقة يمكن اختيار طبق وعصير؟`;
+      return { q, ans: A(r), ch: four(A(r), [A(a + b), A(r + a), A((a - 1) * b), A(r - 1)]), sol: `${A(a)} × ${A(b)} = ${A(r)}` };
+    },
+  };
+
+  /* ───── the rules. tok: the formula (terms are {t}); say: فهيم's line; cue: when it shows up; trap: its trap;
+     words: blanks the words screen may swap; num: the step-by-step example (rows of tokens, {b} a blank; swap: blanks
+     of one row that may go in either order, a product's or a sum's) ───── */
+  const EMB = /[?&]embed\b/.test(location.search), RULE0 = (location.search.match(/[?&]rule=(\w+)/) || [])[1];
+  const FORCE = EMB ? (/[?&]mode=review\b/.test(location.search) ? 'due' : 'new') : null;
+  if (EMB) document.documentElement.classList.add('embed');
+  const B = v => ({ b: v });
+  const RULES = [
+    { key: 'prob', name: 'الاحتمال', tok: [{ t: 'الاحتمال' }, '=', { t: 'عدد المطلوب' }, '÷', { t: 'عدد كل النواتج' }],
+      say: '*الاحتمال*: عدد اللي تبيه، على عدد كل النواتج.', cue: 'تجيك لما تقرا «احتمال» أو «سُحب عشوائياً».', trap: 'تقسم على الكل، مو على الباقي.',
+      num: { ex: 'نرد واحد: احتمال عدد أكبر من ٤', rows: [['=', B('٢'), '÷', B('٦')], ['=', B('١/٣')]], more: ['٤', '٢/٤', '١/٢'] } },
+    { key: 'mean', name: 'الوسط الحسابي', tok: [{ t: 'الوسط' }, '=', { t: 'المجموع' }, '÷', { t: 'العدد' }],
+      say: '*الوسط*: اجمعها كلها، واقسم على عددها.', cue: 'تجيك لما تقرا «متوسط» أو «معدّل». ولو طلب المجموع: الوسط × العدد.', trap: 'تقسم على عدد الأعداد، مو على ٢.',
+      num: { ex: 'الوسط الحسابي للأعداد ٨، ١٢، ١٠', rows: [['=', B('٣٠'), '÷', B('٣')], ['=', B('١٠')]], more: ['٢', '١٥', '٢٨'] } },
+    { key: 'hand', name: 'المصافحات', tok: [{ t: 'المصافحات' }, '=', { t: 'العدد' }, '×', { t: '(العدد − ١)' }, '÷', '٢'], wswap: [1, 2],
+      say: '*المصافحات*: كل واحد يصافح الباقين، وكل مصافحة تنحسب مرة.', cue: 'تجيك لما تقرا «كل واحد مع كل واحد»: مصافحات، مباريات دوري، خطوط بين نقاط.', trap: 'لا تنسى ÷ ٢، كل مصافحة انحسبت مرتين.',
+      num: { ex: '٧ أشخاص، كل واحد يصافح الباقين', rows: [['=', B('٧'), '×', B('٦'), '÷', '٢'], ['=', B('٤٢'), '÷', '٢'], ['=', B('٢١')]], more: ['٨', '٤٩', '١٤'], swap: [[0, 0, 1]] } },
+    { key: 'last', name: 'رقم الآحاد في الضرب', tok: [{ t: 'آخر رقم في الناتج' }, '=', 'آخر رقم من', { t: 'آحاد' }, '×', { t: 'آحاد' }],
+      say: '*آخر رقم* في الضرب يجي من ضرب الآحاد بس.', cue: 'تجيك لما تقرا «رقم الآحاد» في ضرب أعداد كبيرة.', trap: 'تضرب الآحاد، ما تجمعها.',
+      num: { ex: 'رقم الآحاد في ٤٨ × ٢٧', rows: [[B('٨'), '×', B('٧'), '=', B('٥٦')], ['رقم الآحاد', '=', B('٦')]], more: ['٤', '٢', '٥'], swap: [[0, 0, 1]] } },
+    { key: 'tri', name: 'مجموع ١ إلى ن', tok: [{ t: 'المجموع' }, '=', { t: 'آخر عدد' }, '×', { t: '(آخر عدد + ١)' }, '÷', '٢'], wswap: [1, 2],
+      say: '*المجموع* من ١: اضرب آخر عدد في اللي بعده، وخذ النص.', cue: 'تجيك لما تقرا «من ١ إلى …» أو «أول … عدداً».', trap: 'آخر عدد + ١، مو − ١.',
+      num: { ex: '١ + ٢ + ٣ + … + ٢٠', rows: [['=', B('٢٠'), '×', B('٢١'), '÷', '٢'], ['=', B('٤٢٠'), '÷', '٢'], ['=', B('٢١٠')]], more: ['١٩', '٤٠٠', '٢٠٠'], swap: [[0, 0, 1]] } },
+    { key: 'queue', name: 'الترتيب من الطرفين', tok: [{ t: 'العدد' }, '=', { t: 'من الأمام' }, '+', { t: 'من الخلف' }, '−', '١'], wswap: [1, 2],
+      say: '*العدد*: اجمع ترتيبك من الجهتين، واطرح نفسك.', cue: 'تجيك لما تقرا «ترتيبه … من الأمام و… من الخلف»، أو الطوابق.', trap: 'لا تنسى − ١، أنت انحسبت مرتين.',
+      num: { ex: 'ترتيبك ٤ من الأمام و٩ من الخلف', rows: [['=', B('٤'), '+', B('٩'), '−', '١'], ['=', B('١٢')]], more: ['١٣', '٥', '١١'], swap: [[0, 0, 1]] } },
+    { key: 'clock', name: 'زاوية الساعة', tok: [{ t: 'الزاوية' }, '=', { t: 'الساعة' }, '×', '٣٠'],
+      say: 'على رأس الساعة: كل ساعة على الوجه *٣٠ درجة*.', cue: 'تجيك لما تكون الساعة تماماً، بدون دقائق.', trap: 'كل ساعة ٣٠°، مو ٦٠ ولا ٥.',
+      num: { ex: 'الزاوية عند الساعة ٥ تماماً', rows: [['=', B('٥'), '×', '٣٠'], ['=', B('١٥٠°')]], more: ['٦٠°', '٦', '١٢٠°'] } },
+    { key: 'ways', name: 'مبدأ العدّ', tok: [{ t: 'عدد الطرق' }, '=', { t: 'خيارات الأول' }, '×', { t: 'خيارات الثاني' }], wswap: [1, 2],
+      say: 'تختار من كل مجموعة؟ *اضرب* عدد الخيارات.', cue: 'تجيك لما تختار شي من كل مجموعة: لبس، طرق بين مدن، وجبة وعصير.', trap: 'تضرب، ما تجمع.',
+      num: { ex: '٤ قمصان و٣ بناطيل: كم طريقة؟', rows: [['=', B('٤'), '×', B('٣')], ['=', B('١٢')]], more: ['٧', '١٦', '٩'], swap: [[0, 0, 1]] } },
+  ];
+  const opHtml = x => OP.test(x) ? `<span class="op">${x === '÷' ? '<i class="dv"></i>' : x}</span>` : `<span class="pw">${x}</span>`;
+  const fcard = R => `<div class="fcard${R.key === 'prob' ? ' tall' : ''}"><div class="line">${R.tok.map((x, i) => typeof x === 'string' ? opHtml(x) : `<span class="k${R.tok.indexOf(x) === 0 ? ' ca' : ''}" data-s="${R.tok.filter(y => typeof y !== 'string').indexOf(x)}">${x.t}<i class="val"></i></span>`).join('')}</div></div>`;
+
+  /* ───── the rule, three ways (?card=1|2|3; 0 is the yellow card). Each draws the formula as the exam prints it —
+     a «÷» rule stacked over its bar — and takes the proof's numbers its own way: html, intro (a promise that ends
+     when the proof may start), review (hidden until the student taps), reset (before a proof replays), val ───── */
+  const CV = (location.search.match(/[?&]card=(1[01]|[0-9])\b/) || [])[1] || '0';
+  const HAND = (location.search.match(/[?&]hand=(marhey|ruqaa|baloo)\b/) || [])[1] || 'marhey';
+  document.documentElement.dataset.hand = HAND;
+  const parseF = R => {
+    const terms = R.tok.filter(x => typeof x !== 'string');
+    const it = R.tok.map(x => typeof x === 'string' ? { p: x } : { t: x.t, s: terms.indexOf(x) });
+    const rhs = it.slice(2), d = rhs.findIndex(x => x.p === '÷');
+    return { lhs: it[0], rhs, num: d < 0 ? null : rhs.slice(0, d), den: d < 0 ? null : rhs.slice(d + 1) };
+  };
+  const fRow = (xs, T) => xs.map(x => x.p != null ? (OP.test(x.p) ? T.op(x.p) : T.plain(x.p)) : T.term(x, false)).join('');
+  const fRhs = (F, T) => F.num ? T.frac(fRow(F.num, T), fRow(F.den, T)) : fRow(F.rhs, T);
+  const fAll = (F, T) => T.term(F.lhs, true) + T.op('=') + fRhs(F, T);
+  const rel = (el, host) => { const a = el.getBoundingClientRect(), b = host.getBoundingClientRect(); return { l: a.left - b.left, r: a.right - b.left, t: a.top - b.top, b: a.bottom - b.top, w: a.width, h: a.height }; };
+  const opTxt = p => p === '÷' ? '<i class="dv"></i>' : p;
+  const at$ = ms => new Promise(res => later(ms, res));
+  const tick = slot => snd('click', slot === 0 ? 1.26 : slot === 1 ? 1 : 1.12, .42);
+  const CARDS = {};
+
+  /* 0. the yellow card */
+  CARDS[0] = {
+    html: fcard,
+    intro(fc, R, t) {
+      const line = fc.querySelector('.line'), card = fc.querySelector('.fcard'); fit(line);
+      anim(card, RISE, { duration: 320, delay: t, fill: 'backwards' });
+      [...line.children].forEach((k, i) => { anim(k, POP, { duration: 280, delay: t + 200 + i * 80, easing: 'ease-out', fill: 'backwards' }); if (k.classList.contains('k')) later(t + 200 + i * 80, () => snd('click', up(i), .35)); });
+      return at$(t + 300 + line.children.length * 80 + 300);
+    },
+    review(fc, R, go) {
+      const card = fc.querySelector('.fcard'); fit(fc.querySelector('.line'));
+      card.style.filter = 'blur(9px)'; card.style.cursor = 'pointer';
+      card.onclick = () => { card.onclick = null; card.style.filter = ''; card.style.transition = 'filter .3s'; snd('on', 1, .45); go(); };
+    },
+    reset(fc) { fc.querySelectorAll('.val').forEach(v => { v.innerHTML = ''; show(v, false); }); fc.querySelectorAll('.k').forEach(k => k.style.boxShadow = ''); },
+    val(fc, slot, text, src) {
+      const k = fc.querySelector(`.k[data-s="${slot}"]`); if (!k) return;
+      const v = k.querySelector('.val'); v.innerHTML = fx(text); show(v); flyFrom(v, src, 520, 34);
+      later(440, () => { pulse(k); k.style.boxShadow = '0 0 0 3px rgba(255,200,0,.6)'; tick(slot); buzz(6); });
+    },
+  };
+
+  /* 1. the whiteboard. Words are written right to left at a hand's pace with the marker riding the edge of the ink;
+     the signs, the fraction bar and the circle round the answer are real strokes drawn in the order a hand draws them */
+  const BLUE_MK = '#2150C8', RED_MK = '#D7262B';
+  const OPS = { '=': ['M19 8.8L5 9.3', 'M19 15.1L5 15.5'], '×': ['M16.8 6.8L7.2 17.4', 'M7.4 7.2L16.8 17'], '+': ['M12.2 5L11.9 19', 'M19 12.2L5 11.8'], '−': ['M18.5 12L5.5 12.4'], '÷': ['M19 12L5 12.3', '.6.2', '.17.8'] };
+  const opSvg = p => `<svg viewBox="0 0 24 24">${(OPS[p] || []).map(d => d[0] === '.' ? `<circle class="dot" cx="12" cy="${d.slice(1)}" r="1.7"/>` : `<path d="${d}" pathLength="1"/>`).join('')}</svg>`;
+  const PEN = `<svg width="100" height="60" viewBox="0 0 100 60"><g transform="rotate(30)"><path d="M0 0L9 -3.4L9 3.4Z" style="fill:var(--mk)"/><rect x="8" y="-5" width="7" height="10" rx="1.5" fill="#B9C0C8"/><rect x="14" y="-7" width="62" height="14" rx="5" fill="url(#penb)"/><rect x="36" y="-7" width="17" height="14" style="fill:var(--mk)"/><rect x="73" y="-7.6" width="13" height="15.2" rx="4" style="fill:var(--mk)"/></g></svg>`;
+  const HFONT = CV === '1' ? 'Aref Ruqaa' : { marhey: 'Marhey', ruqaa: 'Aref Ruqaa', baloo: 'Baloo Bhaijaan 2' }[HAND];
+  const fontR = (CV === '1' || CV === '4') && document.fonts ? Promise.race([document.fonts.load(`700 31px "${HFONT}"`, 'الاحتمال عدد ٠١٢٣٤٥٦٧٨٩'), at$(2500)]).catch(() => {}) : Promise.resolve();
+  const BT = {
+    term: (x, l) => `<span class="k${l ? ' ca' : ''}" data-s="${x.s}"><span class="hw-t" data-w>${x.t}</span><i class="val hw-t"></i></span>`,
+    plain: p => `<span class="pl"><span class="hw-t" data-w>${fx(p)}</span></span>`,
+    op: p => `<span class="op1" data-w>${opSvg(p)}</span>`,
+    frac: (n, d) => `<span class="fq"><span class="fq-n">${n}</span><svg class="fq-bar" data-w><path pathLength="1"/></svg><span class="fq-d">${d}</span></span>`,
+  };
+  const svgPt = (el, x, y, host) => { const q = new DOMPoint(x, y).matrixTransform(el.getScreenCTM()), b = host.getBoundingClientRect(); return { x: q.x - b.left, y: q.y - b.top }; };
+  const tr = (x, y) => `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+  function bwMount(fc) {
+    fit(fc.querySelector('.wb-fx'), 16);
+    fc.querySelectorAll('svg.fq-bar').forEach(s => {
+      const w = s.getBoundingClientRect().width; s.setAttribute('viewBox', `0 0 ${w.toFixed(1)} 10`);
+      s.querySelector('path').setAttribute('d', `M${(w - 1).toFixed(1)} 5.2C${(w * .68).toFixed(1)} 3.9 ${(w * .34).toFixed(1)} 6.3 1 4.8`);
+    });
+    fc.querySelectorAll('[data-w]').forEach(el => {
+      if (el.classList.contains('hw-t')) el.style.clipPath = 'inset(0 0 0 100%)';
+      el.querySelectorAll('path').forEach(p => p.style.strokeDashoffset = 1);
+      el.querySelectorAll('circle').forEach(c => c.style.opacity = 0);
+    });
+    fc._p = { x: 0, y: 0, out: false };
+  }
+  /* plan the pen over a list of things to write, from t0 ms; returns when it is done */
+  function bwSched(fc, list, t0, color) {
+    const host = fc.querySelector('.wbw'), pen = host.querySelector('.pen');
+    let t = t0, p = fc._p;
+    const go = (kf, dur, ease = 'linear') => anim(pen, kf, { duration: dur, delay: t, easing: ease, fill: 'forwards' });
+    const move = (x, y, dur, lift) => { go([{ transform: tr(p.x, p.y) }, { transform: tr((p.x + x) / 2, Math.min(p.y, y) - lift), offset: .5 }, { transform: tr(x, y) }], dur, 'ease-in-out'); p = { x, y, out: true }; t += dur; };
+    const reveal = (el, kf, dur, ease = 'linear') => { anim(el, kf, { duration: dur, delay: t, easing: ease, fill: 'backwards' }); later(t, () => { el.style.clipPath = ''; el.style.strokeDashoffset = ''; el.style.opacity = ''; }); };
+    const stroke = (s, dur) => {
+      const L = s.getTotalLength(), N = Math.max(4, Math.round(L / 6)), pts = [];
+      for (let i = 0; i <= N; i++) { const q = s.getPointAtLength(L * i / N); pts.push(svgPt(s, q.x, q.y, host)); }
+      move(pts[0].x, pts[0].y, 90, 6);
+      reveal(s, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], dur);
+      go(pts.map(q => ({ transform: tr(q.x, q.y) })), dur);
+      p = { x: pts[N].x, y: pts[N].y, out: true };
+      later(t, () => scratch(dur)); t += dur + 30;
+    };
+    if (!p.out) {
+      const mk = host.querySelector(`.mk[data-mk="${color}"]`) || host.querySelector(color === RED_MK ? '.mk.r' : '.mk.b'), m = rel(mk, host), sx = m.l + 6, sy = m.t + 3;
+      later(t, () => { pen.style.setProperty('--mk', color); snd('tap', .7, .22); });
+      anim(mk, [{ opacity: 1 }, { opacity: 0 }], { duration: 120, delay: t, fill: 'forwards' });
+      anim(pen, [{ opacity: 0 }, { opacity: 1 }], { duration: 140, delay: t, fill: 'forwards' });
+      p = { x: sx, y: sy, out: true }; fc._mk = mk;
+      go([{ transform: tr(sx, sy) }, { transform: tr(sx, sy) }], 1); t += 40;
+    }
+    for (const el of list) {
+      if (el.classList.contains('op1')) {
+        for (const s of el.querySelectorAll('path, circle')) {
+          if (s.tagName === 'circle') { const c = svgPt(s, +s.getAttribute('cx'), +s.getAttribute('cy'), host); move(c.x, c.y, 80, 5); reveal(s, [{ opacity: 0 }, { opacity: 1 }], 40); t += 60; }
+          else stroke(s, 130);
+        }
+      } else if (el.tagName.toLowerCase() === 'svg' || el.tagName.toLowerCase() === 'path') {
+        const s = el.tagName.toLowerCase() === 'path' ? el : el.querySelector('path');
+        stroke(s, Math.max(220, s.getTotalLength() * 2.4));
+      } else {
+        const r = rel(el, host), pad = r.h * .2, x0 = r.r - pad * .5, x1 = r.l + pad * .5, w = Math.max(4, x0 - x1), y = r.t + r.h * .6, dur = Math.max(170, w * 3.3);
+        move(x0, y, 120, 9);
+        reveal(el, [{ clipPath: 'inset(0 0 0 100%)' }, { clipPath: 'inset(0 0 0 0%)' }], dur);
+        const N = Math.max(3, Math.round(w / 12)), kf = [];
+        for (let i = 0; i <= N; i++) kf.push({ transform: tr(x0 - w * i / N, y + (i && i < N ? (Math.random() - .5) * r.h * .28 : 0)) });
+        go(kf, dur); p = { x: x1, y, out: true };
+        later(t, () => scratch(dur)); t += dur + 40;
+      }
+    }
+    fc._p = p; return t;
+  }
+  function bwHome(fc, t) {
+    const host = fc.querySelector('.wbw'), pen = host.querySelector('.pen'), p = fc._p; if (!p || !p.out) return t;
+    const mk = fc._mk, m = rel(mk, host), x = m.l + 6, y = m.t + 3;
+    anim(pen, [{ transform: tr(p.x, p.y) }, { transform: tr((p.x + x) / 2, Math.min(p.y, y) - 24), offset: .5 }, { transform: tr(x, y) }], { duration: 340, delay: t, easing: 'ease-in-out', fill: 'forwards' });
+    anim(pen, [{ opacity: 1 }, { opacity: 0 }], { duration: 140, delay: t + 280, fill: 'forwards' });
+    anim(mk, [{ opacity: 0 }, { opacity: 1 }], { duration: 140, delay: t + 280, fill: 'forwards' });
+    later(t + 290, () => snd('tap', .6, .2));
+    fc._p = { x, y, out: false }; return t + 420;
+  }
+  function bwCircle(fc, v, t, color = RED_MK) {
+    const host = fc.querySelector('.wbw'), r = rel(v, host);
+    const cx = (r.l + r.r) / 2, cy = (r.t + r.b) / 2, rx = r.w / 2 + 9, ry = r.h / 2 + 2, N = 44, a0 = -2.5, pts = [];
+    for (let i = 0; i <= N; i++) { const a = a0 - (i / N) * (Math.PI * 2 + .6), k = 1 + .04 * Math.sin(i * .9) + .08 * i / N; pts.push((cx + Math.cos(a) * rx * k).toFixed(1) + ' ' + (cy + Math.sin(a) * ry * k).toFixed(1)); }
+    const svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'wb-circ'); svg.setAttribute('width', host.clientWidth); svg.setAttribute('height', host.clientHeight);
+    const path = document.createElementNS(NS, 'path'); path.setAttribute('d', 'M' + pts.join('L')); path.setAttribute('pathLength', '1'); path.style.strokeDashoffset = 1;
+    svg.appendChild(path); host.insertBefore(svg, host.querySelector('.pen'));
+    return bwSched(fc, [path], t, color);
+  }
+  CARDS[1] = {
+    html(R) {
+      return `<div class="wbw"><div class="wb"><div class="wb-s"><svg class="wb-ghost" viewBox="0 0 300 120" preserveAspectRatio="none"><path d="M30 34c30-14 52 16 84 0s50-10 72 4"/><path d="M150 92c26-8 60 8 96-4"/><path d="M40 98c14-6 30 4 46-2"/></svg>
+        <div class="wb-fx">${fAll(parseF(R), BT)}</div><span class="wb-hint">اضغط وأكتبها لك</span></div></div>
+        <div class="wb-tray"><i class="mk b"></i><i class="mk r"></i></div><div class="pen">${PEN}</div></div>`;
+    },
+    intro(fc, R, t) {
+      const t0 = performance.now();
+      return fontR.then(() => new Promise(res => {
+        if (!fc.isConnected) return;
+        bwMount(fc);
+        const end = bwHome(fc, bwSched(fc, [...fc.querySelectorAll('[data-w]')], Math.max(0, t - (performance.now() - t0)), BLUE_MK) + 80);
+        later(end, res);
+      }));
+    },
+    review(fc, R, go) {
+      fontR.then(() => {
+        if (!fc.isConnected) return;
+        bwMount(fc);
+        const list = [...fc.querySelectorAll('[data-w]')], hint = fc.querySelector('.wb-hint'), wb = fc.querySelector('.wb');
+        const t = bwHome(fc, bwSched(fc, list.slice(0, 2), 900, BLUE_MK) + 80);
+        later(t, () => { show(hint); anim(hint, RISE, { duration: 260 }); });
+        wb.style.cursor = 'pointer';
+        wb.onclick = () => { wb.onclick = null; wb.style.cursor = ''; hint.style.opacity = 0; snd('on', 1, .4); later(bwHome(fc, bwSched(fc, list.slice(2), 0, BLUE_MK) + 80), go); };
+      });
+    },
+    reset(fc) {
+      fc.querySelectorAll('.val').forEach(v => { v.innerHTML = ''; });
+      fc.querySelectorAll('.wb-circ').forEach(c => c.remove());
+      if (fc._p && fc._p.out) bwHome(fc, 0);
+    },
+    val(fc, slot, text, src) {
+      const k = fc.querySelector(`.k[data-s="${slot}"]`); if (!k || !fc._p) return;
+      const v = k.querySelector('.val'); v.innerHTML = fx(text); v.style.clipPath = 'inset(0 0 0 100%)';
+      if (src) pulse(src);
+      let t = bwSched(fc, [v], 0, RED_MK);
+      later(Math.max(0, t - 100), () => { tick(slot); buzz(6); });
+      if (slot === 0) { t = bwCircle(fc, v, t + 80); later(t - 120, () => snd('hint', 1, .35)); bwHome(fc, t + 160); }
+    },
+  };
+
+  /* 2. the line of working */
+  const SLC = s => 'c' + Math.min(s, 2);
+  const ST1 = { term: x => `<span class="k ${SLC(x.s)}" data-s="${x.s}">${x.t}</span>`, plain: p => `<span class="pl">${fx(p)}</span>`, op: p => `<span class="op">${opTxt(p)}</span>`,
+    frac: (n, d) => `<span class="fq"><span class="fq-n">${n}</span><i class="fq-bar"></i><span class="fq-d">${d}</span></span>` };
+  const ST2 = { ...ST1, term: x => `<b class="sv ${SLC(x.s)}" data-s="${x.s}"></b>` };
+  CARDS[2] = {
+    html(R) {
+      const F = parseF(R);
+      return `<div class="sl"><div class="sl-g">
+        <span class="sl-l">${ST1.term(F.lhs)}</span><span class="sl-e r1">=</span><span class="sl-r r1">${fRhs(F, ST1)}</span>
+        <span></span><span class="sl-e r2">=</span><span class="sl-r r2">${fRhs(F, ST2)}</span>
+        <span></span><span class="sl-e r3">=</span><span class="sl-r r3"><b class="sv res" data-s="0"></b></span></div></div>`;
+    },
+    marks(fc, h0) {
+      const ks = [...fc.querySelectorAll('.sl-l .k, .r1 .k')];
+      ks.forEach((k, i) => { anim(k, [{ backgroundSize: '0% .44em' }, { backgroundSize: '100% .44em' }], { duration: 320, delay: h0 + i * 170, easing: 'cubic-bezier(.3,0,.2,1)', fill: 'backwards' }); later(h0 + i * 170, () => snd('click', up(i * 2), .32)); });
+      return h0 + ks.length * 170 + 300;
+    },
+    intro(fc, R, t) {
+      fit(fc.querySelector('.sl-g'), 14);
+      const bits = [...fc.querySelectorAll('.sl-l .k, .sl-e.r1, .r1 .k, .r1 .op, .r1 .pl')];
+      bits.forEach((b, i) => anim(b, [{ opacity: 0, transform: 'translateY(.45em)', filter: 'blur(5px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], { duration: 460, delay: t + i * 70, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'backwards' }));
+      const bar = fc.querySelector('.r1 .fq-bar'); if (bar) anim(bar, [{ transform: 'scaleX(0)' }, { transform: 'none' }], { duration: 420, delay: t + 180, easing: 'cubic-bezier(.3,0,.2,1)', fill: 'backwards' });
+      return at$(this.marks(fc, t + bits.length * 70 + 260));
+    },
+    review(fc, R, go) {
+      fit(fc.querySelector('.sl-g'), 14);
+      const r = fc.querySelector('.sl-r.r1'); r.style.filter = 'blur(9px)'; fc.style.cursor = 'pointer';
+      fc.onclick = () => { fc.onclick = null; fc.style.cursor = ''; r.style.transition = 'filter .3s'; r.style.filter = ''; snd('on', 1, .45); later(this.marks(fc, 300) - 300, go); };
+    },
+    reset(fc) { fc.querySelectorAll('.r2, .r3').forEach(e => e.style.opacity = ''); fc.querySelectorAll('.sv').forEach(s => s.innerHTML = ''); },
+    val(fc, slot, text, src) {
+      const sv = slot === 0 ? fc.querySelector('.r3 .sv') : fc.querySelector(`.r2 .sv[data-s="${slot}"]`); if (!sv) return;
+      fc.querySelectorAll(slot === 0 ? '.r3' : '.r2').forEach(e => { if (e.style.opacity !== '1') { e.style.opacity = 1; anim(e, [{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'ease-out' }); } });
+      sv.innerHTML = fx(text); flyFrom(sv, src, 520, 34);
+      const k = fc.querySelector(`.k[data-s="${slot}"]`);
+      later(440, () => { if (slot === 0) { jump(sv); snd('on', 1, .42); } else { pulse(sv); tick(slot); } if (k) pulse(k); buzz(6); });
+    },
+  };
+
+  /* 3. the flashcard: it is dealt on the name's side and turns over to the rule; a review waits on the name */
+  const FT = { term: (x, l) => `<span class="k${l ? ' ca' : ''}" data-s="${x.s}"><span class="kt">${x.t}</span><i class="val"></i></span>`, plain: ST1.plain, op: ST1.op, frac: ST1.frac };
+  function c3Tilt(fc) {
+    const w = fc.querySelector('.c3w'), t = fc.querySelector('.c3t');
+    w.onpointermove = e => { const r = w.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5; t.style.transform = `rotateX(${(-y * 10).toFixed(2)}deg) rotateY(${(x * 12).toFixed(2)}deg)`; };
+    w.onpointerleave = () => { t.style.transform = ''; };
+  }
+  CARDS[3] = {
+    html(R) {
+      const F = parseF(R);
+      return `<div class="c3w"><div class="c3t"><div class="c3">
+        <div class="c3-f c3-front${F.num ? ' has-fq' : ''}"><span class="c3-clip"><i class="c3-sheen"></i></span><div class="c3-fx">${fAll(F, FT)}</div></div>
+        <div class="c3-f c3-back"><span class="c3-clip"></span><span class="c3-e">قانون</span><span class="c3-q">${R.name}</span><span class="c3-h">قلها في بالك، واقلبها</span></div></div></div></div>`;
+    },
+    flip(fc, tf) {
+      const c3 = fc.querySelector('.c3');
+      anim(c3, [{ transform: 'rotateY(180deg)' }, { transform: 'rotateY(-14deg)', offset: .72 }, { transform: 'rotateY(4deg)', offset: .88 }, { transform: 'rotateY(0deg)' }], { duration: 760, delay: tf, easing: 'cubic-bezier(.45,0,.25,1)', fill: 'backwards' });
+      later(tf, () => { c3.style.transform = ''; snd('on', 1, .45); });
+      later(tf + 420, () => buzz(10));
+      anim(fc.querySelector('.c3-sheen'), [{ transform: 'translateX(0) skewX(-14deg)' }, { transform: 'translateX(-430%) skewX(-14deg)' }], { duration: 950, delay: tf + 600, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'backwards' });
+      const ks = [...fc.querySelectorAll('.c3-front .k:not(.ca) .kt')], h0 = tf + 760;
+      ks.forEach((k, i) => { anim(k, [{ opacity: .35, transform: 'none' }, { opacity: 1, transform: 'scale(1.12)', offset: .45 }, { opacity: 1, transform: 'none' }], { duration: 340, delay: h0 + i * 150, easing: 'ease-out', fill: 'backwards' }); later(h0 + i * 150, () => snd('click', up(i * 2), .32)); });
+      return at$(h0 + ks.length * 150 + 300);
+    },
+    intro(fc, R, t) {
+      fit(fc.querySelector('.c3-fx'), 13); c3Tilt(fc);
+      fc.querySelector('.c3').style.transform = 'rotateY(180deg)';
+      anim(fc.querySelector('.c3w'), [{ opacity: 0, transform: 'translateY(46px) rotate(-6deg) scale(.88)' }, { opacity: 1, transform: 'translateY(-5px) rotate(1.2deg) scale(1.02)', offset: .7 }, { opacity: 1, transform: 'none' }], { duration: 560, delay: t, easing: 'cubic-bezier(.3,.8,.4,1)', fill: 'backwards' });
+      later(t + 380, () => { snd('drop', 1, .45); buzz(8); });
+      return this.flip(fc, t + 1050);
+    },
+    review(fc, R, go) {
+      fit(fc.querySelector('.c3-fx'), 13); c3Tilt(fc);
+      const w = fc.querySelector('.c3w'); fc.querySelector('.c3').style.transform = 'rotateY(180deg)'; fc.querySelector('.c3-back').classList.add('rv'); w.style.cursor = 'pointer';
+      w.onclick = () => { w.onclick = null; w.style.cursor = ''; this.flip(fc, 0).then(go); };
+    },
+    reset(fc) { fc.querySelectorAll('.val').forEach(v => { v.innerHTML = ''; show(v, false); }); },
+    val(fc, slot, text, src) {
+      const k = fc.querySelector(`.k[data-s="${slot}"]`); if (!k) return;
+      const v = k.querySelector('.val'); v.innerHTML = fx(text); show(v); flyFrom(v, src, 520, 34);
+      later(440, () => { pulse(k); tick(slot); buzz(6); if (slot === 0) anim(fc.querySelector('.c3w'), [{ transform: 'none' }, { transform: 'scale(1.03)', offset: .35 }, { transform: 'none' }], { duration: 380, easing: 'ease-out' }); });
+    },
+  };
+
+  /* 4. the whiteboard, drawn as Duolingo draws things: a blue frame on its lip, a gold tag, a magnet, three flat
+     markers on the tray. Blue writes the rule, red the numbers, and green circles the answer */
+  const DB = '#2B70C9', DR = '#EA2B2B', DG = '#58CC02';
+  const mkSvg = c => `<svg viewBox="0 0 60 14"><path d="M.5 7L7 3.6V10.4Z" fill="${c}"/><rect x="6" y="3.4" width="5" height="7.2" rx="1" fill="#AFAFAF"/><rect x="10" y="1" width="38" height="12" rx="4" fill="#F7F7F7"/><rect x="10" y="8" width="38" height="5" rx="2.5" fill="#E5E5E5"/><rect x="24" y="1" width="9" height="12" fill="${c}"/><rect x="46" y="0" width="13.5" height="14" rx="4.5" fill="${c}"/><rect x="48.5" y="2.4" width="7" height="2.2" rx="1.1" fill="#fff" opacity=".5"/></svg>`;
+  const PEN_D = `<svg width="100" height="60" viewBox="0 0 100 60"><g transform="rotate(30)"><path d="M0 0L9 -3.6L9 3.6Z" style="fill:var(--mk)"/><rect x="8" y="-5" width="7" height="10" rx="1.5" fill="#AFAFAF"/><rect x="14" y="-7" width="62" height="14" rx="5" fill="#F7F7F7" stroke="#DADADA" stroke-width="1.2"/><rect x="14.6" y="0" width="60.8" height="6.4" rx="4.4" fill="#E5E5E5"/><rect x="36" y="-7" width="17" height="14" style="fill:var(--mk)"/><rect x="73" y="-7.6" width="13" height="15.2" rx="4.5" style="fill:var(--mk)"/><rect x="75.5" y="-5.2" width="7" height="2.4" rx="1.2" fill="#fff" opacity=".5"/><rect x="18" y="-4.6" width="14" height="2.4" rx="1.2" fill="#fff"/></g></svg>`;
+  const SPARK = '<path d="M12 0C13 7 17 11 24 12C17 13 13 17 12 24C11 17 7 13 0 12C7 11 11 7 12 0Z"/>';
+  const BOUNCE = [{ transform: 'none' }, { transform: 'scale(1.025, .975)', offset: .3 }, { transform: 'scale(.99, 1.015)', offset: .65 }, { transform: 'none' }];
+  function dbSpark(fc, v) {
+    const host = fc.querySelector('.wbw'), r = rel(v, host);
+    [[r.r + 10, r.t - 4, 1, 0], [r.l - 12, r.b + 2, .75, 90]].forEach(([x, y, k, d]) => {
+      const sp = document.createElementNS(NS, 'svg'); sp.setAttribute('viewBox', '0 0 24 24'); sp.setAttribute('class', 'db-sp'); sp.innerHTML = SPARK;
+      sp.style.left = x + 'px'; sp.style.top = y + 'px'; host.appendChild(sp);
+      const a = anim(sp, [{ transform: `scale(0) rotate(0deg)` }, { transform: `scale(${1.15 * k}) rotate(45deg)`, offset: .45 }, { transform: `scale(0) rotate(90deg)` }], { duration: 620, delay: d, easing: 'ease-out', fill: 'both' });
+      later(d + 640, () => sp.remove());
+    });
+  }
+  function dbArrive(fc, t) {
+    const wb = fc.querySelector('.wb'), tag = fc.querySelector('.db-tag'), mag = fc.querySelector('.db-mag'), tray = fc.querySelector('.wb-tray');
+    anim(wb, [{ opacity: 0, transform: 'translateY(16px) scale(.94)' }, { opacity: 1, transform: 'translateY(-3px) scale(1.01)', offset: .6 }, { opacity: 1, transform: 'none' }], { duration: 420, delay: t, easing: 'cubic-bezier(.3,0,.2,1)', fill: 'backwards' });
+    anim(tray, RISE, { duration: 300, delay: t + 120, fill: 'backwards' });
+    fc.querySelectorAll('.mk').forEach((m, i) => anim(m, [{ opacity: 0, transform: 'translateY(-14px)' }, { opacity: 1, transform: 'translateY(2px) scaleY(.85)', offset: .7 }, { opacity: 1, transform: 'none' }], { duration: 300, delay: t + 220 + i * 70, easing: 'ease-in', fill: 'backwards' }));
+    anim(tag, [{ opacity: 0, transform: 'translateY(-18px) rotate(-14deg)' }, { opacity: 1, transform: 'translateY(2px) rotate(-2deg) scale(1.06, .92)', offset: .65 }, { opacity: 1, transform: 'rotate(-4deg)' }], { duration: 420, delay: t + 300, easing: 'ease-in', fill: 'backwards' });
+    anim(mag, [{ opacity: 0, transform: 'scale(0)' }, { opacity: 1, transform: 'scale(1.2)', offset: .6 }, { opacity: 1, transform: 'none' }], { duration: 300, delay: t + 380, fill: 'backwards' });
+    later(t + 430, () => snd('click', 1.12, .3)); later(t + 520, () => snd('click', 1.26, .26));
+    return t + 640;
+  }
+  CARDS[4] = {
+    html(R) {
+      return `<div class="wbw duo"><div class="wb"><span class="db-tag">القانون</span><i class="db-mag"></i><div class="wb-s">
+        <div class="wb-fx">${fAll(parseF(R), BT)}</div><span class="wb-hint">اضغط وأكتبها لك</span></div></div>
+        <div class="wb-tray"><i class="mk b" data-mk="${DB}">${mkSvg(DB)}</i><i class="mk r" data-mk="${DR}">${mkSvg(DR)}</i><i class="mk g" data-mk="${DG}">${mkSvg(DG)}</i></div><div class="pen">${PEN_D}</div></div>`;
+    },
+    intro(fc, R, t) {
+      const t0 = performance.now(), w = fc.querySelector('.wbw'); w.style.visibility = 'hidden';
+      return fontR.then(() => new Promise(res => {
+        if (!fc.isConnected) return;
+        w.style.visibility = ''; bwMount(fc);
+        const a = dbArrive(fc, Math.max(0, t - 420 - (performance.now() - t0)));
+        const end = bwHome(fc, bwSched(fc, [...fc.querySelectorAll('[data-w]')], a + 60, DB) + 80);
+        later(end, res);
+      }));
+    },
+    review(fc, R, go) {
+      const w = fc.querySelector('.wbw'); w.style.visibility = 'hidden';
+      fontR.then(() => {
+        if (!fc.isConnected) return;
+        w.style.visibility = ''; bwMount(fc);
+        const list = [...fc.querySelectorAll('[data-w]')], hint = fc.querySelector('.wb-hint'), wb = fc.querySelector('.wb');
+        const t = bwHome(fc, bwSched(fc, list.slice(0, 2), dbArrive(fc, 300) + 200, DB) + 80);
+        later(t, () => { show(hint); anim(hint, POP, { duration: 300 }); });
+        wb.style.cursor = 'pointer';
+        wb.onclick = () => { wb.onclick = null; wb.style.cursor = ''; hint.style.opacity = 0; snd('on', 1, .4); anim(wb, BOUNCE, { duration: 300 }); later(bwHome(fc, bwSched(fc, list.slice(2), 0, DB) + 80), go); };
+      });
+    },
+    reset(fc) {
+      fc.querySelectorAll('.val').forEach(v => { v.innerHTML = ''; });
+      fc.querySelectorAll('.wb-circ, .db-sp').forEach(c => c.remove());
+      if (fc._p && fc._p.out) bwHome(fc, 0);
+    },
+    val(fc, slot, text, src) {
+      const k = fc.querySelector(`.k[data-s="${slot}"]`); if (!k || !fc._p) return;
+      const v = k.querySelector('.val'); v.innerHTML = fx(text); v.style.clipPath = 'inset(0 0 0 100%)';
+      if (src) pulse(src);
+      let t = bwSched(fc, [v], 0, DR);
+      later(Math.max(0, t - 100), () => { tick(slot); buzz(6); });
+      if (slot === 0) {
+        t = bwCircle(fc, v, bwHome(fc, t + 60), DG);
+        later(t - 60, () => { snd('hint', 1, .35); buzz(10); dbSpark(fc, v); anim(fc.querySelector('.wb'), BOUNCE, { duration: 360 }); });
+        bwHome(fc, t + 160);
+      }
+    },
+  };
+
+  /* 5. Brilliant's guided glow */
+  const BGT = {
+    term: (x, l) => `<span class="k${l ? ' ca' : ''}" data-s="${x.s}"><span class="bg-t">${x.t}</span><i class="bg-v${l ? ' ans' : ''}"></i></span>`,
+    plain: p => `<span class="pl">${fx(p)}</span>`, op: p => `<span class="op">${opTxt(p)}</span>`,
+    frac: (n, d) => `<span class="fq"><span class="fq-n">${n}</span><i class="fq-bar"></i><span class="fq-d">${d}</span></span>` };
+  const EZ = 'cubic-bezier(.16,1,.3,1)', EZ2 = 'cubic-bezier(.22,1,.36,1)';
+  const mid = (r) => ({ x: (r.l + r.r) / 2, y: (r.t + r.b) / 2 });
+  function bgDot(host) { const d = document.createElement('i'); d.className = 'bg-dot'; host.appendChild(d); return d; }
+  function bgLines(host) {
+    let svg = host.querySelector('svg.bg-ln');
+    if (!svg) { svg = document.createElementNS(NS, 'svg'); svg.setAttribute('class', 'bg-ln'); host.appendChild(svg); }
+    svg.setAttribute('width', host.clientWidth); svg.setAttribute('height', host.clientHeight); return svg;
+  }
+  /* the light reads the rule: it lands on each term in turn, which glows as it passes */
+  function bgRead(fc, t) {
+    const host = fc.querySelector('.bg5'), ks = [...fc.querySelectorAll('.k')].sort((a, b) => +a.dataset.s - +b.dataset.s);
+    if (!ks.length) return t;
+    const d = bgDot(host), pts = ks.map(k => mid(rel(k.querySelector('.bg-t'), host)));
+    const kf = [{ transform: tr(pts[0].x, pts[0].y) + ' scale(0)', opacity: 0, offset: 0 }];
+    const per = 520, total = per * ks.length + 300;
+    pts.forEach((p, i) => { kf.push({ transform: tr(p.x, p.y) + ' scale(1)', opacity: 1, offset: (i * per + 220) / total }); kf.push({ transform: tr(p.x, p.y) + ' scale(1)', opacity: 1, offset: (i * per + 420) / total }); });
+    kf.push({ transform: tr(pts[pts.length - 1].x, pts[pts.length - 1].y) + ' scale(0)', opacity: 0, offset: 1 });
+    anim(d, kf, { duration: total, delay: t, easing: 'linear', fill: 'both' });
+    ks.forEach((k, i) => {
+      later(t + i * per + 220, () => { k.classList.add('glow'); snd('click', up(i * 2), .3); });
+      later(t + i * per + 700, () => k.classList.remove('glow'));
+    });
+    later(t + total + 40, () => d.remove());
+    return t + total;
+  }
+  CARDS[5] = {
+    html(R) { return `<div class="bg5"><div class="bg-card"><div class="bg-fx">${fAll(parseF(R), BGT)}</div><span class="bg-hint">اضغط تشوف القانون</span></div></div>`; },
+    intro(fc, R, t) {
+      const card = fc.querySelector('.bg-card'), line = fc.querySelector('.bg-fx'); fit(line, 15);
+      anim(card, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 380, delay: Math.max(0, t - 300), easing: EZ, fill: 'backwards' });
+      const kids = [...line.querySelectorAll('.k, .op, .pl, .fq-bar')];
+      kids.forEach((el, i) => anim(el, [{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 260, delay: t - 120 + i * 55, easing: EZ2, fill: 'backwards' }));
+      return at$(bgRead(fc, t + kids.length * 55 + 200) + 150);
+    },
+    review(fc, R, go) {
+      const w = fc.querySelector('.bg5'), card = fc.querySelector('.bg-card'), hint = fc.querySelector('.bg-hint'); fit(fc.querySelector('.bg-fx'), 15);
+      w.classList.add('hide'); fc.querySelector('.k.ca').classList.add('keep');
+      fc.querySelector('.k.ca .bg-t').style.cssText = 'background:#F2F2F2;color:#1F1F1F;box-shadow:none';
+      anim(card, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 380, delay: 500, easing: EZ, fill: 'backwards' });
+      later(1300, () => { show(hint); anim(hint, [{ opacity: 0 }, { opacity: 1 }], { duration: 300 }); });
+      card.style.cursor = 'pointer';
+      card.onclick = () => {
+        card.onclick = null; card.style.cursor = ''; hint.style.opacity = 0; snd('on', 1, .4);
+        const ks = [...fc.querySelectorAll('.k:not(.ca) .bg-t')];
+        ks.forEach((b, i) => later(i * 160, () => { b.style.transition = 'none'; w.classList.remove('hide'); anim(b, [{ background: '#C9D5FF' }, { background: '#ECF0FF' }], { duration: 700, easing: 'ease-out' }); snd('click', up(i * 2), .3); }));
+        later(ks.length * 160, () => { w.classList.remove('hide'); fc.querySelector('.k.ca .bg-t').style.cssText = ''; });
+        later(bgRead(fc, ks.length * 160 + 200) + 150, go);
+      };
+    },
+    reset(fc) {
+      fc.querySelectorAll('.bg-v').forEach(v => { v.innerHTML = ''; v.style.opacity = 0; });
+      fc.querySelectorAll('.bg-ln, .bg-dot').forEach(x => x.remove());
+      fc.querySelectorAll('.k.glow').forEach(k => k.classList.remove('glow'));
+    },
+    val(fc, slot, text, src) {
+      const host = fc.querySelector('.bg5'), k = fc.querySelector(`.k[data-s="${slot}"]`); if (!k) return;
+      const chip = k.querySelector('.bg-t'), v = k.querySelector('.bg-v'), up1 = !!k.closest('.fq-n');
+      v.innerHTML = fx(text);
+      const c = rel(chip, host), vr = rel(v, host), cx = (c.l + c.r) / 2;
+      const s0 = src ? (() => { const a = src.getBoundingClientRect(), b = host.getBoundingClientRect(); return { x: a.left + a.width / 2 - b.left, y: a.top + a.height / 2 - b.top }; })() : { x: cx, y: c.t - 40 };
+      const cm = mid(c), y0 = up1 ? c.t - 3 : c.b + 3, y1 = up1 ? vr.b + 4 : vr.t - 4;
+      const d = bgDot(host);
+      if (src) pulse(src);
+      const lift = Math.min(s0.y, cm.y) - 50;
+      anim(d, [{ transform: tr(s0.x, s0.y) + ' scale(.2)', opacity: 0 }, { transform: tr(s0.x, s0.y) + ' scale(1)', opacity: 1, offset: .12 },
+        { transform: tr((s0.x + cm.x) / 2, lift) + ' scale(1)', opacity: 1, offset: .55 }, { transform: tr(cm.x, cm.y) + ' scale(1)', opacity: 1, offset: .82 },
+        { transform: tr(cm.x, cm.y) + ' scale(1.15)', opacity: 1, offset: .9 }, { transform: tr(cx, y0) + ' scale(.8)', opacity: 1, offset: 1 }], { duration: 640, easing: 'cubic-bezier(.45,0,.3,1)', fill: 'forwards' });
+      later(520, () => { k.classList.add('glow'); snd('click', slot === 0 ? 1.26 : 1, .32); });
+      /* the line it draws on its way down, ending in an arrow */
+      const svg = bgLines(host), ln = document.createElementNS(NS, 'path'), tip = document.createElementNS(NS, 'path');
+      ln.setAttribute('d', `M${cx.toFixed(1)} ${y0.toFixed(1)}L${cx.toFixed(1)} ${(y1 + (up1 ? 5 : -5)).toFixed(1)}`); ln.setAttribute('pathLength', '1'); ln.style.strokeDasharray = '1 2'; ln.style.strokeDashoffset = 1;
+      const dir = up1 ? -1 : 1, ty = y1;
+      tip.setAttribute('d', `M${(cx - 5).toFixed(1)} ${(ty - dir * 6).toFixed(1)}L${(cx + 5).toFixed(1)} ${(ty - dir * 6).toFixed(1)}L${cx.toFixed(1)} ${ty.toFixed(1)}Z`); tip.setAttribute('class', 'tip'); tip.style.opacity = 0;
+      svg.appendChild(ln); svg.appendChild(tip);
+      anim(d, [{ transform: tr(cx, y0) + ' scale(.8)', opacity: 1 }, { transform: tr(cx, y1) + ' scale(.7)', opacity: 1, offset: .85 }, { transform: tr(cx, y1) + ' scale(0)', opacity: 0 }], { duration: 300, delay: 660, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+      anim(ln, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 250, delay: 660, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+      anim(tip, [{ opacity: 0, transform: `translateY(${-dir * 4}px)` }, { opacity: 1, transform: 'none' }], { duration: 140, delay: 880, fill: 'forwards' });
+      later(980, () => {
+        d.remove(); v.style.opacity = 1;
+        anim(v, [{ transform: 'translateX(-50%) scale(.6)', opacity: 0 }, { transform: 'translateX(-50%) scale(1.08)', opacity: 1, offset: .65 }, { transform: 'translateX(-50%)', opacity: 1 }], { duration: 300, easing: 'ease-out' });
+        tick(slot); buzz(6);
+      });
+      later(2100, () => { k.classList.remove('glow'); svg.classList.add('dim'); });
+      if (slot === 0) later(1150, () => {
+        const card = fc.querySelector('.bg-card');
+        anim(card, [{ boxShadow: '0 0 0 0 rgba(94,217,129,0)', borderColor: '#E5E5E5' }, { boxShadow: '0 0 20px 8px rgba(94,217,129,.3)', borderColor: '#5ED981', offset: .3 }, { boxShadow: '0 0 0 0 rgba(94,217,129,0)', borderColor: '#E5E5E5' }], { duration: 1000, easing: 'ease-out' });
+        snd('hint', 1, .35);
+      });
+    },
+  };
+
+  /* 6. Duolingo's grammar card */
+  const GST = {
+    term: (x, l) => `<span class="k${l ? ' ca' : ''}" data-s="${x.s}"><span class="gs-t">${x.t}</span><i class="gs-v"></i></span>`,
+    plain: p => `<span class="pl">${fx(p)}</span>`, op: p => `<span class="op">${opTxt(p)}</span>`,
+    frac: (n, d) => `<span class="fq"><span class="fq-n">${n}</span><i class="fq-bar"></i><span class="fq-d">${d}</span></span>` };
+  const GS_NEW = '<svg viewBox="0 0 24 24"><rect x="5" y="3" width="11" height="15" rx="2.5" fill="#fff" opacity=".55" transform="rotate(-12 10 10)"/><rect x="8" y="5" width="11" height="15" rx="2.5" fill="#fff"/><path d="M11 11h5M11 14h3.5" stroke="#CE82FF" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  const GS_REV = '<svg viewBox="0 0 24 24"><path d="M18.5 9A7 7 0 0 0 6 7.5M5.5 15A7 7 0 0 0 18 16.5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><path d="M5 3.5v4.5h4.5M19 20.5V16h-4.5" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function gsArrive(fc, t, rv) {
+    const tag = fc.querySelector('.gs-tag'), disc = tag.querySelector('.gs-disc'), lab = tag.querySelector('b'), deck = fc.querySelector('.gs-deck');
+    anim(disc, [{ transform: 'scale(0)' }, { transform: 'scale(1.25)', offset: .55 }, { transform: 'scale(.92)', offset: .8 }, { transform: 'none' }], { duration: 450, delay: t, easing: 'ease-out', fill: 'backwards' });
+    anim(lab, [{ opacity: 0, transform: 'scale(1.6)' }, { opacity: 1, transform: 'none', offset: .3 }, { opacity: 1, transform: 'none' }], { duration: 340, delay: t + 260, easing: 'ease-in', fill: 'backwards' });
+    later(t + 30, () => snd(rv ? 'on' : 'hint', 1, .3));
+    anim(deck, [{ opacity: 0, transform: 'translateY(18px) scale(.9)' }, { opacity: 1, transform: 'none' }], { duration: 500, delay: t + 120, easing: 'cubic-bezier(.2,.9,.3,1.15)', fill: 'backwards' });
+    [fc.querySelector('.gs-p2'), fc.querySelector('.gs-p1')].forEach((p, i) => anim(p, [{ transform: 'translateY(16px)' }, { transform: 'none' }], { duration: 360, delay: t + 380 + i * 80, easing: 'cubic-bezier(.2,.9,.3,1.2)', fill: 'backwards' }));
+    return t + 560;
+  }
+  function gsInk(fc, t) {
+    const line = fc.querySelector('.gs-fx'), kids = [...line.querySelectorAll('.k, .op, .pl, .fq-bar')];
+    kids.forEach((el, i) => anim(el, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 300, delay: t + i * 90, easing: 'cubic-bezier(.2,.9,.3,1.2)', fill: 'backwards' }));
+    let n = 0;
+    kids.forEach((el, i) => { if (el.matches('.k:not(.ca)')) { const u = el.querySelector('.gs-t'), j = n++; anim(u, [{ '--ul': '0%' }, { '--ul': '100%' }], { duration: 240, delay: t + i * 90 + 200, easing: 'ease-out', fill: 'backwards' }); later(t + i * 90 + 200, () => snd('click', up(j * 2), .3)); } });
+    return t + kids.length * 90 + 300;
+  }
+  if (window.CSS && CSS.registerProperty) try { CSS.registerProperty({ name: '--ul', syntax: '<percentage>', inherits: false, initialValue: '100%' }); } catch (e) {}
+  CARDS[6] = {
+    html(R) {
+      return `<div class="gs6"><div class="gs-tag"><i class="gs-disc">${GS_NEW}</i><b>قانون جديد</b></div>
+        <div class="gs-deck"><i class="gs-p2"></i><i class="gs-p1"></i><div class="gs-card"><div class="gs-fx">${fAll(parseF(R), GST)}</div><span class="gs-hint">اضغط وشوف القانون</span><i class="gs-band"></i></div></div></div>`;
+    },
+    intro(fc, R, t) {
+      fit(fc.querySelector('.gs-fx'), 16);
+      const a = gsArrive(fc, Math.max(0, t - 400), false);
+      return at$(gsInk(fc, a) + 100);
+    },
+    review(fc, R, go) {
+      const w = fc.querySelector('.gs6'), card = fc.querySelector('.gs-card'), hint = fc.querySelector('.gs-hint'), tag = fc.querySelector('.gs-tag');
+      fit(fc.querySelector('.gs-fx'), 16);
+      tag.classList.add('rv'); tag.querySelector('.gs-disc').innerHTML = GS_REV; tag.querySelector('b').textContent = 'مراجعة';
+      w.classList.add('hide');
+      const a = gsArrive(fc, 300, true);
+      later(a + 300, () => { show(hint); anim(hint, [{ opacity: 0 }, { opacity: 1 }], { duration: 300 }); });
+      card.style.cursor = 'pointer';
+      card.onclick = () => {
+        card.onclick = null; card.style.cursor = ''; hint.style.opacity = 0; w.classList.remove('hide');
+        anim(card, BOUNCE, { duration: 300 });
+        later(gsInk(fc, 0) + 100, go);
+      };
+    },
+    reset(fc) {
+      fc.querySelectorAll('.gs-v').forEach(v => { v.innerHTML = ''; v.style.opacity = 0; });
+      const c = fc.querySelector('.gs-card'); if (c) c.classList.remove('ok');
+    },
+    val(fc, slot, text, src) {
+      const k = fc.querySelector(`.k[data-s="${slot}"]`); if (!k) return;
+      const v = k.querySelector('.gs-v'); v.innerHTML = fx(text) + `<span class="gs-gh">${fx(text)}</span>`; v.style.opacity = 1;
+      const a = src && src.getBoundingClientRect(), bb = v.getBoundingClientRect(), K = scaleOf(v);
+      if (src) pulse(src);
+      if (a) { const dx = ((a.left + a.width / 2) - (bb.left + bb.width / 2)) / K, dy = ((a.top + a.height / 2) - (bb.top + bb.height / 2)) / K;
+        anim(v, [{ transform: `translateX(-50%) translate(${dx}px, ${dy}px) scale(.8)` }, { transform: `translateX(-50%) translate(${dx * .5}px, ${dy * .5 - 30}px) scale(1.12)`, offset: .5 }, { transform: 'translateX(-50%)' }], { duration: 520, easing: 'cubic-bezier(.4,0,.3,1)' }); }
+      else anim(v, [{ opacity: 0, transform: 'translateX(-50%) translateY(12px)' }, { opacity: 1, transform: 'translateX(-50%)' }], { duration: 300, easing: 'cubic-bezier(.2,.9,.3,1.3)' });
+      later(520, () => {
+        anim(v, [{ transform: 'translateX(-50%) scale(1.12, .88)' }, { transform: 'translateX(-50%) scale(.96, 1.04)', offset: .5 }, { transform: 'translateX(-50%)' }], { duration: 300, easing: 'ease-out' });
+        anim(v.querySelector('.gs-gh'), [{ opacity: 1, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(1.35)' }], { duration: 660, easing: 'cubic-bezier(.42,0,.58,1)', fill: 'forwards' });
+        tick(slot); buzz(6);
+      });
+      if (slot === 0) later(900, () => {
+        const card = fc.querySelector('.gs-card'), band = card.querySelector('.gs-band');
+        card.classList.add('ok'); snd('right', 1, .4); buzz(12);
+        anim(band, [{ transform: 'translateX(-140%) skewX(-22deg)' }, { transform: 'translateX(420%) skewX(-22deg)' }], { duration: 520, delay: 80, easing: 'cubic-bezier(.4,0,.2,1)' });
+        anim(fc.querySelector('.gs-deck'), [{ transform: 'none' }, { transform: 'translateY(-6px) scale(1.02)', offset: .35 }, { transform: 'translateY(1px) scale(.995)', offset: .7 }, { transform: 'none' }], { duration: 480, easing: 'ease-out' });
+      });
+    },
+  };
+
+  /* ───── five more (?card=7…11; the user, 2026-10-29, on 4–6: «i dont like them create 5 more versions with new ideas») ───── */
+  const cen = (el, host) => { const a = el.getBoundingClientRect(), b = host.getBoundingClientRect(); return { x: a.left + a.width / 2 - b.left, y: a.top + a.height / 2 - b.top }; };
+  const FRAC = (n, d) => `<span class="fq"><span class="fq-n">${n}</span><i class="fq-bar"></i><span class="fq-d">${d}</span></span>`;
+  const decoy = s => String(s).replace(/[٠-٩]/g, () => AR[rnd(0, 9)]);
+  const stopA = (...els) => els.forEach(e => e && e.getAnimations().forEach(a => a.cancel()));
+  const fadeHint = (h, d) => later(d, () => { show(h); anim(h, [{ opacity: 0 }, { opacity: 1 }], { duration: 300 }); });
+  function onTap(card, hint, f) { card.style.cursor = 'pointer'; card.onclick = () => { card.onclick = null; card.style.cursor = ''; hint.style.opacity = 0; f(); }; }
+  /* a flap landing: a short noise click */
+  function clack(vol = .09, f = 2400) {
+    if (!ctx || ctx.state !== 'running') return;
+    const sr = ctx.sampleRate, n = Math.floor(sr * .03), b = ctx.createBuffer(1, n, sr), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (sr * .0035));
+    const s = ctx.createBufferSource(), bp = ctx.createBiquadFilter(), g = ctx.createGain();
+    s.buffer = b; bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = 1.3; g.gain.value = vol;
+    s.connect(bp); bp.connect(g); g.connect(ctx.destination); s.start();
+  }
+  /* a neon tube striking: a low buzz that flickers with the light */
+  function hum(ms, vol = .025) {
+    if (!ctx || ctx.state !== 'running') return;
+    const t = ctx.currentTime, s = ms / 1000, o1 = ctx.createOscillator(), o2 = ctx.createOscillator(), lp = ctx.createBiquadFilter(), g = ctx.createGain();
+    o1.type = 'sawtooth'; o1.frequency.value = 120; o2.type = 'square'; o2.frequency.value = 240.7; lp.type = 'lowpass'; lp.frequency.value = 1400;
+    g.gain.setValueAtTime(0, t);
+    [[.08, 1], [.16, .1], [.28, .9], [.36, .3], [.5, 1], [.62, .7], [.85, .6], [1, 0]].forEach(([p, a]) => g.gain.linearRampToValueAtTime(vol * a, t + p * s));
+    o1.connect(lp); o2.connect(lp); lp.connect(g); g.connect(ctx.destination);
+    o1.start(t); o2.start(t); o1.stop(t + s + .05); o2.stop(t + s + .05);
+  }
+
+  /* 7. the split-flap board: every word clatters through letters until it lands */
+  const LET = 'ابتثجحخدذرزسشصضطعغفقكلمنهوي';
+  const gib = w => w.split(' ').map(p => Array.from({ length: Math.max(1, p.length - rnd(0, 1)) }, () => LET[rnd(0, LET.length - 1)]).join('')).join(' ');
+  const flHtml = (s, shown = '') => `<span class="fl-s">${fx(s)}</span><span class="fl-h t"><span class="fl-x">${shown}</span></span><span class="fl-h b"><span class="fl-x">${shown}</span></span>`;
+  function flip(fl, seq, t0, step = 72, vol = .08) {
+    const d = Math.min(step * 1.7, 150);
+    seq.forEach((s, i) => later(t0 + i * step, () => {
+      if (!fl.isConnected) return;
+      const T = fl.querySelector('.fl-h.t:not(.fa) .fl-x'), Bt = fl.querySelector('.fl-h.b:not(.fb) .fl-x'), old = T.innerHTML;
+      T.innerHTML = s;
+      const a = document.createElement('span'), b = document.createElement('span');
+      a.className = 'fl-h t fa'; a.innerHTML = `<span class="fl-x">${old}</span>`; b.className = 'fl-h b fb'; b.innerHTML = `<span class="fl-x">${s}</span>`;
+      fl.append(a, b);
+      a.animate([{ transform: 'rotateX(0)', filter: 'brightness(1)' }, { transform: 'rotateX(-90deg)', filter: 'brightness(.5)' }], { duration: d / 2, easing: 'ease-in', fill: 'forwards' });
+      b.animate([{ transform: 'rotateX(90deg)', filter: 'brightness(1.6)' }, { transform: 'rotateX(0)', filter: 'brightness(1)' }], { duration: d / 2, delay: d / 2, easing: 'ease-out', fill: 'backwards' })
+        .onfinish = () => { Bt.innerHTML = s; a.remove(); b.remove(); };
+      clack(vol * (i === seq.length - 1 ? 1.5 : 1), 1900 + Math.random() * 1300);
+    }));
+    return t0 + seq.length * step + d;
+  }
+  const sfIn = (f, t, n = rnd(4, 6)) => { const w = f.querySelector('.fl-s'); return flip(f, [...Array(n)].map(() => gib(w.textContent)).concat(w.innerHTML), t); };
+  const sfStatus = (fc, word, t) => { const f = fc.querySelector('.fl.st'); f.querySelector('.fl-s').textContent = word; return flip(f, [gib(word), gib(word), word], t, 80, .05); };
+  const SFT = {
+    term: (x, l) => `<span class="k${l ? ' ca' : ''}" data-s="${x.s}"><span class="fl">${flHtml(x.t)}</span><span class="sf-v"><span class="fl">${flHtml('')}</span></span></span>`,
+    plain: p => `<span class="pl">${fx(p)}</span>`, op: p => `<span class="op">${opTxt(p)}</span>`, frac: FRAC };
+  const sfArrive = (fc, t) => anim(fc.querySelector('.sf-board'), [{ opacity: 0, transform: 'translateY(10px) scale(.98)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: t, easing: EZ, fill: 'backwards' });
+  CARDS[7] = {
+    html(R) {
+      return `<div class="sf7"><div class="sf-board"><div class="sf-head"><span class="sf-lab">القانون</span><span class="sf-st"><span class="fl st">${flHtml('مراجعة')}</span><i class="sf-lamp"></i></span></div>
+        <div class="sf-fx">${fAll(parseF(R), SFT)}</div><span class="sf-hint">اضغط تشوف القانون</span></div></div>`;
+    },
+    intro(fc, R, t) {
+      const line = fc.querySelector('.sf-fx'); fit(line, 14);
+      const t0 = Math.max(0, t - 500); sfArrive(fc, t0); fc._st = 'جديد';
+      line.querySelectorAll('.op, .pl, .fq-bar').forEach((e, i) => anim(e, [{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: t0 + 300 + i * 60, fill: 'backwards' }));
+      let end = sfStatus(fc, 'جديد', t0 + 220);
+      [...line.querySelectorAll('.k > .fl')].forEach((f, i) => { end = Math.max(end, sfIn(f, t0 + 400 + i * 170)); });
+      return at$(end + 150);
+    },
+    review(fc, R, go) {
+      const board = fc.querySelector('.sf-board'), hint = fc.querySelector('.sf-hint'); fit(fc.querySelector('.sf-fx'), 14);
+      sfArrive(fc, 300); fc._st = 'مراجعة'; sfStatus(fc, 'مراجعة', 520); sfIn(fc.querySelector('.k.ca > .fl'), 700, 3);
+      fadeHint(hint, 1500);
+      onTap(board, hint, () => {
+        snd('on', 1, .35); let end = 0;
+        [...fc.querySelectorAll('.k:not(.ca) > .fl')].forEach((f, i) => { end = Math.max(end, sfIn(f, i * 150)); });
+        later(end + 150, go);
+      });
+    },
+    reset(fc) {
+      fc.querySelectorAll('.sf-v').forEach(v => { v.className = 'sf-v'; v.firstElementChild.innerHTML = flHtml(''); });
+      const b = fc.querySelector('.sf-board'); if (b && b.classList.contains('ok')) { b.classList.remove('ok'); const f = fc.querySelector('.fl.st'); f.innerHTML = flHtml(fc._st, fc._st); }
+    },
+    val(fc, slot, text, src) {
+      const k = fc.querySelector(`.k[data-s="${slot}"]`); if (!k) return;
+      const v = k.querySelector('.sf-v'), f = v.firstElementChild, fin = fx(text);
+      if (src) pulse(src);
+      f.querySelector('.fl-s').innerHTML = fin; v.classList.add('on'); if (slot === 0) v.classList.add('ans');
+      anim(f, [{ opacity: 0, transform: 'translateY(-6px) scale(.8)' }, { opacity: 1, transform: 'none' }], { duration: 220, easing: 'ease-out' });
+      const end = flip(f, [0, 1, 2, 3, 4].map(() => fx(decoy(text))).concat(fin), 90, 70, .09);
+      later(end - 120, () => { tick(slot); buzz(6); pulse(k.querySelector(':scope > .fl')); });
+      if (slot === 0) later(end, () => { fc.querySelector('.sf-board').classList.add('ok'); sfStatus(fc, 'محلول', 0); snd('hint', 1, .35); });
+    },
+  };
+
+  /* 8. coloured tiles: each part of the rule its own colour, its number rolling in like a counter */
+  const BN_C = [['#16181D', '#16181D'], ['#2F6BFF', '#EAF0FF'], ['#E8650A', '#FFF0E2'], ['#7A4DFF', '#F1EBFF']];
+  const BNT = {
+    term: (x, l) => `<span class="k${l ? ' ca' : ''}" data-s="${x.s}"><span class="bt" style="--c:${BN_C[x.s][0]};--cb:${BN_C[x.s][1]}"><span class="bt-w">${x.t}</span><span class="bt-n"><span class="bt-r"><b class="q">؟</b></span></span><i class="bt-band"></i></span></span>`,
+    plain: p => `<span class="pl${/^[٠-٩]+$/.test(p) ? ' nm' : ''}">${fx(p)}</span>`, op: p => `<span class="op">${opTxt(p)}</span>`, frac: FRAC };
+  const SPRING = [{ opacity: 0, transform: 'translateY(12px) scale(.86)' }, { opacity: 1, transform: 'translateY(-2px) scale(1.03)', offset: .6 }, { opacity: 1, transform: 'none' }];
+  function bnIn(fc, t, only) {
+    const kids = [...fc.querySelectorAll('.bn-fx .k, .bn-fx .op, .bn-fx .pl, .bn-fx .fq-bar')].filter(e => !only || only(e));
+    kids.forEach((e, i) => { anim(e, SPRING, { duration: 460, delay: t + i * 80, easing: 'ease-out', fill: 'backwards' }); if (e.classList.contains('k')) later(t + i * 80, () => snd('click', up(i), .3)); });
+    return t + kids.length * 80 + 400;
+  }
+  function bnRoll(k, text, t0) {
+    const r = k.querySelector('.bt-r'), seq = [0, 1, 2, 3].map(() => decoy(text)).concat(text), n = seq.length - 1, ms = 720;
+    later(t0, () => {
+      r.innerHTML = seq.map(s => `<b>${fx(s)}</b>`).join('');
+      anim(r, [{ transform: 'translateY(0)' }, { transform: `translateY(${-(n + .14) * 1.5}em)`, offset: .78 }, { transform: `translateY(${-n * 1.5}em)` }], { duration: ms, easing: 'cubic-bezier(.3,.6,.25,1)', fill: 'forwards' });
+      [.08, .2, .36, .56].forEach((f, i) => later(ms * f, () => snd('tap', 1.35 + i * .09, .16)));
+    });
+    return t0 + ms * .78;
+  }
+  CARDS[8] = {
+    html(R) { return `<div class="bn8"><div class="bn-panel"><span class="bn-lab">القانون</span><div class="bn-fx">${fAll(parseF(R), BNT)}</div><span class="bn-hint">اضغط تشوف القانون</span></div></div>`; },
+    intro(fc, R, t) {
+      fit(fc.querySelector('.bn-fx'), 14);
+      const t0 = Math.max(0, t - 450);
+      anim(fc.querySelector('.bn-panel'), [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 380, delay: t0, easing: EZ, fill: 'backwards' });
+      return at$(bnIn(fc, t0 + 200));
+    },
+    review(fc, R, go) {
+      const w = fc.querySelector('.bn8'), panel = fc.querySelector('.bn-panel'), hint = fc.querySelector('.bn-hint'); fit(fc.querySelector('.bn-fx'), 14);
+      w.classList.add('hide');
+      anim(panel, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 380, delay: 300, easing: EZ, fill: 'backwards' });
+      bnIn(fc, 450);
+      fadeHint(hint, 1400);
+      onTap(panel, hint, () => {
+        w.classList.remove('hide'); snd('on', 1, .35);
+        const ts = [...fc.querySelectorAll('.k:not(.ca) .bt')];
+        ts.forEach((b, i) => { anim(b, [{ transform: 'scale(.92)' }, { transform: 'scale(1.05)', offset: .5 }, { transform: 'none' }], { duration: 360, delay: i * 120, easing: 'ease-out' }); anim(b.querySelector('.bt-w'), [{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: i * 120, fill: 'backwards' }); later(i * 120, () => snd('click', up(i * 2), .3)); });
+        later(ts.length * 120 + 350, go);
+      });
+    },
+    reset(fc) {
+      fc.querySelectorAll('.bt-r').forEach(r => { stopA(r); r.innerHTML = '<b class="q">؟</b>'; });
+      fc.querySelectorAll('.bt.ok').forEach(b => b.classList.remove('ok'));
+      fc.querySelectorAll('.bn-dot').forEach(d => d.remove());
+    },
+    val(fc, slot, text, src) {
+      const host = fc.querySelector('.bn8'), k = fc.querySelector(`.k[data-s="${slot}"]`); if (!k) return;
+      const bt = k.querySelector('.bt'), c = cen(k.querySelector('.bt-n'), host);
+      let t = 0;
+      if (src) {
+        pulse(src);
+        const s = cen(src, host), d = document.createElement('i'), lift = Math.min(s.y, c.y) - 46;
+        d.className = 'bn-dot'; d.style.background = slot === 0 ? '#16A34A' : BN_C[slot][0]; host.appendChild(d);
+        anim(d, [{ transform: tr(s.x, s.y) + ' scale(.3)', opacity: 0 }, { transform: tr(s.x, s.y) + ' scale(1)', opacity: 1, offset: .15 }, { transform: tr((s.x + c.x) / 2, lift), opacity: 1, offset: .55 }, { transform: tr(c.x, c.y) + ' scale(.6)', opacity: 1 }], { duration: 520, easing: 'cubic-bezier(.45,0,.3,1)', fill: 'forwards' });
+        later(520, () => d.remove()); t = 470;
+      }
+      later(t, () => anim(bt, [{ transform: 'none' }, { transform: 'scale(1.06, .94)', offset: .3 }, { transform: 'scale(.98, 1.03)', offset: .65 }, { transform: 'none' }], { duration: 380, easing: 'ease-out' }));
+      const e = bnRoll(k, text, t);
+      later(e, () => { tick(slot); buzz(6); });
+      if (slot === 0) later(e + 80, () => {
+        bt.classList.add('ok'); snd('right', 1, .38); buzz(12);
+        anim(k.querySelector('.bt-band'), [{ transform: 'translateX(130%) skewX(-20deg)' }, { transform: 'translateX(-330%) skewX(-20deg)' }], { duration: 640, easing: 'cubic-bezier(.4,0,.2,1)' });
+      });
+    },
+  };
+
+  /* 9. kinetic type: the words rise in, a line runs under each part, and every number pushes its word out of the way */
+  const XO = 'cubic-bezier(.19,1,.22,1)', XIO = 'cubic-bezier(.87,0,.13,1)';
+  const KTT = {
+    term: (x, l) => `<span class="k${l ? ' ca' : ''}" data-s="${x.s}"><span class="kt-m"><i class="kt-hl"></i><span class="kt-w">${x.t}</span><span class="kt-n"></span></span><span class="kt-c">${x.t}</span><i class="kt-u"></i></span>`,
+    plain: p => `<span class="pl">${fx(p)}</span>`, op: p => `<span class="op">${opTxt(p)}</span>`, frac: FRAC };
+  function ktIn(fc, t, only) {
+    const line = fc.querySelector('.kt-fx'), kids = [...line.querySelectorAll('.k, .op, .pl, .fq-bar')].filter(e => !only || only(e));
+    kids.forEach((e, i) => {
+      const d = t + i * 85;
+      if (e.classList.contains('k')) { anim(e.querySelector('.kt-w'), [{ transform: 'translateY(108%)' }, { transform: 'none' }], { duration: 720, delay: d, easing: XO, fill: 'backwards' }); later(d, () => snd('tap', 1.1 + i * .06, .22)); }
+      else if (e.classList.contains('fq-bar')) anim(e, [{ transform: 'scaleX(0)' }, { transform: 'none' }], { duration: 640, delay: d, easing: XO, fill: 'backwards' });
+      else anim(e, [{ opacity: 0, transform: 'translateY(.3em)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: d, easing: XO, fill: 'backwards' });
+    });
+    const e2 = t + kids.length * 85 + 260, terms = [...line.querySelectorAll('.k:not(.ca)')].filter(e => !only || only(e));
+    terms.forEach((k, j) => {
+      const d = e2 + j * 280;
+      anim(k.querySelector('.kt-u'), [{ transform: 'scaleX(0)', transformOrigin: '100% 50%' }, { transform: 'scaleX(1)', transformOrigin: '100% 50%', offset: .5 }, { transform: 'scaleX(1)', transformOrigin: '0 50%', offset: .501 }, { transform: 'scaleX(0)', transformOrigin: '0 50%' }], { duration: 640, delay: d, easing: 'cubic-bezier(.65,0,.35,1)' });
+      later(d, () => snd('click', up(j * 2), .26));
+    });
+    return e2 + terms.length * 280 + 320;
+  }
+  CARDS[9] = {
+    html(R) { return `<div class="kt9"><span class="kt-eye"><i></i>القانون</span><div class="kt-fx">${fAll(parseF(R), KTT)}</div><span class="kt-hint">اضغط تشوف القانون</span></div>`; },
+    intro(fc, R, t) {
+      fit(fc.querySelector('.kt-fx'), 15);
+      const t0 = Math.max(0, t - 450);
+      anim(fc.querySelector('.kt-eye'), [{ opacity: 0, transform: 'translateX(-10px)' }, { opacity: 1, transform: 'none' }], { duration: 500, delay: t0, easing: XO, fill: 'backwards' });
+      return at$(ktIn(fc, t0 + 150));
+    },
+    review(fc, R, go) {
+      const w = fc.querySelector('.kt9'), hint = fc.querySelector('.kt-hint'); fit(fc.querySelector('.kt-fx'), 15);
+      w.classList.add('hide');
+      ktIn(fc, 300, e => !e.matches('.k:not(.ca)'));
+      fadeHint(hint, 1300);
+      onTap(w, hint, () => { w.classList.remove('hide'); snd('on', 1, .35); later(ktIn(fc, 0, e => e.matches('.k:not(.ca)')), go); });
+    },
+    reset(fc) {
+      fc.querySelectorAll('.kt9 .k').forEach(k => { stopA(k.querySelector('.kt-w'), k.querySelector('.kt-n'), k.querySelector('.kt-c'), k.querySelector('.kt-hl')); k.querySelector('.kt-n').innerHTML = ''; });
+    },
+    val(fc, slot, text, src) {
+      const k = fc.querySelector(`.k[data-s="${slot}"]`); if (!k) return;
+      const w = k.querySelector('.kt-w'), n = k.querySelector('.kt-n'), c = k.querySelector('.kt-c');
+      if (src) pulse(src);
+      stopA(w, n, c);
+      n.innerHTML = fx(text); n.classList.toggle('ans', slot === 0);
+      anim(w, [{ transform: 'none' }, { transform: 'translateY(-108%)' }], { duration: 540, easing: XIO, fill: 'forwards' });
+      anim(n, [{ transform: 'translateY(108%)' }, { transform: 'none' }], { duration: 580, delay: 60, easing: XIO, fill: 'both' });
+      anim(c, [{ opacity: 0, transform: 'translate(-50%, -5px)' }, { opacity: 1, transform: 'translateX(-50%)' }], { duration: 420, delay: 420, easing: XO, fill: 'forwards' });
+      later(40, () => snd('tap', 1.5, .2)); later(420, () => { tick(slot); buzz(6); });
+      if (slot === 0) later(560, () => { anim(k.querySelector('.kt-hl'), [{ transform: 'scaleX(0)' }, { transform: 'none' }], { duration: 560, easing: XO, fill: 'forwards' }); snd('hint', 1, .35); });
+    },
+  };
+
+  /* 10. liquid glass: a glass card over a slowly moving sky; each number a drop that spreads into a bubble */
+  if (window.CSS && CSS.registerProperty) try { CSS.registerProperty({ name: '--ga', syntax: '<angle>', inherits: false, initialValue: '0deg' }); } catch (e) {}
+  const GLT = {
+    term: (x, l) => `<span class="k${l ? ' ca' : ''}" data-s="${x.s}"><span class="gl-t">${x.t}</span><i class="gl-v${l ? ' ans' : ''}"></i></span>`,
+    plain: p => `<span class="pl">${fx(p)}</span>`, op: p => `<span class="op">${opTxt(p)}</span>`, frac: FRAC };
+  const JELLY = [{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1.1, .92)', offset: .45 }, { opacity: 1, transform: 'scale(.96, 1.04)', offset: .7 }, { opacity: 1, transform: 'none' }];
+  const glSweep = (fc, d = 0) => anim(fc.querySelector('.gl-sweep'), [{ transform: 'translateX(130%) skewX(-18deg)' }, { transform: 'translateX(-330%) skewX(-18deg)' }], { duration: 950, delay: d, easing: 'cubic-bezier(.45,0,.25,1)' });
+  const glArrive = (fc, t) => anim(fc.querySelector('.gl-card'), [{ opacity: 0, transform: 'translateY(14px) scale(.97)', filter: 'blur(8px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }], { duration: 600, delay: t, easing: EZ, fill: 'backwards' });
+  CARDS[10] = {
+    html(R) {
+      return `<div class="gl10w"><div class="gl10"><div class="gl-sky"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i></div>
+        <div class="gl-card"><span class="gl-lab">القانون</span><div class="gl-fx">${fAll(parseF(R), GLT)}</div><span class="gl-hint">اضغط تشوف القانون</span><i class="gl-sweep"></i><i class="gl-ring"></i></div></div></div>`;
+    },
+    intro(fc, R, t) {
+      const line = fc.querySelector('.gl-fx'); fit(line, 15);
+      const t0 = Math.max(0, t - 450); glArrive(fc, t0);
+      const kids = [...line.querySelectorAll('.k, .op, .pl, .fq-bar')];
+      kids.forEach((e, i) => { const d = t0 + 320 + i * 80; anim(e, JELLY, { duration: 520, delay: d, easing: 'ease-out', fill: 'backwards' }); if (e.classList.contains('k')) later(d, () => snd('tap', 1.6 + i * .05, .2)); });
+      const e = t0 + 320 + kids.length * 80; glSweep(fc, e);
+      return at$(e + 650);
+    },
+    review(fc, R, go) {
+      const w = fc.querySelector('.gl10'), card = fc.querySelector('.gl-card'), hint = fc.querySelector('.gl-hint'); fit(fc.querySelector('.gl-fx'), 15);
+      w.classList.add('hide'); glArrive(fc, 300); fadeHint(hint, 1200);
+      onTap(card, hint, () => {
+        w.classList.remove('hide'); snd('on', 1, .35); glSweep(fc);
+        const ts = [...fc.querySelectorAll('.k:not(.ca) .gl-t')];
+        ts.forEach((b, i) => { anim(b, [{ filter: 'blur(6px)', opacity: .7 }, { filter: 'blur(0)', opacity: 1 }], { duration: 520, delay: 120 + i * 140, easing: EZ, fill: 'backwards' }); later(120 + i * 140, () => snd('tap', 1.7 + i * .08, .2)); });
+        later(ts.length * 140 + 700, go);
+      });
+    },
+    reset(fc) {
+      fc.querySelectorAll('.gl-v').forEach(v => { v.innerHTML = ''; v.style.opacity = 0; });
+      fc.querySelectorAll('.gl-drop').forEach(d => d.remove());
+    },
+    val(fc, slot, text, src) {
+      const host = fc.querySelector('.gl10w'), k = fc.querySelector(`.k[data-s="${slot}"]`); if (!k) return;
+      const chip = k.querySelector('.gl-t'), v = k.querySelector('.gl-v');
+      v.innerHTML = fx(text);
+      const c = cen(v, host); let t = 0;
+      if (src) {
+        pulse(src);
+        const s = cen(src, host), d = document.createElement('i'), mx = (s.x + c.x) / 2, my = Math.min(s.y, c.y) - 60;
+        d.className = 'gl-drop'; host.appendChild(d);
+        anim(d, [{ transform: tr(s.x, s.y) + ' scale(.2)', opacity: 0 }, { transform: tr(s.x, s.y) + ' scale(1)', opacity: 1, offset: .14 }, { transform: tr(mx, my) + ' scale(1.18, .86)', offset: .55 },
+          { transform: tr(c.x, c.y - 6) + ' scale(.9, 1.12)', offset: .88 }, { transform: tr(c.x, c.y) + ' scale(1.6, .5)', opacity: .9 }], { duration: 640, easing: 'cubic-bezier(.45,0,.3,1)', fill: 'forwards' });
+        later(640, () => d.remove()); t = 620;
+      }
+      later(t, () => {
+        v.style.opacity = 1;
+        anim(v, [{ transform: 'translateX(-50%) scale(1.5, .4)', opacity: .6 }, { transform: 'translateX(-50%) scale(.88, 1.14)', opacity: 1, offset: .35 }, { transform: 'translateX(-50%) scale(1.06, .95)', offset: .62 }, { transform: 'translateX(-50%) scale(.98, 1.02)', offset: .82 }, { transform: 'translateX(-50%)', opacity: 1 }], { duration: 640, easing: 'ease-out' });
+        anim(chip, [{ transform: 'none' }, { transform: 'scale(1.08)', offset: .35 }, { transform: 'none' }], { duration: 380, easing: 'ease-out' });
+        snd('tap', 1.8, .2); tick(slot); buzz(6);
+      });
+      if (slot === 0) later(t + 260, () => {
+        anim(fc.querySelector('.gl-ring'), [{ opacity: 0, '--ga': '0deg' }, { opacity: 1, '--ga': '70deg', offset: .2 }, { opacity: 1, '--ga': '280deg', offset: .75 }, { opacity: 0, '--ga': '360deg' }], { duration: 1500, easing: 'cubic-bezier(.4,0,.2,1)' });
+        glSweep(fc); snd('hint', 1, .35); buzz(12);
+      });
+    },
+  };
+
+  /* 11. neon: each part of the rule a tube in its own colour that strikes and flickers; each number a comet in its part's colour */
+  const NE_C = ['#F2F4FF', '#3CD3FF', '#FF4FA8', '#FFC53D'], NE_OK = '#3DFFA2';
+  const FLICK = [{ opacity: 0 }, { opacity: 1, offset: .08 }, { opacity: .1, offset: .16 }, { opacity: .9, offset: .28 }, { opacity: .3, offset: .36 }, { opacity: 1, offset: .5 }, { opacity: .7, offset: .62 }, { opacity: 1 }];
+  const neOn = (el, d, ms = 640) => anim(el, FLICK, { duration: ms, delay: d, easing: 'linear', fill: 'backwards' });
+  const NET = {
+    term: (x, l) => `<span class="k${l ? ' ca' : ''}" data-s="${x.s}" style="--nc:${NE_C[x.s]}"><span class="ne-t"><span class="ne-off">${x.t}</span><span class="ne-on">${x.t}</span></span><i class="ne-v"></i></span>`,
+    plain: p => `<span class="pl">${fx(p)}</span>`, op: p => `<span class="op">${opTxt(p)}</span>`, frac: FRAC };
+  function neLight(els, t) {
+    let d = t;
+    els.forEach(e => { const isK = e.classList.contains('ne-on'); neOn(e, d, isK ? 640 : 420); if (isK) later(d, () => { hum(560, .02); clack(.035, 5200); }); d += isK ? 260 : 110; });
+    return d;
+  }
+  const neSvg = host => { let s = host.querySelector('svg.ne-ln'); if (!s) { s = document.createElementNS(NS, 'svg'); s.setAttribute('class', 'ne-ln'); host.appendChild(s); } s.setAttribute('width', host.clientWidth); s.setAttribute('height', host.clientHeight); return s; };
+  const neArrive = (fc, t) => anim(fc.querySelector('.ne-card'), [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: t, easing: EZ, fill: 'backwards' });
+  CARDS[11] = {
+    html(R) { return `<div class="ne11"><div class="ne-card"><span class="ne-lab">القانون</span><div class="ne-fx">${fAll(parseF(R), NET)}</div><span class="ne-hint">اضغط وولّع القانون</span></div></div>`; },
+    intro(fc, R, t) {
+      const line = fc.querySelector('.ne-fx'); fit(line, 15);
+      const t0 = Math.max(0, t - 450); neArrive(fc, t0); neOn(fc.querySelector('.ne-lab'), t0 + 250, 500);
+      return at$(neLight([...line.querySelectorAll('.k .ne-on, .op, .pl, .fq-bar')], t0 + 520) + 520);
+    },
+    review(fc, R, go) {
+      const w = fc.querySelector('.ne11'), card = fc.querySelector('.ne-card'), hint = fc.querySelector('.ne-hint'), line = fc.querySelector('.ne-fx'); fit(line, 15);
+      w.classList.add('hide'); neArrive(fc, 300); neOn(fc.querySelector('.ne-lab'), 520, 500);
+      neLight([...line.querySelectorAll('.k.ca .ne-on, .op, .pl, .fq-bar')], 700);
+      fadeHint(hint, 1500);
+      onTap(card, hint, () => { w.classList.remove('hide'); later(neLight([...line.querySelectorAll('.k:not(.ca) .ne-on')], 0) + 450, go); });
+    },
+    reset(fc) {
+      fc.querySelectorAll('.ne-v').forEach(v => { v.innerHTML = ''; v.style.opacity = 0; });
+      fc.querySelectorAll('.ne-ln, .ne-head').forEach(x => x.remove());
+      const ca = fc.querySelector('.k.ca'); if (ca) ca.style.setProperty('--nc', NE_C[0]);
+    },
+    val(fc, slot, text, src) {
+      const host = fc.querySelector('.ne11'), k = fc.querySelector(`.k[data-s="${slot}"]`); if (!k) return;
+      const v = k.querySelector('.ne-v'), on = k.querySelector('.ne-on'), col = slot === 0 ? NE_OK : NE_C[slot];
+      v.innerHTML = fx(text);
+      const c = cen(v, host); let t = 0;
+      if (src) {
+        const s = cen(src, host), mx = (s.x + c.x) / 2 + (c.x > s.x ? -30 : 30), my = Math.min(s.y, c.y) - 70;
+        const dp = `M${s.x.toFixed(1)} ${s.y.toFixed(1)}Q${mx.toFixed(1)} ${my.toFixed(1)} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`;
+        const p = document.createElementNS(NS, 'path'); p.setAttribute('d', dp); p.setAttribute('pathLength', '1'); p.style.stroke = col; p.style.color = col; p.style.strokeDasharray = '.3 2';
+        neSvg(host).appendChild(p);
+        anim(p, [{ strokeDashoffset: .3 }, { strokeDashoffset: -1 }], { duration: 780, easing: 'cubic-bezier(.5,0,.3,1)', fill: 'forwards' });
+        const h = document.createElement('i'); h.className = 'ne-head'; h.style.setProperty('--nc', col); h.style.offsetPath = `path('${dp}')`; host.appendChild(h);
+        anim(h, [{ offsetDistance: '0%', opacity: 0 }, { offsetDistance: '8%', opacity: 1, offset: .1 }, { offsetDistance: '100%', opacity: 1 }], { duration: 600, easing: 'cubic-bezier(.5,0,.3,1)', fill: 'forwards' });
+        anim(src, [{ filter: 'none' }, { filter: `drop-shadow(0 0 6px ${col})`, offset: .25 }, { filter: 'none' }], { duration: 900 });
+        pulse(src);
+        later(620, () => h.remove()); later(900, () => p.remove()); t = 600;
+      }
+      later(t, () => {
+        v.style.opacity = 1; neOn(v, 0, 520);
+        anim(on, [{ filter: 'brightness(1.9)' }, { filter: 'none' }], { duration: 520, easing: 'ease-out' });
+        hum(420, .02); tick(slot); buzz(6);
+      });
+      if (slot === 0) later(t + 200, () => {
+        k.style.setProperty('--nc', NE_OK); neOn(on, 0, 720); hum(720, .03); snd('hint', 1, .35); buzz(12);
+        anim(fc.querySelector('.ne-card'), [{ boxShadow: 'inset 0 0 0 1px #262E62, 0 0 0 0 rgba(61,255,162,0)' }, { boxShadow: 'inset 0 0 0 1.5px #3DFFA2, 0 0 26px 4px rgba(61,255,162,.35)', offset: .3 }, { boxShadow: 'inset 0 0 0 1px #262E62, 0 0 0 0 rgba(61,255,162,0)' }], { duration: 1200, easing: 'ease-out' });
+      });
+    },
+  };
+  const CARD = CARDS[CV];
+
+  /* ───── progress: a ladder of reviews, kept in this browser ───── */
+  const KEY = 'qudrati.ruleflow.v4', LADDER = [1, 3, 7, 14, 30], EXAM = 30;
+  let ST = {}; try { ST = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { ST = {}; }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(ST)); } catch (e) {} };
+  const day = () => Math.floor(Date.now() / 864e5);
+  const status = R => { const s = ST[R.key]; if (!s) return 'new'; return s.due <= day() ? 'due' : 'ok'; };
+  const DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+  const inDays = n => n === 1 ? 'بكرة' : n === 2 ? 'بعد يومين' : `بعد ${A(n)} ${n <= 10 ? 'أيام' : 'يوم'}`;
+
+  /* ───── screens ───── */
+  const app = $('app');
+  let cur = null;
+  function go(html, dir = 1) {
+    wipe();
+    const el = document.createElement('div'); el.className = 'scr'; el.innerHTML = html;
+    const old = cur; cur = el; app.appendChild(el);
+    if (old) {
+      if (reduce) old.remove();
+      else {
+        anim(el, [{ transform: `translateX(${dir > 0 ? -100 : 100}%)` }, { transform: 'none' }], { duration: 340, easing: 'cubic-bezier(.3,0,.2,1)' });
+        old.animate([{ transform: 'none', opacity: 1 }, { transform: `translateX(${dir > 0 ? 40 : -40}%)`, opacity: 0 }], { duration: 300, easing: 'cubic-bezier(.3,0,.2,1)' });
+        setTimeout(() => old.remove(), 300);
+      }
+    }
+    return el;
+  }
+  const q$ = s => cur.querySelector(s);
+  const fhIn = (img, d = 120) => anim(img, [{ opacity: 0, transform: 'translateY(30px) scale(.82)' }, { opacity: 1, transform: 'none' }], { duration: 460, delay: d, easing: 'cubic-bezier(.3,1.5,.5,1)', fill: 'backwards' });
+
+  /* the list: فهيم says what today is, then the rules */
+  function deck() {
+    const due = RULES.filter(r => status(r) === 'due'), fresh = RULES.filter(r => status(r) === 'new');
+    const line = due.length ? `عندك *${A(due.length)}* ${due.length === 1 ? 'قانون تراجعه' : 'قوانين تراجعها'} اليوم.` : fresh.length ? `باقي *${A(fresh.length)}* ${fresh.length > 10 ? 'قانوناً' : 'قوانين'} جديدة. يلا نبدأ بأولها!` : 'كل قوانينك ثابتة. ارجع لي بكرة.';
+    const order = [...due, ...fresh, ...RULES.filter(r => status(r) === 'ok')];
+    const chip = R => { const s = status(R); return s === 'new' ? '<span class="chip new">جديد</span>' : s === 'due' ? '<span class="chip due">راجعه</span>' : `<span class="chip ok">${inDays(ST[R.key].due - day())}</span>`; };
+    go(`<div class="dk-top"><span class="exam">${CAL}${A(EXAM)} يوم للاختبار</span></div>
+      <div class="body"><div class="obs"><img class="obs-duo" src="${FH('point')}" alt=""><div class="obs-say"><p class="obs-bubble"><span class="tx"></span></p></div></div>
+        <div class="rows">${order.map(R => `<button class="row" data-k="${R.key}"><b>${R.name}</b>${chip(R)}</button>`).join('')}</div></div>`);
+    fhIn(q$('.obs-duo'));
+    const t = sayInto(q$('.tx'), line, 380);
+    [...cur.querySelectorAll('.row')].forEach((b, i) => { anim(b, RISE, { duration: 300, delay: t + i * 45, easing: 'ease-out', fill: 'backwards' }); b.onclick = () => { snd('tap'); lesson(RULES.find(r => r.key === b.dataset.k)); }; });
+  }
+
+  /* one rule as a short lesson: teach → the words → the numbers → three questions → done */
+  let L = null, FW = [];
+  function lesson(R) {
+    L = { R, steps: 6, done: 0, miss: 0, right: 0, tries: 0, q: [0, 1, 2].map(i => G[R.key](i)), qi: 0 };
+    snd('start', 1, .35);
+    teach();
+  }
+  const top = () => `<div class="ltop"><button class="x" id="quit" aria-label="خروج">${X}</button><div class="duo-bar"><i style="width:${Math.max(L.done / L.steps * 100, 4)}%"></i></div></div>`;
+  const step = () => { L.done++; const i = q$('.duo-bar i'); if (i) i.style.width = Math.max(L.done / L.steps * 100, 4) + '%'; };
+  const bindQuit = () => { q$('#quit').onclick = () => { snd('tap'); deck(); }; };
+
+  /* 1. فهيم teaches: his line, the card, the proof; then he says when it shows up */
+  function teach() {
+    const R = L.R, review = FORCE ? FORCE === 'due' : status(R) !== 'new';
+    go(`${top()}<div class="body">
+        <div class="obs"><img class="obs-duo" src="${FH('teach')}" alt=""><div class="obs-say"><p class="obs-bubble"><span class="tx"></span></p></div></div>
+        <div id="fc">${CARD.html(R)}</div>
+        <div class="stage" id="stage" title="أعد الرسم"></div><p class="dcap" id="dcap"></p></div>
+      <div class="foot"><button class="btn" id="go">كمّل</button></div>`);
+    bindQuit();
+    fhIn(q$('.obs-duo'));
+    const t = sayInto(q$('.tx'), review ? `تذكر *${R.name}*؟ قلها في بالك قبل ما تشوفها.` : R.say, 380);
+    const fc = q$('#fc');
+    if (review) CARD.review(fc, R, () => later(350, () => proof(R)));
+    else CARD.intro(fc, R, t).then(() => { if (fc.isConnected) proof(R); });
+    q$('#stage').onclick = () => { snd('tap'); proof(R); };
+    q$('#go').onclick = () => { snd('tap'); step(); words(); };
+  }
+  function drawDia(R) {
+    const host = q$('#stage'); host.innerHTML = DIA[R.key].html();
+    const g = host.firstElementChild, W = host.clientWidth - 8, H = host.clientHeight - 4;
+    g._s = Math.min(W / g.offsetWidth, H / g.offsetHeight, 1.15); g.style.transform = `translate(-50%, -50%) scale(${g._s})`;
+    q$('#dcap').textContent = '';
+    return g;
+  }
+  function proof(R) {
+    RUN++; const tok = RUN, alive = () => tok === RUN;
+    CARD.reset(q$('#fc'));
+    const g = drawDia(R);
+    anim(g.parentNode, [{ opacity: 0 }, { opacity: 1 }], { duration: 260 });
+    const c = {
+      wait: ms => new Promise(res => setTimeout(() => { if (alive()) res(); }, ms)),
+      s: (k, r, v) => { if (alive()) snd(k, r, v); },
+      cap: t => { const p = q$('#dcap'); if (!p || !alive()) return; p.innerHTML = fx(t); anim(p, RISE, { duration: 260 }); },
+      val: (slot, text, src) => { if (alive()) CARD.val(q$('#fc'), slot, text, src); },
+    };
+    DIA[R.key].run(g, c).then(() => {
+      if (!alive()) return;
+      later(500, () => { const tx = q$('.tx'); if (tx) sayInto(tx, L.R.cue, 0); });
+      const b = q$('#go'); if (b) jump(b, 400);
+    });
+  }
+
+  /* the fill, as the app draws it: rows of tokens and blanks, tiles under them, «تحقق»; a miss stays on the
+     screen — the wrong chips go red and back to the tiles, the right ones stay — until it is right */
+  function fill({ ask, ex, rows, tiles, swaps, kind, help, onDone }) {
+    go(`${top()}<div class="body">
+        <div class="obs"><img class="obs-duo" src="${FH('cheer')}" alt=""><div class="obs-say"><p class="obs-bubble"><span class="tx"></span></p></div></div>
+        <div class="ln-eq rf-box ${kind === 'words' ? 'rf-words' : 'rf-num'}">${ex ? `<div class="rf-ex">${fx(ex)}</div>` : ''}
+          ${rows.map((r, ri) => `<div class="rf-line">${r.map(x => typeof x === 'string' ? `<span class="rf-t${OP.test(x) ? ' op2' : ''}">${x === '÷' ? '<i class="dv"></i>' : fx(x)}</span>` : `<button class="ln-blank" data-r="${ri}"></button>`).join('')}</div>`).join('')}</div>
+        <div class="ln-tiles${kind === 'words' ? ' wd' : ''}">${tiles.map((t, i) => `<button class="ln-tile" data-i="${i}" data-t="${t}">${fx(t)}</button>`).join('')}</div></div>
+      <div class="foot"><button class="btn" id="chk" disabled>تحقق</button></div>
+      <div class="sheet" id="sheet"></div>`);
+    bindQuit();
+    fhIn(q$('.obs-duo'));
+    const t0 = sayInto(q$('.tx'), ask, 380);
+    const blanks = [...cur.querySelectorAll('.ln-blank')], tl = [...cur.querySelectorAll('.ln-tile')];
+    const want = []; rows.forEach(r => r.forEach(x => { if (typeof x !== 'string') want.push(x.b); }));
+    const put = blanks.map(() => null); FW = want;
+    const lines = [...cur.querySelectorAll('.rf-line')];
+    const refit = () => lines.forEach(l => fit(l, 14));
+    refit();
+    anim(q$('.rf-box'), RISE, { duration: 320, delay: t0 - 200, fill: 'backwards' });
+    tl.forEach((b, i) => anim(b, RISE, { duration: 280, delay: t0 + i * 50, easing: 'ease-out', fill: 'backwards' }));
+    const mark = () => { const n = put.indexOf(null); blanks.forEach((b, i) => b.classList.toggle('next', i === n)); q$('#chk').disabled = n !== -1; };
+    mark();
+    tl.forEach(b => b.onclick = () => {
+      const n = put.indexOf(null); if (n < 0) return;
+      put[n] = +b.dataset.i; b.classList.add('used'); const bl = blanks[n];
+      bl.innerHTML = fx(tiles[put[n]]); bl.classList.add('filled'); refit(); flyFrom(bl, b, 300, 20); snd('click', up(n * 2), .4); buzz(5); mark();
+    });
+    blanks.forEach((bl, n) => bl.onclick = () => {
+      if (put[n] == null || bl.classList.contains('right')) return;
+      tl[put[n]].classList.remove('used'); put[n] = null; bl.innerHTML = ''; bl.className = 'ln-blank'; refit(); snd('off', 1, .35); mark();
+    });
+    let misses = 0;
+    q$('#chk').onclick = () => {
+      const got = put.map(i => tiles[i]), ok = got.map((g, i) => g === want[i]);
+      (swaps || []).forEach(([a, b]) => { if (got[a] === want[b] && got[b] === want[a]) { ok[a] = ok[b] = true; } });
+      if (ok.every(Boolean)) {
+        blanks.forEach((b, i) => { b.className = 'ln-blank right'; jump(b, i * 60); });
+        snd('right', 1, .55); buzz(12);
+        verdict(true, pick(['أحسنت!', 'ممتاز!', 'بالضبط!']), null, onDone);
+      } else {
+        misses++; L.miss += misses === 1 ? 1 : 0;
+        blanks.forEach((b, i) => { if (!ok[i]) { b.classList.add('wrong'); anim(b, SHAKE, { duration: 380 }); } });
+        snd('wrong', 1, .45); buzz([30, 40, 30]);
+        verdict(false, 'مو كذا', help, () => {
+          blanks.forEach((b, i) => { if (!ok[i] && put[i] != null) { tl[put[i]].classList.remove('used'); put[i] = null; b.innerHTML = ''; b.className = 'ln-blank'; } else { b.classList.remove('wrong'); } });
+          refit(); mark();
+        }, 'حاول مرة ثانية');
+      }
+    };
+  }
+  /* 2. the words */
+  function words() {
+    const R = L.R, slots = R.tok.filter(x => typeof x !== 'string');
+    const mine = slots.map(s => s.t), others = shuffle([...new Set(RULES.filter(r => r !== R).flatMap(r => r.tok.filter(x => typeof x !== 'string').map(x => x.t)))].filter(t => !mine.includes(t))).slice(0, 2);
+    fill({ kind: 'words', ask: 'كمّل *القانون* من ذاكرتك:', rows: [R.tok.map(x => typeof x === 'string' ? x : B(x.t))], tiles: shuffle([...mine, ...others]), swaps: R.wswap ? [R.wswap] : [], help: R.say.replace(/\*/g, ''),
+      onDone: () => { step(); numbers(); } });
+  }
+  /* 3. the numbers, step by step */
+  function numbers() {
+    const R = L.R, N = R.num, right = []; N.rows.forEach(r => r.forEach(x => { if (typeof x !== 'string') right.push(x.b); }));
+    let idx = 0; const sw = (N.swap || []).map(([ri, a, b]) => { let base = 0; for (let k = 0; k < ri; k++) base += N.rows[k].filter(x => typeof x !== 'string').length; return [base + a, base + b]; });
+    fill({ kind: 'num', ask: 'كمّل *الحل* خطوة خطوة:', ex: N.ex, rows: N.rows, tiles: shuffle([...right, ...N.more]), swaps: sw, help: R.trap,
+      onDone: () => { step(); question(); } });
+  }
+  /* 4. only now the exam's questions */
+  function question() {
+    if (!L.q.length) return done();
+    const Q = L.Q = L.q.shift(); L.qi++;
+    go(`${top()}<div class="body"><p class="qq">${Q.q.split(' ').map(w => `<span class="w">${fx(w)}</span>`).join(' ')}</p>
+        <div class="opts">${Q.ch.map(o => `<button class="opt" data-v="${o}">${fx(o)}</button>`).join('')}</div></div>
+      <div class="foot"><button class="btn" id="chk" disabled>تحقق</button></div><div class="sheet" id="sheet"></div>`);
+    bindQuit();
+    [...cur.querySelectorAll('.qq .w')].forEach((w, i) => anim(w, RISE, { duration: 240, delay: 200 + i * 24, fill: 'backwards' }));
+    const opts = [...cur.querySelectorAll('.opt')]; let sel = null;
+    opts.forEach((b, i) => { anim(b, RISE, { duration: 280, delay: 420 + i * 60, easing: 'ease-out', fill: 'backwards' }); b.onclick = () => { opts.forEach(x => x.classList.remove('sel')); b.classList.add('sel'); sel = b; q$('#chk').disabled = false; snd('tap', 1.1, .4); }; });
+    q$('#chk').onclick = () => {
+      if (!sel) return; opts.forEach(x => x.disabled = true); q$('#chk').disabled = true;
+      const ok = sel.dataset.v === Q.ans, right = opts.find(x => x.dataset.v === Q.ans); L.tries++;
+      sel.classList.remove('sel');
+      if (ok) { L.right++; sel.classList.add('ok'); jump(sel); snd('right', 1, .55); buzz(12); step(); verdict(true, pick(['أحسنت!', 'صح!', 'كفو!']), Q.sol, question); }
+      else { L.miss++; L.steps++; sel.classList.add('no'); anim(sel, SHAKE, { duration: 400 }); right.classList.add('ok'); later(300, () => jump(right)); snd('wrong', 1, .45); buzz([30, 40, 30]); L.q.push(G[L.R.key](L.qi + 3)); verdict(false, 'الجواب: ' + Q.ans, L.R.trap, question, 'فهمت', Q.sol); }
+    };
+  }
+  /* the sheet: green with its line, or red with فهيم saying the trap */
+  function verdict(ok, head, line, then, btn, sol) {
+    const sh = q$('#sheet');
+    sh.className = 'sheet ' + (ok ? 'ok' : 'no');
+    sh.innerHTML = `<div class="sh-h"><span class="sh-i">${ok ? CHECK('#58A700') : CROSS}</span>${fx(head)}</div>
+      ${ok ? (line ? `<p class="sh-d">${fx(line)}</p>` : '') : `${sol ? `<p class="sh-d">${fx(sol)}</p>` : ''}${line ? `<div class="sh-tip"><img src="${FH('encourage')}" alt=""><p>${fx(line)}</p></div>` : ''}`}
+      <button class="btn ${ok ? '' : 'red'}" id="cont">${btn || 'المتابعة'}</button>`;
+    sh.style.transform = 'none';
+    anim(sh, [{ transform: 'translateY(105%)' }, { transform: 'translateY(-4px)', offset: .8 }, { transform: 'none' }], { duration: 340, delay: 180, easing: 'ease-out', fill: 'backwards' });
+    const tip = sh.querySelector('.sh-tip img'); if (tip) fhIn(tip, 420);
+    let once = false;
+    q$('#cont').onclick = () => {
+      if (once) return; once = true; snd('tap');
+      if (ok || !then || btn === 'فهمت') return then();
+      sh.animate([{ transform: 'none' }, { transform: 'translateY(105%)' }], { duration: 220, easing: 'ease-in' }); sh.style.transform = 'translateY(105%)';
+      then();
+    };
+  }
+  /* 5. done: فهيم celebrates and says when it comes back */
+  function done() {
+    const R = L.R, prev = ST[R.key], pass = L.miss <= 1;
+    const lv = pass ? Math.min((prev ? prev.lv : 0) + 1, LADDER.length) : Math.max((prev ? prev.lv : 1) - 1, 1);
+    const gap = pass ? LADDER[lv - 1] : 1;
+    ST[R.key] = { lv, due: day() + gap }; save();
+    const when = DAYS[new Date(Date.now() + gap * 864e5).getDay()];
+    go(`<div class="body"><div class="obt"><p class="obs-bubble"><span class="tx"></span></p><img class="obt-duo" src="${FH(pass ? 'celebrate' : 'encourage')}" alt=""></div></div>
+      <div class="foot"><button class="btn" id="nx">القانون الجاي</button><button class="btn ghost" id="home">القائمة</button></div>`);
+    const img = q$('.obt-duo');
+    anim(img, [{ opacity: 0, transform: 'translateY(60px) scale(.7)' }, { opacity: 1, transform: 'translateY(-14px) scale(1.04)', offset: .6 }, { opacity: 1, transform: 'none' }], { duration: 620, delay: 120, easing: 'ease-out', fill: 'backwards' });
+    snd('done', 1, .5); buzz([20, 60, 30]);
+    sayInto(q$('.tx'), pass ? `*${R.name}* ثبتت! ${A(L.right)} من ${A(L.tries)} صح. أرجع لك فيها *${inDays(gap)}*، ${when}.` : `${R.name} تبي شوية. أرجع لك فيها *بكرة* نثبّتها.`, 600);
+    q$('#nx').onclick = () => { snd('tap'); const nx = RULES.find(r => r !== R && status(r) !== 'ok') || RULES[(RULES.indexOf(R) + 1) % RULES.length]; lesson(nx); };
+    q$('#home').onclick = () => { snd('tap'); deck(); };
+  }
+
+  $('reset').onclick = () => { ST = {}; save(); deck(); };
+  window.__flow = { L: () => L, want: () => FW, RULES, G, st: () => ST, lesson: k => lesson(RULES.find(r => r.key === k)), deck };
+  function embStart() {
+    const R = RULES.find(r => r.key === RULE0) || RULES[0], ov = document.createElement('button');
+    ov.className = 'emb-go'; ov.innerHTML = `<img src="${FH('teach')}" alt=""><b>${R.name}</b><span>شغّل</span>`;
+    $('phone').appendChild(ov);
+    const start = () => { if (!ov.isConnected) return; ov.remove(); audio(); if (ctx && ctx.state === 'suspended') ctx.resume(); lesson(R); };
+    ov.onclick = start;
+    addEventListener('message', e => { if (e.data && e.data.go) start(); });
+  }
+  const CNAME = ['', 'الصبورة', 'سطر الحل', 'بطاقة الحفظ', 'سبورة دولينجو', 'توهّج Brilliant', 'بطاقة دولينجو', 'لوحة المطار', 'مربعات ملوّنة', 'الكلمة تصير رقم', 'زجاج', 'نيون'][CV];
+  if (CNAME) document.querySelector('.side .kick').textContent = 'قوانين القدرات — ' + CNAME;
+  const boot = () => { if (EMB && RULE0) embStart(); else deck(); };
+  /* a version's own fonts load before it is measured */
+  const CF = { 7: ['700 22px "IBM Plex Sans Arabic"'], 8: ['700 26px "Readex Pro"', '600 15px "Readex Pro"'], 9: ['800 30px "Cairo"', '700 12px "Cairo"'], 10: ['600 23px "IBM Plex Sans Arabic"', '700 19px "IBM Plex Sans Arabic"'], 11: ['700 26px "Baloo Bhaijaan 2"'] }[CV];
+  const cfR = CF && document.fonts ? Promise.race([Promise.all(CF.map(f => document.fonts.load(f, 'الاحتمال عدد ٠١٢٣٤٥٦٧٨٩'))), new Promise(r => setTimeout(r, 2500))]).catch(() => {}) : Promise.resolve();
+  if (document.fonts && document.fonts.ready) cfR.then(() => document.fonts.ready).then(boot); else boot();
+})();
+</script>
+</body>
+</html>

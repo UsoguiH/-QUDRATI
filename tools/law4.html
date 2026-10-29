@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>الطلعة والنزلة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&display=swap">
+<style>
+:root {
+  --green: #58CC02;        --green-dk: #58A700;     --green-lip: #478700;
+  --green-bg: #D6FFB8;     --green-pale: #A5ED6E;
+  --blue: #1CB0F6;         --blue-dk: #1899D6;      --blue-light: #DDF4FF;   --blue-border: #84D8FF;
+  --gold: #FFC800;         --gold-dk: #E6A000;      --gold-bg: #FFF4BF;
+  --brown: #AA572A;        --brown-dk: #7A3B12;
+  --red: #FF4B4B;          --red-dk2: #EA2B2B;      --red-bg: #FFDFE0;
+  --purple: #CE82FF;       --purple-dk: #A568CC;
+  --ink: #4B4B4B;          --gray: #777777;         --gray-icon: #AFAFAF;
+  --line: #E5E5E5;         --snow: #FFFFFF;         --polar: #F7F7F7;
+  --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--snow); }
+body { font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { font-family: var(--font); cursor: pointer; -webkit-tap-highlight-color: transparent; color: inherit; }
+#app { position: relative; height: 100dvh; max-width: 430px; margin: 0 auto; display: flex; flex-direction: column; overflow: hidden; background: var(--snow); }
+
+/* buttons: Duolingo's 3D face on its lip */
+.btn { display: block; width: 100%; height: 52px; border: 0; border-radius: 16px; background: var(--green); color: #fff;
+  font-size: 17px; font-weight: 800; box-shadow: 0 4px 0 var(--green-lip); transition: transform .06s; }
+.btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--green-lip); }
+.btn:disabled { background: var(--line); color: var(--gray-icon); box-shadow: 0 4px 0 #CFCFCF; }
+.btn.white { background: #fff; color: var(--blue); border: 2px solid var(--line); box-shadow: 0 4px 0 var(--line); }
+.btn.white:active { box-shadow: 0 0 0 var(--line); }
+.btn.blue { background: var(--blue); box-shadow: 0 4px 0 var(--blue-dk); }
+.btn.gold { background: var(--gold); color: var(--brown-dk); box-shadow: 0 4px 0 var(--gold-dk); }
+.btn + .btn { margin-top: 12px; }
+
+/* top of a lesson */
+.top { display: flex; align-items: center; gap: 12px; padding: 14px 16px 6px; min-height: 52px; }
+.x { width: 32px; height: 32px; border: 0; background: none; padding: 0; color: var(--gray-icon); }
+.x svg { width: 18px; height: 18px; }
+.bar { flex: 1; height: 16px; border-radius: 8px; background: var(--line); overflow: hidden; position: relative; }
+.bar i { position: absolute; inset: 0 0 0 auto; width: 0; border-radius: 8px; background: var(--green); transition: width .45s cubic-bezier(.3,1.3,.5,1); }
+.bar i::after { content: ""; position: absolute; top: 4px; inset-inline: 8px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.3); }
+
+/* the stack's story segments: finite and visible */
+.segs { flex: 1; display: flex; gap: 5px; }
+.segs i { flex: 1; height: 6px; border-radius: 3px; background: var(--line); position: relative; overflow: hidden; }
+.segs i.on { background: var(--blue); }
+.segs i.ok { background: var(--green); }
+.segs i.miss { background: var(--gold); }
+.count { font-size: 15px; font-weight: 800; color: var(--gray-icon); min-width: 34px; text-align: center; }
+
+.body { flex: 1; overflow-y: auto; padding: 8px 16px 16px; display: flex; flex-direction: column; }
+.foot { padding: 12px 16px 22px; }
+.kick { font-size: 15px; font-weight: 800; color: var(--purple-dk); margin: 6px 0 2px; }
+.h { font-size: 23px; font-weight: 800; line-height: 1.35; margin: 2px 0 14px; }
+.sub { font-size: 16px; font-weight: 600; color: var(--gray); line-height: 1.5; margin: 0 0 12px; }
+.big { font-size: 46px; font-weight: 800; text-align: center; margin: 18px 0 22px; letter-spacing: .5px; }
+.big.sm { font-size: 38px; }
+.tag { align-self: flex-start; font-size: 13px; font-weight: 800; padding: 3px 10px; border-radius: 10px; background: var(--polar); color: var(--gray); border: 2px solid var(--line); }
+.tag.back { background: var(--gold-bg); color: var(--brown); border-color: var(--gold); }
+.tag.trap { background: var(--red-bg); color: var(--red-dk2); border-color: #FFB2B2; }
+.tag.new { background: var(--blue-light); color: var(--blue-dk); border-color: var(--blue-border); }
+
+/* choices */
+.chs { display: grid; gap: 10px; }
+.chs.two { grid-template-columns: 1fr 1fr; }
+.ch { position: relative; min-height: 58px; padding: 10px 12px; border-radius: 16px; background: #fff; border: 2px solid var(--line); border-bottom-width: 4px;
+  font-size: 19px; font-weight: 700; color: var(--ink); text-align: center; }
+.ch.big2 { font-size: 26px; font-weight: 800; }
+.ch.sel { background: var(--blue-light); border-color: var(--blue-border); color: var(--blue-dk); }
+.ch.ok { background: var(--green-bg); border-color: var(--green-pale); color: var(--green-dk); }
+.ch.no { background: var(--red-bg); border-color: #FFB2B2; color: var(--red-dk2); }
+.ch.dim { opacity: .45; }
+.ch:disabled { cursor: default; }
+
+/* the exam's comparison */
+.cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 16px; }
+.cmp > div { border: 2px solid var(--line); border-radius: 16px; padding: 10px 6px 12px; text-align: center; }
+.cmp small { display: block; font-size: 13px; font-weight: 700; color: var(--gray); }
+.cmp b { display: block; font-size: 27px; font-weight: 800; margin-top: 2px; }
+
+/* keypad */
+.inp { height: 64px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--blue-border); border-radius: 16px; background: #fff;
+  font-size: 34px; font-weight: 800; letter-spacing: 2px; }
+.inp.ok { border-color: var(--green); background: var(--green-bg); color: var(--green-dk); }
+.inp.no { border-color: var(--red); background: var(--red-bg); color: var(--red-dk2); }
+.caret { width: 3px; height: 32px; border-radius: 2px; background: var(--blue); animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+.key { height: 50px; border-radius: 13px; background: #fff; border: 2px solid var(--line); border-bottom-width: 4px; font-size: 24px; font-weight: 700; }
+.key:active { transform: translateY(2px); border-bottom-width: 2px; }
+.key.del { color: var(--gray); font-size: 20px; }
+@media (max-height: 680px) { .key { height: 42px; font-size: 21px; } .pad { gap: 6px; margin-top: 8px; } .big { margin: 8px 0 12px; font-size: 38px; } }
+
+/* a worked line: tokens, each its own chip so they can light, land and be tapped */
+.eq { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 6px; font-size: 26px; font-weight: 800; line-height: 1.3; }
+.eq span { display: inline-block; }
+.eq .t { opacity: 0; transform: translateY(10px) scale(.8); transition: opacity .18s, transform .32s cubic-bezier(.3,1.6,.5,1); }
+.eq .t.in { opacity: 1; transform: none; }
+.eq .op { color: var(--gold-dk); }
+.eq .hl { color: var(--blue-dk); background: var(--blue-light); border-radius: 10px; padding: 0 6px; box-shadow: 0 2px 0 var(--blue-border); }
+.eq.toks span.tp { padding: 2px 8px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; cursor: pointer; }
+.eq.toks span.tp.ok { background: var(--green-bg); border-color: var(--green-pale); color: var(--green-dk); }
+.eq.toks span.tp.no { background: var(--red-bg); border-color: #FFB2B2; color: var(--red-dk2); }
+.eq.toks span.tp.right { background: var(--gold-bg); border-color: var(--gold); color: var(--brown-dk); }
+
+/* the snap: the verdict sheet that plays the trick on the student's own numbers */
+.snap:empty { display: none; }
+.snap { margin-top: auto; border-radius: 20px 20px 0 0; margin-inline: -16px; margin-bottom: -16px; padding: 14px 16px 18px;
+  background: var(--green-bg); transform: translateY(105%); transition: transform .32s cubic-bezier(.2,1.2,.4,1); }
+.snap.in { transform: none; }
+.snap.miss { background: var(--gold-bg); }
+.snap .v { display: flex; align-items: center; gap: 8px; font-size: 21px; font-weight: 800; color: var(--green-dk); margin-bottom: 8px; }
+.snap.miss .v { color: var(--brown); }
+.snap .v svg { width: 26px; height: 26px; flex: none; }
+.snap .eq { font-size: 21px; justify-content: flex-start; color: var(--ink); margin: 2px 0 6px; }
+.snap .dg { font-size: 16px; font-weight: 700; color: var(--brown-dk); line-height: 1.5; margin: 4px 0 10px; }
+.snap .btn { margin-top: 8px; }
+.snap.miss .btn { background: var(--gold); color: var(--brown-dk); box-shadow: 0 4px 0 var(--gold-dk); }
+.swipe { display: flex; justify-content: center; margin-top: 8px; color: var(--green-dk); opacity: .7; }
+.snap.miss .swipe { color: var(--brown); }
+.swipe svg { width: 22px; height: 22px; animation: nudge 1.2s ease-in-out infinite; }
+@keyframes nudge { 50% { transform: translateY(-6px); } }
+
+/* the hook's two lanes */
+.lanes { display: grid; gap: 10px; margin-top: 4px; }
+.lane { border-radius: 16px; padding: 10px 14px; border: 2px solid var(--line); }
+.lane h4 { margin: 0 0 4px; font-size: 14px; font-weight: 800; color: var(--gray); display: flex; justify-content: space-between; }
+.lane .ln { font-size: 20px; font-weight: 700; color: var(--gray); opacity: 0; transform: translateX(-8px); transition: opacity .25s, transform .25s; }
+.lane .ln.in { opacity: 1; transform: none; }
+.lane.fast { border-color: var(--gold); background: var(--gold-bg); }
+.lane.fast h4 { color: var(--brown); }
+.lane.fast .ln { color: var(--brown-dk); font-size: 25px; font-weight: 800; }
+
+/* the number line and the figure */
+svg text { font-family: var(--font); }
+.nl { width: 100%; height: auto; display: block; margin: 4px 0 6px; }
+.nl .tk { cursor: pointer; }
+.nl .tk circle { fill: #fff; stroke: var(--line); stroke-width: 2.5; transition: fill .2s, stroke .2s; }
+.nl .tk text { font-size: 17px; font-weight: 800; fill: var(--ink); text-anchor: middle; }
+.nl .tk.on circle { fill: var(--blue); stroke: var(--blue-dk); }
+.nl .tk.on text { fill: #fff; }
+.nl .tk.bad circle { fill: var(--red-bg); stroke: var(--red); }
+.nl .arc { fill: none; stroke: var(--gold-dk); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 220; stroke-dashoffset: 220; transition: stroke-dashoffset .6s ease-out; }
+.nl .arc.in { stroke-dashoffset: 0; }
+.nl .al { font-size: 20px; font-weight: 800; fill: var(--brown); text-anchor: middle; opacity: 0; transition: opacity .3s .4s; }
+.nl .al.in { opacity: 1; }
+.rows { display: grid; gap: 4px; margin-top: 6px; }
+.rows .r { font-size: 24px; font-weight: 800; text-align: center; opacity: 0; transform: translateY(8px); transition: opacity .25s, transform .3s cubic-bezier(.3,1.5,.5,1); }
+.rows .r.in { opacity: 1; transform: none; }
+.rows .r.gold { color: var(--brown-dk); background: var(--gold-bg); border-radius: 14px; padding: 2px 0; }
+
+.fig { width: 100%; max-width: 300px; height: auto; display: block; margin: 0 auto; }
+.fig .strip { transform-box: fill-box; transform-origin: center; transition: transform .9s cubic-bezier(.5,0,.25,1.2); }
+.fig.moved .strip { transform: translate(100px, 130px) rotate(90deg); }
+.fig .hole { opacity: 0; transition: opacity .3s .9s; }
+.fig.moved .hole { opacity: 1; }
+.fig .lb { font-size: 18px; font-weight: 800; text-anchor: middle; transition: opacity .3s; }
+.fig .before { transition: opacity .25s; }
+.fig.moved .before { opacity: 0; }
+.fig .after { opacity: 0; transition: opacity .3s .95s; }
+.fig.moved .after { opacity: 1; }
+
+/* the rule card: Duolingo's regular yellow */
+.rule { background: var(--gold-bg); border: 2px solid var(--gold); border-radius: 18px; box-shadow: 0 5px 0 var(--gold); padding: 14px 16px 16px; }
+.rule .nm { display: inline-block; font-size: 14px; font-weight: 800; color: var(--brown); background: #fff; border: 2px solid var(--gold); border-radius: 10px; padding: 1px 10px; }
+.rule .when { font-size: 16px; font-weight: 700; color: var(--brown); margin: 10px 0 4px; }
+.rule .ln { font-size: 24px; font-weight: 800; color: var(--ink); line-height: 1.6; }
+.rule .k { display: inline-block; padding: 0 8px; border-radius: 10px; transition: background .2s, color .2s, box-shadow .2s, transform .3s cubic-bezier(.3,1.8,.5,1); }
+.rule .k.lit { background: var(--blue-light); color: var(--blue-dk); box-shadow: 0 2px 0 var(--blue-border); transform: scale(1.06); }
+.rule .ex { font-size: 16px; font-weight: 700; color: var(--brown); margin-top: 8px; }
+.rule.pop { animation: pop .5s cubic-bezier(.3,1.6,.5,1); }
+@keyframes pop { 0% { transform: scale(.7); opacity: 0; } 60% { transform: scale(1.04); opacity: 1; } 100% { transform: scale(1); } }
+
+/* the deck */
+.deck { padding: 16px; overflow-y: auto; flex: 1; }
+.deck h1 { font-size: 24px; font-weight: 800; margin: 4px 0 2px; }
+.deck .h1s { font-size: 15px; font-weight: 600; color: var(--gray); margin-bottom: 14px; }
+.meter { margin-top: 12px; }
+.meter .mt { display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; color: var(--brown); margin-bottom: 4px; }
+.meter .mb { height: 14px; border-radius: 7px; background: rgba(170,87,42,.15); overflow: hidden; position: relative; }
+.meter .mb i { position: absolute; inset: 0 0 0 auto; border-radius: 7px; background: var(--green); transition: width 1s cubic-bezier(.3,1.2,.5,1); }
+.meter .mb i::after { content: ""; position: absolute; top: 3px; inset-inline: 6px; height: 3px; border-radius: 2px; background: rgba(255,255,255,.35); }
+.card { border: 2px solid var(--line); border-radius: 18px; padding: 14px; margin-top: 16px; }
+.card h3 { margin: 0 0 2px; font-size: 17px; font-weight: 800; }
+.card .cs { font-size: 14px; font-weight: 600; color: var(--gray); margin-bottom: 8px; line-height: 1.5; }
+.next { text-align: center; font-size: 16px; font-weight: 700; color: var(--gray); margin: 14px 0 10px; }
+.next b { color: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; font-weight: 700; color: var(--gray); margin-top: 6px; }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend i { display: inline-block; width: 18px; height: 0; border-top: 3px solid var(--blue); }
+.legend i.dash { border-top-style: dashed; border-color: var(--gray-icon); }
+.legend b { display: inline-grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; }
+.log { width: 100%; border-collapse: collapse; font-size: 14px; }
+.log td, .log th { padding: 6px 4px; border-bottom: 1px solid var(--line); text-align: right; }
+.log th { color: var(--gray); font-weight: 700; }
+.ok-t { color: var(--green-dk); font-weight: 800; }
+.no-t { color: var(--red-dk2); font-weight: 800; }
+.small { font-size: 13px; color: var(--gray); font-weight: 600; line-height: 1.5; }
+.sim { margin-top: 16px; border: 2px dashed var(--purple); border-radius: 16px; padding: 10px 12px; }
+.sim .row { display: flex; gap: 8px; margin-top: 8px; }
+.sim button { flex: 1; height: 38px; border-radius: 12px; border: 2px solid var(--purple); background: #fff; color: var(--purple-dk); font-weight: 800; font-size: 15px; }
+.links { display: flex; gap: 10px; margin-top: 16px; }
+.links button { flex: 1; height: 42px; border-radius: 12px; border: 2px solid var(--line); background: #fff; color: var(--gray); font-weight: 800; font-size: 14px; }
+.toast { position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%) translateY(80px); background: var(--ink); color: #fff; padding: 8px 16px; border-radius: 12px; font-weight: 700; transition: transform .3s; z-index: 9; }
+.toast.in { transform: translateX(-50%); }
+
+/* the end of a stack */
+.end { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 16px; text-align: center; }
+.end .eh { font-size: 28px; font-weight: 800; margin: 0 0 4px; }
+.end .es { font-size: 17px; font-weight: 700; color: var(--gray); margin-bottom: 20px; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0 6px; }
+.stat { border: 2px solid var(--line); border-radius: 16px; padding: 8px; }
+.stat small { display: block; font-size: 13px; font-weight: 800; color: var(--gray); }
+.stat b { font-size: 24px; font-weight: 800; }
+.boom { animation: boom .7s cubic-bezier(.3,1.6,.5,1); }
+@keyframes boom { 0% { transform: scale(.6) rotate(-4deg); } 55% { transform: scale(1.12) rotate(2deg); } 75% { transform: scale(.96); } 100% { transform: scale(1); } }
+
+/* the stack moves like a feed */
+.stage { position: relative; flex: 1; overflow: hidden; }
+.panel { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--snow); transition: transform .38s cubic-bezier(.3,.9,.3,1); will-change: transform; }
+.panel.below { transform: translateY(100%); }
+.panel.above { transform: translateY(-100%); }
+
+/* every answer jumps (fxAddJump's beats), a miss sinks and shakes */
+.jump { animation: jump .48s linear; }
+@keyframes jump {
+  0% { transform: translateY(0) scale(1, 1); }
+  7% { transform: translateY(-15px) scale(.947, 1.056); }
+  21% { transform: translateY(-24px) scale(1, 1); }
+  36% { transform: translateY(-24px); }
+  64% { transform: translateY(-6px) scale(.98, 1.07); }
+  71% { transform: translateY(1px) scale(1.024, .926); }
+  86% { transform: translateY(-4px) scale(1, 1); }
+  100% { transform: translateY(0); }
+}
+.shake { animation: shake .4s ease-out; }
+@keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-8px) translateY(2px); } 40% { transform: translateX(7px) translateY(2px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(2px); } }
+.fade-in { animation: fin .35s ease-out both; }
+@keyframes fin { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+/* law4: the rule's own pieces */
+.dv { display: inline-block; width: .62em; height: .62em; fill: currentColor; vertical-align: .02em; }
+.tri { display: inline-block; width: .62em; height: .62em; fill: currentColor; }
+.moves { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 8px; margin: 12px 0 18px; }
+.mv { display: inline-flex; align-items: center; gap: 5px; padding: 2px 10px; border-radius: 10px; font-size: 18px; font-weight: 800; }
+.moves .mv { font-size: 23px; padding: 4px 14px; border-radius: 12px; }
+.mv.up { background: var(--green-bg); color: var(--green-dk); box-shadow: 0 3px 0 var(--green-pale); }
+.mv.dn { background: var(--red-bg); color: var(--red-dk2); box-shadow: 0 3px 0 #FFB2B2; }
+.mv.p { background: #fff; color: var(--ink); border: 2px solid var(--line); }
+.ar { color: var(--gray-icon); font-weight: 800; font-size: 20px; }
+.unit { text-align: center; font-size: 16px; font-weight: 800; color: var(--gray); margin-top: 4px; }
+.ch.gone { display: none; }
+.say { font-size: 18px; font-weight: 800; color: var(--purple-dk); margin: 14px 0 6px; }
+.ladder { display: grid; gap: 8px; margin: 6px 0 10px; }
+.st { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 14px; border: 2px solid var(--line);
+  opacity: 0; transform: translateY(10px) scale(.96); transition: opacity .2s, transform .35s cubic-bezier(.3,1.6,.5,1); }
+.st.in { opacity: 1; transform: none; }
+.st .pr { margin-inline-start: auto; font-size: 28px; font-weight: 800; }
+.st .dd { font-size: 17px; font-weight: 800; color: var(--gray); }
+.st.up .pr { color: var(--green-dk); }
+.st.dn { border-color: #FFB2B2; }
+.st.dn .pr { color: var(--red-dk2); }
+.note { font-size: 16px; font-weight: 800; color: var(--brown-dk); background: var(--gold-bg); border-radius: 12px; padding: 6px 12px; margin: 0;
+  opacity: 0; transition: opacity .3s; }
+.note.in { opacity: 1; }
+.cmp b.w { font-size: 17px; line-height: 1.45; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+<script>
+(function () {
+'use strict';
+
+/* ───────── basics ───────── */
+const SIM = /[?&]sim\b/.test(location.search);
+const KEY = SIM ? 'law4.sim' : 'law4';
+const DAY = 864e5;
+const HORIZON = 90;
+const $app = document.getElementById('app');
+const AR = '٠١٢٣٤٥٦٧٨٩';
+const toAr = n => String(n).replace(/\d/g, d => AR[d]);
+const sq = n => toAr(n) + '²';
+const pad2 = n => (n < 10 ? '0' : '') + n;
+const clamp = (a, b, x) => Math.min(b, Math.max(a, x));
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const buzz = ms => { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} };
+const durTxt = s => s <= 90 ? secTxt(s) : s < 150 ? 'دقيقتين' : toAr(Math.round(s / 60)) + ' دقايق';
+const secTxt = s => { const n = Math.max(1, Math.round(s)); return n === 1 ? 'ثانية' : n === 2 ? 'ثانيتين' : n <= 10 ? toAr(n) + ' ثوانٍ' : toAr(n) + ' ثانية'; };
+
+let S;
+function fresh() { return { v: 1, off: 0, learned: null, card: null, hist: [], log: [], seen: [], newRule: null }; }
+function load() { try { S = JSON.parse(localStorage.getItem(KEY)) || fresh(); } catch (e) { S = fresh(); } }
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+load();
+
+const now = () => Date.now() + (S.off || 0) * DAY;
+const dstr = t => { const d = new Date(t); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); };
+const dnum = s => { const p = s.split('-').map(Number); return Math.round(Date.UTC(p[0], p[1] - 1, p[2]) / DAY); };
+const today = () => dstr(now());
+const addDays = (s, n) => { const p = s.split('-').map(Number); return dstr(new Date(p[0], p[1] - 1, p[2] + n).getTime()); };
+const dayOf = t => S.learned ? (t - S.learned.at) / DAY : 0;
+
+/* ───────── sounds: the app's own files ───────── */
+const SND = {
+  tap: '../assets/sounds/bri/lightweight-choice.mp3', key: '../assets/sounds/bri/assessment-click-option-1.mp3',
+  right: '../assets/sounds/correct.mp3', wrong: '../assets/sounds/bri/incorrect.mp3', snap: '../assets/sounds/bri/hint.mp3',
+  start: '../assets/sounds/bri/start-lesson.mp3', next: '../assets/sounds/bri/continue.mp3', lane: '../assets/sounds/bri/toggle-on.mp3',
+  rule: '../assets/sounds/bri/highlight-node.mp3', t1: '../assets/sounds/bri/xp-tally-1.mp3', t2: '../assets/sounds/bri/xp-tally-2.mp3',
+  t3: '../assets/sounds/bri/xp-tally-3.mp3', t4: '../assets/sounds/bri/xp-tally-4.mp3', t5: '../assets/sounds/bri/xp-tally-5.mp3',
+  done: '../assets/sounds/bri/lesson-complete.mp3', big: '../assets/sounds/bri/level-mastered.mp3', small: '../assets/sounds/bri/level-passed.mp3',
+  move: '../assets/sounds/bri/drag-released.mp3', back: '../assets/sounds/bri/streak-charge.mp3'
+};
+const SNDC = {};
+function play(k, vol) {
+  try {
+    if (!SNDC[k]) { SNDC[k] = new Audio(SND[k]); SNDC[k].preload = 'auto'; }
+    const a = SNDC[k].cloneNode(); a.volume = vol == null ? .8 : vol; a.play().catch(() => {});
+  } catch (e) {}
+}
+function warm() { Object.keys(SND).forEach(k => { if (!SNDC[k]) { SNDC[k] = new Audio(SND[k]); SNDC[k].preload = 'auto'; } }); }
+
+function fx(el, cls) { if (!el) return; el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); }
+function toast(t) { const el = document.getElementById('toast'); el.textContent = t; el.classList.add('in'); setTimeout(() => el.classList.remove('in'), 1800); }
+
+/* ───────── FSRS-6, default parameters (research/law3/t1-memory.md §C) ───────── */
+const W = [0.212, 1.2931, 2.3065, 8.2956, 6.4133, 0.8334, 3.0194, 0.001, 1.8722, 0.1666, 0.796, 1.4835, 0.0614, 0.2629, 1.6483, 0.6014, 1.8729, 0.5425, 0.0912, 0.0658, 0.1542];
+const DEC = -W[20], FAC = Math.pow(0.9, 1 / DEC) - 1, TARGET = 0.85;
+const R = (t, s) => Math.pow(1 + FAC * Math.max(0, t) / s, DEC);
+const IV = (r, s) => s / FAC * (Math.pow(r, 1 / DEC) - 1);
+const D0 = g => clamp(1, 10, W[4] - Math.exp(W[5] * (g - 1)) + 1);
+function fsrsNext(c, g, t) {
+  const r = R(t, c.s);
+  let s;
+  if (t < 1) s = c.s * Math.max(g > 1 ? 1 : 0, Math.exp(W[17] * (g - 3 + W[18])) * Math.pow(c.s, -W[19]));
+  else if (g > 1) s = c.s * (1 + Math.exp(W[8]) * (11 - c.d) * Math.pow(c.s, -W[9]) * (Math.exp(W[10] * (1 - r)) - 1) * (g === 2 ? W[15] : 1));
+  else s = Math.min(W[11] * Math.pow(c.d, -W[12]) * (Math.pow(c.s + 1, W[13]) - 1) * Math.exp(W[14] * (1 - r)), c.s / Math.exp(W[17] * W[18]));
+  const d = clamp(1, 10, W[7] * D0(4) + (1 - W[7]) * (c.d - W[6] * (g - 3) * (10 - c.d) / 9));
+  return { s: Math.max(.1, s), d, r };
+}
+const examDay = () => addDays(S.learned.day, HORIZON);
+/* the gap cap: an early ladder (successive relearning wants 3–4 sessions while the
+   procedure is fresh, and FSRS's adult-flashcard defaults would jump day 1 → day 15),
+   then the 21-day ridgeline, then one forced check a week before the exam */
+const LADDER = { 2: 3, 3: 7, 4: 14 };
+function dueAfter(day, s, reps) {
+  const cap = LADDER[reps] || 21;
+  let due = addDays(day, clamp(1, cap, Math.round(IV(TARGET, s))));
+  const ex = dnum(examDay());
+  if (dnum(day) < ex - 10 && dnum(due) > ex - 4) due = addDays(examDay(), -7);
+  return due;
+}
+function Rnow() { if (!S.card) return 0; return R((now() - S.card.lastT) / DAY, S.card.s); }
+const isDue = () => S.card && dnum(today()) >= dnum(S.card.due);
+
+/* ───────── the rule: up a% then down a% loses a × a ÷ 100 percent ───────── */
+const TRI_UP = '<svg class="tri" viewBox="0 0 10 10"><path d="M5 1.2L9.4 8.6H.6z"/></svg>', TRI_DN = '<svg class="tri" viewBox="0 0 10 10"><path d="M5 8.8L9.4 1.4H.6z"/></svg>';
+const DIV = '<svg class="dv" viewBox="0 0 10 10" role="img" aria-label="÷"><circle cx="5" cy="1.7" r="1.35"/><rect x=".6" y="4.15" width="8.8" height="1.7" rx=".85"/><circle cx="5" cy="8.3" r="1.35"/></svg>';
+const pc = n => toAr(n) + '٪';
+const lossOf = a => a * a / 100;
+const phrase = (a, ud) => ud ? `زاد ${pc(a)} ثم نقص ${pc(a)}` : `نقص ${pc(a)} ثم زاد ${pc(a)}`;
+const shuffle = arr => arr.map(x => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map(p => p[1]);
+function pa(easy) {
+  for (let i = 0; i < 40; i++) {
+    const a = easy ? 10 : pick([20, 30, 40, 50, 60]);
+    const P = pick(easy ? [100, 1000] : [200, 300, 400, 500, 800, 1000, 2000]);
+    const ud = Math.random() < .6;
+    const id = a + '-' + P + (ud ? 'u' : 'd');
+    if (S.seen.indexOf(id) < 0 || i > 30) { S.seen.push(id); if (S.seen.length > 40) S.seen.shift(); return { a, P, ud }; }
+  }
+}
+const trickLine = a => [toAr(a), '×', toAr(a), DIV, '١٠٠', '=', pc(lossOf(a))];
+function mk(kind, o) {
+  o = o || {};
+  const p = o.a ? { a: o.a, P: o.P || 1000, ud: o.ud !== false } : pa(o.easy);
+  const it = Object.assign({ kind, tag: o.tag || null }, p);
+  const L = lossOf(p.a), fin = p.P - p.P * L / 100;
+  it.L = L; it.fin = fin;
+  if (kind === 'loss') {
+    it.ans = L;
+  } else if (kind === 'lossc') {
+    const d3 = p.a === 10 ? 2 : p.a / 10;
+    it.ch = shuffle([{ t: pc(L), ok: 1 }, { t: pc(0), ok: 0 }, { t: pc(p.a), ok: 0 }, { t: pc(d3), ok: 0 }]);
+    it.ans = it.ch.findIndex(c => c.ok);
+    it.why = p.ud ? '' : 'الترتيب ما يفرق — نفس الخسارة.';
+  } else if (kind === 'price') {
+    it.ch = shuffle([{ t: toAr(fin), ok: 1 }, { t: toAr(p.P), ok: 0 }, { t: toAr(p.P + p.P * L / 100), ok: 0 }]);
+    it.ans = it.ch.findIndex(c => c.ok);
+    it.why = `${toAr(p.P)} ناقص ${pc(L)} = ${toAr(fin)}`;
+  } else if (kind === 'cmp') {
+    const v = o.v || pick(['orig', 'num', 'swap', 'more']);
+    it.v = v;
+    it.v1 = `${toAr(p.P)} بعد ما ${phrase(p.a, p.ud)}`;
+    if (v === 'orig') { it.v2 = toAr(p.P); it.ans = 1; it.why = `الأولى = ${toAr(fin)} — أقل من ${toAr(p.P)}`; }
+    else if (v === 'num') { it.v2 = toAr(fin); it.ans = 2; it.why = `${toAr(p.P)} ناقص ${pc(L)} = ${toAr(fin)}`; }
+    else if (v === 'swap') { it.v2 = `${toAr(p.P)} بعد ما ${phrase(p.a, !p.ud)}`; it.ans = 2; it.why = 'الترتيب ما يفرق — نفس الخسارة.'; }
+    else { const b = p.a === 60 ? 50 : p.a + 10; it.b = b; it.v2 = `${toAr(p.P)} بعد ما ${phrase(b, p.ud)}`; it.ans = b > p.a ? 0 : 1;
+      it.why = `الأولى تخسر ${pc(L)}، والثانية ${pc(lossOf(b))} — النسبة الأكبر تخسّر أكثر.`; }
+  }
+  return it;
+}
+function diagnose(it, val) {
+  const a = it.a;
+  if (val === 0) return 'ما يرجع — النزلة تنحسب من سعر غير اللي زاد عليه.';
+  if (val === a) return `الخسارة مو ${pc(a)} — هي ${toAr(a)} × ${toAr(a)} ${DIV} ١٠٠.`;
+  if (val === a * a) return 'قريب — الناتج ينقسم على ١٠٠.';
+  if (val === 2 * a) return 'ما تتضاعف — هي النسبة في نفسها، على ١٠٠.';
+  return '';
+}
+
+/* ───────── rendering a card ───────── */
+let CUR = null;
+const ICON_OK = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#58CC02"/><path d="M6.5 12.5l3.5 3.5 7.5-8" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const ICON_MISS = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#E6A000"/><path d="M12 6.5v7M12 17.5v.1" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>';
+const ICON_UP = '<svg viewBox="0 0 24 24"><path d="M6 14l6-6 6 6" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const X_SVG = '<svg viewBox="0 0 18 18"><path d="M2 2l14 14M16 2L2 16" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+const TAGS = { back: ['رجعت لك — بأرقام جديدة', 'back'], swap: ['انعكس الترتيب', 'trap'], cold: ['أول بطاقة اليوم', 'new'], win: ['ختامها', 'new'], exam: ['بصيغة الاختبار', 'new'] };
+
+function itemHTML(it) {
+  const tag = it.tag && TAGS[it.tag] ? `<span class="tag ${TAGS[it.tag][1]}">${TAGS[it.tag][0]}</span>` : '';
+  let q = '', body = '';
+  if (it.kind === 'loss') {
+    q = `${phrase(it.a, it.ud)} — كم ٪ الخسارة؟`;
+    body = `<div class="moves">${moves(it.a, it.ud)}</div>` + padHTML();
+  } else if (it.kind === 'lossc') {
+    q = `${phrase(it.a, it.ud)} — كم ٪ الخسارة؟`;
+    body = `<div class="moves">${moves(it.a, it.ud)}</div><div class="chs two">${it.ch.map((c, i) => `<button class="ch big2" data-i="${i}">${c.t}</button>`).join('')}</div>`;
+  } else if (it.kind === 'price') {
+    q = `سعره ${toAr(it.P)} ريال، ${phrase(it.a, it.ud)}. كم صار؟`;
+    body = `<div class="moves">${moves(it.a, it.ud, it.P)}</div><div class="chs">${it.ch.map((c, i) => `<button class="ch big2" data-i="${i}">${c.t}</button>`).join('')}</div>`;
+  } else if (it.kind === 'cmp') {
+    q = 'أيّهما أكبر؟';
+    body = `<div class="cmp"><div><small>القيمة الأولى</small><b class="w">${it.v1}</b></div><div><small>القيمة الثانية</small><b class="w">${it.v2}</b></div></div>
+      <div class="chs">${CMP.map((c, i) => `<button class="ch" data-i="${i}">${c}</button>`).join('')}</div>`;
+  }
+  return `${tag}<p class="h" style="margin-top:10px">${q}</p>${body}<div class="snap" id="snap"></div>`;
+}
+/* the two moves drawn as chips: up green, down red, in the order they happen */
+function moves(a, ud, P) {
+  const up = `<span class="mv up">${TRI_UP} ${pc(a)}</span>`, dn = `<span class="mv dn">${TRI_DN} ${pc(a)}</span>`;
+  return (P ? `<span class="mv p">${toAr(P)}</span><span class="ar">←</span>` : '') + (ud ? up + '<span class="ar">←</span>' + dn : dn + '<span class="ar">←</span>' + up);
+}
+const CMP = ['القيمة الأولى أكبر', 'القيمة الثانية أكبر', 'القيمتان متساويتان', 'المعطيات غير كافية'];
+function padHTML() {
+  const keys = ['١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩', '', '٠', '⌫'];
+  return `<div class="inp" id="inp" dir="ltr"><span class="caret"></span></div><div class="unit">٪</div>
+    <div class="pad" dir="ltr">${keys.map(k => k ? `<button class="key${k === '⌫' ? ' del' : ''}" data-k="${k}">${k}</button>` : '<span></span>').join('')}</div>
+    <button class="btn" id="chk" style="margin-top:12px" disabled>تحقّق</button>`;
+}
+function wireItem(root, it, onDone) {
+  CUR = { it, t0: performance.now(), val: '', done: false, onDone, root };
+  root.querySelectorAll('.ch').forEach(b => b.addEventListener('click', () => answerChoice(+b.dataset.i, b)));
+  root.querySelectorAll('.key').forEach(b => b.addEventListener('click', () => keyIn(b.dataset.k)));
+  const chk = root.querySelector('#chk'); if (chk) chk.addEventListener('click', answerTyped);
+}
+function keyIn(k) {
+  if (!CUR || CUR.done) return;
+  if (k === '⌫') CUR.val = CUR.val.slice(0, -1); else if (CUR.val.length < 4) CUR.val += k;
+  play('key', .35);
+  CUR.root.querySelector('#inp').innerHTML = CUR.val ? CUR.val : '<span class="caret"></span>';
+  CUR.root.querySelector('#chk').disabled = !CUR.val;
+}
+document.addEventListener('keydown', e => {
+  if (!CUR || CUR.done || !CUR.root.querySelector('#inp')) return;
+  if (/^[0-9٠-٩]$/.test(e.key)) keyIn(AR[+e.key] || e.key);
+  else if (e.key === 'Backspace') keyIn('⌫');
+  else if (e.key === 'Enter' && CUR.val) answerTyped();
+});
+const fromAr = s => +s.replace(/[٠-٩]/g, c => AR.indexOf(c));
+function answerTyped() {
+  if (!CUR || CUR.done || !CUR.val) return;
+  const v = fromAr(CUR.val), ok = v === CUR.it.ans, box = CUR.root.querySelector('#inp');
+  box.classList.add(ok ? 'ok' : 'no');
+  CUR.root.querySelectorAll('.key, #chk').forEach(b => b.disabled = true);
+  fx(box, ok ? 'jump' : 'shake');
+  resolve(ok, v);
+}
+function answerChoice(i, btn) {
+  if (!CUR || CUR.done) return;
+  const ok = i === CUR.it.ans;
+  CUR.root.querySelectorAll('.ch').forEach(b => { b.disabled = true; if (+b.dataset.i === CUR.it.ans) b.classList.add('ok'); else if (b !== btn) b.classList.add('dim'); });
+  if (!ok) btn.classList.add('no');
+  fx(btn, ok ? 'jump' : 'shake');
+  resolve(ok, i);
+}
+function resolve(ok, val) {
+  const c = CUR; c.done = true;
+  const sec = (performance.now() - c.t0) / 1000, it = c.it;
+  play(ok ? 'right' : 'wrong', ok ? .8 : .6); buzz(ok ? 12 : [20, 40, 20]);
+  const snap = c.root.querySelector('#snap');
+  let verdict;
+  if (ok) verdict = sec < 8 ? `صح — ${secTxt(sec)}` : 'صح';
+  else if (it.kind === 'loss') verdict = `الجواب ${pc(it.ans)}`;
+  else if (it.kind === 'cmp') verdict = `الجواب: ${CMP[it.ans]}`;
+  else verdict = `الجواب ${it.ch[it.ans].t}`;
+  const extra = it.kind === 'loss' ? (ok ? '' : diagnose(it, val)) : it.why;
+  const toks = trickLine(it.a);
+  snap.className = 'snap' + (ok ? '' : ' miss');
+  snap.innerHTML = `<div class="v">${ok ? ICON_OK : ICON_MISS}<span>${verdict}</span></div>
+    <div class="eq">${toks.map(t => `<span class="t${t === DIV || /^[×=]$/.test(t) ? ' op' : ''}">${t}</span>`).join('')}</div>
+    ${extra ? `<div class="dg">${extra}</div>` : ''}
+    <button class="btn" id="go">${c.onDone.label || 'التالي'}</button>
+    ${c.onDone.swipe ? `<div class="swipe">${ICON_UP}</div>` : ''}`;
+  requestAnimationFrame(() => requestAnimationFrame(() => snap.classList.add('in')));
+  setTimeout(() => play('snap', .35), 200);
+  snap.querySelectorAll('.eq .t').forEach((t, i) => setTimeout(() => t.classList.add('in'), 240 + i * 70));
+  const body = c.root.querySelector('.body'); if (body) setTimeout(() => body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' }), 350);
+  snap.querySelector('#go').addEventListener('click', () => { play('next', .5); c.onDone.fn(ok, sec, val); });
+}
+
+/* ───────── reel 1: the hook, the trick on the price, the rule as its caption ───────── */
+function ruleCard(lit) {
+  return `<div class="rule${lit ? '' : ' pop'}" id="rc"><span class="nm">الطلعة والنزلة</span>
+    <div class="when">زاد ونقص بنفس النسبة؟ ما يرجع — يخسر:</div>
+    <div class="ln">الخسارة = <span class="k${lit ? ' lit' : ''}">النسبة × النسبة</span> ${DIV} ١٠٠</div>
+    <div class="ex">٢٠٪ ← ٢٠ × ٢٠ ${DIV} ١٠٠ = ٤٪ — والترتيب ما يفرق</div></div>`;
+}
+const HOOK_CH = [['back', '١٠٠٠ — رجع زي ما كان'], ['less', 'أقل من ١٠٠٠'], ['more', 'أكثر من ١٠٠٠']];
+function hookHTML() {
+  return `<p class="kick">سؤال يطيّح ناس كثير</p>
+    <p class="h" style="margin-bottom:6px">جوال سعره ١٠٠٠ ريال.<br>زاد ٢٠٪… وبعد شهر نزل ٢٠٪.</p>
+    <p class="sub" style="margin-bottom:12px">كم سعره الحين؟</p>
+    <div class="chs" id="hc">${HOOK_CH.map(c => `<button class="ch" data-c="${c[0]}">${c[1]}</button>`).join('')}</div>
+    <div id="rv"></div>`;
+}
+function wireHook(p, onDone) {
+  CUR = null;
+  const t0 = performance.now();
+  p.querySelectorAll('#hc .ch').forEach(btn => btn.addEventListener('click', async () => {
+    if (p.dataset.picked) return; p.dataset.picked = 1;
+    const choice = btn.dataset.c, ok = choice === 'less', sec = (performance.now() - t0) / 1000;
+    btn.classList.add('sel'); fx(btn, 'jump'); play('tap', .6); buzz(10);
+    p.querySelectorAll('#hc .ch').forEach(x => { x.disabled = true; if (x !== btn) x.classList.add('gone'); });
+    await sleep(520);
+    const say = choice === 'back' ? 'أغلب الناس يقولونها — بس لا.' : ok ? 'صح — بس بكم بالضبط؟' : 'لا — صار أقل.';
+    const rv = p.querySelector('#rv');
+    rv.innerHTML = `<p class="say">${say}</p>
+      <div class="ladder">
+        <div class="st"><span class="pr">١٠٠٠</span></div>
+        <div class="st up"><span class="mv up"><svg class="tri" viewBox="0 0 10 10"><path d="M5 1.2L9.4 8.6H.6z"/></svg> ٢٠٪</span><span class="dd">+٢٠٠</span><span class="pr">١٢٠٠</span></div>
+        <div class="st dn"><span class="mv dn"><svg class="tri" viewBox="0 0 10 10"><path d="M5 8.8L9.4 1.4H.6z"/></svg> ٢٠٪</span><span class="dd">−٢٤٠</span><span class="pr">٩٦٠</span></div>
+      </div>
+      <p class="note">النزلة انحسبت من ١٢٠٠ — مو من ١٠٠٠.</p>
+      <div id="rh"></div>`;
+    const sts = rv.querySelectorAll('.st');
+    play(ok ? 'right' : 'lane', .6);
+    for (let i = 0; i < sts.length; i++) { await sleep(i ? 650 : 120); sts[i].classList.add('in'); play('t' + (i + 2), .45); if (i === 2) buzz(15); }
+    await sleep(500); rv.querySelector('.note').classList.add('in');
+    await sleep(700);
+    const rh = rv.querySelector('#rh');
+    rh.innerHTML = ruleCard() + '<button class="btn" id="go" style="margin-top:16px">دورك</button><div class="swipe">' + ICON_UP + '</div>';
+    play('rule', .7); buzz(10);
+    setTimeout(() => { const k = rh.querySelector('.k'); if (k) { k.classList.add('lit'); play('t5', .5); } }, 600);
+    const body = p.querySelector('.body'); setTimeout(() => body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' }), 60);
+    rh.querySelector('#go').addEventListener('click', () => { play('next', .5); onDone.fn(ok, sec, choice); });
+    p.dataset.done = 1;
+  }));
+}
+
+/* ───────── one engine for every stack: the lesson's four reels, the review's three ───────── */
+let STK = null;
+function runStack(mode, cards) {
+  warm(); play('start', .6);
+  STK = { mode, cards, i: 0, res: [], requeued: 0, t0: now(), rBefore: Rnow() };
+  $app.innerHTML = `<div class="top"><button class="x" id="quit" aria-label="خروج">${X_SVG}</button><div class="segs" id="segs"></div><span class="count" id="cnt"></span></div>
+    ${mode === 'practice' ? '<p class="small" style="text-align:center;margin:0">تجربة — ما تنحسب ولا تغيّر موعد المراجعة</p>' : ''}<div class="stage" id="stage"></div>`;
+  document.getElementById('quit').addEventListener('click', () => { CUR = null; STK = null; home(); });
+  showCard(true);
+}
+function segs() {
+  document.getElementById('segs').innerHTML = STK.cards.map((c, i) => `<i class="${i < STK.res.length ? (STK.res[i].ok || STK.res[i].kind === 'hook' ? 'ok' : 'miss') : i === STK.i ? 'on' : ''}"></i>`).join('');
+  document.getElementById('cnt').textContent = toAr(Math.min(STK.i + 1, STK.cards.length)) + '/' + toAr(STK.cards.length);
+}
+function showCard(first) {
+  segs();
+  const stage = document.getElementById('stage'), it = STK.cards[STK.i];
+  const p = document.createElement('div');
+  p.className = 'panel' + (first ? '' : ' below');
+  p.innerHTML = `<div class="body">${it.kind === 'hook' ? hookHTML() : itemHTML(it)}</div>`;
+  stage.appendChild(p);
+  const old = stage.querySelector('.panel:not(:last-child)');
+  requestAnimationFrame(() => requestAnimationFrame(() => { p.classList.remove('below'); if (old) { old.classList.add('above'); setTimeout(() => old.remove(), 420); } }));
+  const last = STK.i === STK.cards.length - 1;
+  const done = { label: last ? 'خلّصنا' : 'التالي', swipe: !last, fn: (ok, sec, val) => advance(it, ok, sec, val) };
+  if (it.kind === 'hook') wireHook(p, done);
+  else { wireItem(p, it, done); CUR.t0 = performance.now() + (first ? 0 : 380); }
+  let y0 = null;
+  p.addEventListener('pointerdown', e => { y0 = e.clientY; });
+  p.addEventListener('pointerup', e => {
+    const answered = it.kind === 'hook' ? p.dataset.done : CUR && CUR.done && CUR.root === p;
+    if (y0 != null && answered && y0 - e.clientY > 60) { const g = p.querySelector('#go'); if (g) g.click(); }
+    y0 = null;
+  });
+}
+function advance(it, ok, sec, val) {
+  STK.res.push({ kind: it.kind, ok, sec, tag: it.tag, val });
+  if (!ok && it.kind !== 'hook' && STK.requeued < 2) {
+    const r = mk(it.kind === 'loss' && STK.mode === 'lesson' ? 'lossc' : it.kind); r.tag = 'back';
+    STK.cards.splice(STK.mode === 'lesson' ? STK.cards.length : STK.cards.length - 1, 0, r); STK.requeued++;
+  }
+  STK.i++;
+  if (STK.i >= STK.cards.length) return STK.mode === 'lesson' ? kept() : endReview();
+  showCard(false);
+}
+
+/* ───────── the lesson: four reels, about thirty seconds ───────── */
+function startLesson() {
+  runStack('lesson', [
+    { kind: 'hook' },
+    mk('lossc', { a: 10, ud: true }),
+    mk('lossc', { a: 30, ud: false, tag: 'swap' }),
+    mk('cmp', { a: 20, P: 500, ud: true, v: 'num', tag: 'exam' })
+  ]);
+}
+function kept() {
+  CUR = null;
+  const hook = STK.res[0], uses = STK.res.slice(1);
+  const right = uses.filter(u => u.ok).length, n = uses.length;
+  const t = now(), day = dstr(t), secs = (t - STK.t0) / 1000;
+  S.learned = { at: t, day, secs: Math.round(secs), hook: hook.val, uses: uses.map(u => [u.kind, u.ok ? 1 : 0, +u.sec.toFixed(1)]) };
+  const g = right >= 3 && right === n ? 3 : 2;
+  S.card = { s: W[2], d: D0(g), last: day, lastT: t, reps: 1, lapse: 0, due: addDays(day, 1) };
+  S.hist = [{ t, g, s: S.card.s, r: null, first: true }];
+  S.log = uses.map(u => ({ t, kind: u.kind, ok: u.ok ? 1 : 0, sec: +u.sec.toFixed(1), ctx: 'lesson' }));
+  save();
+  $app.innerHTML = `<div class="end fade-in">
+    <p class="eh">قاعدة جديدة في دفترك</p><p class="es">${toAr(right)} من ${toAr(n)} — في ${durTxt(secs)}</p>
+    ${ruleCard(true)}
+    <div class="meter" style="text-align:right"><div class="mt"><span>قوة الحفظ</span><span id="mp">٠٪</span></div><div class="mb"><i id="mi" style="width:0"></i></div></div>
+    <p class="next">بكرة: <b>٣ بطاقات</b> — نص دقيقة.</p>
+    <button class="btn" data-n="1">تم — كانت جديدة عليّ</button><button class="btn white" data-n="0">تم — كنت أعرفها</button></div>`;
+  play('done', .7); buzz([15, 60, 25]);
+  setTimeout(() => { $app.querySelector('#mi').style.width = '100%'; countUp($app.querySelector('#mp'), 100, 900); }, 400);
+  $app.querySelectorAll('.btn[data-n]').forEach(b => b.addEventListener('click', () => { S.newRule = b.dataset.n === '1'; save(); play('next', .5); home(); }));
+}
+function countUp(el, to, ms) { const t0 = performance.now(); (function f() { const k = Math.min(1, (performance.now() - t0) / ms); el.textContent = toAr(Math.round(to * k)) + '٪'; if (k < 1) requestAnimationFrame(f); })(); }
+
+/* ───────── the return: three reels ───────── */
+function startReview(practice) {
+  runStack(practice ? 'practice' : 'review', [mk('loss', { tag: 'cold' }), mk(pick(['price', 'cmp', 'cmp'])), mk('lossc', { easy: true, tag: 'win' })]);
+}
+function endReview() {
+  CUR = null;
+  const first = STK.res[0], right = STK.res.filter(r => r.ok).length, n = STK.res.length, practice = STK.mode === 'practice';
+  let surprise = false, next = null, after = 1;
+  if (!practice) {
+    const t = now(), day = dstr(t), el = (t - S.card.lastT) / DAY;
+    const g = !first.ok ? 1 : (first.sec > 30 || STK.res.some(r => !r.ok)) ? 2 : 3;
+    const nx = fsrsNext(S.card, g, dnum(day) - dnum(S.card.last));
+    surprise = first.ok && STK.rBefore < .75;
+    S.card.s = nx.s; S.card.d = nx.d; S.card.last = day; S.card.lastT = t; S.card.reps++; if (g === 1) S.card.lapse++;
+    S.card.due = dueAfter(day, nx.s, S.card.reps);
+    S.hist.push({ t, g, s: nx.s, r: +STK.rBefore.toFixed(3) });
+    STK.res.forEach((r, i) => S.log.push({ t, kind: r.kind, ok: r.ok ? 1 : 0, sec: +r.sec.toFixed(1), ctx: i === 0 ? 'cold' : 'review', day: +el.toFixed(2), pred: i === 0 ? +STK.rBefore.toFixed(3) : undefined }));
+    save();
+    next = S.card.due; after = R(0, nx.s);
+  }
+  const head = practice ? 'هذا شكل المراجعة' : surprise ? 'كانت تبرد — ومسكتها' : first.ok ? 'ماسكة' : 'رجّعناها';
+  const subl = practice ? 'المراجعة الحقيقية تجي بموعدها، وأول بطاقة فيها هي القياس.'
+    : !first.ok ? 'أول بطاقة طاحت، ورجعت لك صح — هذا اللي يثبّتها.' : `أول بطاقة: ${secTxt(first.sec)} — والقاعدة مخفية.`;
+  $app.innerHTML = `<div class="end fade-in"><p class="eh" id="eh">${head}</p><p class="es">${subl}</p>
+    ${ruleCard(true)}
+    <div class="meter" style="text-align:right"><div class="mt"><span>قوة الحفظ</span><span id="mp">${toAr(Math.round(STK.rBefore * 100))}٪</span></div><div class="mb"><i id="mi" style="width:${Math.round(STK.rBefore * 100)}%"></i></div></div>
+    <div class="stats"><div class="stat"><small>صح</small><b>${toAr(right)} من ${toAr(n)}</b></div><div class="stat"><small>الوقت</small><b>${durTxt((now() - STK.t0) / 1000)}</b></div></div>
+    ${next ? `<p class="next">المراجعة الجاية <b>${dueTxt(next)}</b></p>` : ''}
+    <div style="margin-top:10px"><button class="btn" id="fin">تم</button></div></div>`;
+  if (!practice) setTimeout(() => { $app.querySelector('#mi').style.width = Math.round(after * 100) + '%'; countUp($app.querySelector('#mp'), Math.round(after * 100), 900); }, 450);
+  if (surprise) { play('big', .8); buzz([20, 60, 30, 60, 40]); fx($app.querySelector('#rc'), 'boom'); fx($app.querySelector('#eh'), 'boom'); }
+  else play(first.ok ? 'small' : 'done', .6);
+  $app.querySelector('#fin').addEventListener('click', () => { play('next', .5); STK = null; home(); });
+}
+function dueTxt(due) {
+  const n = dnum(due) - dnum(today());
+  return n <= 0 ? 'اليوم' : n === 1 ? 'بكرة' : n === 2 ? 'بعد يومين' : n <= 10 ? `بعد ${toAr(n)} أيام` : `بعد ${toAr(n)} يوم`;
+}
+
+/* ───────── the recall chart: the model's line, the plan ahead, and what was measured ───────── */
+function chartSVG() {
+  const Wd = 340, H = 150, top = 30, bot = 124, left = 10, right = 330, lo = .5;
+  const X = day => right - (clamp(0, HORIZON, day) / HORIZON) * (right - left);
+  const Y = r => bot - (clamp(lo, 1, r) - lo) / (1 - lo) * (bot - top);
+  const t0 = S.learned.at, nowD = dayOf(now());
+  let past = '', fut = '';
+  for (let i = 0; i < S.hist.length; i++) {
+    const h = S.hist[i], a = dayOf(h.t), b = i + 1 < S.hist.length ? dayOf(S.hist[i + 1].t) : nowD;
+    let d = '';
+    for (let x = a; x <= b + 1e-9; x += Math.max(.1, (b - a) / 30)) d += (d ? 'L' : 'M') + X(x).toFixed(1) + ' ' + Y(R(x - a, h.s)).toFixed(1);
+    d += 'L' + X(b).toFixed(1) + ' ' + Y(R(b - a, h.s)).toFixed(1);
+    past += `<path d="${d}" fill="none" stroke="#1CB0F6" stroke-width="2.5" stroke-linejoin="round"/>`;
+  }
+  let c = { s: S.card.s, d: S.card.d }, reps = S.card.reps, lastDay = S.card.last, lastD = dayOf(S.card.lastT), due = S.card.due, guard = 0, dots = '';
+  let d = '';
+  if (dnum(due) < dnum(today())) due = today();
+  while (guard++ < 20) {
+    const dueD = dnum(due) - dnum(S.learned.day), from = Math.max(lastD, nowD), to = Math.min(HORIZON, dueD);
+    if (to > from) for (let x = from; x <= to + 1e-9; x += Math.max(.2, (to - from) / 24)) d += (d ? 'L' : 'M') + X(x).toFixed(1) + ' ' + Y(R(x - lastD, c.s)).toFixed(1);
+    if (dueD >= HORIZON) break;
+    const nx = fsrsNext(c, 3, dnum(due) - dnum(lastDay));
+    if (dueD > nowD) dots += `<circle cx="${X(dueD).toFixed(1)}" cy="${Y(1).toFixed(1)}" r="4" fill="#fff" stroke="#AFAFAF" stroke-width="2"><title>مراجعة متوقّعة — يوم ${toAr(dueD)}</title></circle>`;
+    c = { s: nx.s, d: nx.d }; lastDay = due; lastD = dueD; d += (d ? 'L' : 'M') + X(dueD).toFixed(1) + ' ' + Y(1).toFixed(1); reps++; due = dueAfter(due, nx.s, reps);
+  }
+  fut = `<path d="${d}" fill="none" stroke="#AFAFAF" stroke-width="2" stroke-dasharray="5 5"/>` + dots;
+  const marks = S.log.filter(l => l.ctx === 'cold').map(l => {
+    const x = X(dayOf(l.t)).toFixed(1);
+    return `<g transform="translate(${x},12)"><circle r="7" fill="${l.ok ? '#58CC02' : '#fff'}" stroke="${l.ok ? '#58A700' : '#EA2B2B'}" stroke-width="2.5"/>
+      <title>يوم ${toAr(Math.round(dayOf(l.t)))}: ${l.ok ? 'صح' : 'غلط'} — ${secTxt(l.sec)}${l.pred != null ? ' — توقّع النموذج ' + toAr(Math.round(l.pred * 100)) + '٪' : ''}</title></g>`;
+  }).join('');
+  const grid = [1, .85, .7].map(r => `<line x1="${left}" x2="${right}" y1="${Y(r)}" y2="${Y(r)}" stroke="#F0F0F0" stroke-width="1.5"/><text x="${right + 4}" y="${Y(r) + 4}" text-anchor="start" font-size="10" fill="#AFAFAF" font-weight="700">${toAr(Math.round(r * 100))}٪</text>`).join('');
+  const ticks = [0, 30, 60, 90].map(dd => `<text x="${dd === 0 ? right - 14 : dd === 90 ? left + 22 : X(dd)}" y="${bot + 18}" font-size="11" text-anchor="middle" fill="#AFAFAF" font-weight="700">${dd === 90 ? 'الاختبار' : 'يوم ' + toAr(dd)}</text>`).join('');
+  const nowLine = `<line x1="${X(nowD)}" x2="${X(nowD)}" y1="${top - 4}" y2="${bot}" stroke="#CE82FF" stroke-width="1.5" stroke-dasharray="3 3"/><text x="${X(nowD)}" y="${bot + 18}" font-size="11" text-anchor="middle" fill="#A568CC" font-weight="800">${nowD < 8 || nowD > 82 || Math.abs(nowD - 30) < 6 || Math.abs(nowD - 60) < 6 ? '' : 'اليوم'}</text>`;
+  return `<svg viewBox="0 0 ${Wd + 22} ${H}" dir="ltr" style="width:100%;height:auto;display:block" role="img" aria-label="منحنى الحفظ">${grid}${nowLine}${fut}${past}${marks}${ticks}</svg>`;
+}
+
+/* ───────── home: the deck ───────── */
+function home() {
+  CUR = null;
+  if (!S.learned) {
+    $app.innerHTML = `<div class="deck fade-in" style="display:flex;flex-direction:column">
+      <p class="kick" style="margin-top:24px">تجربة ٢ — نص دقيقة</p>
+      <h1 style="font-size:30px;line-height:1.3">سؤال يطيّح ناس كثير…<br>ونص دقيقة يكفي.</h1>
+      <p class="sub" style="margin-top:10px">قاعدة وحدة في ٤ بطاقات. بعدها ترجع لك ٣ بطاقات بأيام محسوبة — ونقيس كم تبقى معك لين يوم ٩٠.</p>
+      <div class="card" style="margin-top:8px"><h3>كيف تنقاس؟</h3><p class="cs" style="margin:0">أول بطاقة في كل مراجعة تجي باردة — أرقام جديدة، والقاعدة مخفية. صحّها ووقتها هو القياس.</p></div>
+      <div style="margin-top:auto;padding-top:20px"><button class="btn" id="go">يلا</button></div>
+      ${simPanel()}</div>`;
+    $app.querySelector('#go').addEventListener('click', startLesson);
+    wireSim(); return;
+  }
+  const r = Rnow(), due = isDue(), dl = Math.max(0, dnum(examDay()) - dnum(today()));
+  const colds = S.log.filter(l => l.ctx === 'cold');
+  const rows = colds.slice().reverse().map(l => `<tr><td>يوم ${toAr(Math.round(dayOf(l.t)))}</td><td class="${l.ok ? 'ok-t' : 'no-t'}">${l.ok ? 'صح' : 'غلط'}</td><td>${secTxt(l.sec)}</td><td>${l.pred != null ? toAr(Math.round(l.pred * 100)) + '٪' : ''}</td></tr>`).join('');
+  $app.innerHTML = `<div class="deck fade-in">
+    <h1>دفتر قواعدي</h1><p class="h1s">باقي على الاختبار ${toAr(dl)} يوم${S.newRule === false ? ' — (القاعدة كانت معروفة عندك)' : ''}</p>
+    ${ruleCard(true)}
+    <div class="meter"><div class="mt"><span>قوة الحفظ الحين</span><span>${toAr(Math.round(r * 100))}٪</span></div><div class="mb"><i style="width:${Math.round(r * 100)}%"></i></div></div>
+    ${due ? `<div style="margin-top:18px"><button class="btn" id="rv">مراجعة اليوم — ٣ بطاقات، نص دقيقة</button></div>`
+      : `<p class="next">المراجعة الجاية <b>${dueTxt(S.card.due)}</b></p><button class="btn white" id="pr">شكل المراجعة — تجربة ما تنحسب</button>`}
+    <div class="card"><h3>ذاكرتك للقاعدة</h3><p class="cs">الخط الأزرق توقّع النموذج لحفظك، والمتقطّع لو كمّلت المراجعات بمواعيدها. الدوائر فوق هي قياسك الحقيقي.</p>
+      ${chartSVG()}
+      <div class="legend"><span><i></i>توقّع النموذج</span><span><i class="dash"></i>الخطة لين الاختبار</span>
+      <span><b style="background:#58CC02"></b>صح</span><span><b style="border:2.5px solid #EA2B2B"></b>غلط</span></div></div>
+    ${colds.length ? `<div class="card"><h3>قياساتك</h3><table class="log"><tr><th>اليوم</th><th>النتيجة</th><th>الوقت</th><th>التوقّع</th></tr>${rows}</table></div>` : ''}
+    <div class="links"><button id="cp">نسخ النتائج</button><button id="rs">ابدأ من جديد</button></div>
+    <p class="small" style="margin-top:10px">التقدّم محفوظ في هذا المتصفح بس — نفس الجهاز ونفس المتصفح كل مرة.</p>
+    ${simPanel()}</div>`;
+  const rv = $app.querySelector('#rv'); if (rv) rv.addEventListener('click', () => startReview(false));
+  const pr = $app.querySelector('#pr'); if (pr) pr.addEventListener('click', () => startReview(true));
+  $app.querySelector('#cp').addEventListener('click', copyResults);
+  $app.querySelector('#rs').addEventListener('click', () => { if (confirm('نمسح كل التجربة ونبدأ من الصفر؟')) { S = fresh(); save(); home(); } });
+  wireSim();
+}
+function copyResults() {
+  const code = 'LAW4:' + btoa(unescape(encodeURIComponent(JSON.stringify(Object.assign({ sim: SIM, at: Date.now() }, S)))));
+  const done = () => toast('انسخت — جاهزة تنلصق في المحادثة');
+  if (navigator.clipboard) navigator.clipboard.writeText(code).then(done, () => prompt('النتائج:', code)); else prompt('النتائج:', code);
+}
+function simPanel() {
+  if (!SIM) return '';
+  return `<div class="sim"><b style="color:#A568CC">آلة الزمن (تجربة فقط)</b><p class="small" style="margin:2px 0 0">تخزين منفصل عن التجربة الحقيقية. اليوم الحالي: ${toAr(Math.round(dayOf(now())))}</p>
+    <div class="row"><button data-d="1">+١ يوم</button><button data-d="3">+٣ أيام</button><button data-d="7">+٧ أيام</button><button data-d="0">صفّر</button></div></div>`;
+}
+function wireSim() {
+  if (!SIM) return;
+  $app.querySelectorAll('.sim button').forEach(b => b.addEventListener('click', () => {
+    const d = +b.dataset.d; if (d) S.off = (S.off || 0) + d; else S = fresh();
+    save(); home();
+  }));
+}
+
+home();
+})();
+</script>
+</body>
+</html>

@@ -8897,7 +8897,7 @@ function tasteSwap(ns, boxes, eq, finish) {
   const T0 = 350, at = t => t / STAR_MS, io = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
   const fly = p => io(Math.min(1, Math.max(0, (p - 383) / (967 - 383))));
   ns.forEach((n, k) => {
-    const dx = r0[1 - k].left - r1[k].left, H = k ? -2.3 : 4, lean = k ? 11 : -11;
+    const dx = (r0[1 - k].left - r1[k].left) / fitZ(n), H = k ? -2.3 : 4, lean = k ? 11 : -11;
     /* the copy that marks where it will land */
     const g = n.cloneNode(true);
     g.className = "ts-ghost";
@@ -9675,6 +9675,121 @@ if (!DEV || /[?&]backtest=1(&|$)/.test(location.search)) {
   addEventListener("pointerdown", backArm, { capture: true, passive: true });
   addEventListener("keydown", backArm, { capture: true, passive: true });
 }
+
+/* ---------------- no step scrolls ----------------
+   The user, 2026-10-29: «no scrolling at all, I don't want any screen to have
+   me able to scroll it». Every step — the first run, a question, a teaching
+   card, a win, a result — fits the phone it is on; the tab pages (the path, the
+   league, stats, settings) are lists and keep scrolling. A step taller than the
+   phone has its body zoomed down until it fits (never under FIT_MIN): a
+   question's body inside its frame, anything else as a page. The fit is made
+   before the first paint of a screen; a change while it is up (an answer's
+   sheet, a hint card, a late font, a turn of the phone) glides to the new size.
+   Code that turns a measured distance into a transform inside a zoomed body
+   divides it by fitZ(el). */
+const FIT_MIN = .6;
+let fitScr = null, fitRO = null;
+function fitZ(el) {
+  let z = 1;
+  for (let n = el; n && n !== document.body; n = n.parentElement) { const v = parseFloat(n.style.zoom); if (v) z *= v; }
+  return z;
+}
+function fitTarget(scr) {
+  const qa = scr.querySelector(".q-area");
+  if (qa) {
+    return { els: Array.from(qa.children).filter(e => getComputedStyle(e).position !== "absolute" && getComputedStyle(e).position !== "fixed"),
+      over: () => qa.scrollHeight - qa.clientHeight };
+  }
+  const body = scr.querySelector(".ob-stage, .wl-body, .teach-body, .complete, .exam-pick") || scr;
+  return { els: [body], page: true, over: () => document.scrollingElement.scrollHeight - innerHeight };
+}
+/* measure the screen as it will stand: an entrance still sliding up, a card
+   mid-jump or a sheet still rising would count as height it does not have.
+   Every finite animation in it is seeked to its end and every transform a
+   script set (GSAP's jumps) is lifted for the measurement, and both are put
+   back in the same task, so nothing paints, finishes or fires in between. */
+function fitSettled(scr, f) {
+  const all = scr.getAnimations ? scr.getAnimations({ subtree: true }) : [];
+  const isTr = a => window.CSSTransition && a instanceof CSSTransition;
+  /* a running transition is never touched: it is short, and seeking or holding it off would break it */
+  const busy = new Set(all.filter(isTr).map(a => a.effect && a.effect.target));
+  const as = all.filter(a => !isTr(a) && a.id !== "fit" && a.currentTime !== null && a.effect && isFinite(a.effect.getComputedTiming().endTime));
+  const was = as.map(a => a.currentTime);
+  as.forEach(a => { try { a.currentTime = a.effect.getComputedTiming().endTime; } catch (e) {} });
+  /* a transform transition is held off while the transform comes and goes, or the lift itself would start one */
+  const tf = Array.from(scr.querySelectorAll('[style*="transform"], [style*="translate"], [style*="scale"]')).filter(e => !busy.has(e)).map(e => {
+    const cs = getComputedStyle(e), hold = /all|transform|translate|scale/.test(cs.transitionProperty) && parseFloat(cs.transitionDuration) > 0;
+    return [e, e.style.transform, e.style.translate, e.style.scale, hold ? e.style.transition : null];
+  });
+  tf.forEach(([e, , , , tn]) => { if (tn !== null) e.style.transition = "none"; e.style.transform = e.style.translate = e.style.scale = ""; });
+  try { return f(); } finally {
+    tf.forEach(([e, t, tr, sc]) => { e.style.transform = t; e.style.translate = tr; e.style.scale = sc; });
+    if (tf.some(x => x[4] !== null)) { void scr.offsetWidth; tf.forEach(([e, , , , tn]) => { if (tn !== null) e.style.transition = tn; }); }
+    as.forEach((a, i) => { try { if (a.playState !== "idle") a.currentTime = was[i]; } catch (e) {} });
+  }
+}
+function fitNow(glide) {
+  const scr = $app.querySelector(":scope > .screen");
+  if (!scr || $app.querySelector(":scope > .bottomnav") || scr.querySelector(".wl-in:not(.wl-landed)") || scr.matches(".wl-in:not(.wl-landed)")) return;
+  fitSettled(scr, () => { fitScreen(scr, glide); fitSheet(scr); });
+}
+/* an answer's sheet shows its whole solution, never a box to scroll: a long one is zoomed
+   down until the sheet leaves the lesson's top bar in sight */
+function fitSheet(scr) {
+  const fb = scr.querySelector(".feedback.show"), sol = fb && fb.querySelector(".fb-solution");
+  if (!sol || getComputedStyle(sol).display === "none") return;
+  const over = () => fb.getBoundingClientRect().height - (innerHeight - 64);
+  sol.style.zoom = "";
+  if (over() <= .5) return;
+  let lo = FIT_MIN, hi = 1, z = lo;
+  sol.style.zoom = z;
+  if (over() <= .5) { for (let i = 0; i < 8; i++) { z = (lo + hi) / 2; sol.style.zoom = z; if (over() <= .5) lo = z; else hi = z; } z = lo; }
+  sol.style.zoom = z.toFixed(4);
+}
+function fitScreen(scr, glide) {
+  const t = fitTarget(scr);
+  if (!t.els.length) return;
+  const z0 = parseFloat(t.els[0].style.zoom) || 1;
+  let o = t.over();
+  if (o <= .5 && (z0 >= 1 || o > -24)) return;
+  t.els.forEach(e => { e.getAnimations().forEach(a => { if (a.id === "fit") a.cancel(); }); e.style.zoom = ""; if (t.page) e.style.minHeight = ""; });
+  let z = 1;
+  o = t.over();
+  /* a body as tall as the phone (min-height 100dvh) would come out short once zoomed: keep it the phone's height */
+  const tall = t.page && parseFloat(getComputedStyle(t.els[0]).minHeight) >= innerHeight - 2;
+  const set = () => t.els.forEach(e => { e.style.zoom = z.toFixed(4); if (tall) e.style.minHeight = (innerHeight / z).toFixed(1) + "px"; });
+  /* the largest zoom that fits: a body does not shrink in proportion (text re-wraps, a flex body
+     stretches), so it is searched for, not computed */
+  if (o > .5) {
+    let lo = FIT_MIN, hi = 1;
+    z = lo; set();
+    const oMin = t.over();
+    if (oMin <= .5) {
+      for (let i = 0; i < 8; i++) { z = (lo + hi) / 2; set(); if (t.over() <= .5) lo = z; else hi = z; }
+      z = lo; set();
+    } else if (oMin > o - 1) { z = 1; set(); }   /* what overflows is not this body: shrinking it would only cost size */
+  }
+  if (glide && Math.abs(z - z0) > .004 && !fxReduced())
+    t.els.forEach(e => { if (e.animate) e.animate([{ zoom: z0 }, { zoom: z }], { id: "fit", duration: 260, easing: "cubic-bezier(.3,.7,.4,1)" }); });
+}
+function fitWire() {
+  const scr = $app.querySelector(":scope > .screen");
+  if (scr === fitScr) return false;
+  fitScr = scr;
+  if (fitRO) fitRO.disconnect();
+  if (scr && window.ResizeObserver) {
+    /* a frame later, never inside the observer: a zoom set there would resize what it watches ("ResizeObserver loop") */
+    let raf = 0;
+    fitRO = new ResizeObserver(() => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; fitNow(true); }); });
+    fitRO.observe(scr);
+    fitTarget(scr).els.forEach(e => { fitRO.observe(e); Array.from(e.children).forEach(k => fitRO.observe(k)); });
+    const fb = scr.querySelector("#fb"); if (fb) fitRO.observe(fb);
+  }
+  return true;
+}
+new MutationObserver(() => { const fresh = fitWire(); fitNow(!fresh); }).observe($app, { childList: true, subtree: true });
+addEventListener("resize", () => fitNow(true));
+if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", () => fitNow(true));
 
 boot();
 netBar();

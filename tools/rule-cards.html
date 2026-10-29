@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>سبورة القانون</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&display=swap">
+<style>
+/* The rule's card in tools/rule-flow.html three ways (?card=1|2|3), side by side. The user, 2026-10-29, on the
+   yellow card: «its now 10% only … plan and really plan and then create something 90% nicer and better, create 3
+   different versions and one version for me is صبوره with handwriting effects». */
+:root { --ink: #3C3C3C; --gray: #777; --line: #E5E5E5; --blue: #1CB0F6; --blue-dk: #1899D6; --blue-light: #DDF4FF; --blue-border: #84D8FF; --green: #58CC02; --green-lip: #478700; --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #EFEFEF; color: var(--ink); font-family: var(--font); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h2, p { margin: 0; }
+button { font-family: var(--font); cursor: pointer; color: inherit; }
+header { max-width: 1760px; margin: 0 auto; padding: 20px 20px 4px; }
+header h1 { font-size: 28px; font-weight: 800; line-height: 1.25; }
+header p { font-size: 15.5px; font-weight: 600; color: var(--gray); margin-top: 4px; }
+.bar { max-width: 1760px; margin: 0 auto; padding: 10px 20px 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chipb { height: 38px; padding: 0 14px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 14.5px; font-weight: 800; }
+.chipb.on { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+.sep { width: 2px; height: 26px; background: #DADADA; margin: 0 4px; border-radius: 1px; }
+.play { height: 38px; padding: 0 18px; border-radius: 12px; border: 0; background: var(--green); box-shadow: 0 4px 0 var(--green-lip); color: #fff; font-size: 15px; font-weight: 800; }
+.play:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--green-lip); }
+.tabs { display: none; gap: 8px; padding: 10px 16px 0; }
+.tabs { flex-wrap: wrap; }
+.tabs button { flex: 1 1 auto; padding: 0 12px; white-space: nowrap; height: 42px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 15px; font-weight: 800; }
+.tabs button.on { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+.grid { max-width: 1760px; margin: 0 auto; padding: 14px 20px 40px; display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 18px; }
+.col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.tag { font-size: 13px; font-weight: 800; color: var(--blue-dk); }
+.col h2 { font-size: 22px; font-weight: 800; line-height: 1.3; }
+.col p.what { font-size: 14px; font-weight: 600; color: var(--gray); min-height: 88px; }
+.frame { position: relative; width: min(100%, calc((100vh - 120px) * 390 / 800)); aspect-ratio: 390 / 800; margin: 0 auto; border: 9px solid #1F1F1F; border-radius: 38px; overflow: hidden; background: #fff; box-shadow: 0 16px 34px rgba(0,0,0,.15); }
+.frame iframe { position: absolute; top: 0; left: 0; width: 390px; height: 800px; border: 0; transform-origin: 0 0; }
+.acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.frame { margin-top: auto; }
+.acts button, .acts a { flex: 1 1 auto; padding: 0 8px; height: 40px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 14.5px; font-weight: 800; color: var(--ink); display: grid; place-items: center; text-decoration: none; }
+.acts button.on { background: var(--green); border-color: var(--green-lip); color: #fff; }
+@media (min-width: 901px) {
+  body.one { display: grid; grid-template-columns: minmax(0, 440px) auto; grid-template-rows: auto 1fr; justify-content: center; column-gap: 48px; padding-top: 18px; }
+  body.one header { grid-column: 1; grid-row: 1; margin: 0; padding: 20px 0 4px; max-width: none; }
+  body.one .bar { grid-column: 1; grid-row: 2; align-content: start; margin: 0; padding: 10px 0 0; max-width: none; }
+  body.one .grid { grid-column: 2; grid-row: 1 / span 2; margin: 0; padding: 14px 0 24px; grid-template-columns: auto; }
+  body.one .frame { width: max(300px, calc((100vh - 110px) * 390 / 800)); }
+}
+@media (max-width: 900px) {
+  header { padding: 16px 16px 0; } header h1 { font-size: 22px; }
+  .bar { padding: 10px 16px 0; }
+  .tabs { display: flex; }
+  .grid { grid-template-columns: minmax(0, 1fr); padding: 12px 16px 30px; }
+  .col { display: none; } .col.on { display: flex; }
+  .frame { width: min(100%, 390px); }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1 id="h1">خمس أفكار جديدة للقانون</h1>
+  <p id="hp">كل نسخة فكرة مختلفة كلياً. اختر قانون، واضغط «شغّل الكل» أو «شغّل» داخل كل جوال، وقيّم كل وحدة تحتها.</p>
+</header>
+<div class="bar" id="bar"></div>
+<div class="tabs" id="tabs"></div>
+<main class="grid" id="grid"></main>
+<script>
+(function () {
+  'use strict';
+  const RULES = [['prob', 'الاحتمال'], ['mean', 'الوسط الحسابي'], ['hand', 'المصافحات'], ['last', 'رقم الآحاد'], ['tri', 'مجموع ١ إلى ن'], ['queue', 'الترتيب من الطرفين'], ['clock', 'زاوية الساعة'], ['ways', 'مبدأ العدّ']];
+  const ALL = /[?&]old\b/.test(location.search), PREV = /[?&]prev\b/.test(location.search);
+  const V = !ALL && !PREV ? [
+    { c: 7, tag: 'فكرة ١', name: 'لوحة المطار', what: 'لوحة إعلانات مثل المطار: كل كلمة في القانون تتقلّب حروفها لين تثبت، بصوت الطقطقة. الأرقام تتقلّب تحت كلماتها، ولما يطلع الجواب تولّع اللمبة خضرا ويصير القانون «محلول».' },
+    { c: 8, tag: 'فكرة ٢', name: 'مربعات ملوّنة', what: 'كل جزء من القانون مربع بلونه، فيه اسمه ومكان رقمه. الرقم يطير من الرسم بلون مربعه ويدور مثل العدّاد لين يوقف، والجواب يقلب مربعه أخضر. بالمراجعة الكلمات تختفي مثل التحميل.' },
+    { c: 9, tag: 'فكرة ٣', name: 'الكلمة تصير رقم', what: 'خط كبير وحركة نظيفة: الكلمات تطلع من تحت، وخط يمرّ تحت كل جزء. كل رقم يجي يدفّ كلمته لفوق ويطلع مكانها، والكلمة تنزل صغيرة تحته، لين يصير القانون كله أرقام.' },
+    { c: 10, tag: 'فكرة ٤', name: 'زجاج', what: 'بطاقة زجاج فوق ألوان تتحرك ببطء، مثل آيفون. الرقم قطرة زجاج تطير من الرسم وتنفرش فقاعة عند كلمتها، والجواب يلفّ حول البطاقة إطار بكل الألوان. بالمراجعة الكلمات ضبابية.' },
+    { c: 11, tag: 'فكرة ٥', name: 'نيون', what: 'لوحة ليلية، وكل جزء من القانون أنبوب نيون بلونه يولّع ويرمش بصوت الطنين. الرقم شهاب بلون كلمته يطير من الرسم لها، والجواب يولّع أخضر. بالمراجعة الأنابيب مطفية لين تضغط.' },
+  ] : ALL ? [
+    { c: 1, tag: 'النسخة ١', name: 'الصبورة', what: 'سبورة بيضاء والقلم يكتب القانون قدامك بخط الرقعة، بصوت القلم على السبورة. الأرقام من الرسم ينكتبون بالقلم الأحمر، والجواب يتحوّط بدائرة، والقلم يرجع مكانه.' },
+    { c: 2, tag: 'النسخة ٢', name: 'سطر الحل', what: 'بدون صندوق: القانون مكتوب نظيف، كل جزء بلونه. وتحته يتعوّض بالأرقام سطر سطر، كل رقم بلون كلمته، لين يطلع الجواب الأخضر.' },
+    { c: 3, tag: 'النسخة ٣', name: 'بطاقة الحفظ', what: 'بطاقة حفظ: وجه فيه اسم القانون، ووجه فيه القانون. تنرمي وتنقلب لك أول مرة، وبالمراجعة تشوف الاسم بس وتقلبها بنفسك بعد ما تقوله في بالك.' },
+  ] : [
+    { c: 4, tag: 'من ملفات دولينجو', name: 'سبورة دولينجو', what: 'سبورة بألوان دولينجو: إطار أزرق، بطاقة «القانون» ومغناطيس، وثلاث أقلام. الأزرق يكتب القانون بخط اليد، والأحمر الأرقام، والأخضر يحوّط الجواب.' },
+    { c: 5, tag: 'من دروس Brilliant', name: 'توهّج Brilliant', what: 'بطاقة بيضاء وكلمات القانون في مربعات زرقا فاتحة، مثل Brilliant. نقطة نعناعية تطير من الرسم للكلمة، تتوهّج، وتنزل بسهم للرقم.' },
+    { c: 6, tag: 'من ملفات دولينجو', name: 'بطاقة دولينجو', what: 'بطاقة الجملة من تمرين القواعد في دولينجو، بألوان دولينجو للرياضيات، وفوقها «قانون جديد». الأرقام تجي في حبات زرقا، والجواب يقلب البطاقة خضرا ويمر عليها اللمعان.' },
+  ];
+  if (ALL) { document.getElementById('h1').textContent = 'القانون بثلاث نسخ'; document.getElementById('hp').textContent = 'النسخ الثلاث الأولى.'; }
+  if (PREV) { document.getElementById('h1').textContent = 'القانون من Brilliant ودولينجو'; document.getElementById('hp').textContent = 'النسخ الثلاث اللي قبل.'; }
+  const SHOWTXT = !PREV;
+  document.getElementById('tabs').innerHTML = V.map((x, i) => `<button data-i="${i}"${i ? '' : ' class="on"'}>${x.name}</button>`).join('');
+  document.getElementById('grid').style.setProperty('--n', V.length);
+  const HANDS = [['marhey', 'خط مرهي'], ['ruqaa', 'خط الرقعة'], ['baloo', 'خط التطبيق']];
+  let hand = 'marhey';
+  const KEY = 'qudrati.rulecards.pick';
+  let pick = {}; try { pick = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) {}
+  let rule = 'prob', mode = 'new';
+  const bar = document.getElementById('bar'), grid = document.getElementById('grid');
+  bar.innerHTML = RULES.map(([k, n]) => `<button class="chipb" data-r="${k}">${n}</button>`).join('') +
+    (!PREV ? '' : '<span class="sep"></span>' + HANDS.map(([k, n]) => `<button class="chipb" data-h="${k}">${n}</button>`).join('')) + '<span class="sep"></span><button class="chipb" data-m="new">أول مرة</button><button class="chipb" data-m="review">مراجعة</button><span class="sep"></span><button class="play" id="all">' + (V.length === 3 ? 'شغّل الثلاث' : 'شغّل الكل') + '</button>';
+  grid.innerHTML = V.map((x, i) => `<section class="col${i ? '' : ' on'}" data-i="${i}">
+      ${SHOWTXT ? `<span class="tag">${x.tag}</span><h2>${x.name}</h2><p class="what">${x.what}</p>` : ''}
+      <div class="frame"><iframe title="${x.name}" allow="autoplay"></iframe></div>
+      <div class="acts"><button data-k="${x.c}" data-p="yes">عجبتني</button><button data-k="${x.c}" data-p="meh">عادي</button><button data-k="${x.c}" data-p="no">لا</button><button class="again" data-c="${x.c}">أعدها</button><a data-c="${x.c}" target="_blank">افتحها</a></div>
+    </section>`).join('');
+  const frames = [...document.querySelectorAll('.frame iframe')];
+  const src = c => `rule-flow.html?card=${c}&embed&rule=${rule}${mode === 'review' ? '&mode=review' : ''}${c === 4 ? '&hand=' + hand : ''}`;
+  const load = () => {
+    frames.forEach((f, i) => { f.src = src(V[i].c); });
+    document.querySelectorAll('a[data-c]').forEach(a => a.href = `rule-flow.html?card=${a.dataset.c}${a.dataset.c === '4' ? '&hand=' + hand : ''}`);
+    bar.querySelectorAll('[data-h]').forEach(b => b.classList.toggle('on', b.dataset.h === hand));
+    bar.querySelectorAll('[data-r]').forEach(b => b.classList.toggle('on', b.dataset.r === rule));
+    bar.querySelectorAll('[data-m]').forEach(b => b.classList.toggle('on', b.dataset.m === mode));
+  };
+  bar.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { rule = b.dataset.r; load(); });
+  bar.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { mode = b.dataset.m; load(); });
+  bar.querySelectorAll('[data-h]').forEach(b => b.onclick = () => { hand = b.dataset.h; load(); });
+  document.getElementById('all').onclick = () => frames.forEach(f => { try { f.contentWindow.postMessage({ go: 1 }, location.origin); } catch (e) {} });
+  document.querySelectorAll('.again').forEach(b => b.onclick = () => { const i = V.findIndex(x => x.c === +b.dataset.c); frames[i].src = src(V[i].c); });
+  const paint = () => document.querySelectorAll('.acts button[data-p]').forEach(b => b.classList.toggle('on', pick[b.dataset.k] === b.dataset.p));
+  document.querySelectorAll('.acts button[data-p]').forEach(b => b.onclick = () => { pick[b.dataset.k] = pick[b.dataset.k] === b.dataset.p ? null : b.dataset.p; try { localStorage.setItem(KEY, JSON.stringify(pick)); } catch (e) {} paint(); });
+  paint(); load();
+  const fit = () => document.querySelectorAll('.frame').forEach(f => { const i = f.querySelector('iframe'), k = f.clientWidth / 390; i.style.transform = `scale(${k})`; i.style.height = (f.clientHeight / k) + 'px'; });
+  addEventListener('resize', fit); new ResizeObserver(fit).observe(grid); fit();
+  document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+    document.querySelectorAll('.col').forEach(c => c.classList.toggle('on', c.dataset.i === b.dataset.i)); fit();
+  });
+})();
+</script>
+</body>
+</html>
