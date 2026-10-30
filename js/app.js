@@ -3823,7 +3823,12 @@ function sesCountLine(resolved) {
 function learnSet(key) { return window.QLEARN && window.QLEARN[key]; }
 function learnRec(key) {
   const r = (S.learn || {})[key];
-  return r && Array.isArray(r.done) ? r : { done: [], acc: {} };
+  if (!r || !Array.isArray(r.done)) return { done: [], acc: {} };
+  /* a short lesson taken out of a node (node 1's «العدد المكرر», 2026-10-30) stays in old saves' done
+     list: kept, it filled a ring segment and counted toward the node for a lesson that is not there */
+  const L = learnSet(key);
+  if (L) r.done = r.done.filter(id => L.lessons.some(x => x.id === id));
+  return r;
 }
 /* the first short lesson of the node not finished yet, or -1 once all are */
 function learnAt(key) {
@@ -3965,12 +3970,12 @@ function rfNear(ans, n) {
   return shuffle(out).slice(0, n);
 }
 function arabicToNum(s) { return +String(s).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace("٫", "."); }
-/* The rule screens run in node 1's first seven short lessons while the user
+/* The rule screens run in node 1's first six short lessons (its first seven until the first was cut) while the user
    judges them (2026-10-26: «lets say just the first 7 lesson only then i will
    decide»); the teaching cards keep their old flow until then. A wrong answer
    is tried again on the spot until it is right, with more help each time and
    never the answer itself (rfHelp). */
-const RF_LESSONS = { "skills.bigsum": 7 }, RF_TEACH = false;
+const RF_LESSONS = { "skills.bigsum": 6 }, RF_TEACH = false;   // the same six as before node 1's first lesson was cut (2026-10-30)
 /* a cloze: eq with _ for each blank, the answers in order, the tiles shuffled */
 function rfCloze(o) {
   const tiles = o.a.concat(o.more || []);
@@ -8655,11 +8660,17 @@ const OB_LEVELS = [
    فهيم answers a pick with encouragement only — never what it pays (the user,
    2026-10-22: no chest or gem talk on this screen) */
 const OB_GOALS = {
-  5:  ["هادئ", "قرابة نص درس", "بداية حلوة! *خطوة صغيرة* كل يوم تفرق."],
-  10: ["معتاد", "قرابة درس كامل", "اختيار ذكي! *درس كل يوم* ويثبت معك."],
-  20: ["جدّي", "درسين كل يوم", "حماس! هذا *الجدّ* — درسين وتحس بالفرق!"]
+  5:  ["هادئ", "بداية حلوة! *خطوة صغيرة* كل يوم تفرق."],
+  10: ["معتاد", "اختيار ذكي! *درس كل يوم* ويثبت معك."],
+  20: ["جدّي", "حماس! هذا *الجدّ* — درسين وتحس بالفرق!"]
 };
-const goalSay = g => OB_GOALS[g][2];
+const goalSay = g => OB_GOALS[g][1];
+/* what a goal costs in a day, in real minutes (the user, 2026-10-30: «a time to it so they feel like
+   it's so little … but add real time»): a short lesson runs about three minutes and asks 5.6
+   answered items on average (the 32 in learn.js, 3 to 9 each), about 32s a question with the teaching
+   around it; 36s rounds that up rather than promise less. 5 → ٣ دقائق, 10 → ٦, 20 → ١٢ */
+const GOAL_SECS = 36;
+const goalTime = g => "قرابة " + arPlural(Math.round(g * GOAL_SECS / 60), "دقيقة", "دقيقتين", "دقائق", "دقيقة");
 /* the bigger the goal, the bigger the answer: one note, two, three rising, a
    longer buzz, and the row's question tiles ripple, one after another, each
    with its own rising tick (glWave) */
@@ -8832,7 +8843,7 @@ const OB_VIEW = {
       <div class="ob-list gl-list" role="radiogroup" aria-label="هدفك اليومي">${GOALS.map((g, i) =>
         obOpt("goal", g, `${g === DAILY_GOAL ? `<span class="gl-badge">الأكثر اختياراً</span>` : ""}
           ${glTiles(g)}
-          <span class="ob-tx"><b>${qCount(g)} يومياً</b><span>${OB_GOALS[g][1]}</span></span>
+          <span class="ob-tx"><b>${qCount(g)} يومياً</b><span>${goalTime(g)}</span></span>
           <span class="gl-tag">${OB_GOALS[g][0]}</span>`, i)).join("")}</div>
       <p class="ob-note">تقدر تغيّره من الإعدادات وقت ما تبي</p>` }),
   start: () => {
@@ -9535,12 +9546,11 @@ function setProfile(guest, name) {
 
 function setTrain() {
   const goal = dailyGoal();
-  const tag = { 5: "هادئ", 10: "معتاد", 20: "جدّي" };
   return `
     <div class="set-lab">هدفك اليومي</div>
     <div class="set-goals" role="radiogroup" aria-label="الهدف اليومي">
       ${GOALS.map(g => `<button type="button" class="set-goal${goal === g ? " on" : ""}" role="radio" aria-checked="${goal === g}" onclick="A.setGoal(${g})">
-        <span class="set-goal-tx"><b>${qCount(g)} يومياً</b><small>${tag[g] || ""} — صندوق ${toAr(Math.round(CHEST_GEMS * g / DAILY_GOAL))} جوهرة</small></span>
+        <span class="set-goal-tx"><b>${qCount(g)} يومياً</b><small>${goalTime(g)}، صندوق ${toAr(Math.round(CHEST_GEMS * g / DAILY_GOAL))} جوهرة</small></span>
         ${glTiles(g)}
       </button>`).join("")}
     </div>

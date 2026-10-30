@@ -4,6 +4,9 @@ Decisions that wait on you, and work put off until later. Newest first.
 
 ## Waiting on you
 
+- **A harder first question** (wishlist, 2026-10-30). You said: «make this first question little bit harder … now even an 8 years old can solve it», with a picture of فهيم beside it.
+  - **Done for now:** node 1's first short lesson, «العدد المكرر» (it opened on ٧ + ٧ + ٧), was deleted. «اجمعها أزواجاً» (٣٧ + ٢٥ + ٦٣ + ٧٥, pairs to ١٠ / ١٠٠ / ١٠٠٠) is now the first lesson anyone plays. The deleted lesson is in git history (`js/data/learn.js` before 2026-10-30) if it is ever wanted back.
+  - **Still open:** the فهيم pose in the picture (hand on chest, book held to it) is not one of the seven the app ships; it looks like the new animated فهيم from the other session's lab (tools/fahim-parts, tools/duo-onboard). If that screen has its own first question, it still needs to be made harder.
 - **The home screen's top** (`tools/home-top.html`): round 4's «فهيم يتحدّاك» shipped on 2026-10-28 (once an exam date is set; the days moved to the stat bar). Rounds 6–9 stay in the lab — the scratch card, the selfie, the trend memes and the rest — in case one of them is wanted later, for example in place of the review card.
 - **Two sounds that are neither Brilliant nor Duolingo:**
   - the chest's hop while it waits for a tap;
@@ -17,7 +20,7 @@ Decisions that wait on you, and work put off until later. Newest first.
   - «mint» beat «gold» 3–1 and «sun» 4–0, and had the clearest score so far.
   - It is long (about 16 screens).
   - The recommendation: split it across node 1's short lessons and cut its last round.
-  - Two calls are yours: whether to build that, and whether mint's opener «٩ + ٩ + ٩ + ٩ + ٩ + ٩» replaces «٧ + ٧ + ٧».
+  - Two calls are yours: whether to build that, and whether mint's opener «٩ + ٩ + ٩ + ٩ + ٩ + ٩» replaces «٧ + ٧ + ٧». (Since 2026-10-30 «٧ + ٧ + ٧» is gone with node 1's first lesson, so mint's opener would need a new home.)
   - You said this comes after the sounds.
 - **Rule lab** (`tools/law.html`): seven versions now, A to G (F «علّم خويك», a friend in a chat; G «وازن الميزان», a balance). None has been picked.
 - **Rule lab 2** (`tools/law2.html`): five ways to learn a rule fast and keep it for 90 days (research in `research/rule-memory.md`). None has been picked.

@@ -4724,6 +4724,10 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 .wl-cta .btn { height: 50px; font-size: 17px; }
 
 .ob-screen { display: flex; flex-direction: column; padding: 0 20px calc(20px + env(safe-area-inset-bottom)); }
+/* nothing past the phone's sides may widen the page: «جرّب»'s rule card pops in at 112% and ran 10px off
+   both edges, and the phone scrolled sideways after it and back, a shake (the user, 2026-10-30). clip,
+   not hidden: no scroll box, so a sticky or a scrollIntoView inside is unaffected */
+.ob-screen { overflow-x: clip; }
 .ob-top { display: flex; align-items: center; gap: 10px; height: 60px; flex-shrink: 0; }
 .ob-back { border: 0; background: none; color: var(--gray-icon); min-width: 44px; min-height: 44px; display: grid; place-items: center; margin-inline-start: -10px; border-radius: 12px; }
 .ob-back:active { background: var(--surface-hover); }
