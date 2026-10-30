@@ -431,11 +431,15 @@ svg.ic { display: block; }
 .node-col { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
 /* the level buttons are a fifth bigger (the user, 2026-10-26: «make level
    buttons bigger»): the whole node — hexagon, lip, sign, ring, ghost, the
-   lesson-done coin and its diamonds — is zoomed as one, so every measured beat
-   keeps its proportions; its title and the «ابدأ» bubble are zoomed back and
-   stay the size they were */
-.node-col { --nz: 1.2; zoom: var(--nz); }
-.node-col .node-label { zoom: calc(1 / var(--nz)); }
+   lesson-done coin and its diamonds — is scaled as one, so every measured beat
+   keeps its proportions; its title is scaled back and stays the size it was.
+   A scale, not zoom: under a zoomed parent Chrome runs no animation on the GPU,
+   so the ring's breath and the star flip took two thirds of a slow phone's main
+   thread on an idle path. The box stays its unscaled size, so its offset on the
+   path (--x) and its title's distances are carried through --nz by hand */
+.node-col { --nz: 1.2; scale: var(--nz); transform-origin: 50% 0; right: calc(var(--x, 0) * var(--nz) * 1px);
+  align-self: flex-start; height: calc(100% / var(--nz)); }   /* as tall on screen as its row, as the zoomed one was (scrollIntoView centres on it) */
+.node-col .node-label { scale: calc(1 / var(--nz)); transform-origin: 50% 0; }
 
 /* the node is a hexagon (NODE_SHAPE in app.js): face, its lip 7px under it and
    a smaller hexagon of shine, painted from the same --node-* colours the coin
@@ -500,14 +504,14 @@ svg.ic { display: block; }
    the path (lbl-l / lbl-r, set in renderPath), level with the face and aligned
    to the node's side, a little further out round the current node's ring */
 .node-col[class*="lbl-"] .node-label {
-  position: absolute; top: calc(39px * var(--nz)); transform: translateY(-50%);
+  position: absolute; top: 39px; translate: 0 -50%;
   width: max-content; max-width: 128px; margin: 0;
   text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 6px #fff;
 }
-.node-col.lbl-l .node-label { right: calc(100% + 14px); text-align: right; }
-.node-col.lbl-r .node-label { left: calc(100% + 14px); text-align: left; }
-.node-col.bob.lbl-l .node-label { right: calc(100% + 26px); margin: 0; }
-.node-col.bob.lbl-r .node-label { left: calc(100% + 26px); margin: 0; }
+.node-col.lbl-l .node-label { right: calc(100% + 14px / var(--nz)); text-align: right; transform-origin: 100% 50%; }
+.node-col.lbl-r .node-label { left: calc(100% + 14px / var(--nz)); text-align: left; transform-origin: 0 50%; }
+.node-col.bob.lbl-l .node-label { right: calc(100% + 26px / var(--nz)); margin: 0; }
+.node-col.bob.lbl-r .node-label { left: calc(100% + 26px / var(--nz)); margin: 0; }
 /* never past the screen's edge (the user, 2026-10-26, on a long title cut off on
    a narrow phone): the title is as wide as the room between the node and a
    12px margin — half the screen, plus how far the node leans away (--ax, ×1.2
@@ -1376,6 +1380,16 @@ button.dom-stat:active { transform: scale(.99); }
    ============================================================ */
 
 /* --- core keyframes --- */
+/* an entrance that runs before an endless loop on the same element animates the separate scale /
+   translate properties, never transform: while a finished entrance on transform stays in the list,
+   Chrome will not run the loop on the GPU, and the top bar's flame alone took two thirds of a slow
+   phone's main thread on an idle path (2484ms in 4s at 4x; 257ms this way). Same motion */
+@keyframes springInS {
+  0%   { scale: 0; opacity: 0; }
+  60%  { scale: 1.15; opacity: 1; }
+  80%  { scale: .94; }
+  100% { scale: 1; opacity: 1; }
+}
 @keyframes springIn {
   0%   { transform: scale(0); opacity: 0; }
   60%  { transform: scale(1.15); opacity: 1; }
@@ -1419,9 +1433,13 @@ button.dom-stat:active { transform: scale(.99); }
   0%   { transform: translateX(-130%); }
   55%, 100% { transform: translateX(130%); }
 }
+/* the band is a box 2.2 times the node's width moved by transform, not a background moved by
+   background-position: that one repaints every finished node on the main thread on every frame,
+   and kept a slow phone's idle path busy 1.5s in every 4 (0.1s this way). The same sweep: from
+   background-position -150% to 150% is the band's own 9/11 either side */
 @keyframes coinShine {
-  0%, 60%  { background-position: -150% 0; }
-  90%, 100%{ background-position: 150% 0; }
+  0%, 60%  { transform: translateX(81.8182%); }
+  90%, 100%{ transform: translateX(-81.8182%); }
 }
 /* Duolingo's ring breathing (idle loop multi lesson): out to 1.02 of its own
    size and in to .86 x .82 every two seconds, slow to leave each end, fading
@@ -1466,9 +1484,9 @@ button.dom-stat:active { transform: scale(.99); }
 
 /* --- top stat bar --- */
 .stat img { animation: springIn .45s cubic-bezier(.3,1.6,.5,1) backwards; }
-.stat-xp img { animation: springIn .45s .08s cubic-bezier(.3,1.6,.5,1) backwards, gemSpin 4.5s 1.5s ease-in-out infinite; }
-.stat-streak img { animation: springIn .45s cubic-bezier(.3,1.6,.5,1) backwards, flameDance 2.4s 1s ease-in-out infinite; transform-origin: 50% 85%; }
-.stat-hearts img { animation: springIn .45s .16s cubic-bezier(.3,1.6,.5,1) backwards, heartBeat 1.8s 1.2s ease-in-out infinite; }
+.stat-xp img { animation: springInS .45s .08s cubic-bezier(.3,1.6,.5,1) backwards, gemSpin 4.5s 1.5s ease-in-out infinite; }
+.stat-streak img { animation: springInS .45s cubic-bezier(.3,1.6,.5,1) backwards, flameDance 2.4s 1s ease-in-out infinite; transform-origin: 50% 85%; }
+.stat-hearts img { animation: springInS .45s .16s cubic-bezier(.3,1.6,.5,1) backwards, heartBeat 1.8s 1.2s ease-in-out infinite; }
 
 /* --- unit banners + path --- */
 .unit-banner { animation: bannerIn .45s cubic-bezier(.3,1.4,.5,1) backwards; }
@@ -1478,10 +1496,14 @@ button.dom-stat:active { transform: scale(.99); }
 .node-ring .ring-seg { stroke-width: 7; stroke-linecap: round; }
 .node-ring .ring-track { stroke: var(--line); animation: ringDimTrack 2s linear infinite; }
 .node-ring .ring-arc { animation: ringDimArc 2s linear infinite; }
-.node-done::after { /* gold shine sweep, inside the hexagon */
-  content: ''; position: absolute; inset: 0; clip-path: path("M35.5 0 L27.75 0 Q17.75 0 12.53 8.53 L5.22 20.47 Q0 29 5.22 37.53 L12.53 49.47 Q17.75 58 27.75 58 L43.25 58 Q53.25 58 58.47 49.47 L65.78 37.53 Q71 29 65.78 20.47 L58.47 8.53 Q53.25 0 43.25 0 Z");
-  background: linear-gradient(115deg, transparent 32%, rgba(255,255,255,.55) 50%, transparent 68%) no-repeat;
-  background-size: 220% 100%;
+.node > .nd-shine { display: none; }
+.node-done > .nd-shine { /* gold shine sweep, inside the hexagon (the button's last child, over its sign) */
+  display: block; position: absolute; inset: 0; pointer-events: none; overflow: hidden;   /* clip-path hides the band but would still let the page scroll to it */
+  clip-path: path("M35.5 0 L27.75 0 Q17.75 0 12.53 8.53 L5.22 20.47 Q0 29 5.22 37.53 L12.53 49.47 Q17.75 58 27.75 58 L43.25 58 Q53.25 58 58.47 49.47 L65.78 37.53 Q71 29 65.78 20.47 L58.47 8.53 Q53.25 0 43.25 0 Z");
+}
+.node-done > .nd-shine::after {
+  content: ''; position: absolute; top: 0; left: 0; width: 220%; height: 100%;
+  background: linear-gradient(115deg, transparent 32%, rgba(255,255,255,.55) 50%, transparent 68%);
   animation: coinShine 3.2s ease-in-out infinite;
 }
 .node:not(:disabled):hover { filter: brightness(1.05); }
@@ -2281,7 +2303,7 @@ button.dom-stat:active { transform: scale(.99); }
   background: #fff; color: var(--ink); border: 2px solid var(--line); border-radius: 18px;
   padding: 11px 18px 10px; font-size: 15px; font-weight: 700; line-height: 1.3; white-space: nowrap; text-align: right;
   transform-origin: 14% 100%; pointer-events: none;
-  animation: chestTipIn .32s cubic-bezier(.3,1.6,.5,1), chestTipFloat 1.6s ease-in-out .32s infinite;
+  animation: chestTipInS .32s cubic-bezier(.3,1.6,.5,1), chestTipFloat 1.6s ease-in-out .32s infinite;
 }
 .chest-tip b { color: var(--chest); font-weight: 800; }
 /* the tail: a drawn curve hung from the padding box — its white covers the bubble's line, its own outline
@@ -2289,6 +2311,7 @@ button.dom-stat:active { transform: scale(.99); }
 .chest-tip .ct-tail { position: absolute; top: 100%; left: 29px; width: 32px; height: 19px; display: block; stroke: var(--line); }
 .chest-tip.out { animation: chestTipOut .22s ease forwards; }
 @keyframes chestTipIn { from { opacity: 0; transform: scale(.6); } }
+@keyframes chestTipInS { from { opacity: 0; scale: .6; } }   /* beside chestTipFloat: see springInS */
 @keyframes chestTipOut { to { opacity: 0; transform: translateY(6px) scale(.9); } }
 @keyframes chestTipFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 :root[data-motion="reduced"] .chest-tip { animation: none; }
@@ -2583,8 +2606,8 @@ button.dom-stat:active { transform: scale(.99); }
   animation: lbbSh 5s .8s cubic-bezier(.4, 0, .2, 1) infinite;
 }
 .lbb-tail { position: absolute; z-index: 1; top: 13px; width: 54px; height: 43px; background: var(--bd); }
-.lbb-tail.l { left: -36px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 17px 50%); transform-origin: 100% 40%; animation: lbbTailL .5s .2s cubic-bezier(.22, .9, .3, 1.25) backwards, lbbFlapL 3.6s 1s ease-in-out infinite; }
-.lbb-tail.r { right: -36px; clip-path: polygon(0 0, 100% 0, calc(100% - 17px) 50%, 100% 100%, 0 100%); transform-origin: 0 40%; animation: lbbTailR .5s .2s cubic-bezier(.22, .9, .3, 1.25) backwards, lbbFlapR 3.6s 1s ease-in-out infinite; }
+.lbb-tail.l { left: -36px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 17px 50%); transform-origin: 100% 40%; animation: lbbTailLS .5s .2s cubic-bezier(.22, .9, .3, 1.25) backwards, lbbFlapL 3.6s 1s ease-in-out infinite; }
+.lbb-tail.r { right: -36px; clip-path: polygon(0 0, 100% 0, calc(100% - 17px) 50%, 100% 100%, 0 100%); transform-origin: 0 40%; animation: lbbTailRS .5s .2s cubic-bezier(.22, .9, .3, 1.25) backwards, lbbFlapR 3.6s 1s ease-in-out infinite; }
 .lbb-fold { position: absolute; z-index: 1; top: 48px; width: 18px; height: 8px; background: var(--bf); animation: lbbFold .3s .38s ease-out backwards; }
 .lbb-fold.l { left: 0; clip-path: polygon(0 0, 100% 0, 100% 100%); }
 .lbb-fold.r { right: 0; clip-path: polygon(0 0, 100% 0, 0 100%); }
@@ -2598,6 +2621,8 @@ button.dom-stat:active { transform: scale(.99); }
 @keyframes lbbSh { 0% { transform: translateX(130%); } 22%, 100% { transform: translateX(-130%); } }
 @keyframes lbbTailL { from { opacity: 0; transform: translateX(34px) scaleX(.2); } to { opacity: 1; transform: none; } }
 @keyframes lbbTailR { from { opacity: 0; transform: translateX(-34px) scaleX(.2); } to { opacity: 1; transform: none; } }
+@keyframes lbbTailLS { from { opacity: 0; translate: 34px 0; scale: .2 1; } to { opacity: 1; translate: none; scale: none; } }   /* see springInS */
+@keyframes lbbTailRS { from { opacity: 0; translate: -34px 0; scale: .2 1; } to { opacity: 1; translate: none; scale: none; } }
 @keyframes lbbFlapL { 0%, 100% { transform: none; } 50% { transform: rotate(-3deg) translateY(1px); } }
 @keyframes lbbFlapR { 0%, 100% { transform: none; } 50% { transform: rotate(3deg) translateY(1px); } }
 @keyframes lbbFold { from { opacity: 0; } to { opacity: 1; } }
@@ -4905,11 +4930,12 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 .obt-bubble::after  { border-top-color: var(--snow); margin-top: -3px; }
 .obt-duo {
   height: clamp(232px, 41vh, 340px);   /* the user, 2026-10-27: «make the mascots bigger here» — as big as the phone allows */ transform-origin: 50% 100%;
-  animation: obDuoIn .55s .08s cubic-bezier(.3,1.5,.5,1) backwards, obBreathe 3.4s .8s ease-in-out infinite;
+  animation: obDuoInS .55s .08s cubic-bezier(.3,1.5,.5,1) backwards, obBreathe 3.4s .8s ease-in-out infinite;
 }
 .obt:has(.obt-chips) .obt-duo { height: clamp(160px, 30vh, 300px); }   /* chips under him: a little less of him, so a small phone does not scroll */
 @media (max-height: 620px) { .obt:has(.obt-chips) .obt-duo { height: 124px; } }
 @keyframes obDuoIn { from { opacity: 0; transform: translateY(34px) scale(.82); } }
+@keyframes obDuoInS { from { opacity: 0; translate: 0 34px; scale: .82; } }   /* beside obBreathe: see springInS */
 @keyframes obBreathe { 50% { transform: scale(1.012, 1.02) translateY(-2px); } }
 .obt-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 7px; margin-top: 18px; animation: fadeUp .4s .5s ease backwards; }
 .obt-chips span { padding: 5px 12px; border-radius: 999px; background: var(--blue-light); color: var(--blue-dk); font-size: 14px; font-weight: 700; }

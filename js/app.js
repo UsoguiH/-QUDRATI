@@ -633,7 +633,9 @@ function render() {
   renderSidebar();
   renderAside();
 }
-function go(v) { sfxHush(); sayStop(); view = v; render(); window.scrollTo(0, 0); }
+/* the win screens' Rive files draw on their own frame loop until cleaned up: any way off them stops it
+   (a jump straight to a tab left it drawing a hidden canvas on every frame) */
+function go(v) { sfxHush(); sayStop(); wstStop(); wvStop(); view = v; render(); window.scrollTo(0, 0); }
 
 const ICO_FILE = { "nav-exam": "nav-exam-64.png" }; // raster icons (user-provided art)
 /* exam day: the target drawn, not the emoji it was (the audit, 2026-10-28;
@@ -1878,7 +1880,7 @@ function renderPath() {
          path (2026-10-26: «make it left or right based on the location of the
          level»); a node in the middle takes the side the path is not heading to */
       const side = x > 0 ? "r" : x < 0 ? "l" : gi % offsets.length === 0 ? "l" : "r";
-      html += `<div class="path-row"><div class="node-col lbl-${side}${current ? " bob" : ""}${stale ? " stale" : ""}" style="right:${x}px;--ax:${Math.abs(x)}" data-key="${key}"${LS ? ` data-n="${LS.lessons.length}"` : ""}>
+      html += `<div class="path-row"><div class="node-col lbl-${side}${current ? " bob" : ""}${stale ? " stale" : ""}" style="--x:${x};--ax:${Math.abs(x)}" data-key="${key}"${LS ? ` data-n="${LS.lessons.length}"` : ""}>
         ${ring}
         ${stale ? `<span class="node-refresh" title="حان وقت المراجعة" aria-hidden="true">${REFRESH_SVG}</span>` : ""}
         <button class="node ${cls}" style="--node-c:${nc[0]};--node-s:${nc[1]};--node-h:${nc[2]};--d:${(gi % 10) * 0.06}s" data-open="${u.c}|${u.s}|${u.h}"
@@ -1886,6 +1888,7 @@ function renderPath() {
           ${open ? `onpointerdown="A.nodePress()" onclick="A.nodeTap(event,'${d.key}','${l.key}',${li})"` : "disabled"}>
           ${done ? NODE_GOLD : NODE_SHAPE}
           ${nodeIcon}
+          <i class="nd-shine" aria-hidden="true"></i>
         </button>
         ${done ? '<span class="node-stars" aria-hidden="true">' + [1, 2, 3].map(sn =>
           '<svg class="ns' + (sn <= p.stars ? ' on' : '') + '" viewBox="5 4 30 30">' + LESSON_ICON_STAR + '</svg>').join('') + '</span>' : ''}
@@ -9794,10 +9797,10 @@ function fitTarget(scr) {
   const qa = scr.querySelector(".q-area");
   if (qa) {
     return { els: Array.from(qa.children).filter(e => getComputedStyle(e).position !== "absolute" && getComputedStyle(e).position !== "fixed"),
-      over: () => qa.scrollHeight - qa.clientHeight };
+      over: () => qa.scrollHeight - qa.clientHeight, room: () => qa.clientHeight };
   }
   const body = scr.querySelector(".ob-stage, .wl-body, .teach-body, .complete, .exam-pick") || scr;
-  return { els: [body], page: true, over: () => document.scrollingElement.scrollHeight - innerHeight };
+  return { els: [body], page: true, over: () => document.scrollingElement.scrollHeight - innerHeight, room: () => innerHeight };
 }
 /* measure the screen as it will stand: an entrance still sliding up, a card
    mid-jump or a sheet still rising would count as height it does not have.
@@ -9824,12 +9827,35 @@ function fitSettled(scr, f) {
     as.forEach((a, i) => { try { if (a.playState !== "idle") a.currentTime = was[i]; } catch (e) {} });
   }
 }
-function fitNow(glide) {
+/* why = "size" when something resized (a turn, a font, content that grew or shrank): a zoomed body may
+   then grow back. A bare change in the DOM ("mut") only ever shrinks, so it never runs the search again */
+function fitNow(glide, why) {
   const scr = $app.querySelector(":scope > .screen");
   /* a screen may opt out (data-fit="off") while something else places it, or ask to be fitted without
      a glide (data-fit="still") when it glides its own moves and a zoom glide on top would fight it */
   if (!scr || $app.querySelector(":scope > .bottomnav") || scr.matches('[data-fit="off"]') || scr.querySelector('[data-fit="off"]')) return;
-  fitSettled(scr, () => { fitScreen(scr, glide); fitSheet(scr); });
+  const t = fitTarget(scr);
+  /* a glide under way lands on the size it was set for; measuring mid-glide would cut it, and cost a layout a frame */
+  if (t.els.some(e => e.getAnimations && e.getAnimations().some(a => a.id === "fit" && a.playState === "running"))) return;
+  /* a change in the DOM is first read as it stands, one layout the frame needs anyway: only an overflow
+     sends it to the measurement at rest (which lays the page out twice); a sheet always goes, to be fitted */
+  if (why === "mut" && t.over() <= .5 && !scr.querySelector(".feedback.show .fb-solution")) return;
+  fitSettled(scr, () => { fitScreen(scr, glide, why, t); fitSheet(scr); });
+}
+/* one fit a frame at most, whatever asked: measuring forces the page to lay out twice, and a clock that
+   ticks or a word typed in used to pay that on every change (the mock's clock cost a 70ms task a second
+   on a slow phone). It runs before the frame paints, so nothing is seen unfitted */
+let fitRaf = 0, fitWhy = "";
+function fitSoon(why) {
+  if (why === "size") fitWhy = "size"; else if (!fitWhy) fitWhy = why;
+  if (!fitRaf) fitRaf = requestAnimationFrame(() => { fitRaf = 0; const w = fitWhy; fitWhy = ""; fitNow(true, w); });
+}
+/* only a change inside what is fitted (or the screen's own children) can change whether it fits */
+function fitTouched(recs, scr) {
+  if (!scr) return false;
+  const box = scr.querySelector(".q-area") || scr.querySelector(".ob-stage, .wl-body, .teach-body, .complete, .exam-pick") || scr;
+  const fb = scr.querySelector("#fb");
+  return recs.some(r => r.target === $app || r.target === scr || box.contains(r.target) || (fb && fb.contains(r.target)));
 }
 /* an answer's sheet shows its whole solution, never a box to scroll: a long one is zoomed
    down until the sheet leaves the lesson's top bar in sight */
@@ -9844,32 +9870,43 @@ function fitSheet(scr) {
   if (over() <= .5) { for (let i = 0; i < 8; i++) { z = (lo + hi) / 2; sol.style.zoom = z; if (over() <= .5) lo = z; else hi = z; } z = lo; }
   sol.style.zoom = z.toFixed(4);
 }
-function fitScreen(scr, glide) {
-  const t = fitTarget(scr);
+function fitScreen(scr, glide, why, t) {
+  t = t || fitTarget(scr);
   if (!t.els.length) return;
   const z0 = parseFloat(t.els[0].style.zoom) || 1;
-  /* a glide under way lands on the size it was set for; refitting mid-glide would cut it */
-  if (t.els.some(e => e.getAnimations && e.getAnimations().some(a => a.id === "fit" && a.playState === "running"))) return;
   let o = t.over();
-  /* an overflow never reads below zero, so a zoomed body that fits is searched again from full size:
-     once something tall went (a late font, a sheet), it grows back instead of staying small */
-  if (o <= .5 && z0 >= 1) return;
-  t.els.forEach(e => { e.getAnimations().forEach(a => { if (a.id === "fit") a.cancel(); }); e.style.zoom = ""; if (t.page) e.style.minHeight = ""; });
-  let z = 1;
-  o = t.over();
+  /* an overflow never reads below zero, so a zoomed body that fits is searched again from full size
+     when something changed size: once something tall went (a late font, a sheet), it grows back */
+  if (o <= .5 && (z0 >= 1 || why !== "size")) return;
   /* a body as tall as the phone (min-height 100dvh) would come out short once zoomed: keep it the phone's height */
   const tall = t.page && parseFloat(getComputedStyle(t.els[0]).minHeight) >= innerHeight - 2;
+  let z = z0;
   const set = () => t.els.forEach(e => { e.style.zoom = z.toFixed(4); if (tall) e.style.minHeight = (innerHeight / z).toFixed(1) + "px"; });
+  const fits = () => t.over() <= .5;
+  /* a zoomed body that still fits, and would not a step bigger, keeps its size: two layouts, not a search
+     (each layout is the whole screen, and on a slow phone a search of ten was a long task) */
+  if (z0 < 1 && o <= .5) {
+    z = Math.min(1, z0 + .01); set();
+    if (!fits()) { z = z0; set(); return; }
+  }
+  t.els.forEach(e => { e.getAnimations().forEach(a => { if (a.id === "fit") a.cancel(); }); e.style.zoom = ""; if (t.page) e.style.minHeight = ""; });
+  z = 1;
+  o = t.over();
   /* the largest zoom that fits: a body does not shrink in proportion (text re-wraps, a flex body
-     stretches), so it is searched for, not computed */
+     stretches), so it is searched for, not computed; it starts from a guess by how much is over */
   if (o > .5) {
-    let lo = FIT_MIN, hi = 1;
-    z = lo; set();
-    const oMin = t.over();
-    if (oMin <= .5) {
-      for (let i = 0; i < 8; i++) { z = (lo + hi) / 2; set(); if (t.over() <= .5) lo = z; else hi = z; }
+    const room = t.room(), g = Math.max(FIT_MIN, Math.min(.995, room / (room + o)));
+    let lo = FIT_MIN, hi = 1, n = 8;
+    z = g; set();
+    if (fits()) { lo = g; hi = Math.min(1, g + .12); n = 4; }
+    else {
+      hi = g; z = lo; set();
+      if (!fits()) { z = t.over() > o - 1 ? 1 : lo; set(); n = 0; }   /* what overflows is not this body: shrinking it would only cost size */
+    }
+    if (n) {
+      for (let i = 0; i < n; i++) { z = (lo + hi) / 2; set(); if (fits()) lo = z; else hi = z; }
       z = lo; set();
-    } else if (oMin > o - 1) { z = 1; set(); }   /* what overflows is not this body: shrinking it would only cost size */
+    }
   }
   if (glide && Math.abs(z - z0) > .004 && !fxReduced() && !scr.matches('[data-fit="still"]'))
     t.els.forEach(e => { if (e.animate) e.animate([{ zoom: z0 }, { zoom: z }], { id: "fit", duration: 260, easing: "cubic-bezier(.3,.7,.4,1)" }); });
@@ -9881,17 +9918,17 @@ function fitWire() {
   if (fitRO) fitRO.disconnect();
   if (scr && window.ResizeObserver) {
     /* a frame later, never inside the observer: a zoom set there would resize what it watches ("ResizeObserver loop") */
-    let raf = 0;
-    fitRO = new ResizeObserver(() => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; fitNow(true); }); });
+    fitRO = new ResizeObserver(() => fitSoon("size"));
     fitRO.observe(scr);
     fitTarget(scr).els.forEach(e => { fitRO.observe(e); Array.from(e.children).forEach(k => fitRO.observe(k)); });
     const fb = scr.querySelector("#fb"); if (fb) fitRO.observe(fb);
   }
   return true;
 }
-new MutationObserver(() => { const fresh = fitWire(); fitNow(!fresh); }).observe($app, { childList: true, subtree: true });
-addEventListener("resize", () => fitNow(true));
-if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", () => fitNow(true));
+/* a new screen is fitted at once, before its first paint; any later change waits for the next frame */
+new MutationObserver(recs => { if (fitWire()) fitNow(false, "size"); else if (fitTouched(recs, fitScr)) fitSoon("mut"); }).observe($app, { childList: true, subtree: true });
+addEventListener("resize", () => fitSoon("size"));
+if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", () => fitSoon("size"));
 
 boot();
 netBar();
