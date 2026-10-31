@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#58CC02">
+<title>الإحصاء والاحتمالات في القدرات — قوانين وأسئلة محلولة | قدراتي</title>
+<meta name="description" content="الإحصاء والاحتمالات في القدرات: الاحتمال = عدد ما تريده ÷ عدد كل النواتج الممكنة. ١٥ قانوناً بصيغها ومتى تُستخدم، ٩ منها بمثال، و٧ أسئلة محلولة.">
+<link rel="canonical" href="https://qudrati.xyz/qudrat/probability-statistics.html">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="قدراتي Qudrati">
+<meta property="og:title" content="الإحصاء والاحتمالات في القدرات — قوانين وأسئلة محلولة | قدراتي">
+<meta property="og:description" content="الإحصاء والاحتمالات في القدرات: الاحتمال = عدد ما تريده ÷ عدد كل النواتج الممكنة. ١٥ قانوناً بصيغها ومتى تُستخدم، ٩ منها بمثال، و٧ أسئلة محلولة.">
+<meta property="og:url" content="https://qudrati.xyz/qudrat/probability-statistics.html">
+<meta property="og:image" content="https://qudrati.xyz/qudrat/img/probability-statistics-16x9.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="675">
+<meta property="og:image:alt" content="الإحصاء والاحتمالات في القدرات — الاحتمال">
+<meta property="og:locale" content="ar_SA">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="الإحصاء والاحتمالات في القدرات — قوانين وأسئلة محلولة | قدراتي">
+<meta name="twitter:description" content="الإحصاء والاحتمالات في القدرات: الاحتمال = عدد ما تريده ÷ عدد كل النواتج الممكنة. ١٥ قانوناً بصيغها ومتى تُستخدم، ٩ منها بمثال، و٧ أسئلة محلولة.">
+<meta name="twitter:image" content="https://qudrati.xyz/qudrat/img/probability-statistics-16x9.png">
+<link rel="preload" href="/qudrat/assets/baloo-bhaijaan-2.woff2?v=4725b14b" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/content.css?v=2367826d">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/app-icon/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/app-icon/apple-touch-icon.png">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": [
+    "Article",
+    "LearningResource"
+   ],
+   "@id": "https://qudrati.xyz/qudrat/probability-statistics.html#lesson",
+   "headline": "الإحصاء والاحتمالات في القدرات",
+   "name": "الاحتمالات والإحصاء",
+   "description": "الإحصاء والاحتمالات في القدرات: الاحتمال = عدد ما تريده ÷ عدد كل النواتج الممكنة. ١٥ قانوناً بصيغها ومتى تُستخدم، ٩ منها بمثال، و٧ أسئلة محلولة.",
+   "inLanguage": "ar",
+   "url": "https://qudrati.xyz/qudrat/probability-statistics.html",
+   "mainEntityOfPage": "https://qudrati.xyz/qudrat/probability-statistics.html",
+   "datePublished": "2026-10-31",
+   "dateModified": "2026-10-31",
+   "image": [
+    "https://qudrati.xyz/qudrat/img/probability-statistics-16x9.png",
+    "https://qudrati.xyz/qudrat/img/probability-statistics-4x3.png",
+    "https://qudrati.xyz/qudrat/img/probability-statistics-1x1.png"
+   ],
+   "author": {
+    "@id": "https://qudrati.xyz/#org"
+   },
+   "publisher": {
+    "@id": "https://qudrati.xyz/#org"
+   },
+   "isPartOf": {
+    "@type": "CollectionPage",
+    "@id": "https://qudrati.xyz/qudrat/#collection",
+    "name": "دروس القسم الكمي في اختبار القدرات",
+    "url": "https://qudrati.xyz/qudrat/",
+    "description": "دروس القسم الكمي في قدراتي: ٢٦ درساً في ٤ وحدات، لكل درس قوانينه بالصيغة والمثال وأسئلة أصلية محلولة، مجاناً."
+   },
+   "learningResourceType": "درس",
+   "isAccessibleForFree": true,
+   "teaches": [
+    "فضاء العينة",
+    "الحدث",
+    "الاحتمال",
+    "مجموع الاحتمالات",
+    "فضاءات العينة الشهيرة",
+    "تمثيل الشبكة",
+    "مبدأ العد",
+    "العد مع التكرار",
+    "العد دون تكرار",
+    "الوسط الحسابي",
+    "الوسيط",
+    "المنوال",
+    "المدى",
+    "التوافيق",
+    "التباديل"
+   ],
+   "about": {
+    "@type": "Thing",
+    "name": "الإحصاء والاحتمالات — القسم الكمي في اختبار القدرات العامة"
+   }
+  },
+  {
+   "@type": "Organization",
+   "@id": "https://qudrati.xyz/#org",
+   "name": "قدراتي",
+   "alternateName": [
+    "Qudrati",
+    "qudrati.xyz"
+   ],
+   "url": "https://qudrati.xyz/",
+   "logo": {
+    "@type": "ImageObject",
+    "url": "https://qudrati.xyz/assets/app-icon/icon-512.png",
+    "width": 512,
+    "height": 512
+   },
+   "description": "قدراتي (qudrati.xyz) لعبة مجانية مستقلة ومفتوحة المصدر للتدريب على القسم الكمي في اختبار القدرات العامة لطلاب الثانوية في السعودية.",
+   "disambiguatingDescription": "مشروع تدريب مستقل على الويب، غير تابع لهيئة تقويم التعليم والتدريب، وليس «اختبارات قدراتي» الرسمية التي تقدّمها الهيئة لطلاب الصف الثالث الابتدائي إلى الأول الثانوي.",
+   "knowsAbout": [
+    "اختبار القدرات العامة",
+    "القسم الكمي",
+    "General Aptitude Test (GAT)"
+   ],
+   "publishingPrinciples": "https://qudrati.xyz/about.html#method",
+   "correctionsPolicy": "https://qudrati.xyz/about.html#corrections",
+   "sameAs": [
+    "https://github.com/UsoguiH/-QUDRATI"
+   ],
+   "contactPoint": {
+    "@type": "ContactPoint",
+    "contactType": "customer support",
+    "url": "https://github.com/UsoguiH/-QUDRATI/issues",
+    "availableLanguage": [
+     "ar",
+     "en"
+    ]
+   }
+  },
+  {
+   "@type": "WebSite",
+   "@id": "https://qudrati.xyz/#website",
+   "url": "https://qudrati.xyz/",
+   "name": "قدراتي",
+   "alternateName": [
+    "Qudrati",
+    "qudrati.xyz"
+   ],
+   "description": "لعبة قدراتي للتدريب على القسم الكمي في اختبار القدرات، مع أدلّة وقوانين وطرق حل مكتوبة من دروسها.",
+   "inLanguage": "ar",
+   "publisher": {
+    "@id": "https://qudrati.xyz/#org"
+   }
+  },
+  {
+   "@type": "BreadcrumbList",
+   "@id": "https://qudrati.xyz/qudrat/probability-statistics.html#breadcrumb",
+   "itemListElement": [
+    {
+     "@type": "ListItem",
+     "position": 1,
+     "name": "قدراتي",
+     "item": "https://qudrati.xyz/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 2,
+     "name": "دروس القسم الكمي",
+     "item": "https://qudrati.xyz/qudrat/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 3,
+     "name": "الاحتمالات والإحصاء"
+    }
+   ]
+  },
+  {
+   "@type": "FAQPage",
+   "@id": "https://qudrati.xyz/qudrat/probability-statistics.html#faq",
+   "mainEntity": [
+    {
+     "@type": "Question",
+     "name": "ما أهم قوانين الإحصاء والاحتمالات في القدرات؟",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "أهمها الاحتمال، مبدأ العد والتوافيق. وفي هذه الصفحة ١٥ قانوناً للدرس، كل قانون تحت عنوانه بصيغته ومتى تستخدمه."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "ما قانون الاحتمالات في القدرات؟",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "الاحتمال = عدد ما تريده ÷ عدد كل النواتج الممكنة. مثال: ٨ بطاقات مرقمة من ١ إلى ٨ ، والزوجية منها ٤ ← احتمال بطاقة زوجية ٤/٨ = ١/٢."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "ما مبدأ العد في القدرات؟",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "عدد الطرق = عدد خيارات الأول × عدد خيارات الثاني. وبصيغة أخرى: عدد طرق الاختيار = حاصل ضرب عدد طرق كل اختيار على حدة. مثال: ٣ قمصان و ٢ بنطلون: ٣ × ٢ = ٦ إطلالات مختلفة."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "ما قانون التوافيق في القدرات؟",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "اضرب تنازلياً بعدد المختارين ÷ (١ × ٢ × ٣ … بعدد المختارين). مثال: اختيار ٣ من ٥: (٥ × ٤ × ٣) ÷ (١ × ٢ × ٣) = ٦٠ ÷ ٦ = ١٠."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "ما الفخ في أسئلة الإحصاء والاحتمالات في القدرات؟",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "مطعم فيه ٢ شوربة و ٣ سلطات و ٢ عصير. كم وجبة؟ الجواب ١٢: اضرب الاختيارات الثلاثة: ٢ × ٣ × ٢ = ١٢ ، ولا تجمعها."
+     }
+    },
+    {
+     "@type": "Question",
+     "name": "كيف أحل أسئلة الإحصاء والاحتمالات بسرعة في القدرات؟",
+     "acceptedAnswer": {
+      "@type": "Answer",
+      "text": "احفظ فضاءات العينة جاهزة: نرد ٦ ، نردان ٣٦ ، عملة ٢ ، عملتان ٤ ، ٣ عملات ٨ ، عملة ونرد ١٢ — لا ترسم الشبكة في الاختبار."
+     }
+    }
+   ]
+  }
+ ]
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#main">انتقل إلى المحتوى</a>
+<div class="page">
+<nav class="crumb" aria-label="مسار الصفحة"><ol>
+  <li><a href="/"><img src="/assets/app-icon/icon-192.webp" width="22" height="22" alt="">قدراتي</a></li>
+  <li><a href="/qudrat/">دروس القسم الكمي</a></li>
+  <li><span aria-current="page">الاحتمالات والإحصاء</span></li>
+</ol></nav>
+<main id="main">
+<article>
+  <p class="kicker">الوحدة ١: مهارات وقوانين هامة في القدرات — الدرس ٣</p>
+  <h1>الإحصاء والاحتمالات في القدرات</h1>
+  <p class="lead"><a href="#probability">قانون الاحتمال</a> في القدرات: الاحتمال = عدد ما تريده ÷ عدد كل النواتج الممكنة. مثال: ٨ بطاقات مرقمة من ١ إلى ٨ ، والزوجية منها ٤ ← احتمال بطاقة زوجية <span class="fr" data-t="٤/٨"><span class="fr-n">٤</span><span class="fr-sr"> على </span><span class="fr-d">٨</span></span> = <span class="fr" data-t="١/٢"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٢</span></span></p>
+  <p>في هذه الصفحة ١٥ قانوناً من درس «الاحتمالات والإحصاء» في قدراتي، كل قانون تحت عنوانه بصيغته ومتى تستخدمه، ٩ منها بالشرح والمثال، ثم ٧ أسئلة أصلية بأسلوب الاختبار مع الحل خطوة بخطوة.</p>
+  <p class="note"><span class="lab">هدف الدرس:</span> أن يحسب الطالب الاحتمال البسيط بضبط فضاء العينة، ويستخدم مبدأ العد والتباديل والتوافيق، ويستخرج الوسط والوسيط والمنوال والمدى.</p>
+  <nav class="toc" aria-label="في هذه الصفحة"><ul>
+    <li><a href="#rules">القوانين مع أمثلة</a></li>
+    <li><a href="#more">بقية القوانين</a></li>
+    <li><a href="#tricks">حيل الحل</a></li>
+    <li><a href="#practice">أسئلة محلولة</a></li>
+    <li><a href="#faq">أسئلة شائعة</a></li>
+  </ul></nav>
+<aside class="cta-in" aria-label="تدرّب في قدراتي">
+  <p>تدرّب على الإحصاء والاحتمالات بأسئلة بأسلوب الاختبار في لعبة قدراتي — مجاناً وبدون تسجيل.</p>
+  <a class="btn" href="https://qudrati.xyz/">ابدأ التدريب مجاناً</a>
+</aside>
+
+  <h2 id="rules">قوانين الإحصاء والاحتمالات مع أمثلة</h2>
+<section class="rule" id="probability" aria-labelledby="probability-h">
+  <h3 id="probability-h">الاحتمال</h3>
+  <p class="f"><span class="k">القانون:</span> الاحتمال = عدد نواتج الحدث ÷ عدد النواتج كلها</p>
+  <p><span class="lab">بالكلمات:</span> الاحتمال = عدد ما تريده ÷ عدد كل النواتج الممكنة</p>
+  <p>الاحتمال كسر. فوق الخط: ما تريده أنت. وتحت الخط: كل النواتج الممكنة.</p>
+  <div class="fig" role="img" aria-label="رسم يوضّح: ٨ بطاقات مرقمة من ١ إلى ٨ ، والزوجية منها ٤ ← احتمال بطاقة زوجية ٤/٨ = ١/٢"><svg aria-hidden="true" focusable="false" viewBox="0 0 292 104" width="292" stroke="#4B4B4B" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="244" y="30" width="28" height="38" rx="4"/><rect x="212" y="30" width="28" height="38" rx="4" fill="#CFCFCF"/><rect x="180" y="30" width="28" height="38" rx="4"/><rect x="148" y="30" width="28" height="38" rx="4" fill="#CFCFCF"/><rect x="116" y="30" width="28" height="38" rx="4"/><rect x="84" y="30" width="28" height="38" rx="4" fill="#CFCFCF"/><rect x="52" y="30" width="28" height="38" rx="4"/><rect x="20" y="30" width="28" height="38" rx="4" fill="#CFCFCF"/><text x="258" y="54" font-size="13" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">١</text> <text x="226" y="54" font-size="13" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">٢</text> <text x="194" y="54" font-size="13" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">٣</text> <text x="162" y="54" font-size="13" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">٤</text> <text x="130" y="54" font-size="13" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">٥</text> <text x="98" y="54" font-size="13" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">٦</text> <text x="66" y="54" font-size="13" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">٧</text> <text x="34" y="54" font-size="13" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">٨</text> <text x="146" y="96" font-size="12" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">٤ زوجية من ٨ — نص البطاقات</text> </svg></div>
+  <p><span class="lab">مثال:</span> ٨ بطاقات مرقمة من ١ إلى ٨ ، والزوجية منها ٤ ← احتمال بطاقة زوجية <span class="fr" data-t="٤/٨"><span class="fr-n">٤</span><span class="fr-sr"> على </span><span class="fr-d">٨</span></span> = <span class="fr" data-t="١/٢"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٢</span></span></p>
+  <p><span class="lab">متى تستخدمه:</span> القانون الأساسي للاحتمال</p>
+  <p class="hook"><span class="lab">تذكّر:</span> المطلوب فوق، والكل تحت</p>
+</section>
+<section class="rule" id="sample-spaces" aria-labelledby="sample-spaces-h">
+  <h3 id="sample-spaces-h">فضاءات العينة الشهيرة</h3>
+  <div class="tw"><table class="memo">
+    <caption>فضاءات العينة الشهيرة في القدرات</caption>
+    <thead><tr><th scope="col">التجربة</th><th scope="col">عدد النواتج</th></tr></thead>
+    <tbody>
+      <tr><td>عملة</td><td>٢</td></tr>
+      <tr><td>عملتان</td><td>٤</td></tr>
+      <tr><td>٣ عملات</td><td>٨</td></tr>
+      <tr><td>نرد</td><td>٦</td></tr>
+      <tr><td>نردان</td><td>٣٦</td></tr>
+      <tr><td>عملة ونرد</td><td>١٢</td></tr>
+    </tbody>
+  </table></div>
+  <p><span class="lab">بالكلمات:</span> عدد النواتج الممكنة (تحت الخط): نرد ٦ ، نردان ٣٦ ، عملة ٢</p>
+  <p>لا تحسبها. احفظ هذه الأعداد. كل واحد منها يُوضع تحت الخط مباشرة.</p>
+  <p><span class="lab">مثال:</span> نردان ← تحت الخط ٣٦ ، فاحتمال ظهور ٦ على الاثنين = <span class="fr" data-t="١/٣٦"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٣٦</span></span></p>
+  <p><span class="lab">متى تستخدمه:</span> تُحفظ ولا تُحسب في الاختبار</p>
+  <p class="hook"><span class="lab">تذكّر:</span> الأعداد محفوظة، فلا تعدّها في الاختبار</p>
+</section>
+<div class="check">
+  <p class="q"><span class="lab">جرّب بنفسك:</span> عند إلقاء عملتين، ما احتمال ظهور شعارين؟</p>
+  <ul class="chips pick"><li><label><input type="radio" name="c-4c10de" value="0"> <span><span class="fr" data-t="١/٢"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٢</span></span></span></label></li><li class="c"><label><input type="radio" name="c-4c10de" value="1"> <span><span class="fr" data-t="١/٤"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٤</span></span></span></label></li><li><label><input type="radio" name="c-4c10de" value="2"> <span><span class="fr" data-t="١/٣"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٣</span></span></span></label></li></ul>
+  <details><summary>الجواب</summary><div class="ans"><p class="ok"><span class="fr" data-t="١/٤"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٤</span></span></p><p>عملتان ← تحت الخط ٤ ، وشعاران ناتج واحد ← <span class="fr" data-t="١/٤"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٤</span></span></p></div></details>
+</div>
+<div class="check">
+  <p class="q"><span class="lab">جرّب بنفسك:</span> بطاقات من ١ إلى ٩ ، ما احتمال مضاعفات ٣ ؟</p>
+  <ul class="chips pick"><li class="c"><label><input type="radio" name="c-90a30c" value="0"> <span><span class="fr" data-t="١/٣"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٣</span></span></span></label></li><li><label><input type="radio" name="c-90a30c" value="1"> <span><span class="fr" data-t="١/٩"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٩</span></span></span></label></li><li><label><input type="radio" name="c-90a30c" value="2"> <span><span class="fr" data-t="٢/٩"><span class="fr-n">٢</span><span class="fr-sr"> على </span><span class="fr-d">٩</span></span></span></label></li></ul>
+  <details><summary>الجواب</summary><div class="ans"><p class="ok"><span class="fr" data-t="١/٣"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٣</span></span></p><p>مضاعفات ٣ هي ٣ و ٦ و ٩ ، أي ثلاث من تسع: <span class="fr" data-t="٣/٩"><span class="fr-n">٣</span><span class="fr-sr"> على </span><span class="fr-d">٩</span></span> = <span class="fr" data-t="١/٣"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٣</span></span></p></div></details>
+</div>
+<section class="rule" id="r-6fd256" aria-labelledby="r-6fd256-h">
+  <h3 id="r-6fd256-h">العد دون تكرار</h3>
+  <p class="f"><span class="k">القانون:</span> عدد الطرق = ك × (ك−١) × (ك−٢) ...</p>
+  <p><span class="lab">بالكلمات:</span> اضرب عدداً لكل خانة، وكل عدد أقل من سابقه بـ ١</p>
+  <p>كلمة «دون تكرار» تعني: الرقم المستخدم خرج. فكل خانة تنقص عن التي قبلها بـ ١.</p>
+  <p><span class="lab">مثال:</span> عدد من خانتين من ٤ أرقام: الخانة الأولى ٤ ، والثانية ٣ ← ٤ × ٣ = ١٢</p>
+  <p><span class="lab">متى تستخدمه:</span> «دون تكرار أي رقم أو حرف»</p>
+  <p class="hook"><span class="lab">تذكّر:</span> المستخدم لا يعود</p>
+</section>
+<section class="rule" id="counting-principle" aria-labelledby="counting-principle-h">
+  <h3 id="counting-principle-h">مبدأ العد</h3>
+  <p class="f"><span class="k">القانون:</span> عدد طرق الاختيار = حاصل ضرب عدد طرق كل اختيار على حدة</p>
+  <p><span class="lab">بالكلمات:</span> عدد الطرق = عدد خيارات الأول × عدد خيارات الثاني</p>
+  <p>اختيار بعد اختيار؟ اضرب ولا تجمع. كل خيار هنا يمشي مع كل خيار هناك.</p>
+  <div class="fig" role="img" aria-label="رسم يوضّح: ٣ قمصان و ٢ بنطلون: ٣ × ٢ = ٦ إطلالات مختلفة"><svg aria-hidden="true" focusable="false" viewBox="0 0 260 130" width="260" stroke="#4B4B4B" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M192 6 h16 l6 6 l-4 5 l-2 -2 v15 h-16 v-15 l-2 2 l-4 -5 z"/><path d="M196 6 q4 5 8 0"/><path d="M142 6 h16 l6 6 l-4 5 l-2 -2 v15 h-16 v-15 l-2 2 l-4 -5 z"/><path d="M146 6 q4 5 8 0"/><path d="M92 6 h16 l6 6 l-4 5 l-2 -2 v15 h-16 v-15 l-2 2 l-4 -5 z"/><path d="M96 6 q4 5 8 0"/><path d="M228 42 h26 v26 h-10 v-16 h-6 v16 h-10 z"/><path d="M228 47 h26"/><path d="M228 76 h26 v26 h-10 v-16 h-6 v16 h-10 z"/><path d="M228 81 h26"/><rect x="76" y="38" width="148" height="68" stroke-width="1.5"/><line x1="125.3" y1="38" x2="125.3" y2="106" stroke-width="1.5"/><line x1="174.7" y1="38" x2="174.7" y2="106" stroke-width="1.5"/><line x1="76" y1="72" x2="224" y2="72" stroke-width="1.5"/><circle cx="199.7" cy="55" r="5" fill="#4B4B4B" stroke="none"/><circle cx="150" cy="55" r="5" fill="#4B4B4B" stroke="none"/><circle cx="100.3" cy="55" r="5" fill="#4B4B4B" stroke="none"/><circle cx="199.7" cy="89" r="5" fill="#4B4B4B" stroke="none"/><circle cx="150" cy="89" r="5" fill="#4B4B4B" stroke="none"/><circle cx="100.3" cy="89" r="5" fill="#4B4B4B" stroke="none"/><text x="150" y="126" font-size="12" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">٣ × ٢ = ٦ إطلالات</text> </svg></div>
+  <p><span class="lab">مثال:</span> ٣ قمصان و ٢ بنطلون: ٣ × ٢ = ٦ إطلالات مختلفة</p>
+  <p><span class="lab">متى تستخدمه:</span> اختيارات متتابعة (وجبات، أزياء، أرقام)</p>
+  <p class="hook"><span class="lab">تذكّر:</span> «و» بين الاختيارات تعني اضرب</p>
+</section>
+<div class="check">
+  <p class="q"><span class="lab">جرّب بنفسك:</span> كم عدداً من خانتين من الأرقام ٢ ، ٣ ، ٥ ، ٧ دون تكرار؟</p>
+  <ul class="chips pick"><li><label><input type="radio" name="c-16aa90" value="0"> <span>١٦</span></label></li><li class="c"><label><input type="radio" name="c-16aa90" value="1"> <span>١٢</span></label></li><li><label><input type="radio" name="c-16aa90" value="2"> <span>٨</span></label></li></ul>
+  <details><summary>الجواب</summary><div class="ans"><p class="ok">١٢</p><p>الخانة الأولى ٤ ، والثانية ٣ بعد خروج المستخدم ← ٤ × ٣ = ١٢</p></div></details>
+</div>
+<div class="traps free">
+  <h4>فخاخ هذا الجزء</h4>
+<p class="trap"><span class="lab">الفخ:</span> مطعم فيه ٢ شوربة و ٣ سلطات و ٢ عصير. كم وجبة؟ الجواب ١٢: اضرب الاختيارات الثلاثة: ٢ × ٣ × ٢ = ١٢ ، ولا تجمعها</p>
+</div>
+<section class="rule" id="combinations" aria-labelledby="combinations-h">
+  <h3 id="combinations-h">التوافيق</h3>
+  <p class="f"><span class="k">القانون:</span> اختيار عشوائي والترتيب غير هام ، مثال: <sup><span class="fr-sr pw">^</span>٥</sup>ق<sub><span class="fr-sr pw">_</span>٣</sub> = (٥×٤×٣) ÷ (١×٢×٣) = ١٠</p>
+  <p><span class="lab">بالكلمات:</span> اضرب تنازلياً بعدد المختارين ÷ (١ × ٢ × ٣ … بعدد المختارين)</p>
+  <p>لجنة أو مجموعة؟ الترتيب لا يهم. فوق الخط: اضرب تنازلياً بعدد المختارين. وتحت الخط: ١ × ٢ × ٣ بعددهم.</p>
+  <p><span class="lab">مثال:</span> اختيار ٣ من ٥: (٥ × ٤ × ٣) ÷ (١ × ٢ × ٣) = ٦٠ ÷ ٦ = ١٠</p>
+  <p><span class="lab">متى تستخدمه:</span> اختيار لجنة أو مجموعة من مجموعة أكبر</p>
+  <p class="hook"><span class="lab">تذكّر:</span> لجنة = اقسم، وترتيب = لا تقسم</p>
+  <div class="traps">
+  <p class="trap"><span class="lab">الفخ:</span> بكم طريقة نختار لاعبَين من ٥ لاعبين؟ الجواب ١٠ وليس ٢٠: (٥ × ٤) ÷ (١ × ٢) = ٢٠ ÷ ٢ = ١٠ ، والترتيب غير مهم</p>
+  </div>
+</section>
+<section class="rule" id="r-9a20a9" aria-labelledby="r-9a20a9-h">
+  <h3 id="r-9a20a9-h">الوسط الحسابي</h3>
+  <p class="f"><span class="k">القانون:</span> الوسط = مجموع البيانات ÷ عددهم</p>
+  <p><span class="lab">بالكلمات:</span> الوسط = مجموع الأعداد ÷ عددها ، والمجموع = الوسط × العدد</p>
+  <p>اجمع كل الأعداد، واقسم على عددها. واعكسها: الوسط × العدد = المجموع.</p>
+  <p><span class="lab">مثال:</span> ٤ + ٦ + ٨ = ١٨ ، والوسط ١٨ ÷ ٣ = ٦ ، وبالعكس ٦ × ٣ = ١٨</p>
+  <p><span class="lab">متى تستخدمه:</span> متوسط الدرجات والأعمار</p>
+  <p class="hook"><span class="lab">تذكّر:</span> لو عرفت الوسط، عرفت المجموع</p>
+  <p class="see"><span class="lab">الشرح الكامل:</span> <a href="/qudrat/arithmetic-mean.html#mean">قانون الوسط الحسابي في القدرات</a></p>
+</section>
+<section class="rule" id="r-b9755e" aria-labelledby="r-b9755e-h">
+  <h3 id="r-b9755e-h">الوسيط</h3>
+  <p class="f"><span class="k">القانون:</span> القيمة التي تتوسط البيانات بعد ترتيبها تصاعدياً أو تنازلياً</p>
+  <p><span class="lab">بالكلمات:</span> الوسيط = العدد الذي في المنتصف بعد الترتيب</p>
+  <p>رتّب الأعداد أولاً. ثم خذ التي في المنتصف. الترتيب قبل كل شيء.</p>
+  <div class="fig" role="img" aria-label="رسم يوضّح: ٩ ، ٢ ، ٥ ← بعد الترتيب ٢ ، ٥ ، ٩ فالوسيط ٥"><svg aria-hidden="true" focusable="false" viewBox="0 0 250 120" width="250" stroke="#4B4B4B" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><text x="210" y="32" font-size="11" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">قبل الترتيب</text> <text x="210" y="54" font-size="12" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">٩ ، ٢ ، ٥</text> <line x1="182" y1="48" x2="160" y2="48"/><path d="M167.2 51.5 L160 48 L167.2 44.5"/><line x1="36" y1="96" x2="158" y2="96"/><rect x="124" y="82" width="26" height="14"/><rect x="84" y="61" width="26" height="35" fill="#CFCFCF"/><rect x="44" y="33" width="26" height="63"/><text x="137" y="114" font-size="13" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">٢</text> <text x="97" y="114" font-size="13" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">٥</text> <text x="57" y="114" font-size="13" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">٩</text> <text x="107" y="52" font-size="11" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">الوسيط ٥</text> </svg></div>
+  <p><span class="lab">مثال:</span> ٩ ، ٢ ، ٥ ← بعد الترتيب ٢ ، ٥ ، ٩ فالوسيط ٥</p>
+  <p><span class="lab">متى تستخدمه:</span> البيانات المفردة</p>
+  <p class="hook"><span class="lab">تذكّر:</span> من لم يرتّب أخذ الرقم الغلط</p>
+</section>
+<div class="check">
+  <p class="q"><span class="lab">جرّب بنفسك:</span> ما وسيط ووسط الأعداد ٧ ، ٢ ، ٦ ؟</p>
+  <ul class="chips pick"><li class="c"><label><input type="radio" name="c-7f0295" value="0"> <span>الوسيط ٦ والوسط ٥</span></label></li><li><label><input type="radio" name="c-7f0295" value="1"> <span>الوسيط ٢ والوسط ٥</span></label></li><li><label><input type="radio" name="c-7f0295" value="2"> <span>الوسيط ٦ والوسط ١٥</span></label></li></ul>
+  <details><summary>الجواب</summary><div class="ans"><p class="ok">الوسيط ٦ والوسط ٥</p><p>رتّب: ٢ ، ٦ ، ٧ ← الوسيط ٦ ، و ١٥ ÷ ٣ = ٥</p></div></details>
+</div>
+<section class="rule" id="r-3052c3" aria-labelledby="r-3052c3-h">
+  <h3 id="r-3052c3-h">المنوال</h3>
+  <p class="f"><span class="k">القانون:</span> القيمة الأكثر تكراراً في البيانات</p>
+  <p><span class="lab">بالكلمات:</span> المنوال = العدد الأكثر تكراراً</p>
+  <p>لا حساب هنا. عُدّ كم مرة تكرر كل عدد. الأكثر تكراراً هو المنوال.</p>
+  <p><span class="lab">مثال:</span> ٣ ، ٧ ، ٣ ، ٥ ، ٣ ← المنوال ٣ لأنه تكرر ثلاث مرات</p>
+  <p><span class="lab">متى تستخدمه:</span> البحث عن الأكثر تكراراً</p>
+  <p class="hook"><span class="lab">تذكّر:</span> الأشهر في القائمة</p>
+</section>
+<section class="rule" id="r-54212c" aria-labelledby="r-54212c-h">
+  <h3 id="r-54212c-h">المدى</h3>
+  <p class="f"><span class="k">القانون:</span> المدى = أكبر قيمة − أصغر قيمة</p>
+  <p><span class="lab">بالكلمات:</span> المدى = أكبر عدد − أصغر عدد</p>
+  <p>خذ أكبر عدد، واطرح منه أصغر عدد. لا علاقة للمدى بالتكرار.</p>
+  <div class="fig" role="img" aria-label="رسم يوضّح: ٤ ، ٩ ، ٢ ، ١١ ← المدى = ١١ − ٢ = ٩"><svg aria-hidden="true" focusable="false" viewBox="0 0 250 120" width="250" stroke="#4B4B4B" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="78" y1="96" x2="234" y2="96"/><rect x="200" y="68" width="26" height="28"/><rect x="162" y="33" width="26" height="63"/><rect x="124" y="82" width="26" height="14"/><rect x="86" y="19" width="26" height="77"/><text x="213" y="114" font-size="13" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">٤</text> <text x="175" y="114" font-size="13" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">٩</text> <text x="137" y="114" font-size="13" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">٢</text> <text x="99" y="114" font-size="13" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">١١</text> <line x1="86" y1="19" x2="56" y2="19" stroke-dasharray="4 3" stroke-width="1.5"/><line x1="124" y1="82" x2="56" y2="82" stroke-dasharray="4 3" stroke-width="1.5"/><line x1="68" y1="19" x2="68" y2="82"/><path d="M64.5 26.2 L68 19 L71.5 26.2"/><path d="M71.5 74.8 L68 82 L64.5 74.8"/><text x="34" y="54" font-size="11" font-weight="700" stroke="none" fill="#4B4B4B" text-anchor="middle">المدى ٩</text> </svg></div>
+  <p><span class="lab">مثال:</span> ٤ ، ٩ ، ٢ ، ١١ ← المدى = ١١ − ٢ = ٩</p>
+  <p><span class="lab">متى تستخدمه:</span> تشتت البيانات</p>
+  <p class="hook"><span class="lab">تذكّر:</span> المسافة بين الطرفين، لا التكرار</p>
+</section>
+<div class="check">
+  <p class="q"><span class="lab">جرّب بنفسك:</span> الأعداد ٦ ، ٢ ، ٦ ، ٩ : ما المنوال والمدى؟</p>
+  <ul class="chips pick"><li class="c"><label><input type="radio" name="c-540b9f" value="0"> <span>المنوال ٦ والمدى ٧</span></label></li><li><label><input type="radio" name="c-540b9f" value="1"> <span>المنوال ٩ والمدى ٦</span></label></li><li><label><input type="radio" name="c-540b9f" value="2"> <span>المنوال ٦ والمدى ٩</span></label></li></ul>
+  <details><summary>الجواب</summary><div class="ans"><p class="ok">المنوال ٦ والمدى ٧</p><p>٦ تكرر مرتين ← المنوال ٦ ، و ٩ − ٢ = ٧</p></div></details>
+</div>
+
+
+  <h2 id="more">بقية قوانين الإحصاء والاحتمالات</h2>
+  <p>٦ قوانين أخرى في درس «الاحتمالات والإحصاء»، كلٌّ بصيغته ومتى تستخدمه.</p>
+<section class="rule sm" id="r-3f9804" aria-labelledby="r-3f9804-h">
+  <h3 id="r-3f9804-h">فضاء العينة</h3>
+  <p class="f"><span class="k">القانون:</span> عدد فضاء العينة = عدد نواتج التجربة</p>
+  <p><span class="lab">متى تستخدمه:</span> أول خطوة في أي سؤال احتمال</p>
+</section>
+<section class="rule sm" id="r-b6a6c9" aria-labelledby="r-b6a6c9-h">
+  <h3 id="r-b6a6c9-h">الحدث</h3>
+  <p class="f"><span class="k">القانون:</span> الحدث = مجموعة جزئية من فضاء العينة</p>
+  <p><span class="lab">متى تستخدمه:</span> تحديد النواتج المطلوبة</p>
+</section>
+<section class="rule sm" id="r-2b8acb" aria-labelledby="r-2b8acb-h">
+  <h3 id="r-2b8acb-h">مجموع الاحتمالات</h3>
+  <p class="f"><span class="k">القانون:</span> مجموع احتمالات عناصر الفضاء = ١</p>
+  <p><span class="lab">متى تستخدمه:</span> إيجاد نسبة مجهولة داخل صندوق</p>
+</section>
+<section class="rule sm" id="r-02bda4" aria-labelledby="r-02bda4-h">
+  <h3 id="r-02bda4-h">تمثيل الشبكة</h3>
+  <p class="f"><span class="k">القانون:</span> عدد الفضاء عند تكرار التجربة = عدد نقاط تقاطع الشبكة</p>
+  <p><span class="lab">متى تستخدمه:</span> عند إلقاء نردين أو عملتين</p>
+</section>
+<section class="rule sm" id="r-16b923" aria-labelledby="r-16b923-h">
+  <h3 id="r-16b923-h">العد مع التكرار</h3>
+  <p class="f"><span class="k">القانون:</span> عدد الطرق = ك × ك × ك ... (نفس العدد لكل خانة)</p>
+  <p><span class="lab">متى تستخدمه:</span> «إذا سُمح بالتكرار»</p>
+</section>
+<section class="rule sm" id="r-14fb07" aria-labelledby="r-14fb07-h">
+  <h3 id="r-14fb07-h">التباديل</h3>
+  <p class="f"><span class="k">القانون:</span> الترتيب هام ، مثال: <sup><span class="fr-sr pw">^</span>٦</sup>ل<sub><span class="fr-sr pw">_</span>٤</sub> = ٦×٥×٤×٣ = ٣٦٠</p>
+  <p><span class="lab">متى تستخدمه:</span> تكوين أرقام أو كلمات أو صفوف مرتبة</p>
+</section>
+
+  <h2 id="tricks">حيل تختصر حل أسئلة الإحصاء والاحتمالات</h2>
+  <ul class="tips">
+    <li>احفظ فضاءات العينة جاهزة: نرد ٦ ، نردان ٣٦ ، عملة ٢ ، عملتان ٤ ، ٣ عملات ٨ ، عملة ونرد ١٢ — لا ترسم الشبكة في الاختبار.</li>
+    <li>الفرق بين التوافيق والتباديل سؤال واحد: هل الترتيب مهم؟ كتب على رف / أرقام / كلمات ← تباديل. لجنة / مجموعة / اختيار أشخاص ← توافيق.</li>
+    <li>قبل حساب الوسيط رتّب البيانات دائماً — الخطأ الأشهر هو أخذ القيمة المتوسطة قبل الترتيب.</li>
+    <li>في سؤال «أوجد النسبة المجهولة»: استخدم أن مجموع احتمالات عناصر الفضاء = ١ ثم وحّد المقامات.</li>
+  </ul>
+
+  <h2 id="practice">أسئلة الإحصاء والاحتمالات محلولة</h2>
+  <p>٧ أسئلة أصلية من بنك قدراتي، بأسلوب الاختبار. حلّها أولاً، ثم افتح الحل.</p>
+  <div class="qs">
+<article class="qcard" id="q-probstats-01">
+  <h3><span class="qn">السؤال ١:</span> بطاقات مرقمة من ١ إلى ١٢ ، سُحبت بطاقة عشوائياً. ما احتمال أن تحمل عدداً من مضاعفات ٤ ؟</h3>
+
+  <ol class="choices pick">
+    <li class="c"><label><input type="radio" name="a-probstats-01" value="0"> <span class="l">أ</span> <span><span class="fr" data-t="١/٤"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٤</span></span></span></label></li>
+    <li><label><input type="radio" name="a-probstats-01" value="1"> <span class="l">ب</span> <span><span class="fr" data-t="١/٣"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٣</span></span></span></label></li>
+    <li><label><input type="radio" name="a-probstats-01" value="2"> <span class="l">جـ</span> <span><span class="fr" data-t="١/٦"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٦</span></span></span></label></li>
+    <li><label><input type="radio" name="a-probstats-01" value="3"> <span class="l">د</span> <span><span class="fr" data-t="١/٢"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٢</span></span></span></label></li>
+  </ol>
+  <details>
+    <summary>اعرض الحل</summary>
+    <div class="ans">
+      <p class="ok">الإجابة الصحيحة: (أ) <span class="fr" data-t="١/٤"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٤</span></span></p>
+      <p>عدد الفضاء = ١٢</p>
+      <p>مضاعفات ٤ في هذه البطاقات هي ٤ ، ٨ ، ١٢ وعددها ٣</p>
+      <p>الاحتمال = <span class="fr" data-t="٣/١٢"><span class="fr-n">٣</span><span class="fr-sr"> على </span><span class="fr-d">١٢</span></span> = <span class="fr" data-t="١/٤"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٤</span></span></p>
+    </div>
+  </details>
+</article>
+<article class="qcard" id="q-probstats-02">
+  <h3><span class="qn">السؤال ٢:</span> عند إلقاء حجر نرد مرة واحدة، ما احتمال ظهور عدد أكبر من ٤ ؟</h3>
+
+  <ol class="choices pick">
+    <li><label><input type="radio" name="a-probstats-02" value="0"> <span class="l">أ</span> <span><span class="fr" data-t="١/٦"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٦</span></span></span></label></li>
+    <li class="c"><label><input type="radio" name="a-probstats-02" value="1"> <span class="l">ب</span> <span><span class="fr" data-t="١/٣"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٣</span></span></span></label></li>
+    <li><label><input type="radio" name="a-probstats-02" value="2"> <span class="l">جـ</span> <span><span class="fr" data-t="١/٢"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٢</span></span></span></label></li>
+    <li><label><input type="radio" name="a-probstats-02" value="3"> <span class="l">د</span> <span><span class="fr" data-t="٢/٣"><span class="fr-n">٢</span><span class="fr-sr"> على </span><span class="fr-d">٣</span></span></span></label></li>
+  </ol>
+  <details>
+    <summary>اعرض الحل</summary>
+    <div class="ans">
+      <p class="ok">الإجابة الصحيحة: (ب) <span class="fr" data-t="١/٣"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٣</span></span></p>
+      <p>فضاء العينة = ١ ، ٢ ، ٣ ، ٤ ، ٥ ، ٦ أي عدد الفضاء = ٦</p>
+      <p>الأعداد الأكبر من ٤ هي ٥ ، ٦ وعددها ٢</p>
+      <p>الاحتمال = <span class="fr" data-t="٢/٦"><span class="fr-n">٢</span><span class="fr-sr"> على </span><span class="fr-d">٦</span></span> = <span class="fr" data-t="١/٣"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٣</span></span></p>
+    </div>
+  </details>
+</article>
+<article class="qcard" id="q-probstats-03">
+  <h3><span class="qn">السؤال ٣:</span> عند إلقاء حجرَي نرد مرة واحدة، ما احتمال أن يكون مجموع العددين الظاهرين ٥ ؟</h3>
+
+  <ol class="choices pick">
+    <li class="c"><label><input type="radio" name="a-probstats-03" value="0"> <span class="l">أ</span> <span><span class="fr" data-t="١/٩"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٩</span></span></span></label></li>
+    <li><label><input type="radio" name="a-probstats-03" value="1"> <span class="l">ب</span> <span><span class="fr" data-t="١/٦"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٦</span></span></span></label></li>
+    <li><label><input type="radio" name="a-probstats-03" value="2"> <span class="l">جـ</span> <span><span class="fr" data-t="٥/٣٦"><span class="fr-n">٥</span><span class="fr-sr"> على </span><span class="fr-d">٣٦</span></span></span></label></li>
+    <li><label><input type="radio" name="a-probstats-03" value="3"> <span class="l">د</span> <span><span class="fr" data-t="١/١٢"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">١٢</span></span></span></label></li>
+  </ol>
+  <details>
+    <summary>اعرض الحل</summary>
+    <div class="ans">
+      <p class="ok">الإجابة الصحيحة: (أ) <span class="fr" data-t="١/٩"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٩</span></span></p>
+      <p>عدد الفضاء = عدد نقاط التقاطع = ٦ × ٦ = ٣٦</p>
+      <p>نواتج المجموع ٥ هي: (١،٤) ، (٢،٣) ، (٣،٢) ، (٤،١) وعددها ٤ نقاط</p>
+      <p>الاحتمال = <span class="fr" data-t="٤/٣٦"><span class="fr-n">٤</span><span class="fr-sr"> على </span><span class="fr-d">٣٦</span></span> = <span class="fr" data-t="١/٩"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٩</span></span></p>
+    </div>
+  </details>
+</article>
+<article class="qcard" id="q-probstats-06">
+  <h3><span class="qn">السؤال ٤:</span> أوجد الوسيط للبيانات الآتية: ٧ ، ٣ ، ٩ ، ١٢ ، ٥ ، ٨ ، ١٥</h3>
+
+  <ol class="choices pick">
+    <li><label><input type="radio" name="a-probstats-06" value="0"> <span class="l">أ</span> <span>٧</span></label></li>
+    <li class="c"><label><input type="radio" name="a-probstats-06" value="1"> <span class="l">ب</span> <span>٨</span></label></li>
+    <li><label><input type="radio" name="a-probstats-06" value="2"> <span class="l">جـ</span> <span>٩</span></label></li>
+    <li><label><input type="radio" name="a-probstats-06" value="3"> <span class="l">د</span> <span>١٢</span></label></li>
+  </ol>
+  <details>
+    <summary>اعرض الحل</summary>
+    <div class="ans">
+      <p class="ok">الإجابة الصحيحة: (ب) ٨</p>
+      <p>نرتب البيانات تصاعدياً: ٣ ، ٥ ، ٧ ، ٨ ، ٩ ، ١٢ ، ١٥</p>
+      <p>عددها ٧ (فردي) فالوسيط هو القيمة الرابعة = ٨</p>
+    </div>
+  </details>
+</article>
+<article class="qcard" id="q-probstats-07">
+  <h3><span class="qn">السؤال ٥:</span> أوجد المدى والمنوال للأعداد: ٦ ، ٩ ، ٤ ، ٩ ، ١٣ ، ٧ ، ٩</h3>
+
+  <ol class="choices pick">
+    <li class="c"><label><input type="radio" name="a-probstats-07" value="0"> <span class="l">أ</span> <span>المدى ٩ والمنوال ٩</span></label></li>
+    <li><label><input type="radio" name="a-probstats-07" value="1"> <span class="l">ب</span> <span>المدى ١٣ والمنوال ٦</span></label></li>
+    <li><label><input type="radio" name="a-probstats-07" value="2"> <span class="l">جـ</span> <span>المدى ٩ والمنوال ٧</span></label></li>
+    <li><label><input type="radio" name="a-probstats-07" value="3"> <span class="l">د</span> <span>المدى ٤ والمنوال ٩</span></label></li>
+  </ol>
+  <details>
+    <summary>اعرض الحل</summary>
+    <div class="ans">
+      <p class="ok">الإجابة الصحيحة: (أ) المدى ٩ والمنوال ٩</p>
+      <p>المدى = أكبر قيمة − أصغر قيمة = ١٣ − ٤ = ٩</p>
+      <p>المنوال = القيمة الأكثر تكراراً = ٩ (تكررت ٣ مرات)</p>
+    </div>
+  </details>
+</article>
+<article class="qcard" id="q-probstats-08">
+  <h3><span class="qn">السؤال ٦:</span> الوسط الحسابي لخمسة أعداد يساوي ١٤ ، فإذا كان مجموع أربعة منها ٥٨ فما العدد الخامس؟</h3>
+
+  <ol class="choices pick">
+    <li><label><input type="radio" name="a-probstats-08" value="0"> <span class="l">أ</span> <span>١٠</span></label></li>
+    <li class="c"><label><input type="radio" name="a-probstats-08" value="1"> <span class="l">ب</span> <span>١٢</span></label></li>
+    <li><label><input type="radio" name="a-probstats-08" value="2"> <span class="l">جـ</span> <span>١٤</span></label></li>
+    <li><label><input type="radio" name="a-probstats-08" value="3"> <span class="l">د</span> <span>١٦</span></label></li>
+  </ol>
+  <details>
+    <summary>اعرض الحل</summary>
+    <div class="ans">
+      <p class="ok">الإجابة الصحيحة: (ب) ١٢</p>
+      <p>الوسط = المجموع ÷ العدد ← المجموع = ١٤ × ٥ = ٧٠</p>
+      <p>العدد الخامس = ٧٠ − ٥٨ = ١٢</p>
+    </div>
+  </details>
+</article>
+<article class="qcard" id="q-probstats-09">
+  <h3><span class="qn">السؤال ٧:</span> بكم طريقة يمكن اختيار ٣ طلاب من بين ٧ طلاب لتمثيل المدرسة، علماً بأن الترتيب بينهم غير…</h3>
+  <p class="stem">بكم طريقة يمكن اختيار ٣ طلاب من بين ٧ طلاب لتمثيل المدرسة، علماً بأن الترتيب بينهم غير هام؟</p>
+  <ol class="choices pick">
+    <li><label><input type="radio" name="a-probstats-09" value="0"> <span class="l">أ</span> <span>٢١</span></label></li>
+    <li class="c"><label><input type="radio" name="a-probstats-09" value="1"> <span class="l">ب</span> <span>٣٥</span></label></li>
+    <li><label><input type="radio" name="a-probstats-09" value="2"> <span class="l">جـ</span> <span>٢١٠</span></label></li>
+    <li><label><input type="radio" name="a-probstats-09" value="3"> <span class="l">د</span> <span>١٢٠</span></label></li>
+  </ol>
+  <details>
+    <summary>اعرض الحل</summary>
+    <div class="ans">
+      <p class="ok">الإجابة الصحيحة: (ب) ٣٥</p>
+      <p>الترتيب غير هام ← توافيق</p>
+      <p><sup><span class="fr-sr pw">^</span>٧</sup>ق<sub><span class="fr-sr pw">_</span>٣</sub> = (٧ × ٦ × ٥) ÷ (١ × ٢ × ٣) = ٢١٠ ÷ ٦ = ٣٥ طريقة</p>
+    </div>
+  </details>
+</article>
+  </div>
+  <p class="note report">وجدت خطأ في سؤال أو حل؟ <a href="/about.html#corrections">هكذا تبلّغ عنه وهكذا نصحّحه</a>.</p>
+  <p>المزيد: <a href="/qudrat-methods.html#probstats">سؤالان آخران على الإحصاء والاحتمالات مع طريقة الحل</a>، و<a href="/qudrat-mock-test.html">اختبار قدرات كمي تجريبي مجاني</a> بمؤقّت.</p>
+
+  <h2 id="faq">أسئلة شائعة عن الإحصاء والاحتمالات في القدرات</h2>
+  <dl class="faq">
+    <dt>ما أهم قوانين الإحصاء والاحتمالات في القدرات؟</dt>
+    <dd>أهمها الاحتمال، مبدأ العد والتوافيق. وفي هذه الصفحة ١٥ قانوناً للدرس، كل قانون تحت عنوانه بصيغته ومتى تستخدمه.</dd>
+    <dt>ما قانون الاحتمالات في القدرات؟</dt>
+    <dd>الاحتمال = عدد ما تريده ÷ عدد كل النواتج الممكنة. مثال: ٨ بطاقات مرقمة من ١ إلى ٨ ، والزوجية منها ٤ ← احتمال بطاقة زوجية <span class="fr" data-t="٤/٨"><span class="fr-n">٤</span><span class="fr-sr"> على </span><span class="fr-d">٨</span></span> = <span class="fr" data-t="١/٢"><span class="fr-n">١</span><span class="fr-sr"> على </span><span class="fr-d">٢</span></span>.</dd>
+    <dt>ما مبدأ العد في القدرات؟</dt>
+    <dd>عدد الطرق = عدد خيارات الأول × عدد خيارات الثاني. وبصيغة أخرى: عدد طرق الاختيار = حاصل ضرب عدد طرق كل اختيار على حدة. مثال: ٣ قمصان و ٢ بنطلون: ٣ × ٢ = ٦ إطلالات مختلفة.</dd>
+    <dt>ما قانون التوافيق في القدرات؟</dt>
+    <dd>اضرب تنازلياً بعدد المختارين ÷ (١ × ٢ × ٣ … بعدد المختارين). مثال: اختيار ٣ من ٥: (٥ × ٤ × ٣) ÷ (١ × ٢ × ٣) = ٦٠ ÷ ٦ = ١٠.</dd>
+    <dt>ما الفخ في أسئلة الإحصاء والاحتمالات في القدرات؟</dt>
+    <dd>مطعم فيه ٢ شوربة و ٣ سلطات و ٢ عصير. كم وجبة؟ الجواب ١٢: اضرب الاختيارات الثلاثة: ٢ × ٣ × ٢ = ١٢ ، ولا تجمعها.</dd>
+    <dt>كيف أحل أسئلة الإحصاء والاحتمالات بسرعة في القدرات؟</dt>
+    <dd>احفظ فضاءات العينة جاهزة: نرد ٦ ، نردان ٣٦ ، عملة ٢ ، عملتان ٤ ، ٣ عملات ٨ ، عملة ونرد ١٢ — لا ترسم الشبكة في الاختبار.</dd>
+  </dl>
+
+  <h2 id="related">دروس ذات صلة</h2>
+  <div class="pn">
+    <a href="/qudrat/key-laws.html" rel="prev">قوانين هامة في القدرات: المصافحات والمباريات وزاوية الساعة <span>الدرس السابق</span></a>
+    <a class="next" href="/qudrat/fastest-methods.html" rel="next">أسرع طرق حل أسئلة القدرات الكمي <span>الدرس التالي</span></a>
+  </div>
+  <ul class="links" style="margin-top:12px">
+    <li><a href="/qudrat/big-numbers.html">جمع وطرح وضرب الأعداد الكبيرة في القدرات</a></li>
+    <li><a href="/qudrat/patterns-cycles.html">الدوريات والأنماط والمتتابعات في القدرات</a></li>
+    <li><a href="/qudrat/divisibility-simplify.html">قابلية القسمة والتبسيط في القدرات</a></li>
+    <li><a href="/qudrat/equations-squares.html">المعادلات والمربع الكامل والفرق بين مربعين في القدرات</a></li>
+    <li><a href="/qudrat/lcm-gcd.html">المضاعف المشترك الأصغر والقاسم المشترك الأكبر في القدرات</a></li>
+    <li><a href="/qudrat/laws.html#probstats">قوانين الإحصاء والاحتمالات في ورقة القوانين</a></li>
+    <li><a href="/qudrat/comparisons.html">أسئلة المقارنة في القدرات</a></li>
+  </ul>
+
+<section class="cta" aria-labelledby="cta-h">
+  <img src="/assets/app-icon/icon-192.webp" width="72" height="72" alt="">
+  <h2 id="cta-h">تدرّب على الإحصاء والاحتمالات في قدراتي</h2>
+  <p>«الاحتمالات والإحصاء» هو الدرس ٣ من وحدة «مهارات وقوانين هامة في القدرات» في لعبة قدراتي، ومعه ١٠ أسئلة أصلية بالحل. يُقسَم في اللعبة إلى ٦ دروس قصيرة: الاحتمال في سطر، عملات ونرد، مبدأ العد، الوسيط والمنوال والمدى، الوسط وعكسه، توافيق ولا تباديل؟. الدروس تُفتح بالترتيب، واختبار تحديد المستوى يتخطّى بك ما تعرفه. مجاناً وبدون تسجيل.</p>
+  <a class="btn" href="https://qudrati.xyz/">ابدأ التدريب مجاناً</a>
+</section>
+</article>
+</main>
+
+<footer class="foot">
+  <h2>صفحات قدراتي</h2>
+  <ul class="links">
+    <li><a href="/">قدراتي — العب وتدرّب على القسم الكمي</a></li>
+    <li><a href="/qudrat/">دروس القسم الكمي في القدرات</a></li>
+    <li><a href="/qudrat/laws.html">قوانين القدرات كمي</a></li>
+    <li><a href="/qudrat/comparisons.html">أسئلة المقارنة في القدرات</a></li>
+    <li><a href="/qudrat-methods.html">أسئلة قدرات كمي مع طريقة الحل</a></li>
+    <li><a href="/qudrat-mock-test.html">اختبار قدرات كمي تجريبي مجاني</a></li>
+    <li><a href="/qudrat-kami.html">دليل القسم الكمي في اختبار القدرات</a></li>
+    <li><a href="/about.html">عن قدراتي وطريقة كتابة الأسئلة</a></li>
+    <li><a href="/privacy.html">الخصوصية</a></li>
+  </ul>
+  <p class="note">قدراتي (qudrati.xyz) لعبة مستقلة للتدريب على القسم الكمي في اختبار القدرات العامة، غير تابعة لهيئة تقويم التعليم والتدريب وغير معتمدة منها، وليست <a href="https://etec.gov.sa/ar/centers/qiyas/p/p-739fe0f2-0bfc-43a1-839f-0873eb6302ac" rel="noopener">«اختبارات قدراتي»</a> التي تقدّمها الهيئة لطلاب الصفوف من الثالث الابتدائي إلى الأول الثانوي. أسئلتها أصلية بأسلوب الاختبار ولا تمثّل أسئلة الاختبار الفعلية. <a href="/about.html#method">كيف تُكتب الأسئلة وتُراجع</a>.</p>
+  <p class="updated">آخر تحديث: <time datetime="2026-10-31">٣١ أكتوبر ٢٠٢٦</time></p>
+</footer>
+</div>
+</body>
+</html>

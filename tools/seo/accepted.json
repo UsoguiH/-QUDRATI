@@ -1,0 +1,9 @@
+{
+  "_about": "Findings tools/seo/audit.js keeps reporting but should not fail a run, because the user has ruled on them (each with the ruling it rests on). They still print, as notes marked «accepted». Match on code and `where` (the path the audit prints); `until` (YYYY-MM-DD) makes an acceptance expire. Add an entry only for a real ruling, never to silence a finding nobody has looked at.",
+  "accepted": [
+    { "code": "render-thin", "where": "/", "reason": "the app replaces the pre-render on boot and the user does not want that text inside the app (CLAUDE.md, index.html); the content pages carry the ranking" },
+    { "code": "render-links", "where": "/", "reason": "same ruling: the home's links exist only before the app boots; every content page links the others in its own HTML" },
+    { "code": "render-blocking", "where": "/", "reason": "css/style.css is the app's own stylesheet and is off-limits to SEO work; it is measured, not changed" },
+    { "code": "css-heavy", "where": "/", "reason": "css/style.css is the app's own stylesheet and is off-limits to SEO work" }
+  ]
+}

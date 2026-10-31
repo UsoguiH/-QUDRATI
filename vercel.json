@@ -1,26 +1,105 @@
 {
   "redirects": [
     {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "www.qudrati.xyz"
-        }
-      ],
-      "destination": "https://qudrati.xyz/:path*",
-      "statusCode": 301
+      "source": "/",
+      "has": [{ "type": "host", "value": "qudrati-lime.vercel.app" }],
+      "destination": "https://qudrati.xyz/",
+      "statusCode": 308
     },
     {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "qudrati-lime.vercel.app"
-        }
-      ],
-      "destination": "https://qudrati.xyz/:path*",
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "qudrati-lime.vercel.app" }],
+      "destination": "https://qudrati.xyz/$1",
       "statusCode": 308
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "www.qudrati.xyz" }],
+      "destination": "https://qudrati.xyz/",
+      "statusCode": 308
+    },
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "www.qudrati.xyz" }],
+      "destination": "https://qudrati.xyz/$1",
+      "statusCode": 308
+    },
+    {
+      "source": "/(.*)\\.html/",
+      "destination": "/$1.html",
+      "statusCode": 308
+    },
+    {
+      "source": "/qudrat/index.html",
+      "destination": "/qudrat/",
+      "statusCode": 308
+    },
+    {
+      "source": "/qudrat",
+      "destination": "/qudrat/",
+      "statusCode": 308
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+    },
+    {
+      "source": "/assets/vendor/(.*)",
+      "has": [{ "type": "query", "key": "v" }],
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "source": "/(js|css)/(.*)",
+      "has": [{ "type": "query", "key": "v" }],
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=86400" }]
+    },
+    {
+      "source": "/css/content.css",
+      "has": [{ "type": "query", "key": "v" }],
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "source": "/qudrat/assets/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800, stale-while-revalidate=2592000" }]
+    },
+    {
+      "source": "/qudrat/assets/(.*)",
+      "has": [{ "type": "query", "key": "v" }],
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
+    },
+    {
+      "source": "/tools/(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/research/(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/deck/(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/assets/(.*)\\.html",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/(.*)\\.(md|zip|mp4|pptx|py|ps1)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/(preview|mobile|chest-animation|chest-animation-tiers|chest-animation-clashroyale|mascot-lab|mascot-edits|mascot-prompts|exam-date-picker|quiz-two-bolts|_tmp_spark|404)\\.html",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    },
+    {
+      "source": "/llms-full.txt",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
     }
   ]
 }

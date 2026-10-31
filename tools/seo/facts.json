@@ -1,0 +1,142 @@
+{
+  "_about": "Exam facts the SEO audit (tools/seo/audit.js) holds our pages to, and watches ETEC for. Every value here was read off the official page named in `source` on the date in `checked`; the audit re-reads that page (unless --offline) and warns when ETEC's table no longer matches. Never add a value that was not read off an official ETEC/Qiyas page. `etec.pdfs` are the other official PDFs our pages cite (ETEC’s two practice tests), watched like the guide: size, Last-Modified and the file’s own last /ModDate. `pdfs[].exam` are the practice tests’ shape, counted by eye: sections, questions a section, minutes a section and the quantitative questions in each (the counts our pages state as «٤٤ سؤالاً كمياً من ٩٦» and «١١ من ٢٤»).",
+  "etec": {
+    "gatPage": "https://etec.gov.sa/ar/centers/qiyas/p/p-7d1870ff-a881-4e9a-9f9d-8f2a2c4df032",
+    "checked": "2026-10-31",
+    "how": "curl of gatPage (200, 1,234,388 bytes); the tables are in the page's embedded JSON as `markup` strings, decoded with JSON.parse and read cell by cell",
+    "quant": {
+      "sci": {
+        "حساب": 23,
+        "هندسة": 10,
+        "جبر": 4,
+        "تفسير البيانات": 8
+      },
+      "lit": {
+        "حساب": 13,
+        "هندسة": 8,
+        "جبر": null,
+        "تفسير البيانات": 4
+      }
+    },
+    "verbal": {
+      "sci": {
+        "التناظر اللفظي": 17,
+        "إكمال الجمل": 7,
+        "الخطأ السياقي": 10,
+        "استيعاب المقروء": 21
+      },
+      "lit": {
+        "التناظر اللفظي": 21,
+        "إكمال الجمل": 13,
+        "الخطأ السياقي": 16,
+        "استيعاب المقروء": 25
+      }
+    },
+    "statements": {
+      "calculator": "بما أن الأسئلة تتضمن أرقاما سهلة، فإنه لا يسمح بإحضار الآلة الحاسبة بجميع أشكالها",
+      "quantDomains": "يركز على القياس والاستنتاج وحل الحساب والهندسة والجبر والبيانات والتحليل"
+    },
+    "guidePdf": {
+      "url": "https://media.etec.gov.sa/media/1izihxlo/%D8%A7%D9%84%D8%AF%D9%84%D9%8A%D9%84-%D8%A7%D9%84%D8%A7-%D8%B1%D8%B4%D8%A7%D8%AF%D9%8A-%D9%84%D8%A7%D8%AE%D8%AA%D8%A8%D8%A7%D8%B1-%D8%A7%D9%84%D9%82%D8%AF%D8%B1%D8%A7%D8%AA-%D8%A7%D9%84%D8%B9%D8%A7%D9%85%D8%A9.pdf",
+      "title": "الدليل الإرشادي لاختبار القدرات العامة",
+      "contentLength": 2177228,
+      "lastModified": "Thu, 23 Jul 2026 11:17:17 GMT",
+      "etag": "\"1dd1a94d1c7644c\"",
+      "exam": {
+        "sections": 5,
+        "perSection": 24,
+        "questions": 120,
+        "minutes": 125,
+        "page": 7,
+        "read": "2026-10-31, by eye off page 7 rendered to an image (the PDF's text layer scrambles its digits): «يحتوي الاختبار على خمسة أقسام، وفي كل قسم ٢٤ سؤالاً، وبمجموع كلي يبلغ ١٢٠ سؤالاً» and «زمن الاختبار: ساعتان وخمس دقائق»"
+      },
+      "modDate": "2026-07-23T14:09:40+03:00",
+      "modDateHow": "the last /ModDate in the PDF (incremental saves append one; the earlier is 2026-07-09), read 2026-10-31 from the file (2,177,228 B)"
+    },
+    "qudratiSeries": {
+      "url": "https://etec.gov.sa/ar/centers/qiyas/p/p-739fe0f2-0bfc-43a1-839f-0873eb6302ac",
+      "name": "اختبارات قدراتي",
+      "why": "ETEC's own test series for grades 3 to 10 shares our name; pages should say we are not it"
+    },
+    "items": [
+      {
+        "id": "7d1870ff-a881-4e9a-9f9d-8f2a2c4df032",
+        "name": "اختبار القدرات العامة",
+        "url": "https://etec.gov.sa/ar/centers/qiyas/p/p-7d1870ff-a881-4e9a-9f9d-8f2a2c4df032",
+        "updateDate": "2026-09-08T11:15:37.87Z",
+        "read": "2026-10-31, curl of the page (200, 1,234,388 B): the item's updateDate in the embedded JSON",
+        "quotedOn": [
+          "/",
+          "/qudrat-kami.html",
+          "/qudrat-mock-test.html",
+          "/llms.txt"
+        ]
+      },
+      {
+        "id": "739fe0f2-0bfc-43a1-839f-0873eb6302ac",
+        "name": "اختبارات قدراتي",
+        "url": "https://etec.gov.sa/ar/centers/qiyas/p/p-739fe0f2-0bfc-43a1-839f-0873eb6302ac",
+        "updateDate": "2026-09-08T11:18:01.807Z",
+        "read": "2026-10-31, curl of the page (200, 1,234,388 B)",
+        "quotedOn": [
+          "/",
+          "/about.html",
+          "/llms.txt",
+          "the lesson pages under /qudrat/"
+        ]
+      }
+    ],
+    "pdfs": [
+      {
+        "url": "https://media.etec.gov.sa/media/wu5lwhvf/%D8%A7%D8%AE%D8%AA%D8%A8%D8%A7%D8%B1-%D8%A7%D9%84%D9%82%D8%AF%D8%B1%D8%A7%D8%AA-%D8%A7%D9%84%D8%B9%D8%A7%D9%85%D8%A9-%D8%A7%D9%84%D8%B9%D9%84%D9%85%D9%8A-%D8%A7%D8%AE%D8%AA%D8%A8%D8%A7%D8%B1-%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A.pdf",
+        "title": "اختبار القدرات العامة العلمي — اختبار تجريبي",
+        "contentLength": 1112747,
+        "lastModified": "Sun, 09 Aug 2026 08:16:45 GMT",
+        "etag": "\"1dd27d76a9cee2b\"",
+        "modDate": "2026-08-06T10:07:26+03:00",
+        "read": "2026-10-31: HEAD 200 (application/pdf) and the whole file (1,112,747 B), one /ModDate in it",
+        "quotedOn": [
+          "/qudrat-kami.html (#page=2: «٢٥ دقيقة لكل قسم من ٢٤ سؤالاً»)",
+          "/qudrat-mock-test.html",
+          "/llms-full.txt"
+        ],
+        "track": "sci",
+        "exam": {
+          "sections": 4,
+          "perSection": 24,
+          "questions": 96,
+          "minutesPerSection": 25,
+          "quantPerSection": 11,
+          "quant": 44,
+          "quantFirst": true,
+          "read": "2026-10-31, by eye off the pages rendered to images (pdf.js in headless Chrome; the text layer has no usable text): p.2 «القسم الأول — أسئلته من: ١ – ٢٤ — الزمن: ٢٥ دقيقة»; each section opens with its quantitative questions: ١–١١ (p.3–4), ٢٥–٣٥ (p.7–8), ٤٩–٥٩ (p.11–12), ٧٣–٨٣ (p.15–16), then verbal to ٢٤، ٤٨، ٧٢، ٩٦; p.18 the answer key runs ١–٩٦"
+        }
+      },
+      {
+        "url": "https://media.etec.gov.sa/media/u1rjvsaq/%D8%A7%D8%AE%D8%AA%D8%A8%D8%A7%D8%B1-%D8%A7%D9%84%D9%82%D8%AF%D8%B1%D8%A7%D8%AA-%D8%A7%D9%84%D8%B9%D8%A7%D9%85%D8%A9-%D8%A7%D9%84%D9%86%D8%B8%D8%B1%D9%8A-%D8%A7%D8%AE%D8%AA%D8%A8%D8%A7%D8%B1-%D8%AA%D8%AC%D8%B1%D9%8A%D8%A8%D9%8A.pdf",
+        "title": "اختبار القدرات العامة النظري — اختبار تجريبي",
+        "contentLength": 1388824,
+        "lastModified": "Mon, 20 Jul 2026 12:09:46 GMT",
+        "etag": "\"1dd1840a7895018\"",
+        "modDate": "2026-07-19T13:06:42+03:00",
+        "read": "2026-10-31: HEAD 200 (application/pdf) and the whole file (1,388,824 B), one /ModDate in it",
+        "quotedOn": [
+          "/qudrat-kami.html",
+          "/qudrat-mock-test.html",
+          "/llms-full.txt"
+        ],
+        "track": "lit",
+        "exam": {
+          "sections": 4,
+          "perSection": 24,
+          "questions": 96,
+          "minutesPerSection": 25,
+          "quantPerSection": 6,
+          "quant": 24,
+          "quantFirst": true,
+          "read": "2026-10-31, by eye off the rendered pages: p.2 «القسم الأول — أسئلته من: ١ – ٢٤ — الزمن: ٢٥ دقيقة»; quantitative questions ١–٦ (p.3), ٢٥–٣٠ (p.7), ٤٩–٥٤ (p.11), ٧٣–٧٨ (p.15), then verbal; p.18 the answer key runs ١–٩٦"
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "_about": "Pages tools/seo/audit.js runs Lighthouse (mobile) on, and the budgets it holds them to. A page's own `budgets` override the defaults; null switches one off. CLS over 0.25 (Google's «poor») is an error, over the budget a warning; LCP over 4 s a warning, over the budget a note; a performance score under budget a note; SEO or accessibility under budget a warning. Local runs go through tools/serve.js (no compression, no CDN), so compare local with local and live with live: history.json keeps them apart.",
+  "budgets": {
+    "cls": 0.1,
+    "lcp": 2500,
+    "perf": 90,
+    "seo": 100,
+    "a11y": 95
+  },
+  "pages": [
+    {
+      "path": "/qudrat-kami.html",
+      "why": "the guide; guides asked for CLS under 0.1 (0.068 on 2026-10-31)"
+    },
+    {
+      "path": "/qudrat/percent.html",
+      "why": "a lesson page, the template all 26 share (lessons asked for CLS)"
+    },
+    {
+      "path": "/qudrat/laws.html",
+      "why": "the biggest content page (122 KB of HTML)"
+    },
+    {
+      "path": "/qudrat-methods.html",
+      "why": "the second biggest, all 26 lessons with solved questions"
+    },
+    {
+      "path": "/",
+      "budgets": {
+        "perf": null,
+        "lcp": null
+      },
+      "note": "the app; its LCP waits for js/app.js and css/style.css, which SEO work does not touch",
+      "watch": {
+        "lcp": 7000,
+        "since": "2026-10-31",
+        "why": "the home owner measured mobile LCP 15.0 s on the local tree (Lighthouse mobile, the same with the old landing markup), against 6.4 s live (shell 94, history.json 13:14 / 15:23): it comes from the uncommitted splash hand-off (index.html #splash, js/app.js splashOut), which SEO work may not touch. Tracked so it is re-measured on the live site once the splash ships; the user decides on it"
+      }
+    }
+  ],
+  "fontCls": {
+    "_about": "CLS with the site web font (the .woff2 files) held back `delays` ms, measured by audit.js over the DevTools Protocol on a phone model (no Arial, Noto Naskh Arabic ready at first paint: the fallback faces in css/content.css as a phone resolves them) at every width in `widths`, and on this machine as it is (desktop, the longest delay, `desktopWidths`). A swap that re-wraps one line moves what is under it only at some widths, so one width misses it: the owners measured lcm-gcd 0.2554 and probability-statistics 0.2519 at 340 px, fractions 0.3440 at 412, privacy 0.228 at 370 and 375, qudrat-mock-test 0.201 at 340, none of them at 390. `pages`: one page of every template (guide, hub, laws, methods, comparisons, mock, about, privacy, a lesson) and each page that went over budget. --font-cls=all runs every sitemap page but the home. Over `budget` a warning, over 0.25 an error. A run in which a font installed on this machine with a name in `siteFamilies` painted text is flagged: a phone does not have it. Asked for by the lessons and guides owners on 2026-10-31 (their harnesses: scratchpad lp3/cls3.js, r3/cls.js REAL=1 LOADFB=1); widths and pages from the monitor critic, round 5.",
+    "pages": [
+      "/qudrat-kami.html",
+      "/qudrat/",
+      "/qudrat/laws.html",
+      "/qudrat-methods.html",
+      "/qudrat/comparisons.html",
+      "/qudrat-mock-test.html",
+      "/about.html",
+      "/privacy.html",
+      "/qudrat/percent.html",
+      "/qudrat/lcm-gcd.html",
+      "/qudrat/probability-statistics.html",
+      "/qudrat/fractions.html"
+    ],
+    "widths": [
+      320,
+      340,
+      375,
+      390,
+      412
+    ],
+    "desktopWidths": [
+      390
+    ],
+    "delays": [
+      1000,
+      2500
+    ],
+    "budget": 0.1,
+    "concurrency": 4,
+    "siteFamilies": [
+      "Baloo",
+      "Qudrati"
+    ]
+  }
+}

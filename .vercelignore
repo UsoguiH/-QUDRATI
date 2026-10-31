@@ -1,0 +1,19 @@
+# Internal notes that are deployed with the site but read by no page.
+# Each is anchored to the repo root with «/», so a file of the same name
+# deeper in the tree is not caught. Nothing the app, a content page or a
+# lab loads may go here: MASCOT-EDITS.md stays deployed because
+# mascot-edits.html fetches it, and tools/, llms*.txt and README.md stay too.
+/CLAUDE.md
+/REMAINING.md
+/design.md
+/MASCOT-PLAN.md
+/Mascotprompt.md
+/5 prompts.md
+/5 prompts 2.md
+/ROADMAP.md
+/ROADMAP-2026.md
+/NEWFEATURE-PLAN.md
+/RETENTION-PLAN.md
+/INTEGRATION-BRIEF.md
+/qudrat-lessons-duolingo.md
+/tools/seo/

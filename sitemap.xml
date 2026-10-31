@@ -1,26 +1,147 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+<!-- written by tools/build_sitemap.js — do not edit by hand -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://qudrati.xyz/</loc>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
+    <lastmod>2026-10-31</lastmod>
     <image:image>
       <image:loc>https://qudrati.xyz/assets/og.png</image:loc>
-      <image:title>قدراتي — تدرّب على القسم الكمي وأنت تلعب</image:title>
     </image:image>
   </url>
   <url>
     <loc>https://qudrati.xyz/qudrat-kami.html</loc>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/laws.html</loc>
+    <lastmod>2026-10-31</lastmod>
   </url>
   <url>
     <loc>https://qudrati.xyz/qudrat-methods.html</loc>
-    <lastmod>2026-09-09</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/comparisons.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat-mock-test.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/about.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/privacy.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/big-numbers.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/key-laws.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/probability-statistics.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/fastest-methods.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/patterns-cycles.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/divisibility-simplify.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/equations-squares.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/lcm-gcd.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/decimals.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/fractions.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/square-roots.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/exponents.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/speed-distance-time.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/percent.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/profit-loss.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/proportion.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/arithmetic-mean.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/angles-polygons.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/triangle.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/rectangle.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/square.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/quadrilaterals.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/shaded-areas.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/circle.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/parallel-lines.html</loc>
+    <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://qudrati.xyz/qudrat/solids.html</loc>
+    <lastmod>2026-10-31</lastmod>
   </url>
 </urlset>

@@ -1,0 +1,739 @@
+{
+ "_about": "What Saudi students actually type, and what our page must carry to be the answer. Sources: Google (hl=ar, gl=sa) and Bing (mkt=ar-SA) autocomplete pulled live on 2026-10-31 (213 seeds, 1,871 suggestions; tools/seo/suggest.js re-runs it), and ten answer-engine probes the same day, in which every reply opened with the formula as text, then one worked example, then the trap. tools/seo/audit.js checks each query automatically: is there an indexable page whose text carries `expect` (a rule's formula from js/data, or its teaching-card wording, plus any `text`) and, when `titleHas` is set, whose <title> contains one of those words. Checking the engines themselves is by hand: ask each query in each engine in `engines`, then add a row to `log` with what you saw. Record only what you saw; never estimate a position or a citation. `page` names the page we mean to answer a query; the audit warns when that page does not carry the answer. A query about one rule (`expect.rule`) is meant for that rule's lesson page, and its `page` says so; the audit warns when `page` is another page (unless `pageWhy` says why) and when another of our pages would answer the query better than the one meant for it.",
+ "engines": [
+  "Google (google.com.sa) incl. AI Overviews",
+  "ChatGPT (search on)",
+  "Perplexity",
+  "Gemini",
+  "Claude (web search on)",
+  "Bing / Copilot"
+ ],
+ "logFormat": {
+  "date": "YYYY-MM-DD",
+  "engine": "one of engines",
+  "id": "query id",
+  "cited": "true if a qudrati.xyz URL is cited or linked",
+  "url": "the qudrati.xyz URL cited, if any",
+  "top": "the first source the engine cited",
+  "note": "anything else seen, verbatim where it matters"
+ },
+ "log": [],
+ "queries": [
+  {
+   "id": "handshakes",
+   "query": "قانون المصافحات قدرات",
+   "page": "/qudrat/key-laws.html",
+   "alt": [
+    "كم عدد المصافحات بين ٦ أشخاص"
+   ],
+   "intent": "one rule + an example",
+   "expect": {
+    "rule": {
+     "lesson": "skills.keylaws",
+     "n": 9
+    }
+   }
+  },
+  {
+   "id": "matches",
+   "query": "قانون عدد المباريات قدرات",
+   "page": "/qudrat/key-laws.html",
+   "intent": "one rule",
+   "expect": {
+    "rule": {
+     "lesson": "skills.keylaws",
+     "n": 6
+    }
+   }
+  },
+  {
+   "id": "gifts",
+   "query": "قانون عدد الهدايا قدرات",
+   "page": "/qudrat/key-laws.html",
+   "intent": "one rule",
+   "expect": {
+    "rule": {
+     "lesson": "skills.keylaws",
+     "n": 8
+    }
+   }
+  },
+  {
+   "id": "clock",
+   "query": "قانون الساعة قدرات",
+   "page": "/qudrat/key-laws.html",
+   "alt": [
+    "الزاوية بين عقربي الساعة قدرات"
+   ],
+   "intent": "one rule + an example",
+   "expect": {
+    "rule": {
+     "lesson": "skills.keylaws",
+     "n": 16
+    }
+   }
+  },
+  {
+   "id": "between",
+   "query": "قانون الاعداد المحصورة قدرات",
+   "page": "/qudrat/key-laws.html",
+   "intent": "one rule",
+   "expect": {
+    "rule": {
+     "lesson": "skills.keylaws",
+     "n": 1
+    }
+   }
+  },
+  {
+   "id": "joint-work",
+   "query": "قانون العمل المشترك قدرات",
+   "page": "/qudrat/key-laws.html",
+   "intent": "one rule",
+   "expect": {
+    "rule": {
+     "lesson": "skills.keylaws",
+     "n": 13
+    }
+   }
+  },
+  {
+   "id": "squares",
+   "query": "كم عدد المربعات في الشكل قدرات",
+   "page": "/qudrat/key-laws.html",
+   "intent": "one rule",
+   "expect": {
+    "rule": {
+     "lesson": "skills.keylaws",
+     "n": 10
+    }
+   }
+  },
+  {
+   "id": "triangles",
+   "query": "قانون عدد المثلثات قدرات",
+   "page": "/qudrat/key-laws.html",
+   "intent": "one rule",
+   "expect": {
+    "rule": {
+     "lesson": "skills.keylaws",
+     "n": 12
+    }
+   }
+  },
+  {
+   "id": "sum-1-n",
+   "query": "قانون جمع الاعداد من ١ الى ١٠٠ قدرات",
+   "page": "/qudrat/big-numbers.html",
+   "intent": "one rule",
+   "expect": {
+    "rule": {
+     "lesson": "skills.bigsum",
+     "n": 5
+    }
+   }
+  },
+  {
+   "id": "probability",
+   "query": "قانون الاحتمالات قدرات",
+   "page": "/qudrat/probability-statistics.html",
+   "intent": "one rule + an example",
+   "expect": {
+    "rule": {
+     "lesson": "skills.probstats",
+     "n": 3
+    }
+   }
+  },
+  {
+   "id": "mean",
+   "query": "قانون الوسط الحسابي قدرات",
+   "page": "/qudrat/arithmetic-mean.html",
+   "intent": "one rule + an example",
+   "expect": {
+    "rule": {
+     "lesson": "ratios.mean",
+     "n": 1
+    }
+   }
+  },
+  {
+   "id": "percent",
+   "query": "قانون النسبة المئوية قدرات",
+   "page": "/qudrat/percent.html",
+   "intent": "one rule + an example",
+   "expect": {
+    "rule": {
+     "lesson": "ratios.percent",
+     "n": 2
+    }
+   }
+  },
+  {
+   "id": "percent-increase",
+   "query": "قانون نسبة الزيادة قدرات",
+   "page": "/qudrat/profit-loss.html",
+   "intent": "one rule + an example",
+   "expect": {
+    "rule": {
+     "lesson": "ratios.profit",
+     "n": 1
+    }
+   }
+  },
+  {
+   "id": "compound",
+   "query": "قانون الربح المركب قدرات",
+   "page": "/qudrat/profit-loss.html",
+   "intent": "one rule",
+   "expect": {
+    "rule": {
+     "lesson": "ratios.profit",
+     "n": 8
+    }
+   }
+  },
+  {
+   "id": "catch-up",
+   "query": "قانون زمن اللحاق قدرات",
+   "page": "/qudrat/speed-distance-time.html",
+   "intent": "one rule",
+   "expect": {
+    "rule": {
+     "lesson": "numbers.speed",
+     "n": 11
+    }
+   }
+  },
+  {
+   "id": "average-speed",
+   "query": "السرعة المتوسطة قدرات",
+   "page": "/qudrat/speed-distance-time.html",
+   "intent": "one rule + the trap",
+   "expect": {
+    "rule": {
+     "lesson": "numbers.speed",
+     "n": 13
+    }
+   }
+  },
+  {
+   "id": "arc",
+   "query": "قانون طول القوس قدرات",
+   "page": "/qudrat/circle.html",
+   "intent": "one rule",
+   "expect": {
+    "rule": {
+     "lesson": "geometry.circle",
+     "n": 11
+    }
+   }
+  },
+  {
+   "id": "cube",
+   "query": "حجم المكعب قدرات",
+   "page": "/qudrat/solids.html",
+   "intent": "one rule",
+   "expect": {
+    "rule": {
+     "lesson": "geometry.solids",
+     "n": 6
+    }
+   }
+  },
+  {
+   "id": "polygon-angles",
+   "query": "قانون مجموع زوايا المضلع قدرات",
+   "page": "/qudrat/angles-polygons.html",
+   "intent": "one rule",
+   "expect": {
+    "rule": {
+     "lesson": "geometry.angles",
+     "n": 23
+    }
+   }
+  },
+  {
+   "id": "divisible-7",
+   "query": "قابلية القسمة على ٧ قدرات",
+   "page": "/qudrat/divisibility-simplify.html",
+   "intent": "one rule",
+   "expect": {
+    "rule": {
+     "lesson": "skills.simplify",
+     "n": 8
+    }
+   }
+  },
+  {
+   "id": "proportion",
+   "query": "التناسب الطردي والعكسي قدرات",
+   "page": "/qudrat/proportion.html",
+   "intent": "one rule",
+   "expect": {
+    "rule": {
+     "lesson": "ratios.proportion",
+     "n": 1
+    }
+   }
+  },
+  {
+   "id": "roots-table",
+   "query": "الجذور المشهورة في القدرات",
+   "page": "/qudrat/square-roots.html",
+   "alt": [
+    "جدول الجذور قدرات"
+   ],
+   "intent": "a table to memorise",
+   "expect": {
+    "rule": {
+     "lesson": "numbers.roots",
+     "n": 1
+    }
+   }
+  },
+  {
+   "id": "powers-table",
+   "query": "الاسس المشهورة في القدرات",
+   "page": "/qudrat/exponents.html",
+   "alt": [
+    "جدول الاسس قدرات"
+   ],
+   "intent": "a table to memorise",
+   "expect": {
+    "rule": {
+     "lesson": "numbers.powers",
+     "n": 1
+    }
+   }
+  },
+  {
+   "id": "percent-table",
+   "query": "النسب المئوية المشهورة قدرات",
+   "page": "/qudrat/percent.html",
+   "intent": "a table to memorise",
+   "expect": {
+    "rule": {
+     "lesson": "ratios.percent",
+     "n": 4
+    }
+   }
+  },
+  {
+   "id": "insufficient",
+   "query": "متى تكون المعطيات غير كافية في القدرات",
+   "intent": "the comparison rule",
+   "expect": {
+    "rule": {
+     "lesson": "skills.fastest",
+     "n": 10
+    }
+   },
+   "page": "/qudrat/comparisons.html",
+   "pageWhy": "the comparison-questions page is built on this rule (its heading «متى تكون المعطيات غير كافية؟» and worked comparisons); the lesson page /qudrat/fastest-methods.html carries it as one rule of eleven"
+  },
+  {
+   "id": "comparison",
+   "query": "اسئلة المقارنة في اختبار القدرات",
+   "alt": [
+    "القيمة الاولى اكبر من الثانية"
+   ],
+   "intent": "the four fixed choices + worked examples",
+   "expect": {
+    "text": [
+     "القيمة الأولى أكبر",
+     "القيمة الثانية أكبر",
+     "القيمتان متساويتان",
+     "المعطيات غير كافية"
+    ]
+   },
+   "page": "/qudrat/comparisons.html"
+  },
+  {
+   "id": "quant-share",
+   "query": "كم نسبة الكمي في القدرات",
+   "alt": [
+    "نسبة الكمي واللفظي في القدرات علمي ونظري"
+   ],
+   "intent": "a four-row table with the official source",
+   "expect": {
+    "text": [
+     "٤٥٪",
+     "٢٥٪"
+    ]
+   },
+   "page": "/qudrat-kami.html"
+  },
+  {
+   "id": "calculator",
+   "query": "هل يسمح بالآلة الحاسبة في اختبار القدرات",
+   "intent": "one official fact",
+   "expect": {
+    "text": [
+     "الآلة الحاسبة"
+    ]
+   },
+   "page": "/qudrat-kami.html"
+  },
+  {
+   "id": "laws-hub",
+   "query": "قوانين القدرات كمي",
+   "alt": [
+    "ملخص قوانين القدرات",
+    "جميع قوانين القدرات",
+    "قوانين القدرات pdf"
+   ],
+   "intent": "every rule on one page, printable",
+   "expect": {
+    "rule": {
+     "lesson": "skills.keylaws",
+     "n": 9
+    },
+    "titleHas": [
+     "قوانين"
+    ]
+   },
+   "page": "/qudrat/laws.html"
+  },
+  {
+   "id": "solved",
+   "query": "اسئلة قدرات كمي مع طريقة الحل",
+   "alt": [
+    "اسئلة قدرات كمي محلولة"
+   ],
+   "intent": "original questions with their solutions",
+   "expect": {
+    "titleHas": [
+     "طريقة الحل",
+     "مع الحل",
+     "محلولة"
+    ]
+   },
+   "page": "/qudrat-methods.html"
+  },
+  {
+   "id": "mock",
+   "query": "اختبار قدرات كمي تجريبي مجاني",
+   "alt": [
+    "محاكي قدرات كمي"
+   ],
+   "intent": "a free practice test, no sign-up",
+   "expect": {
+    "titleHas": [
+     "تجريبي",
+     "محاكي"
+    ]
+   },
+   "page": "/qudrat-mock-test.html"
+  },
+  {
+   "id": "fractions",
+   "query": "الكسور قدرات",
+   "intent": "a topic page",
+   "expect": {
+    "titleHas": [
+     "الكسور"
+    ]
+   },
+   "page": "/qudrat/fractions.html"
+  },
+  {
+   "id": "app",
+   "query": "تطبيق قدرات كمي مجاني",
+   "alt": [
+    "لعبة قدرات",
+    "افضل تطبيق قدرات"
+   ],
+   "intent": "the app itself",
+   "expect": {
+    "titleHas": [
+     "قدراتي"
+    ],
+    "text": [
+     "مجاني"
+    ]
+   },
+   "page": "/"
+  },
+  {
+   "id": "brand",
+   "query": "قدراتي qudrati.xyz",
+   "alt": [
+    "موقع قدراتي",
+    "تطبيق قدراتي"
+   ],
+   "intent": "set us apart from ETEC's «اختبارات قدراتي» series and other «قدراتي» brands",
+   "expect": {
+    "text": [
+     "اختبارات قدراتي"
+    ]
+   },
+   "page": "/"
+  },
+  {
+   "id": "exam-questions",
+   "query": "كم سؤال في اختبار القدرات",
+   "source": "keywords research 2026-10-31: «كم سؤال في اختبار القدرات» G10 B12",
+   "page": "/qudrat-kami.html",
+   "expect": {
+    "textAny": [
+     "١٢٠ سؤالاً"
+    ]
+   },
+   "note": "the answer must come from the ETEC guide p.7 (facts.json guidePdf.exam)"
+  },
+  {
+   "id": "exam-duration",
+   "query": "كم مدة اختبار القدرات",
+   "source": "keywords: «مدة اختبار القدرات» G10 B9, «كم ساعة اختبار القدرات» G6",
+   "page": "/qudrat-kami.html",
+   "expect": {
+    "textAny": [
+     "ساعتان وخمس دقائق",
+     "ساعتين وخمس دقائق",
+     "١٢٥ دقيقة"
+    ]
+   }
+  },
+  {
+   "id": "exam-sections",
+   "query": "اقسام اختبار القدرات",
+   "source": "keywords: «اقسام اختبار القدرات (الكمي)» G4",
+   "page": "/qudrat-kami.html",
+   "expect": {
+    "textAny": [
+     "خمسة أقسام"
+    ]
+   }
+  },
+  {
+   "id": "profit-loss",
+   "query": "قانون الربح والخسارة قدرات",
+   "source": "keywords: «قانون الربح والخسارة قدرات», «قانون الربح قدرات» (Google)",
+   "page": "/qudrat/profit-loss.html",
+   "expect": {
+    "rule": {
+     "lesson": "ratios.profit",
+     "n": 6
+    }
+   }
+  },
+  {
+   "id": "discount-compound",
+   "query": "قانون الخصم المركب قدرات",
+   "page": "/qudrat/profit-loss.html",
+   "source": "keywords: «قانون الخصم قدرات» (Google)",
+   "expect": {
+    "rule": {
+     "lesson": "ratios.profit",
+     "n": 9
+    }
+   }
+  },
+  {
+   "id": "statistics",
+   "query": "الاحصاء قدرات",
+   "source": "keywords: «الاحصاء قدرات» 9 Google suggestions; «الاحتمالات والإحصاء قدرات» 0",
+   "page": "/qudrat/probability-statistics.html",
+   "expect": {
+    "titleHas": [
+     "الإحصاء"
+    ]
+   }
+  },
+  {
+   "id": "median",
+   "query": "الوسيط قدرات",
+   "page": "/qudrat/probability-statistics.html",
+   "source": "probstats rule; school-grade collision without «قدرات» (keywords research)",
+   "expect": {
+    "rule": {
+     "lesson": "skills.probstats",
+     "n": 11
+    }
+   }
+  },
+  {
+   "id": "divisibility",
+   "query": "قابلية القسمة قدرات",
+   "source": "keywords: «قابلية القسمة» G10 B12",
+   "page": "/qudrat/divisibility-simplify.html",
+   "expect": {
+    "titleHas": [
+     "قابلية القسمة"
+    ]
+   }
+  },
+  {
+   "id": "pythagoras-triples",
+   "query": "اشهر مثلثات فيثاغورس قدرات",
+   "page": "/qudrat/triangle.html",
+   "source": "keywords: «اشهر مثلثات فيثاغورس قدرات» (Google)",
+   "expect": {
+    "rule": {
+     "lesson": "geometry.triangle",
+     "n": 5
+    }
+   }
+  },
+  {
+   "id": "primes",
+   "query": "الاعداد الاولية المشهورة قدرات",
+   "page": "/qudrat/divisibility-simplify.html",
+   "source": "skills.simplify rule «أوليّات مشهورة في الاختبار»; memorisation-table intent",
+   "expect": {
+    "rule": {
+     "lesson": "skills.simplify",
+     "n": 14
+    }
+   }
+  },
+  {
+   "id": "multiplication-facts",
+   "query": "جدول الضرب قدرات",
+   "page": "/qudrat/divisibility-simplify.html",
+   "source": "keywords: «جدول الضرب قدرات» (Google + Bing)",
+   "expect": {
+    "rule": {
+     "lesson": "skills.simplify",
+     "n": 2
+    }
+   }
+  },
+  {
+   "id": "circle-area",
+   "query": "قانون مساحة الدائرة قدرات",
+   "page": "/qudrat/circle.html",
+   "source": "keywords: «الدائرة قدرات» 7 Google suggestions",
+   "expect": {
+    "rule": {
+     "lesson": "geometry.circle",
+     "n": 1
+    }
+   }
+  },
+  {
+   "id": "counting-principle",
+   "query": "مبدأ العد قدرات",
+   "page": "/qudrat/probability-statistics.html",
+   "source": "probstats rule; probe topic «counting» in the AEO research",
+   "expect": {
+    "rule": {
+     "lesson": "skills.probstats",
+     "n": 7
+    }
+   }
+  },
+  {
+   "id": "simulator",
+   "query": "محاكي قدرات كمي مجاني",
+   "source": "keywords: «محاكي قدرات» G10 B10",
+   "page": "/qudrat-mock-test.html",
+   "expect": {
+    "titleHas": [
+     "تجريبي",
+     "محاكي"
+    ]
+   }
+  },
+  {
+   "id": "game",
+   "query": "لعبة قدرات كمي",
+   "source": "keywords: «لعبة قدرات» G5",
+   "page": "/",
+   "expect": {
+    "titleHas": [
+     "لعبة"
+    ]
+   }
+  },
+  {
+   "id": "free-site",
+   "query": "موقع قدرات مجاني",
+   "source": "keywords: «موقع قدرات مجاني», «منصة قدرات مجانية»",
+   "page": "/",
+   "expect": {
+    "text": [
+     "مجاني"
+    ]
+   },
+   "pageWhy": "a navigational query for the site itself: the home is the free app, and its rendered DOM says «مجاني بالكامل» (about.html says it too, in more words)"
+  },
+  {
+   "id": "rectangles",
+   "query": "كم عدد المستطيلات في الشكل قدرات",
+   "page": "/qudrat/key-laws.html",
+   "source": "keywords research 2026-10-31: «كم عدد المربعات/المستطيلات في الشكل قدرات»",
+   "intent": "one rule + an example",
+   "expect": {
+    "rule": {
+     "lesson": "skills.keylaws",
+     "n": 11
+    }
+   }
+  },
+  {
+   "id": "opposite-directions",
+   "query": "قانون زمن الالتقاء قدرات",
+   "page": "/qudrat/speed-distance-time.html",
+   "alt": [
+    "قانون الاتجاهين المتعاكسين قدرات"
+   ],
+   "source": "keywords research 2026-10-31: «قانون زمن الالتقاء قدرات» (3 suggestions)",
+   "intent": "one rule + an example",
+   "expect": {
+    "rule": {
+     "lesson": "numbers.speed",
+     "n": 7
+    }
+   }
+  },
+  {
+   "id": "quant-count",
+   "query": "كم سؤال كمي في اختبار القدرات المحوسب",
+   "source": "keywords research 2026-10-31: «كم سؤال كمي في اختبار القدرات محوسب» (Google)",
+   "page": "/qudrat-kami.html",
+   "expect": {
+    "textAny": [
+     "٥٤ سؤالاً"
+    ]
+   },
+   "note": "an estimate from ETEC's shares applied to the guide's 120 questions; the page must say it is that, not an official count"
+  },
+  {
+   "id": "foundation",
+   "query": "تأسيس كمي قدرات",
+   "source": "competitor research 2026-10-31: one of the five Bing SA position checks",
+   "page": "/qudrat/",
+   "expect": {
+    "textAny": [
+     "٢٦ درساً"
+    ]
+   },
+   "note": "never name the book behind the curriculum (the user decides that)"
+  }
+ ],
+ "serpChecks": {
+  "_about": "Positions on Bing Saudi Arabia (cc=SA, setlang=ar), to be read by hand and logged raw: the date, the engine and market, our best URL and its position, or null when qudrati.xyz is not in the top 20. Never an estimate. The competitor research of 2026-10-31 found qudrati.xyz in none of these. Google positions come only from Search Console once the user verifies the domain.",
+  "engine": "https://www.bing.com/search?cc=SA&setlang=ar&q=",
+  "queries": [
+   "قدرات كمي",
+   "اختبار قدرات تجريبي",
+   "قوانين القدرات الكمي",
+   "أسئلة المقارنة قدرات كمي",
+   "تأسيس كمي"
+  ],
+  "logFormat": {
+   "at": "YYYY-MM-DD",
+   "engine": "bing-sa",
+   "query": "…",
+   "position": null,
+   "url": null,
+   "top3": [
+    "…"
+   ],
+   "by": "who checked"
+  },
+  "log": []
+ }
+}
