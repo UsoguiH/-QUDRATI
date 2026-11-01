@@ -1876,7 +1876,8 @@ function build() {
   const M = buildModel();
   const css = fs.readFileSync(path.join(ROOT, "css", "content.css"), "utf8");
   if (!css.includes(`url(${FONT_URL})`)) throw new Error(`css/content.css's @font-face must load url(${FONT_URL}), the font's current hash`);
-  const cssV = crypto.createHash("sha1").update(css).digest("hex").slice(0, 8);
+  /* hashed as LF, the bytes git stores and Vercel serves, whatever the checkout's line endings */
+  const cssV = crypto.createHash("sha1").update(css.replace(/\r\n/g, "\n")).digest("hex").slice(0, 8);
   const TODAY = today();
   const jobs = [
     ...M.all.map(l => ({ file: `qudrat/${l.slug}.html`, render: d => lessonPageCounted(l, M, d, cssV) })),

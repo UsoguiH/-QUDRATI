@@ -492,7 +492,7 @@ llms = between(llms, "<!-- pages:start -->", "<!-- pages:end -->", pagesMd, "llm
 out.set("llms.txt", llms);
 out.set("index.html", idx);
 /* the 404 uses the content pages' font: the same URL (one cache entry) and the same fallback faces */
-const contentCss = rd("css/content.css");
+const contentCss = rd("css/content.css").replace(/\r\n/g, "\n");
 const fontFaces = contentCss.match(/@font-face\s*\{[^}]*\}/g) || [];
 const fontUrl = ((fontFaces.find(f => /Baloo Bhaijaan 2/.test(f)) || "").match(/url\(([^)]+\.woff2[^)]*)\)/) || [])[1];
 if (!fontUrl || !/\?v=/.test(fontUrl) || fontFaces.length < 2)
