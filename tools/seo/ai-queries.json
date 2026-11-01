@@ -711,6 +711,51 @@
     ]
    },
    "note": "never name the book behind the curriculum (the user decides that)"
+  },
+  {
+   "id": "score-calc",
+   "query": "حساب درجة القدرات الكمي واللفظي",
+   "alt": [
+    "كيف تحسب درجة القدرات"
+   ],
+   "source": "Search Console 2026-11-01: a query our site was shown for with no page answering it",
+   "intent": "how ETEC scores (norm-referenced), and that no official right-answers formula exists",
+   "page": "/qudrat-score.html",
+   "expect": {
+    "titleHas": [
+     "درجة"
+    ],
+    "textAny": [
+     "معياري المرجع"
+    ]
+   }
+  },
+  {
+   "id": "score-dist",
+   "query": "توزيع درجات القدرات",
+   "alt": [
+    "كم الدرجة المتوسطة في القدرات"
+   ],
+   "source": "Search Console 2026-11-01: «توزيع الدرجات»",
+   "intent": "ETEC's score table",
+   "page": "/qudrat-score.html",
+   "expect": {
+    "textAny": [
+     "٨١ فأكثر"
+    ]
+   }
+  },
+  {
+   "id": "weighted",
+   "query": "حساب النسبة الموزونة",
+   "source": "not measured: the usual next question after the score; check it in suggest.js before relying on it",
+   "intent": "the weighted-average sum, weights from the university",
+   "page": "/qudrat-score.html",
+   "expect": {
+    "textAny": [
+     "النسبة الموزونة"
+    ]
+   }
   }
  ],
  "serpChecks": {

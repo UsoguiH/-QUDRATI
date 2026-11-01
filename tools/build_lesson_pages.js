@@ -965,6 +965,7 @@ const SITE_LINKS = [
   ["/qudrat-methods.html", "أسئلة قدرات كمي مع طريقة الحل"],
   ["/qudrat-mock-test.html", "اختبار قدرات كمي تجريبي مجاني"],
   ["/qudrat-kami.html", "دليل القسم الكمي في اختبار القدرات"],
+  ["/qudrat-score.html", "حساب درجة القدرات وتوزيع الدرجات"],
   ["/about.html", "عن قدراتي وطريقة كتابة الأسئلة"],
   ["/privacy.html", "الخصوصية"],
 ];
@@ -1643,6 +1644,8 @@ function imageCards(M) {
   /* for qudrat-kami.html, which the guides build by hand: its Article points here (the shares are
      the guide's own table, p. 5) */
   cards.push({ name: "kami", kicker: "دليل القسم الكمي", title: "القسم الكمي في اختبار القدرات العامة", rule: "نسبة الكمي من الاختبار — الدليل الإرشادي", formula: "٤٥٪ في التخصصات العلمية — ٢٥٪ في التخصصات النظرية" });
+  /* for qudrat-score.html, by hand too: the score table is ETEC's own (its GAT page and the guide, p. 8) */
+  cards.push({ name: "score", kicker: "درجة القدرات", title: "حساب درجة القدرات: كيف تُحسب وماذا تعني", rule: "الدرجة وموقعها بين المختبرين — الهيئة", formula: "٦٥ المتوسط — ٨١ فأكثر أعلى ٥٪" });
   return cards;
 }
 function cardHtml(c, w, h) {
@@ -1690,8 +1693,11 @@ function drawImages(M) {
       const src = path.join(tmp, `${c.name}-${ratio}.html`);
       fs.writeFileSync(src, cardHtml(c, w, h));
       const out = path.join(dir, `${c.name}-${ratio}.png`);
+      fs.rmSync(out, { force: true });
       execFileSync(CHROME, ["--headless=new", "--disable-gpu", "--hide-scrollbars", "--no-first-run", "--allow-file-access-from-files",
         `--user-data-dir=${path.join(tmp, "profile")}`, `--window-size=${w},${h}`, "--force-device-scale-factor=1", `--screenshot=${out}`, "file:///" + src.replace(/\\/g, "/")], { stdio: "ignore" });
+      /* with another Chrome running, the launcher can return before the screenshot is written */
+      for (const until = Date.now() + 15000; !fs.existsSync(out) && Date.now() < until;) execFileSync(process.execPath, ["-e", "setTimeout(()=>{},250)"]);
       if (!fs.existsSync(out)) throw new Error("Chrome drew nothing for " + out);
     }
     manifest[c.name] = cardKey(c);

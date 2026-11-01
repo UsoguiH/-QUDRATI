@@ -109,7 +109,7 @@ const SKIP_DIRS = new Set([".git", ".claude", ".vercel", "node_modules", "tools"
 /* the dev harnesses: noindex already, listed again so a lost meta tag never lists one */
 const DEV_PAGES = /^(preview|mobile|chest-animation|chest-animation-tiers|chest-animation-clashroyale|mascot-lab|mascot-edits|mascot-prompts|exam-date-picker|quiz-two-bolts|_tmp_spark|404)\.html$/;
 /* the order the guide pages are listed in; any other guide follows, by its URL */
-const ROOT_ORDER = ["index.html", "qudrat-kami.html", "qudrat/index.html", "qudrat/laws.html", "qudrat-methods.html", "qudrat/comparisons.html", "qudrat-mock-test.html", "about.html", "privacy.html"];
+const ROOT_ORDER = ["index.html", "qudrat-kami.html", "qudrat-score.html", "qudrat/index.html", "qudrat/laws.html", "qudrat-methods.html", "qudrat/comparisons.html", "qudrat-mock-test.html", "about.html", "privacy.html"];
 
 const AR = "٠١٢٣٤٥٦٧٨٩";
 const toAr = n => String(n).replace(/[0-9]/g, d => AR[d]);

@@ -3052,7 +3052,9 @@ function dataHash() {
     }
     pg.selfCounts = checkSelfCounts(pg, w, m, title, d);
     checkJsonLd(pg);
-    pg.visibleDate = (byTag(pg.root, "time").map(t => t.attrs.datetime || textOf(t)).find(Boolean) || "");
+    /* the «آخر تحديث» date when the page has one; a source's «رجعنا إليه في» date is not the page's */
+    { const ts = byTag(pg.root, "time"), up = ts.find(t => t.parent && /آخر تحديث/.test(textOf(t.parent)));
+      pg.visibleDate = ((up ? [up] : ts).map(t => t.attrs.datetime || textOf(t)).find(Boolean) || ""); }
     for (const t of byTag(pg.root, "time")) if (t.attrs.datetime != null && /^\d{4}-/.test(t.attrs.datetime.trim())) { const b = badDate(t.attrs.datetime); if (b) add("warn", "time-datetime", w, `<time datetime> is ${b}`, t.attrs.datetime + " «" + textOf(t).slice(0, 40) + "»"); else if (t.attrs.datetime.slice(0, 10) > today) add("warn", "time-datetime", w, "<time datetime> is in the future", t.attrs.datetime); }
   }
   {
