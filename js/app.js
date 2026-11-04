@@ -8620,7 +8620,7 @@ function renderWelcome() {
       ${welcomeHero()}
       <h1 class="wl-title">قدراتي</h1>
       <p class="wl-sub">تدرّب على القسم الكمي — درساً بعد درس</p>
-      <div class="login-badges wl-badges"><span>${toAr(bankSize())} سؤال أصلي</span><span>مجاني بالكامل</span><span>بدون حساب</span></div>
+      <div class="login-badges wl-badges"><span>حيل تختصر الوقت</span><span>مجاني بالكامل</span><span>تعلّم وأنت تلعب</span></div>
     </div>
     <div class="wl-cta">
       <button class="btn" onclick="A.obStart()">ابدأ الآن</button>
@@ -8638,14 +8638,14 @@ A.loginGuest = function () { S.user = { name: "ضيف", guest: true }; save(); a
    exam's own format, a habit — with the real counts, and under it the promises
    a student would otherwise have to take on faith, each of them true. */
 const INTRO_VALUE = [
-  { ic: "book",   c: "purple", t: () => `المنهج الكمي كامل في ${toAr(allLessons().length)} درساً`,
-    s: () => `${toAr(bankSize())} سؤالاً بحلولها` },
+  { ic: "book",   c: "purple", t: () => `أساسيات القسم الكمي في ${toAr(allLessons().length)} درساً`,
+    s: () => "بحيل سهلة تختصر عليك الوقت" },
   { ic: "target", c: "blue",   t: () => "اختبار تجريبي على نمط الاختبار الحقيقي",
     s: () => "تعرف مستواك قبل يوم الاختبار" },
   { ic: "streak", c: "gold",   t: () => "عادة يومية تمشي معك",
     s: () => "هدف يومي وسلسلة أيام" }
 ];
-const INTRO_PROMISE = ["مجاني بالكامل", "بدون حساب ولا إيميل", "تقدّمك محفوظ في جهازك"];
+const INTRO_PROMISE = ["مجاني بالكامل", "تعلّم وأنت تلعب", "تقدّمك محفوظ في جهازك"];
 /* Each answer carries فهيم's reaction to it, the way Duolingo's onboarding
    answers do ("Okay, we'll start fresh!") — the bubble that asked the question
    says it the moment the answer is picked. */
