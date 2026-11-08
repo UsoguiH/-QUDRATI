@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>قوانين اليوم</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;700;800&display=swap">
+<style>
+/* The path's card for the rules due today, the one it has and three new ones (2026-11-03; the user, on the fanned deck:
+   «create better animation than this one i want very amazing animation and UI»). Each phone is tools/lawapp/run.html,
+   the real app with the rule laid in, opened with ?deck=N; the bar sets how many rules are due and the speed */
+:root { --ink: #3C3C3C; --gray: #777; --line: #E5E5E5; --blue: #1CB0F6; --blue-dk: #1899D6; --blue-light: #DDF4FF; --blue-border: #84D8FF;
+  --green: #58CC02; --green-lip: #478700; --gold: #FFC800; --gold-dk: #E6A000; --brown: #CD7900; --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #EFEFEF; color: var(--ink); font-family: var(--font); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h2, p { margin: 0; }
+button { font-family: var(--font); cursor: pointer; color: inherit; }
+header { max-width: 1500px; margin: 0 auto; padding: 18px 20px 4px; }
+header h1 { font-size: 26px; font-weight: 800; line-height: 1.25; }
+header p { font-size: 15px; font-weight: 600; color: var(--gray); margin-top: 4px; max-width: 900px; }
+.bar { max-width: 1500px; margin: 0 auto; padding: 10px 20px 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bar .lbl { font-size: 14px; font-weight: 800; color: var(--gray); margin-inline-start: 6px; }
+.chipb { height: 38px; padding: 0 14px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 14.5px; font-weight: 800; }
+.chipb.on { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+.sep { width: 2px; height: 26px; background: #DADADA; margin: 0 4px; border-radius: 1px; }
+.play { height: 38px; padding: 0 18px; border-radius: 12px; border: 0; background: var(--green); box-shadow: 0 4px 0 var(--green-lip); color: #fff; font-size: 15px; font-weight: 800; }
+.play:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--green-lip); }
+.grid { max-width: 1500px; margin: 0 auto; padding: 16px 20px 40px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tag { font-size: 13px; font-weight: 800; color: var(--brown); }
+.col.old .tag { color: var(--gray); }
+.col h2 { font-size: 20px; font-weight: 800; line-height: 1.3; }
+.col p.what { font-size: 13.5px; font-weight: 600; color: var(--gray); min-height: 84px; }
+.frame { position: relative; width: 100%; max-width: 390px; aspect-ratio: 390 / 470; margin: 0 auto; border: 9px solid #1F1F1F; border-bottom: 0;
+  border-radius: 38px 38px 0 0; overflow: hidden; background: #fff; box-shadow: 0 16px 34px rgba(0,0,0,.12); }
+.frame iframe { position: absolute; top: 0; left: 0; width: 390px; height: 844px; border: 0; transform-origin: 0 0; }
+.pick { height: 44px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 15px; font-weight: 800; }
+.pick.on { border-color: var(--green); background: #D7FFB8; color: #58A700; }
+.col.rec .tag::after { content: ' — اخترتها'; color: var(--green-lip); }
+@media (max-width: 1100px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .grid { grid-template-columns: minmax(0, 1fr); padding: 12px 16px 32px; } header, .bar { padding-inline: 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>بطاقة «قوانين تراجعها اليوم»</h1>
+  <p>الحالية وثلاث جديدة على المسار نفسه. كل وحدة تمرّ على القوانين اللي تنتظرك واحد واحد، واسم القانون اللي قدّام يتبدّل تحت العنوان مع حركته، فتعرف وش اللي ينتظرك مو بس كم. اضغط البطاقة في أي جوال وتبدأ المراجعة.</p>
+</header>
+<div class="bar">
+  <span class="lbl">كم قانون ينتظر؟</span>
+  <button class="chipb" data-due="1">قانون</button><button class="chipb" data-due="2">قانونين</button><button class="chipb on" data-due="3">٣ قوانين</button>
+  <span class="sep"></span>
+  <span class="lbl">السرعة</span>
+  <button class="chipb on" data-slow="1">عادية</button><button class="chipb" data-slow="4">أبطأ ×٤</button>
+  <span class="sep"></span>
+  <button class="play" id="again">أعد التشغيل</button>
+</div>
+<div class="grid" id="grid"></div>
+<script>
+const LOOKS = [
+  { v: 0, cls: 'old', tag: 'الحالية', name: 'المروحة', what: 'الشكل اللي عندك الآن: المسدّسات الذهبية فوق بعض، الأمامي يقفز ويلفّ كل ٣٫٦ ثانية.' },
+  { v: 1, tag: 'الأولى', name: 'الكومة', what: 'القوانين كومة أوراق ذهبية مائلة، كل وحدة تطلّ من ورا اللي قدّامها. الأمامية تنحني وتقفز فوق الكومة وتلفّ وتنزل ورا، والباقي يتقدّم خطوة بقفزة صغيرة، ولمعة تمرّ على الجديدة.' },
+  { v: 2, tag: 'الثانية', name: 'الحلقة', what: 'مسدّس ذهبي واحد داخل حلقة المسار نفسها، قطعة لكل قانون. الرمز يسوّي قلبة النجمة اللي في المسار وينزل رمز القانون اللي بعده، وقطعته تنوّر والحلقة تتنفّس.' },
+  { v: 3, tag: 'الثالثة', name: 'الكومة الذهبية', rec: true, what: 'القوانين كومة عملات ذهبية سميكة. العملة اللي فوق تنرمي وتنقلب مرتين وتتبدّل وهي على حافتها، وتنزل على الكومة وهي تنضغط تحتها.' },
+];
+let due = 3, slow = 1, picked = '3';
+try { picked = localStorage.getItem('qudrati.lawdeck.pick') || picked; } catch (e) {}
+const grid = document.getElementById('grid');
+function build() {
+  grid.innerHTML = LOOKS.map(L => `<div class="col${L.cls ? ' ' + L.cls : ''}${L.rec ? ' rec' : ''}">
+    <span class="tag">${L.tag}</span><h2>${L.name}</h2><p class="what">${L.what}</p>
+    <div class="frame"><iframe title="${L.name}" data-v="${L.v}"></iframe></div>
+    ${L.v ? `<button class="pick${picked == L.v ? ' on' : ''}" data-pick="${L.v}">${picked == L.v ? 'اخترتها' : 'اختر هذي'}</button>` : ''}
+  </div>`).join('');
+  load();
+  grid.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => {
+    picked = b.dataset.pick; try { localStorage.setItem('qudrati.lawdeck.pick', picked); } catch (e) {}
+    grid.querySelectorAll('[data-pick]').forEach(x => { const on = x.dataset.pick === picked; x.classList.toggle('on', on); x.textContent = on ? 'اخترتها' : 'اختر هذي'; });
+  });
+  fit();
+}
+/* the phones load one after another: each one seeds the same student before the app reads it */
+function load() {
+  const fr = [...grid.querySelectorAll('iframe')];
+  let i = 0;
+  const next = () => { if (i >= fr.length) return; const f = fr[i++]; f.onload = () => setTimeout(next, 250);
+    f.src = `lawapp/run.html?dev=1&deck=${f.dataset.v}&due=${due}&slow=${slow}&a=${Date.now()}`; };
+  next();
+}
+function fit() { grid.querySelectorAll('.frame').forEach(fr => { const f = fr.querySelector('iframe'); f.style.transform = `scale(${fr.clientWidth / 390})`; }); }
+addEventListener('resize', fit);
+document.querySelectorAll('[data-due]').forEach(b => b.onclick = () => { due = +b.dataset.due; document.querySelectorAll('[data-due]').forEach(x => x.classList.toggle('on', x === b)); load(); });
+document.querySelectorAll('[data-slow]').forEach(b => b.onclick = () => { slow = +b.dataset.slow; document.querySelectorAll('[data-slow]').forEach(x => x.classList.toggle('on', x === b)); load(); });
+document.getElementById('again').onclick = load;
+build();
+</script>
+</body>
+</html>

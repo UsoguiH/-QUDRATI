@@ -1,0 +1,8 @@
+/* fahim — Marhey 700, فهيم's purple standing on its own darker lip, on a lilac light */
+.qs-bg { background: radial-gradient(120% 78% at 50% 43%, #FFFFFF 0%, #F7F2FF 48%, #EADCFF 100%); }
+.qs-l { fill: #7C3AED; }
+.qs-x { display: block; fill: #5B21B6; transform: translateY(52px); }
+.qs-g { fill: #58CC02; } .qs-o { fill: #FFC800; } .qs-b { fill: #1CB0F6; }
+.qs-d .qs-lip { display: block; transform: translateY(36px); }
+.qs-g .qs-lip { fill: #46A302; } .qs-o .qs-lip { fill: #E69B00; } .qs-b .qs-lip { fill: #1590C8; }
+.qs-d.qs-plain, .qs-t { fill: #7C3AED; } .qs-plain .qs-lip { display: none; }

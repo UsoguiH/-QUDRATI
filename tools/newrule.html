@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>قانون جديد</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;700;800&display=swap">
+<style>
+/* «قانون جديد» beside Duolingo's «كلمة جديدة» (2026-10-31; the user: «make the animation of the card like Duolingo exactly,
+   and change its UI to something else»): Duolingo's own file in the first phone, mirrored as the app mirrors it on a
+   right-to-left phone, started with the same timing and from the same place as ours; then rule-flow.html's card 13 in
+   three looks (?nw=1|2|3). All four start together; «بطيء» plays every phone four times slower */
+:root { --ink: #3C3C3C; --gray: #777; --line: #E5E5E5; --blue: #1CB0F6; --blue-dk: #1899D6; --blue-light: #DDF4FF; --blue-border: #84D8FF; --green: #58CC02; --green-lip: #478700; --purple: #CE82FF; --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #EFEFEF; color: var(--ink); font-family: var(--font); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h2, p { margin: 0; }
+button { font-family: var(--font); cursor: pointer; color: inherit; }
+header { max-width: 1760px; margin: 0 auto; padding: 18px 20px 4px; }
+header h1 { font-size: 26px; font-weight: 800; line-height: 1.25; }
+header p { font-size: 15px; font-weight: 600; color: var(--gray); margin-top: 4px; max-width: 900px; }
+.bar { max-width: 1760px; margin: 0 auto; padding: 10px 20px 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chipb { height: 38px; padding: 0 14px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 14.5px; font-weight: 800; }
+.chipb.on { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+.sep { width: 2px; height: 26px; background: #DADADA; margin: 0 4px; border-radius: 1px; }
+.play { height: 38px; padding: 0 18px; border-radius: 12px; border: 0; background: var(--green); box-shadow: 0 4px 0 var(--green-lip); color: #fff; font-size: 15px; font-weight: 800; }
+.play:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--green-lip); }
+.tabs { display: none; flex-wrap: wrap; gap: 8px; padding: 10px 16px 0; }
+.tabs button { flex: 1 1 auto; padding: 0 12px; white-space: nowrap; height: 42px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 15px; font-weight: 800; }
+.tabs button.on { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+.grid { max-width: 1760px; margin: 0 auto; padding: 14px 20px 40px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tag { font-size: 13px; font-weight: 800; color: var(--blue-dk); }
+.col.duo .tag { color: #A568CC; }
+.col h2 { font-size: 20px; font-weight: 800; line-height: 1.3; display: flex; align-items: center; gap: 8px; }
+.sw { width: 18px; height: 22px; border-radius: 4px; flex: none; display: grid; place-items: center; }
+.sw svg { width: 62%; }
+.sw svg[viewBox^="4250"] { width: 70%; }
+.sw svg[viewBox="0 0 20 26"] { width: 78%; }
+.sw svg[viewBox="0 0 20 20"]:only-child { width: 80%; }
+a.chipb { display: inline-grid; place-items: center; text-decoration: none; color: inherit; }
+.col p.what { font-size: 13.5px; font-weight: 600; color: var(--gray); min-height: 42px; }
+/* the hexagon before and after: three phones, then the turn frame by frame */
+.strips { max-width: 1200px; margin: 0 auto; padding: 0 20px 48px; display: flex; flex-direction: column; gap: 8px; }
+.strips h2 { font-size: 20px; font-weight: 800; }
+.strips p { font-size: 14px; font-weight: 600; color: var(--gray); }
+.strips b { font-size: 15px; font-weight: 800; margin-top: 8px; }
+.strips img { width: 100%; background: #fff; border-radius: 16px; border: 2px solid var(--line); direction: ltr; }
+/* all twelve: five phones a row, sized by the column, the rank a badge */
+body.all .grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+body.e .grid { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; }
+body.e .col h2 { font-size: 17px; }
+body.e .col p.what { font-size: 12.5px; min-height: 96px; }
+body.all .frame { width: 100%; }
+body.all .col p.what { min-height: 84px; font-size: 13px; }
+body.all .col:nth-child(2) .tag, body.all .col:nth-child(3) .tag, body.all .col:nth-child(4) .tag { color: #CD7900; }
+.frame { position: relative; width: min(100%, calc((100vh - 300px) * 390 / 844)); aspect-ratio: 390 / 844; margin: auto auto 0; border: 9px solid #1F1F1F; border-radius: 38px; overflow: hidden; background: #fff; box-shadow: 0 16px 34px rgba(0,0,0,.15); }
+.frame iframe { position: absolute; top: 0; left: 0; width: 390px; height: 844px; border: 0; transform-origin: 0 0; }
+.acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.acts button { flex: 1 1 auto; padding: 0 8px; height: 40px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 14.5px; font-weight: 800; }
+.acts button.on { background: var(--green); border-color: var(--green-lip); color: #fff; }
+@media (max-width: 900px) {
+  header { padding: 14px 16px 0; } header h1 { font-size: 21px; }
+  .bar { padding: 10px 16px 0; }
+  .tabs { display: flex; }
+  .grid { grid-template-columns: minmax(0, 1fr); padding: 12px 16px 30px; }
+  .col { display: none; } .col.on { display: flex; }
+  .frame { width: min(100%, 390px); }
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>قانون جديد — نفس حركة دولينجو</h1>
+  <p>أول جوال ملف دولينجو نفسه، والباقي بطاقتنا بنفس حركته بالضبط: الستة عشر شكلاً كلها في صفحة وحدة، الأحدث أولاً. «شغّل الكل» يشغّلها مع بعض.</p>
+</header>
+<div class="bar" id="bar"></div>
+<div class="tabs" id="tabs"></div>
+<div class="grid" id="grid"></div>
+<script>
+(() => {
+  const SIGN = { 1: '<rect x="6" y="2.4" width="8" height="5.6" rx="2"/><rect x="2.6" y="8.9" width="14.8" height="2.3" rx="1.15"/><rect x="6" y="12.1" width="8" height="5.6" rx="2"/>',
+    2: '<rect x="2.6" y="5.6" width="14.8" height="3.2" rx="1.6"/><rect x="2.6" y="11.2" width="14.8" height="3.2" rx="1.6"/>',
+    3: '<circle cx="10" cy="4.6" r="2.3"/><rect x="2.6" y="8.7" width="14.8" height="2.7" rx="1.35"/><circle cx="10" cy="15.4" r="2.3"/>',
+    4: '<rect x="1.6" y="5.4" width="14.6" height="8.2" rx="1.8" fill="#fff"/><rect x="4" y="7.9" width="9.8" height="1.4" rx=".7" fill="#8A3FD1"/><rect x="5.4" y="10.3" width="7" height="1.4" rx=".7" fill="#C9A3EE"/>',
+    5: '<path d="M10 2.6l2.2 4.6 5 .6-3.7 3.5.9 5-4.4-2.4-4.4 2.4.9-5-3.7-3.5 5-.6z" fill="#C57A1C" stroke="#C57A1C" stroke-width="1.4" stroke-linejoin="round"/>' };
+  const Q = '<svg viewBox="4250 1370 780 1030"><path fill="#3C3C3C" fill-rule="evenodd" d="M4290 2361L4847 2361L4988 2213L4988 1835L4847 1687L4573 1687L4396 1865L4396 2146L4458 2213L4290 2213Z M4625 1835L4847 1835L4847 2213L4662 2213L4544 2102L4544 1917Z"/><path fill="#58CC02" d="M4742 1413h152v152h-152Z M4503 1413h152v152h-152Z"/></svg>';
+  const sw = (bg, c, k) => `<i class="sw" style="background:${bg};color:${c}">${k === 6 ? Q : `<svg viewBox="0 0 20 20" fill="currentColor">${SIGN[k]}</svg>`}</i>`;
+  /* three sets of three: the first (?set=1), three of Qudrati's own (?set=2), and three more (the default) */
+  const SET = ((location.search.match(/[?&]set=([123bnmhe]|all)/) || [])[1]) || 'e';
+  const HEXSW = '<svg viewBox="0 0 71 65" style="width:100%"><g stroke-width="8" stroke-linejoin="round"><polygon points="19.5,11 51.5,11 67,36 51.5,61 19.5,61 4,36" fill="#E6A000" stroke="#E6A000"/><polygon points="19.5,4 51.5,4 67,29 51.5,54 19.5,54 4,29" fill="#FFC800" stroke="#FFC800"/></g><g transform="translate(22 9) scale(.68)" fill="none" stroke="#C57A1C" stroke-width="4"><rect x="6" y="6" width="28" height="28" rx="7"/><g fill="#C57A1C" stroke="none"><circle cx="14" cy="14" r="3"/><circle cx="20" cy="20" r="3"/><circle cx="26" cy="26" r="3"/></g></g></svg>';
+  const MINI = '<svg viewBox="0 0 20 26"><rect x="4" y="2.4" width="12" height="3.8" rx="1.9" fill="#D7FFB8" stroke="#58CC02"/><rect x="8" y="7.9" width="4" height=".8" rx=".4" fill="#AFAFAF"/><rect x="8" y="9.5" width="4" height=".8" rx=".4" fill="#AFAFAF"/><rect x="4.5" y="12.4" width="11" height="3.6" rx="1.8" fill="#DDF4FF" stroke="#1CB0F6"/><rect x="2.6" y="17.3" width="14.8" height="1" rx=".5" fill="#3C3C3C"/><rect x="4.5" y="19.6" width="11" height="3.6" rx="1.8" fill="#DDF4FF" stroke="#1CB0F6"/></svg>';
+  const DIEC = c => DIE.replace('stroke="#fff"', `stroke="${c}"`).replace('fill="#fff"', `fill="${c}"`);
+  const SHEET = '<svg viewBox="0 0 20 20">' + [[3.4, 2], [10, 0], [16.6, 1]].map(([y, sel]) => [4.2, 8.1, 12, 15.9].map((x, i) => 3 - i === sel ? `<circle cx="${x}" cy="${y}" r="1.75" fill="#3C3C3C"/>` : `<circle cx="${x}" cy="${y}" r="1.5" fill="none" stroke="#AFAFAF" stroke-width=".8"/>`).join('')).join('') + '</svg>';
+  const DIE = '<svg viewBox="0 0 40 40" fill="none" stroke="#fff" stroke-width="4"><rect x="6" y="6" width="28" height="28" rx="7"/><g fill="#fff" stroke="none"><circle cx="14" cy="14" r="3"/><circle cx="20" cy="20" r="3"/><circle cx="26" cy="26" r="3"/></g></svg>';
+  const ALL = [
+    { k: 1, tag: 'شكل ١', name: 'أزرق — الكسر', what: 'بطاقة زرقاء فاتحة عليها كسر كما يُكتب في القدرات. نفس أزرق الكلمات في القانون.', sw: sw('#DDF4FF', '#1CB0F6', 1) },
+    { k: 2, tag: 'شكل ٢', name: 'أخضر — يساوي', what: 'بطاقة خضراء فاتحة عليها «=». أخضر الإجابة الصحيحة في التطبيق.', sw: sw('#D7FFB8', '#58CC02', 2) },
+    { k: 3, tag: 'شكل ٣', name: 'برتقالي — القسمة', what: 'بطاقة برتقالية فاتحة عليها «÷». أدفأ الثلاثة وأوضحها على الأبيض.', sw: sw('#FFEFD6', '#FF9600', 3) },
+    { k: 7, tag: 'شكل ٧', name: 'ورقة الإجابة', what: 'ورقة إجابة القدرات: علامات التوقيت على الحافة، وفقاعات أ ب ج د مظلّلة بالرصاص. القانون جزء من الاختبار نفسه.', sw: `<i class="sw" style="background:#fff;box-shadow:inset 0 0 0 1.5px #DCDCDC">${SHEET}</i>` },
+    { k: 8, tag: 'شكل ٨', name: 'علامة الدرس', what: 'البطاقة هي درس القانون في المسار: لون وحدته وعلامته نفسها (نرد الاحتمال، أعمدة الوسط…). كل قانون يجي ببطاقة درسه.', sw: `<i class="sw" style="background:linear-gradient(180deg,#71DC1A 0 9%,#58CC02 9%)">${DIE}</i>` },
+    { k: 9, tag: 'شكل ٩', name: 'فهيم', what: 'فهيم نفسه على البطاقة بلون كتابه: هو اللي علّمك القانون، فيطير هو للعنوان.', sw: `<i class="sw" style="background:url(newrule/fahim-head.png) 50% 100% / 92% auto no-repeat,#F3E0FF"></i>` },
+    { k: 14, tag: 'دمج ٨ و٥ — شكل ١٤', name: 'الدرس الذهبي بشكله', what: 'الدرس نفسه يطير: مسدّس المسار على حافته، بذهب الدرس المكتمل وخطّي لمعته، وعليه علامة الدرس بالبني (نرد الاحتمال، أعمدة الوسط…).', sw: `<i class="sw" style="width:24px;height:22px">${HEXSW}</i>` },
+    { k: 15, tag: 'بعد — شكل ١٥', name: 'المسدّس الذهبي المصمت', what: 'له سُمك حقيقي بذهب حافته بين وجهيه، يتبع حدود المسدّس بالضبط، فيبان طرفه وهو يلف مثل بطاقة دولينجو وما يختفي وهو على جنبه. والتلوّي أنعم: ٢٤ شريحة بدل ١٦.', sw: `<i class="sw" style="width:24px;height:22px">${HEXSW}</i>` },
+    { k: 16, tag: 'أكبر — شكل ١٦', name: 'المسدّس المصمت أكبر', what: 'نفس المسدّس المصمت بمرّة ونص حجمه وهو يطير (٥٦ × ٥٢)، وأيقونته في العنوان أكبر، فيبان الدرس وعلامته أوضح.', sw: `<i class="sw" style="width:28px;height:26px">${HEXSW}</i>` },
+    { k: 13, tag: 'دمج ٨ و٥ — شكل ١٣', name: 'البطاقة الذهبية بعلامة الدرس', what: 'نفس الدمج على شكل البطاقة: ذهب الدرس المكتمل بخطّي اللمعة وحافته، وعلامة الدرس بالبني بدل النجمة.', sw: `<i class="sw" style="background:linear-gradient(118deg,transparent 50%,#FFD940 50% 61%,transparent 61% 68%,#FFD940 68% 74%,transparent 74%),#FFC800;box-shadow:inset 0 -2px 0 #E6A000">${DIEC('#C57A1C')}</i>` },
+    { k: 10, tag: 'شكل ١٠', name: 'بطاقة الكنز', what: 'بطاقة مجموعات بكحلي الصندوق وذهبه، عليها علامة الدرس بالذهب، ولمعة قوس قزح تمر عليها وهي تلف. القانون شيء نادر تجمعه.', sw: `<i class="sw" style="background:#1E3A8A;box-shadow:inset 0 0 0 1.4px #FFC800">${DIEC('#FFC800')}</i>` },
+    { k: 11, tag: 'شكل ١١', name: 'القانون مصغّر', what: 'بطاقة القانون نفسها صغيرة: شكل معادلته بالرقائق (الجواب أخضر، الأجزاء زرقاء، والكسر بخطّه). كل قانون شكل معادلته.', sw: `<i class="sw" style="background:#fff;box-shadow:inset 0 0 0 1.4px #E5E5E5,inset 0 -2px 0 #E5E5E5">${MINI}</i>` },
+    { k: 12, tag: 'شكل ١٢', name: 'تذكرة الاختبار', what: 'تذكرة دخول الاختبار: كعبها بلون الدرس، خط تخريم بقطعين على الجانبين، علامة الدرس وباركود. كل قانون تذكرة أقرب للاختبار.', sw: `<i class="sw" style="background:linear-gradient(180deg,#58CC02 0 34%,#fff 34%);box-shadow:inset 0 0 0 1.2px #E5E5E5">${DIEC('#58CC02')}</i>` },
+    { k: 4, tag: 'شكل ٤', name: 'كتاب فهيم', what: 'البطاقة هي كتاب فهيم البنفسجي «قدرات» بكعبه ولوحة عنوانه البيضاء: كأن القانون صفحة جديدة في كتابه.', sw: sw('linear-gradient(270deg,#6E28B3 0 15%,#A35FE0 15% 19%,transparent 19%),#8A3FD1', '#fff', 4) },
+    { k: 5, tag: 'شكل ٥', name: 'الدرس الذهبي', what: 'ذهب الدرس المكتمل في المسار بنجمته وخطّي اللمعة: القانون الجديد شيء تكسبه.', sw: sw('linear-gradient(118deg,transparent 50%,#FFD940 50% 61%,transparent 61% 68%,#FFD940 68% 74%,transparent 74%),#FFC800', '#C57A1C', 5) },
+    { k: 6, tag: 'شكل ٦', name: 'حرف قدراتي', what: 'حرف القاف من شعار «قدراتي» بخطه المربّع، ونقطتاه بأخضر عملة القاف في شاشة البداية.', sw: sw('#fff;box-shadow:inset 0 0 0 1.5px #DCDCDC', '#3C3C3C', 6) },
+  ];
+  /* the three sets, and the best three (?set=b, the default): the lesson's node, the answer sheet, the fraction */
+  /* all twelve ranked (?set=all, the default): how clearly it reads at the header's 15 x 19, what it says about a new rule,
+     how finished it looks, and whether it fits the app */
+  const RANK = [
+    [10, 'يُقرأ من بعيد بأي حجم: كحلي غامق على الأبيض، وإطار ذهبي، ولمعة تخلّي الطيران مكافأة. ألوانه ألوان صندوق التطبيق، والعلامة علامة الدرس.'],
+    [8, 'علامة الدرس نفسها اللي في المسار وبلون وحدته، فيربط القانون بدرسه. أبيض على لون صريح، فيبقى واضح حتى في العنوان الصغير.'],
+    [12, 'فكرة قريبة من الطالب (تذكرة الاختبار) ومفصّلة: الكعب والتخريم والباركود. تفاصيلها تضيع شوي في العنوان الصغير.'],
+    [11, 'أذكى فكرة: شكل المعادلة نفسه يطير. لكنه فاتح على الأبيض، والرقائق صغيرة جداً في العنوان.'],
+    [7, 'ورقة الإجابة تقول «هذا من الاختبار» بوضوح، لكن الفقاعات تختفي في العنوان، والورقة البيضاء تذوب في الصفحة.'],
+    [1, 'واضح وأنيق، والكسر مكتوب كما في القدرات. عيبه إنه عام: ممكن يكون في أي تطبيق.'],
+    [6, 'شعارنا، وحرف القاف جميل. لكنه يقول «قدراتي» مو «قانون جديد».'],
+    [4, 'كتاب فهيم فكرة حلوة، لكن بنفسجيه قريب من بطاقة دولينجو نفسها، ولوحة العنوان صغيرة.'],
+    [3, 'برتقالي واضح على الأبيض، و«÷» علامة قانون. عام مثل الأزرق.'],
+    [9, 'فهيم واقف جنب الكلام في نفس الشاشة، فوجهه على البطاقة تكرار، وما يبان في ١٥ بكسل.'],
+    [2, 'الأخضر في التطبيق يعني «إجابة صحيحة»، فيلخبط المعنى قبل ما الطالب يجاوب.'],
+    [5, 'الذهبي في المسار يعني «خلّصت الدرس»، والقانون لسا جديد: معنى غلط.'],
+  ];
+  /* every look on one page (?set=e, the default), the latest first */
+  const SETS = { e: [16, 15, 14, 13, 10, 11, 12, 7, 8, 9, 4, 5, 6, 1, 2, 3], h: [14, 15, 16, 13], m: [14, 13, 8, 5], all: RANK.map(r => r[0]), n: [10, 11, 12], b: [8, 7, 1], 3: [7, 8, 9], 2: [4, 5, 6], 1: [1, 2, 3] };
+  const BEST = { 8: 'الأفضل', 7: 'الثاني', 1: 'الثالث' };
+  const V = [{ k: 'duo', tag: 'الأصل', name: 'دولينجو', what: 'ملفهم كما يشتغل في تطبيقهم على جوال عربي. للمقارنة فقط.' }]
+    .concat(SETS[SET].map((k, i) => { const x = ALL.find(y => y.k === k);
+      if (SET === 'all') return { ...x, tag: `المركز ${(i + 1).toLocaleString('ar-EG')} — ${x.tag}`, what: RANK[i][1], rank: i + 1 };
+      if (SET === 'h' && k === 13) return { ...x, tag: 'المستطيل — شكل ١٣' };
+      if (SET === 'h' && k === 14) return { ...x, tag: 'قبل — شكل ١٤', what: 'المسدّس بلا سُمك: وهو يلف يصير ورقة، وعلى جنبه يختفي تقريباً، وأطرافه تتكسّر.' };
+      return SET === 'b' ? { ...x, tag: x.tag + ' — ' + BEST[k] } : x; }));
+  if (SET === 'all' || SET === 'm' || SET === 'h' || SET === 'e') document.body.classList.add('all');
+  if (SET === 'e') document.body.classList.add('e');
+  if (SET === 'h') {
+    document.body.classList.add('hx');
+    document.getElementById('grid').insertAdjacentHTML('afterend', `<section class="strips"><h2>اللفّة إطاراً إطاراً</h2>
+      <p>نفس اللحظات من الطيران، مكبّرة ثلاث مرات، من اليسار لليمين: من البداية، مروراً باللفّة، إلى ما قبل النزول في العنوان.</p>
+      <b>قبل</b><img src="newrule/hex-before.png" alt="المسدّس قبل"><b>بعد</b><img src="newrule/hex-after.png" alt="المسدّس بعد"></section>`);
+  }
+  /* where each rule's name sits in فهيم's bubble and when the card leaves it (measured on card 13 at 390 x 844),
+     carried into Duolingo's card_start coordinates (mirrored) so its card leaves from the same place at the same time */
+  const RULES = [['prob', 'الاحتمال', 206, 133, 1023], ['mean', 'الوسط الحسابي', 213, 133, 984], ['hand', 'المصافحات', 194, 125, 982]];
+  const duoStart = (x, y) => [Math.round(-12 + ((390 - x) - 184) / .933), Math.round(-135 + (y - 133) / .9735)];
+  const KEY = 'qudrati.newrule.pick';
+  let pick = {}; try { pick = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) {}
+  let rule = 'prob', slow = false;
+  const bar = document.getElementById('bar'), grid = document.getElementById('grid');
+  bar.innerHTML = RULES.map(([k, n]) => `<button class="chipb" data-r="${k}">${n}</button>`).join('') +
+    '<span class="sep"></span>' + [['e', 'كل الأشكال'], ['h', 'المسدّس قبل وبعد'], ['m', 'الدمج'], ['all', 'الكل مرتّبة'], ['n', 'الأحدث'], ['b', 'أفضل ٣'], ['3', 'الجديدة'], ['2', 'من قدراتي'], ['1', 'الأولى']].map(([k, n]) => `<a class="chipb${k === SET ? ' on' : ''}" href="?set=${k}">${n}</a>`).join('') + '<span class="sep"></span><button class="chipb" id="slow">بطيء ×٤</button><span class="sep"></span><button class="play" id="all">' + (SET === 'all' || SET === 'm' || SET === 'e' ? 'شغّل الكل' : SET === 'h' ? 'شغّل الكل' : 'شغّل الأربعة') + '</button>';
+  document.getElementById('tabs').innerHTML = V.map((x, i) => `<button data-i="${i}"${i ? '' : ' class="on"'}>${x.name}</button>`).join('');
+  grid.innerHTML = V.map((x, i) => `<section class="col${x.k === 'duo' ? ' duo' : ''}${i ? '' : ' on'}" data-i="${i}">
+      <span class="tag">${x.tag}</span>
+      <h2>${x.sw || ''}${x.name}</h2>
+      <p class="what">${x.what}</p>
+      <div class="frame"><iframe title="${x.name}" allow="autoplay"></iframe></div>
+      <div class="acts">${x.sw ? `<button data-k="${x.k}" data-p="yes">عجبتني</button><button data-k="${x.k}" data-p="no">لا</button>` : ''}<button class="again" data-i="${i}">أعدها</button></div>
+    </section>`).join('');
+  const frames = [...document.querySelectorAll('.frame iframe')];
+  const src = x => {
+    const r = RULES.find(q => q[0] === rule);
+    if (x.k !== 'duo') return `rule-flow.html?card=13&embed&rule=${rule}&nw=${x.k}${slow ? '&slow=4' : ''}`;
+    const [cx, cy] = duoStart(r[2], r[3]);
+    return `newword-duo.html?rtl&wait&hon=250&fly=${cx},${cy}&at=${r[4]}${slow ? '&speed=.25' : ''}`;
+  };
+  /* a phone is ready once its «شغّل» cover is up (ours) or the file has loaded (Duolingo's) */
+  /* a phone is ready once its new page has loaded (f.ld, so the page it is leaving never counts) and shows its «شغّل»
+     cover (ours) or has its file (Duolingo's); it has started once the cover is gone or the file has begun */
+  const ready = f => { try { const w = f.contentWindow, d = f.contentDocument; return f.ld && !!(d && (d.querySelector('.emb-go') || (w.__nw && w.__nw.ready))); } catch (e) { return false; } };
+  const started = f => { try { const w = f.contentWindow, d = f.contentDocument; return !!(w.__nw ? w.__nw.begun : d.querySelector('.emb-go') === null); } catch (e) { return true; } };
+  const post = f => { try { f.contentWindow.postMessage({ go: 1 }, location.origin); } catch (e) {} };
+  /* all at once, then again to any that missed it, for a second */
+  const go = fs => { fs.forEach(post); let n = 0; const iv = setInterval(() => { const late = fs.filter(f => !started(f)); late.forEach(post); if (!late.length || ++n > 10) clearInterval(iv); }, 100); };
+  let tok = 0;
+  const load = (fs, play) => {
+    const my = ++tok;
+    fs.forEach(f => { f.ld = false; f.onload = () => { f.ld = true; }; f.src = src(V[frames.indexOf(f)]); });
+    if (!play) return;
+    const t0 = Date.now(), iv = setInterval(() => {
+      if (my !== tok) return clearInterval(iv);
+      if (fs.every(ready) || Date.now() - t0 > 8000) { clearInterval(iv); setTimeout(() => go(fs), 250); }
+    }, 60);
+  };
+  const paintBar = () => {
+    bar.querySelectorAll('[data-r]').forEach(b => b.classList.toggle('on', b.dataset.r === rule));
+    document.getElementById('slow').classList.toggle('on', slow);
+  };
+  bar.querySelectorAll('[data-r]').forEach(b => b.onclick = () => { rule = b.dataset.r; paintBar(); load(frames, true); });
+  document.getElementById('slow').onclick = () => { slow = !slow; paintBar(); load(frames, true); };
+  document.getElementById('all').onclick = () => load(frames, true);
+  document.querySelectorAll('.again').forEach(b => b.onclick = () => load([frames[+b.dataset.i]], true));
+  const paint = () => document.querySelectorAll('.acts button[data-p]').forEach(b => b.classList.toggle('on', pick[b.dataset.k] === b.dataset.p));
+  document.querySelectorAll('.acts button[data-p]').forEach(b => b.onclick = () => { pick[b.dataset.k] = pick[b.dataset.k] === b.dataset.p ? null : b.dataset.p; try { localStorage.setItem(KEY, JSON.stringify(pick)); } catch (e) {} paint(); });
+  paint(); paintBar(); load(frames, false);
+  const fit = () => document.querySelectorAll('.frame').forEach(f => { const i = f.querySelector('iframe'), k = f.clientWidth / 390; i.style.transform = `scale(${k})`; i.style.height = (f.clientHeight / k) + 'px'; });
+  addEventListener('resize', fit); new ResizeObserver(fit).observe(grid); fit();
+  document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('#tabs button').forEach(x => x.classList.toggle('on', x === b));
+    document.querySelectorAll('.col').forEach(c => c.classList.toggle('on', c.dataset.i === b.dataset.i)); fit();
+  });
+})();
+</script>
+</body>
+</html>

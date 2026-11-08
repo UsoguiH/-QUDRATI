@@ -1,0 +1,5 @@
+/* markroundplain — the user's «قدراتي», rounded (every corner soft, round dots): ink on white, dots too; a dot lights up into its coin's colour as it leaves */
+#splash { --qs-dot-filter: brightness(0) opacity(.9); }
+.qs-bg { background: #FFFFFF; }
+.qs-l, .qs-d { fill: #1A1A1A; }
+.qs-d.qs-plain, .qs-t { fill: #1A1A1A; }

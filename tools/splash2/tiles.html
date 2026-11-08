@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>صح! — شاشة التحميل</title>
+<link rel="stylesheet" href="stage.css">
+<style>
+.cover { position: absolute; inset: 0; background: #FFFFFF; }
+.tp { position: absolute; left: 0; top: 0; will-change: transform; }
+.slab { position: absolute; inset: 0; border-radius: 12px; background: #E5E5E5; opacity: 0; }
+.tile { position: absolute; inset: 0; box-sizing: border-box; background: #FFFFFF; border: 2px solid #E5E5E5; border-bottom-width: 4px;
+  border-radius: 12px; overflow: hidden; transform-origin: 50% 100%; }
+.tile .face { position: absolute; inset: 0; }
+.tile.ok { background: #D6FFB8; border-color: #A5ED6E; }
+.band { position: absolute; top: -20%; bottom: -20%; width: 34%; left: 0; background: rgba(255,255,255,.75); transform: translateX(-160%) skewX(-18deg); }
+svg.pc { position: absolute; overflow: visible; }
+svg.pc path, svg.pc rect { fill: #111111; transition: fill .12s; }
+.ok svg.pc path, .ok svg.pc rect, svg.pc.ok path, svg.pc.ok rect { fill: #58A700; }
+.spk { position: absolute; width: 14px; height: 14px; transform: scale(0); }
+.spk path { fill: #58CC02; }
+.spk.b path { fill: #A5ED6E; }
+</style>
+</head>
+<body>
+<script src="stage.js"></script>
+<script>
+/* «صح!»: the four pieces of «قدراتي» on answer tiles, shuffled while the app loads;
+   once it is up they snap into order and answer right — the app's own wave — then
+   the tiles let go and the pieces close into the welcome title. */
+const S = .048, PADX = 14, PADY = 12, GAP = 10, TOP = 326;
+const ORDER = ["qd", "r", "a", "ty"];                 // right to left, as it reads
+const TS = mScale(TITLE.w);
+const VH = MARK.bottom - MARK.top;
+
+window.IDEA = function ({ stage, ready, alive }) {
+  const wl = welcomeLayer(stage);
+  const cover = el("div", { class: "cover" }, stage);
+  const row = el("div", { class: "layer" }, stage);
+  const fly = el("div", { class: "layer" }, stage);
+
+  /* each piece: its paths and dots, drawn in its own box */
+  const T = {};
+  ORDER.forEach(k => {
+    const [x0, x1] = MARK.bbox[k], bw = x1 - x0;
+    const w = Math.max(40, bw * S + PADX * 2), h = VH * S + PADY * 2 + 6;
+    const tp = el("div", { class: "tp" }, row);
+    tp.style.width = w + "px"; tp.style.height = h + "px";
+    const slab = el("div", { class: "slab" }, tp);
+    const tile = el("div", { class: "tile" }, tp);
+    const band = el("div", { class: "band" }, tile);
+    const svg = el("svg:svg", { class: "pc", viewBox: `${x0} ${MARK.top} ${bw} ${VH}` }, tile);
+    svg.style.cssText = `left:${(w - 4 - bw * S) / 2}px;top:${PADY}px;width:${bw * S}px;height:${VH * S}px`;
+    el("svg:path", { d: MARK.pieces[k], "fill-rule": "evenodd" }, svg);
+    MARK.dots.filter(d => d[2] === k).forEach(([x, y]) => el("svg:rect", { x, y, width: MARK.dot, height: MARK.dot }, svg));
+    const spk = [0, 1].map(i => {
+      const s = el("svg:svg", { class: "spk" + (i ? " b" : ""), viewBox: "-10 -10 20 20" }, tp);
+      el("svg:path", { d: "M0 -10Q1.6 -1.6 10 0Q1.6 1.6 0 10Q-1.6 1.6 -10 0Q-1.6 -1.6 0 -10Z" }, s);
+      s.style.left = (i ? w - 10 : -6) + "px"; s.style.top = (i ? -8 : h - 22) + "px";
+      if (i) { s.style.width = s.style.height = "10px"; }
+      return s;
+    });
+    T[k] = { k, x0, bw, w, h, tp, slab, tile, band, svg, spk, x: 0, y: 0, r: 0, s: 1 };
+  });
+  const H = T.qd.h;
+
+  function layout(order) {
+    const W = order.reduce((a, k) => a + T[k].w, 0) + GAP * (order.length - 1);
+    let right = 195 + W / 2; const xs = {};
+    order.forEach(k => { xs[k] = right - T[k].w; right -= T[k].w + GAP; });
+    return xs;
+  }
+  function paint(t) { t.tp.style.transform = `translate(${t.x}px, ${TOP + t.y}px) rotate(${t.r}deg) scale(${t.s})`; }
+
+  /* move every tile to its place in `order`; the pair named in `pair` arcs one over, one under */
+  function arrange(order, pair, ms) {
+    const xs = layout(order), from = {};
+    ORDER.forEach(k => { from[k] = T[k].x; });
+    if (pair) { T[pair[0]].tp.style.zIndex = 3; T[pair[1]].tp.style.zIndex = 1; }
+    return tween(ms, e => {
+      const arc = Math.sin(Math.PI * e);
+      ORDER.forEach(k => {
+        const t = T[k];
+        t.x = from[k] + (xs[k] - from[k]) * e;
+        if (pair && k === pair[0]) { t.y = -38 * arc; t.r = -7 * arc * Math.sign(xs[k] - from[k] || 1); t.s = 1 + .06 * arc; }
+        else if (pair && k === pair[1]) { t.y = 14 * arc; t.r = 0; t.s = 1 - .05 * arc; }
+        else { t.y = 0; t.r = 0; t.s = 1; }
+        paint(t);
+      });
+    }, ease.inOut).then(() => ORDER.forEach(k => { T[k].tp.style.zIndex = ""; }));
+  }
+
+  (async () => {
+    let order = ["a", "ty", "r", "qd"];
+    const xs = layout(order);
+    ORDER.forEach(k => { T[k].x = xs[k]; paint(T[k]); });
+    /* they drop in one after another, each landing with a squash */
+    await Promise.all(order.map((k, i) => anim(T[k].tile, [
+      { transform: "translateY(-90px) scale(.9, 1.08)", opacity: 0 },
+      { transform: "translateY(0) scale(.96, 1.04)", opacity: 1, offset: .62 },
+      { transform: "translateY(0) scale(1.07, .9)", offset: .78 },
+      { transform: "none", opacity: 1 }
+    ], { duration: 480, delay: 60 + i * 90, easing: "cubic-bezier(.45,0,.55,1)", fill: "both" })));
+    let done = false; ready.then(() => { done = true; });
+    /* shuffle while loading: never into the right order by chance */
+    const same = (a, b) => a.every((k, i) => k === b[i]);
+    let n = 0;
+    while (!done) {
+      await wait(260);
+      if (done || !alive()) break;
+      let i, j, next;
+      do {
+        i = (n * 3 + 1) % 4; j = (i + 1 + (n % 3)) % 4; n++;
+        next = order.slice(); [next[i], next[j]] = [next[j], next[i]];
+      } while (same(next, ORDER));
+      await arrange(next, [order[i], order[j]], 540);
+      order = next;
+    }
+    if (!alive()) return;
+    /* into the right order */
+    const wrong = ORDER.filter((k, i) => order[i] !== k);
+    await arrange(ORDER, wrong.length ? [wrong[0], wrong[wrong.length - 1]] : null, 560);
+    await wait(110);
+    if (!alive()) return;
+    /* right answer: the app's wave, the first in reading order first */
+    ORDER.forEach((k, i) => {
+      const t = T[k], d = i * 50;
+      t.slab.style.opacity = 1;
+      anim(t.tile, [
+        { transform: "none" },
+        { transform: "translateY(7.3px) scale(1.07, .88)", offset: .12 },
+        { transform: "translateY(-23.6px) scale(.95, 1.07)", offset: .4 },
+        { transform: "translateY(4.4px) scale(1.05, .93)", offset: .66 },
+        { transform: "translateY(-1.6px) scale(.99, 1.01)", offset: .84 },
+        { transform: "none" }
+      ], { duration: 650, delay: d, easing: "linear" });
+      setTimeout(() => t.tile.classList.add("ok"), (d + 100) * ST.K);
+      anim(t.band, [{ transform: "translateX(-160%) skewX(-18deg)" }, { transform: "translateX(420%) skewX(-18deg)" }],
+        { duration: 520, delay: d + 180, easing: "cubic-bezier(.4,0,.2,1)" });
+      t.spk.forEach((s, j) => anim(s, [
+        { transform: "scale(0) rotate(0deg)", opacity: 1 },
+        { transform: "scale(1.15) rotate(60deg)", opacity: 1, offset: .45 },
+        { transform: "scale(0) rotate(140deg)", opacity: 0 }
+      ], { duration: 560, delay: d + 260 + j * 70, easing: "cubic-bezier(.3,.7,.4,1)" }));
+    });
+    await wait(150 + 650 + 140);
+    if (!alive()) return;
+    /* the tiles let go; the pieces close their gaps into the title */
+    const st = stage.getBoundingClientRect(), sc = st.width / 390;
+    ORDER.forEach((k, i) => {
+      const t = T[k], r = t.svg.getBoundingClientRect();
+      const L = (r.left - st.left) / sc, Tp = (r.top - st.top) / sc, Wd = r.width / sc;
+      fly.appendChild(t.svg);
+      t.svg.classList.add("ok");
+      t.svg.style.cssText = `left:${L}px;top:${Tp}px;width:${Wd}px;height:${Wd * VH / t.bw}px`;
+      const tl = TITLE.x + (t.x0 - MARK.vb[0]) * TS, tt = TITLE.y + (MARK.top - MARK.vb[1]) * TS, tw = t.bw * TS;
+      anim(t.svg, [
+        { left: L + "px", top: Tp + "px", width: Wd + "px", height: Wd * VH / t.bw + "px" },
+        { left: tl + "px", top: tt + "px", width: tw + "px", height: tw * VH / t.bw + "px" }
+      ], { duration: 640, delay: 40, easing: "cubic-bezier(.55,0,.2,1)" });
+      setTimeout(() => t.svg.classList.remove("ok"), 220 * ST.K);
+      anim(t.tp, [{ opacity: 1, transform: t.tp.style.transform }, { opacity: 0, transform: t.tp.style.transform + " translateY(10px) scale(.92)" }],
+        { duration: 260, easing: "cubic-bezier(.4,0,1,1)" });
+    });
+    anim(cover, [{ opacity: 1 }, { opacity: 0 }], { duration: 420, delay: 360, easing: "ease-out" });
+    anim(wl.querySelector(".wl-base"), [{ transform: "translateY(14px)" }, { transform: "none" }], { duration: 560, delay: 360, easing: "cubic-bezier(.22,1,.36,1)" });
+    heroPop(wl.hero, 420);
+  })();
+};
+</script>
+</body>
+</html>

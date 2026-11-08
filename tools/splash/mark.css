@@ -1,0 +1,5 @@
+/* mark — the user's own «قدراتي», black on white, its square dots in the coins' colours */
+.qs-bg { background: #FFFFFF; }
+.qs-l { fill: #111111; }
+.qs-g { fill: #58CC02; } .qs-o { fill: #FFC800; } .qs-b { fill: #1CB0F6; }
+.qs-d.qs-plain, .qs-t { fill: #111111; }

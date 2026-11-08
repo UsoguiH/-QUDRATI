@@ -432,11 +432,11 @@ html[data-hand="baloo"] .duo .wb-fx { font-weight: 800; }
    each term in a blue-100 box with blue-700 ink (their variable box), the unknown in a gray-100 box, blanks dashed gray-300 on gray-50, correct in green */
 .kb12 { --kf: 'IBM Plex Sans Arabic', 'Baloo Bhaijaan 2', sans-serif; position: relative; }
 .kb12 .k { background: none; border: 0; border-radius: 0; padding: 0; box-shadow: none; color: inherit; }
-.kb-card { position: relative; box-sizing: border-box; border: 2px solid #E5E5E5; border-radius: 20px; background: #fff; padding: 70px 10px 62px; }
+.kb-card { position: relative; box-sizing: border-box; margin: 0 -12px; border: 2px solid #E5E5E5; border-radius: 20px; background: #fff; padding: 70px 6px 62px; }
 .kb-tag { position: absolute; top: 16px; right: 0; left: 0; text-align: center; font: 700 15px/1 var(--kf); letter-spacing: .02em; color: #294BC6; }
-.kb-fx { display: flex; justify-content: safe center; align-items: center; gap: .26em; white-space: nowrap; font: 500 34px/1.3 var(--kf); color: #141414; }
+.kb-fx { display: flex; justify-content: safe center; align-items: center; gap: .2em; white-space: nowrap; font: 500 34px/1.3 var(--kf); color: #141414; }
 .kb12 .k { position: relative; display: inline-block; vertical-align: middle; }
-.kb-m { position: relative; display: inline-block; vertical-align: middle; overflow: hidden; padding: .04em .3em .1em; border-radius: 6px; background: #ECF0FF; color: #294BC6; text-align: center; transition: background-color .35s, color .35s, box-shadow .35s; }
+.kb-m { position: relative; display: inline-block; vertical-align: middle; overflow: hidden; padding: .04em .22em .1em; border-radius: 6px; background: #ECF0FF; color: #294BC6; text-align: center; transition: background-color .35s, color .35s, box-shadow .35s; }
 .kb12 .k.ca .kb-m { background: #F2F2F2; color: #141414; }
 .kb-w { position: relative; display: inline-block; }
 .kb-n { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #294BC6; transform: translateY(115%); }
@@ -461,7 +461,7 @@ html[data-hand="baloo"] .duo .wb-fx { font-weight: 800; }
    (--blue-light on a --blue-border rim with its 3px lip), the unknown the white chip, the answer the green of Duolingo's correct wave,
    and a review's blanks the fill's own dashed blank */
 .kb12.kb13 { --kf: var(--font); }
-.kb13 .kb-card { border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 18px; padding: 62px 10px 56px; }
+.kb13 .kb-card { border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 18px; padding: 62px 6px 62px; }
 .kb13 .kb-tag { font: 800 15px/1 var(--kf); letter-spacing: 0; color: var(--blue-dk); }
 .kb13 .kb-fx { font: 800 26px/1.35 var(--kf); color: var(--ink); }
 .kb13 .kb-m { padding: .02em .3em .06em; border-radius: 12px; background: var(--blue-light); color: var(--blue-dk); box-shadow: inset 0 0 0 2px var(--blue-border), inset 0 -3px 0 var(--blue-border); }
@@ -478,6 +478,29 @@ html[data-hand="baloo"] .duo .wb-fx { font-weight: 800; }
 .kb13.hide .k:not(.ca) .kb-m { background: #F7F7F7; box-shadow: none; }
 .kb13.hide .k:not(.ca) .kb-m::before { border-radius: 12px; border-color: var(--gray-icon); }
 .kb13 .kb-hint { font: 700 15px var(--kf); color: var(--gray-icon); }
+
+/* 12 and 13 on the first three rules (2026-10-30): a blank to pick into, the three words under the rule, and at the end the numbers small under their words */
+.kb12 .k.gap .kb-m { background: #F8F8F8; box-shadow: none; }
+.kb12 .k.gap .kb-m::before { content: ""; position: absolute; inset: 0; border-radius: 6px; border: 2px dashed #CCC; }
+.kb12 .k.gap .kb-w { transform: translateY(115%); }
+.kb12 .k.ask .kb-m::before { border-color: #456DFF; animation: kbAsk 1.2s ease-in-out infinite; }
+@keyframes kbAsk { 50% { opacity: .35; } }
+.kb-pick { position: absolute; left: 0; right: 0; bottom: 12px; display: flex; justify-content: center; gap: 8px; padding: 0 8px; }
+.kb-ch { flex: none; padding: 3px 14px 5px; border: 2px solid #E5E5E5; border-bottom-width: 4px; border-radius: 12px; background: #fff; font: 600 17px/1.5 var(--kf); color: #141414; white-space: nowrap; cursor: pointer; }
+.kb-ch:active { transform: translateY(2px); border-bottom-width: 2px; }
+.kb-ch.ok { border-color: #29CC57; background: #D4F5DD; color: #009B2B; }
+.kb-ch.no { border-color: #FF8585; background: #FFEFEF; color: #C43939; cursor: default; }
+.kb12 .kb-c.num { font-weight: 700; font-size: 18px; color: #294BC6; }
+.kb12 .k.ok .kb-c.num { color: #009B2B; }
+.kb-c.num .fr { font-size: 1.05em; }
+.kb13 .k.gap .kb-m { background: #F7F7F7; box-shadow: none; }
+.kb13 .k.gap .kb-m::before { border-radius: 12px; border-color: var(--gray-icon); }
+.kb13 .k.ask .kb-m::before { border-color: var(--blue); }
+.kb13 .kb-ch { border-color: var(--line); font: 700 17px/1.5 var(--kf); color: var(--ink); }
+.kb13 .kb-ch.ok { border-color: var(--green-pale); background: var(--green-bg); color: var(--green-dk); }
+.kb13 .kb-ch.no { border-color: #FFB2B2; background: #FFDFE0; color: #EA2B2B; }
+.kb13 .kb-c.num { font: 800 18px/1.3 var(--kf); color: var(--blue-dk); }
+.kb13 .k.ok .kb-c.num { color: var(--green-dk); }
 
 /* the fill, drawn as the app draws it (rfBody) */
 .ln-eq { font-weight: 800; text-align: center; color: var(--ink); background: #fff; border: 2px solid var(--line); border-radius: 16px; box-shadow: 0 2px 0 var(--line); }
@@ -538,6 +561,92 @@ html[data-hand="baloo"] .duo .wb-fx { font-weight: 800; }
 .chip.new { background: var(--blue-light); color: var(--blue-dk); }
 .chip.due { background: var(--orange-bg); color: var(--orange-dk); }
 .chip.ok { background: var(--green-bg); color: var(--green-dk); }
+
+/* «قانون جديد»: Duolingo's new-word header and its flying card (nw_header_and_card_v10.riv, measured frame by frame) at
+   Duolingo's own sizes (the card 31 x 39, the header's 15 x 19), in a look of our own (?nw=1|2|3): a pale face with the
+   rule's sign, the edge, the sign and the card behind in one colour, the label a shade darker */
+:root { --nwf: var(--blue-light); --nwm: var(--blue); --nwt: var(--blue-dk); }
+:root[data-nw="2"] { --nwf: var(--green-bg); --nwm: var(--green); --nwt: var(--green-dk); }
+:root[data-nw="3"] { --nwf: var(--orange-bg); --nwm: var(--orange); --nwt: var(--orange-dk); }
+/* three of Qudrati's own: فهيم's purple «قدرات» book with its spine and white title plate; the path's finished node, gold
+   with its two bands of light and its star; the ق of the «قدراتي» wordmark in ink on white, its dots in the ق coin's green */
+:root[data-nw="4"] { --nwf: #8A3FD1; --nwbg: linear-gradient(270deg, #6E28B3 0 15%, #A35FE0 15% 19%, transparent 19%), #8A3FD1; --nwm: #5E1A9E; --nwt: #7A2BC4; }
+:root[data-nw="5"] { --nwf: var(--gold); --nwbg: linear-gradient(118deg, transparent 50%, #FFD940 50% 61%, transparent 61% 68%, #FFD940 68% 74%, transparent 74%), var(--gold); --nwm: var(--gold-dk); --nwt: #CD7900; }
+:root[data-nw="6"] { --nwf: #fff; --nwsh: inset 0 0 0 1.6px #DCDCDC; --nwm: #4B4B4B; --nwt: var(--ink); }
+/* and three more: the exam's answer sheet (paper, its timing marks down the edge, a column of bubbles with one shaded in
+   pencil); the rule's lesson as its node on the path (its unit's colour with the node's lighter top, the lesson's own sign in
+   white; set per rule by nwLook); فهيم himself on a card in his book's purple */
+:root[data-nw="7"] { --nwf: #fff; --nwbg: repeating-linear-gradient(180deg, #4B4B4B 0 1.6px, transparent 1.6px 4.6px) right 2.2px top 4px / 2.4px calc(100% - 8px) no-repeat, #fff; --nwsh: inset 0 0 0 1.6px #DCDCDC; --nwm: #AFAFAF; --nwt: var(--ink); }
+:root[data-nw="9"] { --nwf: #F3E0FF; --nwbg: url(newrule/fahim-head.png) 50% 100% / 92% auto no-repeat, #F3E0FF; --nwm: #8A3FD1; --nwt: #7A2BC4; }
+/* and three more, made to be looked at: 10 a collectible card in the chest's navy and gold, the rule's lesson sign in gold and a
+   holographic light that crosses it as it turns; 11 the rule's own card shrunk, white on its rim and lip with the shape of its
+   formula in the card's chips (the answer green, the terms blue, the bar in ink); 12 an exam admission ticket, the stub in
+   the lesson's colour, a perforation with a notch cut at each side, the lesson's sign and a barcode on the white */
+:root[data-nw="10"] { --nwf: #1E3A8A; --nwbg: linear-gradient(112deg, transparent 38%, rgba(255,241,184,.08) 41%, rgba(255,241,184,.7) 47%, rgba(190,215,255,.55) 51%, rgba(255,200,240,.35) 54%, transparent 60%) 100% 0 / 320% 100% no-repeat, #1E3A8A;
+  --nwsh: inset 0 0 0 1.4px #FFC800, inset 0 0 0 2.6px #1E3A8A, inset 0 0 0 3.2px rgba(255,200,0,.45); --nwm: #172C6B; --nwt: #1E3A8A; }
+:root[data-nw="10"] .nw-b { background: #FFC800; }
+:root[data-nw="11"] { --nwf: #fff; --nwsh: inset 0 0 0 1.4px #E5E5E5, inset 0 -3px 0 #E5E5E5; --nwm: #CFCFCF; --nwt: var(--blue-dk); }
+:root[data-nw="11"] .nw-b { background: var(--blue); }
+:root[data-nw="11"] .nw-f svg { width: 72%; margin-bottom: 6%; }
+:root[data-nw="12"] { --nwu: var(--green); --nwf: #fff; --nwm: #DADADA; --nwt: var(--green-dk);
+  --nwbg: linear-gradient(#fff, #fff) 50% 12% / 50% 1.8px no-repeat, linear-gradient(rgba(255,255,255,.65), rgba(255,255,255,.65)) 50% 21% / 32% 1.6px no-repeat, repeating-linear-gradient(90deg, #fff 0 1.6px, transparent 1.6px 3.4px) 0 33% / 100% 1.1px no-repeat, linear-gradient(180deg, var(--nwu) 0 33.5%, transparent 33.5%), repeating-linear-gradient(90deg, #4B4B4B 0 .9px, transparent .9px 2px) 50% 90% / 54% 3.4px no-repeat, #fff;
+  --nwsh: inset 0 0 0 1.4px #E5E5E5;
+  --nwmask: radial-gradient(circle 3.2px at 0 34%, transparent 97%, #000) left / 51% 100% no-repeat, radial-gradient(circle 3.2px at 100% 34%, transparent 97%, #000) right / 51% 100% no-repeat; }
+:root[data-nw="12"] .nw-b { background: var(--nwu); }
+:root[data-nw="12"] .nw-f svg { width: 50%; margin-top: 22%; }
+.nw-f { -webkit-mask: var(--nwmask, none); mask: var(--nwmask, none); }
+/* 8 and 5 merged (the user: «make 8 and 5 the golden one and the lesson itself shape, do a merge between them»): the gold of a
+   finished node with its two bands of light, carrying the lesson's own sign in the node's brown — 13 on the card, its lip under
+   it; 14 as the node itself, the path's rounded hexagon on its lip (71 x 58 over 7, at the card's size) */
+:root[data-nw="13"] { --nwf: var(--gold); --nwbg: linear-gradient(118deg, transparent 50%, #FFD940 50% 61%, transparent 61% 68%, #FFD940 68% 74%, transparent 74%), var(--gold); --nwsh: inset 0 -3px 0 var(--gold-dk); --nwm: var(--gold-dk); --nwt: #CD7900; }
+:root[data-nw="13"] .nw-f svg { margin-bottom: 8%; }
+:root:is([data-nw="14"], [data-nw="15"], [data-nw="16"]) { --nwf: transparent; --nwbg: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 71 65%22%3E%3Cdefs%3E%3CclipPath id=%22c%22%3E%3Cpolygon points=%2219.5,4 51.5,4 67,29 51.5,54 19.5,54 4,29%22/%3E%3C/clipPath%3E%3C/defs%3E%3Cpolygon points=%2219.5,11 51.5,11 67,36 51.5,61 19.5,61 4,36%22 fill=%22%23E6A000%22 stroke=%22%23E6A000%22 stroke-width=%228%22 stroke-linejoin=%22round%22/%3E%3Cpolygon points=%2219.5,4 51.5,4 67,29 51.5,54 19.5,54 4,29%22 fill=%22%23FFC800%22 stroke=%22%23FFC800%22 stroke-width=%228%22 stroke-linejoin=%22round%22/%3E%3Cg clip-path=%22url%28%23c%29%22 fill=%22%23FFD940%22%3E%3Cpolygon points=%2227,60 38,60 63,-4 52,-4%22/%3E%3Cpolygon points=%2242,60 47,60 72,-4 67,-4%22/%3E%3C/g%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat; --nwmask: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 71 65%22%3E%3Cg stroke=%22%23000%22 stroke-width=%228%22 stroke-linejoin=%22round%22%3E%3Cpolygon points=%2219.5,11 51.5,11 67,36 51.5,61 19.5,61 4,36%22/%3E%3Cpolygon points=%2219.5,4 51.5,4 67,29 51.5,54 19.5,54 4,29%22/%3E%3C/g%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat; --nwm: var(--gold-dk); --nwt: #CD7900; }
+:root:is([data-nw="14"], [data-nw="15"], [data-nw="16"]) .nw-c { top: 3px; width: 21px; height: 19px; border-radius: 0; }
+:root:is([data-nw="14"], [data-nw="15"], [data-nw="16"]) .nw-b { background: var(--gold-dk); -webkit-mask: var(--nwmask); mask: var(--nwmask); }
+:root:is([data-nw="14"], [data-nw="15"]) .nw-ic { width: 31px; }
+:root[data-nw="16"] .nw-tag { height: 34px; gap: 6px; font-size: 16px; }
+:root[data-nw="16"] .nw-ic { width: 40px; height: 32px; }
+:root[data-nw="16"] .nw-c { top: 3px; width: 27px; height: 25px; }
+:root:is([data-nw="14"], [data-nw="15"], [data-nw="16"]) .nw-f svg { width: 44%; margin-bottom: 11%; }
+.nw-l .s { fill: none; stroke: currentColor; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.nw-l .f, .nw-l .j { fill: currentColor; }
+:root[data-nw="7"] .nw-f svg { width: 80%; margin-inline-start: 12%; }
+.nw-tag { position: relative; display: flex; align-items: center; gap: 5px; height: 26px; margin: 0 2px 6px; font-size: 15px; font-weight: 800; color: var(--nwt); }
+.nw-ic { position: relative; flex: none; width: 26px; height: 24px; }
+.nw-c { position: absolute; top: 2px; inset-inline-start: 4px; width: 15px; height: 19px; border-radius: 4px; transform-origin: 50% 60%; }
+.nw-f { z-index: 2; background: var(--nwbg, var(--nwf)); box-shadow: var(--nwsh, none); display: grid; place-items: center; color: var(--nwm); }
+.nw-f svg { width: 54%; height: auto; }
+.nw-b { z-index: 1; background: var(--nwm); transform: translate(-6px, 1px) rotate(-10deg); }
+.nw-ic.swap .nw-b { z-index: 3; }
+.nw-w { display: inline-block; opacity: 0; }
+/* the flying card: a point on Duolingo's path (.nw-fly, moved and turned by the path) holding a window (.nw-win) onto a sheet of
+   the turn drawn before it flies (.nw-sheet, nwSprite), stepped frame by frame; both are transforms, so the GPU runs the whole
+   flight and nothing is painted while it flies */
+.nw-fly { position: absolute; z-index: 30; left: 0; top: 0; width: 0; height: 0; pointer-events: none; will-change: transform; }
+.nw-win { position: absolute; overflow: hidden; }
+.nw-sheet { position: absolute; left: 0; top: 0; will-change: transform; }
+/* Duolingo's right-answer wave on a picked word (adWave in app.js) */
+.ad-go { position: relative; z-index: 1; }
+.ad-slab { position: absolute; z-index: 0; display: block; background: var(--line); opacity: 0; pointer-events: none; }
+.ad-sh { position: absolute; inset: 0; z-index: -1; display: block; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.ad-sh b { position: absolute; top: 0; bottom: 0; left: 0; width: 38px; background: #F8FFF2; transform-origin: 0 0; translate: -200px 0; }
+.ad-sp { position: absolute; z-index: 1; display: block; pointer-events: none; scale: 0; }
+.ad-sp svg { display: block; width: 100%; height: 100%; fill: #F8FFF2; }
+.ad-sp.a { top: 4px; left: 4px; }
+.ad-sp.b { bottom: 4px; right: 4px; }
+/* a rule's level: one step of the review ladder (1, 3, 7, 14, 30 days) a dot; all five and it turns gold */
+.lv { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 14px; }
+.lv-dots { display: flex; gap: 8px; }
+.lv-dots i { width: 30px; height: 14px; border-radius: 7px; background: var(--line); box-shadow: inset 0 -3px 0 #D5D5D5; }
+.lv-dots i.on { background: var(--blue); box-shadow: inset 0 -3px 0 var(--blue-dk); }
+.lv.gold .lv-dots i.on { background: var(--gold); box-shadow: inset 0 -3px 0 var(--gold-dk); }
+.lv-t { margin: 0; font-size: 15px; font-weight: 800; color: var(--gray); }
+.lv-t b { color: var(--blue-dk); }
+.lv.gold .lv-t b { color: #CD7900; }
+.rl { display: flex; gap: 3px; flex: none; }
+.rl i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.rl i.on { background: var(--blue); }
+.rl.gold i.on { background: var(--gold); }
 
 /* the diagrams: plain, the way a good textbook draws */
 .dg { display: flex; flex-direction: column; align-items: center; gap: 10px; }
@@ -658,10 +767,16 @@ svg.d text { font-family: var(--font); font-weight: 800; }
   /* ───── motion ───── */
   const TL = { t: [], a: [] };
   let RUN = 0;
-  const later = (ms, f) => { TL.t.push(setTimeout(f, ms)); };
+  /* ?slow=4 plays the lesson four times slower, to set it beside Duolingo's file played the same way */
+  const SLOW = +((location.search.match(/[?&]slow=(\d+)/) || [])[1] || 1);
+  document.documentElement.style.setProperty('--nwsl', SLOW);
+  const later = (ms, f) => { TL.t.push(setTimeout(f, ms * SLOW)); };
   const wipe = () => { RUN++; TL.t.forEach(clearTimeout); TL.t = []; TL.a.forEach(a => { try { a.cancel(); } catch (e) {} }); TL.a = []; };
-  const anim = (el, kf, o) => { if (reduce || !el) return null; const a = el.animate(kf, o); TL.a.push(a); return a; };
+  const anim = (el, kf, o) => { if (reduce || !el) return null; const a = el.animate(kf, o); if (SLOW > 1) a.playbackRate = 1 / SLOW; TL.a.push(a); return a; };
   const show = (el, on = true) => { if (el) el.style.opacity = on ? 1 : 0; };
+  /* a line drawn in from the right and wiped off to the left, with its origin held on the left and the growth carried by a
+     translate, so the GPU runs it (an animated transform-origin keeps the page's main thread busy for as long as it waits) */
+  const nwSweep = (el, kf, o) => { if (el) el.style.transformOrigin = '0 50%'; return anim(el, kf, o); };
   const RISE = [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }];
   const POP = [{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1.08)', offset: .7 }, { opacity: 1, transform: 'none' }];
   const PULSE = [{ transform: 'none' }, { transform: 'scale(1.18)', offset: .4 }, { transform: 'none' }];
@@ -685,7 +800,7 @@ svg.d text { font-family: var(--font); font-weight: 800; }
   /* فهيم's words arrive one at a time, each on Brilliant's tap, as his bubble does in the app */
   const wsplit = t => t.split(' ').map(w => `<span class="w">${fx(w.replace(/\*([^*]+)\*/g, '<em>$1</em>'))}</span>`).join(' ');
   function sayInto(el, text, d0 = 250) {
-    el.innerHTML = wsplit(text.replace(/\*(\S+) (\S+)\*/g, '*$1* *$2*'));
+    el.innerHTML = wsplit(text.replace(/\*([^*]+)\*/g, (m, p) => p.split(' ').map(w => `*${w}*`).join(' ')));
     const ws = [...el.querySelectorAll('.w')];
     anim(el.closest('.obs-bubble'), [{ opacity: 0, transform: 'scale(.1)' }, { opacity: 1, transform: 'none' }], { duration: 250, delay: d0 - 200 > 0 ? d0 - 200 : 0, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'backwards' });
     ws.forEach((w, i) => { anim(w, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 200, delay: d0 + i * 85, fill: 'backwards' }); later(d0 + i * 85, () => snd('tap', 1.25 + (i % 3) * .06, .2)); });
@@ -716,7 +831,7 @@ svg.d text { font-family: var(--font); font-weight: 800; }
         <div class="dlab"><span>المجموع<b class="n1">٠</b></span><span>العدد<b class="n2">٠</b></span><span class="l3">الوسط<b class="n3">؟</b></span></div></div>`,
       async run(st, c) {
         const V = [4, 6, 11], M = 7, bc = [...st.querySelectorAll('.bc')], cols = bc.map(b => b.querySelector('.bu')), bv = bc.map(b => b.querySelector('.bv')), ml = st.querySelector('.ml'), box = st.querySelector('.bars'), n1 = st.querySelector('.n1'), n2 = st.querySelector('.n2'), n3 = st.querySelector('.n3');
-        bc.forEach((b, i) => anim(b, [{ opacity: 0, transform: 'scaleY(.2)', transformOrigin: 'bottom' }, { opacity: 1, transform: 'none', transformOrigin: 'bottom' }], { duration: 380, delay: i * 90, easing: 'cubic-bezier(.3,1.3,.5,1)', fill: 'backwards' }));
+        bc.forEach((b, i) => anim((b.style.transformOrigin = 'bottom', b), [{ opacity: 0, transform: 'scaleY(.2)' }, { opacity: 1, transform: 'none' }], { duration: 380, delay: i * 90, easing: 'cubic-bezier(.3,1.3,.5,1)', fill: 'backwards' }));
         await c.wait(560); let sum = 0;
         for (let i = 0; i < 3; i++) { const u = [...cols[i].children]; u.forEach(x => x.classList.add('hl')); sum += V[i]; n1.textContent = A(sum); pulse(n1); pulse(bv[i]); c.s('t' + (i + 1), 1, .45); await c.wait(320); u.forEach(x => x.classList.remove('hl')); }
         c.val(1, '٢١', n1); await c.wait(460);
@@ -773,7 +888,7 @@ svg.d text { font-family: var(--font); font-weight: 800; }
       async run(st, c) {
         const mul = st.querySelector('.mul'), band = st.querySelector('.band'), u1 = st.querySelector('.u1'), u2 = st.querySelector('.u2'), pr = [...st.querySelectorAll('.pr')], last = st.querySelector('.lastc'), s1 = st.querySelector('.s1'), s2 = st.querySelector('.s2');
         anim(mul, RISE, { duration: 320 }); await c.wait(500);
-        mul.classList.add('dim'); show(band); anim(band, [{ transform: 'scaleY(0)', transformOrigin: 'top' }, { transform: 'none', transformOrigin: 'top' }], { duration: 360, easing: 'ease-out' }); c.s('off', 1, .4);
+        mul.classList.add('dim'); show(band); band.style.transformOrigin = 'top'; anim(band, [{ transform: 'scaleY(0)' }, { transform: 'none' }], { duration: 360, easing: 'ease-out' }); c.s('off', 1, .4);
         c.cap('العشرات ما تأثّر على آخر رقم'); await c.wait(650);
         pulse(u1); c.val(1, '٧', u1); await c.wait(400);
         pulse(u2); c.val(2, '٣', u2); await c.wait(520);
@@ -951,8 +1066,8 @@ svg.d text { font-family: var(--font); font-weight: 800; }
   if (EMB) document.documentElement.classList.add('embed');
   const B = v => ({ b: v });
   const RULES = [
-    { key: 'prob', name: 'الاحتمال', tok: [{ t: 'الاحتمال' }, '=', { t: 'عدد المطلوب' }, '÷', { t: 'عدد كل النواتج' }],
-      say: '*الاحتمال*: عدد اللي تبيه، على عدد كل النواتج.', cue: 'تجيك لما تقرا «احتمال» أو «سُحب عشوائياً».', trap: 'تقسم على الكل، مو على الباقي.',
+    { key: 'prob', name: 'الاحتمال', tok: [{ t: 'الاحتمال' }, '=', { t: 'المطلوب' }, '÷', { t: 'الكل' }],
+      say: '*الاحتمال*: المطلوب، على الكل.', cue: 'تجيك لما تقرا «احتمال» أو «سُحب عشوائياً».', trap: 'تقسم على الكل، مو على الباقي.',
       num: { ex: 'نرد واحد: احتمال عدد أكبر من ٤', rows: [['=', B('٢'), '÷', B('٦')], ['=', B('١/٣')]], more: ['٤', '٢/٤', '١/٢'] } },
     { key: 'mean', name: 'الوسط الحسابي', tok: [{ t: 'الوسط' }, '=', { t: 'المجموع' }, '÷', { t: 'العدد' }],
       say: '*الوسط*: اجمعها كلها، واقسم على عددها.', cue: 'تجيك لما تقرا «متوسط» أو «معدّل». ولو طلب المجموع: الوسط × العدد.', trap: 'تقسم على عدد الأعداد، مو على ٢.',
@@ -985,6 +1100,7 @@ svg.d text { font-family: var(--font); font-weight: 800; }
   const CV = (location.search.match(/[?&]card=(1[0-3]|[0-9])\b/) || [])[1] || '0';
   const HAND = (location.search.match(/[?&]hand=(marhey|ruqaa|baloo)\b/) || [])[1] || 'marhey';
   document.documentElement.dataset.hand = HAND;
+  document.documentElement.dataset.nw = (location.search.match(/[?&]nw=(1[0-6]|[1-9])\b/) || [])[1] || '1';
   const parseF = R => {
     const terms = R.tok.filter(x => typeof x !== 'string');
     const it = R.tok.map(x => typeof x === 'string' ? { p: x } : { t: x.t, s: terms.indexOf(x) });
@@ -1657,7 +1773,7 @@ svg.d text { font-family: var(--font); font-weight: 800; }
     const e2 = t + kids.length * 85 + 260, terms = [...line.querySelectorAll('.k:not(.ca)')].filter(e => !only || only(e));
     terms.forEach((k, j) => {
       const d = e2 + j * 280;
-      anim(k.querySelector('.kt-u'), [{ transform: 'scaleX(0)', transformOrigin: '100% 50%' }, { transform: 'scaleX(1)', transformOrigin: '100% 50%', offset: .5 }, { transform: 'scaleX(1)', transformOrigin: '0 50%', offset: .501 }, { transform: 'scaleX(0)', transformOrigin: '0 50%' }], { duration: 640, delay: d, easing: 'cubic-bezier(.65,0,.35,1)' });
+      nwSweep(k.querySelector('.kt-u'), [{ transform: 'translateX(100%) scaleX(0)' }, { transform: 'translateX(0) scaleX(1)', offset: .5 }, { transform: 'translateX(0) scaleX(0)' }], { duration: 640, delay: d, easing: 'cubic-bezier(.65,0,.35,1)' });
       later(d, () => snd('click', up(j * 2), .26));
     });
     return e2 + terms.length * 280 + 320;
@@ -1821,27 +1937,39 @@ svg.d text { font-family: var(--font); font-weight: 800; }
      the word rises inside it, a blue-500 line runs along its foot, and each number pushes its word up and out while the box
      grows or shrinks to the number; the word comes back small under it, and the answer's box turns Brilliant's correct green */
   const KBT = {
-    term: (x, l) => `<span class="k${l ? ' ca' : ''}" data-s="${x.s}"><span class="kb-m"><span class="kb-w">${x.t}</span><span class="kb-n"></span><i class="kb-u"></i></span><span class="kb-c">${x.t}</span></span>`,
+    term: (x, l) => `<span class="k${l ? ' ca' : ''}" data-s="${x.s}"><span class="kb-m"><span class="kb-w">${x.t}</span><span class="kb-n"></span><i class="kb-u"></i></span><span class="kb-c" data-w="${x.t}">${x.t}</span></span>`,
     plain: p => `<span class="pl">${fx(p)}</span>`, op: p => `<span class="op">${opTxt(p)}</span>`, frac: FRAC };
+  /* the first three rules play the card as a student asked for it (tools/student-view.html; the user, 2026-10-30: «ok do it your way
+     and lets do it for the first 3 lessons»): a short rule plays faster, a new rule leaves one term blank for the student to pick,
+     a review asks for one term before it shows anything, and the card ends on the rule in words with its numbers small under it */
+  const KB_NEW = new Set(['prob', 'mean', 'hand']);
+  const kbNew = fc => !!(fc._R && KB_NEW.has(fc._R.key));
   function kbIn(fc, t, only) {
-    const line = fc.querySelector('.kb-fx'), kids = [...line.querySelectorAll('.k, .op, .pl, .fq-bar')].filter(e => !only || only(e));
+    const line = fc.querySelector('.kb-fx'), all = [...line.querySelectorAll('.k, .op, .pl, .fq-bar')], kids = all.filter(e => !only || only(e));
+    const sp = kbNew(fc) && all.length <= 5 ? .62 : 1, st = 85 * sp, su = 280 * sp;
     kids.forEach((e, i) => {
-      const d = t + i * 85;
+      const d = t + i * st;
       if (e.classList.contains('k')) {
         anim(e.querySelector('.kb-m'), [{ opacity: 0, transform: 'scale(.86)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: d, easing: XO, fill: 'backwards' });
-        anim(e.querySelector('.kb-w'), [{ transform: 'translateY(115%)' }, { transform: 'none' }], { duration: 720, delay: d + 60, easing: XO, fill: 'backwards' });
+        if (!e.classList.contains('gap')) anim(e.querySelector('.kb-w'), [{ transform: 'translateY(115%)' }, { transform: 'none' }], { duration: 720 * Math.max(sp, .8), delay: d + 60, easing: XO, fill: 'backwards' });
         later(d, () => snd('tap', 1.1 + i * .06, .22));
       }
       else if (e.classList.contains('fq-bar')) anim(e, [{ transform: 'scaleX(0)' }, { transform: 'none' }], { duration: 640, delay: d, easing: XO, fill: 'backwards' });
       else anim(e, [{ opacity: 0, transform: 'translateY(.3em)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: d, easing: XO, fill: 'backwards' });
     });
-    const e2 = t + kids.length * 85 + 260, terms = [...line.querySelectorAll('.k:not(.ca)')].filter(e => !only || only(e));
+    const e2 = t + kids.length * st + 260 * sp, terms = [...line.querySelectorAll('.k:not(.ca):not(.gap)')].filter(e => !only || only(e));
     terms.forEach((k, j) => {
-      const d = e2 + j * 280;
-      anim(k.querySelector('.kb-u'), [{ transform: 'scaleX(0)', transformOrigin: '100% 50%' }, { transform: 'scaleX(1)', transformOrigin: '100% 50%', offset: .5 }, { transform: 'scaleX(1)', transformOrigin: '0 50%', offset: .501 }, { transform: 'scaleX(0)', transformOrigin: '0 50%' }], { duration: 640, delay: d, easing: 'cubic-bezier(.65,0,.35,1)' });
+      const d = e2 + j * su;
+      nwSweep(k.querySelector('.kb-u'), [{ transform: 'translateX(100%) scaleX(0)' }, { transform: 'translateX(0) scaleX(1)', offset: .5 }, { transform: 'translateX(0) scaleX(0)' }], { duration: 640 * Math.max(sp, .8), delay: d, easing: 'cubic-bezier(.65,0,.35,1)' });
       later(d, () => snd('click', up(j * 2), .26));
     });
-    return e2 + terms.length * 280 + 320;
+    return e2 + terms.length * su + 320 * sp;
+  }
+  /* the rule is always one line (the user, 2026-10-29: «i dont want two lines»), as big as the card's width lets it be */
+  function kbFit(fc) {
+    const line = fc.querySelector('.kb-fx');
+    line.style.fontSize = '';
+    fit(line, 15);
   }
   function kbGrow(fc) {
     /* the card keeps its height, so nothing under it moves: the rule grows into the card's own empty foot and no further */
@@ -1857,30 +1985,146 @@ svg.d text { font-family: var(--font); font-weight: 800; }
     anim(line, [{ fontSize: from + 'px' }, { fontSize: to + 'px' }], { duration: 640, easing: XIO });
     line.style.fontSize = to + 'px';
   }
+  /* one term is a blank and three words wait under the rule: the right one drops into it; a wrong one shakes and is spent.
+     On a review a wrong pick counts against the rule, so it comes back sooner */
+  function kbAsk(fc, k, review, done) {
+    const R = fc._R, card = fc.querySelector('.kb-card'), tag = fc.querySelector('.kb-tag'), right = k.querySelector('.kb-w').textContent;
+    const mine = R.tok.filter(x => typeof x !== 'string').map(x => x.t);
+    const pool = shuffle([...new Set(RULES.filter(r => r !== R).flatMap(r => r.tok.filter(x => typeof x !== 'string').map(x => x.t)))].filter(t => !mine.includes(t)));
+    const near = pool.filter(t => t.length <= right.length + 5), others = (near.length >= 2 ? near : pool).slice(0, 2);
+    const pick = document.createElement('div'); pick.className = 'kb-pick';
+    pick.innerHTML = shuffle([right, ...others]).map(t => `<button class="kb-ch">${t}</button>`).join('');
+    card.appendChild(pick);
+    k.classList.add('gap', 'ask');
+    tag.textContent = 'وش الناقص؟';
+    anim(tag, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: XO });
+    [...pick.children].forEach((b, i) => anim(b, RISE, { duration: 300, delay: 80 + i * 70, easing: XO, fill: 'backwards' }));
+    later(80, () => snd('on', 1.1, .3));
+    let miss = 0;
+    pick.querySelectorAll('.kb-ch').forEach(b => b.onclick = () => {
+      if (pick.dataset.done) return;
+      if (b.textContent !== right) {
+        miss++; b.classList.add('no'); b.disabled = true; anim(b, SHAKE, { duration: 400 }); snd('wrong', 1, .4); buzz([30, 40, 30]);
+        if (review && miss === 1 && L) L.miss++;
+        return;
+      }
+      pick.dataset.done = 1; kbWave(b); snd('right', 1, .45); buzz(12);
+      const m = k.querySelector('.kb-m'), w = k.querySelector('.kb-w');
+      k.classList.remove('gap', 'ask');
+      anim(w, [{ opacity: 0, transform: 'translateY(-115%)' }, { opacity: 1, transform: 'none' }], { duration: 520, easing: XO });
+      anim(m, [{ transform: 'none' }, { transform: 'scale(1.08)', offset: .4 }, { transform: 'none' }], { duration: 420, delay: 120, easing: 'cubic-bezier(.3,1.4,.5,1)' });
+      later(700, () => { anim(pick, [{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' }); later(250, () => pick.remove()); });
+      later(420, () => {
+        tag.textContent = 'القانون'; anim(tag, [{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
+        done(miss);
+      });
+    });
+  }
+  /* Duolingo's right answer on a tapped word, as the app plays it (adWave in app.js, from TapInput's AtomicDelightAnimation):
+     it crouches, springs 23.6px, lands past its place and rebounds (650ms) with its squash and stretch, turns green 100ms in over
+     a grey slab where it stood, and a pale band and two sparkles cross it */
+  const AD_JUMP = [[0, 0, 'cubic-bezier(.01,0,0,1)'], [.1277, 7.3, 'linear'], [.1538, -12.7, 'cubic-bezier(.1,.53,0,.92)'],
+    [.3585, -23.6, 'cubic-bezier(1,-.05,.95,.65)'], [.6923, 4.4, 'cubic-bezier(.09,.75,.4,.95)'], [.8723, -7.3, 'cubic-bezier(.89,-.08,.95,.79)'], [1, 0]];
+  const AD_SQ = [[0, 0, 0, 'cubic-bezier(.01,0,0,1)'], [.1509, 2.9, -5.8, 'linear'], [.1818, -5.7, 2.53, 'cubic-bezier(.01,0,.15,1)'],
+    [.4236, 0, 0, 'cubic-bezier(.85,0,.94,.72)'], [.7873, 0, 2.53, 'linear'], [.8182, 1.96, -2.9, 'cubic-bezier(.1,.47,.01,1)'], [1, 0, 0]];
+  const AD_SLAB = { at: [0, .2418, .6364, .8491, 1], k: [5.9, 7.1, 1.27, 4.72, 3.64], l: [4.78, 6.36, 4.78, 5.45, 3.64], m: [4.5, 5, 4.3, 4.57, 3.64],
+    ease: ['cubic-bezier(.1,.53,0,.92)', 'cubic-bezier(1,-.03,.95,.65)', 'cubic-bezier(.09,.75,.4,.95)', 'cubic-bezier(.89,-.08,.95,.79)'] };
+  const AD_STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C12.9 7.2 16.8 11.1 24 12 16.8 12.9 12.9 16.8 12 24 11.1 16.8 7.2 12.9 0 12 7.2 11.1 11.1 7.2 12 0Z"/></svg>';
+  function kbWave(c) {
+    if (reduce) { c.classList.add('ok'); return; }
+    const W = c.offsetWidth || 1, H = c.offsetHeight || 1, par = c.parentElement, ease = e => (e ? { easing: e } : {}), rad = getComputedStyle(c).borderRadius;
+    c.classList.add('ad-go');
+    anim(c, AD_JUMP.map(([o, y, e]) => Object.assign({ offset: o, translate: `0 ${y}px` }, ease(e))), { duration: 650 });
+    anim(c, AD_SQ.map(([o, w, h, e]) => Object.assign({ offset: o, scale: `${(1 + 2 * w / W).toFixed(4)} ${(1 + 2 * h / H).toFixed(4)}` }, ease(e))), { duration: 550 });
+    const slab = document.createElement('i'); slab.className = 'ad-slab';
+    Object.assign(slab.style, { left: c.offsetLeft + 'px', top: c.offsetTop + 'px', width: W + 'px', height: H + 'px', borderRadius: rad });
+    par.insertBefore(slab, c);
+    anim(slab, AD_SLAB.at.map((o, j) => Object.assign({ offset: o, opacity: 1,
+      clipPath: `inset(${(AD_SLAB.l[j] + AD_SLAB.m[j]).toFixed(2)}px ${AD_SLAB.k[j]}px ${(AD_SLAB.l[j] - AD_SLAB.m[j]).toFixed(2)}px ${AD_SLAB.k[j]}px round ${rad})` }, ease(AD_SLAB.ease[j]))), { duration: 550, delay: 100 });
+    const sh = document.createElement('i'); sh.className = 'ad-sh'; sh.innerHTML = '<b></b>'; c.appendChild(sh);
+    const band = sh.firstChild, bw = 38, x = p => `${(-bw + (W + bw + H / 2) * p).toFixed(1)}px 0`;
+    band.style.transform = `skewX(${(-Math.atan(.5) * 180 / Math.PI).toFixed(2)}deg)`;
+    anim(band, [{ offset: 0, translate: x(0), easing: 'linear' }, { offset: .0486, translate: x(.24), easing: 'cubic-bezier(.17,.17,.32,.73)' },
+      { offset: .4286, translate: x(.47), easing: 'cubic-bezier(.63,.17,.83,.83)' }, { offset: 1, translate: x(1) }], { duration: 350, delay: 105, fill: 'backwards' });
+    [['ad-sp a', 12], ['ad-sp b', 8]].forEach(([cls, sz]) => {
+      const sp = document.createElement('i'); sp.className = cls; sp.style.width = sp.style.height = sz + 'px'; sp.innerHTML = AD_STAR; c.appendChild(sp);
+      anim(sp, [{ offset: 0, scale: 0, easing: 'cubic-bezier(.17,.17,0,.89)' }, { offset: .5, scale: 1.1535, easing: 'cubic-bezier(.8,-.09,.83,.83)' }, { offset: 1, scale: 0 }], { duration: 400, delay: 100, fill: 'both' });
+      anim(sp, [{ rotate: '0deg' }, { rotate: '39.05deg' }], { duration: 400, delay: 100 });
+    });
+    later(100, () => c.classList.add('ok'));
+    later(700, () => { slab.remove(); sh.remove(); c.querySelectorAll('.ad-sp').forEach(e => e.remove()); c.classList.remove('ad-go'); });
+  }
+  /* the end: the numbers step down under their words and the rule comes back in words, big, so the rule is the last thing seen */
+  function kbBack(fc) {
+    const line = fc.querySelector('.kb-fx'), ks = [...line.querySelectorAll('.k')].filter(k => k.querySelector('.kb-n').innerHTML), F1 = parseFloat(getComputedStyle(line).fontSize);
+    if (!ks.length) return;
+    stopA(line);
+    const ms = ks.map(k => k.querySelector('.kb-m')), from = ms.map(m => [m.style.width, m.style.height]);
+    ms.forEach(m => { m.style.width = ''; m.style.height = ''; });
+    fit(line, 15);
+    const F2 = parseFloat(getComputedStyle(line).fontSize), s = scaleOf(line);
+    const to = ms.map(m => { const r = m.getBoundingClientRect(); return [(r.width / s / F2) + 'em', (r.height / s / F2) + 'em']; });
+    anim(line, [{ fontSize: F1 + 'px' }, { fontSize: F2 + 'px' }], { duration: 640, easing: XIO });
+    ms.forEach((m, i) => {
+      m.style.width = to[i][0]; m.style.height = to[i][1];
+      anim(m, [{ width: from[i][0] || to[i][0], height: from[i][1] || to[i][1] }, { width: to[i][0], height: to[i][1] }], { duration: 640, easing: XIO });
+    });
+    const tk = fc._kbT;
+    later(700, () => { if (fc._kbT === tk) ms.forEach(m => { m.style.width = ''; m.style.height = ''; }); });
+    ks.forEach((k, i) => {
+      const w = k.querySelector('.kb-w'), n = k.querySelector('.kb-n'), c = k.querySelector('.kb-c');
+      stopA(w, n, c);
+      anim(n, [{ transform: 'none' }, { transform: 'translateY(115%)' }], { duration: 520, delay: i * 60, easing: XIO, fill: 'backwards' });
+      anim(w, [{ transform: 'translateY(-115%)' }, { transform: 'none' }], { duration: 600, delay: 60 + i * 60, easing: XIO, fill: 'backwards' });
+      c.innerHTML = n.firstChild ? n.firstChild.innerHTML : ''; c.classList.add('num'); c.style.opacity = 1;
+      anim(c, [{ opacity: 0, transform: 'translate(-50%, -6px)' }, { opacity: 1, transform: 'translateX(-50%)' }], { duration: 420, delay: 320 + i * 60, easing: XO, fill: 'backwards' });
+    });
+    snd('on', .9, .3);
+    later(520, () => { const tag = fc.querySelector('.kb-tag'); if (tag) anim(tag, [{ transform: 'none' }, { transform: 'scale(1.12)', offset: .4 }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.3,1.4,.5,1)' }); });
+  }
   CARDS[12] = {
     html(R) { return `<div class="kb12"><div class="kb-card"><span class="kb-tag">القانون</span><div class="kb-fx">${fAll(parseF(R), KBT)}</div><span class="kb-hint">اضغط تشوف القانون</span></div></div>`; },
     intro(fc, R, t) {
-      fit(fc.querySelector('.kb-fx'), 15);
+      fc._R = R; kbFit(fc);
       const t0 = Math.max(0, t - 450);
       anim(fc.querySelector('.kb-card'), [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: t0, easing: XO, fill: 'backwards' });
       anim(fc.querySelector('.kb-tag'), [{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: t0 + 120, fill: 'backwards' });
-      return at$(kbIn(fc, t0 + 220));
+      if (!kbNew(fc)) return at$(kbIn(fc, t0 + 220));
+      const k = fc.querySelector('.kb12 .k[data-s="1"]'); k.classList.add('gap');
+      const end = kbIn(fc, t0 + 220);
+      return new Promise(res => later(end, () => kbAsk(fc, k, false, () => later(450, res))));
     },
     review(fc, R, go) {
-      const w = fc.querySelector('.kb12'), card = fc.querySelector('.kb-card'), hint = fc.querySelector('.kb-hint'); fit(fc.querySelector('.kb-fx'), 15);
-      w.classList.add('hide');
+      fc._R = R;
+      const w = fc.querySelector('.kb12'), card = fc.querySelector('.kb-card'), hint = fc.querySelector('.kb-hint'); kbFit(fc);
       anim(card, [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: 200, easing: XO, fill: 'backwards' });
+      if (kbNew(fc)) {
+        const terms = [...fc.querySelectorAll('.kb12 .k:not(.ca)')], k = terms[rnd(0, terms.length - 1)];
+        terms.forEach(x => x.classList.add('gap'));
+        const end = kbIn(fc, 300, e => !e.matches('.k:not(.ca)'));
+        later(end, () => kbAsk(fc, k, true, miss => {
+          const rest = terms.filter(x => x !== k);
+          rest.forEach(x => x.classList.remove('gap'));
+          later(kbIn(fc, 0, e => rest.includes(e)), () => go(!miss));
+        }));
+        return;
+      }
+      w.classList.add('hide');
       kbIn(fc, 300, e => !e.matches('.k:not(.ca)'));
       fadeHint(hint, 1300);
       onTap(card, hint, () => { w.classList.remove('hide'); snd('on', 1, .35); later(kbIn(fc, 0, e => e.matches('.k:not(.ca)')), go); });
     },
     reset(fc) {
+      fc._kbT = (fc._kbT || 0) + 1;
+      const pk = fc.querySelector('.kb-pick'); if (pk) pk.remove();
+      const tag = fc.querySelector('.kb-tag'); if (tag) tag.textContent = 'القانون';
       fc.querySelectorAll('.kb12 .k').forEach(k => {
-        const m = k.querySelector('.kb-m');
-        stopA(m, k.querySelector('.kb-w'), k.querySelector('.kb-n'), k.querySelector('.kb-c'));
-        k.classList.remove('ok'); m.style.width = ''; m.style.height = ''; k.querySelector('.kb-n').innerHTML = '';
+        const m = k.querySelector('.kb-m'), c = k.querySelector('.kb-c');
+        stopA(m, k.querySelector('.kb-w'), k.querySelector('.kb-n'), c);
+        k.classList.remove('ok', 'gap', 'ask'); m.style.width = ''; m.style.height = ''; k.querySelector('.kb-n').innerHTML = '';
+        c.classList.remove('num'); c.style.opacity = ''; c.innerHTML = c.dataset.w;
       });
-      const card = fc.querySelector('.kb-card'); if (card) { card.style.height = ''; stopA(fc.querySelector('.kb-fx')); fit(fc.querySelector('.kb-fx'), 15); }
+      const card = fc.querySelector('.kb-card'); if (card) { card.style.height = ''; stopA(fc.querySelector('.kb-fx')); kbFit(fc); }
     },
     val(fc, slot, text, src) {
       const k = fc.querySelector(`.k[data-s="${slot}"]`); if (!k) return;
@@ -1899,12 +2143,15 @@ svg.d text { font-family: var(--font); font-weight: 800; }
       anim(n, [{ transform: 'translateY(115%)' }, { transform: 'none' }], { duration: 580, delay: 60, easing: XIO, fill: 'both' });
       anim(c, [{ opacity: 0, transform: 'translate(-50%, -5px)' }, { opacity: 1, transform: 'translateX(-50%)' }], { duration: 420, delay: 420, easing: XO, fill: 'forwards' });
       later(40, () => snd('tap', 1.5, .2)); later(420, () => { tick(slot); buzz(6); });
-      if (slot === 0) later(560, () => {
+      if (slot !== 0) return;
+      later(560, () => {
         k.classList.add('ok'); snd('right', 1, .38); buzz(12);
         anim(m, [{ transform: 'none' }, { transform: 'scale(1.08)', offset: .4 }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.3,1.4,.5,1)' });
       });
       /* a long rule was shrunk to fit its words; once the answer is in, the numbers take less room, so the line grows back */
-      if (slot === 0) later(1000, () => kbGrow(fc));
+      const tk = fc._kbT;
+      later(1000, () => { if (fc._kbT === tk) kbGrow(fc); });
+      if (kbNew(fc)) later(2700, () => { if (fc._kbT === tk) kbBack(fc); });
     },
   };
 
@@ -1914,6 +2161,264 @@ svg.d text { font-family: var(--font); font-weight: 800; }
   });
 
   const CARD = CARDS[CV];
+  /* the first three rules on 12 / 13 play the student's version: the new-rule header, the level, a right review skips the proof */
+  const kbOn = R => (CV === '12' || CV === '13') && KB_NEW.has(R.key);
+
+  /* ───── «قانون جديد»: Duolingo's new-word header and card (nw_header_and_card_v10.riv, as ChallengeIndicatorView sets it up),
+     measured off the file at a twentieth of its speed and drawn as our own rule card ───── */
+  /* the rule's sign on the card, one per look: a fraction, «=», «÷»; the book's title plate, the node's star, the wordmark's ق */
+  const NW_Q = '<svg viewBox="4250 1370 780 1030"><path fill="#3C3C3C" fill-rule="evenodd" d="M4290 2361L4847 2361L4988 2213L4988 1835L4847 1687L4573 1687L4396 1865L4396 2146L4458 2213L4290 2213Z M4625 1835L4847 1835L4847 2213L4662 2213L4544 2102L4544 1917Z"/><path fill="#58CC02" d="M4742 1413h152v152h-152Z M4503 1413h152v152h-152Z"/></svg>';
+  const NW_SIGN = { 1: '<rect x="6" y="2.4" width="8" height="5.6" rx="2"/><rect x="2.6" y="8.9" width="14.8" height="2.3" rx="1.15"/><rect x="6" y="12.1" width="8" height="5.6" rx="2"/>',
+    2: '<rect x="2.6" y="5.6" width="14.8" height="3.2" rx="1.6"/><rect x="2.6" y="11.2" width="14.8" height="3.2" rx="1.6"/>',
+    3: '<circle cx="10" cy="3.4" r="2.3"/><rect x="2.6" y="8.7" width="14.8" height="2.7" rx="1.35"/><circle cx="10" cy="15.4" r="2.3"/>',
+    4: '<rect x="1.6" y="5.4" width="14.6" height="8.2" rx="1.8" fill="#fff"/><rect x="4" y="7.9" width="9.8" height="1.4" rx=".7" fill="#8A3FD1"/><rect x="5.4" y="10.3" width="7" height="1.4" rx=".7" fill="#C9A3EE"/>',
+    5: '<path d="M10 2.6l2.2 4.6 5 .6-3.7 3.5.9 5-4.4-2.4-4.4 2.4.9-5-3.7-3.5 5-.6z" fill="#C57A1C" stroke="#C57A1C" stroke-width="1.4" stroke-linejoin="round"/>',
+    7: '<circle cx="4.2" cy="3.4" r="1.5" fill="none" stroke="#AFAFAF" stroke-width=".8"/><circle cx="8.1" cy="3.4" r="1.75" fill="#3C3C3C"/><circle cx="12" cy="3.4" r="1.5" fill="none" stroke="#AFAFAF" stroke-width=".8"/><circle cx="15.9" cy="3.4" r="1.5" fill="none" stroke="#AFAFAF" stroke-width=".8"/><circle cx="4.2" cy="10" r="1.5" fill="none" stroke="#AFAFAF" stroke-width=".8"/><circle cx="8.1" cy="10" r="1.5" fill="none" stroke="#AFAFAF" stroke-width=".8"/><circle cx="12" cy="10" r="1.5" fill="none" stroke="#AFAFAF" stroke-width=".8"/><circle cx="15.9" cy="10" r="1.75" fill="#3C3C3C"/><circle cx="4.2" cy="16.6" r="1.5" fill="none" stroke="#AFAFAF" stroke-width=".8"/><circle cx="8.1" cy="16.6" r="1.5" fill="none" stroke="#AFAFAF" stroke-width=".8"/><circle cx="12" cy="16.6" r="1.75" fill="#3C3C3C"/><circle cx="15.9" cy="16.6" r="1.5" fill="none" stroke="#AFAFAF" stroke-width=".8"/>',
+    9: '' }[document.documentElement.dataset.nw];
+  let SIGN = NW_SIGN === undefined ? NW_Q : NW_SIGN ? `<svg viewBox="0 0 20 20" fill="currentColor">${NW_SIGN}</svg>` : '';
+  /* look 8: each rule as its lesson's node — the lesson's sign (the app's LESSON_ICON) on its unit's colour */
+  const NW_LES = { prob: ['green', '<rect class="s" x="6" y="6" width="28" height="28" rx="7"/><circle class="f" cx="14" cy="14" r="3"/><circle class="f" cx="20" cy="20" r="3"/><circle class="f" cx="26" cy="26" r="3"/>'],
+    mean: ['purple', '<path class="s" d="M8 34V22M16 34V12M24 34V18M32 34V8M4 20h32"/>'],
+    hand: ['green', '<circle class="s" cx="13" cy="20" r="7"/><path class="s" d="M20 20h16M30 20v7M35 20v5"/>'],
+    last: ['green', '<path class="s" d="M32 18a12 12 0 0 0-22-5M8 22a12 12 0 0 0 22 5"/><path class="s" d="M9 5v8h8M31 35v-8h-8"/>'],
+    tri: ['green', '<path class="s" d="M12 6v12M6 12h12M24 12h11M24 27l10 10M34 27l-10 10M6 32h12"/><circle class="f" cx="12" cy="26.5" r="2.4"/><circle class="f" cx="12" cy="37.5" r="2.4"/>'],
+    queue: ['green', '<path class="f j" d="M23 3 8 23h11l-3 14 16-21H21z"/>'],
+    clock: ['yellow', '<path class="s" d="M6 33h29M6 33 30 9"/><path class="s" d="M19 33a13 13 0 0 0-4-9"/>'],
+    ways: ['green', '<rect class="s" x="6" y="6" width="28" height="28" rx="7"/><circle class="f" cx="14" cy="14" r="3"/><circle class="f" cx="20" cy="20" r="3"/><circle class="f" cx="26" cy="26" r="3"/>'] };
+  const NW_UNIT = { green: ['#58CC02', '#58A700', '#71DC1A', '#58A700'], blue: ['#1CB0F6', '#1899D6', '#55C5F9', '#1899D6'], purple: ['#CE82FF', '#A568CC', '#DAA0FF', '#A568CC'], yellow: ['#FFC800', '#E6A000', '#FFE700', '#CD7900'] };
+  /* look 11: the shape of the rule's formula in the card's chips, top to bottom: the answer (green), «=», then its terms
+     (blue) as a fraction, a product over a number, a product, or a sum */
+  const NW_FORM = { prob: 'frac', mean: 'frac', hand: 'pfrac', tri: 'pfrac', last: 'prod', clock: 'prod', ways: 'prod', queue: 'sum' };
+  const nwMini = R => {
+    const pill = (x, y, w, h, f, st) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h / 2}" fill="${f}" stroke="${st}" stroke-width="1"/>`;
+    const B = (x, y, w) => pill(x, y, w, 3.6, '#DDF4FF', '#1CB0F6'), bar = y => `<rect x="2.6" y="${y}" width="14.8" height="1" rx=".5" fill="#3C3C3C"/>`;
+    const op = (x, y, k) => k === '×' ? `<path d="M${x - 1.1} ${y - 1.1}l2.2 2.2M${x + 1.1} ${y - 1.1}l-2.2 2.2" stroke="#AFAFAF" stroke-width=".8" stroke-linecap="round"/>` : `<path d="M${x - 1.2} ${y}h2.4M${x} ${y - 1.2}v2.4" stroke="#AFAFAF" stroke-width=".8" stroke-linecap="round"/>`;
+    const k = NW_FORM[R.key] || 'frac';
+    let g = pill(4, 2.4, 12, 3.8, '#D7FFB8', '#58CC02') + '<rect x="8" y="7.9" width="4" height=".8" rx=".4" fill="#AFAFAF"/><rect x="8" y="9.5" width="4" height=".8" rx=".4" fill="#AFAFAF"/>';
+    if (k === 'frac') g += B(4.5, 12.4, 11) + bar(17.3) + B(4.5, 19.6, 11);
+    if (k === 'pfrac') g += B(1.6, 12.4, 7.2) + op(10, 14.2, '×') + B(11.2, 12.4, 7.2) + bar(17.3) + B(7.6, 19.6, 4.8);
+    if (k === 'prod') g += B(4.5, 12.6, 11) + op(10, 18.2, '×') + B(4.5, 20.2, 11);
+    if (k === 'sum') g += B(1.6, 12.6, 7.2) + op(10, 14.4, '+') + B(11.2, 12.6, 7.2) + `<rect x="8" y="19.6" width="4" height=".8" rx=".4" fill="#AFAFAF"/>` + B(7, 21.2, 6);
+    return `<svg viewBox="0 0 20 26">${g}</svg>`;
+  };
+  const nwLook = R => {
+    const nw = document.documentElement.dataset.nw;
+    if (!['8', '10', '11', '12', '13', '14', '15', '16'].includes(nw)) return;
+    const [u, g] = NW_LES[R.key] || NW_LES.prob, [c, sh, hi, t] = NW_UNIT[u], st = document.documentElement.style;
+    if (nw === '8') {
+      st.setProperty('--nwf', c); st.setProperty('--nwm', sh); st.setProperty('--nwt', t);
+      st.setProperty('--nwbg', `linear-gradient(180deg, ${hi} 0 9%, ${c} 9%)`);
+      SIGN = `<svg class="nw-l" viewBox="0 0 40 40" style="color:#fff">${g}</svg>`;
+    }
+    if (nw === '10') SIGN = `<svg class="nw-l" viewBox="0 0 40 40" style="color:#FFC800">${g}</svg>`;
+    if (nw === '11') SIGN = nwMini(R);
+    if (['13', '14', '15', '16'].includes(nw)) SIGN = `<svg class="nw-l" viewBox="0 0 40 40" style="color:#C57A1C">${g}</svg>`;
+    if (nw === '12') { st.setProperty('--nwu', c); st.setProperty('--nwt', t); SIGN = `<svg class="nw-l" viewBox="0 0 40 40" style="color:${c}">${g}</svg>`; }
+  };
+  nwLook({ key: RULE0 || 'prob' });
+  if (document.documentElement.dataset.nw === '9') fetch('newrule/fahim-head.png').then(r => r.blob()).then(b => new Promise(res => { const f = new FileReader(); f.onload = () => res(f.result); f.readAsDataURL(b); })).then(d => { NW_IMG = d; }).catch(() => {});
+  const nwTag = R => (nwLook(R), `<div class="nw-tag"><span class="nw-ic"><i class="nw-c nw-b"></i><i class="nw-c nw-f">${SIGN}</i></span><span class="nw-w">قانون</span><span class="nw-w">جديد</span></div>`);
+  /* the flight, [ms, u, v, turn°, width, height]: u runs from the word (0) to the header (1), v is the sideways bow, both in parts of
+     the distance between them, so the path keeps its shape at any distance; Duolingo's file is drawn left to right and the app mirrors
+     it on a right-to-left phone, so here the bow and the turn are mirrored. The card rises and squashes, turns over once (NW_SPIN),
+     then sweeps into the header, shrinking to the header card's size, and lands at 975ms */
+  const NW_FLY = [[0, 0, 0, 8.9, 0.809, 1.175], [33, 0.023, -0.0163, 4.7, 0.812, 1.179], [67, 0.0451, -0.0244, -0.2, 0.864, 1.169], [100, 0.0678, -0.0296, -5, 1.102, 1.114],
+    [133, 0.0895, -0.0331, -6.6, 1.251, 0.986], [167, 0.1108, -0.0356, -7.9, 1.225, 1.004], [200, 0.129, -0.0373, -9.1, 1.237, 0.973], [233, 0.1432, -0.0384, -9.9, 1.105, 1.038],
+    [267, 0.1517, -0.0396, -10.1, 1, 1.101], [300, 0.1558, -0.0405, -10.4, 1, 1.111], [317, 0.1596, -0.0413, -10.7, 1, 1.098], [333, 0.1607, -0.0418, -11.2, 1, 1.088],
+    [350, 0.1613, -0.0405, -8.4, 1, 1.078], [367, 0.162, -0.039, -8, 1, 1.067], [383, 0.1626, -0.0375, -9.6, 1, 1.057], [400, 0.1633, -0.0363, -11.3, 1, 1.032],
+    [433, 0.1748, -0.0378, -11.8, 1, 1.077], [467, 0.1858, -0.0387, -12.3, 1, 1.079], [500, 0.1975, -0.0393, -13.9, 1, 1.071], [550, 0.219, -0.0398, -17.1, 1, 1.054],
+    [600, 0.2454, -0.0403, -21.1, 1, 1.032], [650, 0.2786, -0.0404, -26.5, 1, 1.01], [700, 0.3217, -0.0398, -32.8, 1, 1], [750, 0.3771, -0.0383, -40.5, 1.006, 0.987],
+    [800, 0.4489, -0.0352, -51.7, 0.972, 0.947], [833, 0.5105, -0.032, -59.7, 0.923, 0.903], [867, 0.5883, -0.0273, -67.4, 0.835, 0.816], [900, 0.6846, -0.0209, -76.2, 0.688, 0.67],
+    [917, 0.7442, -0.0168, -77.8, 0.491, 0.483], [933, 0.8102, -0.0121, -77, 0.476, 0.464], [950, 0.8948, -0.0058, -77.1, 0.477, 0.464], [975, 1, 0, -80, 0.474, 0.465]];
+  const NW_LAND = 975;
+  /* its turn about its upright axis, [ms, turn°, twist°], read off the width of Duolingo's card at its middle, head and foot
+     (cos of the turn) every 12ms: it slides off the line, passes edge-on at 358ms and slows into the last of it, over at 700ms.
+     Its foot runs ahead of its head by the twist (33° through the turn, letting go after it), so it passes as a wedge, an
+     hourglass and the other wedge */
+  const NW_SPIN = [[0, 0, 0], [240, 0, 0], [262, 12, 30], [274, 22, 33], [286, 29, 33], [298, 38, 33], [310, 45, 33], [322, 54, 33], [334, 66, 33],
+    [346, 80, 33], [358, 88, 33], [370, 99, 33], [382, 101, 33], [394, 111, 33], [406, 117, 33], [418, 122, 32], [442, 128, 29], [466, 136, 27],
+    [490, 141, 24], [514, 148, 22], [550, 156, 17], [600, 164, 10], [650, 170, 5], [700, 180, 0]];
+  const nwSpin = (t, y) => { const k = NW_SPIN.findIndex(p => p[0] >= t); if (k < 0) return 180; if (k === 0) return 0;
+    const [t0, a0, w0] = NW_SPIN[k - 1], [t1, a1, w1] = NW_SPIN[k], f = (t - t0) / (t1 - t0); return a0 + (a1 - a0) * f + (w0 + (w1 - w0) * f) * y; };
+  /* the header coming on: the gold card slides out and over the yellow one, they swap, hold, and swap back (660ms) */
+  function nwShuffle(ic, d) {
+    const f = ic.querySelector('.nw-f'), b = ic.querySelector('.nw-b'), T = 660, o = ms => ms / T;
+    /* measured left to right; the phone is right to left, so every x and turn is mirrored */
+    const at = (x, y, r) => `translate(${-x}px, ${y}px) rotate(${-r}deg)`;
+    anim(b, [{ offset: 0, transform: at(0, 0, 0) }, { offset: o(51), transform: at(13, 5, 20), easing: 'linear' }, { offset: o(115), transform: at(13, 5, 14) },
+      { offset: o(211), transform: at(-5, -2, -4) }, { offset: o(300), transform: at(-6, -2, -3) }, { offset: o(403), transform: at(-6, -2, -3) },
+      { offset: o(499), transform: at(-3, -2, -1) }, { offset: o(530), transform: at(0, 0, 0) }, { offset: 1, transform: at(6, 1, 10) }],
+      { duration: T, delay: d, easing: 'cubic-bezier(.3,0,.2,1)', fill: 'backwards' });
+    anim(f, [{ offset: 0, transform: at(0, 0, 0) }, { offset: o(51), transform: at(-2, -1, 0) }, { offset: o(115), transform: at(-2, -1, 0) },
+      { offset: o(211), transform: at(11, 4, 24) }, { offset: o(300), transform: at(12, 4, 25) }, { offset: o(403), transform: at(12, 4, 25) },
+      { offset: o(499), transform: at(9, 3, 20), easing: 'cubic-bezier(.4,0,.2,1)' }, { offset: o(547), transform: at(1, 1, 2) }, { offset: 1, transform: at(0, 0, 0) }],
+      { duration: T, delay: d, easing: 'cubic-bezier(.3,0,.2,1)', fill: 'backwards' });
+    later(d + 120, () => ic.classList.add('swap')); later(d + 410, () => ic.classList.remove('swap'));
+    later(d, () => snd('tap', 1.5, .18)); later(d + 140, () => snd('tap', 1.3, .16)); later(d + 430, () => snd('tap', 1.6, .18));
+    /* the label's words slide in from the icon's side, 283ms in and 70ms apart (330ms, PathInterpolator .14, .76, 0, 1) */
+    [...ic.parentNode.querySelectorAll('.nw-w')].forEach((w, i) => {
+      later(d + 283 + i * 70, () => { w.style.opacity = 1; });
+      anim(w, [{ transform: 'translateX(10px)' }, { transform: 'none' }], { duration: 330, delay: d + 283 + i * 70, easing: 'cubic-bezier(.14,.76,0,1)' });
+    });
+  }
+  /* the card lands: the gold card tucks behind, the yellow one leans back and holds, then both spring back (Duolingo's card_hit) */
+  function nwHit(ic) {
+    const f = ic.querySelector('.nw-f'), b = ic.querySelector('.nw-b'), T = 560, o = ms => ms / T;
+    anim(b, [{ offset: 0, transform: 'translate(-6px, 1px) rotate(-10deg)' }, { offset: o(35), transform: 'none' }, { offset: o(315), transform: 'none' },
+      { offset: o(400), transform: 'translate(-6px, 1px) rotate(-15deg)' }, { offset: o(480), transform: 'translate(-6px, 1px) rotate(-8deg)' }, { offset: 1, transform: 'translate(-6px, 1px) rotate(-10deg)' }],
+      { duration: T, easing: 'cubic-bezier(.3,0,.2,1)' });
+    anim(f, [{ offset: 0, transform: 'scale(1.12)' }, { offset: o(40), transform: 'none', easing: 'cubic-bezier(.2,0,0,1)' }, { offset: o(120), transform: 'translateX(4px) rotate(20deg)' },
+      { offset: o(300), transform: 'translateX(4px) rotate(20deg)', easing: 'cubic-bezier(.3,0,.2,1)' }, { offset: o(340), transform: 'translateX(1px) rotate(7deg)' },
+      { offset: o(400), transform: 'rotate(-2.7deg)' }, { offset: o(460), transform: 'rotate(2.1deg)' }, { offset: 1, transform: 'none' }],
+      { duration: T, easing: 'cubic-bezier(.3,0,.2,1)' });
+    snd('drop', 1.2, .35); buzz(10);
+    later(310, () => snd('tap', 1.7, .18));
+  }
+  /* ── the flying card, drawn before it flies ──
+     A look is drawn once as a picture of its face (nwFace: the look's colours, its sign, its shape), then the turn is drawn
+     from it into a sheet of 36 frames from flat at 240ms to flat again at 700ms, each shown around its own moment (nwSprite): each row of pixels turned by its own angle (the turn and the twist, nwSpin),
+     the face squeezed by the cosine, the card's thickness as its edge colour behind it, the shine of 10 laid on per frame.
+     The flight then only moves the card along the path and steps the sheet: two transforms the GPU runs on its own, so a
+     busy or slow phone draws it as smoothly as a fast one. */
+  const NW_GRID = 6, NW_T0 = 240, NW_T1 = 700;
+  const nwCssLin = (deg, w, h) => { const a = deg * Math.PI / 180, dx = Math.sin(a), dy = -Math.cos(a), L = Math.abs(w * dx) + Math.abs(h * dy);
+    return [w / 2 - dx * L / 2, h / 2 - dy * L / 2, w / 2 + dx * L / 2, h / 2 + dy * L / 2]; };
+  const nwLinDef = (id, deg, w, h, stops) => { const [x1, y1, x2, y2] = nwCssLin(deg, w, h);
+    return `<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${stops.map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join('')}</linearGradient>`; };
+  /* a sign placed as the header's grid places it: centred, fr of the width, moved by (mx, my) parts of the width */
+  const nwPlace = (svg, w, h, fr, mx = 0, my = 0, color) => {
+    if (!svg) return '';
+    const vb = (svg.match(/viewBox="([^"]+)"/) || [, '0 0 20 20'])[1].split(/\s+/).map(Number), sw = w * fr, sh = sw * vb[3] / vb[2];
+    return svg.replace('<svg ', `<svg x="${(w - sw) / 2 + mx * w}" y="${(h - sh) / 2 + my * w}" width="${sw}" height="${sh}" ${color ? `style="color:${color}" ` : ''}`);
+  };
+  const NW_HEX = '19.5,4 51.5,4 67,29 51.5,54 19.5,54 4,29', NW_HEXLIP = '19.5,11 51.5,11 67,36 51.5,61 19.5,61 4,36';
+  let NW_IMG = '';
+  /* the face of each look as one SVG: [width, height, thickness, edge colour, svg body, shine] */
+  const nwFace = R => {
+    const nw = +document.documentElement.dataset.nw, cs = getComputedStyle(document.documentElement), v = k => cs.getPropertyValue(k).trim();
+    const [u] = NW_LES[R.key] || NW_LES.prob, [uc, ush, uhi] = NW_UNIT[u];
+    let w = 31, h = 39, T = 1.6, edge = v('--nwm') || '#1CB0F6', body = '', defs = '', shine = false;
+    const rr = (fill, x = 0, y = 0, ww = w, hh = h, r = 5) => `<rect x="${x}" y="${y}" width="${ww}" height="${hh}" rx="${r}" fill="${fill}"/>`;
+    const rim = (c, sw, r = 5) => `<rect x="${sw / 2}" y="${sw / 2}" width="${w - sw}" height="${h - sw}" rx="${r - sw / 2}" fill="none" stroke="${c}" stroke-width="${sw}"/>`;
+    const clip = '<clipPath id="k"><rect width="' + w + '" height="' + h + '" rx="5"/></clipPath>';
+    if (nw <= 3) body = rr(v('--nwf')) + nwPlace(SIGN, w, h, .54, 0, 0, edge);
+    else if (nw === 4) body = rr('#8A3FD1') + `<g clip-path="url(#k)"><rect x="${w * .81}" width="${w * .04}" height="${h}" fill="#A35FE0"/><rect x="${w * .85}" width="${w * .15}" height="${h}" fill="#6E28B3"/></g>` + nwPlace(SIGN, w, h, .54);
+    else if (nw === 5 || nw === 13) {
+      defs = nwLinDef('g', 118, w, h, [[.5, 'rgba(255,217,64,0)'], [.5, '#FFD940'], [.61, '#FFD940'], [.61, 'rgba(255,217,64,0)'], [.68, 'rgba(255,217,64,0)'], [.68, '#FFD940'], [.74, '#FFD940'], [.74, 'rgba(255,217,64,0)']]);
+      body = rr('#FFC800') + rr('url(#g)') + (nw === 13 ? `<g clip-path="url(#k)"><rect y="${h - 3}" width="${w}" height="3" fill="#E6A000"/></g>` + nwPlace(SIGN, w, h, .54, 0, -.04) : nwPlace(SIGN, w, h, .54));
+      edge = '#E6A000';
+    }
+    else if (nw === 6) body = rr('#fff') + rim('#DCDCDC', 1.6) + nwPlace(SIGN, w, h, .54);
+    else if (nw === 7) body = rr('#fff') + Array.from({ length: Math.floor((h - 8) / 4.6) + 1 }, (_, i) => `<rect x="${w - 4.6}" y="${4 + i * 4.6}" width="2.4" height="1.6" fill="#4B4B4B"/>`).join('') + rim('#DCDCDC', 1.6) + nwPlace(SIGN, w, h, .8, -.06);
+    else if (nw === 8) { body = rr(uc) + `<g clip-path="url(#k)"><rect width="${w}" height="${h * .09}" fill="${uhi}"/></g>` + nwPlace(SIGN, w, h, .54); edge = ush; }
+    else if (nw === 9) { const iw = w * .92, ih = iw * 100 / 96; body = rr('#F3E0FF') + `<g clip-path="url(#k)"><image href="${NW_IMG}" x="${(w - iw) / 2}" y="${h - ih}" width="${iw}" height="${ih}"/></g>`; edge = '#8A3FD1'; }
+    else if (nw === 10) { body = rr('#1E3A8A') + rim('#FFC800', 1.4) + `<rect x="2.9" y="2.9" width="${w - 5.8}" height="${h - 5.8}" rx="2.4" fill="none" stroke="rgba(255,200,0,.45)" stroke-width=".6"/>` + nwPlace(SIGN, w, h, .54); edge = '#172C6B'; shine = true; }
+    else if (nw === 11) body = rr('#fff') + `<g clip-path="url(#k)"><rect y="${h - 3}" width="${w}" height="3" fill="#E5E5E5"/></g>` + rim('#E5E5E5', 1.4) + nwPlace(SIGN, w, h, .72, 0, -.03);
+    else if (nw === 12) {
+      const dash = Array.from({ length: Math.ceil(w / 3.4) }, (_, i) => `<rect x="${i * 3.4}" y="${(h - 1.1) * .33}" width="1.6" height="1.1" fill="#fff"/>`).join('');
+      const bars = Array.from({ length: Math.floor(w * .54 / 2) }, (_, i) => `<rect x="${w * .23 + i * 2}" y="${(h - 3.4) * .9}" width=".9" height="3.4" fill="#4B4B4B"/>`).join('');
+      body = `<mask id="n"><rect width="${w}" height="${h}" fill="#fff"/><circle cx="0" cy="${h * .34}" r="3.2"/><circle cx="${w}" cy="${h * .34}" r="3.2"/></mask><g mask="url(#n)">` + rr('#fff') +
+        `<g clip-path="url(#k)"><rect width="${w}" height="${h * .335}" fill="${uc}"/></g><rect x="${w * .25}" y="${(h - 1.8) * .12}" width="${w * .5}" height="1.8" fill="#fff"/><rect x="${w * .34}" y="${(h - 1.6) * .21}" width="${w * .32}" height="1.6" fill="rgba(255,255,255,.65)"/>` +
+        dash + bars + rim('#E5E5E5', 1.4) + '</g>' + nwPlace(SIGN, w, h, .5, 0, .11);
+      edge = '#DADADA';
+    }
+    else {
+      w = nw === 16 ? 56 : 39; h = nw === 16 ? 52 : 36; T = nw === 14 ? 0 : nw === 16 ? 3.8 : 2.6; edge = '#D99A00';
+      body = `<svg width="${w}" height="${h}" viewBox="0 0 71 65" preserveAspectRatio="none"><defs><clipPath id="h"><polygon points="${NW_HEX}"/></clipPath></defs><g stroke-width="8" stroke-linejoin="round">` +
+        `<polygon points="${NW_HEXLIP}" fill="#E6A000" stroke="#E6A000"/><polygon points="${NW_HEX}" fill="#FFC800" stroke="#FFC800"/></g>` +
+        `<g clip-path="url(#h)" fill="#FFD940"><polygon points="27,60 38,60 63,-4 52,-4"/><polygon points="42,60 47,60 72,-4 67,-4"/></g></svg>` + nwPlace(SIGN, w, h, .44, 0, -.055);
+    }
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}"><style>.s{fill:none;stroke:currentColor;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}.f,.j{fill:currentColor}</style><defs>${clip}${defs}</defs>${body}</svg>`;
+    return { w, h, T, edge, svg, shine };
+  };
+  /* the sheet: built in slices of six frames between other work, finished at once if the card must fly before it is done */
+  let NW_SP = null;
+  function nwSprite(R) {
+    const F = nwFace(R), S = Math.min(4, (devicePixelRatio || 1) * 1.25), n = NW_GRID * NW_GRID;
+    const cw = Math.ceil(F.w + F.T + 3), ch = Math.ceil(F.h + 3), Wd = Math.round(F.w * S), Hd = Math.round(F.h * S);
+    const sheet = document.createElement('canvas'); sheet.width = Math.round(cw * S) * NW_GRID; sheet.height = Math.round(ch * S) * NW_GRID;
+    const sp = { F, S, cw, ch, sheet, done: 0, n, ready: false, img: new Image() };
+    const face = document.createElement('canvas'); face.width = Wd; face.height = Hd;
+    let rows = null;
+    const frame = k => {
+      const g = sheet.getContext('2d'), cwd = Math.round(cw * S), chd = Math.round(ch * S), ox = (k % NW_GRID) * cwd, oy = Math.floor(k / NW_GRID) * chd;
+      const t = NW_T0 + k * (NW_T1 - NW_T0) / (n - 1), cx = ox + cwd / 2, top = oy + Math.round((chd - Hd) / 2), zT = F.T * S / 2;
+      let src = face;
+      if (F.shine) {
+        /* 10's light: from the far side at 30% of the flight to gone at 75%, a band of light across the navy */
+        const X = Math.max(0, Math.min(1, 1 - (t / NW_LAND - .3) / .45)), tmp = document.createElement('canvas'); tmp.width = Wd; tmp.height = Hd;
+        const q = tmp.getContext('2d'); q.drawImage(face, 0, 0); q.globalCompositeOperation = 'source-atop';
+        const bw = F.w * 3.2, off = -2.2 * F.w * X, [x1, y1, x2, y2] = nwCssLin(112, bw, F.h), gr = q.createLinearGradient((x1 + off) * S, y1 * S, (x2 + off) * S, y2 * S);
+        [[.38, 'rgba(255,241,184,0)'], [.41, 'rgba(255,241,184,.08)'], [.47, 'rgba(255,241,184,.7)'], [.51, 'rgba(190,215,255,.55)'], [.54, 'rgba(255,200,240,.35)'], [.6, 'rgba(255,200,240,0)']].forEach(([o, c]) => gr.addColorStop(o, c));
+        q.fillStyle = gr; q.fillRect(0, 0, Wd, Hd); src = tmp;
+      }
+      g.fillStyle = F.edge;
+      for (let j = 0; j < Hd; j++) {
+        const r = rows[j]; if (!r) continue;
+        const ph = nwSpin(t, (j + .5) / Hd - .5) * Math.PI / 180, c = Math.cos(ph), sn = Math.sin(ph), ac = Math.abs(c);
+        const a0 = (r[0] - Wd / 2) * ac, a1 = (r[1] - Wd / 2) * ac, sh = zT * sn;
+        /* the edge only once the card has turned enough to show it, kept half a pixel inside the face's own outline */
+        if (zT && Math.abs(sh) > .25) { const l = cx + Math.min(a0 - sh, a0 + sh, -a1 - sh, -a1 + sh) + .5, rr = cx + Math.max(a1 + sh, a1 - sh, -a0 + sh, -a0 - sh) - .5; g.fillRect(l, top + j, rr - l, 1); }
+        if (ac * Wd < .5) continue;
+        const fx = cx + (c >= 0 ? sh : -sh) - Wd / 2 * ac;
+        g.drawImage(src, 0, j, Wd, 1, fx, top + j, Wd * ac, 1);
+      }
+    };
+    sp.step = (all) => {
+      if (!rows || sp.ready) return;
+      const end = all ? n : Math.min(n, sp.done + 6);
+      for (; sp.done < end; sp.done++) frame(sp.done);
+      if (sp.done >= n) sp.ready = true; else setTimeout(() => sp.step(), 0);
+    };
+    sp.img.onload = () => {
+      face.getContext('2d').drawImage(sp.img, 0, 0, Wd, Hd);
+      /* each row's extent, read off the face, so the edge follows its shape */
+      rows = new Array(Hd);
+      let px = null; try { px = face.getContext('2d').getImageData(0, 0, Wd, Hd).data; } catch (e) {}
+      for (let j = 0; j < Hd; j++) {
+        if (!px) { rows[j] = [0, Wd]; continue; }
+        let l = -1, r = -1; for (let x = 0; x < Wd; x++) if (px[(j * Wd + x) * 4 + 3] > 40) { if (l < 0) l = x; r = x + 1; }
+        rows[j] = l < 0 ? null : [l, r];
+      }
+      sp.step();
+    };
+    sp.img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(F.svg);
+    return sp;
+  }
+  /* the flying card at S, flying the distance D (N its normal), and its sheet stepped across the turn */
+  function nwCard(S, D, N, sp) {
+    const c = document.createElement('i'); c.className = 'nw-fly';
+    if (sp && !sp.ready) sp.step(true);
+    if (sp && sp.ready) {
+      const win = document.createElement('i'); win.className = 'nw-win';
+      Object.assign(win.style, { width: sp.cw + 'px', height: sp.ch + 'px', left: -sp.cw / 2 + 'px', top: -sp.ch / 2 + 'px' });
+      const sh = sp.sheet; sh.className = 'nw-sheet'; sh.style.width = sp.cw * NW_GRID + 'px'; sh.style.height = sp.ch * NW_GRID + 'px';
+      win.appendChild(sh); c.appendChild(win);
+      const at = k => `translate(${-(k % NW_GRID) * sp.cw}px, ${-Math.floor(k / NW_GRID) * sp.ch}px)`;
+      c.__sheet = [{ offset: 0, transform: at(0), easing: 'steps(1, end)' }]
+        .concat(Array.from({ length: sp.n - 1 }, (_, i) => ({ offset: (NW_T0 + (i + .5) * (NW_T1 - NW_T0) / (sp.n - 1)) / NW_LAND, transform: at(i + 1), easing: 'steps(1, end)' })))
+        .concat([{ offset: 1, transform: at(sp.n - 1) }]);
+    }
+    c.__kf = NW_FLY.map(([t, u, v, r, sx, sy]) => ({ offset: t / NW_LAND,
+      transform: `translate(${(S[0] + u * D[0] - v * N[0]).toFixed(1)}px, ${(S[1] + u * D[1] - v * N[1]).toFixed(1)}px) rotate(${-r}deg) scale(${sx}, ${sy})` }));
+    return c;
+  }
+  function nwGo(c) {
+    const o = { duration: NW_LAND, easing: 'linear', fill: 'both' };
+    anim(c, c.__kf, o);
+    const sh = c.querySelector('.nw-sheet'); if (sh) anim(sh, c.__sheet, o);
+  }
+  /* the flight from the new word to the header's icon */
+  function nwFly(from, ic) {
+    if (!from || !ic || !cur || reduce) { if (ic) nwHit(ic); return; }
+    const box = cur.getBoundingClientRect(), a = from.getBoundingClientRect(), z = ic.querySelector('.nw-f').getBoundingClientRect();
+    const S = [a.left + a.width / 2 - box.left, a.top + a.height / 2 - box.top], E = [z.left + z.width / 2 - box.left, z.top + z.height / 2 - box.top];
+    const D = [E[0] - S[0], E[1] - S[1]], N = [D[1], -D[0]];
+    const c = nwCard(S, D, N, NW_SP); cur.appendChild(c); nwGo(c);
+    snd('on', 1.25, .28);
+    later(330, () => snd('tap', 1.9, .14));
+    later(NW_LAND, () => { c.remove(); nwHit(ic); });
+  }
 
   /* ───── progress: a ladder of reviews, kept in this browser ───── */
   const KEY = 'qudrati.ruleflow.v4', LADDER = [1, 3, 7, 14, 30], EXAM = 30;
@@ -1952,7 +2457,7 @@ svg.d text { font-family: var(--font); font-weight: 800; }
     const chip = R => { const s = status(R); return s === 'new' ? '<span class="chip new">جديد</span>' : s === 'due' ? '<span class="chip due">راجعه</span>' : `<span class="chip ok">${inDays(ST[R.key].due - day())}</span>`; };
     go(`<div class="dk-top"><span class="exam">${CAL}${A(EXAM)} يوم للاختبار</span></div>
       <div class="body"><div class="obs"><img class="obs-duo" src="${FH('point')}" alt=""><div class="obs-say"><p class="obs-bubble"><span class="tx"></span></p></div></div>
-        <div class="rows">${order.map(R => `<button class="row" data-k="${R.key}"><b>${R.name}</b>${chip(R)}</button>`).join('')}</div></div>`);
+        <div class="rows">${order.map(R => `<button class="row" data-k="${R.key}"><b>${R.name}</b>${kbOn(R) && ST[R.key] ? rlDots(ST[R.key].lv) : ''}${chip(R)}</button>`).join('')}</div></div>`);
     fhIn(q$('.obs-duo'));
     const t = sayInto(q$('.tx'), line, 380);
     [...cur.querySelectorAll('.row')].forEach((b, i) => { anim(b, RISE, { duration: 300, delay: t + i * 45, easing: 'ease-out', fill: 'backwards' }); b.onclick = () => { snd('tap'); lesson(RULES.find(r => r.key === b.dataset.k)); }; });
@@ -1971,23 +2476,44 @@ svg.d text { font-family: var(--font); font-weight: 800; }
 
   /* 1. فهيم teaches: his line, the card, the proof; then he says when it shows up */
   function teach() {
-    const R = L.R, review = FORCE ? FORCE === 'due' : status(R) !== 'new';
-    go(`${top()}<div class="body">
+    const R = L.R, review = FORCE ? FORCE === 'due' : status(R) !== 'new', nw = !review && kbOn(R);
+    go(`${top()}<div class="body">${nw ? nwTag(R) : ''}
         <div class="obs"><img class="obs-duo" src="${FH('teach')}" alt=""><div class="obs-say"><p class="obs-bubble"><span class="tx"></span></p></div></div>
         <div id="fc">${CARD.html(R)}</div>
         <div class="stage" id="stage" title="أعد الرسم"></div><p class="dcap" id="dcap"></p></div>
       <div class="foot"><button class="btn" id="go">كمّل</button></div>`);
     bindQuit();
     fhIn(q$('.obs-duo'));
-    const t = sayInto(q$('.tx'), review ? `تذكر *${R.name}*؟ قلها في بالك قبل ما تشوفها.` : R.say, 380);
+    const t = sayInto(q$('.tx'), review ? ((CV === '12' || CV === '13') && KB_NEW.has(R.key) ? `تذكر *${R.name}*؟ وش الناقص فيه؟` : `تذكر *${R.name}*؟ قلها في بالك قبل ما تشوفها.`) : R.say, 380);
     const fc = q$('#fc');
-    if (review) CARD.review(fc, R, () => later(350, () => proof(R)));
-    else CARD.intro(fc, R, t).then(() => { if (fc.isConnected) proof(R); });
+    /* a new rule: the header shuffles in, and once فهيم has said the rule's name it flies off his bubble into the header;
+       the rule card comes as it lands */
+    let t2 = t;
+    if (nw) {
+      const ic = q$('.nw-ic'), ws = [...cur.querySelectorAll('.tx .w')], wi = Math.max(0, ws.findIndex(w => w.querySelector('em')));
+      nwShuffle(ic, 250);
+      NW_SP = reduce ? null : nwSprite(R);
+      const launch = Math.max(380 + wi * 85 + 260, 950);
+      later(launch, () => nwFly(ws[wi], ic));
+      t2 = Math.max(t, launch + NW_LAND + 350);
+    }
+    if (review) CARD.review(fc, R, ok => ok === true && kbOn(R) ? remembered() : later(350, () => proof(R)));
+    else CARD.intro(fc, R, t2).then(() => { if (fc.isConnected) proof(R); });
     q$('#stage').onclick = () => { snd('tap'); proof(R); };
     q$('#go').onclick = () => { snd('tap'); step(); words(); };
   }
+  /* a review picked right first time: no proof, the rule stays in words and the button is ready */
+  function remembered() {
+    const st = q$('#stage'); if (st) st.style.display = 'none';
+    const tx = q$('.tx'); if (tx) sayInto(tx, pick(['صح! *تذكرته* من أول مرة.', 'كفو! ما *نسيته*.', 'بالضبط! *ثابت* عندك.']), 150);
+    const b = q$('#go'); if (b) jump(b, 700);
+  }
   function drawDia(R) {
     const host = q$('#stage'); host.innerHTML = DIA[R.key].html();
+    /* a tall rule card leaves less room: the drawing gives way (down to 130px) so the screen never scrolls; 44px is kept for the caption chips under it */
+    const body = host.closest('.body'); host.style.height = '';
+    const over = body.scrollHeight - body.clientHeight + 44;
+    if (over > 0) host.style.height = Math.max(130, host.offsetHeight - over) + 'px';
     const g = host.firstElementChild, W = host.clientWidth - 8, H = host.clientHeight - 4;
     g._s = Math.min(W / g.offsetWidth, H / g.offsetHeight, 1.15); g.style.transform = `translate(-50%, -50%) scale(${g._s})`;
     q$('#dcap').textContent = '';
@@ -1999,7 +2525,7 @@ svg.d text { font-family: var(--font); font-weight: 800; }
     const g = drawDia(R);
     anim(g.parentNode, [{ opacity: 0 }, { opacity: 1 }], { duration: 260 });
     const c = {
-      wait: ms => new Promise(res => setTimeout(() => { if (alive()) res(); }, ms)),
+      wait: ms => new Promise(res => setTimeout(() => { if (alive()) res(); }, ms * SLOW)),
       s: (k, r, v) => { if (alive()) snd(k, r, v); },
       cap: t => { const p = q$('#dcap'); if (!p || !alive()) return; p.innerHTML = fx(t); anim(p, RISE, { duration: 260 }); },
       val: (slot, text, src) => { if (alive()) CARD.val(q$('#fc'), slot, text, src); },
@@ -2115,23 +2641,47 @@ svg.d text { font-family: var(--font); font-weight: 800; }
   }
   /* 5. done: فهيم celebrates and says when it comes back */
   function done() {
-    const R = L.R, prev = ST[R.key], pass = L.miss <= 1;
+    const R = L.R, prev = ST[R.key], pass = L.miss <= 1, from = prev ? prev.lv : 0;
     const lv = pass ? Math.min((prev ? prev.lv : 0) + 1, LADDER.length) : Math.max((prev ? prev.lv : 1) - 1, 1);
     const gap = pass ? LADDER[lv - 1] : 1;
     ST[R.key] = { lv, due: day() + gap }; save();
     const when = DAYS[new Date(Date.now() + gap * 864e5).getDay()];
-    go(`<div class="body"><div class="obt"><p class="obs-bubble"><span class="tx"></span></p><img class="obt-duo" src="${FH(pass ? 'celebrate' : 'encourage')}" alt=""></div></div>
+    go(`<div class="body"><div class="obt"><p class="obs-bubble"><span class="tx"></span></p><img class="obt-duo" src="${FH(pass ? 'celebrate' : 'encourage')}" alt=""></div>${kbOn(R) ? lvHtml() : ''}</div>
       <div class="foot"><button class="btn" id="nx">القانون الجاي</button><button class="btn ghost" id="home">القائمة</button></div>`);
     const img = q$('.obt-duo');
     anim(img, [{ opacity: 0, transform: 'translateY(60px) scale(.7)' }, { opacity: 1, transform: 'translateY(-14px) scale(1.04)', offset: .6 }, { opacity: 1, transform: 'none' }], { duration: 620, delay: 120, easing: 'ease-out', fill: 'backwards' });
     snd('done', 1, .5); buzz([20, 60, 30]);
+    if (kbOn(R)) lvShow(q$('.lv'), from, lv);
     sayInto(q$('.tx'), pass ? `*${R.name}* ثبتت! ${A(L.right)} من ${A(L.tries)} صح. أرجع لك فيها *${inDays(gap)}*، ${when}.` : `${R.name} تبي شوية. أرجع لك فيها *بكرة* نثبّتها.`, 600);
     q$('#nx').onclick = () => { snd('tap'); const nx = RULES.find(r => r !== R && status(r) !== 'ok') || RULES[(RULES.indexOf(R) + 1) % RULES.length]; lesson(nx); };
     q$('#home').onclick = () => { snd('tap'); deck(); };
   }
 
+  /* the level: five dots, one a step of the ladder; the step this lesson earned fills on a note, and the fifth turns them gold */
+  const lvHtml = () => `<div class="lv"><div class="lv-dots">${LADDER.map(() => '<i></i>').join('')}</div><p class="lv-t"></p></div>`;
+  function lvShow(el, from, to) {
+    const ds = [...el.querySelectorAll('.lv-dots i')], N = LADDER.length, t = el.querySelector('.lv-t');
+    const say = n => n === N ? `صار ذهبي! <b>${A(N)} من ${A(N)}</b>` : `حفظته <b>${A(n)} من ${A(N)}</b>`;
+    ds.forEach((d, i) => d.classList.toggle('on', i < from));
+    el.classList.toggle('gold', from === N && to === N);
+    t.innerHTML = say(from);
+    anim(el, RISE, { duration: 320, delay: 600, fill: 'backwards' });
+    if (to === from) return;
+    later(1100, () => {
+      t.innerHTML = say(to);
+      if (to > from) {
+        const d = ds[to - 1]; d.classList.add('on');
+        anim(d, [{ transform: 'scale(.3)' }, { transform: 'scale(1.3)', offset: .6 }, { transform: 'none' }], { duration: 420, easing: 'ease-out' });
+        snd('click', up(to * 2), .45); buzz(8);
+        if (to === N) later(420, () => { el.classList.add('gold'); ds.forEach((x, i) => { jump(x, i * 60); later(i * 60, () => snd('tap', up(i * 2 + 4), .25)); }); });
+      } else {
+        const d = ds[from - 1]; d.classList.remove('on'); anim(d, SHAKE, { duration: 380 }); snd('off', 1, .35);
+      }
+    });
+  }
+  const rlDots = lv => `<span class="rl${lv === LADDER.length ? ' gold' : ''}">${LADDER.map((x, i) => `<i${i < lv ? ' class="on"' : ''}></i>`).join('')}</span>`;
   $('reset').onclick = () => { ST = {}; save(); deck(); };
-  window.__flow = { L: () => L, want: () => FW, RULES, G, st: () => ST, lesson: k => lesson(RULES.find(r => r.key === k)), deck };
+  window.__flow = { nwCard: (S, D, N) => { const sp = nwSprite({ key: RULE0 || 'prob' }); return new Promise(res => { const w = () => sp.ready ? res(nwCard(S, D, N, sp)) : setTimeout(w, 20); w(); }); }, nwGo: c => nwGo(c), L: () => L, want: () => FW, RULES, G, st: () => ST, lesson: k => lesson(RULES.find(r => r.key === k)), deck, done: () => done() };
   function embStart() {
     const R = RULES.find(r => r.key === RULE0) || RULES[0], ov = document.createElement('button');
     ov.className = 'emb-go'; ov.innerHTML = `<img src="${FH('teach')}" alt=""><b>${R.name}</b><span>شغّل</span>`;

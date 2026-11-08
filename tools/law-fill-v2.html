@@ -1,0 +1,72 @@
+<!doctype html>
+<!-- Version 2 of the long rule («كلام أقصر», ?lf=2 in tools/lawapp/law.js) on four phone sizes at their real size, to test by
+     hand (2026-11-04; the user: «lets see this one الثانية كلام أقصر in edge casses … can you open them i test them my self»).
+     The chips switch every phone to the same rule and screen. tools/lawapp/lfv2/ holds the captured run of every rule in
+     four states at 320, 360 and 390 wide (`m-<W>.json`: the line's size, overflow, clipped words, zoom, scroll) -->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>كلام أقصر</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;700;800&display=swap">
+<style>
+:root { --ink: #3C3C3C; --gray: #777; --line: #E5E5E5; --blue-dk: #1899D6; --blue-light: #DDF4FF; --blue-border: #84D8FF;
+  --green: #58CC02; --green-lip: #478700; --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #EFEFEF; color: var(--ink); font-family: var(--font); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, p { margin: 0; }
+button { font-family: var(--font); cursor: pointer; color: inherit; }
+header { padding: 18px 20px 4px; }
+header h1 { font-size: 26px; font-weight: 800; line-height: 1.25; }
+header p { font-size: 15px; font-weight: 600; color: var(--gray); margin-top: 4px; max-width: 980px; }
+.bar { padding: 10px 20px 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bar .lbl { font-size: 14px; font-weight: 800; color: var(--gray); }
+.sep { width: 2px; height: 26px; background: #DADADA; margin: 0 4px; border-radius: 1px; }
+.chipb { height: 36px; padding: 0 12px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 14px; font-weight: 800; }
+.chipb.on { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+.chipb:active { transform: translateY(2px); border-bottom-width: 2px; }
+.play { height: 36px; padding: 0 16px; border-radius: 12px; border: 0; background: var(--green); box-shadow: 0 4px 0 var(--green-lip); color: #fff; font-size: 14.5px; font-weight: 800; }
+.play:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--green-lip); }
+.row { padding: 18px 20px 40px; display: flex; flex-wrap: wrap; gap: 22px; align-items: flex-start; }
+.ph { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.ph b { font-size: 15px; font-weight: 800; }
+.ph small { font-size: 13px; font-weight: 700; color: var(--gray); }
+.frame { border: 9px solid #1F1F1F; border-radius: 36px; overflow: hidden; background: #fff; box-shadow: 0 16px 34px rgba(0,0,0,.12); }
+.frame iframe { display: block; border: 0; }
+</style>
+</head>
+<body>
+<header>
+  <h1>«كلام أقصر» على أحجام الجوالات</h1>
+  <p>الثانية بأربعة أحجام جوال بمقاسها الحقيقي. اختر القانون والشاشة من فوق وكل الجوالات تنتقل لها، وجرّب: حط كلمات غلط طويلة، اضغط «تحقق»، وكمّلها صح.</p>
+</header>
+<div class="bar" id="rules"></div>
+<div class="bar"><span class="lbl">الشاشة:</span><button class="chipb on" data-f="words">«كمّل القانون»</button><button class="chipb" data-f="nums">«حطّ أرقام المثال»</button><span class="sep"></span><button class="play" id="again">أعد الشاشة</button></div>
+<div class="row" id="row"></div>
+<script>
+const SIZES = [[320, 568, 'أصغر جوال'], [360, 640, 'أندرويد صغير'], [390, 780, 'آيفون عادي'], [430, 932, 'جوال كبير']];
+const RULES = [['ops', 'ترتيب العمليات'], ['tens', 'الأعداد المكمّلة'], ['tri', 'مجموع ١ إلى ن'], ['common', 'العدد المشترك'], ['evensum', 'مجموع الزوجية'],
+  ['last', 'رقم الآحاد في الضرب'], ['fromto', 'من… إلى، وبين'], ['hand', 'المصافحات'], ['league', 'مباريات الدوري'], ['tris', 'المثلثات من رأس واحد'],
+  ['clockm', 'الساعة مع الدقائق'], ['outcomes', 'عملات ونرد'], ['ways', 'مبدأ العدّ'], ['norep', 'بدون تكرار'], ['median', 'الوسيط'], ['places', 'كم مكان؟']];
+let key = 'league', fill = 'words';
+const cur = () => `fill:${key}:${fill}`;
+const bar = document.getElementById('rules'), row = document.getElementById('row');
+bar.innerHTML = '<span class="lbl">القانون:</span>' + RULES.map(([k, n]) => `<button class="chipb" data-k="${k}">${n}</button>`).join('');
+row.innerHTML = SIZES.map(([w, h, n]) => `<div class="ph"><b>${n}</b><small>${String(w).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d])} × ${String(h).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d])}</small>
+  <div class="frame"><iframe width="${w}" height="${h}" title="${n}" allow="autoplay"></iframe></div></div>`).join('');
+const frames = [...row.querySelectorAll('iframe')];
+const paint = () => { bar.querySelectorAll('[data-k]').forEach(b => b.classList.toggle('on', b.dataset.k === key)); document.querySelectorAll('[data-f]').forEach(b => b.classList.toggle('on', b.dataset.f === fill)); };
+const open = () => { paint(); frames.forEach(f => f.contentWindow && f.contentWindow.postMessage({ law: cur() }, '*')); };
+bar.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { key = b.dataset.k; open(); });
+document.querySelectorAll('[data-f]').forEach(b => b.onclick = () => { fill = b.dataset.f; open(); });
+document.getElementById('again').onclick = open;
+/* the phones load one after another: each one seeds the same student before the app reads it */
+let i = 0;
+const next = () => { if (i >= frames.length) return; const f = frames[i++]; f.onload = () => setTimeout(next, 300); f.src = `lawapp/run.html?dev=1&lf=2&a=${Date.now()}#${cur()}`; };
+paint(); next();
+</script>
+</body>
+</html>

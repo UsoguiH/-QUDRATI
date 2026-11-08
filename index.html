@@ -28,14 +28,66 @@
 <link rel="sitemap" type="application/xml" title="خريطة الموقع" href="/sitemap.xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=95">
+<link id="qs-gf" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" onerror="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
+<link rel="stylesheet" href="css/style.css?v=98">
+<link rel="stylesheet" href="css/law-core.css?v=98">
+<link rel="stylesheet" href="css/law.css?v=98">
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="96x96" href="assets/app-icon/favicon-96.png">
 <link rel="icon" type="image/png" sizes="32x32" href="assets/app-icon/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/app-icon/favicon-16.png">
 <link rel="apple-touch-icon" sizes="180x180" href="assets/app-icon/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
+<!-- The loading screen (2026-10-29): what a student sees from the first frame
+     until the app has booted. It is painted from this page alone — no font, no
+     script file — so it is up at once: «قدراتي» drawn as paths (tools/splash_word.py)
+     with its six dots as coins, which hop in a wave while a slow load runs on and,
+     once the app is up, become the welcome screen's three coins (splashOut in
+     app.js). Without JavaScript none of it shows and the pre-rendered page does. -->
+<style id="qs-css">
+#splash { display: none; }
+.qs, .qs body { overflow: hidden; }
+.qs #splash { position: fixed; inset: 0; z-index: 2147483000; display: flex; align-items: center; justify-content: center;
+  padding-bottom: 7vh; -webkit-tap-highlight-color: transparent; }
+.qs-bg { position: absolute; inset: 0; background: #fff; }
+#splash .qs-word { position: relative; display: block; width: min(66vw, 264px); height: auto; overflow: visible; }
+.qs-u, .qs-x, .qs-lip, .qs-ring { display: none; }
+.qs-d { transform-box: fill-box; transform-origin: 50% 100%; animation: qsHop calc(1.2s * var(--qs-k, 1)) calc((.45s + var(--i) * 50ms) * var(--qs-k, 1)) infinite; }
+@keyframes qsHop {
+  0%   { transform: none; animation-timing-function: ease-in-out; }
+  7%   { transform: scale(1.18, .82); animation-timing-function: cubic-bezier(.2, .8, .4, 1); }
+  23%  { transform: translateY(-370px) scale(.9, 1.12); animation-timing-function: ease-out; }
+  30%  { transform: translateY(-400px); animation-timing-function: cubic-bezier(.6, 0, .9, .6); }
+  40%  { transform: translateY(-10px) scale(.93, 1.09); animation-timing-function: ease-out; }
+  45%  { transform: scale(1.22, .78); animation-timing-function: ease-out; }
+  51%  { transform: translateY(-34px) scale(.97, 1.04); animation-timing-function: ease-in-out; }
+  56%, 100% { transform: none; }
+}
+/* the hand-off (splashOut): the ground fades from under the coins, later when the screen rises in */
+.qs-out .qs-bg { animation: qsBgOut calc(.38s * var(--qs-k, 1)) ease-out forwards; }
+.qs-out.qs-scr .qs-bg { animation-delay: calc(.7s * var(--qs-k, 1)); }
+@keyframes qsBgOut { to { opacity: 0; } }
+[data-motion="reduced"] .qs-d { animation: none; }
+/* the look: its ground, its letters, its coins (tools/splash/<look>.css, written by tools/splash_word.py --ship) */
+/* splash-css:start */
+/* markcoins — the user's «قدراتي» in ink, its dots in the welcome circles' colours (ق green, ت gold, ي blue) from the first frame, and the title keeps them */
+.qs-bg { background: #FFFFFF; }
+.qs-l { fill: #111111; }
+.qs-word > g:nth-of-type(1), .qs-word > g:nth-of-type(2) { fill: #58CC02; }
+.qs-word > g:nth-of-type(3), .qs-word > g:nth-of-type(4) { fill: #FFC800; }
+.qs-word > g:nth-of-type(5), .qs-word > g:nth-of-type(6) { fill: #1CB0F6; }
+/* splash-css:end */
+</style>
+<script>
+/* the loading screen shows only where the app will run; the motion switch is the save's */
+(function () {
+  var d = document.documentElement; d.className += " qs";
+  try { if (/"motion":"reduced"/.test(localStorage.getItem("qudratState") || "")) d.setAttribute("data-motion", "reduced"); } catch (e) {}
+  var k = /[?&]dev=1(&|$)/.test(location.search) && location.search.match(/[?&]qslow=(\d+)/);   /* the lab's slow motion */
+  if (k) d.style.setProperty("--qs-k", k[1]);
+})();
+</script>
 <script>
 /* The browser's own install bar was swallowed here and nothing replaced it, so
    the app could be installed only by a student who knew the browser menu. Keep
@@ -191,6 +243,52 @@ addEventListener("appinstalled", function () { window.__qInstall = null; dispatc
 </script>
 </head>
 <body>
+  <div id="splash" aria-hidden="true">
+<!-- splash-word:start -->
+<div class="qs-bg"></div>
+<svg class="qs-word" viewBox="954 1283 4094 1596" aria-hidden="true">
+<path class="qs-u" d="M974 -320Q3001 -370 5028 -340L5008 60Q3001 90 988 68Z"/>
+<path class="qs-x" fill-rule="evenodd" d="M3563 2361L4007 2361L4096 2287L4166 2361L4847 2361L4988 2213L4988 1835L4847 1687L4573 1687L4396 1865L4396 2146L4458 2213L4166 2213L4166 1865L3978 1687L3682 1687L3682 1835L3918 1835L4007 1917L4007 2213L3563 2213Z M4625 1835L4847 1835L4847 2213L4662 2213L4544 2102L4544 1917Z M3415 1687L3271 1687L3271 2361L3167 2531L3045 2531L3045 2664L3234 2664L3363 2531L3415 2475Z M2664 1687L2520 1687L2520 2213L2209 2213L2209 1687L1854 1687L1706 1835L1706 2361L1166 2361L1166 2046L1228 1980L1314 1980L1314 1835L1166 1835L1014 1980L1014 2361L1166 2531L1706 2531L1854 2361L1854 1835L2065 1835L2065 2361L2520 2361L2664 2213Z M2879 1343L2879 2361L3023 2361L3023 1343Z"/>
+<path class="qs-l" fill-rule="evenodd" d="M3563 2361L4007 2361L4096 2287L4166 2361L4847 2361L4988 2213L4988 1835L4847 1687L4573 1687L4396 1865L4396 2146L4458 2213L4166 2213L4166 1865L3978 1687L3682 1687L3682 1835L3918 1835L4007 1917L4007 2213L3563 2213Z M4625 1835L4847 1835L4847 2213L4662 2213L4544 2102L4544 1917Z M3415 1687L3271 1687L3271 2361L3167 2531L3045 2531L3045 2664L3234 2664L3363 2531L3415 2475Z M2664 1687L2520 1687L2520 2213L2209 2213L2209 1687L1854 1687L1706 1835L1706 2361L1166 2361L1166 2046L1228 1980L1314 1980L1314 1835L1166 1835L1014 1980L1014 2361L1166 2531L1706 2531L1854 2361L1854 1835L2065 1835L2065 2361L2520 2361L2664 2213Z M2879 1343L2879 2361L3023 2361L3023 1343Z"/>
+<g class="qs-d qs-g" style="--i:0"><path class="qs-lip" d="M4742 1413h152v152h-152Z"/><path d="M4742 1413h152v152h-152Z"/></g>
+<g class="qs-d qs-g" style="--i:1"><path class="qs-lip" d="M4503 1413h152v152h-152Z"/><path d="M4503 1413h152v152h-152Z"/></g>
+<g class="qs-d qs-o" style="--i:2"><path class="qs-lip" d="M2597 1413h152v152h-152Z"/><path d="M2597 1413h152v152h-152Z"/></g>
+<g class="qs-d qs-o" style="--i:3"><path class="qs-lip" d="M2366 1413h152v152h-152Z"/><path d="M2366 1413h152v152h-152Z"/></g>
+<g class="qs-d qs-b" style="--i:4"><path class="qs-lip" d="M1545 2673h152v152h-152Z"/><path d="M1545 2673h152v152h-152Z"/></g>
+<g class="qs-d qs-b" style="--i:5"><path class="qs-lip" d="M1310 2673h152v152h-152Z"/><path d="M1310 2673h152v152h-152Z"/></g>
+</svg>
+<!-- splash-word:end -->
+  </div>
+  <script>
+  /* the lab (tools/splash.html) tries a look in its place: ?dev=1&splashv=<look> */
+  (function () {
+    var m = /[?&]dev=1(&|$)/.test(location.search) && location.search.match(/[?&]splashv=([a-z]+)/);
+    if (!m) return;
+    try {
+      var x = new XMLHttpRequest(); x.open("GET", "tools/splash/" + m[1] + ".html", false); x.send();
+      if (x.status !== 200) return;
+      var sp = document.getElementById("splash"), hs = document.getElementById("qs-css");
+      sp.innerHTML = x.responseText;
+      var st = sp.querySelector("style");
+      hs.textContent = hs.textContent.replace(/\/\* splash-css:start \*\/[\s\S]*?\/\* splash-css:end \*\//, "") + st.textContent;
+      st.parentNode.removeChild(st);
+    } catch (e) {}
+  })();
+  /* if the app cannot start — a script that fails to load or throws — the loading screen steps aside
+     for the page under it; a stylesheet or a picture that fails (Google's fonts blocked) is not that */
+  (function () {
+    function off() {
+      var s = document.getElementById("splash");
+      if (!s || window.QS_TAKEN) return;
+      s.parentNode.removeChild(s); document.documentElement.classList.remove("qs");
+    }
+    addEventListener("error", function (e) {
+      var t = e.target;
+      if (e instanceof ErrorEvent || (t && t.tagName === "SCRIPT")) off();
+    }, true);
+    setTimeout(off, 20000);
+  })();
+  </script>
   <div class="app-shell">
     <nav id="sidebar" class="sidebar" aria-label="التنقل الرئيسي"></nav>
     <div id="app" class="app">
@@ -311,14 +409,21 @@ addEventListener("appinstalled", function () { window.__qInstall = null; dispatc
   </div>
     <aside id="aside" class="aside" aria-label="ملخص تقدمك"></aside>
   </div>
-  <script defer src="js/data/skills.js?v=95"></script>
-  <script defer src="js/data/numbers.js?v=95"></script>
-  <script defer src="js/data/ratios.js?v=95"></script>
-  <script defer src="js/data/geometry.js?v=95"></script>
-  <script defer src="js/data/teach.js?v=95"></script>
-  <script defer src="js/data/teach-figures.js?v=95"></script>
-  <script defer src="js/data/learn.js?v=95"></script>
+  <script defer src="js/data/skills.js?v=98"></script>
+  <script defer src="js/data/numbers.js?v=98"></script>
+  <script defer src="js/data/ratios.js?v=98"></script>
+  <script defer src="js/data/geometry.js?v=98"></script>
+  <script defer src="js/data/teach.js?v=98"></script>
+  <script defer src="js/data/teach-figures.js?v=98"></script>
+  <script defer src="js/data/learn.js?v=98"></script>
   <script defer src="assets/vendor/gsap.min.js?v=40"></script>
-  <script defer src="js/app.js?v=95"></script>
+  <script defer src="js/law/law-core.js?v=98"></script>
+  <script defer src="js/law/law-more.js?v=98"></script>
+  <script defer src="js/law/law-more-bigsum.js?v=98"></script>
+  <script defer src="js/law/law-more-keylaws.js?v=98"></script>
+  <script defer src="js/law/law-more-probstats.js?v=98"></script>
+  <script defer src="js/law/law-deck.js?v=98"></script>
+  <script defer src="js/law/law.js?v=98"></script>
+  <script defer src="js/app.js?v=98"></script>
 </body>
 </html>

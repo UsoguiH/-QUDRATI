@@ -1,0 +1,15 @@
+/* duo — Duolingo's way: the whole screen its green, the name white and chunky on a green lip (Lemonada 700);
+   the green opens from the middle as the coins fly, and the name turns green on white */
+@property --qs-r { syntax: "<length>"; inherits: false; initial-value: 0px; }
+.qs-bg { background: #58CC02; }
+.qs-l { fill: #FFFFFF; transition: fill .24s; }
+.qs-x { display: block; fill: #46A302; transform: translateY(48px); transition: fill .24s; }
+.qs-d { fill: #FFFFFF; }
+.qs-d .qs-lip { display: block; fill: #46A302; transform: translateY(32px); }
+.qs-out .qs-bg { -webkit-mask-image: radial-gradient(circle at 50% 45%, transparent var(--qs-r), #000 calc(var(--qs-r) + 1px));
+  mask-image: radial-gradient(circle at 50% 45%, transparent var(--qs-r), #000 calc(var(--qs-r) + 1px));
+  animation: qsIris calc(.6s * var(--qs-k, 1)) cubic-bezier(.65, 0, .35, 1) forwards; }
+@keyframes qsIris { from { --qs-r: 0px; } to { --qs-r: 120vmax; } }
+.qs-out .qs-l, .wl-mark .qs-l { fill: #58CC02; }
+.qs-out .qs-x, .wl-mark .qs-x { fill: #58A700; }
+.qs-d.qs-plain, .qs-t { fill: #58CC02; } .qs-plain .qs-lip { display: none; }

@@ -1,0 +1,163 @@
+<!doctype html>
+<!-- The user's notes of 2026-11-08 on the rules inside the app (branch laws-in-app), the seven items the user listed on 2026-11-08, done, each with what changed and its screens; formerly the user's screenshot
+     before it and the app's screens after it (tools/lawapp/round3/, captured from index.html by headless Chrome). -->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>السبعة خلصت</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;700;800&display=swap">
+<style>
+:root { --ink: #3C3C3C; --gray: #777; --line: #E5E5E5; --blue: #1CB0F6; --blue-dk: #1899D6; --green: #58CC02; --green-lip: #478700;
+  --red: #FF4B4B; --gold: #FFC800; --brown: #CD7900; --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #F2F2F2; color: var(--ink); font-family: var(--font); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+h1, h2, p { margin: 0; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 24px 20px 60px; }
+header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px; }
+header h1 { font-size: 28px; font-weight: 800; line-height: 1.25; }
+header p { margin-top: 4px; font-size: 15.5px; font-weight: 600; color: var(--gray); max-width: 760px; }
+.try { display: inline-flex; align-items: center; height: 46px; padding: 0 20px; border-radius: 14px; background: var(--green); box-shadow: 0 4px 0 var(--green-lip);
+  color: #fff; font-size: 16px; font-weight: 800; text-decoration: none; }
+.try:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--green-lip); }
+.toc { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.toc a { padding: 6px 12px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; color: var(--ink); font-size: 14px; font-weight: 800; text-decoration: none; }
+section { margin-top: 26px; padding: 20px; border-radius: 20px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; }
+.num { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--blue); box-shadow: 0 3px 0 var(--blue-dk); color: #fff; font-size: 17px; font-weight: 800; margin-inline-end: 10px; vertical-align: middle; }
+section h2 { font-size: 22px; font-weight: 800; line-height: 1.3; }
+.said { margin-top: 10px; padding: 10px 14px; border-radius: 14px; background: #F7F7F7; font-size: 15px; font-weight: 600; color: var(--gray); }
+.said b { color: var(--ink); }
+.did { margin: 12px 0 0; padding: 0 20px 0 0; font-size: 15.5px; font-weight: 600; }
+.did li { margin-top: 4px; }
+.row { display: flex; gap: 16px; margin-top: 16px; overflow-x: auto; padding-bottom: 6px; align-items: flex-start; }
+figure { flex: none; margin: 0; width: 230px; }
+figure img { display: block; width: 100%; border-radius: 18px; border: 2px solid var(--line); background: #fff; cursor: zoom-in; }
+figcaption { margin-top: 6px; font-size: 13.5px; font-weight: 700; color: var(--gray); }
+.tag { display: inline-block; padding: 1px 9px; border-radius: 8px; font-size: 12.5px; font-weight: 800; margin-inline-end: 4px; }
+.tag.b { background: #FFDFE0; color: #EA2B2B; }
+.tag.a { background: #D7FFB8; color: #58A700; }
+.tag.r { background: #DDF4FF; color: var(--blue-dk); }
+.sep { flex: none; align-self: center; font-size: 28px; color: #C8C8C8; }
+.box { position: fixed; inset: 0; z-index: 9; display: none; place-items: center; background: rgba(0,0,0,.72); padding: 20px; }
+.box.on { display: grid; }
+.box img { max-width: 100%; max-height: 92vh; border-radius: 18px; }
+@media (max-width: 560px) { .wrap { padding: 16px 16px 40px; } figure { width: 200px; } section { padding: 16px; } }
+.ok { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: #58CC02; color: #fff; font-size: 15px; margin-inline-start: 8px; vertical-align: middle; }
+table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 15px; }
+th, td { padding: 8px 10px; border-bottom: 2px solid var(--line); text-align: start; }
+th { color: var(--gray); font-size: 13.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>السبعة خلصت</h1>
+      <p>كل وحدة من قائمتك: وش سوّيت، وصورها من التطبيق الحقيقي. كل شي جرّبته في التطبيق نفسه (index.html).</p>
+    </div>
+    <a class="try" href="../mobile.html" target="_blank">جرّب التطبيق</a>
+  </header>
+
+  <section>
+    <h2><span class="num">١</span>«كمّل الخطوة»: كل رقم يتصحّح أول ما يحطّه<span class="ok">✓</span></h2>
+    <ul class="did">
+      <li>الرقم الصح يخضرّ ويقفز ويثبت مكانه، وكل رقم صح بصوت أعلى من اللي قبله.</li>
+      <li>الرقم الغلط يحمرّ ويهتز ويرجع لمكانه، وفهيم يقول له مثلاً: «٦ مو هنا. هذا مكان المصافحات، دوّره في المثال»، ويذكّره بالقانون، بدون ما يعطيه الجواب. ولو غلط مرتين في نفس الفراغ، تروح الأرقام اللي ما لها مكان.</li>
+      <li>زر «تحقق» راح من الشاشة. لما يحط آخر رقم يطلع شريط «صح!» الأخضر، و«متابعة» في نفس مكان الزر بالضبط.</li>
+      <li>الجهتين حول «×» و«+» تقبل أي ترتيب مثل قبل.</li>
+      <li>جرّبتها على كل القوانين الـ ٣٤ اللي فيها هالشاشة: رقم غلط أول، وبعدين الصح، وكلها طلع لها الشريط الأخضر.</li>
+      <li>وصلّحت شي ثاني لقيته: المثال لما يكون جملة («٦ أشخاص، كل اثنين تصافحوا…») كان يطلع برا البطاقة. الحين ينزل سطر ثاني.</li>
+    </ul>
+    <div class="row">
+      <figure><img src="lawapp/round4/i-miss.jpg" alt=""><figcaption>رقم غلط: يحمرّ ويهتز، وفهيم يساعد</figcaption></figure>
+      <figure><img src="lawapp/round4/i-one.jpg" alt=""><figcaption>رقم صح: يخضرّ ويثبت</figcaption></figure>
+      <figure><img src="lawapp/round4/i-done.jpg" alt=""><figcaption>آخر رقم: شريط «صح!»</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">٢</span>بطاقة «قوانينك ثابتة» سطر واحد<span class="ok">✓</span></h2>
+    <ul class="did">
+      <li>صارت مثل بطاقة المراجعة: القانون الذهبي، و«قوانينك ثابتة» (أو «خلّصت مراجعة اليوم» بعد ما يراجع)، وزر صغير «قوانيني». بدون أي سطر زيادة.</li>
+    </ul>
+    <div class="row"><figure><img src="lawapp/round4/p-ok.jpg" alt=""><figcaption>على المسار</figcaption></figure></div>
+  </section>
+
+  <section>
+    <h2><span class="num">٣</span>صور صفحة الشاشات<span class="ok">✓</span></h2>
+    <ul class="did">
+      <li>صوّرت من جديد «كمّل القانون» و«كمّل الخطوة» للقوانين الـ ٣٥ (لأنها تغيّرت اليوم)، وأول شاشة من «الأعداد المكمّلة» بالأرقام الزرقاء.</li>
+      <li><a href="law-screens.html" target="_blank">افتح صفحة الشاشات</a></li>
+    </ul>
+    <div class="row"><figure><img src="lawapp/round4/tens-1.jpg" alt=""><figcaption>«الأعداد المكمّلة»: ١٠ و١٠٠ و١٠٠٠ بالأزرق</figcaption></figure></div>
+  </section>
+
+  <section>
+    <h2><span class="num">٥</span>ثلاث قوانين صارت تتسوّى باليد<span class="ok">✓</span></h2>
+    <ul class="did">
+      <li><b>المصافحات:</b> أربعة أشخاص. يضغط على اثنين فيتصافحون: خط بينهم، وعدد مصافحات كل واحد فوق كتفه، والعدّاد يزيد. لو ضغط على اثنين تصافحوا قبل، يهتزون وفهيم يقول «تصافحوا قبل!». بعد الست يطلع القانون بالأرقام: كل واحد صافح ٣، و٤ × ٣ = ١٢، وكل مصافحة انحسبت مرتين، ÷ ٢ = ٦.</li>
+      <li><b>مبدأ العدّ:</b> ثلاث قمصان وبنطلونين. يضغط قميص وبنطلون فتطير اللبسة لمكانها في جدول ٣ × ٢. لو كرر لبسة تهتز. بعد الست: ٣ × ٢ = ٦.</li>
+      <li><b>الترتيب من الطرفين:</b> طابور فيه «أنت». يزيد ناس قدّامه ووراه لين يصير ترتيبه مثل المثال (الأرقام تتغيّر كل مرة)، ولو زاد واحد زيادة يهتز الزر. بعدين يسأله: كم واحد في الطابور؟ الفخ (جمع الرقمين) يهتز، وفهيم يقول: «أنت انحسبت مرتين، مرة من الأمام ومرة من الخلف».</li>
+      <li>كل ضغطة تتصحّح في وقتها، بدون زر «تحقق»، وفي الآخر شريط «صح!» مثل شاشة الأزواج.</li>
+    </ul>
+    <div class="row">
+      <figure><img src="lawapp/round4/h-2-miss.jpg" alt=""><figcaption>المصافحات: زوج مكرر</figcaption></figure>
+      <figure><img src="lawapp/round4/h-3-done.jpg" alt=""><figcaption>المصافحات: الست كلها</figcaption></figure>
+      <figure><img src="lawapp/round4/w-2-miss.jpg" alt=""><figcaption>مبدأ العدّ: لبسة مكررة</figcaption></figure>
+      <figure><img src="lawapp/round4/w-3-done.jpg" alt=""><figcaption>مبدأ العدّ: الجدول كامل</figcaption></figure>
+      <figure><img src="lawapp/round4/q-2-built.jpg" alt=""><figcaption>الطابور: يكوّنه</figcaption></figure>
+      <figure><img src="lawapp/round4/q-3-trap.jpg" alt=""><figcaption>الطابور: الفخ</figcaption></figure>
+      <figure><img src="lawapp/round4/q-4-done.jpg" alt=""><figcaption>الطابور: صح</figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">٦</span>النسخة الاحتياطية فيها القوانين<span class="ok">✓</span></h2>
+    <ul class="did">
+      <li>رمز النسخة الاحتياطية صار فيه تقدّم القوانين (وش تعلّم منها، وكل واحد وين وصل ومتى يرجع). لما يستعيده ترجع القوانين معه، ورسالة التأكيد تقول كم قانون فيها.</li>
+      <li>جرّبتها: سوّيت رمز لطالب عنده قوانين، ومسحت القوانين، ورجّعت الرمز من الإعدادات، فرجعت كلها نفسها بالضبط. والرموز القديمة اللي ما فيها قوانين تشتغل مثل قبل.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2><span class="num">٧</span>أول درس كطالب جديد على جوالات آيفون<span class="ok">✓</span></h2>
+    <ul class="did">
+      <li>مشيت أول درس شاشة شاشة (١٠ شاشات)، وبعده شاشة الفوز و«تقدّمك اليوم» والمسار، على أربع جوالات. في كل شاشة فحصت: هل الصفحة تتمرّر؟ هل فيه شي يطلع برا الشاشة؟ هل فيه شي ينزل تحت الزر؟</li>
+      <li>لقيت مشكلة وحدة وصلّحتها: في آيفون SE والجوال الصغير، صف الأرقام الثاني في شاشة الأزواج كان ينزل تحت الزر. السبب إن زر «القانون» ينضاف بعد ما تنقاس الشاشة، فصارت تنقاس من جديد بعده. وصغّرت المسافات في الشاشات الجديدة على الجوالات القصيرة، عشان الأرقام تبقى كبيرة.</li>
+      <li>وبعدها فحصت كل شاشات القوانين الـ ٣٥ (القانون، و«كمّل القانون»، و«كمّل الخطوة» أو الشاشة اليدوية) على آيفون SE والجوال الصغير: ولا شاشة فيها شي تحت الزر أو برا الشاشة أو تتمرّر. بس في الجوال الصغير (٣٢٠) فيه ١٥ شاشة «كمّل القانون» للقوانين الطويلة تصغر لـ ٧٠–٧٩٪ عشان تدخل، والكلام فيها يبقى مقروء. وشاشة الأزواج في الجوال الصغير صارت ٨٦٪ بعد ما كانت ٧٠٪.</li>
+    </ul>
+    <table>
+      <tr><th>الجوال</th><th>المقاس</th><th>النتيجة</th></tr>
+      <tr><td>iPhone 17</td><td>٤٠٢ × ٨٧٤</td><td>كل الشاشات سليمة</td></tr>
+      <tr><td>iPhone 17 Pro Max</td><td>٤٤٠ × ٩٥٦</td><td>كل الشاشات سليمة</td></tr>
+      <tr><td>iPhone SE</td><td>٣٧٥ × ٦٦٧</td><td>سليمة بعد التصليح</td></tr>
+      <tr><td>جوال صغير</td><td>٣٢٠ × ٥٦٨</td><td>سليمة بعد التصليح</td></tr>
+    </table>
+    <div class="row">
+      <figure><img src="lawapp/round4/iphone17promax-03-law-tens-play.jpg" alt=""><figcaption>iPhone 17 Pro Max</figcaption></figure>
+      <figure><img src="lawapp/round4/iphone17-03-law-tens-play.jpg" alt=""><figcaption>iPhone 17</figcaption></figure>
+      <figure><img src="lawapp/round4/iphoneSE-03-law-tens-play.jpg" alt=""><figcaption>iPhone SE</figcaption></figure>
+      <figure><img src="lawapp/round4/small-03-law-tens-play.jpg" alt=""><figcaption>جوال صغير</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="push">
+    <h2><span class="num">٤</span>الرفع</h2>
+    <ul class="did">
+      <!-- push:start -->
+      <li>آخر خطوة، بعد ما خلص كل اللي فوق.</li>
+      <!-- push:end -->
+    </ul>
+  </section>
+</div>
+<div class="box" id="box"><img alt=""></div>
+<script>
+const box = document.getElementById('box');
+document.querySelectorAll('figure img').forEach(i => i.onclick = () => { box.firstElementChild.src = i.src; box.classList.add('on'); });
+box.onclick = () => box.classList.remove('on');
+</script>
+</body>
+</html>

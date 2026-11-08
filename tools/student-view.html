@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>رأيي كطالب</title>
+<!-- The rule card (tools/rule-cards.html, cards 12 and 13) judged as a Qudrat student would (2026-10-30; the user: «in html type what you want and your rating and how much they will remember the laws»). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&display=swap">
+<style>
+:root {
+  --green: #58CC02; --green-dk: #58A700; --green-lip: #478700; --green-bg: #D7FFB8;
+  --blue: #1CB0F6; --blue-dk: #1899D6; --blue-light: #DDF4FF;
+  --red: #FF4B4B; --red-bg: #FFDFE0; --gold: #FFC800; --gold-bg: #FFF4BF; --brown: #AA572A;
+  --ink: #3C3C3C; --gray: #777; --gray-icon: #AFAFAF; --line: #E5E5E5; --wash: #F7F7F7;
+  --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #fff; color: var(--ink); font-family: var(--font); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+main { max-width: 760px; margin: 0 auto; padding: 28px 16px 60px; }
+h1 { margin: 0 0 4px; font-size: 30px; font-weight: 800; line-height: 1.3; }
+.lede { margin: 0 0 22px; font-size: 17px; font-weight: 600; color: var(--gray); }
+h2 { margin: 34px 0 12px; font-size: 22px; font-weight: 800; }
+.card { border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 18px; padding: 16px 18px; background: #fff; }
+
+/* the score */
+.score { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.sc { text-align: center; padding: 18px 12px 16px; }
+.sc .k { font-size: 15px; font-weight: 700; color: var(--gray); }
+.sc .n { font-size: 64px; font-weight: 800; line-height: 1.1; margin-top: 4px; }
+.sc .n small { font-size: 26px; color: var(--gray-icon); font-weight: 700; }
+.sc .d { font-size: 15px; font-weight: 600; color: var(--gray); margin-top: 6px; }
+.sc.now .n { color: var(--gold); }
+.sc.fix { border-color: #A5ED6E; background: #F4FFEB; }
+.sc.fix .n { color: var(--green-dk); }
+
+/* lists */
+.list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.list li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; }
+.list .ic { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; }
+.list .ic svg { width: 20px; height: 20px; }
+.good .ic { background: var(--green-bg); color: var(--green-dk); }
+.bad .ic { background: var(--red-bg); color: var(--red); }
+.list b { display: block; font-size: 17px; font-weight: 800; line-height: 1.4; }
+.list p { margin: 2px 0 0; font-size: 15.5px; font-weight: 600; color: var(--gray); }
+.list q { quotes: none; color: var(--blue-dk); font-weight: 700; }
+
+/* what I want */
+.want { display: grid; gap: 12px; counter-reset: w; }
+.want .card { display: grid; grid-template-columns: 40px 1fr; gap: 12px; align-items: start; }
+.want .num { width: 40px; height: 40px; border-radius: 12px; background: var(--blue); box-shadow: 0 3px 0 var(--blue-dk); color: #fff; font-size: 20px; font-weight: 800; display: grid; place-items: center; }
+.want b { display: block; font-size: 18px; font-weight: 800; line-height: 1.4; }
+.want p { margin: 2px 0 0; font-size: 15.5px; font-weight: 600; color: var(--gray); }
+.ex { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; font-size: 16px; font-weight: 700; }
+.ex .was { padding: 2px 10px; border-radius: 10px; background: var(--wash); color: var(--gray); text-decoration: line-through; text-decoration-color: var(--gray-icon); }
+.ex .arr { color: var(--gray-icon); }
+.ex .now { padding: 2px 10px; border-radius: 10px; background: var(--blue-light); color: var(--blue-dk); border: 2px solid #84D8FF; }
+
+/* the chart: remembered after a day, a week, a month */
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0 0 14px; font-size: 15px; font-weight: 700; }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.legend i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+.grp { margin: 0 0 18px; }
+.grp h3 { margin: 0 0 8px; font-size: 17px; font-weight: 800; }
+.row { display: grid; grid-template-columns: 1fr 46px; align-items: center; gap: 10px; margin: 0 0 6px; }
+.track { position: relative; height: 22px; border-radius: 99px; background: var(--wash); overflow: hidden; }
+.bar { position: absolute; inset-block: 0; inset-inline-start: 0; border-radius: 99px; width: 0; transition: width .9s cubic-bezier(.3, 1.2, .5, 1); }
+.bar::after { content: ""; position: absolute; top: 4px; inset-inline: 8px; height: 5px; border-radius: 99px; background: rgba(255,255,255,.35); }
+.row .v { font-size: 16px; font-weight: 800; text-align: start; }
+.s1 { background: var(--gray-icon); } .s2 { background: var(--blue); } .s3 { background: var(--green); }
+.tip { position: fixed; z-index: 5; pointer-events: none; padding: 6px 10px; border-radius: 10px; background: var(--ink); color: #fff; font-size: 14px; font-weight: 700; opacity: 0; transition: opacity .12s; max-width: 260px; }
+.why { margin-top: 14px; font-size: 14.5px; font-weight: 600; color: var(--gray); }
+.why b { color: var(--ink); }
+details { margin-top: 12px; }
+summary { cursor: pointer; font-size: 15px; font-weight: 800; color: var(--blue-dk); }
+table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 15px; }
+th, td { border-bottom: 1px solid var(--line); padding: 6px 4px; text-align: start; }
+th { color: var(--gray); font-weight: 700; }
+td { font-weight: 700; }
+
+.final { margin-top: 30px; padding: 18px; border-radius: 18px; background: var(--gold-bg); border: 2px solid var(--gold); border-bottom-width: 5px; }
+.final b { display: block; font-size: 19px; font-weight: 800; color: #7A3B12; }
+.final p { margin: 4px 0 0; font-size: 16px; font-weight: 600; color: var(--brown); }
+
+@media (max-width: 520px) {
+  h1 { font-size: 25px; }
+  .sc .n { font-size: 52px; }
+}
+</style>
+</head>
+<body>
+<main>
+  <h1>رأيي كطالب قدرات</h1>
+  <p class="lede">تخيّلت نفسي طالب باقي له شهرين على اختبار القدرات، وفتحت درس القانون. هذا رأيي بصراحة في بطاقة «الكلمة تصير رقم»، وكم بتذكّر من القوانين.</p>
+
+  <div class="score">
+    <div class="card sc now"><div class="k">البطاقة الحين</div><div class="n">٦<small>/١٠</small></div><div class="d">شكلها حلو، بس أتفرّج وأنسى</div></div>
+    <div class="card sc fix"><div class="k">مع اللي أبيه تحت</div><div class="n">٨٫٥<small>/١٠</small></div><div class="d">أشارك فيها وأتذكّرها</div></div>
+  </div>
+
+  <h2>اللي عجبني</h2>
+  <ul class="list good">
+    <li><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5l4 4 8-9"/></svg></span><div><b>شكلها جدّي ونظيف</b><p>مو مثل تطبيقات الأطفال، فأثق فيها. ما فيها شي يشتّتني.</p></div></li>
+    <li><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5l4 4 8-9"/></svg></span><div><b>أشوف القانون وهو يشتغل</b><p>الأرقام تطير من المثال لمكانها في القانون، فأفهم وش يعني كل جزء بدل ما أحفظ كلام.</p></div></li>
+    <li><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5l4 4 8-9"/></svg></span><div><b>الجواب الأخضر ممتع</b><p>لحظة صغيرة تحسّسني إني فهمت.</p></div></li>
+  </ul>
+
+  <h2>اللي يضايقني</h2>
+  <ul class="list bad">
+    <li><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg></span><div><b>أتفرّج بس</b><p>مثل فيديو. مخي يقول «حلو» ويكمّل، وبكرة ما أتذكّر.</p></div></li>
+    <li><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg></span><div><b>آخر شي أشوفه أرقام، مو القانون</b><p>تنتهي بـ <q>١٠ = ٥ × ٤ ÷ ٢</q> كبيرة، والكلمات صغيرة تحتها. أتذكّر إنه كان فيه ٥ و٤، وما أتذكّر وش هي المصافحات.</p></div></li>
+    <li><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg></span><div><b>بعض القوانين جملة طويلة</b><p><q>آخر رقم في الناتج = آخر رقم من آحاد × آحاد</q> ما أحفظها. في راسي بسمّيها «آحاد × آحاد» وخلاص.</p></div></li>
+    <li><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg></span><div><b>المراجعة أقدر أغشّ فيها</b><p>فهيم يقول «قلها في بالك» وأنا بصراحة ما بقولها، بضغط على طول. ما فيه شي يتأكّد إني تذكّرت.</p></div></li>
+    <li><span class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg></span><div><b>طويلة على قانون سهل</b><p>الوسط الحسابي فهمته في ثانيتين، وأنتظر الحركة تخلص عشان أضغط «كمّل».</p></div></li>
+  </ul>
+
+  <h2>اللي أبيه</h2>
+  <div class="want">
+    <div class="card"><span class="num">١</span><div><b>تنتهي على القانون، مو على المثال</b><p>بعد ما يطلع الجواب الأخضر، ترجع الكلمات كبيرة والأرقام صغيرة تحتها. آخر صورة في راسي تكون القانون نفسه.</p></div></div>
+    <div class="card"><span class="num">٢</span><div><b>أسوّي شي واحد صغير</b><p>جزء من القانون يكون فراغ وأنا أضغط الكلمة الصح فيه، والأرقام تطير بعدها. كذا أنا جزء منها، مو أتفرّج.</p></div></div>
+    <div class="card"><span class="num">٣</span><div><b>القانون بالكلام اللي أقوله لصاحبي</b><p>قصير، أقدر أقوله ليلة الاختبار بنفس واحد.</p>
+      <div class="ex"><span class="was">آخر رقم في الناتج = آخر رقم من آحاد × آحاد</span><span class="arr">←</span><span class="now">آحاد الناتج = آحاد × آحاد</span></div>
+      <div class="ex"><span class="was">عدد الطرق = خيارات الأول × خيارات الثاني</span><span class="arr">←</span><span class="now">الطرق = الأول × الثاني</span></div></div></div>
+    <div class="card"><span class="num">٤</span><div><b>المراجعة تسألني قبل ما تعلّمني</b><p>أختار الجزء الناقص من ٢ أو ٣ خيارات قبل ما يطلع القانون. ما أقدر أغشّ، ولما أجيبها صح أحسّ إني ذكي.</p></div></div>
+    <div class="card"><span class="num">٥</span><div><b>أقصر على القانون السهل</b><p>لو القانون قصير، الحركة تكون أسرع.</p></div></div>
+  </div>
+
+  <h2>كم بتذكّر من القانون؟</h2>
+  <div class="card">
+    <div class="legend" id="lg"></div>
+    <div id="chart"></div>
+    <p class="why"><b>هذا تقدير مني، مو قياس.</b> مبني على اللي معروف عن التذكّر: اللي أتفرّج عليه بس أنساه بسرعة، واللي أسترجعه بنفسي يثبت. في دراسة مشهورة عن الاسترجاع (Roediger وKarpicke، ٢٠٠٦)، الطلاب اللي اختبروا نفسهم تذكّروا بعد أسبوع ٦١٪، واللي أعادوا القراءة بس ٤٠٪. ودرس القانون عندنا فيه بعد البطاقة «كمّل القانون» و«كمّل الحل» وثلاث أسئلة، ومراجعات بعد ١ و٣ و٧ و١٤ و٣٠ يوم، وهذا اللي يرفع الرقم أكثر من شكل البطاقة.</p>
+    <details><summary>الأرقام في جدول</summary><table id="tb"></table></details>
+  </div>
+
+  <div class="final">
+    <b>الخلاصة</b>
+    <p>البطاقة الحين حلوة أول مرة، بس لو اعتمدت عليها لحالها بنسى أغلب القانون خلال أسبوع. الشي اللي يخلّيني أتذكّر مو شكلها، هو إني أسترجع القانون بنفسي، وإني أشوفه آخر شي، وإنه قصير.</p>
+  </div>
+</main>
+<div class="tip" id="tip"></div>
+<script>
+(function () {
+  'use strict';
+  const AR = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+  /* remembered (percent) after a day, a week and a month: an estimate, not a measurement */
+  const S = [
+    { c: 's1', name: 'البطاقة لحالها، أتفرّج بس' },
+    { c: 's2', name: 'الدرس كامل كما هو الحين' },
+    { c: 's3', name: 'الدرس كامل مع اللي أبيه' },
+  ];
+  const T = [
+    { t: 'بعد يوم', v: [45, 70, 85] },
+    { t: 'بعد أسبوع', v: [25, 50, 75] },
+    { t: 'بعد شهر بدون مراجعة', v: [10, 30, 50] },
+    { t: 'بعد شهر مع المراجعات', v: [null, 70, 88] },
+  ];
+  document.getElementById('lg').innerHTML = S.map(s => `<span><i class="${s.c}"></i>${s.name}</span>`).join('');
+  document.getElementById('chart').innerHTML = T.map(g => `<div class="grp"><h3>${g.t}</h3>` + g.v.map((v, i) => v == null ? '' :
+    `<div class="row" data-tip="${S[i].name}: ${AR(v)}٪"><div class="track"><div class="bar ${S[i].c}" data-w="${v}"></div></div><span class="v">${AR(v)}٪</span></div>`).join('') + '</div>').join('');
+  document.getElementById('tb').innerHTML = '<tr><th></th>' + S.map(s => `<th>${s.name}</th>`).join('') + '</tr>' +
+    T.map(g => `<tr><td>${g.t}</td>` + g.v.map(v => `<td>${v == null ? 'لا ينطبق' : AR(v) + '٪'}</td>`).join('') + '</tr>').join('');
+  requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('.bar').forEach((b, i) => { b.style.transitionDelay = (i * 70) + 'ms'; b.style.width = b.dataset.w + '%'; })));
+  const tip = document.getElementById('tip');
+  document.querySelectorAll('.row').forEach(r => {
+    r.addEventListener('pointermove', e => { tip.textContent = r.dataset.tip; tip.style.opacity = 1; tip.style.left = Math.min(e.clientX + 12, innerWidth - tip.offsetWidth - 8) + 'px'; tip.style.top = (e.clientY - 40) + 'px'; });
+    r.addEventListener('pointerleave', () => { tip.style.opacity = 0; });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+/* dotduo — the user's «قدراتي» in ink (markmono), its six dots in Duolingo's six colours, red to purple; each coin takes off in its pair's tone, and the title keeps them */
+.qs-bg { background: #FFFFFF; }
+.qs-l { fill: #111111; }
+#splash { --qs-dot-lit: step; --qs-dot-filter-g: brightness(0) invert(56%) sepia(88%) saturate(2442%) hue-rotate(-19deg) brightness(98%) contrast(105%); --qs-dot-filter-o: brightness(0) invert(71%) sepia(78%) saturate(1769%) hue-rotate(24deg) brightness(99%) contrast(98%); --qs-dot-filter-b: brightness(0) invert(53%) sepia(50%) saturate(697%) hue-rotate(-169deg) brightness(103%) contrast(97%); }
+.qs-word > g:nth-of-type(1) { fill: #FF4B4B; }
+.qs-word > g:nth-of-type(2) { fill: #FF9600; }
+.qs-word > g:nth-of-type(3) { fill: #FFC800; }
+.qs-word > g:nth-of-type(4) { fill: #58CC02; }
+.qs-word > g:nth-of-type(5) { fill: #1CB0F6; }
+.qs-word > g:nth-of-type(6) { fill: #CE82FF; }

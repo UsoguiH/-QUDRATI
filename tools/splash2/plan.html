@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>المخطط — شاشة التحميل</title>
+<link rel="stylesheet" href="stage.css">
+<style>
+.navy { position: absolute; inset: 0; background: #0F3D91; }
+.grid { position: absolute; inset: -8px; opacity: 0;
+  background:
+    linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px) 0 4px / 80px 80px,
+    linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px) 35px 0 / 80px 80px,
+    linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px) 0 4px / 16px 16px,
+    linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px) 35px 0 / 16px 16px; }
+.vig { position: absolute; inset: 0; background: radial-gradient(120% 80% at 50% 45%, transparent 40%, rgba(5,20,60,.45)); }
+.wl { clip-path: inset(100% 0 0 0); }
+.edge { position: absolute; left: 0; right: 0; top: 844px; height: 2px; background: #8FD8FF; box-shadow: 0 0 10px 2px rgba(143,216,255,.7); opacity: 0; }
+.guide { stroke: #8FD8FF; stroke-width: 1; stroke-dasharray: 5 4; opacity: .75; }
+.gmask { stroke: #FFFFFF; stroke-width: 6; fill: none; }
+.cross { stroke: #8FD8FF; stroke-width: 1.4; }
+.ol { fill: none; stroke: #FFFFFF; stroke-width: 1.5; vector-effect: non-scaling-stroke; stroke-linejoin: miter; }
+.comet { fill: none; stroke: #CFF3FF; stroke-width: 3; stroke-linecap: round; vector-effect: non-scaling-stroke; opacity: 0; }
+.comets { filter: drop-shadow(0 0 3px #6FD2FF) drop-shadow(0 0 7px #2FA8FF); }
+</style>
+</head>
+<body>
+<script src="stage.js"></script>
+<script>
+/* «المخطط»: the name drawn on a blueprint — grid, guides at its own heights, its
+   outline traced right to left; a laser keeps running round it while the app
+   loads; then the ink floods in, and the white welcome wipes up from the bottom,
+   turning the name black where it passes as it flies into the title. */
+const C = CENTER(300), s = mScale(300);
+const sy = Y => C.y + (Y - MARK.vb[1]) * s, sx = X => C.x + (X - MARK.vb[0]) * s;
+
+window.IDEA = function ({ stage, ready, alive }) {
+  const N = el("div", { class: "layer" }, stage);
+  el("div", { class: "navy" }, N);
+  const grid = el("div", { class: "grid" }, N);
+  el("div", { class: "vig" }, N);
+  const svg = el("svg:svg", { class: "full", viewBox: "0 0 390 844" }, N);
+  const defs = el("svg:defs", {}, svg);
+  const W = welcomeLayer(stage);
+  const edge = el("div", { class: "edge" }, stage);
+
+  /* guides: dashed lines at the name's heights and edges, each revealed by a mask drawn along it */
+  const guides = el("svg:g", {}, svg);
+  const lines = [
+    ...[MARK.top, 1687, 2361, MARK.bottom].map((Y, i) => ({ x1: 390, y1: sy(Y), x2: 0, y2: sy(Y), d: 180 + i * 90 })),
+    ...[4988, 1014].map((X, i) => ({ x1: sx(X), y1: 0, x2: sx(X), y2: 844, d: 520 + i * 90 }))
+  ];
+  const masks = lines.map((L, i) => {
+    const m = el("svg:mask", { id: "gm" + i, maskUnits: "userSpaceOnUse", x: 0, y: 0, width: 390, height: 844 }, defs);
+    const ml = el("svg:line", { class: "gmask", x1: L.x1, y1: L.y1, x2: L.x2, y2: L.y2, pathLength: 1, "stroke-dasharray": "1 1", "stroke-dashoffset": 1 }, m);
+    el("svg:line", { class: "guide", x1: L.x1, y1: L.y1, x2: L.x2, y2: L.y2, mask: `url(#gm${i})` }, guides);
+    return { ml, d: L.d };
+  });
+  const crosses = [[4988, MARK.top], [1014, MARK.top], [4988, MARK.bottom], [1014, MARK.bottom]].map(([X, Y]) => {
+    const g = el("svg:g", { class: "cross" }, guides);
+    el("svg:path", { d: `M${sx(X) - 7} ${sy(Y)}H${sx(X) + 7}M${sx(X)} ${sy(Y) - 7}V${sy(Y) + 7}` }, g);
+    el("svg:circle", { cx: sx(X), cy: sy(Y), r: 3.2, fill: "none" }, g);
+    g.style.transformBox = "fill-box"; g.style.transformOrigin = "center"; g.style.opacity = 0;
+    return g;
+  });
+
+  /* the white name (filled later, behind a clip), its outline, its laser */
+  const clip = el("svg:clipPath", { id: "fl", clipPathUnits: "userSpaceOnUse" }, defs);
+  const cr = el("svg:rect", { x: 5048, y: 1200, width: 0, height: 1800 }, clip);
+  const white = markGroup(svg, { fill: "#FFFFFF" });
+  place(white, C.x, C.y, C.w);
+  Object.values(white.parts).forEach(p => p.setAttribute("clip-path", "url(#fl)"));
+  white.dots.forEach(d => { d.style.transform = "scale(0)"; });
+  const dotD = MARK.dots.map(([x, y]) => `M${x} ${y}h${MARK.dot}v${MARK.dot}h${-MARK.dot}Z`);
+  const ols = [...MARK.outlines, ...dotD];
+  const olG = el("svg:g", {}, white.inner);
+  const outl = ols.map(d => el("svg:path", { class: "ol", d, pathLength: 1, "stroke-dasharray": "1 1", "stroke-dashoffset": 1 }, olG));
+  const cmG = el("svg:g", { class: "comets" }, white.inner);
+  const comets = MARK.outlines.map(d => el("svg:path", { class: "comet", d, pathLength: 1, "stroke-dasharray": ".09 .91" }, cmG));
+
+  /* the black name, in the welcome layer, flying with the white one */
+  const black = markGroup(W.svg, { fill: "#111111" });
+  place(black, C.x, C.y, C.w);
+
+  (async () => {
+    anim(grid, [{ opacity: 0, transform: "scale(1.04)" }, { opacity: 1, transform: "none" }], { duration: 700, easing: "cubic-bezier(.2,.8,.3,1)" });
+    masks.forEach(m => anim(m.ml, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 620, delay: m.d, easing: "cubic-bezier(.6,0,.2,1)", fill: "both" }));
+    crosses.forEach((g, i) => anim(g, [{ opacity: 0, transform: "scale(0) rotate(-90deg)" }, { opacity: 1, transform: "none" }],
+      { duration: 380, delay: 760 + i * 60, easing: "cubic-bezier(.3,1.5,.5,1)", fill: "both" }));
+    /* the outline, right to left: each letter, then its dots */
+    const at = [640, 980, 1100, 1210, 1320, 820, 880, 1150, 1200, 1500, 1560];
+    await Promise.all(outl.map((p, i) => anim(p, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }],
+      { duration: i < 5 ? (i === 4 ? 720 : 560) : 260, delay: at[i], easing: "cubic-bezier(.45,0,.25,1)", fill: "both" })));
+    if (!alive()) return;
+    /* the laser, round and round while the app loads */
+    let done = false; ready.then(() => { done = true; });
+    if (!done) {
+      comets.forEach((c, i) => {
+        c.style.opacity = 1;
+        c.animate([{ strokeDashoffset: 0 }, { strokeDashoffset: -1 }], { duration: (1500 + i * 130) * ST.K, iterations: Infinity, delay: -i * 300 * ST.K });
+      });
+      await ready;
+      if (!alive()) return;
+      comets.forEach(c => anim(c, [{ opacity: 1 }, { opacity: 0 }], { duration: 220 }));
+    }
+    /* the ink floods in, right to left; the dots pop as it reaches them */
+    tween(560, e => { const x = 5048 - e * 4094; cr.setAttribute("x", x); cr.setAttribute("width", 5048 - x); }, ease.inOut);
+    white.dots.forEach((d, i) => anim(d, [{ transform: "scale(0)" }, { transform: "scale(1.35)", offset: .6 }, { transform: "scale(1)" }],
+      { duration: 300, delay: [80, 140, 300, 350, 420, 470][i], easing: "cubic-bezier(.3,.7,.4,1)" }));
+    anim(olG, [{ opacity: 1 }, { opacity: 0 }], { duration: 300, delay: 360 });
+    anim(guides, [{ opacity: 1 }, { opacity: 0 }], { duration: 360, delay: 380 });
+    await wait(820);
+    if (!alive()) return;
+    /* the welcome wipes up; the name flies into the title, black wherever the white has reached */
+    const E = "cubic-bezier(.7,0,.25,1)";
+    anim(W, [{ clipPath: "inset(100% 0 0 0)" }, { clipPath: "inset(0% 0 0 0)" }], { duration: 760, easing: E });
+    anim(edge, [{ top: "844px", opacity: 1 }, { top: "-2px", opacity: 1 }], { duration: 760, easing: E });
+    const fly = [{ transform: placeTf(C.x, C.y, C.w) }, { transform: placeTf(C.x, C.y - 8, C.w * 1.02), offset: .18 }, { transform: placeTf(TITLE.x, TITLE.y, TITLE.w) }];
+    [white, black].forEach(g => anim(g, fly, { duration: 800, delay: 60, easing: "cubic-bezier(.5,0,.2,1)" }));
+    heroPop(W.hero, 640);
+  })();
+};
+</script>
+</body>
+</html>

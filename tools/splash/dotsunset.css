@@ -1,0 +1,10 @@
+/* dotsunset — the user's «قدراتي» in ink (markmono), its six dots a sunset running right to left, yellow through coral to violet; each coin takes off in its pair's tone and lights into its own colour, and the title keeps the sunset */
+.qs-bg { background: #FFFFFF; }
+.qs-l { fill: #111111; }
+#splash { --qs-dot-lit: step; --qs-dot-filter-g: brightness(0) invert(80%) sepia(50%) saturate(3348%) hue-rotate(-23deg) brightness(102%) contrast(101%); --qs-dot-filter-o: brightness(0) invert(46%) sepia(73%) saturate(3408%) hue-rotate(-31deg) brightness(102%) contrast(100%); --qs-dot-filter-b: brightness(0) invert(44%) sepia(48%) saturate(4861%) hue-rotate(-77deg) brightness(82%) contrast(93%); }
+.qs-word > g:nth-of-type(1) { fill: #FFB627; }
+.qs-word > g:nth-of-type(2) { fill: #FF8F2E; }
+.qs-word > g:nth-of-type(3) { fill: #FF6340; }
+.qs-word > g:nth-of-type(4) { fill: #FF3F6C; }
+.qs-word > g:nth-of-type(5) { fill: #E5369A; }
+.qs-word > g:nth-of-type(6) { fill: #B03ACF; }

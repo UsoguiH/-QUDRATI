@@ -1,0 +1,8 @@
+/* markdark — the user's «قدراتي» in white on black, dots too; the black lifts as the coins turn to colour, the name to ink */
+#splash { --qs-dot-filter: brightness(0) invert(1); }
+.qs-bg { background: #111111; }
+.qs-l { fill: #FFFFFF; transition: fill .24s; }
+.qs-d { fill: #FFFFFF; }
+.qs-out .qs-l, .wl-mark .qs-l { fill: #111111; }
+.qs-d.qs-plain, .qs-t { fill: #111111; }
+.qs-out .qs-bg { animation-delay: calc(.34s * var(--qs-k, 1)); }

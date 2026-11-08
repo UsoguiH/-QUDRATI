@@ -1,0 +1,5 @@
+/* brilliant — Brilliant's way: black geometric type (Rubik 900, round and square corners as their wordmark), white, flat colour */
+.qs-bg { background: #FFFFFF; }
+.qs-l { fill: #141414; }
+.qs-g { fill: #58CC02; } .qs-o { fill: #FFC800; } .qs-b { fill: #1CB0F6; }
+.qs-d.qs-plain, .qs-t { fill: #141414; }

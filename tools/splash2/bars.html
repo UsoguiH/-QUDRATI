@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>الأعمدة — شاشة التحميل</title>
+<link rel="stylesheet" href="stage.css">
+<style>
+.purple { position: absolute; inset: 0; background: radial-gradient(90% 60% at 50% 42%, #8A55F7, #7A3EF0 60%, #6C31E3); }
+.floor { position: absolute; left: 40px; right: 40px; height: 1px; background: rgba(255,255,255,.35); }
+</style>
+</head>
+<body>
+<script src="stage.js"></script>
+<script>
+/* «الأعمدة»: the name's nine upright strokes are a bar chart that bounces while
+   the app loads; once it is up each bar springs to its stroke, the rest of the
+   letters join them right to left and the dots land as gold; then the purple falls
+   away in columns and the name, black where the welcome shows, flies into the title. */
+const C = CENTER(300), s = mScale(300);
+const BASE = 2361;
+const BARS = [[4847, 4988, 1835, 2213], [4396, 4544, 1865, 2146], [4007, 4166, 1917, 2287], [3271, 3415, 1687, 2361], [2879, 3023, 1343, 2361],
+  [2520, 2664, 1687, 2213], [2065, 2209, 1687, 2361], [1706, 1854, 1835, 2361], [1014, 1166, 1980, 2361]];
+const COLS = 10;
+
+window.IDEA = function ({ stage, ready, alive }) {
+  const W = welcomeLayer(stage);
+  const P = el("div", { class: "layer" }, stage);
+  el("div", { class: "purple" }, P);
+  const floor = el("div", { class: "floor" }, P);
+  floor.style.top = (C.y + (BASE - MARK.vb[1]) * s) + "px"; floor.style.opacity = 0;
+  const svg = el("svg:svg", { class: "full", viewBox: "0 0 390 844" }, P);
+  const defs = el("svg:defs", {}, svg);
+  const clip = el("svg:clipPath", { id: "wp", clipPathUnits: "userSpaceOnUse" }, defs);
+  const cr = el("svg:rect", { x: 5048, y: 1200, width: 0, height: 1800 }, clip);
+
+  const white = markGroup(svg, { fill: "#FFFFFF", dots: false });
+  place(white, C.x, C.y, C.w);
+  Object.values(white.parts).forEach(p => p.setAttribute("clip-path", "url(#wp)"));
+  const bars = BARS.map(([x0, x1]) => el("svg:rect", { x: x0, width: x1 - x0, y: BASE, height: 0, fill: "#FFFFFF" }, white.inner));
+  /* gold dots on their lips */
+  const gold = MARK.dots.map(([x, y]) => {
+    const g = el("svg:g", {}, white.inner);
+    el("svg:rect", { x, y: y + 44, width: MARK.dot, height: MARK.dot, fill: "#E6A000" }, g);
+    el("svg:rect", { x, y, width: MARK.dot, height: MARK.dot, fill: "#FFC800" }, g);
+    g.style.transformBox = "fill-box"; g.style.transformOrigin = "50% 100%"; g.style.opacity = 0;
+    return g;
+  });
+  const black = markGroup(W.svg, { fill: "#111111" });
+  place(black, C.x, C.y, C.w);
+
+  /* the bars, driven every frame: an equalizer while loading, then a spring to the strokes */
+  const t0 = performance.now();
+  let mode = "eq", settleAt = 0;
+  const from = BARS.map(() => [BASE, BASE]);
+  const eq = (i, t) => 200 + 1350 * Math.pow(.5 + .5 * Math.sin(t / (1100 * ST.K) * 2 * Math.PI - i * .7 + 1.2), 1.3) * (.8 + .2 * Math.sin(i * 2.3 + t / (2300 * ST.K)));
+  function frame(now) {
+    if (!alive()) return;
+    const t = now - t0;
+    let still = true;
+    bars.forEach((b, i) => {
+      let top, bot;
+      if (mode === "eq") {
+        const g = ease.back(Math.max(0, Math.min(1, (t - (120 + i * 55) * ST.K) / (520 * ST.K))));
+        top = BASE - g * eq(i, t); bot = BASE;
+        from[i] = [top, bot]; still = false;
+      } else {
+        const k = Math.max(0, Math.min(1, (now - settleAt - i * 40 * ST.K) / (560 * ST.K)));
+        const e = ease.back(k);
+        top = from[i][0] + (BARS[i][2] - from[i][0]) * e;
+        bot = from[i][1] + (BARS[i][3] - from[i][1]) * e;
+        if (k < 1) still = false;
+      }
+      b.setAttribute("y", Math.min(top, bot)); b.setAttribute("height", Math.abs(bot - top));
+    });
+    if (!still) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  (async () => {
+    anim(floor, [{ opacity: 0, transform: "scaleX(.3)" }, { opacity: 1, transform: "none" }], { duration: 600, easing: "cubic-bezier(.2,.8,.3,1)" });
+    await wait(1250);                           // the bars are up and have bounced once
+    await ready;
+    if (!alive()) return;
+    mode = "settle"; settleAt = performance.now();
+    await wait(380);
+    tween(520, e => { const x = 5048 - e * 4094; cr.setAttribute("x", x); cr.setAttribute("width", 5048 - x); }, ease.inOut);
+    anim(floor, [{ opacity: 1 }, { opacity: 0 }], { duration: 400, delay: 200 });
+    await wait(230);
+    if (!alive()) return;
+    /* the dots land: ق and ت drop from above, ي's bounce up from below */
+    gold.forEach((g, i) => {
+      const up = i >= 4;
+      anim(g, [
+        { opacity: 0, transform: `translateY(${up ? 520 : -760}px) scale(.8, 1.15)` },
+        { opacity: 1, transform: "translateY(0) scale(.9, 1.12)", offset: .55 },
+        { opacity: 1, transform: "translateY(0) scale(1.22, .78)", offset: .72 },
+        { opacity: 1, transform: "translateY(0) scale(.95, 1.05)", offset: .86 },
+        { opacity: 1, transform: "none" }
+      ], { duration: 520, delay: [0, 60, 150, 210, 300, 360][i], easing: "cubic-bezier(.5,0,.5,1)" });
+    });
+    await wait(820);
+    if (!alive()) return;
+    /* the purple falls away in columns, right to left; the name flies into the title */
+    const cw = 390 / COLS;
+    tween(1000, e => {
+      const T = e * 1000;
+      const ys = [...Array(COLS)].map((_, j) => { const k = Math.max(0, Math.min(1, (T - j * 42) / 600)); return 844 * k * k * (1.4 - .4 * k); });
+      let pts = [`390px 844px`];
+      ys.forEach((y, j) => { const xr = 390 - j * cw, xl = xr - cw; pts.push(`${xr}px ${y}px`, `${xl}px ${y}px`); });
+      pts.push(`0px 844px`);
+      P.style.clipPath = `polygon(${pts.join(",")})`;
+    });
+    const fly = [{ transform: placeTf(C.x, C.y, C.w) }, { transform: placeTf(C.x, C.y + 6, C.w * 1.02), offset: .15 }, { transform: placeTf(TITLE.x, TITLE.y, TITLE.w) }];
+    [white, black].forEach(g => anim(g, fly, { duration: 820, delay: 80, easing: "cubic-bezier(.5,0,.2,1)" }));
+    heroPop(W.hero, 680);
+  })();
+};
+</script>
+</body>
+</html>

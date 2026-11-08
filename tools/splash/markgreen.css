@@ -1,0 +1,5 @@
+/* markgreen — the user's «قدراتي» all in Duolingo's green, letters and dots; each coin leaves green and lights into its own colour */
+#splash { --qs-dot-lit: step; --qs-dot-filter: brightness(0) invert(47%) sepia(75%) saturate(1117%) hue-rotate(59deg) brightness(113%) contrast(98%); }
+.qs-bg { background: #FFFFFF; }
+.qs-l, .qs-d { fill: #58CC02; }
+.qs-d.qs-plain, .qs-t { fill: #58CC02; }

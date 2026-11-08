@@ -1,0 +1,154 @@
+<!doctype html>
+<!-- The user's notes of 2026-11-08 on the rules inside the app (branch laws-in-app), each change with the user's own screenshot
+     before it and the app's screens after it (tools/lawapp/round2/, captured from index.html by headless Chrome). -->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>تعديلات القوانين</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;700;800&display=swap">
+<style>
+:root { --ink: #3C3C3C; --gray: #777; --line: #E5E5E5; --blue: #1CB0F6; --blue-dk: #1899D6; --green: #58CC02; --green-lip: #478700;
+  --red: #FF4B4B; --gold: #FFC800; --brown: #CD7900; --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #F2F2F2; color: var(--ink); font-family: var(--font); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+h1, h2, p { margin: 0; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 24px 20px 60px; }
+header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px; }
+header h1 { font-size: 28px; font-weight: 800; line-height: 1.25; }
+header p { margin-top: 4px; font-size: 15.5px; font-weight: 600; color: var(--gray); max-width: 760px; }
+.try { display: inline-flex; align-items: center; height: 46px; padding: 0 20px; border-radius: 14px; background: var(--green); box-shadow: 0 4px 0 var(--green-lip);
+  color: #fff; font-size: 16px; font-weight: 800; text-decoration: none; }
+.try:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--green-lip); }
+.toc { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.toc a { padding: 6px 12px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; color: var(--ink); font-size: 14px; font-weight: 800; text-decoration: none; }
+section { margin-top: 26px; padding: 20px; border-radius: 20px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; }
+.num { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--blue); box-shadow: 0 3px 0 var(--blue-dk); color: #fff; font-size: 17px; font-weight: 800; margin-inline-end: 10px; vertical-align: middle; }
+section h2 { font-size: 22px; font-weight: 800; line-height: 1.3; }
+.said { margin-top: 10px; padding: 10px 14px; border-radius: 14px; background: #F7F7F7; font-size: 15px; font-weight: 600; color: var(--gray); }
+.said b { color: var(--ink); }
+.did { margin: 12px 0 0; padding: 0 20px 0 0; font-size: 15.5px; font-weight: 600; }
+.did li { margin-top: 4px; }
+.row { display: flex; gap: 16px; margin-top: 16px; overflow-x: auto; padding-bottom: 6px; align-items: flex-start; }
+figure { flex: none; margin: 0; width: 230px; }
+figure img { display: block; width: 100%; border-radius: 18px; border: 2px solid var(--line); background: #fff; cursor: zoom-in; }
+figcaption { margin-top: 6px; font-size: 13.5px; font-weight: 700; color: var(--gray); }
+.tag { display: inline-block; padding: 1px 9px; border-radius: 8px; font-size: 12.5px; font-weight: 800; margin-inline-end: 4px; }
+.tag.b { background: #FFDFE0; color: #EA2B2B; }
+.tag.a { background: #D7FFB8; color: #58A700; }
+.tag.r { background: #DDF4FF; color: var(--blue-dk); }
+.sep { flex: none; align-self: center; font-size: 28px; color: #C8C8C8; }
+.box { position: fixed; inset: 0; z-index: 9; display: none; place-items: center; background: rgba(0,0,0,.72); padding: 20px; }
+.box.on { display: grid; }
+.box img { max-width: 100%; max-height: 92vh; border-radius: 18px; }
+@media (max-width: 560px) { .wrap { padding: 16px 16px 40px; } figure { width: 200px; } section { padding: 16px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>تعديلات القوانين داخل التطبيق</h1>
+      <p>كل ملاحظة كتبتها، وتحتها صورتك قبل وصور التطبيق بعد التعديل. كلها مصوّرة من التطبيق الحقيقي (index.html) على فرع laws-in-app، وما فيه شي مرفوع.</p>
+    </div>
+    <a class="try" href="../mobile.html" target="_blank">جرّبه في التطبيق</a>
+  </header>
+  <nav class="toc">
+    <a href="#c1">١ القانون الأول</a><a href="#c2">٢ شاشة الأرقام</a><a href="#c3">٣ تقدّمك اليوم</a><a href="#c4">٤ بطاقة المراجعة</a><a href="#c5">٥ زر القانون</a>
+  </nav>
+
+  <section id="c1">
+    <h2><span class="num">١</span>القانون الأول بكلامه، ويظهر كامل في أول درس</h2>
+    <p class="said"><b>قلت:</b> خلّ القانون يقول «دوّر الأزواج اللي مجموعها ١٠ ١٠٠ ١٠٠٠»، وفي أول درس لا تخلّيه يجاوب لأنه ناقص، أبيه يظهر كامل على طول.</p>
+    <ul class="did">
+      <li>القانون صار جملة: «دوّر <b>الأزواج</b> اللي <b>مجموعها</b> ١٠، ١٠٠، ١٠٠٠»، بدون «المجموع = الزوج الأول + الزوج الثاني».</li>
+      <li>في أول درس في المسار يظهر القانون كامل وكلماته تنوّر وحدة وحدة، وما فيه «وش الناقص؟». باقي الدروس مثل ما هي.</li>
+      <li>و«كمّل القانون» بعده صار على نفس الجملة: تعبّي «الأزواج» و«مجموعها».</li>
+    </ul>
+    <div class="row">
+      <figure><img src="lawapp/round2/before-36.png" alt=""><figcaption><span class="tag b">قبل</span>«وش الناقص؟» في أول درس</figcaption></figure>
+      <span class="sep">←</span>
+      <figure><img src="lawapp/round2/b-rule-first.jpg" alt=""><figcaption><span class="tag a">بعد</span>القانون كامل من أول مرة</figcaption></figure>
+      <figure><img src="lawapp/round2/c-words.jpg" alt=""><figcaption><span class="tag a">بعد</span>«كمّل القانون» على الجملة</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="c2">
+    <h2><span class="num">٢</span>شاشة الأرقام صارت «كمّل الخطوة» اللي اتفقنا عليها</h2>
+    <p class="said"><b>قلت:</b> هذي الشاشة ما أحبها أبد، اتفقنا نبي شي مثل «كمّل الحل خطوة خطوة»، و«١٠٠» اللي فوق ما قدرت أشيلها.</p>
+    <ul class="did">
+      <li>«حطّ أرقام المثال في القانون» راحت. مكانها شاشة التطبيق نفسها: المثال فوق، وتحته الحل خطوة في كل سطر، والفراغات تعبّيها من الأرقام.</li>
+      <li>للقانون الأول: «(٤٦ + ؟) + (٣٨ + ؟)» ← «= ؟ + ؟» ← «= ؟».</li>
+      <li>أي رقم تحطه تقدر تشيله بضغطة عليه، جرّبتها في الفحص: انحط الرقم وبعد الضغطة رجع للبطاقات.</li>
+      <li>وكل القوانين الـ٣٥ صارت شاشة أرقامها بنفس الطريقة، من مثال درسها.</li>
+    </ul>
+    <div class="row">
+      <figure><img src="lawapp/round2/before-37.png" alt=""><figcaption><span class="tag b">قبل</span>الشاشة القديمة</figcaption></figure>
+      <figure><img src="lawapp/round2/before-42.png" alt=""><figcaption><span class="tag r">اللي طلبته</span>«كمّل الحل خطوة خطوة»</figcaption></figure>
+      <span class="sep">←</span>
+      <figure><img src="lawapp/round2/e-steps.jpg" alt=""><figcaption><span class="tag a">بعد</span>«كمّل الخطوة» للقانون الأول</figcaption></figure>
+      <figure><img src="lawapp/round2/e-steps-placed.jpg" alt=""><figcaption><span class="tag a">بعد</span>رقم انحط، وتشيله بضغطة</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="c3">
+    <h2><span class="num">٣</span>بطاقة القانون في «تقدّمك اليوم» مثل بطاقة الدرس وأحلى</h2>
+    <p class="said"><b>قلت:</b> خلّ بطاقة القوانين مثل اللي فوقها أو أحسن، وأبي حركات كثيرة.</p>
+    <ul class="did">
+      <li>صارت بنفس شكل بطاقة الدرس: المسدّس الذهبي مكان الصح، اسم القانون والعدد «١/٣٥»، وتحتها خمس خطوات القانون مثل شريط الدرس، و«يرجع لك بكرة».</li>
+      <li>الحركة: المسدّس ينرمي من فوق ويلفّ مثل عملة المسار، ينزل وينضغط، البطاقة تنقلب ذهبية وتكبر شوي، لمعتين تدور جنب المسدّس، ضوء يعبر البطاقة، والخطوة الأولى تتعبّى، كل ضربة بصوتها.</li>
+    </ul>
+    <div class="row">
+      <figure><img src="lawapp/round2/before-38.png" alt=""><figcaption><span class="tag b">قبل</span>البطاقة القديمة</figcaption></figure>
+      <span class="sep">←</span>
+      <figure><img src="lawapp/round2/g-win-700.jpg" alt=""><figcaption><span class="tag a">بعد</span>المسدّس ينرمي ويلفّ</figcaption></figure>
+      <figure><img src="lawapp/round2/g-win-1100.jpg" alt=""><figcaption><span class="tag a">بعد</span>ينزل والبطاقة تنقلب ذهبية</figcaption></figure>
+      <figure><img src="lawapp/round2/g-win-end.jpg" alt=""><figcaption><span class="tag a">بعد</span>الخطوة الأولى تعبّت</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="c4">
+    <h2><span class="num">٤</span>بطاقة «قوانين تراجعها اليوم» من ٣ قوانين وفوق، وبشكل جديد</h2>
+    <p class="said"><b>قلت:</b> أنا في أول درس ليش تطلع وأنا ما عندي قوانين؟ خلّها تطلع إذا عندي ٣ قوانين أو أكثر، وحسّن شكلها.</p>
+    <ul class="did">
+      <li>السبب: قوانين جوال التجربة كانت محفوظة في المتصفح. الحين القانون ما ينحسب إلا إذا خلّصت درسه فعلاً في حفظك، فطالب جديد ما يشوف قوانين ما تعلّمها، لا في المسار ولا في «قوانيني».</li>
+      <li>البطاقة ما تطلع إلا من ٣ قوانين وفوق.</li>
+      <li>شكلها الجديد: بطاقة بيضاء مثل بطاقات المسار، كومة العملات الذهبية جنب العنوان، اسم القانون اللي قدّام يتبدّل، وزر ذهبي عريض «راجع ٣ قوانين» يعبره ضوء كل ما تنرمي العملة.</li>
+    </ul>
+    <div class="row">
+      <figure><img src="lawapp/round2/before-40.png" alt=""><figcaption><span class="tag b">قبل</span>طلعت في أول درس</figcaption></figure>
+      <span class="sep">←</span>
+      <figure><img src="lawapp/round2/a-path-new.jpg" alt=""><figcaption><span class="tag a">بعد</span>طالب جديد: ما تطلع</figcaption></figure>
+      <figure><img src="lawapp/round2/h-path-one.jpg" alt=""><figcaption><span class="tag a">بعد</span>بعد قانون واحد: ما تطلع</figcaption></figure>
+      <figure><img src="lawapp/round2/i-path-three.jpg" alt=""><figcaption><span class="tag a">بعد</span>٣ قوانين: الشكل الجديد</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="c5">
+    <h2><span class="num">٥</span>زر «القانون» في كل شاشة بعد القانون</h2>
+    <p class="said"><b>قلت:</b> في كل شاشة بعد شاشة القانون حط زر يرجّعك له، شكله مثل دولينجو، فاللي يبي يشوف القانون مرة ثانية يقدر في أي صفحة.</p>
+    <ul class="did">
+      <li>زر أبيض بارز مثل أزرار دولينجو تحت شريط الدرس، فيه مسدّس القانون وكلمة «القانون» («القوانين» إذا الدرس فيه أكثر من واحد).</li>
+      <li>يطلع في كل شاشة بعد القانون في الدرس: «كمّل القانون»، «كمّل الخطوة»، وكل الأسئلة بعدها.</li>
+      <li>الضغطة تطلّع لوحة من تحت بنطّة، فيها القانون وكلماته تنوّر وحدة وحدة بصوتها، وشرحه، و«تمام» يرجعك لمكانك بدون ما يضيع شي من اللي عبّيته.</li>
+    </ul>
+    <div class="row">
+      <figure><img src="lawapp/round2/before-41.png" alt=""><figcaption><span class="tag b">قبل</span>ما فيه طريق للقانون</figcaption></figure>
+      <span class="sep">←</span>
+      <figure><img src="lawapp/round2/c-words.jpg" alt=""><figcaption><span class="tag a">بعد</span>الزر في «كمّل القانون»</figcaption></figure>
+      <figure><img src="lawapp/round2/f-later.jpg" alt=""><figcaption><span class="tag a">بعد</span>وفي الأسئلة بعده</figcaption></figure>
+      <figure><img src="lawapp/round2/d-sheet-2.jpg" alt=""><figcaption><span class="tag a">بعد</span>اللوحة: القانون وشرحه</figcaption></figure>
+    </div>
+  </section>
+</div>
+<div class="box" id="box"><img alt=""></div>
+<script>
+const box = document.getElementById('box');
+document.querySelectorAll('figure img').forEach(i => i.onclick = () => { box.firstElementChild.src = i.src; box.classList.add('on'); });
+box.onclick = () => box.classList.remove('on');
+</script>
+</body>
+</html>

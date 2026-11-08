@@ -1,0 +1,13 @@
+/* night — Readex Pro 700 in white on Duolingo's night, coins lit on their lips; the name turns to ink as the day comes in */
+.qs-bg { background:
+  radial-gradient(1.6px 1.6px at 18% 16%, #FFFFFFcc 99%, transparent), radial-gradient(1.2px 1.2px at 74% 11%, #FFFFFF99 99%, transparent),
+  radial-gradient(2px 2px at 86% 31%, #FFFFFFb3 99%, transparent), radial-gradient(1.3px 1.3px at 9% 44%, #FFFFFF80 99%, transparent),
+  radial-gradient(1.8px 1.8px at 30% 73%, #FFFFFF99 99%, transparent), radial-gradient(1.2px 1.2px at 63% 84%, #FFFFFF80 99%, transparent),
+  radial-gradient(1.6px 1.6px at 92% 66%, #FFFFFF99 99%, transparent), radial-gradient(1.1px 1.1px at 45% 24%, #FFFFFF73 99%, transparent),
+  radial-gradient(110% 70% at 50% 42%, #22404B 0%, #16262D 55%, #0F191E 100%); }
+.qs-l { fill: #FFFFFF; transition: fill .45s .08s; }
+.qs-g { fill: #89E219; } .qs-o { fill: #FFD43B; } .qs-b { fill: #49C0F8; }
+.qs-d .qs-lip { display: block; transform: translateY(34px); }
+.qs-g .qs-lip { fill: #58A700; } .qs-o .qs-lip { fill: #E6A000; } .qs-b .qs-lip { fill: #1899D6; }
+.qs-out .qs-l, .wl-mark .qs-l { fill: #3C3C3C; }
+.qs-d.qs-plain, .qs-t { fill: #3C3C3C; } .qs-plain .qs-lip { display: none; }

@@ -1,0 +1,40 @@
+<style>
+/* dotshift — the user's «قدراتي» in ink (markmono), its six dots a rainbow that moves one place along at the top of every hop, so each dot lands in a new colour; the coins take off in their own colours, and the title keeps the rainbow still */
+.qs-bg { background: #FFFFFF; }
+.qs-l { fill: #111111; }
+.qs-word > g:nth-of-type(1) { fill: #FF4B8B; }
+.qs-word > g:nth-of-type(2) { fill: #FF8A00; }
+.qs-word > g:nth-of-type(3) { fill: #FFCC00; }
+.qs-word > g:nth-of-type(4) { fill: #3DDC84; }
+.qs-word > g:nth-of-type(5) { fill: #00B8FF; }
+.qs-word > g:nth-of-type(6) { fill: #8A5CFF; }
+.qs-word > g:nth-of-type(1) { --c0: #FF4B8B; --c1: #FF8A00; --c2: #FFCC00; --c3: #3DDC84; --c4: #00B8FF; --c5: #8A5CFF; }
+.qs-word > g:nth-of-type(2) { --c0: #FF8A00; --c1: #FFCC00; --c2: #3DDC84; --c3: #00B8FF; --c4: #8A5CFF; --c5: #FF4B8B; }
+.qs-word > g:nth-of-type(3) { --c0: #FFCC00; --c1: #3DDC84; --c2: #00B8FF; --c3: #8A5CFF; --c4: #FF4B8B; --c5: #FF8A00; }
+.qs-word > g:nth-of-type(4) { --c0: #3DDC84; --c1: #00B8FF; --c2: #8A5CFF; --c3: #FF4B8B; --c4: #FF8A00; --c5: #FFCC00; }
+.qs-word > g:nth-of-type(5) { --c0: #00B8FF; --c1: #8A5CFF; --c2: #FF4B8B; --c3: #FF8A00; --c4: #FFCC00; --c5: #3DDC84; }
+.qs-word > g:nth-of-type(6) { --c0: #8A5CFF; --c1: #FF4B8B; --c2: #FF8A00; --c3: #FFCC00; --c4: #3DDC84; --c5: #00B8FF; }
+.qs-d > path:last-child { animation: qsTint calc(7.2s * var(--qs-k, 1)) calc((.45s + var(--i) * 50ms) * var(--qs-k, 1)) infinite; }
+@keyframes qsTint {
+  0%, 4.1% { fill: var(--c0); }
+  4.7%, 20.8% { fill: var(--c1); }
+  21.4%, 37.5% { fill: var(--c2); }
+  38.0%, 54.1% { fill: var(--c3); }
+  54.7%, 70.8% { fill: var(--c4); }
+  71.4%, 87.5% { fill: var(--c5); }
+  88.0%, 100% { fill: var(--c0); }
+}
+.qs-plain > path, [data-motion="reduced"] .qs-d > path { animation: none; }
+</style>
+<div class="qs-bg"></div>
+<svg class="qs-word" viewBox="954 1283 4094 1596" aria-hidden="true">
+<path class="qs-u" d="M974 -320Q3001 -370 5028 -340L5008 60Q3001 90 988 68Z"/>
+<path class="qs-x" fill-rule="evenodd" d="M3563 2361L4007 2361L4096 2287L4166 2361L4847 2361L4988 2213L4988 1835L4847 1687L4573 1687L4396 1865L4396 2146L4458 2213L4166 2213L4166 1865L3978 1687L3682 1687L3682 1835L3918 1835L4007 1917L4007 2213L3563 2213Z M4625 1835L4847 1835L4847 2213L4662 2213L4544 2102L4544 1917Z M3415 1687L3271 1687L3271 2361L3167 2531L3045 2531L3045 2664L3234 2664L3363 2531L3415 2475Z M2664 1687L2520 1687L2520 2213L2209 2213L2209 1687L1854 1687L1706 1835L1706 2361L1166 2361L1166 2046L1228 1980L1314 1980L1314 1835L1166 1835L1014 1980L1014 2361L1166 2531L1706 2531L1854 2361L1854 1835L2065 1835L2065 2361L2520 2361L2664 2213Z M2879 1343L2879 2361L3023 2361L3023 1343Z"/>
+<path class="qs-l" fill-rule="evenodd" d="M3563 2361L4007 2361L4096 2287L4166 2361L4847 2361L4988 2213L4988 1835L4847 1687L4573 1687L4396 1865L4396 2146L4458 2213L4166 2213L4166 1865L3978 1687L3682 1687L3682 1835L3918 1835L4007 1917L4007 2213L3563 2213Z M4625 1835L4847 1835L4847 2213L4662 2213L4544 2102L4544 1917Z M3415 1687L3271 1687L3271 2361L3167 2531L3045 2531L3045 2664L3234 2664L3363 2531L3415 2475Z M2664 1687L2520 1687L2520 2213L2209 2213L2209 1687L1854 1687L1706 1835L1706 2361L1166 2361L1166 2046L1228 1980L1314 1980L1314 1835L1166 1835L1014 1980L1014 2361L1166 2531L1706 2531L1854 2361L1854 1835L2065 1835L2065 2361L2520 2361L2664 2213Z M2879 1343L2879 2361L3023 2361L3023 1343Z"/>
+<g class="qs-d qs-g" style="--i:0"><path class="qs-lip" d="M4742 1413h152v152h-152Z"/><path d="M4742 1413h152v152h-152Z"/></g>
+<g class="qs-d qs-g" style="--i:1"><path class="qs-lip" d="M4503 1413h152v152h-152Z"/><path d="M4503 1413h152v152h-152Z"/></g>
+<g class="qs-d qs-o" style="--i:2"><path class="qs-lip" d="M2597 1413h152v152h-152Z"/><path d="M2597 1413h152v152h-152Z"/></g>
+<g class="qs-d qs-o" style="--i:3"><path class="qs-lip" d="M2366 1413h152v152h-152Z"/><path d="M2366 1413h152v152h-152Z"/></g>
+<g class="qs-d qs-b" style="--i:4"><path class="qs-lip" d="M1545 2673h152v152h-152Z"/><path d="M1545 2673h152v152h-152Z"/></g>
+<g class="qs-d qs-b" style="--i:5"><path class="qs-lip" d="M1310 2673h152v152h-152Z"/><path d="M1310 2673h152v152h-152Z"/></g>
+</svg>

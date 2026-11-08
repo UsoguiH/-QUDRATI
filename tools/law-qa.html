@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<!-- The QA and user-acceptance pass of 2026-11-03 over the rule lab (tools/law-app.html) and the app around it: nine
+     testers, what each found, what was fixed and checked again, and what waits on the user. Not in the app. -->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>فحص القوانين</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root { --ink: #3C3C3C; --gray: #777; --line: #E5E5E5; --blue-dk: #1899D6; --green: #58A700; --green-bg: #D7FFB8; --gold: #FFC800; --gold-bg: #FFF4BF; --red: #EA2B2B; --red-bg: #FFDFE0; --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #EFEFEF; color: var(--ink); font-family: var(--font); line-height: 1.55; }
+.wrap { max-width: 1000px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { margin: 0 0 4px; font-size: 30px; font-weight: 800; }
+.lede { margin: 0 0 18px; font-size: 16.5px; font-weight: 600; color: var(--gray); }
+.lede a { color: var(--blue-dk); font-weight: 800; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 18px; }
+.stat { background: #fff; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 16px; padding: 10px 12px; text-align: center; }
+.stat b { display: block; font-size: 26px; font-weight: 800; }
+.stat span { font-size: 14px; font-weight: 700; color: var(--gray); }
+section { background: #fff; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 20px; padding: 16px 18px; margin-bottom: 16px; }
+h2 { margin: 0 0 10px; font-size: 20px; font-weight: 800; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th, td { text-align: start; vertical-align: top; padding: 8px 6px; border-top: 1px solid var(--line); }
+th { font-size: 13.5px; color: var(--gray); font-weight: 800; border-top: 0; }
+td:first-child { width: 34%; font-weight: 800; }
+.tag { display: inline-block; padding: 0 8px; border-radius: 8px; font-size: 12.5px; font-weight: 800; white-space: nowrap; }
+.t-b { background: var(--red-bg); color: var(--red); }
+.t-m { background: #FFEFD6; color: #E07800; }
+.t-n { background: #EEF; color: #5560C8; }
+.t-ok { background: var(--green-bg); color: var(--green); }
+ul { margin: 0; padding: 0 20px 0 0; font-size: 15.5px; font-weight: 600; }
+li { margin: 5px 0; }
+li b { font-weight: 800; }
+.ask { background: var(--gold-bg); border-color: var(--gold); }
+@media (max-width: 640px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } td:first-child { width: 40%; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>فحص القوانين والتطبيق</h1>
+  <p class="lede">تسعة فاحصين، كل واحد على جزء: شاشة القانون، «كمّل القانون»، «حطّ أرقام المثال»، المراجعة، المسار والفوز و«قوانيني»، دروس كاملة من أولها لآخرها، مسح آلي لكل شاشة على ثلاث مقاسات جوال، باقي التطبيق، وطالبة تجرّبه كأنها تذاكر. بعدها صلّحت اللي لقوه، وفحصته مرة ثانية على ٣٩٠ و٣٦٠ و٣٢٠. جرّبه بنفسك في <a href="law-app.html">صفحة القوانين في التطبيق</a>.</p>
+
+  <div class="stats">
+    <div class="stat"><b>٩</b><span>فاحصين</span></div>
+    <div class="stat"><b>٢٥</b><span>تصليح، كل واحد انفحص</span></div>
+    <div class="stat"><b>٢٤٬٠٠٠</b><span>سؤال مولّد، كلها صح</span></div>
+    <div class="stat"><b>١١</b><span>درس كامل من أوله لآخره</span></div>
+  </div>
+
+  <section>
+    <h2>اللي انصلح وانفحص مرة ثانية</h2>
+    <table>
+      <tr><th>المشكلة</th><th>وش صار الحين</th></tr>
+      <tr><td><span class="tag t-b">حرجة</span> في جوال صغير، بطاقات الأرقام تنزل تحت «تحقق» وما تنضغط، فالطالب يعلق</td><td>كل شاشة تصغر بالقدر اللي تحتاجه بس، والبطاقات دايماً فوق الزر. انفحصت الثمانية قوانين قبل الغلط وبعده، على ٣٢٠ و٣٦٠ و٣٩٠</td></tr>
+      <tr><td><span class="tag t-m">مهمة</span> لو طلعت من المراجعة في نصها، تضيع كل القوانين اللي خلّصتها</td><td>كل قانون ينحفظ أول ما تجاوب سؤاله، فالطلوع ما يضيّع شي</td></tr>
+      <tr><td><span class="tag t-m">مهمة</span> ضغطتين سريعة على «متابعة» تتخطّى القانون اللي بعده وتحسبه غلط، أو تتخطّى شاشة النهاية</td><td>الزر يشتغل مرة وحدة بس بعد كل جواب، وزر النهاية يظهر بعد ما يتكلم فهيم</td></tr>
+      <tr><td><span class="tag t-m">مهمة</span> الفراغ يصغر لما تحط فيه رقم أو كلمة، والسطر يتحرك ويطلع من البطاقة في «رقم الآحاد»</td><td>كل فراغ عرضه ثابت من البداية. انقاس قبل الحط وبعده لكل القوانين</td></tr>
+      <tr><td><span class="tag t-m">مهمة</span> في «رقم الآحاد» ٧ × ٨ ينحسب غلط، مع إن الفراغين اسمهم «آحاد»</td><td>الفراغين اللي لهم نفس الاسم يقبلون الترتيبين</td></tr>
+      <tr><td><span class="tag t-m">مهمة</span> أول مساعدة في «كمّل القانون» تعطي الجواب نفسه (مثلاً «المطلوب، على الكل»)</td><td>تعطي مثال بالأرقام: «فكّر بمثال: ٧ × ٦ ÷ ٢ = ٢١»، بدون الكلمات</td></tr>
+      <tr><td><span class="tag t-m">مهمة</span> بطاقة «قوانين تراجعها اليوم» مخفية فوق لما يفتح التطبيق</td><td>المسار يفتح والبطاقة قدامك، وزر السهم ينزلك لدرسك</td></tr>
+      <tr><td><span class="tag t-m">مهمة</span> «قوانيني» تنقص في الجوال الصغير، وأزرارها برا الشاشة، وزر الرجوع في الجوال يطلع من التطبيق</td><td>الشبكة تصغر وتبقى الأزرار ظاهرة. زر الرجوع و Esc يقفلونها، وترتيبها صار نفس ترتيب المسار</td></tr>
+      <tr><td><span class="tag t-m">مهمة</span> شاشة نهاية المراجعة تطلع برا الشاشة مع خمس قوانين أو أكثر</td><td>الصفوف تصغر وفهيم يصغر، والثمانية كلها تبين فوق «متابعة»</td></tr>
+      <tr><td><span class="tag t-m">مهمة</span> شاشة القانون ما تركب على ٣٢٠×٥٦٨، والرسم يدخل في البطاقة</td><td>تصميم أصغر للجوالات القصيرة، والرسم يتعدّل لما يكبر بنفسه (أعمدة الوسط). كل شي فوق «كمّل» للقوانين الثمانية</td></tr>
+      <tr><td><span class="tag t-n">صغيرة</span> «وش الناقص؟» يعرض اسم قانون ثاني كخيار غلط، و«الكل» ينفع جواب في «الوسط» و«المصافحات»</td><td>ما يطلع أي اسم قانون ولا كلمة ممكن تنحسب صح، في الشاشتين</td></tr>
+      <tr><td><span class="tag t-n">صغيرة</span> القانون الجديد يسأل عن «العدد» و«(العدد − ١)» ظاهرة جنبه</td><td>يسأل عن الكلمة اللي ما تبين داخل كلمة ثانية</td></tr>
+      <tr><td><span class="tag t-n">صغيرة</span> «آحاد × آحاد» في المراجعة: الفراغ الثاني يعطيك الجواب</td><td>اختيار واحد يعبّي الاثنين</td></tr>
+      <tr><td><span class="tag t-n">صغيرة</span> «كمّل» يشتغل قبل ما يخلص الشرح، فالطالب يتخطاه</td><td>ينتظر لين يخلص الشرح. ولو تذكّر القانون في المراجعة يشتغل على طول</td></tr>
+      <tr><td><span class="tag t-n">صغيرة</span> الغلط في «كمّل القانون» و«حطّ الأرقام» ما ينحسب في الدرس، والبار ما يتحرك مع الصح</td><td>الغلط يُحسب على أول محاولة ويقطع السلسلة، والبار يتقدم مع الصح، مثل شاشات التطبيق</td></tr>
+      <tr><td><span class="tag t-n">صغيرة</span> القانون اللي ينعاد في درس ما يتحدّث موعده</td><td>لو تذكّرته وهو مستحق يتقدم خطوة، ولو غلطت فيه يرجع بكرة</td></tr>
+      <tr><td><span class="tag t-n">صغيرة</span> عدد القوانين في البطاقة غير اللي في المراجعة (المراجعة تاخذ ٥ بس)</td><td>المراجعة تاخذ كل المستحق</td></tr>
+      <tr><td><span class="tag t-n">صغيرة</span> «تذكرت ١ من ٣» وأنت تذكرت ٢، و«قوانينك ثابتة» بعد غلطتين، و«جاوب سؤاله وخلّه ذهبي» وهو أصلاً يبقى ذهبي</td><td>العدد صار صح، والبطاقة تقول «خلّصت مراجعة اليوم»، والجملة «جاوب سؤاله صح ويرجع لك بعد شهر»</td></tr>
+      <tr><td><span class="tag t-n">صغيرة</span> اليوم ينحسب بتوقيت غرينتش، فـ«بكرة» يجي الساعة ٣ الفجر</td><td>ينحسب بيوم الطالب نفسه</td></tr>
+      <tr><td><span class="tag t-n">صغيرة</span> الكلمة الطويلة تنقص داخل الفراغ، وحرف «آ» ينقص من فوق، وأول حرف من «آخر» ينقص</td><td>الكلمة تصغر لين تدخل، وما في حرف ينقص</td></tr>
+      <tr><td><span class="tag t-n">صغيرة</span> عدّاد بطاقة الفوز يبدأ كبير، ومع الحركة مطفية ما يتحدّث</td><td>يبدأ بحجمه وينط وقته، ومع الحركة المطفية ينرسم على آخره</td></tr>
+      <tr><td><span class="tag t-n">صغيرة</span> الصياغة: «قرابة ١ دقيقة»، «باقي فراغين في غير مكانه»، «أرجع لك فيه بكرة»، «بعد خمس مراجعات»</td><td>«قرابة دقيقة»، «باقي فراغين، فكّر فيهم مرة ثانية»، «يرجع لك بكرة»، «بعد أربع مراجعات»، و«الفخ:» و«متى يجيك:» مكتوبة</td></tr>
+      <tr><td><span class="tag t-n">صغيرة</span> مساعدة «المجموع» و«(العدد − ١)» تقول «في المثال كم؟» والرقم مو موجود في المثال</td><td>تقول كيف تحسبه: «احسبها: ٨ + ١٢ + ١٠ = ؟»، «كل واحد يصافح الباقين ما عدا نفسه: كم؟»</td></tr>
+      <tr><td><span class="tag t-n">صغيرة</span> أزرار اللوحة: «شغّله» و«شوفه» مرة ثانية ما يطلع فيها «قانون جديد»، والجوال يروح من الشاشة</td><td>كل ضغطة تعرضه جديد، والجوال يرجع قدامك</td></tr>
+      <tr><td><span class="tag t-n">صغيرة</span> الصوت المطفي ما ينطبق على «قوانيني»، والإشارات باهتة في بطاقة القاعدة، وشكل القانون صغير في بطاقة الدرس</td><td>الثلاث انصلحت</td></tr>
+    </table>
+  </section>
+
+  <section>
+    <h2>اللي اشتغل من أول مرة</h2>
+    <ul>
+      <li><b>رياضيات الأمثلة الثمانية</b> وسطر الحل تحتها كلها صح، ولا في رقم غلط ينفع جواب.</li>
+      <li><b>٢٤٬٠٠٠ سؤال قدرات مولّد</b> (٣٬٠٠٠ لكل قانون): الجواب صح وموجود مرة وحدة بين أربع خيارات مختلفة، بدون أرقام إنجليزية.</li>
+      <li><b>خطوات الحفظ</b> بالضبط: ١، ٣، ٧، ١٤، ٣٠ يوم، والغلط يرجع بكرة.</li>
+      <li><b>ما في تسريب</b> من ستايل القوانين لباقي التطبيق: كل شاشة انقاست مع الستايل وبدونه، والفرق صفر.</li>
+      <li><b>كل أدوات الفحص</b> اشتغلت بدون أخطاء: بنك الأسئلة، الدروس القصيرة، بطاقات الشرح، الصفحات، وخريطة الموقع.</li>
+      <li><b>دروس كاملة</b> (١١ درس) من المسار للفوز: البار ما يرجع، القلوب ما تنقص في شاشات القانون، والأخطاء ترجع آخر الدرس.</li>
+    </ul>
+  </section>
+
+  <section class="ask">
+    <h2>يحتاج قرارك</h2>
+    <ul>
+      <li><b>في التطبيق الحقيقي، «·» تطلع للطالب</b> وتنقرا صفر: «كل ساعة = ٣٠° · عقرب الدقائق» تنقرا «٠٣٠». موجودة ٥٣ مرة في البيانات (الدروس، بطاقات الشرح، والدرس القصير). تصليحها يغيّر ملف المنهج والبيانات ويحتاج نسخة جديدة من التطبيق.</li>
+      <li><b>أرقام إنجليزية في الدوري:</b> أسماء المنافسين مثل «Nouf2006» و«3bdulaziz». أخليها لأنها أسماء مستخدمين، ولا أغيّرها؟</li>
+      <li><b>المراجعة والاختبار:</b> آخر خطوة (٣٠ يوم) تخلص بعد يوم ٥٥، والاختبار بعد ٤٣ يوم. أخلّي الخطوات تقصر لين تخلص قبل الاختبار؟</li>
+      <li><b>بطاقتين «راجع»</b> فوق المسار لما يكون عندك قوانين ومراجعة اليوم مع بعض. أدمجهم في بطاقة وحدة؟</li>
+      <li><b>درس «مجموع ١ إلى ن»</b> فيه قانونه بالشكل الجديد، وقاعدة ثانية بالشكل القديم («كمّل القاعدة»). أحوّل كل قواعد الدروس للشكل الجديد؟</li>
+      <li><b>في «حطّ الأرقام»</b> لو حطيت ٦ مكان «العدد» و٧ مكان «(العدد − ١)» ينحسب صح لأنه ضرب. هذا اللي قلته قبل، بس الحين كل فراغ مكتوب اسمه. أخليه يقبل الترتيبين ولا لا؟</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>باقي، صغيرة</h2>
+    <ul>
+      <li>البطاقة تنزل شوي في نص الشرح لما فهيم يقول جملة أطول.</li>
+      <li>كلام الرسم صغير جداً على الجوالات الصغيرة (٣٢٠).</li>
+      <li>«الاحتمال» و«مبدأ العدّ» لهم نفس الإشارة (النرد).</li>
+      <li>بعض خيارات أسئلة المراجعة ضعيفة: احتمال أكبر من ١، أو رقم عشري في «مجموع ١ إلى ن».</li>
+      <li>«تقدّمك اليوم» على ٣٦٠ تصغر لـ٨٧٪ لما تكون فيها بطاقة القانون.</li>
+      <li>في التطبيق نفسه: مساعدة «كمّل الخطوة» تنكسر سطرين ويبقى «١٠٠٠» لحاله.</li>
+    </ul>
+  </section>
+</div>
+</body>
+</html>

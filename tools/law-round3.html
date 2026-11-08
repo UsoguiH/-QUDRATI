@@ -1,0 +1,148 @@
+<!doctype html>
+<!-- The user's notes of 2026-11-08 on the rules inside the app (branch laws-in-app), round 3: the ordering screen and the pairs screen, the user's screenshot
+     before it and the app's screens after it (tools/lawapp/round3/, captured from index.html by headless Chrome). -->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>شاشتين أفضل</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;700;800&display=swap">
+<style>
+:root { --ink: #3C3C3C; --gray: #777; --line: #E5E5E5; --blue: #1CB0F6; --blue-dk: #1899D6; --green: #58CC02; --green-lip: #478700;
+  --red: #FF4B4B; --gold: #FFC800; --brown: #CD7900; --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #F2F2F2; color: var(--ink); font-family: var(--font); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+h1, h2, p { margin: 0; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 24px 20px 60px; }
+header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px; }
+header h1 { font-size: 28px; font-weight: 800; line-height: 1.25; }
+header p { margin-top: 4px; font-size: 15.5px; font-weight: 600; color: var(--gray); max-width: 760px; }
+.try { display: inline-flex; align-items: center; height: 46px; padding: 0 20px; border-radius: 14px; background: var(--green); box-shadow: 0 4px 0 var(--green-lip);
+  color: #fff; font-size: 16px; font-weight: 800; text-decoration: none; }
+.try:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--green-lip); }
+.toc { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.toc a { padding: 6px 12px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; color: var(--ink); font-size: 14px; font-weight: 800; text-decoration: none; }
+section { margin-top: 26px; padding: 20px; border-radius: 20px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; }
+.num { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--blue); box-shadow: 0 3px 0 var(--blue-dk); color: #fff; font-size: 17px; font-weight: 800; margin-inline-end: 10px; vertical-align: middle; }
+section h2 { font-size: 22px; font-weight: 800; line-height: 1.3; }
+.said { margin-top: 10px; padding: 10px 14px; border-radius: 14px; background: #F7F7F7; font-size: 15px; font-weight: 600; color: var(--gray); }
+.said b { color: var(--ink); }
+.did { margin: 12px 0 0; padding: 0 20px 0 0; font-size: 15.5px; font-weight: 600; }
+.did li { margin-top: 4px; }
+.row { display: flex; gap: 16px; margin-top: 16px; overflow-x: auto; padding-bottom: 6px; align-items: flex-start; }
+figure { flex: none; margin: 0; width: 230px; }
+figure img { display: block; width: 100%; border-radius: 18px; border: 2px solid var(--line); background: #fff; cursor: zoom-in; }
+figcaption { margin-top: 6px; font-size: 13.5px; font-weight: 700; color: var(--gray); }
+.tag { display: inline-block; padding: 1px 9px; border-radius: 8px; font-size: 12.5px; font-weight: 800; margin-inline-end: 4px; }
+.tag.b { background: #FFDFE0; color: #EA2B2B; }
+.tag.a { background: #D7FFB8; color: #58A700; }
+.tag.r { background: #DDF4FF; color: var(--blue-dk); }
+.sep { flex: none; align-self: center; font-size: 28px; color: #C8C8C8; }
+.box { position: fixed; inset: 0; z-index: 9; display: none; place-items: center; background: rgba(0,0,0,.72); padding: 20px; }
+.box.on { display: grid; }
+.box img { max-width: 100%; max-height: 92vh; border-radius: 18px; }
+@media (max-width: 560px) { .wrap { padding: 16px 16px 40px; } figure { width: 200px; } section { padding: 16px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>شاشتين أفضل للقوانين</h1>
+      <p>صورتك قبل، وتحتها الشاشة الجديدة في التطبيق الحقيقي (index.html على فرع laws-in-app)، خطوة خطوة. ما فيه شي مرفوع.</p>
+    </div>
+    <a class="try" href="../mobile.html" target="_blank">جرّبه في التطبيق</a>
+  </header>
+
+  <section id="c1">
+    <h2><span class="num">١</span>«ترتيب العمليات»: يرتّب بس، بدون «أول» و«آخر»</h2>
+    <p class="said"><b>قلت:</b> «أول» و«آخر» خيارات غلط هنا، وطريقة تعليم سيئة.</p>
+    <ul class="did">
+      <li>معك حق: الكلمات الغلط كانت تجي من قوانين ثانية، وهنا ما لها معنى، فالطالب يخمّن كلمات بدل ما يفكّر في الترتيب.</li>
+      <li>القانون هذا ترتيب، فالسؤال صار «رتّبها: مين يبدأ أول؟» بالخطوات الأربع بس، وتحت كل فراغ مكانه: أولاً، ثانياً، ثالثاً، أخيراً.</li>
+      <li>شلنا «الناتج =» لأن القانون ما هو معادلة.</li>
+      <li>لو غلط: يبقى الصح في مكانه، والغلط يرجع، وفهيم يسأله: «في ٢٠ − (٢ + ١)² × ٢: وش تحسب أول؟ وبعده؟».</li>
+    </ul>
+    <div class="row">
+      <figure><img src="lawapp/round3/before-44.png" alt=""><figcaption><span class="tag b">قبل</span>«أول» و«آخر» بين الخيارات</figcaption></figure>
+      <span class="sep">←</span>
+      <figure><img src="lawapp/round3/ops-1.jpg" alt=""><figcaption><span class="tag a">بعد</span>الخطوات الأربع بس، وكل فراغ بمكانه</figcaption></figure>
+      <figure><img src="lawapp/round3/ops-3-miss.jpg" alt=""><figcaption><span class="tag a">بعد</span>غلط: الصح يبقى، والمساعدة سؤال</figcaption></figure>
+      <figure><img src="lawapp/round3/ops-4-right.jpg" alt=""><figcaption><span class="tag a">بعد</span>صح</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="c2">
+    <h2><span class="num">٢</span>«الأعداد المكمّلة»: وصّل الأزواج بدل ما تعبّي الفراغات</h2>
+    <p class="said"><b>قلت:</b> كثير بيغلطون وهم عارفين الجواب، نبي أفضل طريقة تعليم.</p>
+    <ul class="did">
+      <li>الشاشة القديمة كانت تخلّيه ينسخ أرقام في سبع فراغات، وما يعرف وش غلطته إلا بعد «تحقق». يعني غلطة وحدة في الترتيب تطيّح الشاشة كلها.</li>
+      <li>الحين يسوّي الحيلة نفسها: ستة أعداد، يضغط عددين مجموعهم ١٠٠ فيطيرون لسطرهم «☐ + ☐ = ١٠٠» ويخضرّون ويقفزون، وكل زوج بصوت أعلى من اللي قبله، مثل «وصّل» في الدروس.</li>
+      <li>كل ضغطة تنحكم في وقتها، فما فيه غلطة تنتظر «تحقق». الزوج الغلط يهتز، وفهيم يقول كم مجموعه فعلاً: «٥٥ + ٨٣ = ١٣٨، مو ١٠٠». ومن الغلطة الثانية يعطيه الحيلة: «الآحاد تكمّل ١٠، والعشرات تكمّل ٩».</li>
+      <li>بعد الأزواج الثلاثة يطلع المجموع «= ١٠٠ + ١٠٠ + ١٠٠ = ٣٠٠»، وكل مرة يعيد الدرس تجيه أعداد جديدة.</li>
+    </ul>
+    <div class="row">
+      <figure><img src="lawapp/round3/before-47.png" alt=""><figcaption><span class="tag b">قبل</span>سبع فراغات وتحقق في الآخر</figcaption></figure>
+      <span class="sep">←</span>
+      <figure><img src="lawapp/round3/pairs-1.jpg" alt=""><figcaption><span class="tag a">بعد</span>ستة أعداد وثلاثة أزواج</figcaption></figure>
+      <figure><img src="lawapp/round3/pairs-2-miss.jpg" alt=""><figcaption><span class="tag a">بعد</span>زوج غلط: يقول كم مجموعه</figcaption></figure>
+      <figure><img src="lawapp/round3/pairs-3-one.jpg" alt=""><figcaption><span class="tag a">بعد</span>زوج صح: يطير لسطره ويخضرّ</figcaption></figure>
+      <figure><img src="lawapp/round3/pairs-4-done.jpg" alt=""><figcaption><span class="tag a">بعد</span>المجموع ٣٠٠</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="c3">
+    <h2><span class="num">٣</span>«أولاً، ثانياً…» ما تقفز</h2>
+    <p class="said"><b>قلت:</b> ليش هذي تقفز؟</p>
+    <ul class="did">
+      <li>السبب: لما يكون الجواب صح كان الفراغ كله يقفز، والكلمة اللي تحته جزء منه فتقفز معه.</li>
+      <li>الحين اللي يقفز ويخضرّ هو المربع بس، و«أولاً، ثانياً، ثالثاً، أخيراً» ثابتة في مكانها. قسناها أثناء القفزة: ما تحرّكت ولا بكسل.</li>
+    </ul>
+    <div class="row">
+      <figure><img src="lawapp/round3/before-53.png" alt=""><figcaption><span class="tag b">قبل</span>الكلمات تقفز مع المربعات</figcaption></figure>
+      <span class="sep">←</span>
+      <figure><img src="lawapp/round3/o-right.jpg" alt=""><figcaption><span class="tag a">بعد</span>المربعات بس تقفز، والكلمات ثابتة</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="c4">
+    <h2><span class="num">٤</span>١٠ و١٠٠ و١٠٠٠ هي اللي بالأزرق</h2>
+    <p class="said"><b>قلت:</b> أبي ١٠ ١٠٠ ١٠٠٠ هي اللي بالأزرق، مو «الأزواج» و«مجموعها».</p>
+    <ul class="did">
+      <li>القانون صار: «دوّر الأزواج اللي مجموعها <b>١٠</b> أو <b>١٠٠</b> أو <b>١٠٠٠</b>»، والأرقام الثلاثة هي اللي بالأزرق، و«الأزواج» و«مجموعها» كلام عادي.</li>
+      <li>كلام فهيم فوقه نفس الشي: الأرقام بالأزرق.</li>
+      <li>في «كمّل القانون» الفراغات هي الأرقام الثلاثة، والخيارات الغلط أرقام لها معنى (٥٠ و٩٩)، مو كلمات من قوانين ثانية. ويقبلها بأي ترتيب.</li>
+    </ul>
+    <div class="row">
+      <figure><img src="lawapp/round3/before-54.png" alt=""><figcaption><span class="tag b">قبل</span>«الأزواج» و«مجموعها» بالأزرق</figcaption></figure>
+      <span class="sep">←</span>
+      <figure><img src="lawapp/round3/t-rule.jpg" alt=""><figcaption><span class="tag a">بعد</span>١٠ و١٠٠ و١٠٠٠ بالأزرق</figcaption></figure>
+      <figure><img src="lawapp/round3/t-words.jpg" alt=""><figcaption><span class="tag a">بعد</span>«كمّل القانون»: يعبّي الأرقام</figcaption></figure>
+    </div>
+  </section>
+
+  <section id="c5">
+    <h2><span class="num">٥</span>بطاقة المراجعة: سطر واحد بس</h2>
+    <p class="said"><b>قلت:</b> خلّها بسيطة جداً، بدون كلام، بس «قوانين تحتاج تراجعها».</p>
+    <ul class="did">
+      <li>شلنا «مراجعة اليوم — قرابة دقيقة» واسم القانون والزر الكبير.</li>
+      <li>صارت سطر واحد: كومة القوانين الذهبية وعليها العدد، «قوانين تحتاج تراجعها»، وزر «راجع» صغير.</li>
+    </ul>
+    <div class="row">
+      <figure><img src="lawapp/round3/before-55.png" alt=""><figcaption><span class="tag b">قبل</span>ثلاثة أسطر وزر كبير</figcaption></figure>
+      <span class="sep">←</span>
+      <figure><img src="lawapp/round3/p-card.jpg" alt=""><figcaption><span class="tag a">بعد</span>سطر واحد</figcaption></figure>
+    </div>
+  </section>
+</div>
+<div class="box" id="box"><img alt=""></div>
+<script>
+const box = document.getElementById('box');
+document.querySelectorAll('figure img').forEach(i => i.onclick = () => { box.firstElementChild.src = i.src; box.classList.add('on'); });
+box.onclick = () => box.classList.remove('on');
+</script>
+</body>
+</html>

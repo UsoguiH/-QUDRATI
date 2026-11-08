@@ -1,0 +1,9 @@
+/* notebook — Changa 800 in blue pen on a maths notebook's squares, a red margin on the right */
+.qs-bg { background-color: #FFFEF8;
+  background-image: linear-gradient(#E3EBF7 1.5px, transparent 1.5px), linear-gradient(90deg, #E3EBF7 1.5px, transparent 1.5px);
+  background-size: 26px 26px; background-position: center center; }
+.qs-bg::after { content: ""; position: absolute; top: 0; bottom: 0; right: 46px; width: 2px; background: #FFB4B4; }
+.qs-l { fill: #2453C8; }
+.qs-g { fill: #58CC02; } .qs-o { fill: #FFC800; } .qs-b { fill: #1CB0F6; }
+.qs-d.qs-plain, .qs-t { fill: #2453C8; }
+.qs-u { display: block; fill: #FFE45C; opacity: .75; }

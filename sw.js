@@ -29,7 +29,7 @@
    The dev harnesses are never served from a cache, neither the page nor
    anything it loads: they exist to show the file on disk right now. */
 
-const VERSION = "95";
+const VERSION = "98";
 const SHELL = "qudrati-shell-" + VERSION;
 const RUNTIME = "qudrati-runtime-" + VERSION;
 
@@ -46,6 +46,16 @@ const CORE = [
   "js/data/teach.js?v=" + VERSION,
   "js/data/teach-figures.js?v=" + VERSION,
   "js/data/learn.js?v=" + VERSION,
+  /* the rules of nodes 1–3: their screens, the path's card, «قوانيني» */
+  "css/law-core.css?v=" + VERSION,
+  "css/law.css?v=" + VERSION,
+  "js/law/law-core.js?v=" + VERSION,
+  "js/law/law-more.js?v=" + VERSION,
+  "js/law/law-more-bigsum.js?v=" + VERSION,
+  "js/law/law-more-keylaws.js?v=" + VERSION,
+  "js/law/law-more-probstats.js?v=" + VERSION,
+  "js/law/law-deck.js?v=" + VERSION,
+  "js/law/law.js?v=" + VERSION,
   "manifest.webmanifest",
   "favicon.ico",
   /* the interface's own glyphs: without these a lesson still works but reads as

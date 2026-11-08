@@ -1,0 +1,7 @@
+/* base — the first build: the app's green name on white, coins with a lip */
+.qs-bg { background: #fff; }
+.qs-l { fill: #58CC02; }
+.qs-g { fill: #78C900; } .qs-o { fill: #FFC800; } .qs-b { fill: #1CB0F6; }
+.qs-d .qs-lip { display: block; transform: translateY(34px); }
+.qs-g .qs-lip { fill: #58A700; } .qs-o .qs-lip { fill: #E6A000; } .qs-b .qs-lip { fill: #1899D6; }
+.qs-d.qs-plain, .qs-t { fill: #58CC02; } .qs-plain .qs-lip { display: none; }

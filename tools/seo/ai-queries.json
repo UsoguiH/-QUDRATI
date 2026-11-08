@@ -17,7 +17,323 @@
   "top": "the first source the engine cited",
   "note": "anything else seen, verbatim where it matters"
  },
- "log": [],
+ "log": [
+  {
+   "date": "2026-11-03",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "laws-hub",
+   "cited": false,
+   "url": null,
+   "top": "x.com",
+   "note": "AI summary («نبذة باستخدام الذكاء الاصطناعي») cites dalqdrat.com, scribd.com; qudrati.xyz not in organic top 10"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "solved",
+   "cited": false,
+   "url": null,
+   "top": "mulaqn.sa",
+   "note": "AI summary cites injazedu.co, learn.sa, qudurat.com, mulaqn.sa"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "mock",
+   "cited": false,
+   "url": null,
+   "top": "thiqa.net",
+   "note": "AI summary cites mulaqn.sa, qiyas.sa, qiyas.abwaab.com, tedu.sa"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "app",
+   "cited": false,
+   "url": null,
+   "top": "apps.apple.com",
+   "note": "AI summary cites dalqdrat.com, mujtahidacademy.com, mulaqn.sa"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "brand",
+   "cited": true,
+   "url": "https://qudrati.xyz/",
+   "top": "qudrati.xyz",
+   "note": "no AI summary; organic 1–4 are qudrati.xyz (/, about, /qudrat/, fastest-methods) and more of our pages below"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "score-calc",
+   "cited": false,
+   "url": null,
+   "top": "khaleejcalculators.com",
+   "note": "AI summary cites mubhir.ai, khaleejcalculators.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "quant-share",
+   "cited": false,
+   "url": null,
+   "top": "blog.ekhtibarat.com",
+   "note": "AI summary cites qudratksa.com, x.com, media.etec.gov.sa"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "handshakes",
+   "cited": false,
+   "url": null,
+   "top": "youtube.com",
+   "note": "AI summary cites x.com, instagram.com, youtube.com, ekhtibarat.com, test-q.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "probability",
+   "cited": true,
+   "url": "https://qudrati.xyz/qudrat/probability-statistics.html",
+   "top": "qudrati.xyz",
+   "note": "organic #1 is our page; AI summary cites dalqdrat.com, qudrati.xyz, youtube.com, maarf.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "percent",
+   "cited": false,
+   "url": null,
+   "top": "jehad.academy",
+   "note": "AI summary cites abdihqt.com, miyya.io, msaary.com, youtube.com, bab9.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "comparison",
+   "cited": true,
+   "url": "https://qudrati.xyz/qudrat/comparisons.html",
+   "top": "qudrati.xyz",
+   "note": "AI summary at the top: qudrati.xyz is the first source card and is cited inline several times; organic #5; organic #1 dalqdrat.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "foundation",
+   "cited": false,
+   "url": null,
+   "top": "instein100.com",
+   "note": "AI summary cites rekaz.io, youtube.com, instein100.com, mulaqn.sa, t.me"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "free-site",
+   "cited": false,
+   "url": null,
+   "top": "qudrat-test.com",
+   "note": "AI summary cites mulaqn.sa, qdrat.sa, ayedacademy.co, qudurat.com, qudrat-test.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "clock",
+   "cited": false,
+   "url": null,
+   "top": "youtube.com",
+   "note": "AI summary cites bazaidacademy.net, ar.wikipedia.org, youtube.com, tiktok.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "game",
+   "cited": false,
+   "url": null,
+   "top": "wordwall.net",
+   "note": "AI summary cites wordwall.net, mulaqn.sa, mujtahidacademy.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "ChatGPT (search on) — temporary chat, logged-in Free account",
+   "id": "laws-hub",
+   "cited": false,
+   "url": null,
+   "top": "albaraah.sa",
+   "note": "sources: albaraah.sa (PDFs), dalqdrat.com, atahdak.com; a second run cited yimnak.sa, dalqdrat.com, atahdak.com, daafoor.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "ChatGPT (search on) — temporary chat, logged-in Free account",
+   "id": "solved",
+   "cited": false,
+   "url": null,
+   "top": "qudurat-pro.com",
+   "note": "sources: qudurat-pro.com, atahdak.com, sidaf.sa, qudratksa.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "ChatGPT (search on) — temporary chat, logged-in Free account",
+   "id": "mock",
+   "cited": false,
+   "url": null,
+   "top": "qudrat-test.com",
+   "note": "sources: qudrat-test.com, mulaqn.sa, learn.sa"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "ChatGPT (search on) — temporary chat, logged-in Free account",
+   "id": "app",
+   "cited": false,
+   "url": null,
+   "top": "dalqdrat.com",
+   "note": "sources: dalqdrat.com, nabras.app, msaary.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "ChatGPT (search on) — temporary chat, logged-in Free account",
+   "id": "brand",
+   "cited": false,
+   "url": null,
+   "top": "qudrat.app",
+   "note": "asked «قدراتي qudrati.xyz» and cited qudrat.app and qudorati.com, not us — Bing has only our home page"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "ChatGPT (search on) — temporary chat, logged-in Free account",
+   "id": "score-calc",
+   "cited": false,
+   "url": null,
+   "top": "etec.gov.sa",
+   "note": "source chips: «هيئة تقويم التعليم والتدريب» +1, «مدونة اختبارات»"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "ChatGPT (search on) — temporary chat, logged-in Free account",
+   "id": "quant-share",
+   "cited": false,
+   "url": null,
+   "top": "msaary.com",
+   "note": "source: msaary.com/qudurat-test-format"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "ChatGPT (search on) — temporary chat, logged-in Free account",
+   "id": "handshakes",
+   "cited": false,
+   "url": null,
+   "top": "moosa.tv",
+   "note": "sources: moosa.tv, tafawaq.sa"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "ChatGPT (search on) — temporary chat, logged-in Free account",
+   "id": "probability",
+   "cited": false,
+   "url": null,
+   "top": "yimnak.sa",
+   "note": "sources: yimnak.sa, dabour-hub.com, atahdak.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "ChatGPT (search on) — temporary chat, logged-in Free account",
+   "id": "percent",
+   "cited": false,
+   "url": null,
+   "top": "sidaf.sa",
+   "note": "sources: sidaf.sa, yimnak.sa, dabour-hub.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "ChatGPT (search on) — temporary chat, logged-in Free account",
+   "id": "comparison",
+   "cited": false,
+   "url": null,
+   "top": "sidaf.sa",
+   "note": "sources: sidaf.sa, qudrat-test.com, lms.ewa.edu.sa"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "ChatGPT (search on) — temporary chat, logged-in Free account",
+   "id": "foundation",
+   "cited": false,
+   "url": null,
+   "top": "abdihqt.com",
+   "note": "sources: abdihqt.com, sites.google.com, qaffplus.sa, mostabiq.sa"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "ChatGPT (search on) — temporary chat, logged-in Free account",
+   "id": "free-site",
+   "cited": false,
+   "url": null,
+   "top": "qudrat-test.com",
+   "note": "sources: qudrat-test.com, darajati.online, qiyas.sa, learn.sa, abo-omran.com, nahdatec.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "ChatGPT (search on) — temporary chat, logged-in Free account",
+   "id": "clock",
+   "cited": false,
+   "url": null,
+   "top": "youtube.com",
+   "note": "sources: youtube.com, daafoor.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "ChatGPT (search on) — temporary chat, logged-in Free account",
+   "id": "game",
+   "cited": false,
+   "url": null,
+   "top": "yimnak.sa",
+   "note": "sources: yimnak.sa, smlah.com, qudratksa.com, play.google.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Perplexity — signed out",
+   "id": "comparison",
+   "cited": false,
+   "url": null,
+   "top": "media.etec.gov.sa",
+   "note": "sources: media.etec.gov.sa, abqarino.com, youtube.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Perplexity — signed out",
+   "id": "probability",
+   "cited": false,
+   "url": null,
+   "top": "mawdoo3.com",
+   "note": "sources: mawdoo3.com, repository.uobaghdad.edu.iq, uomus.edu.iq, mdrscenter.com (general probability, not Qudrat-specific)"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Perplexity — signed out",
+   "id": "laws-hub",
+   "cited": false,
+   "url": null,
+   "top": "dalqdrat.com",
+   "note": "sources: dalqdrat.com, t.me, scribd.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Perplexity — signed out",
+   "id": "mock",
+   "cited": false,
+   "url": null,
+   "top": "qiyas.sa",
+   "note": "sources: qiyas.sa, mulaqn.sa, tafrud.com, qudrat-test.com, ekhtbir.com"
+  },
+  {
+   "date": "2026-11-03",
+   "engine": "Perplexity — signed out",
+   "id": "brand",
+   "cited": true,
+   "url": "https://qudrati.xyz/about.html",
+   "top": "qudrati.xyz",
+   "note": "cites qudrati.xyz/about.html, /qudrat-mock-test.html and / — its own crawler has read our pages"
+  }
+ ],
  "queries": [
   {
    "id": "handshakes",
@@ -779,6 +1095,72 @@
    ],
    "by": "who checked"
   },
-  "log": []
+  "log": [
+   {
+    "at": "2026-11-03",
+    "engine": "bing-sa",
+    "query": "قدرات كمي",
+    "position": null,
+    "url": null,
+    "top3": [
+     "mulaqn.sa",
+     "ami.sa",
+     "elmonsf.com"
+    ],
+    "by": "Claude via Claude in Chrome (first 20 results)"
+   },
+   {
+    "at": "2026-11-03",
+    "engine": "bing-sa",
+    "query": "اختبار قدرات تجريبي",
+    "position": null,
+    "url": null,
+    "top3": [
+     "qudurat.com",
+     "drjat.sa",
+     "ami.sa"
+    ],
+    "by": "Claude via Claude in Chrome (first 20 results)"
+   },
+   {
+    "at": "2026-11-03",
+    "engine": "bing-sa",
+    "query": "قوانين القدرات الكمي",
+    "position": null,
+    "url": null,
+    "top3": [
+     "eqiyas.com",
+     "scribd.com",
+     "yimnak.sa"
+    ],
+    "by": "Claude via Claude in Chrome (first 20 results)"
+   },
+   {
+    "at": "2026-11-03",
+    "engine": "bing-sa",
+    "query": "أسئلة المقارنة قدرات كمي",
+    "position": null,
+    "url": null,
+    "top3": [
+     "as2elah.com",
+     "qdrati.com",
+     "mulaqn.sa"
+    ],
+    "by": "Claude via Claude in Chrome (first 20 results)"
+   },
+   {
+    "at": "2026-11-03",
+    "engine": "bing-sa",
+    "query": "تأسيس كمي",
+    "position": null,
+    "url": null,
+    "top3": [
+     "scribd.com",
+     "instein100.com",
+     "tiqdr.com"
+    ],
+    "by": "Claude via Claude in Chrome (first 20 results)"
+   }
+  ]
  }
 }

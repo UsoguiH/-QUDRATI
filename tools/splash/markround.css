@@ -1,0 +1,5 @@
+/* markround — the user's «قدراتي», rounded (every corner soft, round dots): ink on white, its dots in the coins' colours */
+.qs-bg { background: #FFFFFF; }
+.qs-l { fill: #1A1A1A; }
+.qs-g { fill: #58CC02; } .qs-o { fill: #FFC800; } .qs-b { fill: #1CB0F6; }
+.qs-d.qs-plain, .qs-t { fill: #1A1A1A; }

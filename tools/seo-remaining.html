@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>SEO What's Left</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F7F7F7; --card: #FFFFFF; --ink: #3C3C3C; --muted: #777777; --line: #E5E5E5;
+  --green: #58CC02; --green-dk: #46A302; --green-bg: #D7FFB8;
+  --blue: #1CB0F6; --blue-dk: #1899D6; --blue-bg: #DDF4FF;
+  --gold: #FFC800; --gold-dk: #E5A500; --gold-bg: #FFF5D3; --brown: #8A5A00;
+  --red: #FF4B4B; --red-bg: #FFDFE0; --purple: #A560E8; --purple-bg: #F3E8FF; --grey: #8C8C8C;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131F24; --card: #1B2B33; --ink: #F1F7FB; --muted: #9AA8B0; --line: #37464F;
+    --green-bg: #1F3A12; --blue-bg: #12303F; --gold-bg: #3A3110; --brown: #FFD966; --red-bg: #3D1C1E; --purple-bg: #2E1F40;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131F24; --card: #1B2B33; --ink: #F1F7FB; --muted: #9AA8B0; --line: #37464F;
+  --green-bg: #1F3A12; --blue-bg: #12303F; --gold-bg: #3A3110; --brown: #FFD966; --red-bg: #3D1C1E; --purple-bg: #2E1F40;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 500 17px/1.6 "Baloo Bhaijaan 2", system-ui, sans-serif; }
+.wrap { max-width: 840px; margin: 0 auto; padding: 28px 16px 80px; }
+h1 { font-size: 30px; line-height: 1.2; margin: 0 0 6px; font-weight: 800; }
+.lede { color: var(--muted); margin: 0 0 20px; }
+.ar { font-family: "Baloo Bhaijaan 2", system-ui, sans-serif; direction: rtl; unicode-bidi: isolate; }
+code { font-family: ui-monospace, Consolas, monospace; font-size: 14px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 0 0 24px; }
+.stat { background: var(--card); border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 16px; padding: 12px 14px; }
+.stat b { display: block; font-size: 28px; line-height: 1.1; font-weight: 800; }
+.stat span { color: var(--muted); font-size: 14.5px; }
+.stat.g b { color: var(--green-dk); } .stat.b b { color: var(--blue-dk); } .stat.o b { color: var(--gold-dk); }
+
+section { background: var(--card); border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 18px; padding: 18px 18px 10px; margin: 0 0 22px; }
+section h2 { margin: 0 0 4px; font-size: 21px; font-weight: 800; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.tag { flex: none; font-size: 13px; font-weight: 800; color: #fff; border-radius: 8px; padding: 2px 10px; }
+.t-you { background: var(--gold-dk); } .t-me { background: var(--blue); } .t-wait { background: var(--purple); } .t-later { background: var(--grey); } .t-done { background: var(--green); } .t-dec { background: var(--red); }
+.sub { color: var(--muted); font-size: 15px; margin: 0 0 8px; }
+ul { list-style: none; padding: 0; margin: 0; }
+li { padding: 10px 0; border-top: 1px solid var(--line); }
+li:first-child { border-top: 0; }
+li b { font-weight: 800; }
+.when { display: inline-block; font-size: 13px; font-weight: 800; color: var(--muted); border: 1.5px solid var(--line); border-radius: 8px; padding: 0 8px; margin-inline-start: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.chip { font-size: 14px; font-weight: 700; background: var(--blue-bg); color: var(--blue-dk); border-radius: 8px; padding: 1px 9px; }
+.chip.ok { background: var(--green-bg); color: var(--green-dk); }
+.chip.no { background: var(--bg); color: var(--muted); border: 1.5px dashed var(--line); }
+
+.decision { border-color: var(--red); background: linear-gradient(var(--card), var(--card)); }
+.decision h2 .tag { background: var(--red); }
+.q { font-size: 19px; font-weight: 800; margin: 6px 0 10px; }
+.bars { margin: 14px 0 6px; }
+.bar-row { display: grid; grid-template-columns: 150px 1fr 64px; gap: 10px; align-items: center; margin: 8px 0; font-size: 14.5px; }
+.bar-row .lbl { color: var(--muted); line-height: 1.25; }
+.bar { height: 22px; background: var(--bg); border: 1.5px solid var(--line); border-radius: 11px; overflow: hidden; display: flex; }
+.bar i { display: block; height: 100%; }
+.bar .ttfb { background: var(--grey); }
+.bar .wait { background: var(--red); }
+.bar .fine { background: var(--green); }
+.bar-row .v { font-weight: 800; text-align: end; }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13.5px; color: var(--muted); margin: 0 0 6px; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; vertical-align: -1px; margin-inline-end: 5px; }
+.goal { font-size: 13.5px; color: var(--muted); margin: 2px 0 14px; }
+
+.steps { display: grid; gap: 6px; margin: 10px 0 14px; counter-reset: s; }
+.steps div { background: var(--bg); border-radius: 12px; padding: 8px 12px 8px 40px; position: relative; font-size: 15.5px; }
+.steps div::before { counter-increment: s; content: counter(s); position: absolute; left: 10px; top: 9px; width: 22px; height: 22px; border-radius: 50%; background: var(--red); color: #fff; font-size: 13px; font-weight: 800; display: grid; place-items: center; }
+.steps div.last::before { background: var(--gold-dk); }
+
+.opts { display: grid; gap: 12px; margin: 12px 0 10px; }
+.opt { border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 14px; padding: 12px 14px; }
+.opt h3 { margin: 0 0 4px; font-size: 17.5px; font-weight: 800; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.opt p { margin: 3px 0; font-size: 15.5px; }
+.opt .pro { color: var(--green-dk); } .opt .con { color: var(--red); }
+.opt.rec { border-color: var(--green); background: var(--green-bg); }
+.rec-tag { font-size: 12.5px; font-weight: 800; color: #fff; background: var(--green); border-radius: 7px; padding: 1px 8px; }
+.steps.bing div::before { background: var(--gold-dk); }
+.copy { font: 800 16px/1 "Baloo Bhaijaan 2", system-ui, sans-serif; color: #fff; background: var(--blue); border: 0; border-radius: 12px; padding: 10px 18px; box-shadow: 0 4px 0 var(--blue-dk); cursor: pointer; margin: 0 0 10px; }
+.copy:active { transform: translateY(4px); box-shadow: none; }
+.copy.done { background: var(--green); box-shadow: 0 4px 0 var(--green-dk); }
+textarea { width: 100%; font: 13.5px/1.5 ui-monospace, Consolas, monospace; color: var(--ink); background: var(--bg); border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 10px; resize: vertical; }
+.fix { background: var(--blue-bg); border-radius: 12px; padding: 10px 14px; margin: 10px 0; font-size: 15.5px; }
+.answer { background: var(--gold-bg); border: 2px solid var(--gold); border-bottom-width: 5px; border-radius: 14px; padding: 10px 14px; margin: 14px 0 8px; }
+.answer b { font-weight: 800; }
+.note { font-size: 14px; color: var(--muted); }
+@media (max-width: 520px) { .bar-row { grid-template-columns: 1fr 56px; } .bar-row .lbl { grid-column: 1 / -1; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>SEO &amp; AEO — what's left</h1>
+<p class="lede">The full check on 3 November 2026. The site itself is clean. What's left is mostly waiting on Google and Bing, one click from you, my requests tomorrow, and one decision.</p>
+
+<div class="stats">
+  <div class="stat g"><b>0 errors</b><span>live audit, all 36 pages</span></div>
+  <div class="stat o"><b>15 / 36</b><span>pages indexed on Google</span></div>
+  <div class="stat b"><b>95–100</b><span>Lighthouse on every content page</span></div>
+  <div class="stat"><b>1 warning</b><span>the home page's speed (the decision below)</span></div>
+</div>
+
+<section>
+  <h2><span class="tag t-done">Done</span> Bing: all 36 pages submitted</h2>
+  <ul><li>You submitted the 35 pages on 3 November, plus percent.html earlier the same day. Bing lists all 36, and 65 of today's 100 are left. Nothing more to do here.</li></ul>
+</section>
+
+<section>
+  <h2><span class="tag t-me">Me</span> Tomorrow, 4 November or later</h2>
+  <p class="sub">Google allows about 11 indexing requests a day, and today's ran out after 11. Open a session and say "do the indexing requests" and I'll do them.</p>
+  <ul>
+    <li><b>Request indexing for the last 10 pages</b>
+      <div class="chips">
+        <span class="chip">decimals</span><span class="chip">patterns-cycles</span><span class="chip">divisibility-simplify</span><span class="chip">angles-polygons</span><span class="chip">rectangle</span><span class="chip">quadrilaterals</span><span class="chip">shaded-areas</span><span class="chip">parallel-lines</span><span class="chip">solids</span><span class="chip">privacy</span>
+      </div>
+    </li>
+    <li><b>Check both sitemap entries</b> in Search Console (<code>sitemap.xml</code> and <code>sitemap.xml?v=2</code>) for «Success».</li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="tag t-wait">Waiting on Google &amp; Bing</span> Nothing we can do faster</h2>
+  <ul>
+    <li><b>20 pages Google hasn't seen yet.</b> Google never read the sitemap. Its own inspection calls this a «Temporary processing error» on its side. The file is valid, returns 200, and Bing reads it fine. The manual requests above go around it.<span class="when">days to ~2 weeks</span></li>
+    <li><b>qudrat-kami.html: crawled but not indexed.</b> Google fetched it fine on 1 November and accepted the canonical. I requested it again today. This is Google's quality queue for a new site, not an error.<span class="when">usually weeks</span></li>
+    <li><b>Bing: pages «Discovered but not crawled».</b> Bing's live test says each one can be indexed. All 36 are now submitted, so Bing should crawl them soon.<span class="when">days</span></li>
+    <li><b>Core Web Vitals: «Not enough usage data».</b> Google has no real-visitor speed data yet, so speed doesn't affect ranking today.<span class="when">needs traffic</span></li>
+    <li><b>Already indexed (15):</b>
+      <div class="chips">
+        <span class="chip ok">home</span><span class="chip ok">qudrat-score</span><span class="chip ok">qudrat-methods</span><span class="chip ok">qudrat/</span><span class="chip ok">laws</span><span class="chip ok">comparisons</span><span class="chip ok">qudrat-mock-test</span><span class="chip ok">about</span><span class="chip ok">big-numbers</span><span class="chip ok">key-laws</span><span class="chip ok">probability-statistics</span><span class="chip ok">square-roots</span><span class="chip ok">percent</span><span class="chip ok">profit-loss</span><span class="chip ok">square</span>
+      </div>
+    </li>
+  </ul>
+</section>
+
+<section>
+  <h2><span class="tag t-later">Later</span> Follow-ups</h2>
+  <ul>
+    <li><b>In 2–4 weeks:</b> screenshots of Search Console's Pages and Performance, to compare with the baseline (810 impressions, 19 clicks, position 8.3 over the three months to 29 October).</li>
+    <li><b>Answer engines, by hand:</b> ask ChatGPT, Perplexity, Gemini, Claude, Google AI Overviews and Copilot the 57 queries in <code>tools/seo/ai-queries.json</code>, and note whether qudrati.xyz is cited. None checked yet. It's only worth doing once more pages are indexed.</li>
+    <li><b>Monthly:</b> <code>node tools/seo/suggest.js</code> (search suggestion snapshot), and now and then <code>node tools/seo/audit.js --update-vocab</code>.</li>
+  </ul>
+</section>
+
+<section class="decision">
+  <h2><span class="tag t-dec">Decision for you</span> Where I stopped</h2>
+  <p class="q">Your idea works: the «قدراتي» loading screen can be what Google measures. Do it?</p>
+
+  <div class="fix"><b>A correction first.</b> The 6.6 s and 15 s I gave you earlier were Lighthouse's <i>simulated</i> slow phone. I measured again on a <i>real</i> throttled phone (same slow 4G, CPU 4× slower). That's closer to what Google's ranking data uses, which comes from real visitors' phones. The home page is <b>3.2 s live, not 6.6 s</b>, and nowhere near 15 s.</div>
+
+  <p>Google measures speed by when the biggest <b>text or picture</b> on screen appears (LCP). Target: under 2.5 s.</p>
+  <p>Your loading screen's «قدراتي» is the first and biggest thing on screen. But it's drawn as shapes (SVG paths), and <b>Google doesn't count shapes</b>, only text and images. So Google skips your name and waits for a later line of text.</p>
+
+  <div class="legend">
+    <span><i style="background:var(--grey)"></i>first paint</span>
+    <span><i style="background:var(--red)"></i>extra wait until what Google counts</span>
+  </div>
+  <div class="bars">
+    <div class="bar-row"><span class="lbl">Live today</span><div class="bar"><i class="ttfb" style="width:51%"></i><i class="wait" style="width:20%"></i></div><span class="v">3.2 s</span></div>
+    <div class="bar-row"><span class="lbl">Loading screen as it is (on my PC)</span><div class="bar"><i class="ttfb" style="width:73%"></i><i class="wait" style="width:27%"></i></div><span class="v">4.9 s</span></div>
+    <div class="bar-row"><span class="lbl">Loading screen with the name counted (on my PC)</span><div class="bar"><i class="ttfb" style="width:76%"></i></div><span class="v">3.4 s</span></div>
+  </div>
+  <p class="goal">Lighthouse with real throttling, out of 4.5 s. "On my PC" runs are slower overall than live, because my local server doesn't compress files like Vercel does. Compare the red part, not the totals. With the name counted, the red part is <b>gone</b>: Google's measurement lands on the very first paint. On live, first paint is about 2.1–2.3 s, so that would be under 2.5 s.</p>
+
+  <p><b>How</b>: a picture of the name's letters, identical to the drawn name, sits behind it in the loading screen. Google counts the picture, and you see exactly the same screen. Once the hand-off starts I hide the picture, so the flying name and the dots stay as they are. I tested it on a temporary copy of the page (now deleted). Google picked the name as the main content in every run.</p>
+
+  <div class="opts">
+    <div class="opt rec">
+      <h3>A. Make the loading screen's name count <span class="rec-tag">My recommendation</span></h3>
+      <p>Add the name picture to the loading screen (index.html, under 1 KB). It ships with the loading screen. Before that, I check the first frame and the hand-off pixel by pixel against today's, the same way you checked the flicker.</p>
+      <p class="pro">+ What Google measures becomes the first paint. Your animation, look and timing don't change.</p>
+      <p class="con">− Only helps once the loading screen is deployed. PageSpeed's simulated number may still show high, but that number isn't what ranks.</p>
+    </div>
+    <div class="opt">
+      <h3>B. Leave it</h3>
+      <p>3.2 s live is "needs improvement", not "poor". The content pages, which rank, are already fast.</p>
+      <p class="pro">+ No change at all.</p>
+      <p class="con">− Once Google has visitor data, the home page will probably sit just above the 2.5 s line.</p>
+    </div>
+  </div>
+
+  <div class="answer"><b>What I need from you:</b> reply <b>A</b> or <b>B</b>. Nothing changes in the app until you do.</div>
+</section>
+
+<section>
+  <h2><span class="tag t-later">Older questions</span> SEO decisions still open in REMAINING.md</h2>
+  <p class="sub">These were asked before. None of them blocks indexing. They're listed so nothing gets lost.</p>
+  <ul>
+    <li><b>Where the questions come from:</b> confirm the wording on about.html, and whether to credit the book, make the repo private, or stop linking it.</li>
+    <li><b>The app's name:</b> «قدراتي» collides with ETEC's «اختبارات قدراتي». The GitHub description and topics wait on that.</li>
+    <li><b>Deep links:</b> every page's button opens the welcome screen, not the lesson it talks about. Fixing that is an app.js change.</li>
+    <li><b>The mock screens' wording</b> («بالتوزيع الرسمي للمواضيع» and the percentile bands) claims more than the guide pages do.</li>
+    <li><b>Mistakes in the source data</b> are fixed on the pages only (39 of them). The app still shows them, including one false rule about average speed.</li>
+    <li><b>Qudrati.apk</b> is the June build. Rebuild it or put it on Play.</li>
+    <li><b>privacy.html</b> says the league's rivals are generated names. Can that line stay?</li>
+    <li><b>Contact and author:</b> only GitHub issues for now. Send an email or a name if you want them on the pages.</li>
+    <li><b>Smaller ones:</b> how many bank questions the pages show (all 255 now), dropping the 4:3 and 1:1 share images (saves ~4.5 MB), keeping <code>tools/seo/</code> off the deploy, and whether the leftover test pages (chest-animation*.html, _tmp_spark.html) should be removed from the deploy.</li>
+  </ul>
+</section>
+
+</div>
+</body>
+</html>

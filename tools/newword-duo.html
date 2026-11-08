@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>كلمة جديدة — دولينجو</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #fff; overflow: hidden; }
+  canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; }
+</style>
+</head>
+<body>
+<!-- Duolingo's own «new word» header and card (nw_header_and_card_v10.riv), set up as ChallengeIndicatorView sets it:
+     the whole screen, fit to height from the top left, the header at (−15, −110), the artboard the screen's size in dp -->
+<canvas id="c"></canvas>
+<script>
+  /* ?speed=.1 plays the file at a tenth of its speed (each frame's clock is slowed before Rive sees it), to measure it */
+  (() => {
+    const S = +(new URLSearchParams(location.search).get('speed') || 1); if (S === 1) return;
+    const raf = requestAnimationFrame.bind(window), now = performance.now.bind(performance), b = now();
+    window.requestAnimationFrame = f => raf(t => f(b + (t - b) * S));
+    performance.now = () => b + (now() - b) * S;
+    const st = setTimeout.bind(window); window.setTimeout = (f, ms, ...a) => st(f, (ms || 0) / S, ...a);
+  })();
+</script>
+<script src="https://unpkg.com/@rive-app/canvas@2.31.2"></script>
+<script>
+  const P0 = new URLSearchParams(location.search);
+  const cv = document.getElementById('c'), dpr = devicePixelRatio || 1;
+  /* ?rtl mirrors it as the app does on a right-to-left phone; ?wait holds it until a parent posts { go } */
+  if (P0.has('rtl')) cv.style.transform = 'scaleX(-1)';
+  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+  const P = new URLSearchParams(location.search);
+  window.__nw = { ready: false, info: null };
+  const R = new rive.Rive({
+    src: 'newword/nw_header_and_card_v10.riv', canvas: cv, artboard: 'header_and_card_main_artboard',
+    stateMachines: 'header_and_card_statemachine', autoplay: !P.has('hold'), autoBind: true,
+    layout: new rive.Layout({ fit: rive.Fit.FitHeight, alignment: rive.Alignment.TopLeft }),
+    onLoad() {
+      const vmi = R.viewModelInstance, info = { artboards: R.contents && R.contents.artboards, props: [] };
+      try { info.props = vmi ? vmi.properties.map(p => p.name + ':' + p.type) : []; } catch (e) { info.err = String(e); }
+      try {
+        vmi.boolean('darkmode_db_bool').value = false;
+        vmi.boolean('header_start_db_bool').value = !P.has('hon') && !P.has('wait');
+        /* ?hon=ms: the header comes on later, to see it arrive */
+        if (P.has('hon') && !P.has('wait')) setTimeout(() => { vmi.boolean('header_start_db_bool').value = true; try { vmi.trigger('header_start_db_trig').trigger(); } catch (e) {} window.__nw.fly = performance.now(); }, +P.get('hon'));
+        vmi.number('header_pos_x_db_num').value = -15;
+        vmi.number('header_pos_y_db_num').value = -110;
+        vmi.number('artboard_x_size_db_num').value = innerWidth;
+        vmi.number('artboard_y_size_db_num').value = innerHeight;
+        const s1 = vmi.string('new_word_db_str'); if (s1) s1.value = P.get('word') || '';
+        const s2 = vmi.string('collect_db_str'); if (s2) s2.value = '';
+      } catch (e) { info.err2 = String(e); }
+      R.resizeDrawingSurfaceToCanvas();
+      window.__nw = { ready: true, info, R, t0: performance.now() };
+      const begin = () => {
+        if (window.__nw.begun) return; window.__nw.begun = true;
+        if (P.has('wait')) setTimeout(() => { vmi.boolean('header_start_db_bool').value = true; try { vmi.trigger('header_start_db_trig').trigger(); } catch (e) {} }, +(P.get('hon') || 0));
+        /* ?fly=x,y&at=ms: the word sits at (x, y) in dp and the card flies from it, as g05 fires it */
+        if (P.has('fly')) {
+          const [x, y] = P.get('fly').split(',').map(Number);
+          setTimeout(() => {
+            vmi.number('card_start_x_db_num').value = x; vmi.number('card_start_y_db_num').value = y;
+            if (P.has('rot')) vmi.number('card_rotation_db_num').value = +P.get('rot');
+            vmi.trigger('card_fly_db_trig').trigger(); window.__nw.fly = performance.now();
+          }, +(P.get('at') || 600));
+        }
+        if (P.has('hit')) setTimeout(() => vmi.trigger('header_hit_db_trig').trigger(), +P.get('hit'));
+      };
+      if (P.has('wait')) addEventListener('message', e => { if (e.data && e.data.go) begin(); }); else begin();
+    },
+    onLoadError(e) { window.__nw = { ready: false, err: String(e) }; },
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+/* sheet — «ورقة الإجابة»: the exam's answer sheet. «قدراتي» in Beiruti 900, printed in ink on the sheet's paper
+   with its timing marks down the edge; its six dots are answer bubbles printed in the sheet's red, which a pencil
+   shades in one after another; the shaded bubbles hop and leave as the coins, and the title keeps shaded bubbles */
+#splash { --qs-dot-filter: grayscale(1) brightness(.3); }
+.qs-bg { background:
+  repeating-linear-gradient(to bottom, transparent 0 28px, #34373F 28px 32px) right 14px top 10px / 11px 100% no-repeat,
+  linear-gradient(#F3D3CB, #F3D3CB) right 36px top 0 / 1px 100% no-repeat,
+  #FFFDF8; }
+.qs-l { fill: #1E2230; }
+.qs-d > circle:nth-child(2), .qs-t > circle:nth-child(2) { fill: #FFFDF8; stroke: #E4573F; stroke-width: 24px; }
+.qs-d .qs-ring, .qs-t .qs-ring { display: block; fill: #34373F; stroke: #34373F; transform-box: fill-box; transform-origin: center; transform: scale(1.2); }
+.qs-d .qs-ring { animation: qsShade calc(.26s * var(--qs-k, 1)) calc((.06s + var(--i) * 65ms) * var(--qs-k, 1)) cubic-bezier(.3,1.5,.5,1) both; }
+@keyframes qsShade { from { transform: scale(0); } to { transform: scale(1.2); } }
+.qs-plain .qs-ring { animation: none; }

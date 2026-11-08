@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<!-- The rule's final version inside the app, for the user to judge (2026-11-03). The phone is the real app (tools/lawapp/run.html)
+     with the rule laid into the path, the lesson, the win screen and a review of its own; nothing of it is in the app.
+     Open through node tools/serve.js: http://localhost:8080/tools/law-app.html -->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>القوانين في التطبيق</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #58CC02; --green-dk: #58A700; --green-lip: #478700; --blue: #1CB0F6; --blue-dk: #1899D6; --blue-light: #DDF4FF;
+  --gold: #FFC800; --gold-dk: #E6A000; --gold-bg: #FFF4BF; --orange-dk: #E07800;
+  --ink: #3C3C3C; --gray: #777; --gray-icon: #AFAFAF; --line: #E5E5E5; --wash: #F7F7F7;
+  --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #EFEFEF; color: var(--ink); font-family: var(--font); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+button { font-family: inherit; cursor: pointer; color: inherit; -webkit-tap-highlight-color: transparent; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 22px 16px 40px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 34px; align-items: start; }
+.side h1 { margin: 2px 0 6px; font-size: 30px; font-weight: 800; line-height: 1.25; }
+.kick { margin: 0; font-size: 15px; font-weight: 800; color: var(--blue-dk); }
+.lede { margin: 0 0 16px; font-size: 16.5px; font-weight: 600; color: var(--gray); }
+.stops { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.stop { display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; align-items: center; padding: 11px 12px; background: #fff; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 16px; }
+.stop .n { width: 44px; height: 40px; }
+.stop b { display: block; font-size: 16.5px; font-weight: 800; line-height: 1.35; }
+.stop p { margin: 2px 0 0; font-size: 14.5px; font-weight: 600; color: var(--gray); line-height: 1.5; }
+.go { height: 38px; padding: 0 14px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 12px; background: #fff; font-size: 14.5px; font-weight: 800; color: var(--blue-dk); white-space: nowrap; }
+.go:active { transform: translateY(2px); border-bottom-width: 2px; }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.tools .go { color: var(--gray); }
+.why { margin-top: 18px; padding: 14px 16px; border-radius: 16px; background: var(--gold-bg); border: 2px solid var(--gold); border-bottom-width: 4px; }
+.why b { display: block; font-size: 16.5px; font-weight: 800; color: #7A3B12; }
+.why ul { margin: 6px 0 0; padding: 0 18px 0 0; font-size: 14.5px; font-weight: 600; color: #8A4B1C; }
+.why li { margin: 3px 0; }
+.cat { margin-top: 18px; }
+.cat h2 { margin: 0 0 2px; font-size: 20px; font-weight: 800; }
+.cat > p { margin: 0 0 10px; font-size: 14.5px; font-weight: 600; color: var(--gray); }
+.cat-n { margin: 12px 0 6px; font-size: 15.5px; font-weight: 800; color: var(--blue-dk); }
+.cat-l { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; align-items: center; padding: 9px 12px; margin-bottom: 8px; background: #fff; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 14px; }
+.cat-l b { font-size: 15px; font-weight: 800; }
+.cat-l .rs { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+.cat-l .rs .go { height: 34px; font-size: 13.5px; padding: 0 11px; color: var(--ink); }
+.cat-l .go.les { height: 34px; font-size: 13.5px; }
+.phone { position: relative; width: 390px; height: min(800px, calc(100svh - 40px)); min-height: 640px; border-radius: 40px; background: #fff; overflow: hidden;
+  border: 10px solid #1F1F1F; box-shadow: 0 30px 60px rgba(0,0,0,.18); }
+.phone iframe { display: block; width: 100%; height: 100%; border: 0; }
+@media (max-width: 900px) {
+  .wrap { grid-template-columns: minmax(0, 1fr); padding: 0 0 30px; gap: 18px; }
+  .phone { order: -1; width: 100%; height: 100svh; min-height: 0; border: 0; border-radius: 0; box-shadow: none; }
+  .side { padding: 0 16px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="side">
+    <p class="kick">قوانين القدرات — النسخة الأخيرة، داخل التطبيق</p>
+    <h1>القانون صار جزء من المسار والدرس</h1>
+    <p class="lede">الجوال اللي جنبك هو التطبيق نفسه، بنفس المسار والأصوات والحركات. القانون الجديد مركّب فيه للتجربة بس، وما دخل التطبيق الحقيقي. الحساب مثل طالبة صار لها ١٢ يوم: خلّصت المرحلة الأولى، والدرس الجاي فيه «المصافحات».</p>
+    <ul class="stops">
+      <li class="stop"><svg class="n" viewBox="0 0 71 65"><g stroke-width="8" stroke-linejoin="round"><polygon points="19.5,11 51.5,11 67,36 51.5,61 19.5,61 4,36" fill="#E6A000" stroke="#E6A000"/><polygon points="19.5,4 51.5,4 67,29 51.5,54 19.5,54 4,29" fill="#FFC800" stroke="#FFC800"/></g><text x="35.5" y="38" text-anchor="middle" font-size="26" font-weight="800" fill="#C57A1C" font-family="Baloo Bhaijaan 2">١</text></svg>
+        <div><b>المسار</b><p>بطاقة «قوانين تراجعها اليوم» فوق المسار، وتنقّز كل شوي. ولما تضغط درس، بطاقته تقول لك «فيه قانون جديد: المصافحات».</p></div><button class="go" data-c="path">افتحه</button></li>
+      <li class="stop"><svg class="n" viewBox="0 0 71 65"><g stroke-width="8" stroke-linejoin="round"><polygon points="19.5,11 51.5,11 67,36 51.5,61 19.5,61 4,36" fill="#E6A000" stroke="#E6A000"/><polygon points="19.5,4 51.5,4 67,29 51.5,54 19.5,54 4,29" fill="#FFC800" stroke="#FFC800"/></g><text x="35.5" y="38" text-anchor="middle" font-size="26" font-weight="800" fill="#C57A1C" font-family="Baloo Bhaijaan 2">٢</text></svg>
+        <div><b>القانون داخل الدرس</b><p>مكان بطاقة القاعدة الصفراء: «قانون جديد» يطير من كلمة فهيم للعنوان مثل دولينجو، والطالب يختار الكلمة الناقصة بنفسه، والرسم يعطي أرقامه للقانون، وآخر شي يرجع القانون بكلماته. بعدها «كمّل القانون»: نفس البطاقة والكسر، الاسم و«=» ثابتين والباقي فراغات. وبعدها «حطّ أرقام المثال في القانون»: تحت كل فراغ مكتوب وش هو، فراغ لكل رقم.</p></div><button class="go" data-c="law">شغّله</button></li>
+      <li class="stop"><svg class="n" viewBox="0 0 71 65"><g stroke-width="8" stroke-linejoin="round"><polygon points="19.5,11 51.5,11 67,36 51.5,61 19.5,61 4,36" fill="#E6A000" stroke="#E6A000"/><polygon points="19.5,4 51.5,4 67,29 51.5,54 19.5,54 4,29" fill="#FFC800" stroke="#FFC800"/></g><text x="35.5" y="38" text-anchor="middle" font-size="26" font-weight="800" fill="#C57A1C" font-family="Baloo Bhaijaan 2">٣</text></svg>
+        <div><b>بعد الفوز</b><p>اضغط «متابعة» في شاشة الفوز، وفي «تقدّمك اليوم» تنزل بطاقة «قانون جديد في مجموعتك»: الشكل الذهبي ينطّ، وأول خطوة من خمس تنوّر، والعدّاد يزيد. والدرس اللي فيه قانونين تنزل أشكالهم الاثنين.</p></div><button class="go" data-c="win">شوفه</button></li>
+      <li class="stop"><svg class="n" viewBox="0 0 71 65"><g stroke-width="8" stroke-linejoin="round"><polygon points="19.5,11 51.5,11 67,36 51.5,61 19.5,61 4,36" fill="#E07800" stroke="#E07800"/><polygon points="19.5,4 51.5,4 67,29 51.5,54 19.5,54 4,29" fill="#FF9600" stroke="#FF9600"/></g><text x="35.5" y="38" text-anchor="middle" font-size="26" font-weight="800" fill="#fff" font-family="Baloo Bhaijaan 2">٤</text></svg>
+        <div><b>المراجعة</b><p>دقيقة أو دقيقتين لكل القوانين المستحقة. يسألك قبل ما يوريك: كلمات القانون فاضية، وكل فراغ تعبّيه بنفسك، واحد بعد الثاني. لو تذكرتها من أول مرة يتخطّى الشرح، ولو غلطت يعيد لك الرسم. بعدها سؤال قدرات بأرقام جديدة، وفي الآخر كل قانون يتقدّم خطوة، ويصير ذهبي في الخامسة.</p></div><button class="go" data-c="review">راجع</button></li>
+      <li class="stop"><svg class="n" viewBox="0 0 71 65"><g stroke-width="8" stroke-linejoin="round"><polygon points="19.5,11 51.5,11 67,36 51.5,61 19.5,61 4,36" fill="#AFAFAF" stroke="#AFAFAF"/><polygon points="19.5,4 51.5,4 67,29 51.5,54 19.5,54 4,29" fill="#E5E5E5" stroke="#E5E5E5"/></g><text x="35.5" y="38" text-anchor="middle" font-size="26" font-weight="800" fill="#AFAFAF" font-family="Baloo Bhaijaan 2">٥</text></svg>
+        <div><b>قوانيني</b><p>مجموعة الطالب، مقسومة على دروس المسار: لكل درس تبويب، وتحته قوانينه وكل واحد مكتوب من أي درس قصير. اللي مرّ عليه شكل ذهبي بخطواته الخمس، والباقية مقفلة. تضغط أي قانون تشوف بطاقته ومتى يجيك في الاختبار وفخّه.</p></div><button class="go" data-c="collection">افتحها</button></li>
+    </ul>
+    <div class="tools">
+      <button class="go" data-c="reset">ابدأ من جديد</button>
+      <button class="go" data-c="due">خلّ كل القوانين تستحق اليوم</button>
+      <button class="go" data-c="gold">قرّبها من الذهبي</button>
+      <button class="go" data-c="law-prob">قانون «الاحتمال»</button>
+      <button class="go" data-c="law-mean">قانون «الوسط الحسابي»</button>
+    </div>
+    <div class="tools">
+      <button class="go" data-c="book">كتاب «القوانين» للوحدة</button>
+      <button class="go" data-c="fill-words">«كمّل القانون» — المصافحات</button>
+      <button class="go" data-c="fill-mean">«كمّل القانون» — الوسط</button>
+      <button class="go" data-c="fill-nums">«حطّ أرقام المثال»</button>
+    </div>
+    <div class="cat" id="cat"><h2>كل قوانين أول ٣ دروس</h2><p>كل قاعدة في دروس المسار الثلاثة الأولى صارت شاشة قانون كاملة: «قانون جديد»، الرسم اللي يعطي أرقامه للقانون، «كمّل القانون»، «حطّ أرقام المثال»، وسؤال قدرات في المراجعة. «الدرس كامل» يشغّل الدرس القصير من أوله، وزر القانون يوديك لشاشته على طول.</p></div>
+    <div class="why"><b>ليش بيثبت في الراس</b>
+      <ul>
+        <li>الطالب يسترجع قبل ما يشوف: يختار الكلمة الناقصة في القانون الجديد، وفي المراجعة كل الكلمات فاضية.</li>
+        <li>آخر صورة يشوفها هي القانون بكلماته، والأرقام صغيرة تحته.</li>
+        <li>المراجعة ترجع في وقتها: بكرة، بعد ٣ أيام، ٧، ١٤، ٣٠. واللي تغلط فيه يرجع بكرة.</li>
+        <li>شي يجمعه: ٣٥ قانون بأشكال ذهبية، وخمس خطوات لكل قانون، وعدّاد يكبر بعد كل درس.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="phone"><iframe id="app" src="lawapp/run.html?dev=1" title="التطبيق" allow="autoplay"></iframe></div>
+</div>
+<script>
+  const fr = document.getElementById('app');
+  /* the list of every rule, read from the app once it is up */
+  const A = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+  const fill = () => { const w = fr.contentWindow; if (!w || !w.LAWX || !w.LAWX.catalog || !w.QBANK) return setTimeout(fill, 300);
+    const cat = document.getElementById('cat'); if (cat.dataset.done) return; cat.dataset.done = 1;
+    cat.insertAdjacentHTML('beforeend', w.LAWX.catalog().map(n => `<div class="cat-n">الدرس ${A(n.i + 1)}: ${n.title}</div>${n.lessons.map(l => `<div class="cat-l"><b>${l.title}</b><button class="go les" data-c="les:${n.node}:${l.idx}">الدرس كامل</button>
+      <div class="rs">${l.laws.map(x => `<button class="go" data-c="rule:${x.key}">${x.name}</button>`).join('')}</div></div>`).join('')}`).join(''));
+    wire(); };
+  fr.addEventListener('load', fill); fill();
+  const wire = () => document.querySelectorAll('[data-c]').forEach(b => b.onclick = () => {
+    const c = b.dataset.c;
+    if (c === 'reset') { fr.src = 'lawapp/run.html?dev=1&t=' + Date.now(); return; }
+    fr.contentWindow.postMessage({ law: c }, '*');
+    fr.focus();
+    /* the phone comes back into view when a button far down the panel is pressed */
+    const r = fr.getBoundingClientRect();
+    if (r.top < 0 || r.bottom > innerHeight) fr.closest('.phone').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+  wire();
+</script>
+</body>
+</html>

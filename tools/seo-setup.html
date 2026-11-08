@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>SEO Setup Steps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F7F7F7; --card: #FFFFFF; --ink: #3C3C3C; --muted: #777777; --line: #E5E5E5;
+  --green: #58CC02; --green-dk: #46A302; --green-bg: #D7FFB8;
+  --blue: #1CB0F6; --blue-dk: #1899D6; --blue-bg: #DDF4FF;
+  --gold: #FFC800; --gold-bg: #FFF5D3; --brown: #8A5A00;
+  --code: #F2F2F2;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131F24; --card: #1B2B33; --ink: #F1F7FB; --muted: #9AA8B0; --line: #37464F;
+    --green-bg: #1F3A12; --blue-bg: #12303F; --gold-bg: #3A3110; --brown: #FFD966; --code: #22343D;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131F24; --card: #1B2B33; --ink: #F1F7FB; --muted: #9AA8B0; --line: #37464F;
+  --green-bg: #1F3A12; --blue-bg: #12303F; --gold-bg: #3A3110; --brown: #FFD966; --code: #22343D;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 500 17px/1.6 "Baloo Bhaijaan 2", system-ui, sans-serif; }
+.wrap { max-width: 760px; margin: 0 auto; padding: 28px 16px 80px; }
+h1 { font-size: 30px; line-height: 1.2; margin: 0 0 6px; font-weight: 800; }
+.lede { color: var(--muted); margin: 0 0 14px; }
+.bar { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 10px 0 14px; }
+.track { height: 16px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.fill { height: 100%; width: 0; background: var(--green); border-radius: 99px; transition: width .35s ease; box-shadow: inset 0 -4px 0 rgba(0,0,0,.08); }
+.count { font-weight: 700; font-size: 15px; color: var(--muted); margin-top: 4px; }
+section { background: var(--card); border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 18px; padding: 20px 18px 10px; margin: 0 0 22px; }
+section h2 { margin: 0 0 4px; font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+.num { flex: none; width: 34px; height: 34px; border-radius: 10px; background: var(--green); color: #fff; display: grid; place-items: center; font-size: 18px; box-shadow: 0 3px 0 var(--green-dk); }
+.time { color: var(--muted); font-size: 14px; font-weight: 600; margin: 0 0 12px; }
+ol.steps { list-style: none; padding: 0; margin: 0; }
+ol.steps > li { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line); }
+ol.steps > li:first-child { border-top: 0; }
+input[type=checkbox] { width: 24px; height: 24px; margin: 3px 0 0; accent-color: var(--green); cursor: pointer; }
+li.done .txt { opacity: .5; }
+li.done .txt > b:first-child { text-decoration: line-through; }
+.txt b { font-weight: 700; }
+.txt p { margin: 4px 0; }
+a { color: var(--blue-dk); font-weight: 700; }
+code, .copy { font-family: ui-monospace, Consolas, monospace; font-size: 14.5px; }
+code { background: var(--code); padding: 1px 6px; border-radius: 6px; word-break: break-all; }
+.copy { display: inline-flex; align-items: center; gap: 8px; background: var(--code); border: 2px solid var(--line); border-radius: 10px; padding: 4px 6px 4px 10px; margin: 4px 0; max-width: 100%; }
+.copy span { overflow-wrap: anywhere; }
+.copy button { font: 700 13px "Baloo Bhaijaan 2", sans-serif; border: 0; border-radius: 8px; padding: 3px 10px; background: var(--blue); color: #fff; cursor: pointer; box-shadow: 0 2px 0 var(--blue-dk); flex: none; }
+.copy button:active { transform: translateY(2px); box-shadow: none; }
+.go { display: inline-block; text-decoration: none; color: #fff; background: var(--green); border-radius: 12px; padding: 7px 16px; margin: 6px 0; font-weight: 800; box-shadow: 0 4px 0 var(--green-dk); }
+.go:active { transform: translateY(4px); box-shadow: none; }
+.pages { list-style: none; padding: 0; margin: 8px 0; display: grid; gap: 6px; }
+.pages li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border: 2px solid var(--line); border-radius: 12px; padding: 6px 8px 6px 12px; }
+.pages li.req { border-color: var(--green); background: var(--green-bg); }
+.pages code { background: none; padding: 0; flex: 1 1 220px; }
+.pages a { font-size: 14px; text-decoration: none; color: #fff; background: var(--blue); border-radius: 8px; padding: 3px 10px; box-shadow: 0 2px 0 var(--blue-dk); }
+.pages label { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.pages input { width: 18px; height: 18px; margin: 0; }
+.note { border-radius: 12px; padding: 10px 14px; margin: 8px 0; font-size: 15.5px; }
+.note.tip { background: var(--blue-bg); }
+.note.warn { background: var(--gold-bg); color: var(--brown); }
+.note.good { background: var(--green-bg); }
+.kbd { display: inline-block; border: 2px solid var(--line); border-bottom-width: 3px; border-radius: 8px; padding: 0 8px; font-weight: 700; font-size: 15px; background: var(--card); }
+.checked { font-size: 14px; color: var(--muted); margin: 0 0 18px; }
+.checked b { color: var(--green-dk); }
+.final { background: var(--green-bg); border-color: var(--green); }
+.final h2 .num { background: var(--gold); box-shadow: 0 3px 0 #E5A500; color: #5A3E00; }
+.reset { margin-top: 10px; background: none; border: 0; color: var(--muted); font: 600 14px "Baloo Bhaijaan 2", sans-serif; text-decoration: underline; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>SEO setup: your 3 jobs</h1>
+  <p class="lede">About 10 minutes. Tick each step as you go; the ticks are saved in this browser.</p>
+  <div class="note good"><b>All done on 1 Nov 2026 by Claude in Chrome:</b> the sitemap submitted to Google, indexing requested for all 8 pages, qudrati.xyz imported into Bing with its sitemap, and the GitHub website set to https://qudrati.xyz/. Nothing is left for you here; the steps stay below for next time.</div>
+  <p class="checked"><b>Checked 1 Nov 2026:</b> all 8 pages below answer 200, are indexable and point to themselves; the sitemap lists 35 pages; robots.txt points to it; and qudrati.xyz is already verified in your Search Console.</p>
+
+  <div class="bar"><div class="track"><div class="fill" id="fill"></div></div><div class="count" id="count"></div></div>
+
+  <!-- 1 -->
+  <section>
+    <h2><span class="num">1</span> Google Search Console</h2>
+    <p class="time">About 6 minutes. Google doesn't use IndexNow, so this is how it learns about the new pages.</p>
+    <div class="note good"><b>Verification is already done.</b> Your link showed the property <code>sc-domain:qudrati.xyz</code>, so you can skip adding and verifying the site. The buttons below open straight into it.</div>
+    <ol class="steps">
+      <li><input type="checkbox"><div class="txt"><b>1.1 Submit the sitemap.</b> Open the Sitemaps page:
+        <div><a class="go" href="https://search.google.com/search-console/sitemaps?resource_id=sc-domain%3Aqudrati.xyz" target="_blank" rel="noopener">Open Sitemaps</a></div>
+        <p>Under «Add a new sitemap», paste this and press <span class="kbd">Submit</span>:</p>
+        <div class="copy"><span>https://qudrati.xyz/sitemap.xml</span><button>Copy</button></div>
+        <div class="note tip">You should see <b>Success</b> and <b>35</b> discovered pages. If it says "Couldn't fetch" in the first hour, that's normal; refresh later. If an old <code>sitemap.xml</code> is already listed, submit it again anyway so Google rereads it.</div></div></li>
+
+      <li><input type="checkbox"><div class="txt"><b>1.2 Ask Google to crawl the key pages now.</b> For each page: press <b>Copy</b>, paste it into the bar at the very top of Search Console («Inspect any URL») and press Enter, wait for the result, press <span class="kbd">Request indexing</span>, wait about a minute until it confirms, then tick it here. Google allows about 10 a day.
+        <ul class="pages" id="pages"></ul>
+        <div class="note warn">"URL is not on Google" is <b>expected</b>: these pages are new. Just press Request indexing.</div></div></li>
+    </ol>
+  </section>
+
+  <!-- 2 -->
+  <section>
+    <h2><span class="num">2</span> Bing Webmaster Tools</h2>
+    <p class="time">About 3 minutes. Bing's index also feeds ChatGPT search, Copilot and DuckDuckGo.</p>
+    <ol class="steps">
+      <li><input type="checkbox"><div class="txt"><b>2.1 Open Bing Webmaster Tools</b> and sign in. Signing in <b>with the same Google account</b> as Search Console makes the next step one click.
+        <div><a class="go" href="https://www.bing.com/webmasters" target="_blank" rel="noopener">Open Bing Webmaster Tools</a></div></div></li>
+
+      <li><input type="checkbox"><div class="txt"><b>2.2 Import from Google.</b> On the «Add your site» screen choose the <b>Import your sites from GSC</b> card and press <span class="kbd">Import</span>. Allow access, make sure <b>qudrati.xyz</b> is ticked, and press <span class="kbd">Import</span>.
+        <div class="note tip">This verifies the site and copies the sitemap in one go. If Bing already shows qudrati.xyz in your list, skip to 2.3.</div></div></li>
+
+      <li><input type="checkbox"><div class="txt"><b>2.3 Check the sitemap.</b> Open qudrati.xyz in Bing, then <b>Sitemaps</b> in the left menu. If the sitemap isn't listed, press <span class="kbd">Submit sitemap</span> and paste:
+        <div class="copy"><span>https://qudrati.xyz/sitemap.xml</span><button>Copy</button></div>
+        <p>Its status may say "Processing" for a day; that's fine.</p></div></li>
+    </ol>
+  </section>
+
+  <!-- 3 -->
+  <section>
+    <h2><span class="num">3</span> GitHub: only the website link for now</h2>
+    <p class="time">About 1 minute. The repo still points visitors to the old address. Leave the description and topics until we decide on the name.</p>
+    <ol class="steps">
+      <li><input type="checkbox"><div class="txt"><b>3.1 Open the repo</b> while signed in to GitHub:
+        <div><a class="go" href="https://github.com/UsoguiH/-QUDRATI" target="_blank" rel="noopener">Open the repo</a></div></div></li>
+
+      <li><input type="checkbox"><div class="txt"><b>3.2 Change the website.</b> On the right, next to <b>About</b>, click the gear icon. In <b>Website</b>, replace <code>https://qudrati-lime.vercel.app</code> with this and press <span class="kbd">Save changes</span>:
+        <div class="copy"><span>https://qudrati.xyz/</span><button>Copy</button></div></div></li>
+    </ol>
+  </section>
+
+  <section class="final">
+    <h2><span class="num">✓</span> Then tell me</h2>
+    <p>Send me <b>"done"</b>, or tell me which step got stuck and what you saw. Then I'll check the result from my side: the GitHub link right away, and Google and Bing as they start crawling. In <b>2–4 weeks</b>, send a screenshot of Search Console's <b>Pages</b> and <b>Performance</b> reports. I can't see them myself.</p>
+    <button class="reset" id="reset">Clear all ticks</button>
+  </section>
+</div>
+<script>
+(function () {
+  var KEY = "qudrati.seoSetup.v2";
+  var PAGES = [
+    "https://qudrati.xyz/",
+    "https://qudrati.xyz/qudrat/",
+    "https://qudrati.xyz/qudrat/laws.html",
+    "https://qudrati.xyz/qudrat-kami.html",
+    "https://qudrati.xyz/qudrat/comparisons.html",
+    "https://qudrati.xyz/qudrat-mock-test.html",
+    "https://qudrati.xyz/qudrat/probability-statistics.html",
+    "https://qudrati.xyz/qudrat/percent.html"
+  ];
+  var list = document.getElementById("pages");
+  list.innerHTML = PAGES.map(function (u, i) {
+    return '<li><code>' + u.replace("https://", "") + '</code>' +
+      '<a href="#" data-copy="' + u + '">Copy</a>' +
+      '<label><input type="checkbox" data-page="' + i + '"> requested</label></li>';
+  }).join("");
+
+  var state = { steps: [], pages: [] };
+  try { var s = JSON.parse(localStorage.getItem(KEY) || "null"); if (s) state = s; } catch (e) {}
+  var steps = Array.prototype.slice.call(document.querySelectorAll("ol.steps > li > input[type=checkbox]"));
+  var pages = Array.prototype.slice.call(list.querySelectorAll("input[data-page]"));
+  function save() {
+    state = { steps: steps.map(function (b) { return b.checked; }), pages: pages.map(function (b) { return b.checked; }) };
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+  function paint() {
+    var n = 0;
+    steps.forEach(function (b) { b.closest("li").classList.toggle("done", b.checked); if (b.checked) n++; });
+    pages.forEach(function (b) { b.closest("li").classList.toggle("req", b.checked); });
+    document.getElementById("fill").style.width = (n / steps.length * 100) + "%";
+    document.getElementById("count").textContent = n === steps.length ? "All " + n + " steps done" : n + " of " + steps.length + " steps done";
+  }
+  steps.forEach(function (b, i) { b.checked = !!(state.steps || [])[i]; b.addEventListener("change", function () { save(); paint(); }); });
+  pages.forEach(function (b, i) {
+    b.checked = !!(state.pages || [])[i];
+    b.addEventListener("change", function () {
+      if (pages.every(function (p) { return p.checked; })) steps[1].checked = true;
+      save(); paint();
+    });
+  });
+  list.addEventListener("click", function (e) {
+    var a = e.target.closest("a[data-copy]"); if (!a) return;
+    e.preventDefault();
+    var t = a.getAttribute("data-copy");
+    var done = function () { a.textContent = "Copied"; setTimeout(function () { a.textContent = "Copy"; }, 1200); };
+    if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, function () { fallback(t); done(); });
+    else { fallback(t); done(); }
+  });
+  document.getElementById("reset").addEventListener("click", function () {
+    steps.concat(pages).forEach(function (b) { b.checked = false; });
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    paint();
+  });
+  document.querySelectorAll(".copy button").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var t = btn.previousElementSibling.textContent;
+      var done = function () { btn.textContent = "Copied"; setTimeout(function () { btn.textContent = "Copy"; }, 1200); };
+      if (navigator.clipboard) navigator.clipboard.writeText(t).then(done, function () { fallback(t); done(); });
+      else { fallback(t); done(); }
+    });
+  });
+  function fallback(t) {
+    var a = document.createElement("textarea"); a.value = t; document.body.appendChild(a); a.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    a.remove();
+  }
+  paint();
+})();
+</script>
+</body>
+</html>

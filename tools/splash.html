@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Splash Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* the lab page's own chrome; the phone is the real index.html with the picked version */
+:root { --bg: #F4F4F6; --panel: #FFFFFF; --ink: #3C3C3C; --mute: #777777; --line: #E5E5E5; --acc: #1CB0F6; --acc-dk: #1899D6; --acc-bg: #DDF4FF; --mark: #1A1A1A; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #131F24; --panel: #1B2A31; --ink: #F1F7FB; --mute: #9DB0BA; --line: #2E3F47; --acc: #49C0F8; --acc-dk: #7FD3FA; --acc-bg: #16384A; --mark: #F1F7FB; }
+}
+:root[data-theme="dark"] { --bg: #131F24; --panel: #1B2A31; --ink: #F1F7FB; --mute: #9DB0BA; --line: #2E3F47; --acc: #49C0F8; --acc-dk: #7FD3FA; --acc-bg: #16384A; --mark: #F1F7FB; }
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif; overflow-x: hidden; }
+button { font: inherit; }
+.top { max-width: 1100px; margin: 0 auto; padding: 26px 16px 0; text-align: center; }
+.top h1 { margin: 0; font-size: 28px; font-weight: 800; }
+.top p { margin: 2px auto 0; color: var(--mute); font-size: 15px; font-weight: 600; }
+
+/* the versions: each chip shows its own name drawn in its own font */
+.picks { max-width: 1100px; margin: 18px auto 0; padding: 0 16px; }
+.picks h2 { margin: 0 0 8px; font-size: 13px; font-weight: 800; color: var(--mute); }
+.row { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.chip { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px 8px; background: var(--panel); border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 16px; cursor: pointer; color: var(--ink); }
+.chip:active { transform: translateY(2px); border-bottom-width: 2px; }
+.chip.on { border-color: var(--acc); background: var(--acc-bg); }
+.chip svg, .chip .mk { width: 112px; height: 52px; overflow: visible; }
+.chip b { font-size: 14px; font-weight: 800; }
+.chip span { font-size: 12px; font-weight: 600; color: var(--mute); }
+.chip .qs-l, .chip .qs-t { fill: var(--mark); }
+.chip .qs-g { fill: #58CC02; } .chip .qs-o { fill: #FFC800; } .chip .qs-b { fill: #1CB0F6; }
+.chip.plain .qs-g, .chip.plain .qs-o, .chip.plain .qs-b { fill: var(--mark); }
+.chip .qs-u, .chip .qs-x, .chip .qs-lip, .chip .qs-ring { display: none; }
+.chip.k-gold .qs-l { fill: #15171E; } .chip.k-gold .qs-d { fill: #FFC800; }
+.chip.k-green svg { background: #58CC02; border-radius: 10px; padding: 5px 8px; box-sizing: border-box; } .chip.k-green .qs-l, .chip.k-green .qs-d { fill: #FFFFFF; }
+.chip.k-sheet svg { background: #FFFDF8; } .chip.k-sheet .qs-l { fill: #1E2230; }
+.chip.k-sheet .qs-d > circle:nth-child(2) { fill: #34373F; stroke: #E4573F; stroke-width: 40px; }
+
+/* the stage: the phone, and beside it the controls and the four steps */
+.stage { max-width: 1100px; margin: 6px auto 0; padding: 0 16px 48px; display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: start; }
+.phone { --k: .9; width: calc(390px * var(--k) + 20px); height: calc(780px * var(--k) + 20px); background: #1F1F22; border-radius: 44px; padding: 10px; box-shadow: 0 18px 40px rgba(0,0,0,.18); }
+.phone .scr { width: calc(390px * var(--k)); height: calc(780px * var(--k)); border-radius: 34px; overflow: hidden; background: #fff; }
+.phone iframe { width: 390px; height: 780px; border: 0; transform: scale(var(--k)); transform-origin: top right; display: block; }
+.side { min-width: 0; }
+.now { margin: 0 0 12px; }
+.now b { display: block; font-size: 24px; font-weight: 800; }
+.now span { display: block; font-size: 15px; font-weight: 600; color: var(--mute); line-height: 1.7; }
+.ctl { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px; }
+.seg { display: inline-flex; gap: 4px; padding: 4px; background: var(--panel); border: 2px solid var(--line); border-radius: 14px; }
+.seg button { font-weight: 800; font-size: 14px; padding: 6px 12px 4px; border: 0; border-radius: 10px; background: transparent; color: var(--mute); cursor: pointer; }
+.seg button.on { background: var(--acc-bg); color: var(--acc-dk); }
+.play { font-weight: 800; font-size: 16px; padding: 9px 22px 7px; border: 0; border-radius: 14px; background: #58CC02; color: #fff; box-shadow: 0 4px 0 #58A700; cursor: pointer; }
+.play:active { transform: translateY(2px); box-shadow: 0 2px 0 #58A700; }
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.step { background: var(--panel); border: 2px solid var(--line); border-radius: 16px; overflow: hidden; }
+.step img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; object-position: center 40%; background: #fff; }
+.step p { margin: 0; padding: 8px 10px 9px; font-size: 13.5px; font-weight: 700; line-height: 1.5; }
+.step p i { font-style: normal; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; margin-left: 6px; border-radius: 50%; background: var(--acc-bg); color: var(--acc-dk); font-weight: 800; font-size: 13px; }
+@media (max-width: 860px) {
+  .stage { grid-template-columns: 1fr; justify-items: center; }
+  .side { width: 100%; }
+  .steps { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 420px) { .phone { --k: .8; } }
+@media (max-width: 370px) { .phone { --k: .72; } }
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>شاشة التحميل</h1>
+  <p>اختر نسخة وشغّلها في الجوال، وجنبه نفس الحركة في أربع خطوات.</p>
+</div>
+
+<div class="picks">
+  <h2>جديد: خطّك كله أخضر، والنقاط بألوان الدوائر — «نقاط الدوائر» هو اللي في التطبيق الحين</h2>
+  <div class="row" id="rowTwo"></div>
+  <h2>جديد: خطّك نفسه وحركته نفسها، والنقاط بألوان — ٥ نسخ</h2>
+  <div class="row" id="rowDots"></div>
+  <h2>الجولة الرابعة: ٣ نسخ، لكل وحدة خطها ولونها وفكرتها</h2>
+  <div class="row" id="rowBest"></div>
+  <h2>خطّك كما رسمته</h2>
+  <div class="row" id="rowMine"></div>
+  <h2>خطّك محسّن ومدوّر</h2>
+  <div class="row" id="rowMark"></div>
+  <h2>خطوط ثانية، والنقاط عملات صغيرة من أول لحظة</h2>
+  <div class="row" id="rowNew"></div>
+</div>
+
+<div class="stage">
+  <div class="phone"><div class="scr"><iframe id="ph" title="الجوال"></iframe></div></div>
+  <div class="side">
+    <div class="now"><b id="nowName"></b><span id="nowWhy"></span></div>
+    <div class="ctl">
+      <button class="play" onclick="play()">شغّل</button>
+      <div class="seg" id="speed"><button data-k="1" class="on">سرعة عادية</button><button data-k="4">أبطأ ٤ مرات</button></div>
+      <div class="seg" id="mode"><button data-m="new" class="on">أول مرة</button><button data-m="back">طالب راجع</button><button data-m="fast">جوال سريع</button></div>
+    </div>
+    <div class="steps">
+      <div class="step"><img id="s1" alt=""><p><i>١</i>يحمّل: النقاط تنطّ موجة</p></div>
+      <div class="step"><img id="s2" alt=""><p><i>٢</i>جاهز: كل نقطتين تنضمّ</p></div>
+      <div class="step"><img id="s3" alt=""><p><i>٣</i>تطير عملات وتقلب، والاسم ينزل</p></div>
+      <div class="step"><img id="s4" alt=""><p><i>٤</i>الاسم صار العنوان، والعملات فوقه</p></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const LOOKS = [
+  { id: "markgreen", row: "rowTwo", ink: "#58CC02", dots: ["#58CC02", "#58CC02", "#58CC02", "#58CC02", "#58CC02", "#58CC02"], name: "أخضر كله", font: "خطّك", why: "خطّك نفسه وحركته نفسها، بس كله بأخضر دولينجو: الحروف والنقاط. أول ما تطلع النقطة تكون خضراء وبعدين تصير بلون عملتها وهي طايرة، والعنوان يبقى أخضر." },
+  { id: "markcoins", row: "rowTwo", dots: ["#58CC02", "#58CC02", "#FFC800", "#FFC800", "#1CB0F6", "#1CB0F6"], name: "نقاط الدوائر", font: "في التطبيق الحين", why: "الحروف بالحبر، والنقاط بنفس ألوان الدوائر الثلاث في شاشة الترحيب: نقطتين القاف خضراء، نقطتين التاء ذهبية، نقطتين الياء زرقاء. كل نقطتين تطلع عملتها بنفس لونها، والعنوان يبقى بنفس النقاط الملوّنة." },
+  { id: "dotsunset", row: "rowDots", dots: ["#FFB627", "#FF8F2E", "#FF6340", "#FF3F6C", "#E5369A", "#B03ACF"], name: "غروب", font: "خطّك", why: "النقاط الست غروب شمس: من الأصفر للبرتقالي للمرجاني للبنفسجي، من اليمين لليسار. كل عملة تطلع بلون نقطتيها وتنوّر بلونها وهي طايرة، والعنوان يبقى بنقاط الغروب." },
+  { id: "dotduo", row: "rowDots", dots: ["#FF4B4B", "#FF9600", "#FFC800", "#58CC02", "#1CB0F6", "#CE82FF"], name: "ألوان دولينجو", font: "خطّك", why: "كل نقطة بلون من ألوان دولينجو الست: أحمر، برتقالي، أصفر، أخضر، أزرق، بنفسجي. مرحة وواضحة، والعنوان يبقى بنفس الألوان." },
+  { id: "dotjewel", row: "rowDots", dots: ["#14C38E", "#14C38E", "#FF3D68", "#FF3D68", "#3D7BFF", "#3D7BFF"], name: "جواهر", font: "خطّك", why: "كل نقطتين جوهرة: زمرد، ياقوت، ياقوت أزرق، وكل وحدة على حافتها الغامقة مثل أزرار التطبيق، وتلمع فوق كل نطّة. العنوان يبقى بالجواهر بدون الحافة." },
+  { id: "dotshift", row: "rowDots", dots: ["#FF4B8B", "#FF8A00", "#FFCC00", "#3DDC84", "#00B8FF", "#8A5CFF"], name: "تتلوّن", font: "خطّك", why: "النقاط قوس قزح يتحرك: فوق كل نطّة تاخذ كل نقطة لون اللي جنبها، فتنزل كل مرة بلون جديد. العملات تطلع بألوانها، والعنوان يبقى قوس قزح ثابت." },
+  { id: "dotmint", row: "rowDots", dots: ["#14B8A6", "#14B8A6", "#FF7A59", "#FF7A59", "#8B5CF6", "#8B5CF6"], name: "نعناع ومرجان", font: "خطّك", why: "ألوان حديثة هادية: ق بالنعناعي، ت بالمرجاني، ي بالبنفسجي، مسطّحة وناعمة. كل عملة تطلع بلون نقطتيها، والعنوان يبقى بنفس الألوان." },
+  { id: "gold", row: "rowBest", kind: "gold", name: "حبر وذهب", font: "Cairo", why: "خط Cairo بأثقل وزن، أقرب شي لخطّك المربّع بس مرسوم باحتراف. الاسم حبر على أبيض والنقاط الست مربعات ذهب تلمع وهي تنطّ، فواضح من أول لحظة إنها عملات. وهي طالعة كل وحدة تنوّر بلون عملتها، والعنوان يبقى بنقاط ذهب." },
+  { id: "green", row: "rowBest", kind: "green", name: "الأخضر", font: "Zain", why: "على طريقة دولينجو: الشاشة كلها خضراء والاسم أبيض سميك بحافة خضراء غامقة. لما يجهز التطبيق يتجمّع الأخضر وينزل لين يصير هو زر «ابدأ الآن»، والنقاط تطير عملات، والاسم يصير أخضر على أبيض." },
+  { id: "sheet", row: "rowBest", kind: "sheet", name: "ورقة الإجابة", font: "Beiruti", why: "ورقة إجابة القدرات اللي يعرفها كل طالب: النقاط دوائر إجابة بالأحمر، والقلم يظلّلها وحدة وحدة كأنك تجاوب، وبعدين تنطّ وتطير عملات. وعلى طرف الشاشة علامات الورقة السوداء." },
+  { id: "markmono", row: "rowMine", plain: true, name: "بدون لون", font: "خطّك", why: "خطّك نفسه بالحبر كله، والنقاط سوداء مثل صورتك. أول ما تطلع النقطة تنوّر بلون عملتها وهي لسا صغيرة، فما يطير شي أسود." },
+  { id: "mark", row: "rowMine", name: "نقاط ملوّنة", font: "خطّك", why: "خطّك نفسه، ونقاطه من البداية بألوان العملات: الأخضر والذهبي والأزرق." },
+  { id: "alexandria", row: "rowNew", name: "ألكسندريا", font: "Alexandria", why: "خط هندسي حديث وثقيل، أقرب شي لروح Brilliant. النقاط عملات صغيرة بحافتها وحلقتها، فواضح من أول ثانية إنها هي عملات الترحيب." },
+  { id: "kufi", row: "rowNew", name: "كوفي", font: "Noto Kufi Arabic", why: "كوفي هندسي مثل الخط اللي رسمته، بس مرسوم باحتراف وبوزن واحد ثابت. النقاط عملات صغيرة." },
+  { id: "almarai", row: "rowNew", name: "المراعي", font: "Almarai", why: "خط مصمَّم للعلامات السعودية: واضح وودود ويتقرى من بعيد. النقاط عملات صغيرة." },
+  { id: "markref", row: "rowMark", name: "محسّن، ملوّن", font: "خطّك", why: "خطّك أثقل شوي، زواياه الخارجية مدوّرة والداخلية حادّة، ونقاطه بألوان العملات." },
+  { id: "markrefplain", row: "rowMark", plain: true, name: "محسّن، بدون لون", font: "خطّك", why: "نفس المحسّن بالحبر كله؛ النقطة تنوّر بلون عملتها أول ما تطلع." },
+  { id: "markround", row: "rowMark", name: "مدوّر، ملوّن", font: "خطّك", why: "خطّك أثقل وكل زواياه ناعمة، ونقاطه دوائر بألوان العملات." },
+  { id: "markroundplain", row: "rowMark", plain: true, name: "مدوّر، بدون لون", font: "خطّك", why: "المدوّر بالحبر كله؛ النقاط تنوّر بألوانها وهي طالعة." }
+];
+/* opened on this computer, the returning student lives on 127.0.0.1 so their save never meets the new student's;
+   opened from a phone on the Wi-Fi there is one address, so the returning student is seeded again each time */
+const NEW = location.origin + "/index.html?dev=1";
+const BACK_HOST = location.hostname === "localhost" ? "http://127.0.0.1:" + location.port : location.origin;
+let LOOK = LOOKS[0], MODE = "new", K = 1, seeded = false, run = 0;
+const ph = document.getElementById("ph");
+
+/* each chip draws its version's name from the version's own file */
+LOOKS.forEach(l => {
+  const b = document.createElement("button");
+  b.className = "chip" + (l.plain ? " plain" : "") + (l.kind ? " k-" + l.kind : ""); b.dataset.id = l.id;
+  b.innerHTML = `<span class="mk"></span><b>${l.name}</b><span>${l.font}</span>`;
+  b.onclick = () => pick(l);
+  document.getElementById(l.row).appendChild(b);
+  fetch(`splash/${l.id}.html`).then(r => r.text()).then(t => {
+    const m = t.match(/<svg[\s\S]*<\/svg>/); if (m) b.querySelector(".mk").outerHTML = m[0];
+    if (l.dots) b.querySelectorAll("svg > g").forEach((g, i) => g.style.fill = l.dots[i]);
+    if (l.ink) b.querySelectorAll("svg .qs-l").forEach(x => x.style.fill = l.ink);   /* a coloured-dots version paints its own six */
+  }).catch(() => {});
+});
+
+function pick(l) {
+  LOOK = l;
+  document.querySelectorAll(".chip").forEach(c => c.classList.toggle("on", c.dataset.id === l.id));
+  document.getElementById("nowName").textContent = l.name;
+  document.getElementById("nowWhy").textContent = l.why;
+  for (let i = 1; i <= 4; i++) document.getElementById("s" + i).src = `splash/story/${l.id}-${i}.jpg`;
+  play();
+}
+function src() {
+  const base = MODE === "back" ? BACK_HOST + "/index.html?dev=1" : NEW;
+  const hold = MODE === "new" ? 2400 : MODE === "back" ? 1800 : 0;
+  return base + "&splashv=" + LOOK.id + (hold ? "&splash=" + hold * K : "") + (K > 1 ? "&qslow=" + K : "") + "&r=" + Math.random().toString(36).slice(2, 7);
+}
+function play() {
+  const me = ++run;
+  ph.onload = null;
+  if (MODE !== "back") { try { localStorage.removeItem("qudratState"); } catch (e) {} if (BACK_HOST === location.origin) seeded = false; }
+  if (MODE === "back" && !seeded) {
+    /* the returning student lives on another origin, so their save never meets the new student's */
+    ph.onload = () => { ph.onload = null; seeded = true; setTimeout(() => { if (me === run) play(); }, 300); };
+    ph.src = BACK_HOST + "/preview.html#path";
+    return;
+  }
+  ph.src = "about:blank";
+  setTimeout(() => { if (me === run) ph.src = src(); }, 60);
+}
+document.querySelectorAll("#speed button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#speed button").forEach(x => x.classList.toggle("on", x === b)); K = +b.dataset.k; play();
+});
+document.querySelectorAll("#mode button").forEach(b => b.onclick = () => {
+  document.querySelectorAll("#mode button").forEach(x => x.classList.toggle("on", x === b)); MODE = b.dataset.m; play();
+});
+pick(LOOKS[0]);
+</script>
+</body>
+</html>

@@ -6,6 +6,15 @@
 
 /* ---------------- helpers ---------------- */
 const $app = document.getElementById("app");
+/* the name as the loading screen draws it, kept for the welcome screen's title so
+   the two are one wordmark (splashOut lands one on the other); text where there is none */
+const WORDMARK = (() => {
+  const w = document.querySelector("#splash .qs-word");
+  if (!w) return "";
+  const c = w.cloneNode(true);
+  c.querySelectorAll(".qs-d").forEach(d => { d.setAttribute("class", "qs-t"); d.removeAttribute("style"); });
+  return c.outerHTML;
+})();
 window.A = {}; // global handlers (filled in throughout the file)
 const AR_DIGITS = "٠١٢٣٤٥٦٧٨٩";
 const toAr = n => String(n).replace(/[0-9]/g, d => AR_DIGITS[d]);
@@ -635,7 +644,12 @@ function render() {
 }
 /* the win screens' Rive files draw on their own frame loop until cleaned up: any way off them stops it
    (a jump straight to a tab left it drawing a hidden canvas on every frame) */
-function go(v) { sfxHush(); sayStop(); wstStop(); wvStop(); view = v; render(); window.scrollTo(0, 0); }
+/* the tab bar sits over the lesson card's veil, so a tab can be pressed with
+   the card open: leaving the screen closes it, or it stayed on the next one */
+function go(v) {
+  document.querySelectorAll(".lesson-pop-veil").forEach(x => x._close ? x._close() : x.remove());
+  sfxHush(); sayStop(); wstStop(); wvStop(); view = v; render(); window.scrollTo(0, 0);
+}
 
 const ICO_FILE = { "nav-exam": "nav-exam-64.png" }; // raster icons (user-provided art)
 /* exam day: the target drawn, not the emoji it was (the audit, 2026-10-28;
@@ -1898,7 +1912,7 @@ function renderPath() {
     });
     html += `</div></section>`;
   });
-  $app.innerHTML = statbar() + `<div class="screen">${NODE_GOLD_DEFS}${examDaysLeft() !== null && examDaysLeft() >= 0 ? fqCard() : countdownCard()}${dueCard()}${html}<div class="path-tail"></div></div>` + floatingQuest() + PATH_FAB + bottomnav("path");
+  $app.innerHTML = statbar() + `<div class="screen">${NODE_GOLD_DEFS}${examDaysLeft() !== null && examDaysLeft() >= 0 ? fqCard() : countdownCard()}${window.LAWX ? LAWX.pathCard() : ""}${dueCard()}${html}<div class="path-tail"></div></div>` + floatingQuest() + PATH_FAB + bottomnav("path");
   requestAnimationFrame(() => {
     pathReveal();
     /* a rank-up on top would hide the beat: it waits, and plays when the rank-up closes and repaints the path */
@@ -1910,7 +1924,7 @@ function renderPath() {
        unconditionally threw a new player past the countdown and the daily
        question, so they landed halfway down a page they had never seen. */
     const r = cur.getBoundingClientRect();
-    if (r.top > window.innerHeight * 0.72 || r.bottom < 80)
+    if ((r.top > window.innerHeight * 0.72 && !document.querySelector('.lw-due:not(.lw-ok)')) || r.bottom < 80)
       cur.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 }
@@ -2569,7 +2583,7 @@ A.go = function (v) { if (v === "review") reviewFrom = view; if (v === "settings
 A.nodeTap = function (ev, domKey, lesKey, li) {
   const d = window.QBANK[domKey], l = d.lessons.find(x => x.key === lesKey);
   const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
-  const old = document.querySelector(".lesson-pop-veil"); if (old) old.remove();
+  const old = document.querySelector(".lesson-pop-veil"); if (old) old._close ? old._close() : old.remove();
   document.querySelectorAll(".node-col.sel").forEach(ringResume);
   const btn = ev.currentTarget;
   nodeRelease(btn);
@@ -2583,6 +2597,7 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   veil.innerHTML = `<div class="lesson-pop" style="--pop-c:${u.c};top:${Math.min(r.bottom + 14, window.innerHeight - 190)}px">
     <h3>${l.title}</h3>
     ${at >= 0 ? `<div class="lp-sub">الدرس ${toAr(at + 1)} من ${toAr(LS.lessons.length)}، ${esc(LS.lessons[at].title)}</div>` : LS ? `<div class="lp-sub">تدريب بوقت — مثل الاختبار</div>` : ""}
+    ${window.LAWX ? LAWX.popLine(domKey + "." + lesKey, at) : ""}
     <button class="lp-boost ${canBoost ? "" : "cant"}" id="lpBoost" aria-label="ضاعف خبرة هذا الدرس مقابل ${toAr(BOOST_COST)} جوهرة">
       <span class="lpb-ico"><img src="assets/icons/lightning.svg" width="20" height="20" alt=""></span>
       <span class="lpb-label">ضاعف الخبرة <span dir="ltr">×٢</span></span>
@@ -2593,11 +2608,14 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   let untrapPop = null;
   const selCol = btn.closest(".node-col");
   if (selCol) ringSelect(selCol);
+  let scrollRaf = 0;
   const popClose = start => {
+    cancelAnimationFrame(scrollRaf);
     if (untrapPop) { untrapPop(); untrapPop = null; }
     veil.remove();
     if (selCol) ringResume(selCol);
   };
+  veil._close = popClose;
   /* the node still shows through the veil: pressing it again presses it — the
      face drops and settles back — and closes the card, as Duolingo's does */
   const onNode = e => { const b = btn.getBoundingClientRect(); return e.clientX >= b.left && e.clientX <= b.right && e.clientY >= b.top && e.clientY <= b.bottom + 7; };
@@ -2639,29 +2657,32 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   /* Make room the way Duolingo does. The bubble used to be clamped to the
      viewport, which parked it ON TOP of the node it was pointing at whenever
      that node sat in the lower part of the screen. Now: if the bubble would
-     run under the tab bar, scroll the node up by exactly that much, open the
-     bubble where the node is going to be, and let it spring in once the
-     scroll lands. offsetHeight is used because it ignores the spring-in
-     transform — getBoundingClientRect() read back zero mid-spring. */
+     run under the tab bar, scroll the node up by exactly that much. The card
+     springs in at once and rides up with the node (a 200ms scroll of our own)
+     rather than waiting hidden for a smooth scroll to land, which held it
+     back up to 450ms after the tap. offsetHeight is used because it ignores
+     the spring-in transform — getBoundingClientRect() read back zero
+     mid-spring. */
   const gap = 14, popH = pop.offsetHeight;
   const navH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h")) || 0;
   const floor = window.innerHeight - navH - 10;
   const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight - window.scrollY);
   let dy = Math.min(maxScroll, Math.max(0, nr.bottom + gap + popH - floor));
   if (nr.top - dy < 64) dy = Math.max(0, nr.top - 64);           // never under the stat bar
-  pop.style.top = Math.max(8, nr.bottom - dy + gap) + "px";
-  if (dy > 0) {
-    pop.classList.add("pending");
-    let landed = false;
-    const land = () => {
-      if (landed) return;
-      landed = true;
-      window.removeEventListener("scrollend", land);
-      pop.classList.remove("pending");
+  const place = () => { pop.style.top = Math.max(8, btn.getBoundingClientRect().bottom + gap) + "px"; };
+  if (dy > 0 && !motionReduced()) {
+    const y0 = window.scrollY, t0 = performance.now(), ms = 200;
+    pop.style.top = Math.max(8, nr.bottom + gap) + "px";
+    const step = now => {
+      const k = Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+      window.scrollTo(0, y0 + dy * e);
+      place();
+      if (k < 1) scrollRaf = requestAnimationFrame(step);
     };
-    window.addEventListener("scrollend", land);
-    setTimeout(land, 450);                                      // browsers without scrollend
-    window.scrollBy({ top: dy, behavior: "smooth" });
+    scrollRaf = requestAnimationFrame(step);
+  } else {
+    if (dy > 0) window.scrollBy(0, dy);
+    pop.style.top = Math.max(8, nr.bottom - dy + gap) + "px";
   }
 };
 
@@ -4106,7 +4127,11 @@ A.startLearn = function (domKey, lesKey, li, boost) {
   if (li === undefined || li === null || li < 0 || li >= L.lessons.length) li = Math.max(0, learnAt(key));
   const les = L.lessons[li];
   const queue = [];
+  if (window.LAWX) LAWX.begin(key, les);
   les.items.forEach(src => {
+    /* a rule card of nodes 1–3 becomes the rule's own three screens (js/law/law.js) */
+    const lx = window.LAWX && LAWX.swap(src, key, les, L);
+    if (lx) { lx.forEach(x => queue.push(learnMake(x))); return; }
     queue.push(learnMake(src));
     if (src && src.t === "see" && src.rule && li < (RF_LESSONS[key] || 0)) [learnRuleWords(src, L), learnRuleNums(src)].forEach(x => { if (x) queue.push(learnMake(x)); });
   });
@@ -4227,7 +4252,7 @@ function rfEqHtml(it, verdict, unfill) {
   const want = verdict ? learnFillWant(it) : null;
   const blank = () => {
     const j = k++, tile = it.ui.slots[j], lab = it.lab && it.lab[j];
-    const st = verdict ? (it.tiles[tile] === want[j] ? " right" : " wrong") : "";
+    const st = verdict ? (it.tiles[tile] === want[j] ? " right" : " wrong") : it.ui.lk && it.ui.lk[j] ? " lk" : "";
     const b = tile === undefined
       ? `<button class="ln-blank" aria-label="فراغ${lab ? ": " + esc(lab) : ""}"></button>`
       : `<button class="ln-blank filled${st}" onclick="${unfill || "A.lUnfill"}(${j})">${esc(it.tiles[tile])}</button>`;
@@ -4344,8 +4369,9 @@ function rfBody(c, verdict, unfill, tile) {
   const words = (c.rf || (c.type === "rfill" ? "words" : "nums")) === "words";
   const tiles = `<div class="ln-tiles rf-tiles" id="lnTiles">${c._tiles.map(k =>
     `<button class="ln-tile${c.ui.slots.indexOf(k) >= 0 ? " used" : ""}${c._out && c._out.indexOf(k) >= 0 ? " out" : ""}" data-k="${k}" onclick="${tile}(${k})"${verdict || (c._out && c._out.indexOf(k) >= 0) ? " disabled" : ""}>${esc(c.tiles[k])}</button>`).join("")}</div>`;
-  const hint = c._hint ? `<div class="rf-hint help" id="rfHint">${c._hint}</div>` : `<div class="rf-hint" id="rfHint"></div>`;
-  const ex = !words && c.q ? `<div class="ln-step rf-ex">${learnFmt(c.q)}</div>` : "";
+  const hint = c._hint ? `<div class="rf-hint help${rfNow(c) ? " rf-fh" : ""}" id="rfHint">${c._hint}</div>` : `<div class="rf-hint" id="rfHint"></div>`;
+  /* a numbers line stays one line; an example said in words wraps, a size down */
+  const ex = !words && c.q ? `<div class="ln-step rf-ex${/[ء-ي]{3}/.test(c.q) ? " rf-say" : ""}">${learnFmt(c.q)}</div>` : "";
   return `<div class="ln-q rf-q">${words ? "كمّل القاعدة:" : "كمّل الخطوة:"}</div>
     <div class="ln-eq rf-box${words ? " rf-words" : " rf-num"}">${ex}<div class="rf-lines" id="lnEq">${learnFillEq(c, verdict, unfill)}</div></div>
     ${hint}${tiles}`;
@@ -4413,10 +4439,12 @@ function learnBody(it) {
 }
 function renderLearn() {
   const it = SES.queue[SES.idx];
+  if (it && it.law && window.LAWX) return LAWX.render(it);
   const d = window.QBANK[SES.domKey], u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
   const pct = sesPct();
   const btn = it.t === "see"
     ? `<button class="btn" onclick="A.next()">${esc(it.go || "فهمت")}</button>`
+    : rfNow(it) ? `<button class="btn rf-nobtn" disabled aria-hidden="true" tabindex="-1">تحقق</button>`
     : `<button class="btn" id="checkBtn" onclick="A.check()" ${learnReady(it) ? "" : "disabled"}>تحقق</button>`;
   $app.innerHTML = `
     <div class="screen screen-full screen-session screen-learn" style="--li-c:${u.c};--li-s:${u.s};--li-h:${u.h}">
@@ -4471,6 +4499,7 @@ A.lTile = function (k) {
     let j = 0; while (it.ui.slots[j] !== undefined) j++;
     if (j >= it.a.length) return;
     it.ui.slots[j] = k; stampTile(it.ui, k);
+    if (rfNow(it)) { rfInstant(it, j); return; }
   } else if (it.t === "order") {
     if (it.ui.seq.indexOf(k) >= 0) return;
     it.ui.seq.push(k);
@@ -4480,7 +4509,7 @@ A.lTile = function (k) {
 };
 A.lUnfill = function (j) {
   const it = SES && SES.queue[SES.idx]; if (!it || SES.locked) return;
-  if (it.t === "fill") it.ui.slots[j] = undefined;
+  if (it.t === "fill") { if (rfNow(it)) return; it.ui.slots[j] = undefined; }
   else if (it.t === "order") it.ui.seq.splice(j, 1);
   snd("tile-remove"); learnPaint();
 };
@@ -4721,9 +4750,83 @@ function rfCheck(it) {
     if (tl) tl.scrollIntoView({ block: "nearest", behavior: fxReduced() ? "auto" : "smooth" });
   }, 950);
 }
+/* «كمّل الخطوة» answers each number the moment it lands (the user, 2026-11-08: «كل رقم يتصحّح أول ما يحطّه … وزر «تحقق»
+   يروح من هالشاشة … مثل شاشة الأزواج بالضبط»): a student who knows the rule used to fill every blank and lose the whole
+   screen at «تحقق» to one slip. A right number turns green, jumps (adWave) on a tally a note higher than the last and
+   stays; a wrong one turns red, shakes and goes back to the tiles, and فهيم says what is wrong with it, never the answer;
+   from the second miss on one blank the tiles that belong nowhere go. The last right number brings the green sheet.
+   The two sides of a «×» or a «+» and the screen's free blanks (`any`) still go in either order: a number fits a blank
+   while any value of its group not yet taken is that number */
+function rfNow(it) { return !!(it && it.t === "fill" && it.rf === "nums"); }
+function rfOk(it, j, v) {
+  const groups = rfSwapRuns(it.eq).slice();
+  if (it.anyOrder) groups.push([0, it.anyOrder - 1]);
+  const g = groups.find(([a, b]) => j >= a && j <= b);
+  if (!g) return v === it.a[j];
+  const pool = it.a.slice(g[0], g[1] + 1);
+  for (let x = g[0]; x <= g[1]; x++) {
+    if (x === j || !(it.ui.lk && it.ui.lk[x])) continue;
+    const at = pool.indexOf(it.tiles[it.ui.slots[x]]); if (at >= 0) pool.splice(at, 1);
+  }
+  return pool.indexOf(v) >= 0;
+}
+function rfMissSay(it, j, v) {
+  const lab = it.lab && it.lab[j], rule = it.rule ? ruleSplit(it.rule).main : "";
+  const said = rule ? `<span class="rf-tr">${String(rule).split("*").map((p, k) => k % 2 ? (p ? `<b class="ln-hl">${esc(p)}</b>` : "") : esc(p)).join("")}</span>` : "";
+  const line = lab ? `هذا مكان <b class="ln-hl">${esc(lab)}</b> — دوّره في المثال.` : "احسبه من السطر اللي فوقه.";
+  const out = it._miss[j] >= 2 ? `<span>شلت لك الأرقام اللي ما لها مكان.</span>` : "";
+  return `${mascot("encourage", "rf-help-fh")}<span class="rf-help-tx"><b>«${esc(v)}» مو هنا.</b><span>${line}</span>${it._miss[j] === 1 && said ? said : ""}${out}</span>`;
+}
+function rfInstant(it, j) {
+  const v = it.tiles[it.ui.slots[j]], hint = document.getElementById("rfHint");
+  it.ui.lk = it.ui.lk || {};
+  const chipAt = () => { const eq = document.getElementById("lnEq"); return eq && eq.querySelectorAll(".ln-blank")[j]; };
+  if (rfOk(it, j, v)) {
+    it.ui.lk[j] = true;
+    learnPaint();
+    const c = chipAt(); if (c) adWave([c]);
+    const n = Object.keys(it.ui.lk).length;
+    snd("rule-fill-step", () => sndTap(), "xp-tally-" + Math.min(n, 5)); buzz(8);
+    if (hint && hint.classList.contains("help")) { hint.className = "rf-hint"; hint.innerHTML = ""; it._hint = ""; }
+    if (n === it.a.length) {
+      SES.locked = true;
+      setTimeout(() => {
+        if (!SES || SES.queue[SES.idx] !== it) return;
+        document.querySelectorAll(".ln-tile, .ln-blank").forEach(x => { x.disabled = true; });
+        learnResolve(it, true, rfShown(it), null, false, it.why);
+      }, 520);
+    }
+    return;
+  }
+  it._tries = (it._tries || 0) + 1;
+  it._miss = it._miss || {}; it._miss[j] = (it._miss[j] || 0) + 1;
+  if (learnGraded(it) && !(it.uid in SES.firstTry)) SES.firstTry[it.uid] = false;
+  SES.run = 0; fxPaintBar(0);
+  SES.locked = true;
+  learnPaint();
+  const c = chipAt();
+  if (c) {
+    c.classList.add("wrong");
+    if (window.gsap && !fxReduced()) gsap.fromTo(c, { x: 0 }, { keyframes: [{ x: -8, duration: .06 }, { x: 7, duration: .07 }, { x: -5, duration: .07 }, { x: 3, duration: .06 }, { x: 0, duration: .06 }] });
+  }
+  snd("rule-fill-miss", () => sndBad()); buzz([30, 40, 30]);
+  it._hint = rfMissSay(it, j, v);
+  if (hint) { hint.innerHTML = it._hint; hint.className = "rf-hint help rf-fh"; void hint.offsetWidth; hint.classList.add("go"); }
+  setTimeout(() => {
+    if (!SES || SES.queue[SES.idx] !== it) return;
+    it.ui.slots[j] = undefined;
+    if (it._miss[j] >= 2) it._out = rfSpare(it);
+    SES.locked = false;
+    document.querySelectorAll("#lnTiles .ln-tile").forEach(x => {
+      const out = !!it._out && it._out.indexOf(+x.dataset.k) >= 0;
+      x.disabled = out; x.classList.toggle("out", out);
+    });
+    learnPaint();
+  }, 620);
+}
 function learnCheck() {
   const it = SES.queue[SES.idx];
-  if (SES.locked || !learnReady(it)) return;
+  if (SES.locked || !learnReady(it) || rfNow(it)) return;
   if (it.rf) { rfCheck(it); return; }
   SES.locked = true;
   const choices = Array.from(document.querySelectorAll(".ln-area .choice"));
@@ -6196,6 +6299,7 @@ A.winMore = function () {
           <span class="wn-next">${nxt || (L.nodeDone ? "المرحلة التالية انفتحت لك" : "")}</span>
         </span>
       </div>` : ""}
+      ${window.LAWX ? LAWX.winCard(W) : ""}
       <div class="wp-card wp-quest${done && !justDone ? " full" : ""}">
         <b class="wq-h" id="wpQt">${done && !justDone ? "اكتمل هدف اليوم" : `حلّ ${qCount(W.goal)}`}</b>
         ${cpbHtml("wpBar", W.qd0, W.qd1, W.goal, "var(--gold)", "#FFE7A0", "#CD7900", chestSVG("wp-chest").replace('viewBox="0 0 260 290"', 'viewBox="12 75 236 192"'), `حللت ${toAr(W.qd1)} من ${toAr(W.goal)} أسئلة اليوم`)}
@@ -6248,7 +6352,7 @@ function wpPlay(W, justDone) {
       .call(() => { c.classList.add("lit"); }, null, at)
       .call(() => { c.classList.remove("lit"); }, null, at + .4);
     let dur = 0;
-    if (c === task) {
+    if (c.classList.contains("wp-law") && window.LAWX) { dur = LAWX.winPlay(c, tl, at); } else if (c === task) {
       /* the lesson ticked off: the ring fills and its check draws, then this
          lesson's segment fills on the quest bar's curve and sound, with its
          particle at the segment's end, and the count turns over */
@@ -7844,7 +7948,8 @@ A.toggleMotion = function () {
    phone removed — the save, a mock in progress, the effect switches. There is
    no server copy to delete; a Google sign-in kept no email and no token, and
    the sheet says where to remove the app from the Google account too. */
-const ACCOUNT_KEYS = ["qudratState", MOCK_KEY, "qudratiFx", FX_LITE_KEY];
+const LAW_KEY = "qudrati.lawapp.v1";
+const ACCOUNT_KEYS = ["qudratState", MOCK_KEY, "qudratiFx", FX_LITE_KEY, LAW_KEY];
 const DELETED_FLAG = "qudratDeleted";
 A.deleteAccount = function () {
   const guest = !S.user || S.user.guest, g = !guest && S.user.google;
@@ -7878,8 +7983,13 @@ function b64dec(s) {
   for (let i = 0; i < bin.length; i++) b[i] = bin.charCodeAt(i);
   return new TextDecoder().decode(b);
 }
+/* the rules' progress (which rules are met, each one's step and the day it comes back) is kept under its own key by
+   js/law/law.js, and travels in the code beside the save (2026-11-08: a restored backup brought back everything but them) */
+function lawSaved() { try { const o = JSON.parse(localStorage.getItem(LAW_KEY) || "null"); return o && typeof o === "object" && !Array.isArray(o) ? o : null; } catch (e) { return null; } }
 function backupCode() {
-  return BACKUP_TAG + "-" + SCHEMA + "." + b64enc(JSON.stringify({ t: BACKUP_TAG, v: SCHEMA, at: Date.now(), s: S })).replace(/=+$/, "");
+  const o = { t: BACKUP_TAG, v: SCHEMA, at: Date.now(), s: S }, law = lawSaved();
+  if (law && Object.keys(law).length) o.law = law;
+  return BACKUP_TAG + "-" + SCHEMA + "." + b64enc(JSON.stringify(o)).replace(/=+$/, "");
 }
 function backupRead(code) {
   const raw = String(code || "").replace(/\s+/g, "");
@@ -7920,7 +8030,7 @@ const qLessons = n => arPlural(n, "درس واحد", "درسان", "دروس", "
    there is one way out of it and it is the button), and puts the focus back
    where it was. When two sheets are open — the method sheet can open the
    guidebook on top of itself — only the topmost one answers a key. */
-const OVERLAY_SEL = ".ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .modal-veil, .rankup-veil";
+const OVERLAY_SEL = ".ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .modal-veil, .rankup-veil, .lw-veil";
 const FOCUS_SEL = 'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 function trapOverlay(veil, close, opts) {
   const o = opts || {};
@@ -8005,11 +8115,13 @@ A.restoreShow = function () {
     if (!o) { msg.className = "bk-msg bad"; msg.textContent = "هذا الرمز غير صالح — تأكد أنك نسخته كاملاً"; return; }
     const s = migrate(Object.assign({}, DEFAULT_STATE, o.s));
     msg.className = "bk-msg ok";
-    msg.textContent = backupSummary(s);
+    const law = o.law && typeof o.law === "object" && !Array.isArray(o.law) ? o.law : null;
+    const said = backupSummary(s) + (law && Object.keys(law).length ? "، " + arPlural(Object.keys(law).length, "قانون واحد", "قانونان", "قوانين", "قانوناً") : "");
+    msg.textContent = said;
     close();
-    askConfirm("نستعيد هذه النسخة؟", backupSummary(s) + " — تقدّمك الحالي على هذا الجهاز سيُستبدل.",
+    askConfirm("نستعيد هذه النسخة؟", said + " — تقدّمك الحالي على هذا الجهاز سيُستبدل.",
       "لا، رجوع", "نعم، استعد", () => {
-        try { localStorage.setItem("qudratState", JSON.stringify(s)); }
+        try { localStorage.setItem("qudratState", JSON.stringify(s)); if (law) localStorage.setItem(LAW_KEY, JSON.stringify(law)); }
         catch (e) { toast("تعذّر حفظ النسخة على هذا الجهاز — مساحة المتصفح ممتلئة أو الحفظ معطّل"); return; }   // it used to reload the old progress as if it had worked (the audit, 2026-10-28)
         mockClear();
         location.reload();
@@ -8618,7 +8730,7 @@ function renderWelcome() {
   $app.innerHTML = `<div class="screen screen-full wl-screen">
     <div class="wl-body">
       ${welcomeHero()}
-      <h1 class="wl-title">قدراتي</h1>
+      ${WORDMARK ? `<h1 class="wl-title wl-mark"><span class="qs-sr">قدراتي</span>${WORDMARK}</h1>` : `<h1 class="wl-title">قدراتي</h1>`}
       <p class="wl-sub">تدرّب على القسم الكمي — درساً بعد درس</p>
       <div class="login-badges wl-badges"><span>حيل تختصر الوقت</span><span>مجاني بالكامل</span><span>تعلّم وأنت تلعب</span></div>
     </div>
@@ -9714,6 +9826,284 @@ A.installApp = function () {
   } catch (e) { render(); }
 };
 
+/* ---------------- the loading screen ---------------- */
+/* index.html paints «قدراتي» with its six dots as coins (#splash) before any
+   of this has loaded; a slow load sets them hopping in a wave. Once the app is
+   up — and the font, so the first screen never swaps its letters — the wave is
+   let land, never cut mid-hop, and the screen is handed over: on the welcome
+   screen each letter's two dots merge into one of its three coins and fly to
+   it with one toss while the name slides into the title (the loading screen's
+   last frame is the welcome screen's first); anywhere else the dots pop off in
+   reading order and the screen rises in. Nothing is held longer than the load. */
+const QS_WAVE = { start: 450, cycle: 1200, airborne: 920 };          // the hop's CSS: delay, period, last dot down
+const QS_COIN = { b: [38, 73.6, 38], o: [98, 68.6, 50], g: [159, 74.1, 38.5] }; // welcome-svg: centre and radius per coin
+let QS_K = 1;                                                        // slow motion for the lab (?dev=1&qslow=N): every beat N times longer
+function qsA(el, frames, o) { return el.animate(frames, Object.assign({}, o, { duration: (o.duration || 0) * QS_K, delay: (o.delay || 0) * QS_K })); }
+function qsT(fn, ms) { return setTimeout(fn, ms * QS_K); }
+function qsWait(ms) { return new Promise(r => setTimeout(r, ms)); }
+/* the loading screen leaves; whatever happened on the way, the welcome screen's own coins and title are shown */
+function qsGone(sp) {
+  if (sp && sp.parentNode) sp.parentNode.removeChild(sp);
+  document.documentElement.classList.remove("qs");
+  document.querySelectorAll(".wl-in:not(.wl-landed)").forEach(s => { s.classList.add("wl-landed"); s.dataset.fit = "still"; });
+}
+/* the font, so the screen under the loading screen is laid out for good before it is handed over:
+   Google's stylesheet, then the Arabic faces themselves (a bare load fetches only the Latin piece,
+   and the Arabic one arriving after the hand-off moved the whole welcome screen), then whatever
+   else the screen asked for */
+function qsFontReady(cap) {
+  const t = performance.now() + cap, left = () => Math.max(0, t - performance.now());
+  const link = document.getElementById("qs-gf");
+  const css = () => !link || link.media !== "print" || !left() ? Promise.resolve() : qsWait(40).then(css);
+  return css().then(() => {
+    const f = document.fonts;
+    if (!f || !f.load || !left()) return;
+    const faces = Promise.all(["600", "700", "800"].map(w => f.load(`${w} 20px "Baloo Bhaijaan 2"`, "قدراتي ٠١٢٣ —").catch(() => {})))
+      .then(() => f.ready);
+    return Promise.race([faces, qsWait(left())]);
+  });
+}
+/* the welcome screen's column after the hand-off: if its layout moves (a font later than the wait,
+   the address bar, the phone turned), it glides from where it was seen to its new place instead of
+   jumping. Positions are kept in the page's own coordinates, so a scroll is never taken for a move. */
+function qsTy(el) {
+  const v = getComputedStyle(el).translate;
+  return !v || v === "none" ? 0 : parseFloat(v.split(" ")[1] || 0) || 0;
+}
+function qsHold(scr, seen) {
+  const body = scr.querySelector(".wl-body"), title = scr.querySelector(".wl-title");
+  if (!body || !title || typeof ResizeObserver !== "function" || !body.animate) return;
+  const at = () => title.getBoundingClientRect().top + window.scrollY - qsTy(body);
+  let was = seen == null ? at() : seen, glide = null;
+  const settle = () => {
+    const now = at(), from = was + qsTy(body) - now;
+    was = now;
+    if (Math.abs(from) < .5) return;
+    if (glide) glide.cancel();
+    glide = body.animate([{ translate: `0 ${from}px` }, { translate: "0 0" }], { duration: 480, easing: "cubic-bezier(.22,1,.36,1)" });
+  };
+  settle();                                                            // the copy's landing place, in the same task as the swap
+  const ro = new ResizeObserver(() => scr.isConnected ? settle() : ro.disconnect());
+  [scr, body, ...body.children, scr.querySelector(".wl-cta")].forEach(el => el && ro.observe(el));
+}
+/* the welcome column is centred, so anything under the title that changes height — the line and
+   the chips re-wrapping when the font comes after the hand-off, on a slow first visit — moved the
+   title. From the hand-off on, the column is held from the top where it stands: the hero and the
+   title stay put and only what is under them reflows. A new width (the phone turned) lets it centre again. */
+function qsPin(scr) {
+  const body = scr && scr.querySelector(".wl-body"), title = body && body.querySelector(".wl-title");
+  if (!title || body.dataset.pin) return;
+  const y0 = title.getBoundingClientRect().top;
+  body.style.justifyContent = "flex-start";
+  const p = (y0 - title.getBoundingClientRect().top) / fitZ(body);
+  if (!(p >= 0)) { body.style.justifyContent = ""; return; }           // already overflowing: leave it as it was
+  body.style.paddingTop = p + "px";
+  body.dataset.pin = "1";
+  const w0 = window.innerWidth;
+  const off = () => {
+    if (window.innerWidth === w0) return;
+    removeEventListener("resize", off);
+    body.style.justifyContent = body.style.paddingTop = "";
+    delete body.dataset.pin;
+  };
+  addEventListener("resize", off);
+}
+/* how long until every dot of the wave in the air has landed. On the way to the welcome screen the
+   wave is waited for even when the app is up before it starts: on a fast phone the hand-off came at
+   a quarter of a second, before anyone had seen the dots, and coins burst out of the name (the
+   user, 2026-10-29: «they didn't detect the dots because it's too fast»). The dots hop once, the
+   eye goes to them, and then they become the coins. */
+function qsBeat(sp, first) {
+  const a = sp.querySelector(".qs-d");
+  const an = a && a.getAnimations ? a.getAnimations()[0] : null;
+  if (!an || an.currentTime == null) return 0;
+  const run = an.currentTime - QS_WAVE.start * QS_K;
+  if (run < 0) return first ? QS_WAVE.airborne * QS_K - run : 0;
+  const phase = run % (QS_WAVE.cycle * QS_K);
+  return phase < QS_WAVE.airborne * QS_K ? QS_WAVE.airborne * QS_K - phase : 0;
+}
+function splashOut() {
+  const sp = document.getElementById("splash");
+  window.QS_TAKEN = 1;
+  if (!sp) return;
+  const hold = DEV ? +((location.search.match(/[?&]splash=(\d+)/) || [])[1] || 0) : 0;
+  QS_K = DEV ? +((location.search.match(/[?&]qslow=(\d+)/) || [])[1] || 1) : 1;
+  Promise.all([qsFontReady(4500), qsWait(hold)])
+    .then(() => qsWait(qsBeat(sp, !motionReduced() && !!$app.querySelector(".wl-screen .welcome-svg"))))
+    .then(() => {
+      sp.querySelectorAll(".qs-d").forEach(d => { d.style.animation = "none"; });
+      if (motionReduced() || !sp.animate) return qsFade(sp);
+      const scr = $app.querySelector(".wl-screen");
+      return scr && scr.querySelector(".welcome-svg") ? qsToWelcome(sp, scr) : qsToScreen(sp);
+    })
+    .catch(() => {
+      qsGone(sp);
+      const scr = $app.querySelector(".wl-screen");
+      try { if (scr) { qsPin(scr); qsHold(scr); } } catch (e) {}
+    });
+}
+function qsFade(sp) {
+  sp.style.pointerEvents = "none";
+  qsPin($app.querySelector(".wl-screen"));
+  const a = sp.animate ? qsA(sp, [{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: "forwards" }) : null;
+  if (a) a.onfinish = () => qsGone(sp); else qsGone(sp);
+}
+/* the three coins of the welcome hero, cut out of its own svg (and its sparkles) */
+function qsCoins(svg) {
+  const tag = n => n.tagName.toLowerCase();
+  const kids = Array.from(svg.children).filter(n => tag(n) !== "defs");
+  const side = kids.map(n => {
+    if (typeof n.getBBox !== "function" || /^(mask|clippath|lineargradient|radialgradient|filter|pattern)$/.test(tag(n))) return "*";
+    const b = n.getBBox(), cx = b.x + b.width / 2;
+    return b.width < 30 ? "s" : cx < 60 ? "b" : cx > 136 ? "g" : "o";
+  });
+  const cut = k => {
+    const c = svg.cloneNode(true); let j = 0;
+    Array.from(c.children).forEach(n => { if (tag(n) === "defs") return; const s = side[j++]; if (s !== "*" && s !== k) n.style.display = "none"; });
+    c.setAttribute("class", "qs-coin"); c.removeAttribute("width"); c.removeAttribute("height");
+    return c;
+  };
+  return { b: cut("b"), g: cut("g"), o: cut("o"), s: cut("s") };
+}
+function qsToWelcome(sp, scr) {
+  scr.classList.add("wl-in");
+  scr.dataset.fit = "off";                                              // the copies place it while they fly; fitted once they land
+  qsPin(scr);
+  const svg = scr.querySelector(".welcome-svg"), title = scr.querySelector(".wl-title"), word = sp.querySelector(".qs-word");
+  const hr = svg.getBoundingClientRect(), k = hr.width / 198;
+  const mark = title.querySelector(".qs-word"), rg = document.createRange();
+  if (!mark) rg.selectNodeContents(title);
+  const tr = (mark || rg).getBoundingClientRect(), wr = word.getBoundingClientRect();
+  const unit = wr.width / word.viewBox.baseVal.width;                 // screen px per unit of the name's svg
+  const top0 = title.getBoundingClientRect().top;
+  sp.style.pointerEvents = "none";
+  /* the real hero and title take over where the copies landed — or at once, if the screen was left
+     or the phone turned while they flew */
+  let landed = false;
+  const land = early => {
+    if (landed) return;
+    landed = true;
+    scr.classList.add("wl-landed");
+    scr.dataset.fit = "still";                                          // qsHold glides whatever moves the column from here
+    if (scr.isConnected) qsHold(scr, early ? null : top0 + window.scrollY);
+    qsGone(sp);
+    fitNow(false, "size");
+  };
+  const w0 = window.innerWidth;
+  const watch = () => {
+    if (landed) return;
+    if (!scr.isConnected || window.innerWidth !== w0) return land(true);
+    requestAnimationFrame(watch);
+  };
+  requestAnimationFrame(watch);
+  sp.classList.add("qs-out");                                           // the look's ground leaves from under the coins
+  /* a look whose ground gathers itself into «ابدأ الآن» (--qs-exit: cta): the green shrinks onto the button's
+     face while the coins fly, and the button takes over there, growing its lip and its label */
+  const cta = scr.querySelector(".wl-cta .btn"), bg = sp.querySelector(".qs-bg");
+  if (cta && bg && bg.animate && getComputedStyle(sp).getPropertyValue("--qs-exit").trim() === "cta") {
+    scr.classList.add("wl-morph");
+    const b = cta.getBoundingClientRect(), v = sp.getBoundingClientRect(), rad = getComputedStyle(cta).borderTopLeftRadius || "13px";
+    bg.style.animation = "none";
+    const m = qsA(bg, [
+      { clipPath: "inset(0px 0px 0px 0px round 0px)" },
+      { clipPath: `inset(${b.top - v.top}px ${v.right - b.right}px ${v.bottom - b.bottom}px ${b.left - v.left}px round ${rad})` }
+    ], { duration: 640, delay: 40, easing: "cubic-bezier(.7,0,.25,1)", fill: "forwards" });
+    m.onfinish = () => { bg.style.visibility = "hidden"; scr.classList.add("wl-cta-on"); };
+  }
+  /* the dots crouch, each pair sliding together */
+  const pairs = {};
+  sp.querySelectorAll(".qs-d").forEach(d => {
+    const c = ["b", "o", "g"].find(x => d.classList.contains("qs-" + x));
+    (pairs[c] = pairs[c] || []).push(d);
+  });
+  Object.keys(pairs).forEach(c => {
+    const [a, b] = pairs[c], ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+    const half = (rb.left - ra.left) / 2 / unit;
+    [[a, half], [b, -half]].forEach(([d, dx]) => qsA(d, [
+      { transform: "none" }, { transform: `translateX(${dx * .6}px) scale(1.26, .74)` }
+    ], { duration: 120, easing: "cubic-bezier(.3,0,.6,1)", fill: "forwards" }));
+    pairs[c].mid = [(ra.left + ra.right + rb.left + rb.right) / 4, (ra.top + ra.bottom + rb.top + rb.bottom) / 4, (ra.width + rb.width) / 2];
+  });
+  /* the name slides into the title — by its own box, not a scale: a scaled copy is painted thinner
+     and softer than the title, and the swap read as the name jumping; this way its last frame is
+     painted exactly as the title is */
+  word.style.cssText = `position:fixed;margin:0;left:${wr.left}px;top:${wr.top}px;width:${wr.width}px`;
+  qsA(word, [
+    { left: `${wr.left}px`, top: `${wr.top}px`, width: `${wr.width}px`, transform: "none" },
+    { left: `${wr.left}px`, top: `${wr.top}px`, width: `${wr.width}px`, transform: "scale(1.03, .96)", offset: .16 },
+    { left: `${tr.left}px`, top: `${tr.top}px`, width: `${tr.width}px`, transform: "none" }
+  ], { duration: 600, delay: 130, easing: "cubic-bezier(.25,.8,.25,1)", fill: "forwards" });
+  /* each pair leaves as its coin: tossed once, edge-on at the top, a squash on landing */
+  const coins = qsCoins(svg), box = `left:${hr.left}px;top:${hr.top}px;width:${hr.width}px;height:${hr.height}px`;
+  [["b", 120], ["g", 150], ["o", 190]].forEach(([c, at]) => {
+    const el = coins[c], [cx, cy, rad] = QS_COIN[c], p = pairs[c];
+    el.style.cssText = `position:fixed;${box};overflow:visible;transform-origin:${cx * k}px ${cy * k}px;visibility:hidden`;
+    sp.appendChild(el);
+    if (!p) return;
+    const ex = hr.left + cx * k, ey = hr.top + cy * k;
+    const sx = p.mid[0] - ex, sy = p.mid[1] - ey, s0 = (p.mid[2] * 1.3) / (2 * rad * k);
+    /* the coin leaves and the letter grows its dots back, so the name always reads */
+    qsT(() => {
+      el.style.visibility = "visible";
+      p.forEach((d, j) => {
+        d.getAnimations().forEach(a => a.cancel());
+        d.classList.add("qs-plain");                                   // grown back in the name's own green, as the title has them
+        qsA(d, [{ transform: "scale(0)" }, { transform: "scale(1.25, .8)", offset: .6 }, { transform: "none" }],
+          { duration: 300, delay: 40 + j * 40, easing: "cubic-bezier(.3,.7,.4,1)", fill: "backwards" });
+      });
+    }, at);
+    const ax = sx * .35, ay = Math.min(sy * .5, 0) - 66;              // the top of the toss
+    /* a look whose dots are plain (--qs-dot-filter): the dot lights up into its coin's colour as it leaves, still dot-sized */
+    const cs = getComputedStyle(sp), df = cs.getPropertyValue("--qs-dot-filter-" + c).trim() || cs.getPropertyValue("--qs-dot-filter").trim();
+    /* a coloured dot's filter does not blend into none cleanly (its hue sweeps the wheel on the way), so a look
+       may ask for a switch (--qs-dot-lit: step): the coin keeps its dot's colour, then is its own at once */
+    const step = df && cs.getPropertyValue("--qs-dot-lit").trim() === "step", fade = df && !step;
+    const lit = df ? [{ transform: `translate(${sx * .92}px, ${sy * .9}px) scale(${s0 * 1.6})`, offset: .1, easing: "cubic-bezier(.2,.7,.45,1)", ...(fade ? { filter: "none" } : {}) }] : [];
+    if (step) qsA(el, [{ filter: df }, { filter: df, offset: .1 }, { filter: "none", offset: .1 }, { filter: "none" }], { duration: 620, delay: at, fill: "both" });
+    qsA(el, [
+      { transform: `translate(${sx}px, ${sy}px) scale(${s0})`, easing: "cubic-bezier(.2,.7,.45,1)", ...(fade ? { filter: df } : {}) },
+      ...lit,
+      { transform: `translate(${ax + sx * .12}px, ${ay + 10}px) scale(.72)`, offset: .36, easing: "linear" },
+      { transform: `translate(${ax}px, ${ay}px) scale(.1, .8)`, offset: .47, easing: "linear" },
+      { transform: `translate(${ax * .8}px, ${ay + 8}px) scale(.86)`, offset: .58, easing: "cubic-bezier(.5,0,.85,.4)" },
+      { transform: "translate(0, 0) scale(1.14, .86)", offset: .86, easing: "ease-out" },
+      { transform: "none" }
+    ], { duration: 620, delay: at, fill: "both" });
+  });
+  coins.s.style.cssText = `position:fixed;${box};overflow:visible;transform-origin:${98 * k}px ${40 * k}px`;
+  sp.appendChild(coins.s);
+  qsA(coins.s, [{ transform: "scale(0)", opacity: 0 }, { transform: "scale(1.2)", opacity: 1, offset: .6 }, { transform: "none", opacity: 1 }],
+    { duration: 300, delay: 700, easing: "ease-out", fill: "both" });
+  qsT(() => land(false), 1050);
+}
+function qsToScreen(sp) {
+  sp.style.pointerEvents = "none";
+  const word = sp.querySelector(".qs-word"), dots = Array.from(sp.querySelectorAll(".qs-d"));
+  /* one last hop, higher, every dot at once but in reading order; the name catches them and steps back */
+  dots.forEach((d, i) => qsA(d, [
+    { transform: "none" },
+    { transform: "scale(1.22, .78)", offset: .16, easing: "cubic-bezier(.2,.8,.4,1)" },
+    { transform: "translateY(-520px) scale(.88, 1.14)", offset: .5, easing: "cubic-bezier(.6,0,.9,.6)" },
+    { transform: "scale(1.24, .76)", offset: .82, easing: "ease-out" },
+    { transform: "none" }
+  ], { duration: 460, delay: i * 30, fill: "forwards" }));
+  qsA(word, [
+    { transform: "none" },
+    { transform: "scale(1.05, .93)", offset: .32, easing: "ease-out" },
+    { transform: "scale(1)", opacity: 1, offset: .5, easing: "cubic-bezier(.5,0,.75,0)" },
+    { transform: "scale(.9)", opacity: 0 }
+  ], { duration: 400, delay: 520, fill: "forwards" });
+  sp.classList.add("qs-out", "qs-scr");                                 // the look's ground leaves as the screen comes
+  /* the screen rises in: the bar from above, the tab bar from below, the rest 24px up, as Brilliant reveals */
+  Array.from($app.children).forEach((el, i) => {
+    const pos = getComputedStyle(el).position, nav = el.classList.contains("bottomnav");
+    const from = el.classList.contains("statbar") ? "0 -14px" : nav ? "0 100%" : pos === "fixed" ? "0 0" : "0 24px";
+    qsA(el, [{ opacity: 0, translate: from }, { opacity: 1, translate: "0 0" }],
+      { duration: nav ? 420 : 640, delay: 700 + Math.min(i, 3) * 70, easing: "cubic-bezier(.22,1,.36,1)", fill: "backwards" });
+  });
+  qsT(() => qsGone(sp), 1400);
+}
+
 /* ---------------- boot ---------------- */
 function boot() {
   initCorrectVoice(); // preload the correct-answer clip so the first play is instant
@@ -9722,6 +10112,7 @@ function boot() {
   let gone = null;
   try { gone = sessionStorage.getItem(DELETED_FLAG); sessionStorage.removeItem(DELETED_FLAG); } catch (e) {}
   if (gone) toast(gone === "account" ? "انحذف حسابك وكل بياناتك" : "انحذفت كل بياناتك");
+  splashOut();
 }
 /* The dev harnesses drive the app through A.debug* and A.fxDemo. On the live
    page they are a console cheat menu — free gems, a forced rank-up — so they
@@ -9940,6 +10331,9 @@ new MutationObserver(recs => { if (fitWire()) fitNow(false, "size"); else if (fi
 addEventListener("resize", () => fitSoon("size"));
 if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", () => fitSoon("size"));
 
+/* the rules (js/law/): they read the app's own state and helpers by name through this bridge */
+window.__QI = new Proxy({}, { get: (t, n) => { if (typeof n !== "string") return undefined; try { return eval(n); } catch (e) { return undefined; } } });
 boot();
 netBar();
+if (window.LAWX) LAWX.ready();
 })();

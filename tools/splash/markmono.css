@@ -1,0 +1,5 @@
+/* markmono — the user's «قدراتي» as drawn: all black, dots too; a dot shows its coin's colour only as it turns in the air */
+#splash { --qs-dot-filter: brightness(0); }
+.qs-bg { background: #FFFFFF; }
+.qs-l, .qs-d { fill: #111111; }
+.qs-d.qs-plain, .qs-t { fill: #111111; }

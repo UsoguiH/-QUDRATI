@@ -1,0 +1,6 @@
+/* markcoins — the user's «قدراتي» in ink, its dots in the welcome circles' colours (ق green, ت gold, ي blue) from the first frame, and the title keeps them */
+.qs-bg { background: #FFFFFF; }
+.qs-l { fill: #111111; }
+.qs-word > g:nth-of-type(1), .qs-word > g:nth-of-type(2) { fill: #58CC02; }
+.qs-word > g:nth-of-type(3), .qs-word > g:nth-of-type(4) { fill: #FFC800; }
+.qs-word > g:nth-of-type(5), .qs-word > g:nth-of-type(6) { fill: #1CB0F6; }

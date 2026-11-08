@@ -1,0 +1,96 @@
+<!doctype html>
+<!-- The long rule on «كمّل القانون» and «حطّ أرقام المثال», four ways (2026-11-04; the user turned down multiple lines, a small
+     line and then the camera: «thats very bad UX … create multiple UX UI versions we want the best case»). Each phone is
+     tools/lawapp/run.html with ?lf=N (`LFV` in tools/lawapp/law.js) on the fill screen of a rule too long for one line at 22px;
+     the chips switch every phone to the same rule -->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>القانون الطويل</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;700;800&display=swap">
+<style>
+:root { --ink: #3C3C3C; --gray: #777; --line: #E5E5E5; --blue: #1CB0F6; --blue-dk: #1899D6; --blue-light: #DDF4FF; --blue-border: #84D8FF;
+  --green: #58CC02; --green-lip: #478700; --brown: #CD7900; --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #EFEFEF; color: var(--ink); font-family: var(--font); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h2, p { margin: 0; }
+button { font-family: var(--font); cursor: pointer; color: inherit; }
+header { max-width: 1600px; margin: 0 auto; padding: 18px 20px 4px; }
+header h1 { font-size: 26px; font-weight: 800; line-height: 1.25; }
+header p { font-size: 15px; font-weight: 600; color: var(--gray); margin-top: 4px; max-width: 980px; }
+.bar { max-width: 1600px; margin: 0 auto; padding: 12px 20px 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bar .lbl { font-size: 14px; font-weight: 800; color: var(--gray); margin-inline-end: 2px; }
+.chipb { height: 36px; padding: 0 12px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 14px; font-weight: 800; }
+.chipb.on { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+.chipb:active { transform: translateY(2px); border-bottom-width: 2px; }
+.play { height: 36px; padding: 0 16px; border-radius: 12px; border: 0; background: var(--green); box-shadow: 0 4px 0 var(--green-lip); color: #fff; font-size: 14.5px; font-weight: 800; }
+.play:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--green-lip); }
+.grid { max-width: 1600px; margin: 0 auto; padding: 16px 20px 40px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+.col.old .tag { color: var(--gray); }
+.col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tag { font-size: 13px; font-weight: 800; color: var(--brown); }
+.col h2 { font-size: 20px; font-weight: 800; line-height: 1.3; }
+.col p.what { font-size: 13.5px; font-weight: 600; color: var(--gray); min-height: 124px; }
+.frame { position: relative; width: 100%; max-width: 390px; aspect-ratio: 390 / 780; margin: 0 auto; border: 9px solid #1F1F1F; border-radius: 38px;
+  overflow: hidden; background: #fff; box-shadow: 0 16px 34px rgba(0,0,0,.12); }
+.frame iframe { position: absolute; top: 0; left: 0; width: 390px; height: 780px; border: 0; transform-origin: 0 0; }
+.pick { height: 44px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 15px; font-weight: 800; }
+.pick.on { border-color: var(--green); background: #D7FFB8; color: #58A700; }
+@media (max-width: 1400px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 900px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .grid { grid-template-columns: minmax(0, 1fr); padding: 12px 16px 32px; } header, .bar { padding-inline: 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>القانون الطويل: الحالية وأربع طرق</h1>
+  <p>١٦ قانون أطول من عرض الجوال إذا انكتبت كاملة بحجم يُقرأ. أول جوال هو شاشة القوانين مثل ما كانت، والأربعة بعده كل واحد يحلّها بطريقة، على نفس القانون، وتقدر تعبّيه فيها كلها. اختر القانون من فوق، وكل الجوالات تنتقل له.</p>
+</header>
+<div class="bar" id="rules"></div>
+<div class="grid" id="grid"></div>
+<script>
+const LOOKS = [
+  { v: 5, cls: 'old', tag: 'الحالية', name: 'مثل ما هي', what: 'شاشة القوانين مثل ما كانت: القانون كامل في سطر واحد، وكل فراغ بعرض أطول كلمة، فيصغر السطر كله لين يدخل البطاقة.' },
+  { v: 1, tag: 'الأولى', name: 'الاسم فوق', what: 'اسم القانون صار عنوان البطاقة، والقانون نفسه سطر واحد تحته تعبّيه. كل القوانين الطويلة بنفس الشكل، وحجمها من ١٨ إلى ٣٠ بدل ١٥.' },
+  { v: 2, tag: 'الثانية', name: 'كلام أقصر', what: 'القانون كامل في سطر واحد مع اسمه، بس بكلمات أقل: «الزوج الأول + الزوج الثاني» صارت «زوج ١ + زوج ٢». حجمها من ١٥ إلى ٢٦.' },
+  { v: 3, tag: 'الثالثة', name: 'فراغ فراغ', what: 'القانون كامل في البطاقة بالحجم اللي يدخل، وتحته عدسة تكبّر الفراغ اللي تعبّيه مع اللي قبله وبعده بحجم ٣٠، ونقطة لكل فراغ. تحط الكلمة فتنزلق العدسة للي بعده.' },
+  { v: 4, tag: 'الرابعة', name: 'الاسم فوق وكلام أقصر', what: 'الأولى والثانية مع بعض: الاسم عنوان، والقانون بكلمات أقل، فأغلبها يطلع بأكبر حجم، من ١٨ إلى ٣٠.' },
+];
+/* the fill screens too long for one line at 22px on a 390px phone (measured 2026-11-04) */
+const RULES = [['ops', 'ترتيب العمليات'], ['tens', 'الأعداد المكمّلة'], ['tri', 'مجموع ١ إلى ن'], ['common', 'العدد المشترك'], ['evensum', 'مجموع الزوجية'],
+  ['last', 'رقم الآحاد في الضرب'], ['fromto', 'من… إلى، وبين'], ['hand', 'المصافحات'], ['league', 'مباريات الدوري'], ['tris', 'المثلثات من رأس واحد'],
+  ['clockm', 'الساعة مع الدقائق'], ['outcomes', 'عملات ونرد'], ['ways', 'مبدأ العدّ'], ['norep', 'بدون تكرار'], ['median', 'الوسيط'], ['places', 'كم مكان؟'],
+  ['median', 'الوسيط بالأرقام', 'nums']].map(([k, n, f]) => ({ c: `fill:${k}:${f || 'words'}`, n }));
+let cur = 'fill:hand:words', picked = '';
+try { picked = localStorage.getItem('qudrati.lawfill.pick') || ''; } catch (e) {}
+const bar = document.getElementById('rules'), grid = document.getElementById('grid');
+bar.innerHTML = '<span class="lbl">القانون:</span>' + RULES.map(r => `<button class="chipb" data-c="${r.c}">${r.n}</button>`).join('') + '<button class="play" id="again">أعد الشاشة</button>';
+grid.innerHTML = LOOKS.map(L => `<div class="col${L.cls ? ' ' + L.cls : ''}">
+  <span class="tag">${L.tag}</span><h2>${L.name}</h2><p class="what">${L.what}</p>
+  <div class="frame"><iframe title="${L.name}" data-v="${L.v}" allow="autoplay"></iframe></div>
+  ${L.cls ? '' : `<button class="pick" data-pick="${L.v}"></button>`}
+</div>`).join('');
+const frames = [...grid.querySelectorAll('iframe')];
+const paintPick = () => grid.querySelectorAll('[data-pick]').forEach(b => { const on = b.dataset.pick === picked; b.classList.toggle('on', on); b.textContent = on ? 'اخترتها' : 'اختر هذي'; });
+const paintChips = () => bar.querySelectorAll('[data-c]').forEach(b => b.classList.toggle('on', b.dataset.c === cur));
+/* the phones load one after another: each one seeds the same student before the app reads it */
+function load() {
+  let i = 0;
+  const next = () => { if (i >= frames.length) return; const f = frames[i++]; f.onload = () => setTimeout(next, 300);
+    f.src = `lawapp/run.html?dev=1&lf=${f.dataset.v}&a=${Date.now()}#${cur}`; };
+  next();
+}
+const open = c => { cur = c; paintChips(); frames.forEach(f => f.contentWindow && f.contentWindow.postMessage({ law: c }, '*')); };
+bar.querySelectorAll('[data-c]').forEach(b => b.onclick = () => open(b.dataset.c));
+document.getElementById('again').onclick = () => open(cur);
+grid.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => { picked = b.dataset.pick; try { localStorage.setItem('qudrati.lawfill.pick', picked); } catch (e) {} paintPick(); });
+function fit() { grid.querySelectorAll('.frame').forEach(fr => { const f = fr.querySelector('iframe'), s = fr.clientWidth / 390; f.style.height = fr.clientHeight / s + 'px'; f.style.transform = `scale(${s})`; }); }
+addEventListener('resize', fit);
+paintChips(); paintPick(); fit(); load();
+</script>
+</body>
+</html>

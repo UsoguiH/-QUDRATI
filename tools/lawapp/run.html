@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<!-- The rule labs' app: the real app (css/style.css, the data, js/app.js) with the rules (js/law/, css/law*.css), which
+     the app itself now loads (2026-11-08), on a seeded student. Opened by tools/law-app.html and the other rule labs. -->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<base href="../../">
+<title>قدراتي — القوانين في التطبيق</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?dev=1">
+<link rel="stylesheet" href="css/law-core.css?dev=1">
+<link rel="stylesheet" href="css/law.css?dev=1">
+<style>html { scrollbar-width: none; } html::-webkit-scrollbar { display: none; }</style>
+<script>
+  window.onerror = function (msg, src, line, col) {
+    var d = document.createElement("div");
+    d.style.cssText = "position:fixed;top:0;left:0;right:0;background:#FF4B4B;color:#fff;font:13px monospace;padding:8px;z-index:9999;direction:ltr;white-space:pre-wrap";
+    d.textContent = "JS ERROR: " + msg + "\n" + (src || "").split("/").pop() + ":" + line + ":" + col;
+    (document.body || document.documentElement).appendChild(d);
+  };
+  /* like preview.html, this overwrites the save, so it only runs where development happens */
+  (function () {
+    var h = location.hostname;
+    var dev = h === "" || h === "localhost" || h === "127.0.0.1" || /^192\.168\./.test(h) || /^10\./.test(h) || /[?&]dev=1(&|$)/.test(location.search);
+    if (!dev) { location.replace("../../index.html"); return; }
+    if (/[?&]keep=1/.test(location.search)) return;
+    /* a student twelve days in: node 1 finished, node 2 two lessons in, so the next lesson is «المصافحات»;
+       three rules met before («مجموع ١ إلى ن»، «رقم الآحاد»، «الترتيب من الطرفين») are due today */
+    var exam = new Date(Date.now() + 43 * 864e5);
+    var t = new Date(), today = t.getFullYear() + "-" + (t.getMonth() + 1) + "-" + t.getDate();
+    var wk = Math.floor((new Date(new Date().setHours(0, 0, 0, 0)) - new Date(2026, 0, 4)) / (7 * 864e5));
+    var ghosts = ["عبدالله", "نورة", "فهد", "ريم", "خالد", "لمى", "تركي", "جواهر", "عمر", "هند", "سلمان", "رنا", "بدر", "ليان"].map(function (n, i) { return { n: n, base: 30 + i * 9, rate: 18 + (i * 7) % 40 }; });
+    var y = new Date(Date.now() - 864e5), yest = y.getFullYear() + "-" + (y.getMonth() + 1) + "-" + y.getDate();
+    localStorage.setItem("qudratState", JSON.stringify({
+      v: 2, disclaimer: true, introSeen: true, track: "sci", sound: true, motion: "full", goal: 10,
+      user: { name: "سارة", guest: false }, profileAsked: true, placeAsked: true, examAsked: true,
+      league: { week: wk, base: 527 - 240, ghosts: ghosts },
+      daily: { day: today, n: 4, claimed: false },
+      xp: 527, totalXp: 850, tierSeen: 1, streak: { count: 12, last: yest },
+      lessons: { "skills.bigsum": { stars: 3, plays: 1 } },
+      learn: { "skills.bigsum": { done: ["tens", "ops", "series", "odd", "even", "diff", "units"], acc: {} }, "skills.keylaws": { done: ["count", "evens"], acc: {} } },
+      days: (function () { var o = {}, m = new Date(new Date().setHours(0, 0, 0, 0));
+        [[1, 12], [2, 8], [3, 15], [5, 6], [8, 9]].forEach(function (p) { var d = new Date(m); d.setDate(d.getDate() - p[0]); o[d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate()] = p[1]; });
+        return o; })(),
+      qstats: {}, mistakes: {},
+      exam: exam.getFullYear() + "-" + String(exam.getMonth() + 1).padStart(2, "0") + "-" + String(exam.getDate()).padStart(2, "0")
+    }));
+    var d0 = Math.floor((Date.now() - new Date().getTimezoneOffset() * 6e4) / 864e5);
+    /* ?due=0…3: how many of the three are due today (tools/law-deck.html) */
+    var nd = /[?&]due=([0-3])/.exec(location.search), nDue = nd ? +nd[1] : 3;
+    localStorage.setItem("qudrati.lawapp.v1", JSON.stringify({
+      tri: { lv: 2, due: nDue > 0 ? d0 : d0 + 2, met: d0 - 4 }, last: { lv: 1, due: nDue > 1 ? d0 : d0 + 2, met: d0 - 1 }, queue: { lv: 1, due: nDue > 2 ? d0 : d0 + 2, met: d0 - 1 }
+    }));
+  })();
+</script>
+</head>
+<body>
+  <div class="app-shell">
+    <nav id="sidebar" class="sidebar" aria-label="التنقل الرئيسي"></nav>
+    <div id="app" class="app"></div>
+    <aside id="aside" class="aside" aria-label="ملخص تقدمك"></aside>
+  </div>
+  <script src="js/data/skills.js?dev=1"></script>
+  <script src="js/data/numbers.js?dev=1"></script>
+  <script src="js/data/ratios.js?dev=1"></script>
+  <script src="js/data/geometry.js?dev=1"></script>
+  <script src="js/data/teach.js?dev=1"></script>
+  <script src="js/data/teach-figures.js?dev=1"></script>
+  <script src="js/data/learn.js?dev=1"></script>
+  <script src="assets/vendor/gsap.min.js?dev=1"></script>
+  <script src="js/law/law-core.js?dev=1"></script>
+  <script src="js/law/law-more.js?dev=1"></script>
+  <script src="js/law/law-more-bigsum.js?dev=1"></script>
+  <script src="js/law/law-more-keylaws.js?dev=1"></script>
+  <script src="js/law/law-more-probstats.js?dev=1"></script>
+  <script src="js/law/law-deck.js?dev=1"></script>
+  <script src="js/law/law.js?dev=1"></script>
+  <script src="js/app.js?dev=1"></script>
+</body>
+</html>

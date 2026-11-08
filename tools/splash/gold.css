@@ -1,0 +1,11 @@
+/* gold — «حبر وذهب»: Cairo 1000 in ink on white, all six dots square gold coins on their lips, each catching
+   the light as it hops; as they leave, each lights into its own coin's colour, and the title keeps gold dots */
+#splash { --qs-dot-filter-g: sepia(1) saturate(5.2) hue-rotate(-12deg) brightness(1.16); --qs-dot-filter-b: grayscale(1) sepia(1) saturate(6) hue-rotate(-8deg) brightness(1.3); }
+.qs-bg { background: #FFFFFF; }
+.qs-l { fill: #15171E; }
+.qs-d { fill: #FFC800; }
+.qs-d .qs-lip { display: block; fill: #E6A000; transform: translateY(46px); }
+.qs-d > path:last-child { animation: qsGlint calc(1.2s * var(--qs-k, 1)) calc((.45s + var(--i) * 50ms) * var(--qs-k, 1)) infinite; }
+@keyframes qsGlint { 0%, 4% { fill: #FFC800; } 12% { fill: #FFF1A8; } 26%, 100% { fill: #FFC800; } }
+.qs-out .qs-d > path, .qs-plain > path { animation: none; }
+.qs-d.qs-plain, .qs-t { fill: #FFC800; } .qs-plain .qs-lip { display: none; }

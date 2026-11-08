@@ -1,0 +1,676 @@
+/* The rule's final version inside the app (tools/law-app.html): the app's tokens, its card grammar (2px rim, a lip under
+   it), its bars and sheets. The rule's own card, header and proofs are in law-core.css. */
+
+/* ───── the rule's screen in a lesson ───── */
+.lw-learn .lw-area {
+  flex: 1; min-height: 0; width: 100%; max-width: var(--col-max, 600px); margin-inline: auto;
+  display: flex; flex-direction: column; overflow: hidden;
+  padding: 10px 16px calc(112px + env(safe-area-inset-bottom));
+}
+.lw-learn .nw-tag { margin: 0 2px 4px; }
+.lw-learn .obs { margin-bottom: 10px; }
+.lw-learn .obs-duo { width: 84px; height: 84px; }
+.lw-learn .obs-bubble { font-size: 16.5px; font-weight: 700; line-height: 1.5; }
+.lw-learn .lw-fc { flex: none; }
+.lw-learn .kb-card { margin: 0; }
+/* a rule over a bar carries its numbers above it: the label keeps clear of them */
+.law .kb13 .kb-card:has(.fq) { padding-top: 80px; }
+.law .kb13 .kb-card:has(.fq) .kb-tag { top: 14px; }
+@media (max-height: 700px) {
+  .lw-learn .obs-duo { width: 68px; height: 68px; }
+  .lw-learn .obs-bubble { font-size: 15px; padding: 8px 12px; }
+  .lw-learn .obs { margin-bottom: 6px; }
+  .law .kb13 .kb-card { padding-top: 52px; padding-bottom: 56px; }
+  .law .kb13 .kb-card:has(.fq) { padding-top: 60px; }
+  .law .kb13 .kb-card:has(.fq) .kb-tag { top: 10px; }
+  .law .kb13 .kb-fx { font-size: 22px; }
+  .lw-learn .kb13 .kb-card.asked { padding-bottom: 30px; }
+  .lw-learn .stage { min-height: 120px; }
+  .lw-learn .nw-tag { height: 28px; margin-bottom: 2px; }
+}
+.lw-learn .stage { flex: 1 1 0; height: auto; min-height: 92px; margin-top: 6px; }
+.lw-learn .dcap { flex: none; min-height: 22px; margin-top: 2px; }
+.lw-learn .action-bar .btn:disabled { pointer-events: none; }
+
+/* «مراجعة»: the header's place, in Duolingo's review orange, with the hexagon turning back on itself */
+.law .lw-rv { color: var(--orange-dk, #E07800); }
+.lw-rv-ic { flex: none; width: 31px; height: 28px; display: block; }
+.lw-rv-ic svg { display: block; width: 100%; height: 100%; }
+
+/* ───── the path: the rules due today ───── */
+.due-card.lw-due { border-color: var(--gold); box-shadow: 0 4px 0 #E6A000; background: #FFFDF2; }
+.due-card.lw-due:active { box-shadow: 0 0 0 #E6A000; }
+.due-card.lw-due .due-go { color: #CD7900; }
+.due-card.lw-due.lw-ok { border-color: var(--line); box-shadow: 0 4px 0 var(--line); background: var(--snow); }
+.due-card.lw-due.lw-ok .due-go { color: var(--blue); }
+/* the rules due today as a fanned deck: the next one in front, the others peeking out behind it, a badge with how many.
+   Every few seconds the front one is tossed like the path's coin: it crouches, springs up, turns over in the air and
+   lands with a squash, while the two behind fan out to let it go and its shadow shrinks under it */
+.lw-stack { position: relative; flex: none; width: 62px; height: 46px; }
+.lw-sx { position: absolute; left: 50%; top: 50%; width: 38px; height: 35px; margin: -19px 0 0 -19px; transform-origin: 50% 100%; }
+.lw-sx svg { display: block; width: 100%; height: 100%; }
+.lw-stack.n2 .lw-sx:first-of-type { transform: translateX(-11px) rotate(-14deg) scale(.84); filter: brightness(.94); }
+.lw-stack.n2 .lw-sx:last-of-type { transform: translateX(4px); }
+.lw-stack.n3 .lw-sx:nth-of-type(1) { transform: translateX(-13px) rotate(-16deg) scale(.8); filter: brightness(.92); }
+.lw-stack.n3 .lw-sx:nth-of-type(2) { transform: translateX(13px) rotate(16deg) scale(.8); filter: brightness(.92); }
+.lw-sh { position: absolute; left: 50%; bottom: 0; width: 30px; height: 6px; margin-left: -15px; border-radius: 50%; background: rgba(205, 121, 0, .22); }
+.lw-stack.n2 .lw-sh { margin-left: -11px; }
+.lw-n { position: absolute; top: -3px; right: -2px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: #FF4B4B; box-shadow: 0 0 0 2px #FFFDF2;
+  color: #fff; font-size: 12.5px; font-weight: 800; line-height: 20px; text-align: center; }
+.lw-ok .lw-sh, .lw-ok .lw-n { display: none; }
+.lw-due:not(.lw-ok) .lw-sx:last-of-type { animation: lwToss 3.6s 1s infinite; }
+.lw-due:not(.lw-ok) .lw-stack.n3 .lw-sx:nth-of-type(1) { animation: lwFanL 3.6s 1s infinite; }
+.lw-due:not(.lw-ok) .lw-stack.n3 .lw-sx:nth-of-type(2) { animation: lwFanR 3.6s 1s infinite; }
+.lw-due:not(.lw-ok) .lw-stack.n2 .lw-sx:first-of-type { animation: lwFanL 3.6s 1s infinite; }
+.lw-due:not(.lw-ok) .lw-sh { animation: lwShade 3.6s 1s infinite; }
+.lw-due:not(.lw-ok) .lw-n { animation: lwBadge 3.6s 1s infinite; }
+@keyframes lwToss {
+  0%, 58%, 100% { translate: 0 0; scale: 1 1; rotate: y 0deg; animation-timing-function: ease-out; }
+  63% { translate: 0 2px; scale: 1.12 .84; rotate: y 0deg; animation-timing-function: cubic-bezier(.2, .9, .3, 1); }
+  71% { translate: 0 -15px; scale: .9 1.1; rotate: y 0deg; animation-timing-function: linear; }
+  78% { translate: 0 -17px; scale: 1 1; rotate: y 180deg; animation-timing-function: cubic-bezier(.5, 0, .9, .6); }
+  85% { translate: 0 0; scale: 1 1; rotate: y 360deg; animation-timing-function: ease-out; }
+  89% { translate: 0 1px; scale: 1.14 .82; rotate: y 360deg; animation-timing-function: ease-out; }
+  94% { translate: 0 -3px; scale: .96 1.05; rotate: y 360deg; }
+  98% { translate: 0 0; scale: 1 1; rotate: y 360deg; }
+}
+@keyframes lwFanL { 0%, 60%, 92%, 100% { rotate: 0deg; translate: 0 0; } 70%, 82% { rotate: -9deg; translate: -3px 1px; } 87% { rotate: 3deg; translate: 1px 0; } }
+@keyframes lwFanR { 0%, 60%, 92%, 100% { rotate: 0deg; translate: 0 0; } 70%, 82% { rotate: 9deg; translate: 3px 1px; } 87% { rotate: -3deg; translate: -1px 0; } }
+@keyframes lwShade { 0%, 60%, 100% { scale: 1 1; opacity: 1; } 71%, 80% { scale: .5 .7; opacity: .45; } 86% { scale: 1.15 1; opacity: 1; } 92% { scale: 1 1; } }
+@keyframes lwBadge { 0%, 84%, 100% { scale: 1; } 88% { scale: 1.3; } 93% { scale: .92; } 97% { scale: 1; } }
+html[data-motion="reduced"] .lw-stack * { animation: none !important; }
+
+/* the lesson card on the path: what is waiting inside it */
+.lp-law { display: flex; align-items: center; gap: 8px; margin: -2px 2px 12px; padding: 6px 10px 6px 12px; border-radius: 12px;
+  background: rgba(255,255,255,.18); color: #fff; font-size: 14px; font-weight: 700; line-height: 1.35; }
+.lp-law b { font-weight: 800; }
+.lp-law-hx { flex: none; width: 28px; height: 26px; }
+.lp-law-hx svg { display: block; width: 100%; height: 100%; }
+
+/* ───── «تقدّمك اليوم»: the rule joins the set ───── */
+.wp-card.wp-law { display: flex; align-items: center; gap: 14px; }
+.wl-hx { flex: none; width: 56px; height: 52px; display: block; transform-origin: 50% 80%; }
+.wl-hx svg { display: block; width: 100%; height: 100%; }
+.wp-law .wn-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.wp-law .wn-tx > b { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.wl-h { font-size: 14px; font-weight: 800; color: #CD7900; }
+.wp-law .wn-count { display: inline-block; font-size: 14px; font-weight: 800; color: var(--gray); }
+.wl-name { font-size: 19px; font-weight: 800; color: var(--ink); line-height: 1.3; }
+.wl-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; }
+.wl-foot .wn-next { font-size: 13px; font-weight: 700; color: var(--gray); }
+
+/* a rule's five steps: blue as they fill, all gold at five */
+.lw-dots { display: inline-flex; gap: 4px; flex: none; }
+.lw-dots i { width: 18px; height: 9px; border-radius: 5px; background: var(--line); box-shadow: inset 0 -2px 0 #D5D5D5; }
+.lw-dots i.on { background: var(--blue); box-shadow: inset 0 -2px 0 var(--blue-dk); }
+.lw-dots.gold i.on { background: var(--gold); box-shadow: inset 0 -2px 0 #E6A000; }
+
+/* ───── the review ───── */
+.lw-trap { display: flex; align-items: flex-end; gap: 8px; margin: 2px 0 12px; }
+.lw-trap img { flex: none; width: 54px; height: 54px; object-fit: contain; }
+.lw-trap p { flex: 1; margin: 0; padding: 8px 12px; border-radius: 14px; background: #fff; color: var(--ink); font-size: 15px; font-weight: 700; line-height: 1.45; }
+
+.lw-end .lw-end-body { flex: 1; min-height: 0; width: 100%; max-width: var(--col-max, 600px); margin-inline: auto; display: flex; flex-direction: column;
+  justify-content: center; gap: 18px; padding: 20px 16px calc(112px + env(safe-area-inset-bottom)); overflow: hidden; }
+.lw-end .obt { padding-top: 0; }
+.lw-end .obt-duo { width: min(170px, 42vw); margin-top: 14px; }
+.lw-end .obs-bubble { font-size: 18px; font-weight: 700; }
+.lw-rows { display: grid; gap: 10px; }
+.lw-row { display: flex; align-items: center; gap: 12px; padding: 9px 14px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 16px; background: #fff; transition: background .3s, border-color .3s; }
+.lw-row.gold { border-color: var(--gold); background: var(--gold-bg); }
+.lw-row-hx { flex: none; width: 40px; height: 37px; }
+.lw-row-hx svg { display: block; width: 100%; height: 100%; }
+.lw-row-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.lw-row-t b { font-size: 16px; font-weight: 800; color: var(--ink); line-height: 1.3; }
+.lw-when { flex: none; font-size: 13px; font-weight: 800; color: var(--green-dk); background: var(--green-bg); border-radius: 8px; padding: 1px 9px; }
+.lw-when.soon { color: var(--orange-dk, #E07800); background: var(--orange-bg, #FFEFD6); }
+
+/* ───── «قوانيني»: the set ───── */
+.lw-veil { position: fixed; inset: 0; z-index: 80; display: flex; align-items: flex-end; background: rgba(0,0,0,.45); font-family: var(--font); }
+.lw-sheet { width: 100%; max-width: 560px; max-height: 94%; margin: 0 auto; overflow: hidden; display: flex; flex-direction: column; gap: 10px;
+  padding: 8px 14px calc(14px + env(safe-area-inset-bottom)); border-radius: 22px 22px 0 0; background: #fff; }
+.lw-grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 0 auto 4px; flex: none; }
+.lw-sheet h2 { margin: 0; font-size: 22px; font-weight: 800; color: var(--ink); text-align: center; }
+.lw-sub { margin: -6px 0 2px; font-size: 14px; font-weight: 700; color: var(--gray); text-align: center; }
+.lw-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.lw-tile { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; padding: 9px 4px 8px; border: 2px solid var(--line); border-bottom-width: 4px;
+  border-radius: 14px; background: #fff; font: inherit; color: var(--ink); cursor: pointer; }
+.lw-tile:active { transform: translateY(2px); border-bottom-width: 2px; }
+.lw-tile.gold { border-color: var(--gold); background: var(--gold-bg); }
+.lw-tile.lock { cursor: default; background: var(--wash, #F7F7F7); }
+.lw-tile .lw-hex { width: 44px; height: 40px; }
+.lw-tile b { font-size: 13.5px; font-weight: 800; line-height: 1.25; text-align: center; min-height: 2.5em; display: flex; align-items: center; }
+.lw-tile.lock b { color: var(--gray-icon); }
+.lw-tile .lw-dots i { width: 12px; height: 7px; }
+.lw-chip { font-size: 11.5px; font-weight: 800; border-radius: 7px; padding: 0 7px; color: var(--green-dk); background: var(--green-bg); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.lw-chip.due { color: var(--orange-dk, #E07800); background: var(--orange-bg, #FFEFD6); }
+.lw-tile.lock .lw-chip { color: var(--gray); background: var(--line); }
+.lw-sheet-foot { display: grid; gap: 10px; margin-top: 4px; }
+.lw-dt-top { display: flex; align-items: center; gap: 12px; padding: 4px 4px 2px; }
+.lw-dt-top > svg { width: 58px; height: 53px; flex: none; }
+.lw-dt-top h2 { text-align: start; margin-bottom: 4px; }
+.lw-dt-cue { margin: 0; font-size: 15px; font-weight: 700; color: var(--gray); line-height: 1.5; }
+.lw-sheet .lw-fc { padding: 2px 0; }
+.lw-sheet .kb-card { margin: 0; }
+.lesson-pop .lp-law-hx svg.lw-hex { width: 36px; height: 33px; }
+
+/* the rule keeps a margin inside its card on every phone */
+.law .kb13 .kb-card { padding-left: 14px; padding-right: 14px; }
+/* once the word is picked the choices are gone, and the card gives their room to the drawing */
+.lw-learn .kb13 .kb-card.asked { padding-bottom: 38px; transition: padding-bottom .35s cubic-bezier(.3,0,.2,1); }
+.lw-learn .dcap.lw-cue { margin-top: 14px; font-size: 15px; line-height: 1.5; color: var(--gray); }
+.lw-veil { z-index: 3000; }
+.lw-tile.lock .lw-chip { white-space: normal; line-height: 1.3; text-align: center; padding: 1px 6px; }
+
+/* every other rule card in a lesson wears card 13's paint, so the yellow card turned down on 2026-10-29 shows nowhere:
+   the white card on its grey rim and lip, «القانون» in blue over the rule, each term the lessons' blue chip with its lip */
+.screen-learn .ln-rule.ln-rule-see { background: #fff; border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 18px; padding: 12px 12px 16px; }
+.screen-learn .ln-rule-see .rf-head { justify-content: center; position: relative; }
+.screen-learn .ln-rule-see .ln-rule-ic { display: none; }
+.screen-learn .ln-rule-see .ln-rule-tag { font-size: 0; }
+.screen-learn .ln-rule-see .ln-rule-tag::after { content: "القانون"; font-size: 15px; font-weight: 800; color: var(--blue-dk); }
+.screen-learn .ln-rule-see .rf-head .ln-rule-again { position: absolute; left: 0; top: 50%; margin: -15px 0 0; color: var(--gray-icon); }
+.screen-learn .ln-rule-see .rw.op { color: var(--gray, #777); }
+.screen-learn .ln-rule-see .rk { border-radius: 12px; padding: 0 .32em; }
+.screen-learn .ln-rule.ln-rule-see.said .rk { color: var(--blue-dk); background: var(--blue-light); box-shadow: inset 0 0 0 2px var(--blue-border), 0 3px 0 var(--blue-border); }
+.screen-learn .ln-rule-see .ln-rule-note { color: var(--gray); }
+/* the app's «فهيم يتحدّاك» card is also .fq: none of its box reaches the rule's fraction */
+.law .kb12 .fq { min-height: 0; width: auto; margin: 0; animation: none; }
+.lw-earn { display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 22px auto 0; font-size: 15.5px; font-weight: 800; color: var(--ink); }
+.lw-earn em { font-style: normal; color: var(--blue-dk); }
+.lw-earn.gold em { color: #CD7900; }
+.lw-earn .lw-dots i { width: 30px; height: 13px; border-radius: 7px; }
+.lw-earn .lw-dots i.next { background: var(--blue-light); box-shadow: inset 0 0 0 2px var(--blue); animation: lwNext 1.1s ease-in-out infinite; }
+.lw-earn.gold .lw-dots i.next { background: var(--gold-bg); box-shadow: inset 0 0 0 2px var(--gold); }
+@keyframes lwNext { 50% { scale: 1.18; opacity: .55; } }
+
+/* ───── «كمّل القانون» / «حطّ أرقام المثال في القانون»: the rule's card with its blanks ───── */
+.lw-fill .lf-ask { margin: 2px 2px 10px; font-size: 19px; font-weight: 800; color: var(--ink); }
+.lw-fill .lf-ex { margin: 0 0 12px; padding: 10px 14px 12px; border: 2px solid var(--line); border-radius: 16px; background: #fff; text-align: center; }
+.lw-fill .lf-ex-t { display: inline-block; margin-bottom: 2px; padding: 0 10px; border-radius: 8px; background: var(--blue-light); color: var(--blue-dk); font-size: 13px; font-weight: 800; }
+.lw-fill .lf-ex p { margin: 0; font-size: 18px; font-weight: 800; line-height: 1.55; color: var(--ink); text-wrap: balance; }
+.lw-fill .lf .kb-card { padding: 46px 14px 30px; }
+.lw-fill.lf-words .lf .kb-card:has(.fq) { padding-top: 50px; }
+.lw-fill.lf-nums .lf .kb-card { padding-bottom: 40px; }
+.lw-fill.lf-nums .lf .kb-card:has(.fq) { padding-top: 74px; }
+.lw-fill .lf .kb-card:has(.fq) .kb-tag { top: 14px; }
+.lw-fill .lf .kb-c { opacity: 1; }
+.lw-fill .lf .lf-b.ans .kb-c { color: var(--green-dk); }
+.lf-b { position: relative; display: inline-block; vertical-align: middle; padding: 0; margin: 0; border: 0; background: none; font: inherit; color: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.lf-b.gap .kb-m { min-width: 2.9em; height: 1.45em; }
+.lf-nums .lf-b.gap .kb-m { min-width: 1.9em; }
+.lf-b:not(.gap) .kb-m { transition: background .2s, box-shadow .2s, color .2s; }
+.lw-fill .kb13 .lf-b.no .kb-m { background: var(--red-bg, #FFDFE0); color: var(--red-dk, #EA2B2B); box-shadow: inset 0 0 0 2px #FF8F8F, 0 3px 0 #FF8F8F; }
+.lf-b.lk { cursor: default; }
+.lw-fill .lf-tiles { margin-top: 16px; }
+.lw-fill .ln-tile.out { opacity: .3; }
+.lw-fill .lf-help { display: none; align-items: flex-end; gap: 8px; margin-top: 10px; }
+.lw-fill .lf-help.on { display: flex; }
+.lw-fill .lf-help img { flex: none; width: 46px; height: 46px; object-fit: contain; }
+.lw-fill .lf-help p { flex: 1; margin: 0; padding: 8px 12px; border: 2px solid var(--line); border-radius: 14px; background: #fff; font-size: 15px; font-weight: 700; line-height: 1.45; color: var(--ink); }
+.lf-b .kb-m { white-space: nowrap; text-align: center; }
+.lf-b .kb-w { max-width: 100%; }
+
+/* «كمّل القانون» and «حطّ أرقام المثال»: the rule's fixed name is plain ink, not a chip; only what the student fills is boxed */
+.lw-fill .kb13 .k.ca .kb-m { background: none; box-shadow: none; padding-inline: .06em; }
+
+/* QA 2026-11-03 — fitted screens: their content sits in .lw-in, which law.js (fitIn) zooms down only as far as it must */
+.lw-end .lw-in { display: flex; flex-direction: column; gap: 18px; }
+.lw-gbox { flex: 0 1 auto; min-height: 0; overflow: hidden; }
+.lw-sheet h2, .lw-sub, .lw-sheet-foot { flex: none; }
+.lw-chip { font-size: 12.5px; }
+/* the madda of «آ» clears the top of its chip */
+.law .kb13 .kb-m { padding-top: .1em; }
+/* «وش الناقص؟»'s three words stay inside the card on a narrow phone */
+@media (max-width: 370px) {
+  .law .kb-pick { gap: 5px; padding: 0 4px; }
+  .law .kb13 .kb-ch { font-size: 15px; padding: 2px 9px 4px; }
+}
+@media (max-width: 330px) { .law .kb13 .kb-ch { font-size: 13.5px; padding: 2px 7px 4px; } }
+/* the new rule on «تقدّمك اليوم» takes one short card, so the win screen keeps its size on a short phone */
+@media (max-height: 700px) {
+  .wp-card.wp-law { padding-top: 10px; padding-bottom: 10px; }
+  .wp-law .wl-hx { width: 44px; height: 40px; }
+  .wp-law .wn-next { display: none; }
+}
+/* the review's end holds the phone's height like a lesson screen, so its rows fit (zoomed) above «متابعة» */
+.screen.lw-end { height: 100dvh; max-height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
+/* a long review ends on short rows and a smaller فهيم, so every rule shows above the button */
+.lw-end.many .obt-duo { width: min(110px, 30vw); margin-top: 6px; }
+.lw-end.many .lw-in { gap: 12px; }
+.lw-end.many .lw-rows { gap: 6px; }
+.lw-end.many .lw-row { padding: 5px 12px; }
+.lw-end.many .lw-row-hx { width: 32px; height: 30px; }
+.lw-end.many .lw-row-t { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }
+.lw-end.many .lw-row-t b { font-size: 15px; }
+.lw-dt-cue b { color: var(--ink); }
+/* the fixed name on «كمّل القانون» is plain ink: nothing to clip, so its first letter is never cut */
+.lw-fill .kb13 .k.ca .kb-m { overflow: visible; }
+/* a short phone (320×568): a smaller فهيم and card, so the rule, its proof and the caption all sit above «كمّل» */
+@media (max-height: 600px) {
+  .lw-learn .lw-area { padding-top: 6px; }
+  .lw-learn .obs-duo { width: 52px; height: 52px; }
+  .lw-learn .obs-bubble { font-size: 14px; padding: 6px 10px; line-height: 1.4; }
+  .lw-learn .obs { margin-bottom: 4px; }
+  .lw-learn .nw-tag { height: 24px; margin-bottom: 0; }
+  .law .kb13 .kb-card { padding-top: 40px; padding-bottom: 44px; }
+  .law .kb13 .kb-card:has(.fq) { padding-top: 50px; }
+  .law .kb13 .kb-fx { font-size: 20px; }
+  .lw-learn .kb13 .kb-card.asked { padding-bottom: 22px; }
+  .lw-learn .stage { min-height: 70px; margin-top: 2px; }
+  .lw-learn .dcap { min-height: 18px; font-size: 13px; }
+}
+/* on a narrow phone the worked line under the drawing wraps instead of running past the screen's edge */
+@media (max-width: 370px) { .lw-learn .dcap { white-space: normal; text-wrap: balance; font-size: 13px; line-height: 1.4; } }
+
+/* ───── «القوانين»: the unit's book (law.js unitBook) ───── */
+.lw-book .lw-sheet.bk2 { height: 94%; padding: 8px 0 calc(14px + env(safe-area-inset-bottom)); background: var(--snow, #F7F7F7); }
+.bk2 .lw-grab { margin-bottom: 6px; }
+.bk2-stage { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.bk2-view { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px; padding: 0 14px; }
+.bk2-view .lw-sheet-foot { flex: none; margin-top: auto; }
+/* the unit's banner: its colour on its lip, the book's mark, how much of it has been met */
+.bk2-hero { flex: none; position: relative; display: grid; grid-template-columns: 1fr auto; gap: 10px 12px; align-items: center; padding: 14px 16px;
+  border-radius: 18px; background: var(--u); box-shadow: 0 5px 0 var(--u-s); color: #fff; overflow: hidden; }
+.bk2-hero::before { content: ""; position: absolute; inset: -40% -10% auto auto; width: 60%; height: 160%; background: rgba(255,255,255,.12); transform: rotate(18deg); pointer-events: none; }
+.bk2-hero-t small { display: block; font-size: 13.5px; font-weight: 800; opacity: .9; }
+.bk2-hero-t h2 { margin: 0; font-size: 21px; font-weight: 800; line-height: 1.3; color: #fff; text-align: start; }
+.bk2-hero-ic { grid-row: 1; grid-column: 2; width: 54px; height: 54px; border-radius: 16px; background: rgba(0,0,0,.14); display: grid; place-items: center; color: var(--u-s); }
+.bk2-hero-ic svg { width: 32px; height: 32px; }
+.bk2-meter { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; }
+.bk2-meter .duo-bar { flex: 1; background: rgba(0,0,0,.18); }
+.bk2-meter span { flex: none; font-size: 13.5px; font-weight: 700; }
+.bk2-meter b { font-weight: 800; }
+/* each lesson as the path draws it */
+.bk2-listbox { flex: 1 1 auto; }
+.bk2-list { display: grid; gap: 8px; padding-bottom: 2px; }
+.bk2-les { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px 12px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 16px;
+  background: #fff; font: inherit; color: var(--ink); text-align: start; cursor: pointer; }
+.bk2-les:active { transform: translateY(2px); border-bottom-width: 2px; }
+.bk2-hx { flex: none; width: 46px; height: 42px; display: block; }
+.bk2-les-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.bk2-les-t small { font-size: 12.5px; font-weight: 800; color: var(--gray); }
+.bk2-les.done .bk2-les-t small { color: #CD7900; }
+.bk2-les-t b { font-size: 15.5px; font-weight: 800; line-height: 1.3; }
+.bk2-les.lock .bk2-les-t b { color: var(--gray); }
+.bk2-les-r { flex: none; display: flex; align-items: center; gap: 8px; }
+.bk2-cnt { flex: none; font-size: 13px; font-weight: 700; color: var(--gray); }
+.bk2-cnt b { font-size: 15px; font-weight: 800; color: var(--ink); }
+.bk2-gold { position: relative; width: 30px; height: 28px; }
+.bk2-gold svg { width: 100%; height: 100%; display: block; }
+.bk2-gold i { position: absolute; top: -5px; left: -6px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--ink); color: #fff; font: 800 11px/17px var(--font); font-style: normal; text-align: center; }
+.bk2-chev { flex: none; width: 18px; height: 18px; color: var(--gray-icon); transform: scaleX(-1); }
+.bk2-chev svg { width: 100%; height: 100%; display: block; }
+/* a lesson: its node, its rules */
+.bk2-top { flex: none; display: flex; align-items: center; gap: 10px; }
+.bk2-back { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 12px; background: #fff; color: var(--gray); cursor: pointer; padding: 0; }
+.bk2-back svg { width: 20px; height: 20px; }
+.bk2-back:active { transform: translateY(2px); border-bottom-width: 2px; }
+.bk2-top .bk2-hx { width: 44px; height: 40px; }
+.bk2-top-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.bk2-top-t small { font-size: 12.5px; font-weight: 800; color: var(--u-s); }
+.bk2-top-t b { font-size: 17px; font-weight: 800; line-height: 1.3; }
+.bk2-laws { flex: none; padding: 10px 12px; border: 2px solid var(--gold); border-bottom-width: 4px; border-radius: 16px; background: var(--gold-bg, #FFF4BF); }
+.bk2-laws-h { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 800; color: #A0561C; }
+.bk2-laws-r { display: flex; flex-wrap: wrap; gap: 6px; }
+.bk2-law { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 6px; border: 2px solid #F5C04A; border-bottom-width: 3px; border-radius: 12px; background: #fff; font: 800 14px var(--font); color: #7A3B12; cursor: pointer; }
+.bk2-law svg { width: 26px; height: 24px; display: block; }
+.bk2-law.lock { border-color: var(--line); color: var(--gray); cursor: default; }
+.bk2-law:not(.lock):active { transform: translateY(2px); border-bottom-width: 1px; }
+.bk2-pages { flex: 1 1 0; min-height: 0; position: relative; }
+.bk2-track { position: absolute; inset: 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.bk2-track::-webkit-scrollbar { display: none; }
+.bk2-pg { flex: 0 0 100%; display: flex; flex-direction: column; gap: 8px; scroll-snap-align: start; }
+.bk2-rule { display: flex; gap: 10px; padding: 10px 12px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 16px; background: #fff; }
+.bk2-num { flex: none; width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: var(--u); box-shadow: 0 3px 0 var(--u-s); color: #fff; font-size: 14px; font-weight: 800; margin-top: 1px; }
+.bk2-num svg { width: 17px; height: 17px; }
+.bk2-rule.done .bk2-num { background: var(--green, #58CC02); box-shadow: 0 3px 0 var(--green-dk, #58A700); }
+.bk2-rule.miss { border-color: #FFB2B2; }
+.bk2-rule.miss .bk2-num { background: #FF4B4B; box-shadow: 0 3px 0 #EA2B2B; }
+.bk2-rt { flex: 1; min-width: 0; }
+.bk2-rt > b { display: block; font-size: 15.5px; font-weight: 800; line-height: 1.35; color: var(--ink); }
+.bk2-f { margin-top: 6px; padding: 6px 10px; border-radius: 10px; background: var(--blue-light, #DDF4FF); color: #0F6FA8; font-size: 15px; font-weight: 800; line-height: 1.55; }
+.bk2-w { display: flex; align-items: flex-start; gap: 5px; margin: 6px 0 0; font-size: 13px; font-weight: 700; color: var(--gray); line-height: 1.45; }
+.bk2-w svg { flex: none; width: 15px; height: 15px; margin-top: 2px; color: var(--gray-icon); }
+.bk2-pager { flex: none; display: flex; align-items: center; justify-content: center; gap: 14px; }
+.bk2-pager[hidden] { display: none; }
+.bk2-arr { width: 40px; height: 36px; display: grid; place-items: center; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 12px; background: #fff; color: var(--u-s); cursor: pointer; padding: 0; }
+.bk2-arr.nx svg { transform: scaleX(-1); }
+.bk2-arr svg { width: 18px; height: 18px; }
+.bk2-arr:disabled { color: var(--line); cursor: default; }
+.bk2-dots { display: flex; gap: 6px; align-items: center; }
+.bk2-dots i { width: 8px; height: 8px; border-radius: 4px; background: var(--line); transition: width .2s, background .2s; }
+.bk2-dots i.on { width: 20px; background: var(--u); }
+.bk2-dots em { font-style: normal; font-size: 14px; font-weight: 800; color: var(--gray); }
+/* «قوانيني»: where each rule was learnt */
+.lw-from { font-size: 11.5px; font-weight: 700; color: var(--gray); line-height: 1.3; text-align: center; max-width: 100%; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lw-dt-from { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 16px; background: #fff; font: inherit; text-align: start; color: var(--ink); cursor: pointer; }
+.lw-dt-from:active { transform: translateY(2px); border-bottom-width: 2px; }
+.lw-dt-from .bk2-hx { width: 40px; height: 36px; }
+.lw-dt-from > span:nth-child(2) { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
+.lw-dt-from small { font-size: 12px; font-weight: 800; color: var(--gray); }
+.lw-dt-from b { font-size: 15px; font-weight: 800; }
+.lw-dt-from em { font-style: normal; font-size: 13px; font-weight: 700; color: #CD7900; }
+.lw-dt-go { flex: none; font-size: 13px; font-weight: 800; color: var(--blue, #1CB0F6); }
+@media (max-height: 640px) { .bk2-hero { padding: 10px 14px; } .bk2-hero-ic { width: 44px; height: 44px; } .bk2-hero-t h2 { font-size: 18px; } .bk2-les { padding: 6px 10px; } }
+/* the unit page fits eight lessons at full size on a 390 × 780 phone */
+.bk2-view { gap: 10px; }
+.bk2-hero { padding: 12px 14px; gap: 8px 12px; }
+.bk2-hero-t h2 { font-size: 19px; }
+.bk2-hero-ic { width: 48px; height: 48px; }
+.bk2-list { gap: 6px; }
+.bk2-les { padding: 5px 12px 5px 10px; gap: 10px; }
+.bk2-les .bk2-hx { width: 40px; height: 37px; }
+.bk2-les-t b { font-size: 15px; line-height: 1.25; }
+.bk2-les-t small { font-size: 12px; line-height: 1.3; }
+@media (max-height: 700px) { .bk2-laws { padding: 6px 10px; } .bk2-laws-h { margin-bottom: 4px; font-size: 12px; } .bk2-law { font-size: 12.5px; padding: 2px 8px 2px 5px; } .bk2-law svg { width: 22px; height: 20px; } .bk2-top-t b { font-size: 15.5px; } .bk2-rule { padding: 8px 10px; } .bk2-f { font-size: 14px; padding: 4px 8px; } }
+/* the book's pager, right to left: «السابق» (white) on the right pointing right, «التالي» (blue, the way on) on the left pointing left, the page between */
+.bk2-pager { justify-content: space-between; gap: 8px; padding-top: 2px; }
+.bk2-arr { width: auto; min-width: 104px; height: 46px; padding: 0 14px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 14px; font: 800 16px var(--font); }
+.bk2-arr svg { width: 18px; height: 18px; flex: none; }
+.bk2-arr.pv { background: #fff; border-color: var(--line); color: var(--blue-dk, #1899D6); }
+.bk2-arr.nx { background: var(--blue, #1CB0F6); border-color: var(--blue-dk, #1899D6); color: #fff; }
+.bk2-arr:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; }
+.bk2-arr:disabled { background: #fff; border-color: var(--line); color: #CFCFCF; }
+.bk2-arr.nx:disabled { background: var(--line); color: #AFAFAF; }
+.bk2-ix { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.bk2-ix em { font-style: normal; font-size: 13.5px; font-weight: 800; color: var(--gray); white-space: nowrap; }
+.bk2-dots[hidden] { display: none; }
+.bk2-dots i { width: 7px; height: 7px; }
+.bk2-dots i.on { width: 18px; }
+@media (max-width: 350px) { .bk2-arr { min-width: 86px; padding: 0 10px; font-size: 14.5px; } }
+
+/* «قوانيني» in tabs (2026-11-03, thirty-five rules): a tab for each of the path's lessons, its rules as chips in two columns,
+   each saying which short lesson teaches it */
+.lw-coll { gap: 8px; }
+.lw-tabs { flex: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.lw-tb { display: flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; padding: 6px 6px 6px 8px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 14px; background: #fff;
+  font-family: inherit; cursor: pointer; transition: border-color .2s, background .2s; -webkit-tap-highlight-color: transparent; }
+.lw-tb:active { transform: translateY(2px); border-bottom-width: 2px; }
+.lw-tb.on { border-color: var(--blue-border, #84D8FF); background: var(--blue-light); }
+.lw-tb .bk2-hx { flex: none; width: 30px; height: 28px; }
+.lw-tb > span { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.2; min-width: 0; }
+.lw-tb b { font-size: 13.5px; font-weight: 800; color: var(--ink); white-space: nowrap; }
+.lw-tb.on b { color: var(--blue-dk); }
+.lw-tb em { font-style: normal; font-size: 12px; font-weight: 800; color: var(--gray); }
+.lw-tt { flex: none; margin: -2px 0 -2px; font-size: 14px; font-weight: 800; color: var(--gray); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lw-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.lw-ch { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 7px 9px 7px 8px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 14px; background: #fff;
+  font-family: inherit; text-align: start; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.lw-ch:active { transform: translateY(2px); border-bottom-width: 2px; }
+.lw-ch .lw-hex { flex: none; width: 36px; height: 33px; }
+.lw-ch-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lw-ch-t b { font-size: 13.5px; font-weight: 800; color: var(--ink); line-height: 1.25; }
+.lw-ch-t small { font-size: 11.5px; font-weight: 700; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lw-ch .lw-dots i { width: 11px; height: 6px; }
+.lw-ch.gold { border-color: var(--gold); background: var(--gold-bg); }
+.lw-ch.due { border-color: #FFB459; background: #FFF6EA; }
+.lw-ch.lock { cursor: default; background: var(--wash, #F7F7F7); }
+.lw-ch.lock .lw-ch-t b { color: var(--gray-icon); }
+@media (max-width: 370px) { .lw-tb { padding: 5px 4px; gap: 4px; } .lw-tb .bk2-hx { width: 24px; height: 22px; } .lw-tb b { font-size: 12.5px; } .lw-ch { padding: 6px 7px; gap: 6px; } .lw-ch .lw-hex { width: 30px; height: 27px; } .lw-ch-t b { font-size: 12.5px; } }
+
+/* «تقدّمك اليوم» when a lesson brings two or three rules: their hexagons overlap like a small hand of cards */
+.wl-hx.n2, .wl-hx.n3 { position: relative; }
+.wl-hx.n2 > svg, .wl-hx.n3 > svg { position: absolute; top: 0; width: 82%; height: 82%; }
+.wl-hx.n2 > svg:nth-child(1) { inset-inline-start: 0; top: 0; }
+.wl-hx.n2 > svg:nth-child(2) { inset-inline-start: 18%; top: 18%; }
+.wl-hx.n3 > svg { width: 72%; height: 72%; }
+.wl-hx.n3 > svg:nth-child(1) { inset-inline-start: 0; top: 0; }
+.wl-hx.n3 > svg:nth-child(2) { inset-inline-start: 14%; top: 14%; }
+.wl-hx.n3 > svg:nth-child(3) { inset-inline-start: 28%; top: 28%; }
+.wp-law.many .wl-name { font-size: 14px; line-height: 1.3; }
+.bk2-law.more { padding: 5px 12px; border-color: var(--line); color: var(--blue-dk); min-height: 34px; }
+/* on a short phone the proof's labels go (the card above already holds every number), so the drawing itself can be bigger */
+@media (max-height: 700px) { .lw-learn .stage .dlab { display: none; } }
+
+/* ───── the path's card for the rules due today, three ways (law-deck.js, tools/law-deck.html) ───── */
+.due-card.lw-due2 { gap: 10px; padding: 10px 12px 10px 14px; }
+.lw-stg { position: relative; flex: none; width: 72px; height: 64px; }
+.lw-stg svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.lw-stg .lw-n { z-index: 3; top: -4px; right: -4px; }
+.d1 .d1-floor { left: auto; right: 4px; width: 46px; margin: 0; }
+.lw-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.lw-tx > b { display: block; font-size: 15.5px; font-weight: 800; color: var(--ink); line-height: 1.35; }
+/* the rule in front, named in turn: each name slides up out of the line as the next comes in */
+.lw-names { position: relative; display: block; height: 22px; overflow: hidden; }
+.lw-nm { position: absolute; inset: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 14.5px; font-weight: 800; line-height: 22px; color: #CD7900; }
+.lw-meta { font-size: 12.5px; font-weight: 700; line-height: 1.4; color: var(--gray); }
+.lw-btn { flex: none; padding: 7px 14px 8px; border-radius: 13px; background: var(--gold); box-shadow: 0 3px 0 var(--gold-dk);
+  color: var(--brown-dk); font-size: 15px; font-weight: 800; line-height: 1.3; }
+.lw-due2:active .lw-btn { box-shadow: 0 3px 0 var(--gold-dk); }
+.lw-sign-in { color: var(--gold-star); }
+
+/* 1 الكومة */
+.d1-floor, .d3-floor { position: absolute; left: 50%; bottom: 1px; width: 40px; height: 7px; margin-left: -20px; border-radius: 50%; background: rgba(205, 121, 0, .2); }
+.d1-deck { position: absolute; inset: 0; perspective: 320px; transform-style: preserve-3d; }
+.d1-c { position: absolute; left: 24px; bottom: 5px; width: 44px; height: 43px; transform-origin: 50% 100%; }
+.d1-sg, .d2-sg, .d3-sg { position: absolute; left: 28.2%; top: 13%; width: 43.7%; height: 44.5%; color: var(--gold-star); }
+.d2-sg, .d3-sg { left: 0; top: 0; width: 100%; height: 100%; }
+.d1-sh { position: absolute; inset: 0; opacity: 0; }
+.d1-sh polygon { fill: #8A4B00; stroke: #8A4B00; }
+.d1-sh g[clip-path] { display: none; }
+
+/* 2 الحلقة */
+.d2-ring { position: absolute; left: 0; top: 1px; width: 72px; height: 60.6px; transform-origin: 50% 50%; }
+.d2-seg { position: absolute; inset: 0; }
+.d2-hx { position: absolute; left: 14.5px; top: 11.6px; width: 43px; height: 41.8px; transform-origin: 50% 100%; }
+.d2-fl { position: absolute; left: 28.2%; top: 13%; width: 43.7%; height: 44.5%; transform-origin: 50% 100%; }
+
+/* 3 الكومة الذهبية */
+.d3-pile { position: absolute; inset: 0; transform-origin: 50% 100%; }
+.d3-pc { position: absolute; left: 14px; bottom: calc(5px + var(--b) * 6px); width: 44px; height: 43.4px; }
+.d3-top { position: absolute; left: 14px; bottom: calc(5px + var(--pile) * 6px); width: 44px; height: 43.4px; transform-origin: 50% 100%; z-index: 2; }
+.d3-spin { position: absolute; inset: 0; transform-origin: 50% 46%; }
+.d3-face { position: absolute; left: 28.2%; top: 12.9%; width: 43.7%; height: 44.3%; }
+
+/* the glint: a white band in a box cut to the hexagon's face */
+.lw-gl { position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+  clip-path: polygon(27.5% 5.8%, 72.5% 5.8%, 94.4% 42%, 72.5% 78.3%, 27.5% 78.3%, 5.6% 42%); }
+.lw-gl i { position: absolute; top: -10%; left: 50%; width: 9px; height: 120%; margin-left: -4.5px; background: rgba(255, 255, 255, .75); }
+.d1-glw { position: absolute; left: 24px; bottom: 5px; width: 44px; height: 43px; z-index: 2; pointer-events: none; }
+html[data-motion="reduced"] .lw-due2 * { animation: none !important; }
+html[data-motion="reduced"] .lw-due2 :is(.lw-nm, .d2-sg, .d3-sg):not(:first-child) { display: none; }
+/* the fill's camera (2026-11-04, «multiple lines is very bad UX … but small law is also bad UX», `camera` in law.js): a long rule
+   stays one line at 28px inside a window that follows the blank being filled, fading where more of the rule waits; under it a
+   map of the whole rule frames what is in sight; once full, the line pulls back to show the whole rule */
+.lw-fill .lf-view { --fl: 0px; --fr: 0px; position: relative; display: block; overflow: clip; touch-action: pan-y; cursor: grab;
+  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0, #000 var(--fl), #000 calc(100% - var(--fr)), transparent 100%); }
+.lw-fill .lf-view { transition: transform .6s cubic-bezier(.3,1.3,.45,1); }
+.lw-fill .lf-view.fl { --fl: 40px; }
+.lw-fill .lf-view.fr { --fr: 40px; }
+.lw-fill.lf-nums .lf-view { padding-block: 34px; margin-block: -34px; }
+.lw-fill .kb-fx.lf-track { display: inline-flex; vertical-align: top; width: max-content; margin-inline-start: 0; transform-origin: 100% 50%; transition: transform .6s cubic-bezier(.3,1.3,.45,1); will-change: transform; }
+.lw-fill .kb-fx.lf-track.lf-still { transition: none; }
+.lw-fill .lf-map { position: relative; width: 64%; margin: 18px auto -8px; padding: 7px 9px; border-radius: 12px; background: #F7F7F7; overflow: hidden; cursor: pointer;
+  transition: opacity .35s, transform .35s; }
+.lw-fill.lf-nums .lf-map { margin-top: 30px; }
+.lw-fill .lf-map.off { opacity: 0; transform: scale(.92); pointer-events: none; }
+.lw-fill .lf-map-in { position: relative; overflow: clip; pointer-events: none; }
+.lw-fill .lf-map-in > .kb-fx { position: absolute; top: 0; right: 0; transform-origin: 100% 0; }
+.lw-fill .lf-map .kb-c { display: none; }
+.lw-fill .lf-map-win { position: absolute; top: 3px; bottom: 3px; right: 9px; border: 2.5px solid var(--blue); border-radius: 9px; box-shadow: 0 0 0 300px rgba(247,247,247,.62);
+  transition: transform .6s cubic-bezier(.3,1.3,.45,1), width .3s; pointer-events: none; }
+
+/* the long rule's fill screen, four versions (law.js `LFV`, tools/law-fill.html). 1 and 4: the name and «=» are the card's
+   title, over a dashed rule, and the formula alone is the line under it */
+.lw-fill .lf.lfv1 .kb-tag, .lw-fill .lf.lfv4 .kb-tag { display: none; }
+.lw-fill .lf.lfv1 .kb-card, .lw-fill .lf.lfv4 .kb-card { padding-top: 16px; }
+.lw-fill .lf.lfv1 .kb-card:has(.fq), .lw-fill .lf.lfv4 .kb-card:has(.fq) { padding-top: 16px; }
+.lw-fill .lf .kb-fx.lf-head { font-size: 23px; margin: 0 -14px 16px; padding: 0 14px 12px; border-bottom: 2px dashed var(--line); }
+.lw-fill.lf-nums .lf .kb-fx.lf-head { padding-bottom: 34px; }
+.lw-fill .lf .lf-head .op { color: var(--gray-icon); }
+/* 3: the lens under the whole rule */
+.lw-fill .lf-lens { margin: 18px -6px -12px; padding: 12px 8px 10px; border-radius: 14px; background: #F7F7F7; }
+.lw-fill.lf-nums .lf-lens { margin-top: 34px; }
+.lw-fill .lf-lens.off { display: none; }
+.lw-fill .lf-lens .kb-fx.lf-lens-row { font-size: 30px; pointer-events: none; }
+.lw-fill.lf-nums .lf-lens .kb-fx.lf-lens-row { padding-bottom: 30px; }
+.lw-fill .lf-lens .lf-near { opacity: .45; }
+.lw-fill .lf-dots { display: flex; justify-content: center; gap: 7px; margin-top: 10px; }
+.lw-fill .lf-dots i { width: 9px; height: 9px; border-radius: 50%; background: #DDD; transition: background .2s; }
+.lw-fill .lf-dots i.on { background: var(--blue); }
+.lw-fill .lf-dots i.cur { background: #fff; box-shadow: inset 0 0 0 2.5px var(--blue); }
+
+/* ───── 2026-11-08: the path's card as a white card with a full-width gold button ───── */
+.due-card.lw-due.lw-due3 { flex-direction: column; align-items: stretch; gap: 12px; padding: 12px 14px 14px; background: var(--snow); border-color: var(--line); box-shadow: 0 4px 0 var(--line); }
+.due-card.lw-due.lw-due3:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--line); }
+.lw3-row { display: flex; align-items: center; gap: 12px; }
+.lw-due3 .lw-tx > b { font-size: 17px; }
+.lw3-kick { font-size: 12.5px; font-weight: 800; color: var(--gold-dk); line-height: 1.4; }
+.lw3-go { position: relative; display: flex; align-items: center; justify-content: center; height: 46px; border-radius: 14px; overflow: hidden;
+  background: var(--gold); box-shadow: 0 4px 0 var(--gold-dk); color: var(--brown-dk); font-size: 16px; font-weight: 800; }
+.lw-due3:active .lw3-go { transform: translateY(2px); box-shadow: 0 2px 0 var(--gold-dk); }
+.lw3-shine { position: absolute; top: -10px; bottom: -10px; left: 0; width: 34px; background: rgba(255, 255, 255, .55); transform: translateX(-60px) skewX(-18deg); animation: lw3Shine 3.6s 1.6s infinite; }
+@keyframes lw3Shine { 0%, 62% { transform: translateX(-60px) skewX(-18deg); } 80%, 100% { transform: translateX(520px) skewX(-18deg); } }
+html[data-motion="reduced"] .lw3-shine { animation: none; display: none; }
+
+/* ───── «تقدّمك اليوم»: the new rule as the lesson's card, turning gold as it lands ───── */
+.wp-card.wp-law.wl2 { position: relative; transition: border-color .3s, background-color .3s; }
+.wl2 .wl-clip { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.wl2 .wl-band { position: absolute; top: 0; bottom: 0; left: 50%; width: 60px; background: rgba(255, 255, 255, .7); clip-path: polygon(40% 0, 100% 0, 60% 100%, 0 100%); transform: translateX(260px); }
+.wl2 .wl-hx { position: relative; width: 52px; height: 48px; perspective: 400px; }
+.wl2 .wl-hx > svg { transform-origin: 50% 85%; }
+.wl2 .wl-spark { position: absolute; width: 14px; height: 14px; opacity: 0; transform: scale(0); background: var(--gold);
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); }
+.wl2 .wl-spark.a { top: -6px; inset-inline-start: -6px; }
+.wl2 .wl-spark.b { bottom: 0; inset-inline-end: -8px; width: 10px; height: 10px; }
+.wl2 .wn-tx { gap: 6px; }
+.wl2 .wl-name { font-size: 18px; font-weight: 800; color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wl2.many .wl-name { font-size: 15px; }
+.wl2 .wl-bar i u { background: var(--gold); }
+.wl2 .wl-bar i.on { background: var(--gold); }
+.wl2 .wl-next { font-size: 13px; font-weight: 700; color: var(--gray); }
+.wl2.won { border-color: var(--gold); background: var(--gold-bg); }
+.wl2.won .wl-name { color: var(--brown-dk); }
+.wl2.won .wn-count, .wl2.won .wl-next { color: var(--gold-dk); }
+.wl2.won .wl-bar i:not(.on) { background: rgba(230, 160, 0, .22); }
+
+/* ───── «القانون»: the pill under the lesson's bar, and its sheet ───── */
+.lw-peek { display: inline-flex; align-items: center; gap: 7px; align-self: flex-start; margin: 2px 16px 4px; height: 38px; padding: 0 14px 0 10px;
+  border-radius: 14px; border: 2px solid var(--line); border-bottom-width: 4px; background: var(--snow); color: var(--ink);
+  font: 800 15px/1 var(--font, inherit); cursor: pointer; -webkit-tap-highlight-color: transparent; flex: none; }
+.lw-peek:active { transform: translateY(2px); border-bottom-width: 2px; margin-bottom: 6px; }
+.lw-peek-hx { display: block; width: 24px; height: 22px; }
+.lw-peek-hx svg { display: block; width: 100%; height: 100%; }
+.lw-pk-veil { position: fixed; inset: 0; z-index: 900; display: flex; align-items: flex-end; justify-content: center; background: rgba(0, 0, 0, .5); }
+.lw-pk { position: relative; width: 100%; max-width: 560px; max-height: 88vh; overflow: auto; padding: 10px 16px calc(18px + env(safe-area-inset-bottom));
+  border-radius: 24px 24px 0 0; background: var(--snow); display: flex; flex-direction: column; gap: 12px; }
+.lw-pk-grip { align-self: center; width: 44px; height: 5px; border-radius: 3px; background: var(--line); }
+.lw-pk-r { display: flex; flex-direction: column; gap: 10px; }
+.lw-pk-h { display: flex; align-items: center; gap: 10px; }
+.lw-pk-h b { font-size: 20px; font-weight: 800; color: var(--ink); }
+.lw-pk-hx { width: 36px; height: 33px; flex: none; }
+.lw-pk-hx svg { display: block; width: 100%; height: 100%; }
+.lw-pk .lw-pk-fc .kb-card { min-height: 0; }
+.lw-pk .kb-hint { display: none; }
+.lw-pk-say { margin: 0; font-size: 16px; font-weight: 700; line-height: 1.6; color: var(--gray); }
+.lw-pk-say em { font-style: normal; color: var(--blue-dk); }
+.lw-pk-ok { flex: none; }
+
+/* «الأعداد المكمّلة»: pair the numbers that make ١٠٠ (2026-11-08) */
+.lw-pairs .pr-box { padding: 12px 12px 10px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 16px; background: #fff; text-align: center; }
+.lw-pairs .pr-box i { font-style: normal; margin: 0 6px; color: var(--gray-icon); }
+.lw-pairs .pr-q { margin: 0 0 8px; padding-bottom: 10px; border-bottom: 2px dashed var(--line); font-size: 22px; font-weight: 800; color: var(--ink); white-space: nowrap; }
+.lw-pairs .pr-n { display: inline-block; transition: color .25s, opacity .25s; }
+.lw-pairs .pr-n.on { color: var(--green-dk); opacity: .4; }
+.lw-pairs .pr-row { display: flex; align-items: center; justify-content: center; margin: 8px 0; font-size: 20px; font-weight: 800; }
+.lw-pairs .pr-chip { position: relative; display: inline-flex; align-items: center; justify-content: center; min-width: 56px; height: 42px; padding: 0 8px; border-radius: 12px;
+  background: var(--blue-light); color: var(--blue-dk); box-shadow: inset 0 0 0 2px var(--blue-border), 0 3px 0 var(--blue-border); font-size: 22px; transition: background .2s, color .2s, box-shadow .2s; }
+.lw-pairs .pr-chip.gap { background: #F7F7F7; box-shadow: none; outline: 2px dashed var(--gray-icon); outline-offset: -2px; }
+.lw-pairs .pr-chip.ok { background: var(--green-bg); color: var(--green-dk); box-shadow: inset 0 0 0 2px var(--green-pale), 0 3px 0 var(--green-pale); }
+.lw-pairs .pr-to { min-width: 36px; color: var(--gray-icon); transition: color .25s; }
+.lw-pairs .pr-row.ok .pr-to { color: var(--green-dk); }
+.lw-pairs .pr-sum, .lw-pairs .pr-wait { margin: 10px 0 2px; padding-top: 10px; border-top: 2px dashed var(--line); font-size: 20px; font-weight: 800; line-height: 34px; color: var(--ink); }
+.lw-pairs .pr-wait { color: var(--gray-icon); }
+.lw-pairs .pr-box:not(.sum) .pr-sum, .lw-pairs .pr-box.sum .pr-wait { display: none; }
+.lw-pairs .pr-tot { display: inline-block; padding: 2px 12px; border-radius: 12px; background: var(--green-bg); color: var(--green-dk); box-shadow: inset 0 0 0 2px var(--green-pale); }
+.lw-pairs .pr-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+.lw-pairs .pr-t { min-width: 0; padding: 10px 0; font-size: 24px; font-weight: 800; }
+.lw-pairs .pr-t.sel { background: var(--blue-light); border-color: var(--blue-border); color: var(--blue-dk); }
+.lw-pairs .pr-t.no { background: var(--red-bg); border-color: var(--red); color: var(--red-dk2); }
+.lw-pairs .pr-t.used { background: var(--line); border-color: var(--line); color: transparent; pointer-events: none; }
+/* an order rule: each blank says its place under it */
+.lw-fill .lf-chain .kb-c { font-size: 12px; color: var(--gray-icon); }
+/* the path's review card, one line (2026-11-08) */
+.due-card.lw-due.lw-due4 { flex-direction: row; align-items: center; gap: 12px; padding: 10px 14px; background: var(--snow); border-color: var(--line); box-shadow: 0 4px 0 var(--line); }
+.due-card.lw-due.lw-due4:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--line); }
+.lw4-t { flex: 1; min-width: 0; font-size: 17px; font-weight: 800; line-height: 1.35; color: var(--ink); text-align: start; }
+.lw4-go { flex: none; display: flex; align-items: center; height: 40px; padding: 0 18px; border-radius: 12px; background: var(--gold); box-shadow: 0 3px 0 var(--gold-dk); color: var(--brown-dk); font-size: 15px; font-weight: 800; }
+.lw-due4:active .lw4-go { transform: translateY(2px); box-shadow: 0 1px 0 var(--gold-dk); }
+.lw-due4 .lw4-hx { flex: none; display: grid; place-items: center; width: 52px; height: 48px; }
+.lw-due4 .lw4-hx svg { width: 52px; height: auto; }
+
+/* the rule done by hand (2026-11-08): المصافحات, مبدأ العدّ, الترتيب من الطرفين */
+.lw-play .pl-box { padding: 12px; }
+.lw-play .pl-count { margin: 6px 0 0; font-size: 18px; font-weight: 800; color: var(--gray); }
+.lw-play .pl-count b { display: inline-block; min-width: 1.2em; color: var(--ink); font-size: 22px; }
+.lw-play .pl-f { margin: 10px 0 0; padding-top: 10px; border-top: 2px dashed var(--line); font-size: 16px; font-weight: 800; line-height: 1.7; color: var(--ink); visibility: hidden; }
+.lw-play .pl-f.on { visibility: visible; }
+.lw-play .pl-f b { display: inline-block; padding: 0 8px; border-radius: 10px; background: var(--green-bg); color: var(--green-dk); box-shadow: inset 0 0 0 2px var(--green-pale); }
+.lw-play .ln-tile.sel { background: var(--blue-light); border-color: var(--blue-border); color: var(--blue-dk); }
+.lw-play .ln-tile.no { background: var(--red-bg); border-color: var(--red); }
+/* the handshakes: four people on a square, a line for every handshake, each one's count on their shoulder */
+.lw-shake .hs-stage { display: block; width: 100%; max-width: 300px; height: auto; margin: 0 auto; overflow: visible; }
+.lw-shake .hs-lines line { stroke: var(--green); stroke-width: 6; stroke-linecap: round; }
+.lw-shake .hs-p { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.lw-shake .hs-p > text { fill: #fff; font: 800 20px var(--font); text-anchor: middle; pointer-events: none; }
+.lw-shake .hs-ring { fill: #fff; stroke: var(--line); stroke-width: 3; }
+.lw-shake .hs-p.sel .hs-ring { stroke: var(--blue); stroke-width: 5; }
+.lw-shake .hs-p.no .hs-ring { stroke: var(--red); stroke-width: 5; }
+.lw-shake .hs-p.full .hs-ring { stroke: var(--green); }
+.lw-shake .hs-n { opacity: 0; }
+.lw-shake .hs-n.on { opacity: 1; }
+.lw-shake .hs-n circle { fill: var(--gold); stroke: #fff; stroke-width: 2; }
+.lw-shake .hs-n text { fill: var(--brown-dk); font: 800 12px var(--font); text-anchor: middle; }
+/* the outfits: a 3 × 2 grid, a cell per shirt and trousers */
+.lw-outfit .of-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 300px; margin: 0 auto; }
+.lw-outfit .of-c { position: relative; display: flex; align-items: center; justify-content: center; gap: 2px; height: 64px; border-radius: 12px; outline: 2px dashed var(--gray-icon); outline-offset: -2px; background: #F7F7F7; }
+.lw-outfit .of-c.on { outline: 0; background: var(--blue-light); box-shadow: inset 0 0 0 2px var(--blue-border); }
+.lw-outfit .of-c.ok { background: var(--green-bg); box-shadow: inset 0 0 0 2px var(--green-pale); }
+.lw-outfit .of-c.no { background: var(--red-bg); }
+.lw-outfit .of-c svg { width: 30px; height: 30px; }
+.lw-outfit .of-row { display: flex; justify-content: center; gap: 10px; margin-top: 12px; }
+.lw-outfit .of-t { display: grid; place-items: center; width: 74px; height: 62px; min-width: 0; padding: 0; }
+.lw-outfit .of-t svg { width: 40px; height: 40px; }
+/* the queue: the front on the right, «أنت» ringed in gold, a tag per end that turns green at the example's place */
+.lw-queue .lf-ask b { color: var(--blue-dk); }
+.lw-queue .qu-ends { display: flex; justify-content: space-between; font-size: 13px; font-weight: 800; color: var(--gray-icon); }
+.lw-queue .qu-ends span:first-child::after { content: ' ←'; } .lw-queue .qu-ends span:last-child::before { content: '← '; }
+.lw-queue .qu-line { display: flex; justify-content: center; align-items: flex-end; gap: 4px; min-height: 64px; margin: 6px 0 4px; }
+.lw-queue .qu-p { display: flex; flex-direction: column; align-items: center; width: 32px; }
+.lw-queue .qu-p svg { width: 30px; height: 36px; }
+.lw-queue .qu-p i { font-style: normal; font-size: 12px; font-weight: 800; color: var(--brown-dk); }
+.lw-queue .qu-p.me.twice i { color: var(--red-dk2); }
+.lw-queue .qu-tags { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.lw-queue .qu-tags span { padding: 3px 10px; border-radius: 10px; background: #F7F7F7; font-size: 14px; font-weight: 800; color: var(--gray); position: relative; }
+.lw-queue .qu-tags span.ok { background: var(--green-bg); color: var(--green-dk); }
+.lw-queue .qu-add { display: flex; justify-content: center; gap: 12px; margin-top: 16px; }
+.lw-queue .qu-add.gone { display: none; }
+.lw-queue .qu-t { font-size: 18px; padding: 10px 18px; }
+.lw-queue .qu-t:disabled { opacity: .45; }
+.lw-queue .qu-ask { display: none; margin-top: 14px; text-align: center; }
+.lw-queue .qu-ask.on { display: block; }
+.lw-queue .qu-ask p { margin: 0 0 10px; font-size: 18px; font-weight: 800; color: var(--ink); }
+.lw-queue .qu-ask > div { display: flex; justify-content: center; gap: 10px; }
+.lw-queue .qu-c { min-width: 70px; font-size: 24px; font-weight: 800; }
+.lw-queue .qu-c.ok { background: var(--green-bg); border-color: var(--green-pale); color: var(--green-dk); }
+.lw-queue .qu-c:disabled:not(.ok) { opacity: .4; }
+/* short phones (iPhone SE and smaller): the hands-on screens tighten so they read near full size instead of zoomed small */
+@media (max-height: 700px) {
+  .lw-pairs .pr-box, .lw-play .pl-box { padding: 8px 10px; }
+  .lw-pairs .pr-q { margin-bottom: 4px; padding-bottom: 6px; font-size: 20px; }
+  .lw-pairs .pr-row { margin: 4px 0; }
+  .lw-pairs .pr-chip { height: 34px; min-width: 50px; font-size: 19px; }
+  .lw-pairs .pr-sum, .lw-pairs .pr-wait { margin-top: 6px; padding-top: 6px; line-height: 28px; font-size: 18px; }
+  .lw-pairs .pr-tiles { gap: 8px; margin-top: 10px; }
+  .lw-pairs .pr-t { padding: 6px 0; font-size: 21px; }
+  .lw-fill .lf-ask { margin-bottom: 6px; font-size: 17px; }
+  .lw-shake .hs-stage { max-width: 240px; }
+  .lw-outfit .of-c { height: 50px; }
+  .lw-outfit .of-row { margin-top: 8px; }
+  .lw-outfit .of-t { height: 50px; width: 64px; }
+  .lw-play .pl-f { margin-top: 6px; padding-top: 6px; font-size: 15px; line-height: 1.6; }
+  .lw-queue .qu-add { margin-top: 10px; }
+}

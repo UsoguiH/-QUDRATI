@@ -1,0 +1,10 @@
+/* dotmint — the user's «قدراتي» in ink (markmono), its dot pairs mint, coral and violet, flat; each coin takes off in its pair's colour, and the title keeps them */
+.qs-bg { background: #FFFFFF; }
+.qs-l { fill: #111111; }
+#splash { --qs-dot-lit: step; --qs-dot-filter-g: brightness(0) invert(60%) sepia(63%) saturate(523%) hue-rotate(125deg) brightness(85%) contrast(97%); --qs-dot-filter-o: brightness(0) invert(70%) sepia(57%) saturate(3530%) hue-rotate(-38deg) brightness(100%) contrast(103%); --qs-dot-filter-b: brightness(0) invert(49%) sepia(93%) saturate(4510%) hue-rotate(-121deg) brightness(100%) contrast(94%); }
+.qs-word > g:nth-of-type(1) { fill: #14B8A6; }
+.qs-word > g:nth-of-type(2) { fill: #14B8A6; }
+.qs-word > g:nth-of-type(3) { fill: #FF7A59; }
+.qs-word > g:nth-of-type(4) { fill: #FF7A59; }
+.qs-word > g:nth-of-type(5) { fill: #8B5CF6; }
+.qs-word > g:nth-of-type(6) { fill: #8B5CF6; }

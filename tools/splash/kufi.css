@@ -1,0 +1,9 @@
+/* kufi — Noto Kufi Arabic 900 in ink on white; each dot a small coin in its coin's colours, on its lip, with its ring */
+.qs-bg { background: #FFFFFF; }
+.qs-l { fill: #1A1A1A; }
+.qs-g { fill: #78C900; } .qs-o { fill: #FFC800; } .qs-b { fill: #1CB0F6; }
+.qs-d .qs-lip { display: block; transform: translateY(26px); }
+.qs-g .qs-lip { fill: #58A700; } .qs-o .qs-lip { fill: #E6A000; } .qs-b .qs-lip { fill: #1899D6; }
+.qs-d .qs-ring { display: block; fill: none; }
+.qs-g .qs-ring { stroke: #8EE000; } .qs-o .qs-ring { stroke: #FFE14D; } .qs-b .qs-ring { stroke: #5CCBFF; }
+.qs-d.qs-plain, .qs-t { fill: #1A1A1A; } .qs-plain .qs-lip, .qs-plain .qs-ring { display: none; }

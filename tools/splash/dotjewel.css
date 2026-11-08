@@ -1,0 +1,21 @@
+/* dotjewel — the user's «قدراتي» in ink (markmono), its dots three pairs of jewels — emerald, ruby, sapphire — each on its darker lip, catching the light at the top of every hop; the title keeps them flat */
+.qs-bg { background: #FFFFFF; }
+.qs-l { fill: #111111; }
+#splash { --qs-dot-lit: step; --qs-dot-filter-g: brightness(0) invert(52%) sepia(87%) saturate(415%) hue-rotate(111deg) brightness(99%) contrast(92%); --qs-dot-filter-o: brightness(0) invert(31%) sepia(97%) saturate(1680%) hue-rotate(-35deg) brightness(103%) contrast(100%); --qs-dot-filter-b: brightness(0) invert(42%) sepia(25%) saturate(3835%) hue-rotate(-153deg) brightness(99%) contrast(112%); }
+.qs-word > g:nth-of-type(1) { fill: #14C38E; }
+.qs-word > g:nth-of-type(2) { fill: #14C38E; }
+.qs-word > g:nth-of-type(3) { fill: #FF3D68; }
+.qs-word > g:nth-of-type(4) { fill: #FF3D68; }
+.qs-word > g:nth-of-type(5) { fill: #3D7BFF; }
+.qs-word > g:nth-of-type(6) { fill: #3D7BFF; }
+.qs-word > g:nth-of-type(1) { --f: #14C38E; --hi: #7DF0C8; --lo: #0B8F67; }
+.qs-word > g:nth-of-type(2) { --f: #14C38E; --hi: #7DF0C8; --lo: #0B8F67; }
+.qs-word > g:nth-of-type(3) { --f: #FF3D68; --hi: #FF9CB3; --lo: #C21F4A; }
+.qs-word > g:nth-of-type(4) { --f: #FF3D68; --hi: #FF9CB3; --lo: #C21F4A; }
+.qs-word > g:nth-of-type(5) { --f: #3D7BFF; --hi: #9DBDFF; --lo: #2350C8; }
+.qs-word > g:nth-of-type(6) { --f: #3D7BFF; --hi: #9DBDFF; --lo: #2350C8; }
+.qs-d .qs-lip { display: block; fill: var(--lo); transform: translateY(46px); }
+.qs-d > path:last-child { animation: qsGem calc(1.2s * var(--qs-k, 1)) calc((.45s + var(--i) * 50ms) * var(--qs-k, 1)) infinite; }
+@keyframes qsGem { 0%, 4% { fill: var(--f); } 14% { fill: var(--hi); } 28%, 100% { fill: var(--f); } }
+.qs-out .qs-d > path, .qs-plain > path, [data-motion="reduced"] .qs-d > path { animation: none; }
+.qs-plain .qs-lip { display: none; }

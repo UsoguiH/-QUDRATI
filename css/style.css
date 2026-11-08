@@ -1715,9 +1715,7 @@ button.dom-stat:active { transform: scale(.99); }
 .review-item { animation: fadeUp .4s ease backwards; }
 
 /* --- popup + modal --- */
-.lesson-pop { animation: springIn .35s cubic-bezier(.3,1.5,.5,1); transform-origin: top center; }
-/* held back while the path scrolls the node into place; springs in on landing */
-.lesson-pop.pending { visibility: hidden; animation: none; }
+.lesson-pop { animation: springIn .24s cubic-bezier(.3,1.5,.5,1); transform-origin: top center; }
 .modal { animation: springIn .4s cubic-bezier(.3,1.4,.5,1); }
 .modal .m-owl { display: inline-block; animation: starRise .6s .15s cubic-bezier(.3,1.6,.5,1) backwards; }
 
@@ -4535,6 +4533,7 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 .rf-head .ln-rule-ic svg { width: 17px; height: 17px; }
 .ln-eq.rf-box { box-sizing: border-box; width: 100%; min-width: 0; padding: 14px 10px; line-height: 1.2; text-wrap: nowrap; }
 .rf-box .rf-ex { font-size: 24px; font-weight: 800; line-height: 1.5; color: var(--ink); white-space: nowrap; padding: 0 4px 10px; margin-bottom: 12px; border-bottom: 1px dashed var(--line); }
+.rf-box .rf-ex.rf-say { white-space: normal; text-wrap: balance; font-size: 19px; line-height: 1.55; }
 .rf-line {
   display: flex; flex-wrap: nowrap; justify-content: safe center; align-items: center; gap: .26em; width: 100%; min-width: 0;
   font-size: 28px; font-weight: 800; line-height: 1.2; color: var(--ink); white-space: nowrap; --bh: 1.8em;
@@ -4579,6 +4578,13 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 :root[data-motion="reduced"] .rf-hint.help.go, :root[data-motion="reduced"] .rf-tiles .ln-tile.out,
 :root[data-motion="reduced"] .rf-line .ln-blank.pt { animation: none; }
 .rf-tiles .ln-tile.used { color: transparent; }
+/* «كمّل الخطوة» answers each number as it lands (rfInstant): a right one stays green, فهيم says what is wrong with a wrong
+   one, and the screen has no «تحقق» (its place is kept, so «متابعة» lands where every other screen's button stands) */
+.rf-line .ln-blank.lk { border: 2px solid var(--green-pale); background: var(--green-bg); color: var(--green-dk); animation: none; }
+.rf-hint.rf-fh { align-items: center; }
+.rf-hint.rf-fh .rf-help-fh { flex: none; width: 46px; height: 46px; object-fit: contain; }
+.rf-hint.rf-fh .rf-help-tx > b:first-child { color: var(--red-dk2); font-size: 15px; }
+.action-bar .rf-nobtn { visibility: hidden; }
 .ln-bw { display: inline-flex; flex-direction: column; align-items: center; vertical-align: top; line-height: 1; margin: 0 2px; }
 .tc-rf { width: 100%; }
 .tc-rf .tc-why { margin-top: 14px; }
@@ -4722,6 +4728,28 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 .wl-badges { margin-bottom: 0; animation-delay: .7s; }
 .wl-cta { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 420px; margin: 0 auto; animation: fadeUp .4s .8s ease backwards; }
 .wl-cta .btn { height: 50px; font-size: 17px; }
+/* arriving from the loading screen (splashOut in app.js): the coins and the name
+   are its copies until they land, then these take over; the line, the chips and
+   the button come in as Brilliant reveals, a fade and a rise on its curve */
+.wl-mark .qs-word { display: block; width: 150px; height: auto; margin: 0 auto; overflow: visible; }
+.qs-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* the screen's own entrance is cut as the hand-off starts (it is still under the loading screen):
+   the name and coins fly to where the title and hero will stay, not to where they are mid-slide */
+.wl-screen.wl-in { animation: none; }
+.wl-in .welcome-hero, .wl-in .wl-title { animation: none; visibility: hidden; }
+.wl-in.wl-landed .welcome-hero { visibility: visible; animation: welcomeFloat 4.2s 1.2s ease-in-out infinite; }
+.wl-in.wl-landed .wl-title { visibility: visible; }
+.wl-in .wl-sub, .wl-in .wl-badges, .wl-in .wl-cta { animation: wlRise calc(1s * var(--qs-k, 1)) cubic-bezier(.22,1,.36,1) backwards, wlFade calc(.7s * var(--qs-k, 1)) ease-out backwards; animation-delay: calc(var(--wl-d) * var(--qs-k, 1)); }
+.wl-in .wl-sub { --wl-d: .46s; } .wl-in .wl-badges { --wl-d: .54s; } .wl-in .wl-cta { --wl-d: .62s; }
+/* a look whose ground gathers itself into «ابدأ الآن» (--qs-exit: cta in the look): the button is where the
+   ground lands, so it does not rise in; it shows once the ground is on its face and grows its lip and label */
+.wl-in.wl-morph .wl-cta { animation: none; }
+.wl-in.wl-morph .wl-cta .btn { visibility: hidden; }
+.wl-in.wl-morph.wl-cta-on .wl-cta .btn, .wl-in.wl-morph.wl-landed .wl-cta .btn { visibility: visible; }
+.wl-in.wl-morph.wl-cta-on .wl-cta .btn { animation: wlBtnIn calc(.34s * var(--qs-k, 1)) cubic-bezier(.3,1.4,.5,1) backwards; }
+@keyframes wlBtnIn { from { color: transparent; box-shadow: 0 0 0 var(--green-lip); } }
+@keyframes wlRise { from { translate: 0 24px; } }
+@keyframes wlFade { from { opacity: 0; } }
 
 .ob-screen { display: flex; flex-direction: column; padding: 0 20px calc(20px + env(safe-area-inset-bottom)); }
 /* nothing past the phone's sides may widen the page: «جرّب»'s rule card pops in at 112% and ran 10px off

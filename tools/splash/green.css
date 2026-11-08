@@ -1,0 +1,12 @@
+/* green — «الأخضر»: the screen in Duolingo's green and «قدراتي» in Zain Black, white on a darker green lip,
+   its dots white; as the coins fly the green gathers itself into «ابدأ الآن» (--qs-exit: cta), and the name
+   lands green on white */
+#splash { --qs-dot-filter: brightness(0) invert(1); --qs-exit: cta; }
+.qs-bg { background: #58CC02; }
+.qs-l { fill: #FFFFFF; transition: fill calc(.3s * var(--qs-k, 1)) calc(.14s * var(--qs-k, 1)); }
+.qs-x { display: block; fill: #46A302; transform: translateY(54px); transition: fill calc(.3s * var(--qs-k, 1)) calc(.14s * var(--qs-k, 1)); }
+.qs-d { fill: #FFFFFF; }
+.qs-d .qs-lip { display: block; fill: #46A302; transform: translateY(40px); }
+.qs-out .qs-l, .wl-mark .qs-l { fill: #58CC02; }
+.qs-out .qs-x, .wl-mark .qs-x { fill: #58A700; }
+.qs-d.qs-plain, .qs-t { fill: #58CC02; } .qs-plain .qs-lip { display: none; }

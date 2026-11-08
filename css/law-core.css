@@ -1,0 +1,206 @@
+/* The rule's own look for the app lab, taken from tools/rule-flow.html and kept under .law */
+.law {
+  --green: #58CC02; --green-dk: #58A700; --green-lip: #478700; --green-bg: #D7FFB8; --green-pale: #A5ED6E;
+  --blue: #1CB0F6; --blue-dk: #1899D6; --blue-light: #DDF4FF; --blue-border: #84D8FF;
+  --purple: #CE82FF; --purple-dk: #A568CC; --purple-tint: #F3E0FF; --purple-border: #E2B6FF;
+  --gold: #FFC800; --gold-dk: #E6A000; --gold-bg: #FFF4BF; --brown: #AA572A; --brown-dk: #7A3B12;
+  --orange: #FF9600; --orange-dk: #E07800; --orange-bg: #FFEFD6;
+  --red: #FF4B4B; --red-dk: #EA2B2B; --red-dk2: #EA2B2B; --red-bg: #FFDFE0; --red-soft: #FFB2B2;
+  --ink: #3C3C3C; --ink2: #4B4B4B; --gray: #777777; --gray-icon: #AFAFAF; --line: #E5E5E5; --wash: #F7F7F7; --snow: #fff;
+  --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
+  color-scheme: light;
+}
+/* فهيم beside his bubble, as in the first run when he asks */
+.law .obs { display: flex; align-items: flex-end; gap: 4px; margin-bottom: 14px; }
+.law .obs-say { flex: 1; min-width: 0; padding-bottom: 22px; }
+.law .obs-bubble { position: relative; margin: 0; background: var(--snow); border: 2px solid var(--line); border-radius: 16px; padding: 11px 14px; font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.55; text-wrap: balance; transform-origin: 0% 80%; }
+.law .obs-bubble::before, .law .obs-bubble::after { content: ""; position: absolute; bottom: 14px; inset-inline-end: -19px; border: 9px solid transparent; }
+.law .obs-bubble::before { border-inline-start-color: var(--line); }
+.law .obs-bubble::after { border-inline-start-color: var(--snow); margin-inline-end: 3px; }
+.law .obs-bubble .w { display: inline-block; }
+.law .obs-bubble em { font-style: normal; color: var(--blue-dk); }
+.law .obs-duo { height: 112px; width: 112px; flex-shrink: 0; object-fit: contain; transform-origin: 50% 100%; }
+.law .obt { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 10px; }
+.law .obt .obs-bubble { text-align: center; font-size: 21px; padding: 14px 18px; }
+.law .obt .obs-bubble::before, .law .obt .obs-bubble::after { bottom: auto; top: 100%; inset-inline-end: auto; left: 50%; margin-left: -9px; border: 10px solid transparent; }
+.law .obt .obs-bubble::before { border-top-color: var(--line); border-inline-start-color: transparent; }
+.law .obt .obs-bubble::after { border-top-color: var(--snow); border-inline-start-color: transparent; margin-top: -3px; margin-inline-end: 0; }
+.law .obt-duo { width: min(230px, 60vw); height: auto; margin-top: 18px; }
+.law .dv { display: inline-block; position: relative; width: .62em; height: .62em; vertical-align: middle; margin: 0 .04em; }
+.law .dv::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: .11em; margin-top: -.055em; border-radius: .06em; background: currentColor; }
+.law .dv::after { content: ""; position: absolute; left: 50%; top: 0; width: .15em; height: .15em; margin-left: -.075em; border-radius: 50%; background: currentColor; box-shadow: 0 .47em 0 currentColor; }
+.law .fr { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.02; font-size: .8em; margin: 0 .08em; }
+.law .fr b { display: block; font-weight: inherit; }
+.law .fr i { display: block; align-self: stretch; height: .11em; min-height: 2px; margin: .1em -.12em; border-radius: 2px; background: currentColor; }
+.law .val .fr { font-size: .85em; padding: 2px 0; }
+/* the proof under it, plain, no frame */
+.law .stage { position: relative; height: 210px; margin-top: 10px; cursor: pointer; }
+.law .stage > .dg { position: absolute; left: 50%; top: 50%; transform-origin: center; }
+.law .dcap { font-size: 14px; font-weight: 700; color: var(--gray); text-align: center; min-height: 22px; }
+.law .fq { display: inline-flex; flex-direction: column; align-items: stretch; vertical-align: middle; }
+.law .fq-n, .law .fq-d { display: flex; justify-content: center; align-items: center; gap: .22em; white-space: nowrap; }
+.law .fq-n .val { top: auto; bottom: 100%; margin: 0 auto 5px; }
+.law .kb12 { --kf: 'IBM Plex Sans Arabic', 'Baloo Bhaijaan 2', sans-serif; position: relative; }
+.law .kb12 .k { background: none; border: 0; border-radius: 0; padding: 0; box-shadow: none; color: inherit; }
+.law .kb-card { position: relative; box-sizing: border-box; margin: 0 -12px; border: 2px solid #E5E5E5; border-radius: 20px; background: #fff; padding: 70px 6px 62px; }
+.law .kb-tag { position: absolute; top: 16px; right: 0; left: 0; text-align: center; font: 700 15px/1 var(--kf); letter-spacing: .02em; color: #294BC6; }
+.law .kb-fx { display: flex; justify-content: safe center; align-items: center; gap: .2em; white-space: nowrap; font: 500 34px/1.3 var(--kf); color: #141414; }
+.law .kb12 .k { position: relative; display: inline-block; vertical-align: middle; }
+.law .kb-m { position: relative; display: inline-block; vertical-align: middle; overflow: hidden; padding: .04em .22em .1em; border-radius: 6px; background: #ECF0FF; color: #294BC6; text-align: center; transition: background-color .35s, color .35s, box-shadow .35s; }
+.law .kb12 .k.ca .kb-m { background: #F2F2F2; color: #141414; }
+.law .kb-w { position: relative; display: inline-block; }
+.law .kb-n { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #294BC6; transform: translateY(115%); }
+.law .kb-n .fr { font-size: .92em; }
+.law .kb12 .k.ca .kb-n { font-size: 1.12em; }
+.law .kb-u { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: #456DFF; transform: scaleX(0); }
+.law .kb-c { position: absolute; top: 100%; left: 50%; margin-top: 8px; transform: translateX(-50%); font: 500 15px/1.3 var(--kf); color: #666; white-space: nowrap; opacity: 0; }
+.law .kb12 .fq-n .kb-c { top: auto; bottom: 100%; margin: 0 0 8px; }
+.law .kb12 .k.ok .kb-m { background: #D4F5DD; color: #009B2B; box-shadow: inset 0 0 0 2px #29CC57; }
+.law .kb12 .k.ok .kb-n { color: #009B2B; }
+.law .kb12 .op { font-weight: 400; color: #141414; }
+.law .kb12 .pl { color: #141414; }
+.law .kb12 .fq { display: inline-flex; flex-direction: column; align-items: center; gap: 8px; }
+.law .kb12 .fq-bar { display: block; align-self: stretch; height: 2px; border-radius: 1px; background: #141414; }
+.law .kb12.hide .k:not(.ca) .kb-m { background: #F8F8F8; }
+.law .kb12.hide .k:not(.ca) .kb-m::before { content: ""; position: absolute; inset: 0; border-radius: 6px; border: 2px dashed #CCC; }
+.law .kb12.hide .k:not(.ca) .kb-w { transform: translateY(115%); }
+.law .kb-hint { position: absolute; left: 0; right: 0; bottom: 18px; text-align: center; font: 500 14px var(--kf); color: #999; opacity: 0; }
+
+/* 13. card 12's layout in the app's own grammar (2026-10-29, the user said yes to «keep Brilliant's layout and boxes, but give it our app's font and blues»):
+   the card is the app's white card on its 2px --line rim and 4px lip, the words Baloo at 800, each term the lesson's blue chip
+   (--blue-light on a --blue-border rim with its 3px lip), the unknown the white chip, the answer the green of Duolingo's correct wave,
+   and a review's blanks the fill's own dashed blank */
+.law .kb12.kb13 { --kf: var(--font); }
+.law .kb13 .kb-card { border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 18px; padding: 62px 6px 62px; }
+.law .kb13 .kb-tag { font: 800 15px/1 var(--kf); letter-spacing: 0; color: var(--blue-dk); }
+.law .kb13 .kb-fx { font: 800 26px/1.35 var(--kf); color: var(--ink); }
+.law .kb13 .kb-m { padding: .02em .3em .06em; border-radius: 12px; background: var(--blue-light); color: var(--blue-dk); box-shadow: inset 0 0 0 2px var(--blue-border), inset 0 -3px 0 var(--blue-border); }
+.law .kb13 .k.ca .kb-m { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 2px var(--line), inset 0 -3px 0 var(--line); }
+.law .kb13 .kb-n { font-weight: 800; color: var(--blue-dk); }
+.law .kb13 .kb-u { left: 8px; right: 8px; bottom: 5px; height: 3px; border-radius: 2px; background: var(--blue); }
+.law .kb13 .kb-c { margin-top: 7px; font: 700 13px/1.3 var(--kf); color: var(--gray); }
+.law .kb13 .fq-n .kb-c { margin: 0 0 7px; }
+.law .kb13 .k.ok .kb-m { background: var(--green-bg); color: var(--green-dk); box-shadow: inset 0 0 0 2px var(--green-pale), inset 0 -3px 0 var(--green-pale); }
+.law .kb13 .k.ok .kb-n { color: var(--green-dk); }
+.law .kb13 .op { font-weight: 800; color: var(--gray-icon); }
+.law .kb13 .pl { color: var(--ink); }
+.law .kb13 .fq-bar { height: 3px; border-radius: 2px; background: var(--ink); }
+.law .kb13.hide .k:not(.ca) .kb-m { background: #F7F7F7; box-shadow: none; }
+.law .kb13.hide .k:not(.ca) .kb-m::before { border-radius: 12px; border-color: var(--gray-icon); }
+.law .kb13 .kb-hint { font: 700 15px var(--kf); color: var(--gray-icon); }
+
+/* 12 and 13 on the first three rules (2026-10-30): a blank to pick into, the three words under the rule, and at the end the numbers small under their words */
+.law .kb12 .k.gap .kb-m { background: #F8F8F8; box-shadow: none; }
+.law .kb12 .k.gap .kb-m::before { content: ""; position: absolute; inset: 0; border-radius: 6px; border: 2px dashed #CCC; }
+.law .kb12 .k.gap .kb-w { transform: translateY(115%); }
+.law .kb12 .k.ask .kb-m::before { border-color: #456DFF; animation: kbAsk 1.2s ease-in-out infinite; }
+@keyframes kbAsk { 50% { opacity: .35; } }
+.law .kb-pick { position: absolute; left: 0; right: 0; bottom: 12px; display: flex; justify-content: center; gap: 8px; padding: 0 8px; }
+.law .kb-ch { flex: none; padding: 3px 14px 5px; border: 2px solid #E5E5E5; border-bottom-width: 4px; border-radius: 12px; background: #fff; font: 600 17px/1.5 var(--kf); color: #141414; white-space: nowrap; cursor: pointer; }
+.law .kb-ch:active { transform: translateY(2px); border-bottom-width: 2px; }
+.law .kb-ch.ok { border-color: #29CC57; background: #D4F5DD; color: #009B2B; }
+.law .kb-ch.no { border-color: #FF8585; background: #FFEFEF; color: #C43939; cursor: default; }
+.law .kb12 .kb-c.num { font-weight: 700; font-size: 18px; color: #294BC6; }
+.law .kb12 .k.ok .kb-c.num { color: #009B2B; }
+.law .kb-c.num .fr { font-size: 1.05em; }
+.law .kb13 .k.gap .kb-m { background: #F7F7F7; box-shadow: none; }
+.law .kb13 .k.gap .kb-m::before { border-radius: 12px; border-color: var(--gray-icon); }
+.law .kb13 .k.ask .kb-m::before { border-color: var(--blue); }
+.law .kb13 .kb-ch { border-color: var(--line); font: 700 17px/1.5 var(--kf); color: var(--ink); }
+.law .kb13 .kb-ch.ok { border-color: var(--green-pale); background: var(--green-bg); color: var(--green-dk); }
+.law .kb13 .kb-ch.no { border-color: #FFB2B2; background: #FFDFE0; color: #EA2B2B; }
+.law .kb13 .kb-c.num { font: 800 18px/1.3 var(--kf); color: var(--blue-dk); }
+.law .kb13 .k.ok .kb-c.num { color: var(--green-dk); }
+.law .nw-f { -webkit-mask: var(--nwmask, none); mask: var(--nwmask, none); }
+.law.law { --nwf: transparent; --nwbg: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 71 65%22%3E%3Cdefs%3E%3CclipPath id=%22c%22%3E%3Cpolygon points=%2219.5,4 51.5,4 67,29 51.5,54 19.5,54 4,29%22/%3E%3C/clipPath%3E%3C/defs%3E%3Cpolygon points=%2219.5,11 51.5,11 67,36 51.5,61 19.5,61 4,36%22 fill=%22%23E6A000%22 stroke=%22%23E6A000%22 stroke-width=%228%22 stroke-linejoin=%22round%22/%3E%3Cpolygon points=%2219.5,4 51.5,4 67,29 51.5,54 19.5,54 4,29%22 fill=%22%23FFC800%22 stroke=%22%23FFC800%22 stroke-width=%228%22 stroke-linejoin=%22round%22/%3E%3Cg clip-path=%22url%28%23c%29%22 fill=%22%23FFD940%22%3E%3Cpolygon points=%2227,60 38,60 63,-4 52,-4%22/%3E%3Cpolygon points=%2242,60 47,60 72,-4 67,-4%22/%3E%3C/g%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat; --nwmask: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 71 65%22%3E%3Cg stroke=%22%23000%22 stroke-width=%228%22 stroke-linejoin=%22round%22%3E%3Cpolygon points=%2219.5,11 51.5,11 67,36 51.5,61 19.5,61 4,36%22/%3E%3Cpolygon points=%2219.5,4 51.5,4 67,29 51.5,54 19.5,54 4,29%22/%3E%3C/g%3E%3C/svg%3E") 0 0 / 100% 100% no-repeat; --nwm: var(--gold-dk); --nwt: #CD7900; }
+.law.law .nw-c { top: 3px; width: 21px; height: 19px; border-radius: 0; }
+.law.law .nw-b { background: var(--gold-dk); -webkit-mask: var(--nwmask); mask: var(--nwmask); }
+
+.law.law .nw-tag { height: 34px; gap: 6px; font-size: 16px; }
+.law.law .nw-ic { width: 40px; height: 32px; }
+.law.law .nw-c { top: 3px; width: 27px; height: 25px; }
+.law.law .nw-f svg { width: 44%; margin-bottom: 11%; }
+.law .nw-l .s { fill: none; stroke: currentColor; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.law .nw-l .f, .law .nw-l .j { fill: currentColor; }
+
+.law .nw-tag { position: relative; display: flex; align-items: center; gap: 5px; height: 26px; margin: 0 2px 6px; font-size: 15px; font-weight: 800; color: var(--nwt); }
+.law .nw-ic { position: relative; flex: none; width: 26px; height: 24px; }
+.law .nw-c { position: absolute; top: 2px; inset-inline-start: 4px; width: 15px; height: 19px; border-radius: 4px; transform-origin: 50% 60%; }
+.law .nw-f { z-index: 2; background: var(--nwbg, var(--nwf)); box-shadow: var(--nwsh, none); display: grid; place-items: center; color: var(--nwm); }
+.law .nw-f svg { width: 54%; height: auto; }
+.law .nw-b { z-index: 1; background: var(--nwm); transform: translate(-6px, 1px) rotate(-10deg); }
+.law .nw-ic.swap .nw-b { z-index: 3; }
+.law .nw-w { display: inline-block; opacity: 0; }
+/* the flying card: a point on Duolingo's path (.nw-fly, moved and turned by the path) holding a window (.nw-win) onto a sheet of
+   the turn drawn before it flies (.nw-sheet, nwSprite), stepped frame by frame; both are transforms, so the GPU runs the whole
+   flight and nothing is painted while it flies */
+.law .nw-fly { position: absolute; z-index: 30; left: 0; top: 0; width: 0; height: 0; pointer-events: none; will-change: transform; }
+.law .nw-win { position: absolute; overflow: hidden; }
+.law .nw-sheet { position: absolute; left: 0; top: 0; will-change: transform; }
+.law .ad-go { position: relative; z-index: 1; }
+.law .ad-slab { position: absolute; z-index: 0; display: block; background: var(--line); opacity: 0; pointer-events: none; }
+.law .ad-sh { position: absolute; inset: 0; z-index: -1; display: block; border-radius: inherit; overflow: hidden; pointer-events: none; }
+.law .ad-sh b { position: absolute; top: 0; bottom: 0; left: 0; width: 38px; background: #F8FFF2; transform-origin: 0 0; translate: -200px 0; }
+.law .ad-sp { position: absolute; z-index: 1; display: block; pointer-events: none; scale: 0; }
+.law .ad-sp svg { display: block; width: 100%; height: 100%; fill: #F8FFF2; }
+.law .ad-sp.a { top: 4px; left: 4px; }
+.law .ad-sp.b { bottom: 4px; right: 4px; }
+/* a rule's level: one step of the review ladder (1, 3, 7, 14, 30 days) a dot; all five and it turns gold */
+.law .lv { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 14px; }
+.law .lv-dots { display: flex; gap: 8px; }
+.law .lv-dots i { width: 30px; height: 14px; border-radius: 7px; background: var(--line); box-shadow: inset 0 -3px 0 #D5D5D5; }
+.law .lv-dots i.on { background: var(--blue); box-shadow: inset 0 -3px 0 var(--blue-dk); }
+.law .lv.gold .lv-dots i.on { background: var(--gold); box-shadow: inset 0 -3px 0 var(--gold-dk); }
+.law .lv-t { margin: 0; font-size: 15px; font-weight: 800; color: var(--gray); }
+.law .lv-t b { color: var(--blue-dk); }
+.law .lv.gold .lv-t b { color: #CD7900; }
+.law .rl { display: flex; gap: 3px; flex: none; }
+.law .rl i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.law .rl i.on { background: var(--blue); }
+.law .rl.gold i.on { background: var(--gold); }
+.law .dg { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.law .dlab { display: flex; gap: 6px; justify-content: center; font-size: 13.5px; font-weight: 800; flex-wrap: nowrap; }
+.law .dlab span { border: 2px solid var(--line); border-radius: 10px; padding: 0 8px; color: var(--gray); white-space: nowrap; }
+.law .dlab b { color: var(--blue-dk); margin-inline-start: 4px; }
+.law .dlab .l3 b { color: var(--green-dk); }
+.law .cells { display: flex; gap: 6px; }
+.law .cell { width: 32px; height: 38px; border-radius: 9px; border: 2px solid var(--line); display: grid; place-items: center; font-size: 18px; font-weight: 800; color: var(--ink2); transition: background .2s, border-color .2s, color .2s; }
+.law .cell.on { background: var(--blue); border-color: var(--blue-dk); color: #fff; }
+.law .cell.ring { border-color: var(--blue-border); }
+.law .bars { position: relative; display: flex; align-items: flex-end; gap: 20px; padding: 0 24px; }
+.law .bc { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.law .bv { font-size: 14px; font-weight: 800; color: var(--ink2); }
+.law .bu { display: flex; flex-direction: column-reverse; gap: 1px; }
+.law .bu i { display: block; width: 36px; height: 9px; border-radius: 2px; background: var(--blue); transition: background .2s; }
+.law .bu i.mv { background: var(--orange); } .bu i.lv { background: var(--green); } .bu i.hl { background: var(--blue-dk); }
+.law .ml { position: absolute; left: 0; right: 0; height: 0; border-top: 2px dashed var(--green-dk); opacity: 0; }
+.law svg.d { display: block; overflow: visible; direction: ltr; }
+.law svg.d text { font-family: var(--font); font-weight: 800; }
+.law .mul { direction: ltr; display: grid; grid-template-columns: 26px 30px 30px 30px; row-gap: 2px; font-size: 30px; font-weight: 800; line-height: 1.2; text-align: center; color: var(--ink2); position: relative; }
+.law .mul .d { transition: color .3s, opacity .3s; }
+.law .mul.dim .t { opacity: .25; }
+.law .mul .op2 { color: var(--gray-icon); }
+.law .mul .bar2 { grid-column: 1 / -1; height: 3px; border-radius: 2px; background: var(--ink2); margin: 2px 0; }
+.law .mul .u { color: var(--blue-dk); }
+.law .mul .band { position: absolute; top: -4px; right: -3px; width: 36px; height: 82px; border-radius: 10px; background: var(--blue-light); z-index: -1; opacity: 0; }
+.law .mul .pr { opacity: 0; }
+.law .mul .lastc { position: relative; color: var(--green-dk); }
+.law .mul .lastc::after { content: ""; position: absolute; inset: 2px -2px; border: 3px solid var(--green); border-radius: 50%; opacity: 0; transition: opacity .2s; }
+.law .mul .lastc.on::after { opacity: 1; }
+.law .dl { flex-direction: row; gap: 22px; align-items: center; }
+.law .step { display: flex; flex-direction: column; gap: 6px; font-size: 20px; font-weight: 800; }
+.law .step > * { opacity: 0; white-space: nowrap; }
+.law .step .s2 { color: var(--green-dk); }
+.law .qrow { display: flex; align-items: center; gap: 7px; direction: rtl; }
+.law .qd { position: relative; width: 26px; height: 26px; border-radius: 50%; border: 2.5px solid var(--ink2); background: #fff; }
+.law .qd.me { background: var(--gold); border-color: var(--gold-dk); }
+.law .qd.twice { box-shadow: 0 0 0 4px var(--red-soft); }
+.law .qd i { position: absolute; left: 50%; width: 22px; margin-left: -11px; text-align: center; font-style: normal; font-size: 12px; font-weight: 800; line-height: 1.5; border-radius: 6px; color: #fff; opacity: 0; }
+.law .qd .f { bottom: calc(100% + 6px); background: var(--blue); }
+.law .qd .b { top: calc(100% + 6px); background: var(--purple); }
+.law .qhead, .law .qends { display: flex; justify-content: space-between; width: 100%; font-size: 12px; font-weight: 800; color: var(--gray-icon); }
+.law .qhead { margin-bottom: 22px; } .qends { margin-top: 22px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
