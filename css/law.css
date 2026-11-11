@@ -243,6 +243,12 @@ html[data-motion="reduced"] .lw-stack * { animation: none !important; }
 .lw-end.many .lw-row-hx { width: 32px; height: 30px; }
 .lw-end.many .lw-row-t { flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; }
 .lw-end.many .lw-row-t b { font-size: 15px; }
+/* on a narrow phone the name keeps its own line and the steps sit under it, as with fewer rules, so «العدد المشترك» is never
+   cut in two (QA, 2026-11-08: names wrapped beside their dots at 320) */
+@media (max-width: 360px) {
+  .lw-end.many .lw-row-t { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; }
+  .lw-end.many .lw-row-t b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+}
 .lw-dt-cue b { color: var(--ink); }
 /* the fixed name on «كمّل القانون» is plain ink: nothing to clip, so its first letter is never cut */
 .lw-fill .kb13 .k.ca .kb-m { overflow: visible; }
@@ -255,6 +261,8 @@ html[data-motion="reduced"] .lw-stack * { animation: none !important; }
   .lw-learn .nw-tag { height: 24px; margin-bottom: 0; }
   .law .kb13 .kb-card { padding-top: 40px; padding-bottom: 44px; }
   .law .kb13 .kb-card:has(.fq) { padding-top: 50px; }
+  /* the numbers stacked over a fraction take the card's top: its «القانون» label gives way (QA, 2026-11-08: the two collided at 320 × 568) */
+  .law .kb13 .kb-card:has(.fq) .kb-tag { display: none; }
   .law .kb13 .kb-fx { font-size: 20px; }
   .lw-learn .kb13 .kb-card.asked { padding-bottom: 22px; }
   .lw-learn .stage { min-height: 70px; margin-top: 2px; }
@@ -320,7 +328,7 @@ html[data-motion="reduced"] .lw-stack * { animation: none !important; }
 .bk2-pages { flex: 1 1 0; min-height: 0; position: relative; }
 .bk2-track { position: absolute; inset: 0; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .bk2-track::-webkit-scrollbar { display: none; }
-.bk2-pg { flex: 0 0 100%; display: flex; flex-direction: column; gap: 8px; scroll-snap-align: start; }
+.bk2-pg { flex: 0 0 100%; display: flex; flex-direction: column; gap: 8px; scroll-snap-align: start; overflow-y: auto; scrollbar-width: none; }   /* a card taller than its page (a phone on its side) scrolls inside it rather than being cut (QA, 2026-11-08) */
 .bk2-rule { display: flex; gap: 10px; padding: 10px 12px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 16px; background: #fff; }
 .bk2-num { flex: none; width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; background: var(--u); box-shadow: 0 3px 0 var(--u-s); color: #fff; font-size: 14px; font-weight: 800; margin-top: 1px; }
 .bk2-num svg { width: 17px; height: 17px; }
@@ -568,6 +576,8 @@ html[data-motion="reduced"] .lw3-shine { animation: none; display: none; }
 .lw-pk-say { margin: 0; font-size: 16px; font-weight: 700; line-height: 1.6; color: var(--gray); }
 .lw-pk-say em { font-style: normal; color: var(--blue-dk); }
 .lw-pk-ok { flex: none; }
+.lw-pk-rs { display: flex; flex-direction: column; gap: inherit; flex: none; }
+.lw-pk.tight .lw-pk-say { display: none; }
 
 /* «الأعداد المكمّلة»: pair the numbers that make ١٠٠ (2026-11-08) */
 .lw-pairs .pr-box { padding: 12px 12px 10px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 16px; background: #fff; text-align: center; }
@@ -608,6 +618,7 @@ html[data-motion="reduced"] .lw3-shine { animation: none; display: none; }
 .lw-play .pl-count b { display: inline-block; min-width: 1.2em; color: var(--ink); font-size: 22px; }
 .lw-play .pl-f { margin: 10px 0 0; padding-top: 10px; border-top: 2px dashed var(--line); font-size: 16px; font-weight: 800; line-height: 1.7; color: var(--ink); visibility: hidden; }
 .lw-play .pl-f.on { visibility: visible; }
+.lw-play .pl-f .nw { white-space: nowrap; }
 .lw-play .pl-f b { display: inline-block; padding: 0 8px; border-radius: 10px; background: var(--green-bg); color: var(--green-dk); box-shadow: inset 0 0 0 2px var(--green-pale); }
 .lw-play .ln-tile.sel { background: var(--blue-light); border-color: var(--blue-border); color: var(--blue-dk); }
 .lw-play .ln-tile.no { background: var(--red-bg); border-color: var(--red); }
@@ -637,7 +648,8 @@ html[data-motion="reduced"] .lw3-shine { animation: none; display: none; }
 /* the queue: the front on the right, «أنت» ringed in gold, a tag per end that turns green at the example's place */
 .lw-queue .lf-ask b { color: var(--blue-dk); }
 .lw-queue .qu-ends { display: flex; justify-content: space-between; font-size: 13px; font-weight: 800; color: var(--gray-icon); }
-.lw-queue .qu-ends span:first-child::after { content: ' ←'; } .lw-queue .qu-ends span:last-child::before { content: '← '; }
+/* each end's arrow points out of the queue, toward its own edge */
+.lw-queue .qu-ends span:first-child::before { content: '→ '; } .lw-queue .qu-ends span:last-child::after { content: ' ←'; }
 .lw-queue .qu-line { display: flex; justify-content: center; align-items: flex-end; gap: 4px; min-height: 64px; margin: 6px 0 4px; }
 .lw-queue .qu-p { display: flex; flex-direction: column; align-items: center; width: 32px; }
 .lw-queue .qu-p svg { width: 30px; height: 36px; }
@@ -674,3 +686,143 @@ html[data-motion="reduced"] .lw3-shine { animation: none; display: none; }
   .lw-play .pl-f { margin-top: 6px; padding-top: 6px; font-size: 15px; line-height: 1.6; }
   .lw-queue .qu-add { margin-top: 10px; }
 }
+
+/* a short phone keeps the book's gold box to one row, so a page holds more than one rule card (QA, 2026-11-08: 13 pages at 320 × 568) */
+@media (max-height: 640px) {
+  .bk2-laws { padding: 5px 8px; }
+  .bk2-laws-h { display: none; }
+  .bk2-laws-r { flex-wrap: nowrap; overflow: hidden; }
+  .bk2-law { flex: none; }
+  .bk2-law.more { order: -1; }
+}
+
+/* the hand-played screens have no «تحقق» to show, so فهيم's help stands in the button's empty place: the screen never shrinks
+   or moves under the finger when he speaks (QA, 2026-11-08: the pairs screen went 86% → 73% at 320 × 568 over two misses) */
+.lw-pairs, .lw-play { position: relative; }
+.lw-fill .lf-help.lw-hfloat { position: absolute; z-index: 46; inset-inline: 16px; bottom: calc(14px + env(safe-area-inset-bottom)); margin: 0; max-width: 568px; margin-inline: auto; }
+.lw-fill .lf-help.lw-hfloat p { font-size: 14px; padding: 7px 11px; line-height: 1.4; }
+.lw-fill .lf-help.lw-hfloat img { width: 42px; height: 42px; }
+.lw-fill:has(.lf-chain) .lf-help.lw-hfloat { bottom: calc(100px + env(safe-area-inset-bottom)); }   /* the order keeps «تحقق»: its help floats over the button, never on it (QA, 2026-11-08) */
+/* a rule's page from «قوانيني» or the book: its card, cue, trap and lesson fitted between its title and «رجوع» (QA, 2026-11-08) */
+.lw-det .lw-in { display: flex; flex-direction: column; gap: 10px; }
+.lw-det .lw-trap { margin-bottom: 0; }
+/* the new rules' names wrap rather than end in «…»: with three of them, or one long one at 320, the card showed a cut name and
+   a count (QA, 2026-11-08) */
+.wl2 .wl-name { white-space: normal; text-overflow: clip; overflow: visible; }
+.wl2.many .wl-name { font-size: 14px; line-height: 1.25; }
+/* a phone on its side: «قوانيني» drops its subline and the tabs' labels, so its rules get the room (QA, 2026-11-08: a 37px window) */
+@media (max-height: 460px) { .lw-coll .lw-sub, .lw-coll .lw-tt, .lw-coll .lw-tb span { display: none; } .lw-coll h2 { font-size: 18px; } }
+/* «وش الناقص؟»'s words keep off the card's rim (QA, 2026-11-08: 2px from it in three rules at 402) */
+.law .kb-pick { padding-inline: 8px; }
+/* the lesson card under a node on a short phone: tighter, so its button clears the tab bar once the node is held under the
+   unit banner (QA, 2026-11-08: 15px of «ابدأ» under the tab bar at 320 × 568) */
+@media (max-height: 600px) {
+  .lesson-pop { padding: 12px 14px; }
+  .lesson-pop h3 { font-size: 19px; }
+  .lesson-pop .lp-sub { margin-bottom: 7px; }
+  .lesson-pop .lp-law { margin-bottom: 8px; padding-block: 4px; }
+  .lesson-pop .lp-boost { margin: 8px 0 8px; padding-block: 6px 4px; }
+}
+/* when even the smallest cards do not fit (three rules on a phone turned sideways) the cards scroll and «تمام» stays at the
+   sheet's foot (QA, 2026-11-08) */
+.lw-pk-foot { flex: none; display: flex; flex-direction: column; }
+/* «تمام» stays in sight on the sheet's own white, so a card scrolling under it is hidden rather than half-seen around the
+   button (QA, 2026-11-08) */
+.lw-pk .lw-pk-foot { position: sticky; bottom: calc(-18px - env(safe-area-inset-bottom)); z-index: 2; margin: 0 -16px calc(-18px - env(safe-area-inset-bottom));
+  padding: 8px 16px calc(18px + env(safe-area-inset-bottom)); background: var(--snow); }
+/* «وش الناقص؟»'s words sat on the rule's line at 320 wide: they sit a little lower, still inside the card (QA, 2026-11-08) */
+@media (max-width: 360px) { .law .kb-pick { bottom: 7px; } }
+/* a long review (eight rules and up) on a short phone: فهيم steps aside and the rows tighten, so all of them fit at a size
+   that reads (QA, 2026-11-08: twelve rules scrolled at 320 × 568, three under «متابعة») */
+@media (max-height: 700px) {
+  .lw-end.lots .obt { flex-direction: column; }
+  .lw-end.lots .obt-duo { display: none; }
+  .lw-end.lots .lw-rows { gap: 4px; }
+  .lw-end.lots .lw-row { padding: 3px 10px; border-bottom-width: 3px; }
+  .lw-end.lots .lw-row-hx { width: 26px; height: 24px; }
+}
+/* the proof's drawing keeps a readable size on a short phone: the stage holds its room and the whole screen is drawn a little
+   smaller instead (`fitIn`), so the drawing is not squeezed into the 70px the card left it (QA, 2026-11-08: «work» at .36,
+   its labels at 4px, at 320 × 568) */
+@media (max-height: 700px) and (min-height: 601px) { .lw-learn .stage { min-height: 120px; } }   /* more pushed the caption under «كمّل» (QA, 2026-11-08) */
+@media (max-height: 600px) { .lw-learn .stage { min-height: 96px; } }
+/* once the rule is back in words the drawing has done its work: it gives way so the last caption stays above «كمّل» (QA, 2026-11-08) */
+@media (max-height: 700px) { .lw-learn:has(.kb-c.num) .stage { min-height: 0; } }   /* a drawing never shrinks to a third on the smallest phones (QA, 2026-11-08: «mean» at .34) */
+
+/* the review's end: «متابعة» and under it a quiet «قوانيني» */
+.lw-end-bar { display: flex; flex-direction: column; gap: 4px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+.lw-end .lw-end-body { padding-bottom: calc(158px + env(safe-area-inset-bottom)); }
+.lw-end-bar .lw-mine { min-height: 44px; padding: 8px; box-shadow: none; border: 0; background: none; color: var(--blue); font-size: 15px; }
+/* the unit book reads at a glance (the user, 2026-11-08: «make the UX bigger why it is the UI so small»): bigger rows for the lessons
+   reached, and a lesson not reached yet is a quiet one-line row with a padlock that does not open */
+.bk2-list { gap: 8px; grid-template-columns: minmax(0, 1fr); }
+.bk2-les { min-width: 0; }
+.bk2-les { padding: 9px 14px 9px 12px; gap: 12px; border-radius: 18px; }
+.bk2-les .bk2-hx { width: 50px; height: 46px; }
+.bk2-les-t small { font-size: 13.5px; }
+.bk2-les-t b { font-size: 17px; line-height: 1.3; }
+.bk2-cnt { font-size: 14px; } .bk2-cnt b { font-size: 17px; }
+.bk2-gold { width: 34px; height: 31px; }
+.bk2-chev { width: 20px; height: 20px; }
+.bk2-les.lock { padding-block: 5px; background: #F7F7F7; border-bottom-width: 2px; cursor: default; }
+.bk2-les.lock:active { transform: none; border-bottom-width: 2px; }
+.bk2-les.lock .bk2-hx { width: 38px; height: 35px; }
+.bk2-les.lock .bk2-les-t { flex-direction: row; align-items: baseline; gap: 6px; }
+.bk2-les.lock .bk2-les-t small { flex: none; }
+.bk2-les.lock .bk2-les-t b { font-size: 15.5px; line-height: 1.25; color: var(--gray-icon, #AFAFAF); }
+.bk2-listbox, .bk2-listbox * { scrollbar-width: none; }
+.bk2-lk { flex: none; width: 22px; height: 22px; color: var(--gray-icon, #AFAFAF); }
+.bk2-lk svg { width: 100%; height: 100%; display: block; }
+@media (max-height: 700px) { .bk2-les { padding: 6px 12px 6px 10px; } .bk2-les .bk2-hx { width: 44px; height: 40px; } .bk2-les-t b { font-size: 16px; } .bk2-les.lock { padding-block: 3px; } }
+/* «الحيلة» (the user, 2026-11-08: the quick trick, not the proof): a card on its lip under the rule, the trick in one line with its
+   key words lighting blue one after another, then the example in an inset, every «÷» stacked, the answer a green pill */
+.lw-learn .stage.tk-on { height: auto; flex: 0 1 auto; min-height: 0; cursor: pointer; display: flex; align-items: flex-start; justify-content: center; }
+.lw-tk { width: 100%; box-sizing: border-box; position: relative; padding: 18px 14px 12px; border: 2px solid var(--line, #E5E5E5); border-bottom-width: 5px; border-radius: 20px; background: #fff; text-align: center; }
+.tk-tag { position: absolute; top: -14px; inset-inline-start: 14px; display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 10px 0 8px; border-radius: 13px;
+  background: var(--gold, #FFC800); box-shadow: 0 2px 0 var(--gold-dk, #E5A500); color: #fff; font: 800 14px/26px var(--font); }
+.tk-tag svg { width: 15px; height: 15px; color: #fff; }
+.tk-say { margin: 0 0 10px; font-size: 19px; font-weight: 800; line-height: 1.55; color: var(--ink, #4B4B4B); text-wrap: balance; }
+.tk-k { font-weight: 800; color: inherit; padding: 0 5px 1px; border-radius: 8px; transition: background .25s, color .25s, box-shadow .25s; }
+.tk-k.lit { background: var(--blue-light, #DDF4FF); color: var(--blue-dk, #1899D6); box-shadow: 0 2px 0 var(--blue-border, #84D8FF); }
+.tk-ex { display: grid; gap: 6px; padding: 10px 10px; border-radius: 14px; background: #F7F7F7; }
+.tk-l { margin: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 4px; font-size: 18px; font-weight: 800; line-height: 1.5; color: var(--ink, #4B4B4B); }
+.tk-l + .tk-l { padding-top: 6px; border-top: 2px dashed var(--line, #E5E5E5); }
+.tk-n { display: inline-block; }
+.tk-fr { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.15; margin: 0 2px; }
+.tk-fr > i { display: block; align-self: stretch; height: 2.5px; margin: 2px 0; border-radius: 2px; background: currentColor; }
+.tk-ans { display: inline-block; font-style: normal; padding: 0 9px; border-radius: 10px; border: 2px solid transparent; transition: background .25s, color .25s, border-color .25s; }
+.tk-ans.lit { background: var(--green-bg, #D7FFB8); border-color: var(--green-pale, #A5ED6E); color: var(--green-dk, #58A700); box-shadow: 0 2px 0 var(--green-pale, #A5ED6E); }
+@media (max-height: 700px) { .lw-tk { padding: 16px 12px 10px; } .tk-say { font-size: 17px; margin-bottom: 8px; } .tk-l { font-size: 16px; } .tk-ex { padding: 8px; } }
+@media (max-height: 600px) { .tk-say { font-size: 16px; line-height: 1.45; } .tk-l { font-size: 15px; } }
+
+/* «تقدّمك اليوم»'s rule card says what each part is (the user, 2026-11-08, circling «ترتيب العمليات ٢/٣٥»): what it is over the
+   name, the set's count in words, and the five reviews named under the bar */
+.wl2 .wl-kick { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 800; color: var(--gold-dk, #E5A500); }
+.wl2 .wl-kick .wn-count { font-size: 13px; font-weight: 800; color: var(--gray); white-space: nowrap; }
+.wl2 .wn-tx > b { display: block; }
+.wl2.won .wl-kick { color: var(--brown, #CD7900); }
+.wl2.many .wl-name, .wl2 .wl-name { font-size: 17px; }
+/* فهيم's bubble holds two lines from the start, so his second line never pushes the rule and «الحيلة» down while they are read (the
+   student tester, 2026-11-08: 14–39px) */
+.lw-learn .obs-bubble { min-height: calc(3em + 26px); box-sizing: border-box; display: flex; align-items: center; }
+.lw-learn .obs-bubble > .tx { display: block; width: 100%; }
+@media (max-height: 700px) { .lw-learn .obs-bubble { min-height: calc(3em + 20px); } }
+@media (max-height: 600px) { .lw-learn .obs-bubble { min-height: calc(2.8em + 16px); } }
+/* the progress card keeps what its five steps are on a short phone */
+@media (max-height: 700px) { .wl2 .wn-next.wl-next { display: block; font-size: 12px; } }
+/* the unit book on a narrow phone: the titles keep their room */
+@media (max-width: 380px) { .bk2-les .bk2-gold { display: none; } .bk2-les { gap: 8px; padding-inline: 10px 8px; } .bk2-les-t b { font-size: 15.5px; } .bk2-les .bk2-hx { width: 40px; height: 37px; } }
+.tk-k { padding: 0 3px 1px; }
+/* with «الحيلة» under it the rule card needs no room for numbers under its words */
+.lw-learn:has(.stage.tk-on) .kb13 .kb-card { padding-bottom: 18px; }
+@media (max-height: 700px) { .lw-learn:has(.stage.tk-on) .kb13 .kb-card { padding-top: 32px; padding-bottom: 12px; } .lw-learn .stage.tk-on { margin-top: 14px; } }
+.tk-k { display: inline-block; white-space: nowrap; }   /* a lit phrase («الأقرب لبعض») never breaks across two lines */
+
+/* the rules card on «إحصائياتي»: the stats cards' row with the gold hexagon in place of the round icon */
+
+.lw-stat-hx { position: relative; flex: none; width: 46px; height: 42px; }
+.lw-stat-hx svg.lw-hex { display: block; width: 100%; height: 100%; }
+.lw-stat-n { position: absolute; top: -6px; left: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--red); color: #fff;
+  border: 2px solid var(--snow); font-size: 12px; font-weight: 800; line-height: 17px; text-align: center; }
+.lw-stat.due .mc-go { color: var(--gold-dk); }
+.lw-stat.clean .mc-go { color: var(--gray); }

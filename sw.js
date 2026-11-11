@@ -29,7 +29,7 @@
    The dev harnesses are never served from a cache, neither the page nor
    anything it loads: they exist to show the file on disk right now. */
 
-const VERSION = "98";
+const VERSION = "99";
 const SHELL = "qudrati-shell-" + VERSION;
 const RUNTIME = "qudrati-runtime-" + VERSION;
 
@@ -61,6 +61,8 @@ const CORE = [
   /* the interface's own glyphs: without these a lesson still works but reads as
      a page of missing images */
   "assets/icons/book.svg",
+  "assets/icons/nav-exam-192.png",
+  "assets/app-icon/icon-192.png",
   "assets/icons/book-locked.svg",
   "assets/icons/check.svg",
   "assets/icons/dumbbell.svg",
@@ -77,6 +79,11 @@ const CORE = [
   "assets/icons/nav-exam-64.png",
   "assets/icons/nav-home.svg",
   "assets/icons/nav-league.svg",
+  "assets/icons/ranks/rank-bronze.png",
+  "assets/icons/ranks/rank-silver.png",
+  "assets/icons/ranks/rank-gold.png",
+  "assets/icons/ranks/rank-diamond.png",
+  "assets/icons/ranks/rank-champion.png",
   "assets/icons/nav-more.svg",
   "assets/icons/nav-stats.svg",
   "assets/icons/nav-trophy.svg",

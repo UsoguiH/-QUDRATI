@@ -5,20 +5,22 @@
   const H = M.h, { A, fx, anim, RISE, POP, pulse, pop, show, up, rnd, pick, shuffle, four, SHAKE } = C;
   const $ = (st, s) => st.querySelector(s), $$ = (st, s) => [...st.querySelectorAll(s)];
   const S = 'green';
+  /* a count with its noun as Arabic counts it: ٣–١٠ the plural, ١١–٩٩ the singular with its tanween, a round hundred the bare singular */
+  const nn = (n, pl, acc, gen) => { const m = n % 100; return `${A(n)} ${m >= 3 && m <= 10 ? pl : m >= 11 ? acc : gen || acc}`; };
   /* a node on a number line: a circle with its number */
   const node = (x, y, v, cls = '', r = 14) => `<g class="nl ${cls}" data-v="${v}"><circle cx="${x}" cy="${y}" r="${r}"/><text x="${x}" y="${y + 1}" text-anchor="middle" dominant-baseline="central">${A(v)}</text></g>`;
   const arc = (x1, x2, y, h = 16) => `<path class="jp" d="M${x1} ${y} Q${(x1 + x2) / 2} ${y - h} ${x2} ${y}" fill="none" stroke="#1CB0F6" stroke-width="2.5" stroke-linecap="round" style="opacity:0"/>`;
 
   const rules = [
-    { key: 'fromto', name: 'من… إلى، وبين', tok: [{ t: 'من… إلى' }, '=', { t: 'الفرق' }, '+', '١', '،', 'بين', '=', { t: 'الفرق' }, '−', '١'],
+    { key: 'fromto', name: 'من… إلى، وبين', tok: [{ t: 'من… إلى' }, '=', { t: 'الفرق' }, '+', '١،', 'بين', '=', { t: 'الفرق' }, '−', '١'],
       say: '*من… إلى*: الفرق + ١. و«بين»: الفرق − ١.', cue: 'تجيك لما تقرا «كم عدداً من … إلى …» أو «كم عدداً بين … و…».',
       trap: '«بين» ما تحسب الطرفين، و«من… إلى» تحسبهم.' },
-    { key: 'evcount', name: 'كم عدداً زوجياً؟', tok: [{ t: 'العدد' }, '=', { t: 'آخر' }, '−', { t: 'أول' }, '÷', '٢', '+', '١'], tail: 7,
+    { key: 'evcount', name: 'عدّ الزوجية والفردية', tok: [{ t: 'العدد' }, '=', { t: 'آخر عدد' }, '−', { t: 'أول عدد' }, '÷', '٢', '+', '١'], tail: 7,
       say: '*العدد*: الفرق بين آخر وأول، على ٢، وزد ١.', cue: 'تجيك لما تقرا «كم عدداً زوجياً (أو فردياً) من … إلى …».',
-      trap: 'لا تنسى + ١: القفزات أقل من الأعداد بواحد.', notDecoy: ['آخر زوجي', 'أول زوجي', 'آخر عدد', 'آخر فردي'] },
+      trap: 'لا تنسى + ١: القفزات أقل من الأعداد بواحد.', notDecoy: ['آخر زوجي', 'أول زوجي', 'آخر عدد', 'آخر فردي', 'أول فردي'] },
     { key: 'evedge', name: 'الأطراف الفردية', tok: [{ t: 'العدد' }, '=', { t: 'آخر زوجي' }, '−', { t: 'أول زوجي' }, '÷', '٢', '+', '١'], tail: 7,
-      say: 'الطرف فردي؟ *ما يدخل*. ابدأ من أول زوجي وانتهِ بآخر زوجي.', cue: 'تجيك لما تقرا «كم عدداً زوجياً بين ٥ و ٣١» والطرفين فرديين.',
-      trap: 'لا تبدأ من الطرف الفردي: أول زوجي بعد ٥ هو ٦.', notDecoy: ['آخر', 'أول', 'آخر عدد', 'آخر فردي'] },
+      say: 'الطرف فردي؟ *ما يدخل*. ابدأ من أول زوجي وانتهِ بآخر زوجي.', cue: 'تجيك لما تقرا «كم عدداً زوجياً بين ٥ و٣١» والطرفين فرديين.',
+      trap: 'لا تبدأ من الطرف الفردي: أول زوجي بعد ٥ هو ٦.', notDecoy: ['آخر', 'أول', 'آخر عدد', 'أول عدد'] },
     { key: 'gifts', name: 'الهدايا', tok: [{ t: 'الهدايا' }, '=', { t: 'العدد' }, '×', { t: '(العدد − ١)' }], wswap: [1, 2],
       say: '*الهدايا*: كل واحد يهدي الباقين، وكل هدية لها اتجاه.', cue: 'تجيك لما يعطي كل واحد كل واحد شي: هدايا، رسائل، بطاقات.',
       trap: 'ما تقسم على ٢: هدية أحمد لسعد غير هدية سعد لأحمد.', notDecoy: ['الكل', 'الخطوط', '(الخطوط − ١)'] },
@@ -31,7 +33,7 @@
     { key: 'marks', name: 'العلامات على الطريق', tok: [{ t: 'العلامات' }, '=', { t: 'الطول' }, '÷', { t: 'المسافة' }, '+', '١'], tail: 5,
       say: 'كم *مسافة* في الطريق؟ وزد علامة البداية.', cue: 'تجيك لما تقرا «علامة (أو شجرة) كل … متر» ومعها البداية.',
       trap: 'لا تنسى + ١: علامة البداية.' },
-    { key: 'cuts', name: 'مرات القصّ', tok: [{ t: 'مرات القص' }, '=', { t: 'عدد القطع' }, '−', '١'],
+    { key: 'cuts', name: 'مرات القصّ', tok: [{ t: 'مرات القصّ' }, '=', { t: 'عدد القطع' }, '−', '١'],
       say: 'كل *قصّة* تزيد قطعة، والقطعة الأولى ما تحتاج قص.', cue: 'تجيك لما تقرا «قطّع حبلاً (أو خشبة) إلى … قطع».',
       trap: 'القصّات أقل من القطع بواحد.' },
     { key: 'clockm', name: 'الساعة مع الدقائق', tok: [{ t: 'الزاوية' }, '=', '|', { t: 'الساعة' }, '×', '٣٠', '−', { t: 'الدقائق' }, '×', '٥٫٥', '|'],
@@ -53,14 +55,14 @@
       async run(st, c) {
         const ns = $$(st, '.nl'), jp = $$(st, '.jp'), at = v => ns.find(n => +n.dataset.v === v), n1 = $(st, '.n1'), n2 = $(st, '.n2'), n3 = $(st, '.n3');
         H.rise(ns, 0, 50); await c.wait(560);
-        c.cap('كم عدد من ٣ إلى ٧؟'); [3, 7].forEach(v => { at(v).classList.add('pin'); pulse(at(v)); }); c.s('on', 1, .35); await c.wait(700);
+        c.cap('كم عدداً من ٣ إلى ٧؟'); [3, 7].forEach(v => { at(v).classList.add('pin'); pulse(at(v)); }); c.s('on', 1, .35); await c.wait(700);
         for (let i = 0; i < 4; i++) { H.draw(jp[i], 240); H.set(n1, i + 1); c.s('tap', up(i * 2), .32); await c.wait(260); }
         c.cap('٧ − ٣ = ٤ قفزات'); c.val(1, '٤', n1); await c.wait(380); c.val(2, '٤', n1); await c.wait(560);
-        c.cap('من ٣ إلى ٧: الطرفين معه');
+        c.cap('من ٣ إلى ٧: الطرفين محسوبين');
         for (let v = 3, k = 0; v <= 7; v++, k++) { at(v).classList.add('on'); pulse(at(v)); H.set(n3, k + 1); c.s('t' + Math.min(k + 1, 5), 1, .4); await c.wait(240); }
         c.cap('٤ + ١ = ٥'); c.s('hint', 1, .45); await c.wait(300); c.val(0, '٥', n3); await c.wait(1100);
         [3, 7].forEach(v => at(v).classList.add('out'));
-        c.cap('وبين ٣ و ٧: بدون الطرفين ← ٤ − ١ = ٣'); H.set(n2, '٣'); c.s('off', 1, .35); await c.wait(600);
+        c.cap('وبين ٣ و٧: بدون الطرفين ← ٤ − ١ = ٣'); H.set(n2, '٣'); c.s('off', 1, .35); await c.wait(600);
       },
     },
     evcount: {
@@ -70,7 +72,7 @@
       async run(st, c) {
         const ns = $$(st, '.nl'), jp = $$(st, '.jp'), n1 = $(st, '.n1'), n2 = $(st, '.n2');
         H.rise(ns, 0, 45); await c.wait(600);
-        c.cap('٤ ، ٦ ، ٨ ، … ، ٢٠ — كم عدداً؟'); await c.wait(500);
+        c.cap('٤، ٦، ٨، …، ٢٠ — كم عدداً؟'); await c.wait(500);
         ns[8].classList.add('pin'); pulse(ns[8]); c.s('t1', 1, .42); c.val(1, '٢٠', ns[8]); await c.wait(520);
         ns[0].classList.add('pin'); pulse(ns[0]); c.s('t2', 1, .42); c.val(2, '٤', ns[0]); await c.wait(560);
         c.cap('كل قفزة ٢ ← (٢٠ − ٤) ÷ ٢ = ٨ قفزات');
@@ -88,7 +90,7 @@
       async run(st, c) {
         const ns = $$(st, '.nl'), at = v => ns.find(n => +n.dataset.v === v), n1 = $(st, '.n1'), n2 = $(st, '.n2'), n3 = $(st, '.n3');
         H.rise([...ns, $(st, '.dots3')], 0, 50); await c.wait(600);
-        c.cap('كم عدداً زوجياً بين ٥ و ٣١؟'); await c.wait(800);
+        c.cap('كم عدداً زوجياً بين ٥ و٣١؟'); await c.wait(800);
         at(5).classList.add('no'); anim(at(5), SHAKE, { duration: 380 }); c.s('off', 1, .4); c.cap('٥ فردي ← ما يدخل'); await c.wait(700);
         at(6).classList.add('pin'); pulse(at(6)); H.set(n1, '٦'); c.s('t1', 1, .42); c.val(2, '٦', at(6)); await c.wait(700);
         at(31).classList.add('no'); anim(at(31), SHAKE, { duration: 380 }); c.s('off', .9, .4); c.cap('٣١ فردي ← ما يدخل'); await c.wait(700);
@@ -99,7 +101,7 @@
     },
     gifts: {
       html: () => {
-        const P = [[70, 34], [230, 34], [230, 150], [70, 150]], L = [];
+        const P = [[230, 34], [70, 34], [70, 150], [230, 150]], L = [];   // read from the right, as the handshakes are (QA, 2026-11-08)
         for (let a = 0; a < 4; a++) for (let b = 0; b < 4; b++) if (a !== b) {
           const [x1, y1] = P[a], [x2, y2] = P[b], dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy), ux = dx / len, uy = dy / len;
           const sx = x1 + ux * 17, sy = y1 + uy * 17, ex = x2 - ux * 21, ey = y2 - uy * 21, mx = (sx + ex) / 2 + uy * 14, my = (sy + ey) / 2 - ux * 14;
@@ -126,7 +128,7 @@
     },
     league: {
       html: () => {
-        const P = [[70, 34], [230, 34], [230, 150], [70, 150]], L = [];
+        const P = [[230, 34], [70, 34], [70, 150], [230, 150]], L = [];
         for (let a = 0; a < 4; a++) for (let b = a + 1; b < 4; b++) {
           const [x1, y1] = P[a], [x2, y2] = P[b], dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy), ox = -dy / len * 4, oy = dx / len * 4;
           L.push(`<line class="g1" x1="${x1 + ox}" y1="${y1 + oy}" x2="${x2 + ox}" y2="${y2 + oy}" stroke="#84D8FF" stroke-width="3" stroke-linecap="round" style="opacity:0"/>`);
@@ -134,7 +136,7 @@
         }
         return `<div class="dg"><svg class="d" width="300" height="184" viewBox="0 0 300 184">${L.join('')}
           ${P.map((q, i) => `<g class="tm" style="opacity:0"><circle cx="${q[0]}" cy="${q[1]}" r="15" fill="#fff" stroke="#4B4B4B" stroke-width="3"/><path d="M${q[0] - 6} ${q[1] - 6}h12v4q0 7-6 9q-6-2-6-9z" fill="${['#1CB0F6', '#FF9600', '#58CC02', '#CE82FF'][i]}"/></g>`).join('')}</svg>
-          ${H.lab([['الفرق'], ['مرة واحدة'], ['ذهاب وإياب']])}</div>`;
+          ${H.lab([['الأندية'], ['مرة واحدة'], ['ذهاب وإياب']])}</div>`;
       },
       async run(st, c) {
         const T = $$(st, '.tm'), L1 = $$(st, '.g1'), L2 = $$(st, '.g2'), n1 = $(st, '.n1'), n2 = $(st, '.n2'), n3 = $(st, '.n3');
@@ -167,7 +169,7 @@
           ln[a].setAttribute('stroke', '#4B4B4B'); ln[b].setAttribute('stroke', '#4B4B4B');
         }
         tf.setAttribute('points', '150,16 30,156 270,156'); tf.setAttribute('fill', 'rgba(88,204,2,.14)'); tf.setAttribute('stroke', '#58CC02');
-        c.cap('كل خط يصير مثلث مع ٣ ثانية ← ٤ × ٣ ÷ ٢ = ٦'); c.val(2, '٣', n1); c.s('hint', 1, .45);
+        c.cap('كل خط يصير مثلثاً مع كل واحد من الـ٣ الباقية ← ٤ × ٣ ÷ ٢ = ٦'); c.val(2, '٣', n1); c.s('hint', 1, .45);
         await c.wait(500); c.val(0, '٦', n2); await c.wait(300);
       },
     },
@@ -259,7 +261,7 @@
     work: {
       html: () => `<div class="dg"><div class="wk">
           <div class="wk-t"><div class="wk-tank">${'<i></i>'.repeat(6)}</div><span class="wk-h">الساعة <b>٠</b></span></div>
-          <div class="wk-k"><span class="ka">الأولى في ٣ ساعات<small>٢ من ٦ كل ساعة</small></span><span class="kb">الثانية في ٦ ساعات<small>١ من ٦ كل ساعة</small></span></div></div>
+          <div class="wk-k"><span class="ka">الأولى في <span class="ln-nw">٣ ساعات</span><small>٢ من ٦ كل ساعة</small></span><span class="kb">الثانية في <span class="ln-nw">٦ ساعات</span><small>١ من ٦ كل ساعة</small></span></div></div>
         ${H.lab([['ضرب الزمنين'], ['جمع الزمنين'], ['معاً', '؟']])}</div>`,
       async run(st, c) {
         const u = $$(st, '.wk-tank i'), hr = $(st, '.wk-h b'), ka = $(st, '.ka'), kb = $(st, '.kb'), n1 = $(st, '.n1'), n2 = $(st, '.n2'), n3 = $(st, '.n3');
@@ -272,7 +274,7 @@
         c.cap('كل ساعة ٣ أجزاء ← امتلأ في ساعتين'); await c.wait(900);
         c.cap('بالقانون: ٣ × ٦ = ١٨'); H.set(n1, '١٨'); c.s('t1', 1, .42); c.val(1, '١٨', n1); await c.wait(700);
         c.cap('٣ + ٦ = ٩'); H.set(n2, '٩'); c.s('t2', 1, .42); c.val(2, '٩', n2); await c.wait(700);
-        c.cap('١٨ ÷ ٩ = ٢ ساعتين ← أقل من الأسرع'); H.set(n3, '٢'); c.s('hint', 1, .45); await c.wait(400); c.val(0, '٢', n3); await c.wait(300);
+        c.cap('١٨ ÷ ٩ = ٢ ← ساعتين، أقل من الأسرع'); H.set(n3, '٢'); c.s('hint', 1, .45); await c.wait(400); c.val(0, '٢', n3); await c.wait(300);
       },
     },
   };
@@ -282,56 +284,57 @@
       const a = rnd(4, 40), b = a + rnd(6, 40), btw = i % 2 === 0;
       const r = btw ? b - a - 1 : b - a + 1;
       return { q: btw ? `كم عدداً صحيحاً يقع بين ${A(a)} و${A(b)}؟` : `كم عدداً صحيحاً من ${A(a)} إلى ${A(b)}؟`, ans: A(r), ch: four(A(r), [A(b - a), A(btw ? b - a + 1 : b - a - 1), A(r + 2)]),
-        sol: `الفرق ${A(b)} − ${A(a)} = ${A(b - a)} ← ${btw ? 'بين: − ١' : 'من… إلى: + ١'} = ${A(r)}` };
+        sol: `الفرق ${A(b)} − ${A(a)} = ${A(b - a)} ← ${btw ? `بين: ${A(b - a)} − ١` : `من… إلى: ${A(b - a)} + ١`} = ${A(r)}` };
     },
     evcount(i) {
       const odd = i % 2 === 1, a = rnd(2, 20) * 2 + (odd ? 1 : 0), b = a + rnd(8, 30) * 2, r = (b - a) / 2 + 1;
-      return { q: `كم عدداً ${odd ? 'فردياً' : 'زوجياً'} في: ${A(a)} ، ${A(a + 2)} ، ${A(a + 4)} ، … ، ${A(b)}؟`, ans: A(r), ch: four(A(r), [A(r - 1), A(b - a), A(r + 1)]),
+      return { q: `كم عدداً ${odd ? 'فردياً' : 'زوجياً'} في: ${A(a)}، ${A(a + 2)}، ${A(a + 4)}، …، ${A(b)}؟`, ans: A(r), ch: four(A(r), [A(r - 1), A(b - a), A(r + 1)]),
         sol: `(${A(b)} − ${A(a)}) ÷ ٢ + ١ = ${A((b - a) / 2)} + ١ = ${A(r)}` };
     },
     evedge(i) {
       const a = rnd(2, 15) * 2 + 1, b = a + rnd(6, 20) * 2, f = a + 1, l = b - 1, r = (l - f) / 2 + 1;
       return { q: `كم عدداً زوجياً يقع بين ${A(a)} و${A(b)}؟`, ans: A(r), ch: four(A(r), [A((b - a) / 2 + 1), A(r - 1), A(b - a - 1)]),
-        sol: `أول زوجي ${A(f)} ، آخر زوجي ${A(l)} ← (${A(l)} − ${A(f)}) ÷ ٢ + ١ = ${A(r)}` };
+        sol: `أول زوجي ${A(f)}، آخر زوجي ${A(l)} ← (${A(l)} − ${A(f)}) ÷ ٢ + ١ = ${A(r)}` };
     },
     gifts(i) {
-      const n = rnd(5, 12), r = n * (n - 1), what = pick([['أصدقاء', 'أهدى كل واحد منهم هدية لكل واحد من الباقين', 'هدية'], ['طلاب', 'أرسل كل واحد منهم رسالة لكل واحد من الباقين', 'رسالة'], ['زملاء', 'كتب كل واحد منهم بطاقة لكل واحد من الباقين', 'بطاقة']]);
+      const n = rnd(5, 10), r = n * (n - 1), what = pick([['أصدقاء', 'أهدى كل واحد منهم هدية لكل واحد من الباقين', 'هدية'], ['طلاب', 'أرسل كل واحد منهم رسالة لكل واحد من الباقين', 'رسالة'], ['زملاء', 'كتب كل واحد منهم بطاقة لكل واحد من الباقين', 'بطاقة']]);
       return { q: `${A(n)} ${what[0]}، ${what[1]}. كم ${what[2]} في المجموع؟`, ans: A(r), ch: four(A(r), [A(r / 2), A(n * n), A((n - 1) * (n - 1))]), sol: `${A(n)} × ${A(n - 1)} = ${A(r)} — بدون ÷ ٢` };
     },
     league(i) {
-      const n = rnd(5, 12), k = pick([2, 2, 3]), r = n * (n - 1) / 2 * k;
+      let n, k; do { n = rnd(5, 12); k = pick([2, 2, 3]); } while (n === 9 && k === 2);   /* not bank keylaws-03 */
+      const r = n * (n - 1) / 2 * k;
       return { q: `دوري فيه ${A(n)} ${n <= 10 ? 'فرق' : 'فريقاً'}، يلعب كل فريقين ${k === 2 ? 'مرتين (ذهاباً وإياباً)' : '٣ مرات'}. كم مباراة في الدوري؟`, ans: A(r), ch: four(A(r), [A(n * (n - 1) / 2), A(n * (n - 1) * k), A(n * k)]),
-        sol: `${A(n)} × ${A(n - 1)} ÷ ٢ = ${A(n * (n - 1) / 2)} ← × ${A(k)} = ${A(r)}` };
+        sol: `${A(n)} × ${A(n - 1)} × ${A(k)} ÷ ٢ = ${A(r)}` };
     },
     tris(i) {
-      const inside = rnd(2, 5), n = inside + 2, r = n * (n - 1) / 2;
-      return { q: `من رأس مثلث رُسمت ${A(inside)} قطع مستقيمة إلى القاعدة (غير الضلعين). كم مثلثاً في الشكل؟`, ans: A(r), ch: four(A(r), [A(inside * (inside - 1) / 2 || 1), A((inside + 1) * inside / 2), A(n * (n - 1))]),
+      const inside = rnd(3, 5), n = inside + 2, r = n * (n - 1) / 2;
+      return { q: `من رأس مثلث رُسمت ${A(inside)} قطع مستقيمة إلى القاعدة (غير الضلعين). كم مثلثاً يتكوّن؟`, ans: A(r), ch: four(A(r), [A(inside * (inside - 1) / 2 || 1), A((inside + 1) * inside / 2), A(n * (n - 1))]),
         sol: `الخطوط مع الضلعين ${A(n)} ← ${A(n)} × ${A(n - 1)} ÷ ٢ = ${A(r)}` };
     },
     marks(i) {
       const d = pick([5, 10, 15, 20, 25]), k = rnd(6, 16), L = d * k, r = k + 1;
-      return { q: `طريق طوله ${A(L)} متراً، وُضعت عليه علامة كل ${A(d)} أمتار بدءاً من بدايته حتى نهايته. كم علامة؟`, ans: A(r), ch: four(A(r), [A(k), A(k - 1), A(k + 2)]), sol: `${A(L)} ÷ ${A(d)} = ${A(k)} مسافة ← + ١ = ${A(r)}` };
+      return { q: `طريق طوله ${nn(L, 'أمتار', 'متراً', 'متر')}، وُضعت عليه علامة كل ${A(d)} ${d > 10 ? 'متراً' : 'أمتار'} بدءاً من بدايته حتى نهايته. كم علامة؟`, ans: A(r), ch: four(A(r), [A(k), A(k - 1), A(k + 2)]), sol: `${A(L)} ÷ ${A(d)} = ${nn(k, 'مسافات', 'مسافة')} ← + ١ = ${A(r)}` };
     },
     cuts(i) {
       const n = rnd(5, 12);
-      if (i % 2) { const m = pick([2, 3, 4, 5]); return { q: `قصّ حبل يحتاج ${A(m)} دقائق للقصّة الواحدة. كم دقيقة تحتاج لتقطيعه إلى ${A(n)} قطع؟`, ans: A((n - 1) * m), ch: four(A((n - 1) * m), [A(n * m), A((n + 1) * m), A(n - 1)]), sol: `القصّات ${A(n)} − ١ = ${A(n - 1)} ← × ${A(m)} = ${A((n - 1) * m)}` }; }
-      return { q: `كم قصّة تحتاج لتقطيع خشبة إلى ${A(n)} قطع؟`, ans: A(n - 1), ch: four(A(n - 1), [A(n), A(n + 1), A(n - 2)]), sol: `${A(n)} − ١ = ${A(n - 1)}` };
+      if (i % 2) { const m = pick([2, 3, 4, 5]); return { q: `قصّ حبل يحتاج ${m === 2 ? 'دقيقتين' : A(m) + ' دقائق'} للقصّة الواحدة. كم دقيقة تحتاج لتقطيعه إلى ${A(n)} ${n > 10 ? 'قطعة' : 'قطع'}؟`, ans: A((n - 1) * m), ch: four(A((n - 1) * m), [A(n * m), A((n + 1) * m), A(n - 1)]), sol: `القصّات ${A(n)} − ١ = ${A(n - 1)} ← × ${A(m)} = ${A((n - 1) * m)}` }; }
+      return { q: `كم قصّة تحتاج لتقطيع خشبة إلى ${nn(n, 'قطع', 'قطعة')}؟`, ans: A(n - 1), ch: four(A(n - 1), [A(n), A(n + 1), A(n - 2)]), sol: `${A(n)} − ١ = ${A(n - 1)}` };
     },
     clockm(i) {
       let h, m, raw, r;
-      do { h = rnd(1, 11); m = pick([10, 20, 30, 40, 50]); raw = Math.abs(30 * h - 5.5 * m); r = raw > 180 ? 360 - raw : raw; } while (r === 0 || r === 180);
+      do { h = rnd(1, 11); m = pick([10, 20, 30, 40, 50]); raw = Math.abs(30 * h - 5.5 * m); r = raw > 180 ? 360 - raw : raw; } while (r === 0 || r === 180 || (h === 4 && m === 40));   /* ٤:٤٠ is bank keylaws-09 */
       const dg = x => A(x) + '°';
       return { q: `كم الزاوية الصغرى بين عقربي الساعة عند ${A(h)}:${A(m)}؟`, ans: dg(r), ch: four(dg(r), [Math.abs(30 * h - 6 * m), raw > 180 ? raw : 360 - raw, r + 15, Math.abs(r - 30) || 45].filter(x => x > 0 && x <= 360).map(dg)),
         sol: `| ${A(h)} × ٣٠ − ${A(m)} × ٥٫٥ | = ${dg(raw)}${raw > 180 ? ` ← فوق ١٨٠°: ٣٦٠° − ${dg(raw)} = ${dg(r)}` : ''}` };
     },
     equal(i) {
-      const t = rnd(5, 15), da = rnd(2, 6), db = da + rnd(2, 6), b0 = rnd(3, 9) * 10, a0 = b0 + (db - da) * t;
-      return { q: `مع خالد ${A(a0)} ريالاً ويوفر ${A(da)} يومياً، ومع فهد ${A(b0)} ريالاً ويوفر ${A(db)} يومياً. بعد كم يوم يتساوى ما معهما؟`, ans: A(t), ch: four(A(t), [A(Math.round((a0 - b0) / (da + db))), A(a0 - b0), A(t + 2)]),
+      const t = rnd(5, 15), da = rnd(3, 6), db = da + rnd(2, 6), b0 = rnd(3, 9) * 10, a0 = b0 + (db - da) * t;
+      return { q: `مع خالد ${nn(a0, 'ريالات', 'ريالاً', 'ريال')} ويوفر ${nn(da, 'ريالات', 'ريالاً', 'ريال')} يومياً، ومع فهد ${nn(b0, 'ريالات', 'ريالاً', 'ريال')} ويوفر ${nn(db, 'ريالات', 'ريالاً', 'ريال')} يومياً. بعد كم يوم يتساوى ما معهما؟`, ans: A(t), ch: four(A(t), [A(Math.round((a0 - b0) / (da + db))), A(a0 - b0), A(t + 2)]),
         sol: `(${A(a0)} − ${A(b0)}) ÷ (${A(db)} − ${A(da)}) = ${A(a0 - b0)} ÷ ${A(db - da)} = ${A(t)}` };
     },
     work(i) {
       const [a, b] = pick([[3, 6], [4, 12], [6, 12], [10, 15], [12, 24], [20, 30], [6, 3], [12, 4]]), r = a * b / (a + b);
-      return { q: `حنفية تملأ حوضاً في ${A(a)} ساعات، وأخرى تملؤه في ${A(b)} ساعة. في كم ساعة يمتلئ لو فُتحتا معاً؟`, ans: A(r), ch: four(A(r), [A((a + b) / 2), A(Math.min(a, b)), A(Math.abs(a - b) || r + 1)]),
+      return { q: `حنفية تملأ حوضاً في ${A(a)} ${a > 10 ? 'ساعة' : 'ساعات'}، وأخرى تملؤه في ${A(b)} ${b > 10 ? 'ساعة' : 'ساعات'}. في كم ساعة يمتلئ لو فُتحتا معاً؟`, ans: A(r), ch: four(A(r), [A((a + b) / 2), A(Math.min(a, b)), A(Math.abs(a - b) || r + 1)]),
         sol: `(${A(a)} × ${A(b)}) ÷ (${A(a)} + ${A(b)}) = ${A(a * b)} ÷ ${A(a + b)} = ${A(r)}` };
     },
   };
@@ -352,20 +355,20 @@
   const where = {
     fromto: ['skills.keylaws', 'count', /^\*من… إلى\*/], evcount: ['skills.keylaws', 'evens', /^\(\*آخر\*/], evedge: ['skills.keylaws', 'evens', /^\*الأطراف الفردية\*/],
     gifts: ['skills.keylaws', 'shake', /^\*الهدايا\*/], league: ['skills.keylaws', 'league', /^\*المباريات\*/], tris: ['skills.keylaws', 'league', /^\*المثلثات\*/],
-    marks: ['skills.keylaws', 'poles', /^علامة في البداية/], cuts: ['skills.keylaws', 'poles', /^\*مرات القص\*/], clockm: ['skills.keylaws', 'clock', /^\*٥٫٥\*/],
+    marks: ['skills.keylaws', 'poles', /^علامة في البداية/], cuts: ['skills.keylaws', 'poles', /^\*مرات القصّ?\*/], clockm: ['skills.keylaws', 'clock', /^\*٥٫٥\*/],
     equal: ['skills.keylaws', 'together', /^\*زمن التساوي\*/], work: ['skills.keylaws', 'together', /^\*زمنهم معاً\*/],
   };
   const nums = {
     fromto: { ex: 'كم عدداً صحيحاً من ٤ إلى ٩؟', v: ['٦', '٥', '٥'], more: ['٤', '١٣', '٣'], line: 'الفرق ٩ − ٤ = ٥ ← من ٤ إلى ٩ = ٥ + ١ = ٦', hint: { 1: 'الفرق: ٩ − ٤ = ؟', 2: 'الفرق نفسه: ٩ − ٤ = ؟' } },
-    evcount: { ex: 'كم عدداً زوجياً في: ٦ ، ٨ ، ١٠ ، … ، ٣٠؟', v: ['١٣', '٣٠', '٦'], more: ['١٢', '٢٤', '١٤'], hint: { 1: 'آخر عدد في المثال كم؟', 2: 'أول عدد في المثال كم؟' } },
-    evedge: { ex: 'كم عدداً زوجياً يقع بين ٧ و ٢٣؟', v: ['٨', '٢٢', '٨'], more: ['٧', '٢٣', '٩'], hint: { 1: '٢٣ فردي: آخر زوجي قبله كم؟', 2: '٧ فردي: أول زوجي بعده كم؟' } },
+    evcount: { ex: 'كم عدداً زوجياً في: ٦، ٨، ١٠، …، ٣٠؟', v: ['١٣', '٣٠', '٦'], more: ['١٢', '٢٤', '١٤'], hint: { 1: 'آخر عدد في المثال كم؟', 2: 'أول عدد في المثال كم؟' } },
+    evedge: { ex: 'كم عدداً زوجياً يقع بين ٧ و٢٣؟', v: ['٨', '٢٢', '٨'], more: ['٧', '٢٣', '٩'], hint: { 1: '٢٣ فردي: آخر زوجي قبله كم؟', 2: '٧ فردي: أول زوجي بعده كم؟' } },
     gifts: { ex: '٥ أصدقاء، كل واحد أهدى كل واحد من الباقين. كم هدية؟', v: ['٢٠', '٥', '٤'], more: ['١٠', '٢٥', '٦'], hint: { 2: 'كل واحد يهدي الباقين ما عدا نفسه: كم؟' } },
     league: { ex: '٥ فرق، كل فريقين يلتقون ذهاباً وإياباً. كم مباراة؟', v: ['٢٠', '٥', '٤', '٢'], more: ['١٠', '٤٠', '٦'], hint: { 2: 'كل فريق يلعب مع كم فريق؟', 3: 'ذهاب وإياب: كم مرة يلتقي كل فريقين؟' } },
     tris: { ex: '٥ خطوط تطلع من رأس واحد (مع الضلعين) إلى القاعدة. كم مثلثاً؟', v: ['١٠', '٥', '٤'], more: ['٢٠', '٦', '٣'], hint: { 1: 'كم خط يطلع من الرأس مع الضلعين؟' } },
     marks: { ex: 'طريق ٦٠ متراً، علامة كل ١٠ أمتار، ومعها علامة البداية. كم علامة؟', v: ['٧', '٦٠', '١٠'], more: ['٦', '٥', '٦٠٠'], hint: { 1: 'كم طول الطريق؟', 2: 'كم متر بين كل علامتين؟' } },
     cuts: { ex: 'تبي تقطع حبلاً إلى ٨ قطع. كم قصّة؟', v: ['٧', '٨'], more: ['٩', '٦', '١٦'], hint: { 1: 'كم قطعة تبي؟' } },
     clockm: { ex: 'الساعة ٤:٢٠ — كم الزاوية بين العقربين؟', v: ['١٠°', '٤', '٢٠'], more: ['١١٠', '١٢٠', '٨٠'], line: '| ٤ × ٣٠ − ٢٠ × ٥٫٥ | = | ١٢٠ − ١١٠ | = ١٠°', hint: { 1: 'الساعة كم؟', 2: 'الدقائق كم؟' } },
-    equal: { ex: 'مع ريم ٩٠ وتوفر ٤ يومياً، ومع سارة ٥٠ وتوفر ٨ يومياً. بعد كم يوم يتساويان؟', v: ['١٠', '٤٠', '٤'], more: ['١٢', '١٤٠', '٨'], hint: { 1: '٩٠ − ٥٠ = ؟', 2: '٨ − ٤ = ؟' } },
+    equal: { ex: 'مع ريم ٩٠ وتوفر ٤ يومياً، ومع سارة ٥٠ وتوفر ٨ يومياً. بعد كم يوم تتساويان؟', v: ['١٠', '٤٠', '٤'], more: ['١٢', '١٤٠', '٨'], hint: { 1: '٩٠ − ٥٠ = ؟', 2: '٨ − ٤ = ؟' } },
     work: { ex: 'حنفية تملأ الحوض في ٤ ساعات، وأخرى في ١٢ ساعة. في كم ساعة يمتلئ لو فتحناهما معاً؟', v: ['٣', '٤٨', '١٦'], more: ['٨', '٦', '٤'], hint: { 1: '٤ × ١٢ = ؟', 2: '٤ + ١٢ = ؟' } },
   };
 
@@ -404,6 +407,7 @@
 .law .wk-k span { display: flex; flex-direction: column; border-inline-start: 5px solid; padding-inline-start: 8px; }
 .law .wk-k .ka { border-color: var(--blue); color: var(--blue-dk); } .law .wk-k .kb { border-color: var(--purple); color: #A568CC; }
 .law .wk-k small { font-size: 12px; color: var(--gray); font-weight: 700; }
+@media (max-width: 380px) { .law .wk-k { font-size: 12px; gap: 5px; } .law .wk-k small { font-size: 10.5px; } .law .wk-k span { padding-inline-start: 6px; } }
 `;
   M.add({ rules, dia, g, sign, where, nums, css });
 })();

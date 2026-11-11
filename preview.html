@@ -121,8 +121,10 @@
         else A.debugRankUp(parseInt(h.replace("rankcap", "")) || 2);
       }
       else if (h === "chest") A.openChest();
-      else if (h === "mocktest") A.startMock();
+      /* a mock left in progress by an earlier visit makes startMock ask first; the harness always starts fresh */
+      else if (h === "mocktest") { localStorage.removeItem("qudratMock"); A.startMock(); }
       else if (h === "mockdone") {
+        localStorage.removeItem("qudratMock");
         A.startMock();
         for (let s = 0; s < 2; s++) {
           const total = document.querySelectorAll(".qn-chip").length;
@@ -138,12 +140,12 @@
       }
       else if (h === "gold" || h === "blue" || h === "fx") {
         const d = window.QBANK.numbers;
-        A.startLesson("numbers", d.lessons[0].key); A.beginQuestions();
+        A.startLesson("numbers", d.lessons[0].key); window.__QI.SES.teach = null; A.beginQuestions();
         setTimeout(function () { A.fxDemo(h === "fx" ? null : h); }, 700);
       }
       else if (h === "lesson" || h === "questbanner") {
         const d = window.QBANK.numbers;
-        A.startLesson("numbers", d.lessons[0].key); A.beginQuestions();
+        A.startLesson("numbers", d.lessons[0].key); window.__QI.SES.teach = null; A.beginQuestions();
         if (h === "questbanner") setTimeout(A.questBanner, 400);
       } else if (h === "climb" || h === "climbtop") {
         /* the league climb after a win: five places up (#climb), or to the top (#climbtop) */
@@ -158,17 +160,17 @@
         if (node) node.click();
       } else if (h === "fab") {
         const d = window.QBANK.numbers;
-        A.startLesson("numbers", d.lessons[0].key); A.beginQuestions();
+        A.startLesson("numbers", d.lessons[0].key); window.__QI.SES.teach = null; A.beginQuestions();
       } else if (h === "teach" || h === "teachrule" || h === "teachcheck") {
-        /* the taught lesson (skills.bigsum): #teach = the opening card, #teachrule = first rule card,
-           #teachcheck = the quick check answered wrong */
-        A.startLesson("skills", "bigsum");
+        /* a taught lesson (numbers' first; node 1 plays as short lessons now): #teach = the opening card, #teachrule = first rule
+           card, #teachcheck = the quick check answered wrong */
+        A.startLesson("numbers", window.QBANK.numbers.lessons[0].key);
         if (h !== "teach") A.teachNext();
         if (h === "teachcheck") { A.teachNext(); A.teachNext(); A.teachPick(0); }
       } else if (h === "rulewords" || h === "rulenums") {
         /* the two screens after a short lesson's rule: its terms to fill back in, then the rule as numbers */
-        A.startLearn("skills", "bigsum", 0);
-        A.debugLearnGo(it => it && it.rf === (h === "rulewords" ? "words" : "nums"));
+        A.startLearn("skills", "bigsum", 1);   /* the ops lesson: its rule's own two screens (the first lesson shows its rule whole) */
+        A.debugLearnGo(it => it && (h === "rulewords" ? it.fill === "words" : it.rf === "nums"));
       } else if (h === "learnfrac") {
         /* the probability node's first card: its fractions drawn as the exam prints them */
         A.startLearn("skills", "probstats", 0);
@@ -233,7 +235,7 @@
         /* every lesson teaches cards now, so renderSession() opens one instead
            of a question and neither feedback sheet was reachable */
         A.debugTeachAll("numbers." + d.lessons[0].key);
-        A.startLesson("numbers", d.lessons[0].key); A.beginQuestions();
+        A.startLesson("numbers", d.lessons[0].key); window.__QI.SES.teach = null; A.beginQuestions();
         /* pick DELIBERATELY: choices are shuffled per serve, so index 0 landed on the
            good sheet or the bad one at random and neither screen was reachable on demand */
         const q = A.debugCurrent();
@@ -246,13 +248,13 @@
         A.showMethod();
       } else if (h === "done") {
         const d = window.QBANK.numbers;
-        A.startLesson("numbers", d.lessons[0].key); A.beginQuestions();
+        A.startLesson("numbers", d.lessons[0].key); window.__QI.SES.teach = null; A.beginQuestions();
         for (let i = 0; i < 200 && document.querySelector(".choices .choice"); i++) {
           A.pick(A.debugCurrent().answer); A.check(); A.next();
         }
       } else if (h === "fail") {
         const d = window.QBANK.numbers;
-        A.startLesson("numbers", d.lessons[0].key); A.beginQuestions();
+        A.startLesson("numbers", d.lessons[0].key); window.__QI.SES.teach = null; A.beginQuestions();
         /* was a hardcoded 3, which stopped matching the day LEVEL_HEARTS became 5.
            Keep missing until the fail screen is actually on-screen. */
         for (let i = 0; i < 12 && document.querySelector(".choices .choice"); i++) {

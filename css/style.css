@@ -168,7 +168,7 @@ svg.ic { display: block; }
 .li-fig svg { max-width: 100%; height: auto; }
 
 /* ---- teaching cards (js/data/teach.js): one rule, one tap, then its questions ---- */
-.screen-teach {
+.screen-full.screen-teach {
   padding-bottom: calc(110px + env(safe-area-inset-bottom));
   /* the check is a lesson question, so its card is the session's option card;
      these are .screen-session's own values, declared again so the two skins
@@ -547,6 +547,7 @@ svg.ic { display: block; }
 /* ============================================================
    Lesson / exam session
    ============================================================ */
+.screen-session > .session-top { flex-shrink: 0; }   /* room given to the step at its foot never squeezes the top bar (QA, 2026-11-08: it rose 14px) */
 .session-top {
   display: flex; align-items: center; gap: 11px;
   height: 58px; padding: 0 14px; margin-top: 6px;
@@ -727,6 +728,7 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
   font-size: 13.5px; font-weight: 800; color: var(--red-dk2);
 }
 .fb-hearts.warn, .fb-hearts.out { background: var(--red); color: #fff; }
+.fb-hearts.warn .ic, .fb-hearts.out .ic { filter: brightness(0) invert(1); }   /* a red heart on the red pill read as a stray dot (QA, 2026-11-08) */
 .fb-correct { font-weight: 600; margin: 6px 0 2px; font-size: 16px; }
 .feedback.bad .fb-correct { color: var(--red-dk2); }
 .fb-solution-toggle { background:none; border:0; font-weight:700; font-size:15px; padding:6px 0; text-decoration: underline; }
@@ -776,7 +778,7 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
 .complete h1 { color: var(--gold); font-size: 31px; letter-spacing: 1.2px; margin: 14px 0 22px; }
 .complete h1.win-title { margin: 10px 0 4px; }
 .result-cards { display: flex; gap: 20px; justify-content: center; width: 100%; margin-bottom: 26px; }
-.rcard { width: 102px; border-radius: 17px; padding: 0; font-weight: 700; }
+.rcard { width: 102px; border-radius: 17px; padding: 0 0 2px; font-weight: 700; }   /* a rim under the white face as thick as the sides, not cut by the corners (QA, 2026-11-08) */
 .rcard .rc-t { font-size: 13px; font-weight: 800; text-transform: uppercase; color: #fff; padding: 3px 0 2px; }
 .rcard .rc-v {
   background: #fff; border-radius: 13px; height: 66px;
@@ -922,7 +924,7 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
      veil, so left/right + auto margins centre it on the CONTENT column:
      with left = 2*--col-off and right = 0, the centre lands at
      50vw + --col-off, which is exactly where the path column is.
-     Auto margins rather than translateX(-50%) so the popIn animation
+     Auto margins rather than translateX(-50%) so the lpIn animation
      (which animates transform) cannot clobber the centring. */
   position: absolute;
   left: calc(2 * var(--col-off)); right: 0;
@@ -930,14 +932,12 @@ table.q-table th, table.q-table td { border: 2px solid var(--line); padding: 6px
   width: calc(100% - 32px); max-width: 430px;
   background: var(--pop-c, var(--purple)); border-radius: 16px;
   padding: 16px; z-index: 91;
-  animation: popIn .18s ease;
 }
 .lesson-pop::before { /* arrow toward the level node */
   content: ''; position: absolute; top: -9px; right: var(--arrow-x, 50%);
   width: 21px; height: 21px; background: inherit;
   transform: translateX(50%) rotate(45deg); border-radius: 5px;
 }
-@keyframes popIn { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; transform: none;} }
 .lesson-pop h3 { color: #fff; font-size: 21px; font-weight: 700; margin: 2px 2px 0; text-wrap: balance; }
 .lesson-pop .btn { margin-bottom: 0; }
 /* Double-XP — one pill that states the offer and its price on its own
@@ -1715,7 +1715,22 @@ button.dom-stat:active { transform: scale(.99); }
 .review-item { animation: fadeUp .4s ease backwards; }
 
 /* --- popup + modal --- */
-.lesson-pop { animation: springIn .24s cubic-bezier(.3,1.5,.5,1); transform-origin: top center; }
+/* The node's card grows out of its own arrow, as Duolingo's does: from the arrow's tip, a quick swell
+   just past its size and back (300ms), its lines following it in 40ms apart; it leaves the same way,
+   shrinking back into the arrow and fading (160ms). Transform and opacity only, so it runs on the GPU. */
+.lesson-pop { transform-origin: calc(100% - var(--arrow-x, 50%)) -10px; animation: lpIn .3s cubic-bezier(.22,1.28,.42,1) backwards; }
+.lesson-pop > * { animation: lpKid .24s ease-out backwards; }
+.lesson-pop > :nth-child(1) { animation-delay: .05s; }
+.lesson-pop > :nth-child(2) { animation-delay: .09s; }
+.lesson-pop > :nth-child(3) { animation-delay: .13s; }
+.lesson-pop > :nth-child(4) { animation-delay: .17s; }
+.lesson-pop > :nth-child(5) { animation-delay: .21s; }
+.lesson-pop-veil.out { pointer-events: none; }
+.lesson-pop-veil.out .lesson-pop { animation: lpOut .16s cubic-bezier(.5,0,.9,.6) forwards; }
+@keyframes lpIn { 0% { opacity: 0; transform: scale(.5); } 35% { opacity: 1; } 100% { opacity: 1; transform: none; } }
+@keyframes lpKid { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes lpOut { to { opacity: 0; transform: scale(.6); } }
+:root[data-motion="reduced"] .lesson-pop, :root[data-motion="reduced"] .lesson-pop > * { animation: none; }
 .modal { animation: springIn .4s cubic-bezier(.3,1.4,.5,1); }
 .modal .m-owl { display: inline-block; animation: starRise .6s .15s cubic-bezier(.3,1.6,.5,1) backwards; }
 
@@ -1911,6 +1926,8 @@ button.dom-stat:active { transform: scale(.99); }
 .net-bar b { font-size: 14.5px; font-weight: 800; }
 .net-bar span { font-size: 12.5px; font-weight: 600; line-height: 1.5; }
 :root[data-motion="reduced"] .net-bar { transition: none; }
+/* the note sits over the tab bar's gap: on a screen without the tab bar (a lesson, a win) it would cover the action, so it waits (QA, 2026-11-08) */
+body:not(:has(.bottomnav)) .net-bar { display: none; }
 
 /* --- a streak about to break, and the three-way goal segment --- */
 .due-card.due-risk { border-color: var(--orange); box-shadow: 0 4px 0 #E07D00; }
@@ -2174,6 +2191,7 @@ button.dom-stat:active { transform: scale(.99); }
 @keyframes cvGemJig { 0% { transform: scale(1) translateY(0) rotate(var(--r)); } 40% { transform: scale(1.1) translateY(-14px) rotate(var(--r)); } 100% { transform: scale(1) translateY(0) rotate(var(--r)); } }
 .cv-foot { position: absolute; left: 20px; right: 20px; bottom: 84px; opacity: 0; transition: opacity .3s ease; }
 .cv-reward.told .cv-foot { opacity: 1; }
+.cv-reward:not(.told) .cv-foot { pointer-events: none; }
 .cv-btn { height: 56px; border-radius: 16px; font-size: 17px; text-transform: none; letter-spacing: 0; background: var(--blue); box-shadow: 0 4px 0 var(--blue-dk); }
 .cv-btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--blue-dk); }
 
@@ -2373,6 +2391,8 @@ button.dom-stat:active { transform: scale(.99); }
   font-size: .82em; line-height: 1.08; text-align: center; margin: 0 .12em; unicode-bidi: isolate; white-space: nowrap; }
 .fr-n { padding: 0 .22em .08em; border-bottom: .11em solid currentColor; }
 .fr-d { padding: .1em .22em 0; }
+.pw { font-size: .6em; line-height: 0; vertical-align: .62em; margin-inline-start: .04em; }
+sub.pw { vertical-align: -.3em; }
 .fr-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .mock-timer .mk-clock { display: flex; width: 19px; height: 19px; }
 .mock-timer .mk-clock svg { width: 100%; height: 100%; }
@@ -2451,6 +2471,7 @@ button.dom-stat:active { transform: scale(.99); }
 }
 .mg-cell.ok  { background: var(--green); box-shadow: 0 3px 0 var(--green-lip); }
 .mg-cell.bad { background: var(--red); box-shadow: 0 3px 0 #C73535; }
+.mg-cell.skip { background: var(--gray-icon); box-shadow: 0 3px 0 #9A9A9A; }   /* left unanswered: not the same as answered wrong (QA, 2026-11-08) */
 .mg-cell:active { transform: translateY(2px); box-shadow: none; }
 .mg-cell.sel { outline: 3px solid var(--blue); outline-offset: 2px; }
 .mock-detail { animation: fadeUp .35s cubic-bezier(.3,1.3,.5,1); margin-top: 8px; }
@@ -2528,7 +2549,7 @@ button.dom-stat:active { transform: scale(.99); }
 .lb-title { font-size: 26px; color: var(--gold-dk); margin: 6px 0 2px; }
 
 /* tier progression ladder (doubles as the screen header) */
-.lb-ladder { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; margin: 6px 2px 14px; }
+.lb-ladder { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; margin: 6px 2px 14px; overflow-x: clip; overflow-clip-margin: 16px; }   /* the edge tier's glow never widens the page (QA, 2026-11-08: champions scrolled sideways) */
 .lb-tier { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 6px; transition: transform .2s; }
 .lb-tier-badge { position: relative; display: inline-flex; }
 .lb-tier-badge .rank-badge { height: 58px; width: auto; display: block; }
@@ -2892,6 +2913,10 @@ button.dom-stat:active { transform: scale(.99); }
 .sk-days .dot.coin .check { display: none; }
 .sk-foot { margin-top: 36px; width: 100%; opacity: 0; transform: translateY(16px); transition: opacity .5s ease, transform .5s cubic-bezier(.2,.7,.3,1); }
 .sk-foot.show { opacity: 1; transform: none; }
+.sk-foot:not(.show) { pointer-events: none; }
+/* a short phone keeps the whole streak scene, «متابعة» included, on the screen (QA, 2026-11-08: the button sat under 568) */
+@media (max-height: 760px) { .sk-flame { width: 250px; height: 250px; } .sk-foot { margin-top: 24px; } }
+@media (max-height: 640px) { .sk-flame { width: 190px; height: 190px; } .sk-num { height: 112px; margin-top: -10px; } .sk-cal { margin-top: 12px; } .sk-foot { margin-top: 16px; } .sk-next { margin-bottom: 10px; font-size: 14px; } }
 .sk-next { color: var(--gray); font-size: 15px; font-weight: 700; line-height: 1.5; text-align: center; margin-bottom: 16px; }
 .sk-btn { width: 100%; }
 
@@ -3227,6 +3252,9 @@ button.dom-stat:active { transform: scale(.99); }
 
 /* dynamic viewport height so mobile browser chrome cannot overflow */
 .app { min-height: 100dvh; }
+/* a screen rising in from 16px lower (fadeUp) poked out of the page for its first quarter second and the page could scroll by it;
+   clip (not hidden) cuts that off without making a scroll box, so sticky headers keep working (QA, 2026-11-08) */
+.app { overflow-y: clip; }
 
 /* A lesson or exam question is a fixed frame exactly one screen tall. The
    header and the action bar are pinned, so letting the PAGE scroll only
@@ -3258,6 +3286,8 @@ button.dom-stat:active { transform: scale(.99); }
 @media (max-width: 767px) {
   .screen-session:has(.mock-bar) .q-area, .screen-place .q-area, .screen-session .q-area.lt-see { padding-bottom: 12px; }
 }
+/* solved, its tiles and help have done their work and give their room to the line (ops at 320 × 568 did not fit beside the sheet) */
+.screen-session:has(.rf-chk):has(#fb.show) :is(.rf-tiles, .rf-hint) { visibility: hidden; }   /* hidden in place, so the solved line never jumps (the student tester, 2026-11-08: 155–190px) */
 body:has(.screen-session) { overflow: hidden; }
 /* a ceremony or a sheet over the path holds the page still under it: nothing scrolls behind it (the user, 2026-10-29) */
 body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .modal-veil, .rankup-veil) { overflow: hidden; }
@@ -4534,6 +4564,7 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 .ln-eq.rf-box { box-sizing: border-box; width: 100%; min-width: 0; padding: 14px 10px; line-height: 1.2; text-wrap: nowrap; }
 .rf-box .rf-ex { font-size: 24px; font-weight: 800; line-height: 1.5; color: var(--ink); white-space: nowrap; padding: 0 4px 10px; margin-bottom: 12px; border-bottom: 1px dashed var(--line); }
 .rf-box .rf-ex.rf-say { white-space: normal; text-wrap: balance; font-size: 19px; line-height: 1.55; }
+.rf-box .rf-ex .rf-exl { font-size: inherit; line-height: 1.2; --bh: 1.5em; }
 .rf-line {
   display: flex; flex-wrap: nowrap; justify-content: safe center; align-items: center; gap: .26em; width: 100%; min-width: 0;
   font-size: 28px; font-weight: 800; line-height: 1.2; color: var(--ink); white-space: nowrap; --bh: 1.8em;
@@ -4544,11 +4575,24 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 /* the numbers screen's steps, one under the other, a dashed rule between them as the example has (rfRows) */
 .rf-num .rf-line + .rf-line { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); }
 .rf-t { display: inline-flex; align-items: center; height: var(--bh); flex: none; }
+/* the absolute-value bar is drawn thin, tall and grey so «| ١» never reads as «||» (QA, 2026-11-08) */
+.rf-t.abs { font-weight: 400; color: var(--gray); transform: scaleY(1.3); padding-inline: .12em; }
+/* «… ÷ ٢» stacked as the exam prints a fraction (rfStack): the top over a bar over the bottom */
+.ln-row { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .22em; vertical-align: middle; }
+.ln-row .rf-fn, .ln-row .rf-fd { gap: .22em; }
+.rf-fr { display: inline-flex; flex-direction: column; align-items: center; flex: none; }
+.rf-fn, .rf-fd { display: flex; align-items: center; justify-content: center; gap: inherit; flex: none; }
+.rf-line .rf-fr .rf-fn, .rf-line .rf-fr .rf-fd { gap: .26em; }
+.rf-words .rf-line .rf-fr .rf-fn, .rf-words .rf-line .rf-fr .rf-fd { gap: .2em; }
+.rf-fn { padding: 0 .15em .14em; border-bottom: .1em solid var(--ink); min-width: 100%; box-sizing: border-box; }
+.rf-fd { padding-top: .14em; }
 .rf-t.par { color: var(--gray); font-weight: 700; }
 .rf-line .ln-blank {
   flex: none; height: var(--bh); min-width: 2.2em; margin: 0; padding: 0 .4em; font-size: .86em; border-radius: 12px;
   border: 2px dashed var(--gray-icon); background: #F7F7F7; color: var(--blue-dk); white-space: nowrap;
 }
+/* a fraction placed in a blank sits inside its height rather than spilling over it (QA, 2026-11-08: ٣/١٠ cut at both ends) */
+.rf-line .ln-blank .fr, .rf-tiles .ln-tile .fr { font-size: .64em; line-height: 1; }
 .rf-line .ln-blank.filled, .rf-line .ln-blank.right { border: 2px solid var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
 .rf-line .ln-blank.wrong { border: 2px solid var(--red); background: var(--red-bg); color: var(--red-dk2); }
 .rf-line .ln-blank.shown { border-style: solid; border-color: var(--blue-border); background: var(--snow); color: var(--blue-dk); }
@@ -4567,10 +4611,10 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 .rf-hint.help.go { animation: rfWarn .4s cubic-bezier(.3, 1.6, .5, 1); }
 .rf-help-ic { display: grid; place-items: center; flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--gold); color: var(--snow); }
 .rf-help-ic svg { width: 17px; height: 17px; }
-.rf-help-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding-top: 2px; }
+.rf-help-tx { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto; padding-top: 2px; }
 .rf-help-tx > b:first-child { color: var(--gray); font-size: 13px; }
 .rf-tr { font-size: 16px; font-weight: 800; color: var(--ink); direction: rtl; }
-.rf-help-tx .ln-hl { display: inline; padding: 0 6px; }
+.rf-help-tx .ln-hl { display: inline-block; padding: 0 6px; line-height: 1.3; }   /* its tint as tall as the line, not the font's whole box (QA, 2026-11-08: it poked out of a one-line help) */
 .rf-tiles .ln-tile.out { background: var(--line); border-color: var(--line); color: transparent; box-shadow: none; pointer-events: none; animation: rfOut .3s ease-out; }
 @keyframes rfOut { from { transform: scale(1.06); } to { transform: none; } }
 .rf-line .ln-blank.pt { border-color: var(--blue); animation: rfPt .9s ease-in-out 3; }
@@ -4584,7 +4628,7 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 .rf-hint.rf-fh { align-items: center; }
 .rf-hint.rf-fh .rf-help-fh { flex: none; width: 46px; height: 46px; object-fit: contain; }
 .rf-hint.rf-fh .rf-help-tx > b:first-child { color: var(--red-dk2); font-size: 15px; }
-.action-bar .rf-nobtn { visibility: hidden; }
+.rf-hint.rf-fh .rf-help-tx > b.ok { color: var(--green-dk); }   /* the praise after a miss is green, never the miss's red (QA, 2026-11-08) */
 .ln-bw { display: inline-flex; flex-direction: column; align-items: center; vertical-align: top; line-height: 1; margin: 0 2px; }
 .tc-rf { width: 100%; }
 .tc-rf .tc-why { margin-top: 14px; }
@@ -4621,6 +4665,10 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
   border: 2px solid var(--blue-border); border-radius: 16px; background: #fff;
   font-size: 34px; font-weight: 800; color: var(--ink); letter-spacing: 2px;
 }
+/* a typed fraction stands over its bar inside the box's own height, so neither the border nor the keypad moves (QA, 2026-11-08:
+   «٤/١١» ran 8px over the border) */
+.ln-input .fr { font-size: .62em; line-height: 1; }
+.ln-input { min-height: 61px; }
 .ln-input.right { border-color: var(--green); background: var(--green-bg); color: var(--green-dk); }
 .ln-input.wrong { border-color: var(--red); background: var(--red-bg); color: var(--red-dk2); }
 .ln-caret { width: 3px; height: 34px; border-radius: 2px; background: var(--blue); animation: caretBlink 1s steps(1) infinite; }
@@ -4643,7 +4691,7 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 .ln-key:disabled { opacity: .5; }
 
 /* match pairs */
-.ln-pairs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ln-pairs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }   /* the right-answer wave jumps 24px: a top-row tile cleared the ask by 12 (QA, 2026-11-08) */
 .ln-col { display: flex; flex-direction: column; gap: 10px; }
 .ln-pr {
   min-height: 60px; padding: 8px 10px; border-radius: 15px;
@@ -4888,6 +4936,8 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 .pl-unit b { color: var(--blue-dk); }
 .pl-unit > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pl-unit > :not(:last-child) { white-space: nowrap; flex-shrink: 0; }
+/* the unit's name wraps rather than losing its end on a narrow phone (QA, 2026-11-08: «… هامة في الق…» at 320) */
+@media (max-width: 360px) { .pl-unit > span:last-child { white-space: normal; text-overflow: clip; line-height: 1.3; } }
 /* the exam's own name for what is being asked: حساب / هندسة / جبر */
 .pl-tag { flex-shrink: 0; padding: 2px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 800; }
 .pl-ar  { background: var(--blue-light); color: var(--blue-dk); }
@@ -5230,7 +5280,9 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 @keyframes clShine { from { left: -50%; } to { left: 120%; } }
 .cl-cta { opacity: 0; transform: translateY(18px); pointer-events: none; }
 .complete.cl .action-bar.cl-cta { box-sizing: border-box; width: 100%; max-width: 452px; padding: 10px 16px calc(16px + env(safe-area-inset-bottom)); }
-.cl-cta.go { opacity: 1; transform: none; pointer-events: auto; transition: opacity .3s .5s, transform .45s .5s cubic-bezier(.3,1.4,.5,1); }
+.cl-cta.go { opacity: 1; transform: none; pointer-events: auto; transition: opacity .3s .5s, transform .45s .5s cubic-bezier(.3,1.4,.5,1); animation: clCtaWait .6s; }
+/* the button takes no tap until it has faded in */
+@keyframes clCtaWait { from, to { pointer-events: none; } }
 :root[data-motion="reduced"] .cl-kick, :root[data-motion="reduced"] .cl-row, :root[data-motion="reduced"] .cl-medal { animation: none; transition: none; }
 .complete h1.wp-title { font-size: 27px; color: var(--gold); margin: 0 0 22px; letter-spacing: 0; }
 .wp-list { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 14px; }
@@ -5300,6 +5352,7 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
    drop starts above the card */
 .wp-gem-rv { position: absolute; left: 50%; top: 50%; width: 176px; height: 176px; transform: translate(-50%, -54%); pointer-events: none; visibility: hidden; }
 .wp-gem.rv .wp-gem-rv { visibility: visible; }
+.wp-gems .wp-gem { margin-inline-start: 14px; }   /* the large pile stays inside its card (QA, 2026-11-08: it spilled over the rim) */
 .wp-gem.rv > .ic { visibility: hidden; }
 .wp-gems .wn-tx > b { font-size: 19px; color: var(--blue-dk); }
 .wp .wn-cta { position: sticky; bottom: 0; width: 100%; max-width: 380px; margin-top: auto; padding: 12px 0 calc(14px + env(safe-area-inset-bottom)); background: var(--snow); display: flex; flex-direction: column; gap: 10px; }
@@ -5457,6 +5510,22 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 .cal-ic .ci-b { fill: var(--snow); stroke: var(--tone); stroke-width: 2.2; }
 .cal-ic .ci-h { fill: var(--tone); }
 .cal-ic .ci-r { fill: none; stroke: var(--tone-dk); stroke-width: 2.4; stroke-linecap: round; }
+/* no date yet: a calendar page with a green «+» on its corner; every few seconds it gives a small nudge and
+   the badge pops, so the empty slot asks to be tapped */
+.stat-exam-add { width: 40px; height: 40px; justify-content: center; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.cal-add { width: 34px; height: 34px; overflow: visible; transform-origin: 50% 90%; animation: caNudge 4.5s 1.2s ease-in-out infinite; }
+.cal-add .ca-lip { fill: var(--blue-dk); }
+.cal-add .ca-face { fill: var(--snow); stroke: var(--blue); stroke-width: 2; }
+.cal-add .ca-head { fill: var(--blue); }
+.cal-add .ca-ring { fill: var(--blue-dk); stroke: var(--snow); stroke-width: 1.4; }
+.cal-add .ca-cell { fill: var(--blue-light); }
+.cal-add .ca-badge { transform-origin: 26px 26px; animation: caBadge 4.5s 1.2s ease-out infinite; }
+.cal-add .ca-badge circle { fill: var(--green); stroke: var(--snow); stroke-width: 2.4; }
+.cal-add .ca-badge path { fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; }
+.stat-exam-add:active .cal-add { animation: none; transform: scale(.9); }
+@keyframes caNudge { 0%, 84%, 100% { transform: none; } 88% { transform: rotate(-9deg) scale(1.06); } 92% { transform: rotate(7deg) scale(1.06); } 96% { transform: rotate(-3deg); } }
+@keyframes caBadge { 0%, 84%, 100% { transform: none; } 90% { transform: scale(1.25); } 95% { transform: scale(.95); } }
+:root[data-motion="reduced"] .cal-add, :root[data-motion="reduced"] .cal-add .ca-badge { animation: none; }
 
 /* ---- shorter phones: last in the file, so they win over every rule they tighten ---- */
 /* a shorter phone: «كم سؤال تبي تحل يومياً؟» brings its rows a step closer (nothing scrolls) */
@@ -5513,3 +5582,80 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
   .place-scene .pl-utx b { font-size: 13.5px; }
   .place-scene .pl-utx span { font-size: 12px; }
 }
+/* the sign-in wall's three chips stay on one row at 320 wide (QA, 2026-11-08) */
+@media (max-width: 350px) { .si-earn { gap: 4px; } .si-earn span { padding-inline: 8px; font-size: 13px; } .si-earn b { font-size: 14px; } .si-earn img { width: 18px; height: 18px; } }
+/* the mock's answers in their own sheet: a list of up to fifty that may run long, with each question's review under it */
+.ask-sheet.mock-sheet { max-height: 86dvh; overflow-y: auto; overscroll-behavior: contain; text-align: right; }
+.mock-sheet .mk-ans-sub { margin: 2px 0 12px; color: var(--gray); font-weight: 700; font-size: 14px; }
+.mock-sheet .fb-solution { max-height: none; overflow: visible; }   /* the sheet scrolls, never a box inside it (QA, 2026-11-08: solutions cut mid-line) */
+.mock-sheet #mkAnsOk { margin-top: 14px; width: 100%; position: sticky; bottom: 4px; z-index: 1; }   /* stays in sight while a long solution scrolls (QA, 2026-11-08) */
+.mock-ans-btn { width: 100%; }
+/* no word left alone on a paragraph's last line («كان»، «٩.»; QA, 2026-11-08) */
+body { text-wrap-style: pretty; }
+/* «جرّب» on a short phone: once answered, only the right choice stays under the values, so the rule card and its line read
+   at full size instead of the step shrinking to three quarters (QA, 2026-11-08: 75% at 320 × 568, 88% at 375 × 667) */
+@media (max-height: 700px) {
+  .ts.shown .ts-opt:not(.ok) { display: none; }
+  .ts.shown .ts-opts { grid-template-columns: 1fr; }
+}
+/* the mock's result fits the phone (QA, 2026-11-08: 76% at 402 × 874, scrolling at 320 × 568): the section rows sit tight,
+   the flame comes down a size on a phone and gives its room to the numbers on a short one */
+.mock-result .result-cards { gap: 12px; margin-bottom: 14px; }
+.mock-result .mock-note { margin-bottom: 10px; }
+.mock-result .card { padding-block: 12px 8px; margin-bottom: 12px; }
+.mock-result .card h3 { margin-bottom: 4px; }
+.mock-result .dom-stat { padding: 2px 0; margin-bottom: 4px; }
+.mock-result .dom-stat .ds-head { font-size: 14px; margin-bottom: 3px; }
+.mock-result .mock-ans-btn { margin-bottom: 12px; }
+.mock-result .fail-actions { gap: 8px; }
+@media (max-height: 920px) { .mock-result .win-hero { --wh: 112px !important; margin-bottom: 4px; } }
+@media (max-height: 700px) {
+  .mock-result { padding-top: 14px !important; }
+  .mock-result .win-hero { display: none; }
+  .mock-result .win-sub { margin-bottom: 10px; }
+  .mock-result .rcard .rc-v { height: 50px; }
+}
+/* no tab bar under the mock's result, so none of its room either: the 96px it kept were zoomed for as content */
+.screen:has(> .mock-result) { padding-bottom: 0; }
+/* the floating chest takes less of a narrow path: it sat on a lesson title at 320 and 375 (QA, 2026-11-08); `scale`, so its hop keeps the GPU */
+@media (max-width: 380px) { .chest-float { scale: .8; transform-origin: 0 100%; } }
+/* a miss on a phone this short says only what is wrong and where; the rule is one tap away under «القانون» (QA, 2026-11-08: help at 8px on ops at 320 × 568) */
+@media (max-height: 600px) { .rf-hint.rf-fh .rf-help-fh, .rf-hint.rf-fh .rf-tr { display: none; } }
+/* a question with a figure on a short phone: the figure gives way first, so the stem and choices stay readable instead of the whole
+   question zooming to two thirds (QA, 2026-11-08: the mock at .66 on 320 × 568) */
+@media (max-height: 760px) { .screen-session .q-figure { margin: 6px 0 8px; } .screen-session .q-figure svg { max-height: 30vh; width: auto; } }
+@media (max-height: 600px) { .screen-session .q-figure svg { max-height: 16vh; } }
+.ln-nw { white-space: nowrap; }
+/* on a short phone «كمّل الخطوة»'s help is one tight line under the tiles (««٦» مو هنا. هذا مكان … — …»), so a miss costs the
+   step as little room as it can (QA, 2026-11-08: the step zoomed from .72 to .61 at 320 × 568) */
+@media (max-height: 600px) {
+  .rf-hint.help.rf-fh { margin-top: 8px; padding: 6px 10px; font-size: 14px; line-height: 1.35; }
+  .rf-hint.rf-fh .rf-help-tx > :not(.rf-tr) { display: inline; }
+  .rf-hint.rf-fh .rf-help-tx > * + * { margin-inline-start: .3em; }
+}
+/* the fail screen's shake never scrolls the page sideways (QA, 2026-11-08: scrollX −9 twice on «نفدت القلوب!») */
+html:has(.fail-scene), body:has(.fail-scene) { overflow-x: clip; }
+.ri-fig { margin: 8px 0; } .ri-fig svg { max-height: 160px; width: auto; max-width: 100%; }
+/* «كمّل الخطوة» keeps its help's room from the start, so a miss, and the «صح!» after it, never move the card and the tiles
+   under the finger (QA, 2026-11-08: the tiles jumped 50–160px up and back on each miss); the help is one size on that screen */
+.screen-session:has(.rf-chk) #rfHint { min-height: 88px; box-sizing: border-box; flex: none; }
+@media (min-height: 701px) { .screen-session:has(.rf-chk) #rfHint { min-height: 96px; } }   /* the second miss's three lines are 92px on a tall phone (QA, 2026-11-08) */
+@media (max-height: 600px) { .screen-session:has(.rf-chk) #rfHint { margin-top: 8px; } }   /* empty or filled, the same gap, so the first miss moves nothing */   /* never squeezed under its text; held as tall as the help gets, so a miss never moves the tiles under the finger (QA, 2026-11-08) */
+.screen-session:has(.rf-chk) #rfHint:empty { display: block; visibility: hidden; }
+.screen-session:has(.rf-chk) #rfHint.help { align-items: center; font-size: 14px; line-height: 1.4; }
+/* room for the help's two lines at its largest, so nothing under the finger moves on a miss (QA, 2026-11-08: 7px at 375, 25px at 320) */
+@media (max-height: 700px) { .screen-session:has(.rf-chk) .rf-hint.help.rf-fh { padding: 8px 10px; } }
+.screen-session:has(.rf-chk) .q-area > #rfHint { margin-bottom: auto; }   /* filled or empty, so the column stays centred where it was */
+/* a «كمّل الخطوة» chain of three or four steps on a short phone: its rows sit closer, so solved it stays whole above the
+   sheet instead of scrolling its ask under the bar (QA, 2026-11-08: lesson 2's chain at 320 × 568) */
+@media (max-height: 600px) {
+  .screen-session .ln-eq.rf-box { padding: 8px 8px; }
+  .screen-session .rf-box .rf-ex { font-size: 20px; padding-bottom: 6px; margin-bottom: 6px; }
+  .screen-session .rf-num .rf-line + .rf-line { margin-top: 2px; padding-top: 2px; }
+}
+@media (max-height: 600px) { .screen-session:has(.rf-chk):has(.feedback.good.show) .q-area > .rf-q { visibility: hidden; } }
+/* solved, the help's reserve is let go: the tiles are gone and nothing more will be said under them (QA, 2026-11-08: the box pushed under the top bar at 320) */
+.screen-session:has(.rf-chk):has(.feedback.good.show) .q-area > #rfHint { visibility: hidden; }
+/* on a 320 × 568 phone a solved four-line chain needs the room «القانون» stands in, or its example goes under the top bar (QA, 2026-11-08) */
+@media (max-height: 600px) { .screen-session:has(.rf-chk):has(.feedback.good.show) .lw-peek { display: none; } }
+@media (max-height: 700px) { .screen-session:has(.rf-chk):has(.feedback.good.show) .q-area > .rf-q { visibility: hidden; } }

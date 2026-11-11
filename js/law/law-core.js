@@ -11,7 +11,9 @@
   const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
   const pick = a => a[Math.floor(Math.random() * a.length)];
   const shuffle = a => a.map(x => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map(x => x[1]);
-  const fx = s => String(s).replace(/([٠-٩]+)\/([٠-٩]+)/g, '<span class="fr"><b>$1</b><i></i><b>$2</b></span>').replace(/÷/g, '<i class="dv"></i>');
+  /* powers raised in the exam's own digits, as the app's lines draw them (QA, 2026-11-08: «٣² = ٩» in the font's Latin ²) */
+  const fx = s => String(s).replace(/([٠-٩]+)\/([٠-٩]+)/g, '<span class="fr"><b>$1</b><i></i><b>$2</b></span>').replace(/÷/g, '<i class="dv"></i>')
+    .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, x => `<sup class="pw">${[...x].map(c => '٠١٢٣٤٥٦٧٨٩'['⁰¹²³⁴⁵⁶⁷⁸⁹'.indexOf(c)]).join('')}</sup>`);
   const gcd = (a, b) => b ? gcd(b, a % b) : a;
   const fr = (a, b) => { const g = gcd(a, b); return A(a / g) + '/' + A(b / g); };
   const OP = /^[=×÷+−←]$/;
@@ -79,6 +81,8 @@
   function flyFrom(el, src, ms = 480, lift = 26) {
     if (!src) return null;
     const k = scaleOf(el), a = src.getBoundingClientRect(), b = el.getBoundingClientRect(), dx = ((a.left + a.width / 2) - (b.left + b.width / 2)) / k, dy = ((a.top + a.height / 2) - (b.top + b.height / 2)) / k;
+    /* while it flies over the tiles it takes no taps, so a fast student's next tap reaches the tile under it (QA, 2026-11-08) */
+    const pe = el.style.pointerEvents; el.style.pointerEvents = 'none'; later(ms + 20, () => { el.style.pointerEvents = pe; });
     return anim(el, [{ opacity: 1, transform: `translate(${dx}px, ${dy}px) scale(.8)` }, { opacity: 1, transform: `translate(${dx * .5}px, ${dy * .5 - lift / k}px) scale(1.12)`, offset: .5 }, { opacity: 1, transform: 'none' }], { duration: ms, easing: 'cubic-bezier(.4,0,.3,1)' });
   }
   function fit(line, min = 12) {
@@ -88,7 +92,17 @@
     while (line.scrollWidth > line.clientWidth + 1 && fs > 10) { fs -= .5; line.style.fontSize = fs + 'px'; }
   }
   /* فهيم's words arrive one at a time, each on Brilliant's tap, as his bubble does in the app */
-  const wsplit = t => t.split(' ').map(w => `<span class="w">${fx(w.replace(/\*([^*]+)\*/g, '<em>$1</em>'))}</span>`).join(' ');
+  /* a short quoted expression («… + ١٥ + … + ٥٠») stays on one line, so no line of the bubble starts with «+» or «…» (QA, 2026-11-08) */
+  /* a sign stays with the number after it, so no line ends on «×» (QA, 2026-11-08) */
+  const wsplit = t => { const ws = t.replace(/ ([×÷+−=]) /g, ' $1\u00A0').split(' '), out = []; let i = 0;
+    const one = w => `<span class="w">${fx(w.replace(/\*([^*]+)\*/g, '<em>$1</em>'))}</span>`;
+    while (i < ws.length) {
+      const w = ws[i], open = w.includes('«') && !w.includes('»');
+      let j = i; if (open) { while (j < ws.length - 1 && !ws[j].includes('»')) j++; }
+      if (open && ws[j].includes('»') && j - i < 10) { out.push(`<span class="ln-nw">${ws.slice(i, j + 1).map(one).join(' ')}</span>`); i = j + 1; }
+      else { out.push(one(w)); i++; }
+    }
+    return out.join(' '); };
   function sayInto(el, text, d0 = 250) {
     el.innerHTML = wsplit(text.replace(/\*([^*]+)\*/g, (m, p) => p.split(' ').map(w => `*${w}*`).join(' ')));
     const ws = [...el.querySelectorAll('.w')];
@@ -194,7 +208,7 @@
       html: () => {
         let d = '';
         for (let r = 0; r < 5; r++) for (let k = 0; k < 6; k++) { const blue = k <= r; d += `<circle class="${blue ? 'b' : 'o'}" data-r="${r}" cx="${232 - k * 30}" cy="${22 + r * 30}" r="10" fill="${blue ? '#1CB0F6' : '#FF9600'}" style="opacity:0"/>`; }
-        return `<div class="dg"><svg class="d" width="290" height="160" viewBox="0 0 290 160">${d}
+        return `<div class="dg"><svg class="d" width="290" height="178" viewBox="0 -18 290 178">${d}
           <text class="lw" x="157" y="-8" font-size="15" fill="#A568CC" text-anchor="middle" style="opacity:0">٦</text>
           <text class="lh" x="262" y="86" font-size="15" fill="#1899D6" text-anchor="middle" style="opacity:0">٥</text></svg>
           <div class="dlab"><span>آخر عدد<b class="n1">٠</b></span><span>آخر عدد + ١ =<b class="n2">؟</b></span><span class="l3">المجموع<b class="n3">٠</b></span></div></div>`;
@@ -260,8 +274,8 @@
     },
     ways: {
       html: () => {
-        const L1 = [60, 150, 240], lv = [];
-        L1.forEach((x, i) => [x - 24, x + 24].forEach((y, j) => lv.push([x, y, i, j])));
+        const L1 = [240, 150, 60], lv = [];   /* read right to left: ق١ and ب١ on the right (QA, 2026-11-08) */
+        L1.forEach((x, i) => [x + 24, x - 24].forEach((y, j) => lv.push([x, y, i, j])));
         return `<div class="dg"><svg class="d" width="300" height="170" viewBox="0 0 300 170">
           ${L1.map(x => `<line class="e1" x1="150" y1="18" x2="${x}" y2="78" stroke="#84D8FF" stroke-width="3" stroke-linecap="round" style="opacity:0"/>`).join('')}
           ${lv.map(([x, y, i]) => `<line class="e2" data-i="${i}" x1="${x}" y1="78" x2="${y}" y2="140" stroke="#E2B6FF" stroke-width="3" stroke-linecap="round" style="opacity:0"/>`).join('')}
@@ -297,23 +311,23 @@
   const G = {
     prob(i) {
       const kind = ['dice', 'bag', 'range'][i % 3]; let q, w, n;
-      if (kind === 'dice') { const c = pick([['عدد أكبر من ٤', v => v > 4], ['عدد زوجي', v => v % 2 === 0], ['عدد أقل من ٣', v => v < 3], ['عدد أولي', v => [2, 3, 5].includes(v)]]); n = 6; w = [1, 2, 3, 4, 5, 6].filter(c[1]).length; q = `رُمي حجر نرد مرة واحدة. ما احتمال ظهور ${c[0]}؟`; }
+      if (kind === 'dice') { const c = pick([['عدد أكبر من ٢', v => v > 2], ['عدد زوجي', v => v % 2 === 0], ['عدد أقل من ٣', v => v < 3], ['عدد أولي', v => [2, 3, 5].includes(v)]]); n = 6; w = [1, 2, 3, 4, 5, 6].filter(c[1]).length; q = `رُمي حجر نرد مرة واحدة. ما احتمال ظهور ${c[0]}؟`; }
       else if (kind === 'bag') { const r = rnd(3, 7), b = rnd(3, 7), blue = Math.random() < .5; n = r + b; w = blue ? b : r; q = `صندوق فيه ${A(r)} كرات حمراء و${A(b)} كرات زرقاء، سُحبت منه كرة عشوائياً. ما احتمال أن تكون ${blue ? 'زرقاء' : 'حمراء'}؟`; }
       else { const [N, m] = pick([[20, 4], [20, 5], [30, 5], [24, 6], [30, 6], [12, 3], [40, 8]]); n = N; w = N / m; q = `اختير عدد عشوائياً من الأعداد ١ إلى ${A(N)}. ما احتمال أن يكون من مضاعفات ${A(m)}؟`; }
       const ans = fr(w, n);
-      return { q, ans, ch: four(ans, [n - w !== w ? fr(w, n - w) : null, fr(n - w, n), fr(1, n), fr(w + 1, n), fr(w, n + 1)]), sol: `المطلوب ${A(w)} من ${A(n)} ← ${A(w)}/${A(n)}${gcd(w, n) > 1 ? ' = ' + ans : ''}` };
+      return { q, ans, ch: four(ans, [n - w > w ? fr(w, n - w) : null, fr(n - w, n), fr(1, n), fr(w + 1, n), kind === 'dice' ? fr(Math.min(w + 2, n - 1), n) : fr(w, n + 1)]), sol: `المطلوب ${A(w)} من ${A(n)} ← ${A(w)}/${A(n)}${gcd(w, n) > 1 ? ' = ' + ans : ''}` };
     },
     mean(i) {
       const kind = ['direct', 'sum', 'miss'][i % 3];
       if (kind === 'direct') { const k = rnd(4, 5), m = rnd(8, 15), v = Array(k).fill(m); for (let g = 0; g < 16; g++) { const a = rnd(0, k - 1), b = rnd(0, k - 1), d = rnd(1, 4); if (a !== b && v[b] - d > 1) { v[a] += d; v[b] -= d; } } const s = k * m; return { q: `ما الوسط الحسابي للأعداد: ${v.map(A).join('، ')}؟`, ans: A(m), ch: four(A(m), [A(m + 1), A(m - 1), A(m + 2), A(Math.round(s / 2))]), sol: `المجموع ${A(s)} ÷ العدد ${A(k)} = ${A(m)}` }; }
-      if (kind === 'sum') { const k = rnd(4, 7), m = rnd(9, 18), s = k * m; return { q: `الوسط الحسابي لـ ${A(k)} أعداد يساوي ${A(m)}. ما مجموع هذه الأعداد؟`, ans: A(s), ch: four(A(s), [A(m + k), A(s - m), A(s + k), A(k * (m + 1))]), sol: `المجموع = الوسط × العدد = ${A(m)} × ${A(k)} = ${A(s)}` }; }
+      if (kind === 'sum') { const k = rnd(4, 7), m = rnd(9, 18), s = k * m; return { q: `الوسط الحسابي لـ${A(k)} أعداد يساوي ${A(m)}. ما مجموع هذه الأعداد؟`, ans: A(s), ch: four(A(s), [A(m + k), A(s - m), A(s + k), A(k * (m + 1))]), sol: `المجموع = الوسط × العدد = ${A(m)} × ${A(k)} = ${A(s)}` }; }
       let m, a, b, c, d; do { m = rnd(9, 14); a = rnd(m - 5, m + 4); b = rnd(m - 5, m + 4); c = rnd(m - 5, m + 4); d = 4 * m - a - b - c; } while (d < 2 || [a, b, c].includes(d) || d === m);
-      return { q: `الوسط الحسابي لأربعة أعداد يساوي ${A(m)}. إذا كانت ثلاثة منها ${A(a)} و${A(b)} و${A(c)}، فما العدد الرابع؟`, ans: A(d), ch: four(A(d), [A(m), A(d + 2), A(Math.abs(d - 3)), A(Math.round((a + b + c) / 3))]), sol: `المجموع = ${A(m)} × ٤ = ${A(4 * m)} ← ${A(4 * m)} − ${A(a + b + c)} = ${A(d)}` };
+      return { q: `الوسط الحسابي لأربعة أعداد يساوي ${A(m)}. إذا كانت ثلاثة منها ${A(a)} و${A(b)} و${A(c)}، فما العدد الرابع؟`, ans: A(d), ch: four(A(d), [A(m), A(d + 2), A(d > 3 ? d - 3 : d + 4), A(Math.round((a + b + c) / 3))]), sol: `المجموع = ${A(m)} × ٤ = ${A(4 * m)} ← ${A(4 * m)} − ${A(a + b + c)} = ${A(d)}` };
     },
     hand(i) {
       const kind = ['people', 'league', 'points'][i % 3]; let n, q;
       if (kind === 'people') { n = rnd(6, 10); q = `في اجتماع حضره ${A(n)} أشخاص، صافح كل واحد منهم جميع الآخرين مرة واحدة. كم عدد المصافحات؟`; }
-      else if (kind === 'league') { n = rnd(10, 16); q = `دوري فيه ${A(n)} ${n === 10 ? 'فرق' : 'فريقاً'}، لعب كل فريق مع كل فريق آخر مباراة واحدة. كم عدد مباريات الدوري؟`; }
+      else if (kind === 'league') { do { n = rnd(10, 16); } while (n === 12);   /* ٦٦ is bank keylaws-04's sum */ q = `دوري فيه ${A(n)} ${n === 10 ? 'فرق' : 'فريقاً'}، لعب كل فريق مع كل فريق آخر مباراة واحدة. كم عدد مباريات الدوري؟`; }
       else { n = rnd(6, 10); q = `كم قطعة مستقيمة يمكن رسمها بين ${A(n)} نقاط، لا تقع أي ثلاث منها على استقامة واحدة؟`; }
       const r = n * (n - 1) / 2;
       return { q, ans: A(r), ch: four(A(r), [A(n * (n - 1)), A(n * (n + 1) / 2), A((n - 1) * (n - 1)), A(r - 1)]), sol: `${A(n)} × ${A(n - 1)} ÷ ٢ = ${A(r)}` };
@@ -325,9 +339,9 @@
       return { q, ans: A(r), ch: four(A(r), [A((ua + ub) % 10), A(Math.floor(ua * ub / 10) % 10), A((r + 5) % 10), A((r + 2) % 10), A((r + 4) % 10)]), sol };
     },
     tri(i) {
-      const n = [30, 40, 50, 25, 60, 100][(i + rnd(0, 5)) % 6], r = n * (n + 1) / 2;
-      const q = [`ما مجموع الأعداد الصحيحة من ١ إلى ${A(n)}؟`, `١ + ٢ + ٣ + … + ${A(n)} = ؟`, `ما مجموع أول ${A(n)} عدداً صحيحاً موجباً؟`][i % 3];
-      return { q, ans: A(r), ch: four(A(r), [A(n * (n - 1) / 2), A(n * n / 2), A(n * (n + 1))]), sol: `${A(n)} × ${A(n + 1)} ÷ ٢ = ${A(r)}` };
+      const n = [30, 40, 50, 25, 80, 100][(i + rnd(0, 5)) % 6], r = n * (n + 1) / 2;
+      const q = [`ما مجموع الأعداد الصحيحة من ١ إلى ${A(n)}؟`, `١ + ٢ + ٣ + … + ${A(n)} = ؟`, `ما مجموع أول ${A(n)} ${n % 100 ? 'عدداً صحيحاً موجباً' : 'عدد صحيح موجب'}؟`][i % 3];
+      return { q, ans: A(r), ch: four(A(r), [A(n * (n - 1) / 2), A(n * n), A(n * (n + 1))]), sol: `${A(n)} × ${A(n + 1)} ÷ ٢ = ${A(r)}` };
     },
     queue(i) {
       const f = rnd(5, 15), b = rnd(5, 15), n = f + b - 1;
@@ -362,17 +376,17 @@
     { key: 'hand', name: 'المصافحات', tok: [{ t: 'المصافحات' }, '=', { t: 'العدد' }, '×', { t: '(العدد − ١)' }, '÷', '٢'], wswap: [1, 2],
       say: '*المصافحات*: كل واحد يصافح الباقين، وكل مصافحة تنحسب مرة.', cue: 'تجيك لما تقرا «كل واحد مع كل واحد»: مصافحات، مباريات دوري، خطوط بين نقاط.', trap: 'لا تنسى ÷ ٢، كل مصافحة انحسبت مرتين.',
       num: { ex: '٧ أشخاص، كل واحد يصافح الباقين', rows: [['=', B('٧'), '×', B('٦'), '÷', '٢'], ['=', B('٤٢'), '÷', '٢'], ['=', B('٢١')]], more: ['٨', '٤٩', '١٤'], swap: [[0, 0, 1]] } },
-    { key: 'last', name: 'رقم الآحاد في الضرب', tok: [{ t: 'آخر رقم في الناتج' }, '=', 'آخر رقم من', { t: 'آحاد' }, '×', { t: 'آحاد' }],
+    { key: 'last', name: 'رقم الآحاد في الضرب', tok: [{ t: 'آخر رقم في الناتج' }, '=', 'آخر رقم في ناتج', { t: 'آحاد' }, '×', { t: 'آحاد' }],
       say: '*آخر رقم* في الضرب يجي من ضرب الآحاد بس.', cue: 'تجيك لما تقرا «رقم الآحاد» في ضرب أعداد كبيرة.', trap: 'تضرب الآحاد، ما تجمعها.',
       num: { ex: 'رقم الآحاد في ٤٨ × ٢٧', rows: [[B('٨'), '×', B('٧'), '=', B('٥٦')], ['رقم الآحاد', '=', B('٦')]], more: ['٤', '٢', '٥'], swap: [[0, 0, 1]] } },
     { key: 'tri', name: 'مجموع ١ إلى ن', tok: [{ t: 'المجموع' }, '=', { t: 'آخر عدد' }, '×', { t: '(آخر عدد + ١)' }, '÷', '٢'], wswap: [1, 2],
       say: '*المجموع* من ١: اضرب آخر عدد في اللي بعده، وخذ النص.', cue: 'تجيك لما تقرا «من ١ إلى …» أو «أول … عدداً».', trap: 'آخر عدد + ١، مو − ١.',
       num: { ex: '١ + ٢ + ٣ + … + ٢٠', rows: [['=', B('٢٠'), '×', B('٢١'), '÷', '٢'], ['=', B('٤٢٠'), '÷', '٢'], ['=', B('٢١٠')]], more: ['١٩', '٤٠٠', '٢٠٠'], swap: [[0, 0, 1]] } },
     { key: 'queue', name: 'الترتيب من الطرفين', tok: [{ t: 'العدد' }, '=', { t: 'من الأمام' }, '+', { t: 'من الخلف' }, '−', '١'], wswap: [1, 2],
-      say: '*العدد*: اجمع ترتيبك من الجهتين، واطرح نفسك.', cue: 'تجيك لما تقرا «ترتيبه … من الأمام و… من الخلف»، أو الطوابق.', trap: 'لا تنسى − ١، أنت انحسبت مرتين.',
+      say: '*العدد*: اجمع ترتيبك من الجهتين، واطرح نفسك.', cue: 'تجيك لما تقرا «ترتيبه … من الأمام و… من الخلف»، أو الطوابق.', trap: 'لا تنسى − ١: صاحب الترتيب انحسب مرتين، مرة من كل جهة.',
       num: { ex: 'ترتيبك ٤ من الأمام و٩ من الخلف', rows: [['=', B('٤'), '+', B('٩'), '−', '١'], ['=', B('١٢')]], more: ['١٣', '٥', '١١'], swap: [[0, 0, 1]] } },
     { key: 'clock', name: 'زاوية الساعة', tok: [{ t: 'الزاوية' }, '=', { t: 'الساعة' }, '×', '٣٠'],
-      say: 'على رأس الساعة: كل ساعة على الوجه *٣٠ درجة*.', cue: 'تجيك لما تكون الساعة تماماً، بدون دقائق.', trap: 'كل ساعة ٣٠°، مو ٦٠ ولا ٥.',
+      say: 'على رأس الساعة: كل ساعة على الوجه *٣٠ درجة*.', cue: 'تجيك لما تكون الساعة تماماً، بدون دقائق.', trap: 'كل ساعة ٣٠°، مو ٦٠ ولا ٥. وبعد الساعة ٦ خذ الزاوية الأصغر: ٣٦٠° − الناتج.',
       num: { ex: 'الزاوية عند الساعة ٥ تماماً', rows: [['=', B('٥'), '×', '٣٠'], ['=', B('١٥٠°')]], more: ['٦٠°', '٦', '١٢٠°'] } },
     { key: 'ways', name: 'مبدأ العدّ', tok: [{ t: 'عدد الطرق' }, '=', { t: 'خيارات الأول' }, '×', { t: 'خيارات الثاني' }], wswap: [1, 2],
       say: 'تختار من كل مجموعة؟ *اضرب* عدد الخيارات.', cue: 'تجيك لما تختار شي من كل مجموعة: لبس، طرق بين مدن، وجبة وعصير.', trap: 'تضرب، ما تجمع.',
@@ -471,11 +485,14 @@
     const names = RULES.map(r => r.tok[0].t), also = R.notDecoy || { mean: ['الكل'], hand: ['الكل'] }[R.key] || [];
     const pool = shuffle([...new Set(RULES.filter(r => r !== R).flatMap(r => r.tok.filter(x => typeof x !== 'string').map(x => x.t)))].filter(t => !mine.includes(t) && !names.includes(t) && !also.includes(t) && /[\u0621-\u064A]/.test(t)));
     /* a rule may name its own wrong answers, when other rules' words make no sense among its terms (the numbers of «الأعداد المكمّلة») */
-    const near = pool.filter(t => Math.abs(t.length - right.length) <= 4), others = R.decoys ? shuffle(R.decoys.filter(t => !mine.includes(t))).slice(0, 2) : (near.length >= 2 ? near : pool).slice(0, 2);
+    const near = pool.filter(t => Math.abs(t.length - right.length) <= 4), others = R.decoys ? shuffle(R.decoys.filter(t => !mine.includes(t) && !also.includes(t))).slice(0, 2) : (near.length >= 2 ? near : pool).slice(0, 2);
     const pick = document.createElement('div'); pick.className = 'kb-pick';
     pick.innerHTML = shuffle([right, ...others]).map(t => `<button class="kb-ch">${t}</button>`).join('');
     card.appendChild(pick);
     k.classList.add('gap', 'ask');
+    /* the same word elsewhere in the rule is hidden too, or the answer stands in the card (QA, 2026-11-08: «من… إلى» showed «الفرق») */
+    const twins = [...card.querySelectorAll('.k')].filter(x => x !== k && !x.classList.contains('gap') && x.querySelector('.kb-w') && x.querySelector('.kb-w').textContent === right);
+    twins.forEach(x => x.classList.add('gap'));
     tag.textContent = 'وش الناقص؟';
     anim(tag, [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: XO });
     [...pick.children].forEach((b, i) => anim(b, RISE, { duration: 300, delay: 80 + i * 70, easing: XO, fill: 'backwards' }));
@@ -490,7 +507,7 @@
       }
       pick.dataset.done = 1; kbWave(b); snd('right', 1, .45); buzz(12);
       const m = k.querySelector('.kb-m'), w = k.querySelector('.kb-w');
-      k.classList.remove('gap', 'ask');
+      k.classList.remove('gap', 'ask'); twins.forEach(x => x.classList.remove('gap'));
       anim(w, [{ opacity: 0, transform: 'translateY(-115%)' }, { opacity: 1, transform: 'none' }], { duration: 520, easing: XO });
       anim(m, [{ transform: 'none' }, { transform: 'scale(1.08)', offset: .4 }, { transform: 'none' }], { duration: 420, delay: 120, easing: 'cubic-bezier(.3,1.4,.5,1)' });
       later(700, () => { anim(pick, [{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' }); later(250, () => pick.remove()); });
@@ -615,6 +632,9 @@
       n.innerHTML = `<span>${fx(text)}</span>`;
       /* the box takes the number's width, never narrower than the word under it, so two captions never touch */
       const pad = parseFloat(getComputedStyle(m).paddingLeft) * 2, w0 = m.getBoundingClientRect().width / scaleOf(m);
+      /* a long value (the median's sorted list) is set smaller rather than run its box off the card (QA, 2026-11-08) */
+      const fxl = fc.querySelector('.kb-fx'), room = fxl ? fxl.clientWidth * .55 : 0, need = n.firstChild.offsetWidth + pad * 1.4;
+      n.style.fontSize = room && need > room ? (room / need).toFixed(3) + 'em' : '';
       const w1 = Math.max(n.firstChild.offsetWidth + pad * 1.4, c.offsetWidth + 6, pad + 14), em = parseFloat(getComputedStyle(m).fontSize);
       /* and grows taller when the number is a fraction, so it is printed at full size, top over bottom */
       const h0 = m.getBoundingClientRect().height / scaleOf(m), h1 = Math.max(h0, n.firstChild.offsetHeight + pad * .7);

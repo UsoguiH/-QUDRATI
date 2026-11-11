@@ -24,7 +24,7 @@
     { key: 'total', name: 'المجموع من الوسط', tok: [{ t: 'المجموع' }, '=', { t: 'الوسط' }, '×', { t: 'العدد' }], wswap: [1, 2],
       say: 'تعرف *الوسط* والعدد؟ اضربهم يطلع المجموع.', cue: 'تجيك لما تقرا «متوسط … أعداد يساوي …» ويسأل عن مجموعها أو عن عدد ناقص.',
       trap: 'تضرب في عدد الأعداد كلها، والناقص معهم.' },
-    { key: 'permcomb', name: 'تباديل ولا توافيق؟', tok: [{ t: 'التباديل' }, '=', { t: 'التوافيق' }, '×', { t: 'ترتيباتها' }], wswap: [1, 2],
+    { key: 'permcomb', name: 'توافيق ولا تباديل؟', tok: [{ t: 'التباديل' }, '=', { t: 'التوافيق' }, '×', { t: 'ترتيباتها' }], wswap: [1, 2],
       say: 'لو *بدّلت مكانين* وصار شي جديد: تباديل. ما تغيّر شي: توافيق.', cue: 'لجنة، فريق، مجموعة: توافيق. رمز، كلمة، مراكز، رف: تباديل.',
       trap: 'لجنة «أحمد وسعد» هي نفسها «سعد وأحمد».' },
     { key: 'places', name: 'كم مكان؟', tok: [{ t: 'التباديل' }, '=', { t: 'أرقام نازلة' }, 'بعدد', { t: 'الأماكن' }],
@@ -105,12 +105,13 @@
       async run(st, c) {
         const row = $(st, '.md'), cs = $$(st, '.md .cell'), x = $(st, '.md-x'), n1 = $(st, '.n1'), n2 = $(st, '.n2');
         show(x, false); H.rise(cs, 0, 70); await c.wait(600);
-        c.cap('٩ ، ٢ ، ٧ ، ٤ ، ٥ — وش الوسيط؟'); await c.wait(800);
+        c.cap('٩، ٢، ٧، ٤، ٥ — وش الوسيط؟'); await c.wait(800);
         cs[2].classList.add('bad'); pop(x); anim(cs[2], SHAKE, { duration: 380 }); c.s('wrong', 1, .3);
         c.cap('اللي في النص الحين ٧، بس ما رتّبناها'); await c.wait(1200);
         cs[2].classList.remove('bad'); show(x, false);
         const sorted = cs.slice().sort((a, b) => +a.dataset.v - +b.dataset.v);
-        H.flip(row, sorted); c.s('drop', 1, .4); c.cap('رتّبها أول: ٢ ، ٤ ، ٥ ، ٧ ، ٩'); await c.wait(700);
+        H.flip(row, sorted); c.s('drop', 1, .4); c.cap('رتّبها أول: ٢، ٤، ٥، ٧، ٩'); await c.wait(700);
+        /* written tight, so the ordered five fit the rule card's chip at 320 and 402 (QA, 2026-11-08: it ran 10px off the card) */
         H.set(n1, '٢،٤،٥،٧،٩'); c.val(2, '٢،٤،٥،٧،٩', n1); await c.wait(700);
         const mid = sorted[2]; [0, 1, 3, 4].forEach(i => sorted[i].classList.add('dim'));
         mid.classList.add('ok'); pulse(mid); c.s('t3', 1, .42); c.val(1, '٥', mid); await c.wait(600);
@@ -139,21 +140,21 @@
       },
     },
     permcomb: {
-      html: () => `<div class="dg"><div class="pc3">${[['أ', 'ب'], ['أ', 'ج'], ['ب', 'ج']].map(([a, b]) => `<div class="pc-col"><span class="pc-t">${a} ${b}</span><span class="pc-o">${a}${b}</span><span class="pc-o">${b}${a}</span></div>`).join('')}</div>
+      html: () => `<div class="dg"><div class="pc3">${[['أ', 'ب'], ['أ', 'ج'], ['ب', 'ج']].map(([a, b]) => `<div class="pc-col"><span class="pc-t">${a} ${b}</span><span class="pc-o">${a} ${b}</span><span class="pc-o">${b} ${a}</span></div>`).join('')}</div>
         ${H.lab([['لجان من ٢'], ['ترتيب كل لجنة'], ['رئيس ونائب', '٠']])}</div>`,
       async run(st, c) {
         const t = $$(st, '.pc-t'), o = $$(st, '.pc-o'), n1 = $(st, '.n1'), n2 = $(st, '.n2'), n3 = $(st, '.n3');
         o.forEach(e => show(e, false));
-        c.cap('٣ أشخاص: أ ، ب ، ج — لجنة من ٢');
+        c.cap('٣ أشخاص: أ، ب، ج — لجنة من ٢');
         for (let i = 0; i < 3; i++) { pop(t[i], 300); H.set(n1, i + 1); c.s('t' + (i + 1), 1, .42); await c.wait(380); }
         c.cap('اللجنة «أ ب» نفسها «ب أ» ← ترتيبها ما يفرق ← توافيق'); c.val(1, '٣', n1); await c.wait(1300);
-        c.cap('رئيس ونائب: «أب» غير «بأ» ← تباديل');
+        c.cap('رئيس ونائب: «أ ثم ب» غير «ب ثم أ» ← تباديل');
         for (let i = 0; i < 3; i++) {
           [o[i * 2], o[i * 2 + 1]].forEach((e, j) => { show(e); anim(e, [{ opacity: 0, transform: `translateY(-22px) translateX(${j ? -14 : 14}px)` }, { opacity: 1, transform: 'none' }], { duration: 340, delay: j * 90, easing: 'cubic-bezier(.3,1.3,.5,1)', fill: 'backwards' }); });
           H.set(n3, (i + 1) * 2); c.s('tap', up(i * 2), .32); await c.wait(420);
         }
         H.set(n2, '٢'); c.val(2, '٢', n2); await c.wait(600);
-        c.cap('٣ لجان × ٢ ترتيب = ٦'); pulse(n3); c.s('hint', 1, .45); await c.wait(380); c.val(0, '٦', n3); await c.wait(300);
+        c.cap('٣ لجان × ترتيبين = ٦'); pulse(n3); c.s('hint', 1, .45); await c.wait(380); c.val(0, '٦', n3); await c.wait(300);
       },
     },
     places: {
@@ -206,16 +207,17 @@
     outcomes(i) {
       const [cn, dn] = pick([[2, 0], [3, 0], [0, 2], [1, 1], [2, 1], [1, 2]]), r = Math.pow(2, cn) * Math.pow(6, dn);
       const say = [cn ? (cn === 1 ? 'عملة' : cn === 2 ? 'عملتان' : '٣ عملات') : '', dn ? (dn === 1 ? 'حجر نرد' : 'حجرا نرد') : ''].filter(Boolean).join(' و');
-      return { q: `رُمي ${say} معاً. كم عدد النواتج الممكنة؟`, ans: A(r), ch: four(A(r), [A(2 * cn + 6 * dn), A(r / 2), A(r * 2)]),
+      return { q: `${cn ? 'رُميت' : 'رُمي'} ${say} معاً. كم عدد النواتج الممكنة؟`, ans: A(r), ch: four(A(r), [A(2 * cn + 6 * dn), A(r / 2), A(r * 2)]),
         sol: `${[...Array(cn).fill('٢'), ...Array(dn).fill('٦')].join(' × ')} = ${A(r)}` };
     },
     order(i) {
-      const s = pick([3, 4, 5, 6, 8, 9, 10]), w = 6 - Math.abs(s - 7), un = Math.ceil(w / 2), ans = fr(w, 36);
+      const s = pick([3, 4, 6, 8, 9, 10]),   /* not ٥, bank probstats-03 */ w = 6 - Math.abs(s - 7), un = Math.ceil(w / 2), ans = fr(w, 36);
       return { q: `رُمي حجرا نرد. ما احتمال أن يكون مجموع العددين ${A(s)}؟`, ans, ch: four(ans, [fr(un, 36), fr(w, 12), fr(1, s), fr(w + 1, 36)]),
         sol: `الأزواج المرتّبة ${A(w)} من ٣٦ ← ${A(w)}/٣٦${gcd(w, 36) > 1 ? ' = ' + ans : ''}` };
     },
     norep(i) {
-      const n = rnd(5, 9), k = pick([2, 3, 3]), r = P4(n, k);
+      let n, k; do { n = rnd(5, 9); k = pick([2, 3, 3]); } while (n === 5 && k === 3);   /* not bank probstats-05 */
+      const r = P4(n, k);
       return { q: `كم رمزاً من ${A(k)} خانات يمكن تكوينه من ${A(n)} أرقام مختلفة، بدون تكرار؟`.replace('٢ خانات', 'خانتين'), ans: A(r), ch: four(A(r), [A(Math.pow(n, k)), A(n * k), A(C4(n, k))]),
         sol: `${Array.from({ length: k }, (_, j) => A(n - j)).join(' × ')} = ${A(r)}` };
     },
@@ -223,21 +225,21 @@
       const k = pick([5, 7]); let v;
       do { v = shuffle(Array.from({ length: 30 }, (_, j) => j + 2)).slice(0, k); } while (v[(k - 1) / 2] === v.slice().sort((a, b) => a - b)[(k - 1) / 2]);
       const s = v.slice().sort((a, b) => a - b), med = s[(k - 1) / 2], mean = Math.round(v.reduce((a, b) => a + b, 0) / k);
-      return { q: `ما وسيط الأعداد: ${v.map(A).join(' ، ')}؟`, ans: A(med), ch: four(A(med), [A(v[(k - 1) / 2]), mean !== med ? A(mean) : null, A(s[(k - 1) / 2 + 1])]),
-        sol: `بعد الترتيب: ${s.map(A).join(' ، ')} ← اللي في النص ${A(med)}` };
+      return { q: `ما وسيط الأعداد: ${v.map(A).join('، ')}؟`, ans: A(med), ch: four(A(med), [A(v[(k - 1) / 2]), mean !== med ? A(mean) : null, A(s[(k - 1) / 2 + 1])]),
+        sol: `بعد الترتيب: ${s.map(A).join('، ')} ← اللي في النص ${A(med)}` };
     },
     total(i) {
       if (i % 2) {
         const k = rnd(4, 7), m = rnd(8, 15), d = rnd(1, 3), x = (k + 1) * (m + d) - k * m;
         return { q: `وسط ${A(k)} أعداد يساوي ${A(m)}، أُضيف إليها عدد فصار الوسط ${A(m + d)}. ما العدد المضاف؟`, ans: A(x), ch: four(A(x), [A(m + d), A(d * k), A(x - m)]),
-          sol: `المجموع قبل ${A(k)} × ${A(m)} = ${A(k * m)} ، وبعد ${A(k + 1)} × ${A(m + d)} = ${A((k + 1) * (m + d))} ← الفرق ${A(x)}` };
+          sol: `المجموع قبل ${A(k)} × ${A(m)} = ${A(k * m)}، وبعد ${A(k + 1)} × ${A(m + d)} = ${A((k + 1) * (m + d))} ← الفرق ${A(x)}` };
       }
       const k = rnd(4, 9), m = rnd(7, 16), r = k * m;
-      return { q: `الوسط الحسابي لـ ${A(k)} أعداد يساوي ${A(m)}. ما مجموعها؟`, ans: A(r), ch: four(A(r), [A(k + m), A(r - m), A(k * (m + 1))]), sol: `${A(m)} × ${A(k)} = ${A(r)}` };
+      return { q: `الوسط الحسابي لـ${A(k)} أعداد يساوي ${A(m)}. ما مجموعها؟`, ans: A(r), ch: four(A(r), [A(k + m), A(r - m), A(k * (m + 1))]), sol: `${A(m)} × ${A(k)} = ${A(r)}` };
     },
     permcomb(i) {
-      const P = ['ترتيب ٤ كتب على رف', 'اختيار رئيس ونائب من ٦ طلاب', 'تكوين رمز من ٣ أرقام مختلفة', 'توزيع ٣ ميداليات على ٨ متسابقين', 'ترتيب ٥ طلاب في طابور'];
-      const Cm = ['اختيار لجنة من ٣ أشخاص من ٧', 'اختيار فريق من ٤ لاعبين من ١٠', 'اختيار ٣ أسئلة من ٨ للإجابة عنها', 'عدد المصافحات بين ٦ أشخاص', 'اختيار ٢ من ٥ أصدقاء لرحلة'];
+      const P = ['ترتيب ٤ كتب على رف', 'اختيار رئيس ونائب من ٦ طلاب', 'تكوين رمز من ٣ أرقام مختلفة', 'توزيع الذهبية والفضية والبرونزية على ٨ متسابقين', 'ترتيب ٥ طلاب في طابور'];
+      const Cm = ['اختيار لجنة من ٣ أشخاص من ٧', 'اختيار فريق من ٤ لاعبين من ١٠', 'اختيار ٣ أسئلة من ٨ للإجابة عنها', 'عدد المصافحات بين ٦ أشخاص', 'اختيار صديقين من ٥ أصدقاء لرحلة'];
       const perm = i % 2 === 0, right = pick(perm ? P : Cm), others = shuffle(perm ? Cm : P).slice(0, 3);
       return { q: `أي مما يلي يُحسب ${perm ? 'بالتباديل (الترتيب يفرق)' : 'بالتوافيق (الترتيب ما يفرق)'}؟`, ans: right, ch: shuffle([right, ...others]),
         sol: `${right}: لو بدّلت مكانين ${perm ? 'يصير شي جديد ← تباديل' : 'ما يتغيّر شي ← توافيق'}` };
@@ -245,11 +247,12 @@
     places(i) {
       const n = rnd(5, 9), k = pick([2, 3]), r = P4(n, k);
       const q = i % 2 ? `بكم طريقة يمكن أن يجلس ${A(k)} من ${A(n)} أشخاص على ${A(k)} كراسي مرقّمة؟` : `سباق فيه ${A(n)} متسابقين، بكم طريقة تُوزّع ${k === 2 ? 'الميداليتان الذهبية والفضية' : 'الميداليات الذهبية والفضية والبرونزية'}؟`;
-      return { q: q.replace('٢ كراسي', 'كرسيين').replace('٢ من', 'اثنان من'), ans: A(r), ch: four(A(r), [A(P4(n, k + 1)), A(C4(n, k)), A(Math.pow(n, k))]),
-        sol: `${A(k)} أماكن ← ${Array.from({ length: k }, (_, j) => A(n - j)).join(' × ')} = ${A(r)}` };
+      return { q: q.replace('٢ كراسي مرقّمة', 'كرسيين مرقّمين').replace('٢ من', 'اثنان من'), ans: A(r), ch: four(A(r), [A(P4(n, k + 1)), A(C4(n, k)), A(Math.pow(n, k))]),
+        sol: `${k === 2 ? 'مكانان' : A(k) + ' أماكن'} ← ${Array.from({ length: k }, (_, j) => A(n - j)).join(' × ')} = ${A(r)}` };
     },
     choose(i) {
-      const n = rnd(5, 9), k = pick([2, 3]), r = C4(n, k);
+      let n, k; do { n = rnd(5, 9); k = pick([2, 3]); } while (n === 7 && k === 3);   /* not bank probstats-09 */
+      const r = C4(n, k);
       return { q: `بكم طريقة يمكن اختيار لجنة من ${A(k)} أشخاص من بين ${A(n)} أشخاص؟`.replace('٢ أشخاص', 'شخصين'), ans: A(r), ch: four(A(r), [A(P4(n, k)), A(n * k), A(C4(n, k - 1) || n)]),
         sol: `(${Array.from({ length: k }, (_, j) => A(n - j)).join(' × ')}) ÷ (${Array.from({ length: k }, (_, j) => A(j + 1)).join(' × ')}) = ${A(P4(n, k))} ÷ ${A(P4(k, k))} = ${A(r)}` };
     },
@@ -274,7 +277,7 @@
     outcomes: { ex: 'رمينا حجري نرد معاً. كم ناتجاً ممكناً؟', v: ['٣٦', '٦', '٦'], more: ['١٢', '٢', '٨'], hint: { 1: 'النرد الأول كم وجه؟', 2: 'النرد الثاني كم وجه؟' } },
     order: { ex: 'رمينا حجري نرد. ما احتمال أن يكون مجموعهما ٥؟', v: ['١/٩', '٤'], more: ['٢', '١/١٨', '٥'], hint: { 1: '(١،٤) وعكسها، و(٢،٣) وعكسها: كم زوج؟' } },
     norep: { ex: 'رمز من ٣ خانات من الأرقام ١ إلى ٦، بدون تكرار. كم رمزاً؟', v: ['١٢٠', '٦', '٥', '٤'], more: ['٢١٦', '٣', '١٨'], hint: { 1: 'كم رقم عندك للخانة الأولى؟', 2: 'الخانة الثانية: واحد أقل', 3: 'الخانة الثالثة: واحد أقل بعد' } },
-    median: { ex: 'ما وسيط: ٨ ، ٣ ، ١١ ، ٦ ، ٤؟', v: ['٦', '٦', '٣،٤،٦،٨،١١'], more: ['١١', '٨،٣،١١،٦،٤', '٤'], line: 'بعد الترتيب: ٣ ، ٤ ، ٦ ، ٨ ، ١١ ← اللي في النص ٦', hint: { 1: 'بعد الترتيب، اللي في النص كم؟', 2: 'رتّبها من الأصغر للأكبر' } },
+    median: { ex: 'ما وسيط: ٨، ٣، ١١، ٦، ٤؟', v: ['٦', '٦', '٣،٤،٦،٨،١١'], more: ['١١', '٨،٣،١١،٦،٤', '٤'], line: 'بعد الترتيب: ٣، ٤، ٦، ٨، ١١ ← اللي في النص ٦', hint: { 1: 'بعد الترتيب، اللي في النص كم؟', 2: 'رتّبها من الأصغر للأكبر' } },
     total: { ex: 'وسط ٥ أعداد = ٨. كم مجموعها؟', v: ['٤٠', '٨', '٥'], more: ['١٣', '٣٢', '٣'], hint: { 1: 'الوسط في المثال كم؟', 2: 'كم عدد في المثال؟' } },
     permcomb: { ex: 'من ٤ أشخاص فيه ٦ لجان من ٢. فبكم طريقة نختار رئيساً ونائباً؟', v: ['١٢', '٦', '٢'], more: ['٨', '٤', '٢٤'], hint: { 1: 'كم لجنة من ٢ في المثال؟', 2: 'لجنة من ٢: بكم ترتيب؟' } },
     places: { ex: '٥ متسابقين على ميداليتين (ذهبية وفضية). بكم طريقة؟', v: ['٢٠', '٥ × ٤', '٢'], more: ['٢٥', '١٠', '٥ × ٤ × ٣'], line: 'مكانان ← رقمين نازلين: ٥ × ٤ = ٢٠', hint: { 1: 'ابدأ من ٥ ونزّل: كم رقم تاخذ؟', 2: 'كم ميدالية؟' } },
@@ -315,14 +318,14 @@
 .law .pc-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .law .pc-t { font-size: 18px; font-weight: 800; color: var(--blue-dk); background: var(--blue-light); border: 2px solid var(--blue-border, #84D8FF); border-radius: 12px; padding: 2px 12px; white-space: nowrap; }
 .law .pc-o { font-size: 16px; font-weight: 800; color: #fff; background: var(--purple); border-radius: 10px; padding: 1px 10px; }
-.law .pl { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.law .pl { display: flex; flex-direction: column; align-items: center; gap: 40px; }
 .law .pl-run { display: flex; gap: 6px; }
 .law .pl-p { width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid var(--ink2); background: #fff; display: grid; place-items: center; font-size: 14px; font-weight: 800; color: var(--ink2); transition: all .2s; }
 .law .pl-p.on { background: var(--blue); border-color: var(--blue-dk); color: #fff; }
 .law .pl-p.gone { opacity: .18; }
 .law .pl-pod { display: flex; align-items: flex-end; gap: 4px; }
 .law .pl-st { width: 64px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 2px; border-radius: 10px 10px 0 0; position: relative; padding-top: 4px; }
-.law .pl-st.a { height: 70px; background: var(--gold); } .law .pl-st.b { height: 54px; background: #D7D7D7; } .law .pl-st.c { height: 42px; background: #F0B27A; }
+.law .pl-st.a { height: 76px; background: var(--gold); } .law .pl-st.b { height: 62px; background: #D7D7D7; } .law .pl-st.c { height: 52px; background: #F0B27A; }
 .law .pl-st i { position: absolute; top: -34px; width: 30px; height: 30px; border-radius: 50%; background: var(--blue); color: #fff; font-style: normal; font-size: 14px; font-weight: 800; display: grid; place-items: center; }
 .law .pl-st i:empty { display: none; }
 .law .pl-st span { font-size: 16px; font-weight: 800; color: #fff; }

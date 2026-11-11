@@ -13,18 +13,18 @@
 /* فهيم beside his bubble, as in the first run when he asks */
 .law .obs { display: flex; align-items: flex-end; gap: 4px; margin-bottom: 14px; }
 .law .obs-say { flex: 1; min-width: 0; padding-bottom: 22px; }
-.law .obs-bubble { position: relative; margin: 0; background: var(--snow); border: 2px solid var(--line); border-radius: 16px; padding: 11px 14px; font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.55; text-wrap: balance; transform-origin: 0% 80%; }
-.law .obs-bubble::before, .law .obs-bubble::after { content: ""; position: absolute; bottom: 14px; inset-inline-end: -19px; border: 9px solid transparent; }
-.law .obs-bubble::before { border-inline-start-color: var(--line); }
-.law .obs-bubble::after { border-inline-start-color: var(--snow); margin-inline-end: 3px; }
+.law .obs-bubble { position: relative; margin: 0; background: var(--snow); border: 2px solid var(--line); border-radius: 16px; padding: 11px 14px; font-size: 18px; font-weight: 800; color: var(--ink); line-height: 1.55; text-wrap: balance; transform-origin: 100% 80%; }
+.law .obs-bubble::before, .law .obs-bubble::after { content: ""; position: absolute; bottom: 14px; inset-inline-start: -19px; inset-inline-end: auto; border: 9px solid transparent; }   /* فهيم stands on the bubble's start side here: the app's end-side tail is undone, not added to (QA, 2026-11-08) */
+.law .obs-bubble::before { border-inline-end-color: var(--line); border-inline-start-color: transparent; }
+.law .obs-bubble::after { border-inline-end-color: var(--snow); border-inline-start-color: transparent; margin-inline-start: 3px; margin-inline-end: 0; }
 .law .obs-bubble .w { display: inline-block; }
 .law .obs-bubble em { font-style: normal; color: var(--blue-dk); }
 .law .obs-duo { height: 112px; width: 112px; flex-shrink: 0; object-fit: contain; transform-origin: 50% 100%; }
 .law .obt { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 10px; }
 .law .obt .obs-bubble { text-align: center; font-size: 21px; padding: 14px 18px; }
-.law .obt .obs-bubble::before, .law .obt .obs-bubble::after { bottom: auto; top: 100%; inset-inline-end: auto; left: 50%; margin-left: -9px; border: 10px solid transparent; }
-.law .obt .obs-bubble::before { border-top-color: var(--line); border-inline-start-color: transparent; }
-.law .obt .obs-bubble::after { border-top-color: var(--snow); border-inline-start-color: transparent; margin-top: -3px; margin-inline-end: 0; }
+.law .obt .obs-bubble::before, .law .obt .obs-bubble::after { bottom: auto; top: 100%; inset-inline-start: auto; inset-inline-end: auto; left: 50%; margin-left: -9px; border: 10px solid transparent; }
+.law .obt .obs-bubble::before { border-top-color: var(--line); border-inline-start-color: transparent; border-inline-end-color: transparent; }
+.law .obt .obs-bubble::after { border-top-color: var(--snow); border-inline-start-color: transparent; border-inline-end-color: transparent; margin-top: -3px; margin-inline-start: 0; }
 .law .obt-duo { width: min(230px, 60vw); height: auto; margin-top: 18px; }
 .law .dv { display: inline-block; position: relative; width: .62em; height: .62em; vertical-align: middle; margin: 0 .04em; }
 .law .dv::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: .11em; margin-top: -.055em; border-radius: .06em; background: currentColor; }
@@ -50,7 +50,7 @@
 .law .kb12 .k.ca .kb-m { background: #F2F2F2; color: #141414; }
 .law .kb-w { position: relative; display: inline-block; }
 .law .kb-n { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #294BC6; transform: translateY(115%); }
-.law .kb-n .fr { font-size: .92em; }
+.law .kb-n .fr { font-size: .72em; line-height: 1; }   /* inside its chip's mask (QA, 2026-11-08: the ١ of ½ cut the chip's rim) */
 .law .kb12 .k.ca .kb-n { font-size: 1.12em; }
 .law .kb-u { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: #456DFF; transform: scaleX(0); }
 .law .kb-c { position: absolute; top: 100%; left: 50%; margin-top: 8px; transform: translateX(-50%); font: 500 15px/1.3 var(--kf); color: #666; white-space: nowrap; opacity: 0; }
@@ -74,7 +74,7 @@
 .law .kb13 .kb-card { border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 18px; padding: 62px 6px 62px; }
 .law .kb13 .kb-tag { font: 800 15px/1 var(--kf); letter-spacing: 0; color: var(--blue-dk); }
 .law .kb13 .kb-fx { font: 800 26px/1.35 var(--kf); color: var(--ink); }
-.law .kb13 .kb-m { padding: .02em .3em .06em; border-radius: 12px; background: var(--blue-light); color: var(--blue-dk); box-shadow: inset 0 0 0 2px var(--blue-border), inset 0 -3px 0 var(--blue-border); }
+.law .kb13 .kb-m { padding: .02em .38em .06em; border-radius: 12px; background: var(--blue-light); color: var(--blue-dk); box-shadow: inset 0 0 0 2px var(--blue-border), inset 0 -3px 0 var(--blue-border); }
 .law .kb13 .k.ca .kb-m { background: #fff; color: var(--ink); box-shadow: inset 0 0 0 2px var(--line), inset 0 -3px 0 var(--line); }
 .law .kb13 .kb-n { font-weight: 800; color: var(--blue-dk); }
 .law .kb13 .kb-u { left: 8px; right: 8px; bottom: 5px; height: 3px; border-radius: 2px; background: var(--blue); }
@@ -159,8 +159,8 @@
 .law .rl i.on { background: var(--blue); }
 .law .rl.gold i.on { background: var(--gold); }
 .law .dg { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.law .dlab { display: flex; gap: 6px; justify-content: center; font-size: 13.5px; font-weight: 800; flex-wrap: nowrap; }
-.law .dlab span { border: 2px solid var(--line); border-radius: 10px; padding: 0 8px; color: var(--gray); white-space: nowrap; }
+.law .dlab { display: flex; gap: 6px; justify-content: center; font-size: 13.5px; font-weight: 800; flex-wrap: wrap; row-gap: 4px; }   /* a long value (the median's sorted list) takes its own line rather than running off the card (QA, 2026-11-08) */
+.law .dlab > span { border: 2px solid var(--line); border-radius: 10px; padding: 0 8px; color: var(--gray); white-space: nowrap; }
 .law .dlab b { color: var(--blue-dk); margin-inline-start: 4px; }
 .law .dlab .l3 b { color: var(--green-dk); }
 .law .cells { display: flex; gap: 6px; }
@@ -204,3 +204,4 @@
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+.law .ln-nw { white-space: nowrap; }   /* also where style.css is not loaded (the labs) */

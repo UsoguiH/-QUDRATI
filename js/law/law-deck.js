@@ -16,7 +16,8 @@
 (function () {
   'use strict';
   const C = () => window.LAWCORE;
-  const q = new URLSearchParams(location.search);
+  /* the lab's switches count only on a dev page (QA, 2026-11-08) */
+  const q = new URLSearchParams(/\/tools\//.test(location.pathname) || /(^|\/)(preview|mobile)\.html$/.test(location.pathname) || /[?&]dev=1(&|$)/.test(location.search) ? location.search : '');
   const DEF = 3;
   const V = q.has('deck') ? +q.get('deck') : DEF;
   const K = +(q.get('slow') || 1) || 1;            /* the lab's «بطيء» */
@@ -171,8 +172,8 @@
     const n = due.length, d = [v1, v2, v3][V - 1](due), cyc = n * d.T;
     /* one line and nothing else (the user, 2026-11-08: «make this UI very simple very very simple not texts just قوانين تحتاج
        تراجعها»): the pile with its count, the line, and a small gold «راجع» */
-    return `<button type="button" class="due-card lw-due lw-due2 lw-due4 dk${V}" onclick="LAWX.review()" aria-label="قوانين تحتاج تراجعها: ${o.count}">
-      ${d.stage}<b class="lw4-t">قوانين تحتاج تراجعها</b><span class="lw4-go">راجع</span>
+    return `<button type="button" class="due-card lw-due lw-due2 lw-due4 dk${V}" onclick="LAWX.review()" aria-label="${o.total === 1 ? 'قانون يحتاج تراجعه' : 'قوانين تحتاج تراجعها'}: ${o.count}">
+      ${d.stage}<b class="lw4-t">${o.total === 1 ? 'قانون يحتاج تراجعه' : 'قوانين تحتاج تراجعها'}</b><span class="lw4-go">راجع</span>
     </button>`;
   }
 

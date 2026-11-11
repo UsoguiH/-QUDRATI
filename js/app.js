@@ -84,9 +84,24 @@ function fracs(html) {
   let svg = 0;
   return String(html == null ? "" : html).split(/(<[^>]*>)/).map(p => {
     if (p[0] === "<") { if (/^<svg[\s>]/i.test(p)) svg++; else if (/^<\/svg/i.test(p)) svg = Math.max(0, svg - 1); return p; }
-    return svg ? p : p.replace(FRAC_RE, (m, b, n, d) =>
-      `${b}<span class="fr"><span class="fr-n">${n}</span><span class="fr-sr"> على </span><span class="fr-d">${d}</span></span>`);
+    return svg ? p : supAr(p.replace(FRAC_RE, (m, b, n, d) =>
+      `${b}<span class="fr"><span class="fr-n">${n}</span><span class="fr-sr"> على </span><span class="fr-d">${d}</span></span>`));
   }).join("");
+}
+/* a power is written with the exam's own digit raised, not the font's Latin «²» (QA, 2026-11-08) */
+/* every superscript digit (٣⁴ × ٣⁵), and a power the data writes with a caret, «أ^ن» or «٣^(٤+٥−٧)» (QA, 2026-11-08) */
+const SUP_DIG = "⁰¹²³⁴⁵⁶⁷⁸⁹", SUP_RE = /[⁰¹²³⁴⁵⁶⁷⁸⁹⁻⁺]+/g, CARET_RE = /\^(\([^()]*\)|[ء-ي٠-٩−-]+)/g;
+/* the font's own fraction glyphs carry Latin digits and sit on the line: «½», «٣٣⅓٪», «١⁄₁₂» stand over their bar as the exam
+   prints them, and a subscript («س₁», «ق₃») is the exam's digit lowered (QA, 2026-11-08) */
+const VUL = { "½": "١/٢", "⅓": "١/٣", "⅔": "٢/٣", "¼": "١/٤", "¾": "٣/٤", "⅕": "١/٥", "⅙": "١/٦", "⅛": "١/٨", "⅜": "٣/٨", "⅝": "٥/٨", "⅞": "٧/٨" };
+const SUB_DIG = "₀₁₂₃₄₅₆₇₈₉", subAr = x => Array.from(x).map(c => SUB_DIG.includes(c) ? "٠١٢٣٤٥٦٧٨٩"[SUB_DIG.indexOf(c)] : c).join("");
+const frSpan = (n, d) => `<span class="fr"><span class="fr-n">${n}</span><span class="fr-sr"> على </span><span class="fr-d">${d}</span></span>`;
+function supAr(t) {
+  return String(t).replace(/[½⅓⅔¼¾⅕⅙⅛⅜⅝⅞]/g, c => { const [n, d] = VUL[c].split("/"); return frSpan(n, d); })
+    .replace(/([٠-٩⁰-⁹¹²³]+)⁄([٠-٩₀-₉]+)/g, (m, n, d) => frSpan(subAr(n.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, c => "٠١٢٣٤٥٦٧٨٩"[SUP_DIG.indexOf(c)])), subAr(d)))
+    .replace(/[₀-₉]+/g, x => `<sub class="pw">${subAr(x)}</sub>`)
+    .replace(CARET_RE, (m, e) => `<sup class="pw">${e.replace(/^\((.*)\)$/, "$1")}</sup>`)
+    .replace(SUP_RE, x => `<sup class="pw">${Array.from(x).map(c => c === "⁻" ? "−" : c === "⁺" ? "+" : "٠١٢٣٤٥٦٧٨٩"[SUP_DIG.indexOf(c)]).join("")}</sup>`);
 }
 function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }   // quotes too: a name with «"» was cut at it inside value="…" (the audit, 2026-10-28)
 
@@ -109,7 +124,7 @@ const LEAGUE_NAMES = [
   "م. العتيبي", "ع. الحربي", "ن. القحطاني", "س. الدوسري", "أ.م",
   "Fahad_99", "sara.m", "Nouf2006", "khaled_alq", "Turki7", "rimaz", "abdullah.s",
   "MshariX", "lulu_04", "3bdulaziz", "Reem.A", "y.alsubaie", "Noura___", "dana2007",
-  "Bader_88", "s7r", "aljoharah", "nayef.k", "ManarQ", "wjdan_", "Ali__2005", "Hessa.z",
+  "Bader_88", "Sahar_7", "aljoharah", "nayef.k", "ManarQ", "wjdan_", "Ali__2005", "Hessa.z",
   "أبو فهد", "أم يزيد", "أبو ناصر", "أم ريم",
   "طموح", "الفارس", "بنت الرياض", "مستعد", "قدرات ٩٩", "هدفي ١٠٠",
   "الصقر", "نجم القياس", "لا مستحيل", "مجتهد", "ابن القصيم",
@@ -177,7 +192,12 @@ function migrate(s) {
   return s;
 }
 let S;
-try { S = migrate(Object.assign({}, DEFAULT_STATE, JSON.parse(localStorage.getItem("qudratState") || "{}"))); }
+try {
+  /* a save that reads but is not a save (null, a number, a list, a word) is set aside as one that does not read (QA, 2026-11-08) */
+  const raw0 = localStorage.getItem("qudratState"), o0 = raw0 == null ? {} : JSON.parse(raw0);
+  if (!o0 || typeof o0 !== "object" || Array.isArray(o0)) throw new Error("not a save");
+  S = migrate(Object.assign({}, DEFAULT_STATE, o0));
+}
 catch (e) {
   S = Object.assign({}, DEFAULT_STATE);
   /* a save that no longer reads used to be replaced, silently, by a new
@@ -185,8 +205,11 @@ catch (e) {
      first, and the student is told */
   try {
     const raw = localStorage.getItem("qudratState");
-    if (raw) {
+    if (raw != null) {
       localStorage.setItem("qudratState.unread", raw);
+      /* its rules go aside with it, so a fresh start's backup never counts rules it has not met (QA, 2026-11-08) */
+      const law = localStorage.getItem("qudrati.lawapp.v1");
+      if (law) { localStorage.setItem("qudrati.lawapp.v1.unread", law); localStorage.removeItem("qudrati.lawapp.v1"); }
       setTimeout(() => toast("تعذّرت قراءة تقدّمك المحفوظ فبدأنا من جديد — النسخة القديمة باقية في جهازك"), 1200);
     }
   } catch (e2) {}
@@ -200,10 +223,11 @@ if (S.tierSeen == null) S.tierSeen = tierIndex();
    used to blank the whole app with no way back to Settings. Coerce the
    containers before anything reads them. */
 (function repair() {
-  const shape = { streak: { count: 0, last: null }, lessons: {}, qstats: {}, mistakes: {}, mocks: [], days: {}, reports: {}, learn: {} };
+  const shape = { streak: { count: 0, last: null }, lessons: {}, qstats: {}, mistakes: {}, mocks: [], days: {}, reports: {}, learn: {}, teach: {} };
   for (const k in shape) {
     const want = shape[k], got = S[k];
-    const ok = Array.isArray(want) ? Array.isArray(got) : (got && typeof got === "object");
+    /* an array where an object belongs is broken too: a restored code with «qstats: [1]» threw here on every load (QA, 2026-11-08) */
+    const ok = Array.isArray(want) ? Array.isArray(got) : (got && typeof got === "object" && !Array.isArray(got));
     if (!ok) S[k] = Array.isArray(want) ? [] : Object.assign({}, want);
   }
   /* and the entries inside them: one null answer record threw on every tab,
@@ -213,6 +237,27 @@ if (S.tierSeen == null) S.tierSeen = tierIndex();
     if (o && typeof o === "object" && !Array.isArray(o)) for (const id in o) if (!o[id] || typeof o[id] !== "object") delete o[id];
   });
   for (const id in S.qstats) { const q = S.qstats[id]; q.r = +q.r || 0; q.w = +q.w || 0; }
+  /* a short lesson's list of finished lessons is a list: a number there threw in the rules' path card and the path never
+     drew, on every load (QA, 2026-11-08) */
+  for (const k in S.learn) { const L = S.learn[k]; if (!Array.isArray(L.done)) L.done = []; L.done = Array.from(new Set(L.done.filter(x => typeof x === "string")));   /* a lesson counted once (QA, 2026-11-08: five «tens» filled five segments) */ if (!L.acc || typeof L.acc !== "object" || Array.isArray(L.acc)) L.acc = {}; }
+  /* and a count is a count a person can earn: 1e308 printed «١e+٣٠٨» */
+  ["xp", "totalXp", "tierSeen"].forEach(k => { S[k] = Math.min(1e9, Math.max(0, Math.floor(+S[k] || 0))); });
+  if (GOALS.indexOf(+S.goal) < 0) S.goal = DAILY_GOAL; else S.goal = +S.goal;
+  S.streak.count = Math.min(1e5, Math.max(0, Math.floor(+S.streak.count || 0)));
+  /* the rest of what a restored code can carry broken (QA, 2026-11-08): a name that is not text stopped Settings and the
+     league from opening, a null mock the mock tab, a date that is not a date printed «NaN يوماً», a day's count of 1e308
+     «١e+٣٠٨ سؤالاً» */
+  if (S.user != null && (typeof S.user !== "object" || Array.isArray(S.user))) S.user = null;
+  /* a save with progress always reaches the path, as a guest when its name was lost (QA, 2026-11-08: the whole first run again) */
+  if (!S.user && (Object.keys(S.lessons || {}).length || S.totalXp > 0)) S.user = { name: "ضيف", guest: true };
+  if (S.user && S.user.name != null && typeof S.user.name !== "string") S.user.name = "";
+  /* every account carries a name: one without is a guest, so it is offered a profile again (QA, 2026-11-08: «{name: 5}» read as signed in) */
+  if (S.user && !String(S.user.name || "").trim()) S.user = { name: "ضيف", guest: true };
+  S.mocks = S.mocks.filter(m => m && typeof m === "object" && +m.total > 0 && isFinite(+m.score)).map(m => Object.assign(m, { total: +m.total, score: Math.max(0, Math.min(+m.total, +m.score)) }));
+  /* an estimate that is not a score out of a hundred is worked out again from the answers («~NaN», «~١e+٣٠٨») */
+  S.mocks.forEach(m => { if (m.est != null && !(typeof m.est === "number" && m.est >= 0 && m.est <= 100)) delete m.est; });
+  if (S.exam != null && !(typeof S.exam === "string" && /^\d{4}-\d{2}-\d{2}$/.test(S.exam) && !isNaN(new Date(S.exam + "T00:00:00")))) S.exam = null;
+  for (const k in S.days) { const n = Math.floor(+S.days[k]); if (!(n > 0)) delete S.days[k]; else S.days[k] = Math.min(1e4, n); }
   /* a streak whose last day is neither today nor yesterday is already broken;
      show 0 rather than a number that can never be extended */
   const t = todayKey(), d = new Date(Date.now() - 864e5);
@@ -473,31 +518,6 @@ function examDaysLeft() {
   const t = new Date(); t.setHours(0, 0, 0, 0);
   return Math.round((new Date(S.exam + "T00:00:00") - t) / 864e5);
 }
-/* 0–100: stars earned across all lessons (70%) + overall first-try accuracy (30%) */
-/* It used to be 70% stars + 30% lifetime accuracy. Stars only come from a
-   lesson's first session (eight of its twenty-four questions) and only ever
-   ratchet up, so three stars on all thirty lessons plus a clean accuracy read
-   100% having answered 240 of 720 questions and none of the hard third. It is
-   capped by how much of the bank has actually been seen now, so the number
-   cannot outrun the coverage behind it. */
-function readiness() {
-  const flat = allLessons();
-  if (!flat.length) return 0;
-  const bank = bankSize() || 1;
-  const seen = Object.keys(S.qstats || {}).length;
-  /* sqrt, not linear: a student who has aced 240 of 720 questions is
-     genuinely more than a third ready, and a linear cap read 0% for
-     someone who had just finished their first lesson. */
-  const coverage = Math.sqrt(Math.min(1, seen / bank));
-  let earned = 0;
-  flat.forEach(x => earned += lessonProg(x.key).stars);
-  const starPart = earned / (flat.length * 3);
-  let r = 0, w = 0;
-  Object.values(S.qstats).forEach(s => { r += s.r; w += s.w; });
-  const acc = (r + w) ? r / (r + w) : 0;
-  const skill = 0.45 * starPart + 0.55 * acc;
-  return Math.round(100 * skill * coverage);
-}
 /* ---------------- daily quest (answer N questions → chest) ---------------- */
 function dailyReset() {
   const t = todayKey();
@@ -533,20 +553,21 @@ function questBump() {
    reached ten through the retries and did. */
 function questTick() { dailyReset(); questBump(); }
 
-/* Arabic counted nouns: 1 singular, 2 dual, 3-10 plural, 11+ singular accusative */
+/* Arabic counted nouns, read off the last two digits: 1 singular, 2 dual, 3-10 plural, 11-99 singular accusative, and a
+   round hundred (100, 101, 102, 200…) the bare singular («١٠٠ سؤال», «١٠٣ أسئلة»; QA, 2026-11-08: «١٠٠ سؤالاً») */
+const arBare = w => String(w).replace(/اً(?=\s|$)/g, "").replace(/ً(?=\s|$)/g, "");
 function arPlural(n, one, two, few, many) {
   if (n === 1) return one;
   if (n === 2) return two;
-  if (n <= 10) return toAr(n) + " " + few;
-  return toAr(n) + " " + many;
+  if (n === 0) return toAr(0) + "\u00A0" + few;   // the number never leaves its noun at a line end (QA, 2026-11-08)
+  const t = n % 100;
+  if (t >= 3 && t <= 10) return toAr(n) + "\u00A0" + few;
+  if (n >= 100 && t <= 2) return toAr(n) + "\u00A0" + arBare(many);
+  return toAr(n) + "\u00A0" + many;
 }
 const qCount = n => arPlural(n, "سؤال واحد", "سؤالان", "أسئلة", "سؤالاً");
-function dayPhrase(n) {
-  if (n === 1) return "يوم واحد";
-  if (n === 2) return "يومان";
-  if (n <= 10) return toAr(n) + " أيام";
-  return toAr(n) + " يوماً";
-}
+const gemCount = n => arPlural(n, "جوهرة واحدة", "جوهرتان", "جواهر", "جوهرة");
+function dayPhrase(n) { return arPlural(n, "يوم واحد", "يومان", "أيام", "يوماً"); }
 const fmtExamDate = d => { const x = new Date(d + "T00:00:00"); return toAr(x.getDate()) + " / " + toAr(x.getMonth() + 1) + " / " + toAr(x.getFullYear()); };
 
 /* ---------------- screens / router ---------------- */
@@ -647,7 +668,7 @@ function render() {
 /* the tab bar sits over the lesson card's veil, so a tab can be pressed with
    the card open: leaving the screen closes it, or it stayed on the next one */
 function go(v) {
-  document.querySelectorAll(".lesson-pop-veil").forEach(x => x._close ? x._close() : x.remove());
+  document.querySelectorAll(".lesson-pop-veil").forEach(x => x._close ? x._close(true) : x.remove());
   sfxHush(); sayStop(); wstStop(); wvStop(); view = v; render(); window.scrollTo(0, 0);
 }
 
@@ -717,9 +738,14 @@ function winHeroPlay() {
    2026-10-28: «my date of exam will be top right»): the card that held them
    gave its place to فهيم's challenge. A tap opens the date picker, as the card did. */
 const CAL_SVG = `<svg class="cal-ic" viewBox="0 0 24 24" aria-hidden="true"><rect class="ci-b" x="2.5" y="4.5" width="19" height="17" rx="4.5"/><path class="ci-h" d="M2.5 9.6V9a4.5 4.5 0 0 1 4.5-4.5h10A4.5 4.5 0 0 1 21.5 9v.6z"/><path class="ci-r" d="M8 2.6v4M16 2.6v4"/></svg>`;
+/* the empty slot: a calendar page in Duolingo's grammar (white face on a blue lip, the blue header with its two
+   rings, the empty day cells) and a green «+» badge on its corner (the user, 2026-11-11: «make it better UI») */
+const CAL_ADD_SVG = `<svg class="cal-add" viewBox="0 0 34 34" aria-hidden="true"><rect class="ca-lip" x="3" y="7" width="25" height="23" rx="6"/><rect class="ca-face" x="3" y="5" width="25" height="23" rx="6"/><path class="ca-head" d="M3 13.5V11a6 6 0 0 1 6-6h13a6 6 0 0 1 6 6v2.5z"/><rect class="ca-ring" x="9" y="2" width="3.4" height="7" rx="1.7"/><rect class="ca-ring" x="18.6" y="2" width="3.4" height="7" rx="1.7"/><g class="ca-cell"><rect x="7.5" y="16.5" width="4" height="3.4" rx="1.2"/><rect x="13.5" y="16.5" width="4" height="3.4" rx="1.2"/><rect x="19.5" y="16.5" width="4" height="3.4" rx="1.2"/><rect x="7.5" y="21.8" width="4" height="3.4" rx="1.2"/><rect x="13.5" y="21.8" width="4" height="3.4" rx="1.2"/></g><g class="ca-badge"><circle cx="26" cy="26" r="7"/><path d="M26 22.6v6.8M22.6 26h6.8"/></g></svg>`;
 function statExam() {
   const days = examDaysLeft();
-  if (days === null || days < 0) return "";
+  /* no date yet (or it has passed): the empty slot asks for one, as Duolingo's avatar with its «+»
+     does at the same corner (the user, 2026-11-11: the date is set here, not on the path) */
+  if (days === null || days < 0) return `<button class="stat stat-exam stat-exam-add" onclick="A.examSetup()" aria-label="${days === null ? "حدّد موعد اختبارك" : "انتهى موعد اختبارك — حدّث الموعد"}">${CAL_ADD_SVG}</button>`;
   return `<button class="stat stat-exam ec2-${examTone(days)}" onclick="A.examSetup()" aria-label="${days ? "باقي على اختبارك " + dayPhrase(days) : "اختبارك اليوم"}">${CAL_SVG}<span>${days ? toAr(days) : "اليوم"}</span></button>`;
 }
 function statbar() {
@@ -746,7 +772,7 @@ A.chestTap = function () {
 let questBannerT = 0;
 A.questBanner = function () {
   document.querySelectorAll(".quest-banner").forEach(e => e.remove());
-  if (document.querySelector(".wn, .wp")) return;   // the lesson already ended: its progress screen tells it
+  if (MOCK || document.querySelector(".wn, .wp, .mock-result, .fail-title, .lw-end, .exam-setup, .screen-mock")) return;   // the lesson or the mock already ended: its own screen tells it; never over a mock, whose clock runs (QA, 2026-11-08)
   const el = document.createElement("div"); el.className = "quest-banner"; el.setAttribute("role", "status");
   el.innerHTML = `<div class="qb-card">
     ${chestSVG("qb-chest")}
@@ -1229,8 +1255,11 @@ function placementComplete() {
     : behind ? `تكمل من *«${start.les.title}»*!`
     : "نبدأ من *أول درس* — أفضل مكان لك، وبنمشي بسرعة.";
   PLACE_START = start ? { key: start.key, nudge: before } : null;
-  const pace = !med || right < 2 ? "" : med <= 62 ? `وقتك قرابة ${toAr(med)} ثانية للسؤال — وفي الاختبار عندك دقيقة تقريباً. ممتاز!`
-    : med <= 90 ? `وقتك قرابة ${toAr(med)} ثانية للسؤال — والاختبار يعطيك دقيقة. الحيل بتسرّعك.`
+  /* seconds counted as Arabic counts them, and a run tapped through in a few seconds a question is not praised (QA, 2026-11-08: «قرابة ١ ثانية … ممتاز!») */
+  const secs = arPlural(med, "ثانية واحدة", "ثانيتين", "ثوانٍ", "ثانية");
+  const pace = !med || right < 2 ? "" : med < 10 ? `جاوبت بسرعة كبيرة — خذ وقتك واقرأ السؤال، عندك دقيقة تقريباً.`
+    : med <= 62 ? `وقتك قرابة ${secs} للسؤال — وفي الاختبار عندك دقيقة تقريباً. ممتاز!`
+    : med <= 90 ? `وقتك قرابة ${secs} للسؤال — والاختبار يعطيك دقيقة. الحيل بتسرّعك.`
     : "الدقة أولاً — والسرعة نبنيها بالتدريب والحيل.";
   const catLine = ["ar", "geo", "alg"].filter(c => cats[c]).map(c => `${PLACE_CAT[c]} ${toAr(cats[c].r)} من ${toAr(cats[c].n)}`).join("، ");
   $app.innerHTML = `<div class="screen screen-full"><div class="complete win-scene place-scene" id="comp">
@@ -1311,78 +1340,6 @@ function placeStepDown() {
   OB = null;
   obFrame(obTop("teach", `تمام! نجرّب شي أسهل: *«${start.les.title}»*.`),
     `<button class="btn" onclick="A.startLesson('${start.dom.key}','${start.les.key}')">يلا نبدأ</button>`, 100, "A.go('path')", "ob-splash", false);
-}
-
-/* What the date actually asks of them, in one clause: the lessons still unopened
-   spread over the weeks that are left. When the date is too close for that to mean
-   anything, it says what the last week before an exam is really for. */
-function planChip(days) {
-  const left = allLessons().filter(x => !lessonProg(x.key).stars).length;
-  if (!left) return `<span class="ec2-plan">المنهج مكتمل — راجع وجرّب المحاكاة</span>`;
-  if (days <= 7) return `<span class="ec2-plan">الوقت قريب — ركّز على المحاكاة والمراجعة</span>`;
-  const weeks = Math.max(1, Math.round(days / 7));
-  const per = Math.ceil(left / weeks);
-  if (per > 12) return `<span class="ec2-plan">الوقت ضيّق — ابدأ بأضعف مجالاتك</span>`;
-  return `<span class="ec2-plan">${qLessons(per)} أسبوعياً تكفي لإنهاء المنهج</span>`;
-}
-
-function countdownCard() {
-  const days = examDaysLeft();
-
-  if (days === null) {
-    return `<button class="ec2 ec2-empty" onclick="A.examSetup()">
-      <span class="ec2-num"><i class="ec2-plus">+</i></span>
-      <span class="ec2-body">
-        <b>\u0645\u062a\u0649 \u0627\u062e\u062a\u0628\u0627\u0631 \u0642\u062f\u0631\u0627\u062a\u0643\u061f</b>
-        <span class="ec2-sub">\u062d\u062f\u0651\u062f \u0627\u0644\u0645\u0648\u0639\u062f \u0648\u0646\u062d\u0633\u0628 \u0644\u0643 \u0627\u0644\u0639\u062f \u0627\u0644\u062a\u0646\u0627\u0632\u0644\u064a \u0648\u062c\u0627\u0647\u0632\u064a\u062a\u0643</span>
-      </span>
-      <span class="ec2-go">${CHEV_SVG}</span>
-    </button>`;
-  }
-
-  if (days < 0) {
-    return `<button class="ec2 ec2-past" onclick="A.examSetup()">
-      <span class="ec2-num"><b>\u2014</b></span>
-      <span class="ec2-body">
-        <b>\u0627\u0646\u062a\u0647\u0649 \u0645\u0648\u0639\u062f \u0627\u062e\u062a\u0628\u0627\u0631\u0643</b>
-        <span class="ec2-sub">\u062d\u062f\u0651\u062b \u0627\u0644\u0645\u0648\u0639\u062f \u0644\u0645\u062a\u0627\u0628\u0639\u0629 \u0627\u0644\u0639\u062f \u0627\u0644\u062a\u0646\u0627\u0632\u0644\u064a</span>
-      </span>
-      <span class="ec2-go">${CHEV_SVG}</span>
-    </button>`;
-  }
-
-  const pct = readiness();
-  /* ceil, so any real progress lights a segment: a student one lesson in has
-     started, and rounding them down to an empty meter says the opposite */
-  const lit = pct > 0 ? Math.max(1, Math.min(10, Math.ceil(pct / 10))) : 0;
-  const tone = examTone(days);
-  const when = new Date(S.exam + "T00:00:00");
-  const dateTxt = EP_DAYNAMES[when.getDay()] + " " + toAr(when.getDate()) + " " + AR_MONTHS[when.getMonth()];
-
-  const numBlock = days === 0
-    ? `<span class="ec2-num"><b class="ec2-today-ic">${TARGET_IC}</b></span>`
-    : `<span class="ec2-num"><b>${toAr(days)}</b><i>${days === 1 ? "\u064a\u0648\u0645" : days === 2 ? "\u064a\u0648\u0645\u0627\u0646" : "\u064a\u0648\u0645\u0627\u064b"}</i></span>`;
-
-  const headline = days === 0
-    ? "\u0627\u062e\u062a\u0628\u0627\u0631\u0643 \u0627\u0644\u064a\u0648\u0645 \u2014 \u0628\u0627\u0644\u062a\u0648\u0641\u064a\u0642"
-    : "\u0628\u0627\u0642\u064d \u0639\u0644\u0649 \u0627\u062e\u062a\u0628\u0627\u0631\u0643";
-
-  return `<button class="ec2 ec2-${tone}" onclick="A.examSetup()"
-      aria-label="${headline} \u2014 ${days === 0 ? "" : dayPhrase(days)}\u060c \u062c\u0627\u0647\u0632\u064a\u062a\u0643 ${toAr(pct)}\u066a">
-    ${numBlock}
-    <span class="ec2-body">
-      <b>${headline}</b>
-      <span class="ec2-sub">${dateTxt}</span>
-      <span class="ec2-ready">
-        <span class="ec2-pips" aria-hidden="true">` +
-          Array.from({ length: 10 }, (_, i) =>
-            `<i class="${i < lit ? "on" : ""}" style="--p:${i}"></i>`).join("") + `</span>
-        <span class="ec2-pct">\u062c\u0627\u0647\u0632\u064a\u062a\u0643 ${toAr(pct)}\u066a</span>
-      </span>
-      ${planChip(days)}
-    </span>
-    <span class="ec2-go">${CHEV_SVG}</span>
-  </button>`;
 }
 
 /* ---------------- daily quest card + chest ---------------- */
@@ -1912,7 +1869,10 @@ function renderPath() {
     });
     html += `</div></section>`;
   });
-  $app.innerHTML = statbar() + `<div class="screen">${NODE_GOLD_DEFS}${examDaysLeft() !== null && examDaysLeft() >= 0 ? fqCard() : countdownCard()}${window.LAWX ? LAWX.pathCard() : ""}${dueCard()}${html}<div class="path-tail"></div></div>` + floatingQuest() + PATH_FAB + bottomnav("path");
+  /* the rules due and the day's review are off the path for now (the user, 2026-11-11: «we will put them in a
+     better place»); the rules a level test just placed still join the reviews as it draws */
+  if (window.LAWX) try { LAWX.backfill(); } catch (e) {}
+  $app.innerHTML = statbar() + `<div class="screen">${NODE_GOLD_DEFS}${fqCard()}${html}<div class="path-tail"></div></div>` + floatingQuest() + PATH_FAB + bottomnav("path");
   requestAnimationFrame(() => {
     pathReveal();
     /* a rank-up on top would hide the beat: it waits, and plays when the rank-up closes and repaints the path */
@@ -2583,7 +2543,7 @@ A.go = function (v) { if (v === "review") reviewFrom = view; if (v === "settings
 A.nodeTap = function (ev, domKey, lesKey, li) {
   const d = window.QBANK[domKey], l = d.lessons.find(x => x.key === lesKey);
   const u = UNIT_COLORS[d.color] || UNIT_COLORS.purple;
-  const old = document.querySelector(".lesson-pop-veil"); if (old) old._close ? old._close() : old.remove();
+  const old = document.querySelector(".lesson-pop-veil:not(.out)"); if (old) old._close ? old._close(true) : old.remove();
   document.querySelectorAll(".node-col.sel").forEach(ringResume);
   const btn = ev.currentTarget;
   nodeRelease(btn);
@@ -2597,7 +2557,6 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   veil.innerHTML = `<div class="lesson-pop" style="--pop-c:${u.c};top:${Math.min(r.bottom + 14, window.innerHeight - 190)}px">
     <h3>${l.title}</h3>
     ${at >= 0 ? `<div class="lp-sub">الدرس ${toAr(at + 1)} من ${toAr(LS.lessons.length)}، ${esc(LS.lessons[at].title)}</div>` : LS ? `<div class="lp-sub">تدريب بوقت — مثل الاختبار</div>` : ""}
-    ${window.LAWX ? LAWX.popLine(domKey + "." + lesKey, at) : ""}
     <button class="lp-boost ${canBoost ? "" : "cant"}" id="lpBoost" aria-label="ضاعف خبرة هذا الدرس مقابل ${toAr(BOOST_COST)} جوهرة">
       <span class="lpb-ico"><img src="assets/icons/lightning.svg" width="20" height="20" alt=""></span>
       <span class="lpb-label">ضاعف الخبرة <span dir="ltr">×٢</span></span>
@@ -2608,11 +2567,15 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   let untrapPop = null;
   const selCol = btn.closest(".node-col");
   if (selCol) ringSelect(selCol);
-  let scrollRaf = 0;
-  const popClose = start => {
+  let scrollRaf = 0, closed = false;
+  /* it leaves the way it came, shrinking back into its arrow (160ms); leaving the path or opening another node
+     takes it away at once */
+  const popClose = now => {
+    if (closed) return; closed = true;
     cancelAnimationFrame(scrollRaf);
     if (untrapPop) { untrapPop(); untrapPop = null; }
-    veil.remove();
+    if (now === true || motionReduced()) veil.remove();
+    else { veil.classList.add("out"); setTimeout(() => veil.remove(), 170); }
     if (selCol) ringResume(selCol);
   };
   veil._close = popClose;
@@ -2668,9 +2631,20 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
   const floor = window.innerHeight - navH - 10;
   const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight - window.scrollY);
   let dy = Math.min(maxScroll, Math.max(0, nr.bottom + gap + popH - floor));
-  if (nr.top - dy < 64) dy = Math.max(0, nr.top - 64);           // never under the stat bar
+  /* never under the stat bar, nor under the unit banner stuck beneath it (at 320 × 568 the node rode up behind it) */
+  const ub = btn.closest(".unit-block") && btn.closest(".unit-block").querySelector(".unit-banner");
+  const roof = ub ? (parseFloat(getComputedStyle(ub).top) || 0) + ub.offsetHeight + 8 : 64;
+  /* the current node's ring reaches past its face and the node bobs: the roof is kept from the ring's top (QA, 2026-11-08) */
+  const ring = btn.parentElement && btn.parentElement.querySelector(".node-ring");
+  const top = Math.min(nr.top, ring ? ring.getBoundingClientRect().top - 6 : nr.top);
+  /* and a node already under the banner when tapped is brought back down clear of it (QA, 2026-11-08) */
+  if (top - dy < roof) dy = Math.max(-window.scrollY, top - roof);
+  /* a card still taller than the room left under its node (a long title and two rules' names at 320 × 568) is drawn a
+     little smaller from its top, so its button never goes under the tab bar (QA, 2026-11-08) */
+  const k = (floor - Math.max(8, nr.bottom - dy + gap)) / popH;
+  if (k < 1) pop.style.scale = Math.max(.74, k).toFixed(3);
   const place = () => { pop.style.top = Math.max(8, btn.getBoundingClientRect().bottom + gap) + "px"; };
-  if (dy > 0 && !motionReduced()) {
+  if (dy !== 0 && !motionReduced()) {
     const y0 = window.scrollY, t0 = performance.now(), ms = 200;
     pop.style.top = Math.max(8, nr.bottom + gap) + "px";
     const step = now => {
@@ -2681,7 +2655,7 @@ A.nodeTap = function (ev, domKey, lesKey, li) {
     };
     scrollRaf = requestAnimationFrame(step);
   } else {
-    if (dy > 0) window.scrollBy(0, dy);
+    if (dy !== 0) window.scrollBy(0, dy);
     pop.style.top = Math.max(8, nr.bottom - dy + gap) + "px";
   }
 };
@@ -2721,7 +2695,7 @@ A.startLesson = function (domKey, lesKey, boost) {
   renderSession();
 };
 /* «قانونان» / «٣ قوانين» / «١١ قانوناً» — a count with the noun in the form Arabic wants for it */
-function countAr(n, f) { return n === 1 ? f.one : n === 2 ? f.two : n <= 10 ? `${toAr(n)} ${f.few}` : `${toAr(n)} ${f.many}`; }
+function countAr(n, f) { return arPlural(n, f.one, f.two, f.few, f.many); }
 const N_RULES = { one: "قانون واحد", two: "قانونان", few: "قوانين", many: "قانوناً" };
 const N_QS = { one: "سؤال واحد", two: "سؤالان", few: "أسئلة", many: "سؤالاً" };
 
@@ -3390,14 +3364,16 @@ function fxClear() {
 
 /* ---------- the jump ---------- */
 function fxAddJump(tl, card, at) {
+  /* a whole «وصّل» board hops a third as high, so it never rises over its question (QA, 2026-11-08: 25–32px into the line) */
+  const k = card.classList.contains("ln-pairs") ? .35 : 1, sq = v => 1 + (FXA(v) - 1) * k;
   tl.to(card, {
     keyframes: [
-      { y: FXP(-15), scaleX: FXA(.947), scaleY: FXA(1.056), duration: FX_JUMP.launch, ease: 'power2.out' },
-      { y: FXP(-24), scaleX: 1, scaleY: 1, duration: FX_JUMP.rise, ease: 'power2.out' },
-      { y: FXP(-24), duration: FX_JUMP.hang },
-      { y: FXP(-6), scaleX: FXA(.980), scaleY: FXA(1.070), duration: FX_JUMP.fall, ease: 'power2.in' },
-      { y: FXP(1), scaleX: FXA(1.024), scaleY: FXA(.926), duration: FX_JUMP.impact, ease: 'power2.in' },
-      { y: FXP(-7), scaleX: 1, scaleY: 1, duration: FX_JUMP.settle, ease: 'back.out(2.6)' }
+      { y: FXP(-15) * k, scaleX: sq(.947), scaleY: sq(1.056), duration: FX_JUMP.launch, ease: 'power2.out' },
+      { y: FXP(-24) * k, scaleX: 1, scaleY: 1, duration: FX_JUMP.rise, ease: 'power2.out' },
+      { y: FXP(-24) * k, duration: FX_JUMP.hang },
+      { y: FXP(-6) * k, scaleX: sq(.980), scaleY: sq(1.070), duration: FX_JUMP.fall, ease: 'power2.in' },
+      { y: FXP(1) * k, scaleX: sq(1.024), scaleY: sq(.926), duration: FX_JUMP.impact, ease: 'power2.in' },
+      { y: FXP(-7) * k, scaleX: 1, scaleY: 1, duration: FX_JUMP.settle, ease: 'back.out(2.6)' }
     ]
   }, at);
 
@@ -3730,7 +3706,10 @@ function answerFxFail(card) {
    if GSAP is unavailable — the answer still resolves, it just does not hop. */
 function answerFx(card, run) {
   if (run >= 3) snd("answer-run");             // every answer that lights the bar (the user: «make it for every lighting»)
-  if (!fxOn() || !window.gsap || !card) return;
+  /* a tile answer has no card to jump: its run still counts on the tag and the bar, which lagged one answer behind
+     (QA, 2026-11-08: «لا شيء يوقفك!» over «٤ على التوالي» on an orange bar) */
+  if (!card) { fxPaintBar(run); return; }
+  if (!fxOn() || !window.gsap) return;
   fxClear();
   /* Reduced motion gets a REDUCED VARIANT, not silence (brief trap 3): the
      card still acknowledges the answer and still settles lifted off its base,
@@ -4036,8 +4015,9 @@ function learnRuleNums(see) {
   const a = [];
   const eq = String(n.eq).replace(/\{([^}]+)\}/g, (m, v) => { a.push(v); return "_"; });
   const terms = rfTerms(see.rule);
-  const lab = n.lab === false ? null : n.lab || (terms.length >= a.length ? terms.slice(0, a.length) : null);
-  return rfCloze({ t: "fill", rf: "nums", q: n.q, rule: see.rule, eq, a, lab, anyOrder: n.any || 0,
+  /* a blank inside «(العدد − ١)» holds العدد: its caption is the term without the bracket's sum (QA, 2026-11-08: «٤ مو هنا. هذا مكان (العدد − ١)») */
+  const lab = n.lab === false ? null : n.lab || (terms.length >= a.length ? terms.slice(0, a.length).map(t => String(t).replace(/^\((.*)\)$/, "$1").split(/\s[−+×÷]\s/)[0]) : null);
+  return rfCloze({ t: "fill", rf: "nums", q: n.q, rule: see.rule, eq, a, lab, anyOrder: n.any || 0, calc: n.calc || null, how: n.how || null, seq: !!n.seq,
     more: n.more || rfNear(a, 2), why: "القاعدة بالأرقام: " + n.eq.replace(/[{}]/g, "").replace(/\n/g, " ، "), ok: "طبّقت القاعدة بالأرقام" });
 }
 /* the teaching card's two screens, cut from its `plain` and `example` */
@@ -4154,7 +4134,7 @@ A.startLearn = function (domKey, lesKey, li, boost) {
   SES = { mode: "learn", domKey, lesKey, key, li, lid: les.id, title: les.title, method: "",
     queue, total: queue.filter(learnGraded).length, idx: 0, done: 0, firstTry: {}, retried: {},
     sel: null, locked: false, xp: 0, gems: 0, replay: learnRec(key).done.indexOf(les.id) >= 0,
-    xpBoost, safe, notime: true, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0, run: 0,
+    xpBoost, safe, notime: true, hearts: LEVEL_HEARTS, left: Q_SECS, timer: null, tSpent: 0, tAnswered: 0, run: 0, t0: Date.now(),
     base: queue.length, got: 0 };
   renderSession();
 };
@@ -4255,13 +4235,57 @@ function rfEqHtml(it, verdict, unfill) {
     const st = verdict ? (it.tiles[tile] === want[j] ? " right" : " wrong") : it.ui.lk && it.ui.lk[j] ? " lk" : "";
     const b = tile === undefined
       ? `<button class="ln-blank" aria-label="فراغ${lab ? ": " + esc(lab) : ""}"></button>`
-      : `<button class="ln-blank filled${st}" onclick="${unfill || "A.lUnfill"}(${j})">${esc(it.tiles[tile])}</button>`;
+      : `<button class="ln-blank filled${st}" onclick="${unfill || "A.lUnfill"}(${j})">${fracs(esc(it.tiles[tile]))}</button>`;
     return b;
   };
-  const tok = s => rfTokens(s).map(t => `<span class="rf-t${RULE_OP.test(t) ? " op" : /^[()]$/.test(t) ? " par" : ""}">${esc(t)}</span>`).join("");
+  const tok = t => `<span class="rf-t${RULE_OP.test(t) ? " op" : /^[()]$/.test(t) ? " par" : t === "|" ? " abs" : ""}">${supAr(esc(t))}</span>`;
   const words = (it.rf || (it.type === "rfill" ? "words" : "nums")) === "words";
-  return rfRows(it.eq, words).map(line =>
-    `<div class="rf-line">${line.split("_").map((part, i, all) => tok(part) + (i < all.length - 1 ? blank() : "")).join("")}</div>`).join("");
+  return rfRows(it.eq, words).map(line => {
+    const items = [];
+    line.split("_").forEach((part, i, all) => {
+      rfTokens(part).forEach(t => items.push({ t, h: tok(t) }));
+      if (i < all.length - 1) items.push({ t: "_", h: blank() });
+    });
+    return `<div class="rf-line">${rfStack(items)}</div>`;
+  }).join("");
+}
+/* a term with one «÷» is drawn as the exam prints a fraction: what is divided over a bar over what
+   divides it (the user, 2026-11-08, on «… × (… − ١) ÷ ٢»: «why this law has no كسر»). A side is cut
+   into its terms at the «+» and «−» outside brackets, so «١٠ − ٦ ÷ ٣» stacks only «٦ ÷ ٣»; the top is
+   everything before the «÷» in its term, the bottom the one number, word, blank or bracket after it, and
+   a «× …» after that stays on the line; brackets round a whole top or bottom go */
+function rfStack(items) {
+  const html = xs => xs.map(x => x.h).join("");
+  const bare = xs => {
+    if (xs.length < 3 || xs[0].t !== "(" || xs[xs.length - 1].t !== ")") return xs;
+    let d = 0;
+    for (let i = 0; i < xs.length; i++) { if (xs[i].t === "(") d++; else if (xs[i].t === ")" && !--d && i < xs.length - 1) return xs; }
+    return xs.slice(1, -1);
+  };
+  const unit = (xs, i) => {
+    if (!xs[i]) return 0;
+    if (xs[i].t !== "(") return /^[=×÷+−←()،|]$/.test(xs[i].t) ? 0 : 1;
+    let d = 0;
+    for (let e = i; e < xs.length; e++) { if (xs[e].t === "(") d++; else if (xs[e].t === ")" && !--d) return e - i + 1; }
+    return 0;
+  };
+  const term = xs => {
+    let d = 0, at = -1, divs = 0;
+    xs.forEach((x, i) => { if (x.t === "(") d++; else if (x.t === ")") d--; else if (!d && x.t === "÷") { at = i; divs++; } });
+    const n = divs === 1 && at > 0 ? unit(xs, at + 1) : 0, rest = xs.slice(at + 1 + n);
+    if (!n || (rest.length && rest[0].t !== "×")) return html(xs);
+    return `<span class="rf-fr"><span class="rf-fn">${html(bare(xs.slice(0, at)))}</span><span class="rf-fd">${html(bare(xs.slice(at + 1, at + 1 + n)))}</span></span>${html(rest)}`;
+  };
+  const out = [];
+  let cur = [], d = 0;
+  const flush = () => { if (cur.length) out.push(term(cur)); cur = []; };
+  items.forEach((x, i) => {
+    if (x.t === "(") d++; else if (x.t === ")") d--;
+    const cut = !d && (/^[=←،|]$/.test(x.t) || (/^[+−]$/.test(x.t) && i > 0 && cur.length));
+    if (cut) { flush(); out.push(x.h); } else cur.push(x);
+  });
+  flush();
+  return out.join("");
 }
 /* a row's natural width from its tokens' layout widths: a token still
    scaled down by its entrance animation must not read as narrow */
@@ -4304,18 +4328,33 @@ function rfFit(root, it) {
   const lines = Array.from(root.querySelectorAll(".rf-line"));
   if (!lines.length) return;
   lines.forEach(l => { l.style.fontSize = ""; });
-  const blanks = Array.from(root.querySelectorAll(".ln-blank")), kept = blanks.map(b => [b.textContent, b.className]);
+  root.querySelectorAll(".ln-blank").forEach(b => { b.style.minWidth = ""; });
+  const blanks = Array.from(root.querySelectorAll(".ln-blank")), kept = blanks.map(b => [b.innerHTML, b.className]);
   const texts = Array.from(new Set(((it && it.tiles) || []).concat((it && it.a) || []).map(String)));
+  let wide = [];
   if (blanks.length && texts.length) {
     const g = blanks[0];
     g.className = "ln-blank filled";
-    const wide = texts.map(t => { g.textContent = t; return [t, g.offsetWidth]; }).sort((x, y) => y[1] - x[1]).map(x => x[0]);
-    lines.forEach(l => Array.from(l.querySelectorAll(".ln-blank")).forEach((b, i) => { b.className = "ln-blank filled"; b.textContent = wide[Math.min(i, wide.length - 1)]; }));
+    wide = texts.map(t => { g.innerHTML = fracs(esc(t)); return [t, g.offsetWidth]; }).sort((x, y) => y[1] - x[1]).map(x => x[0]);
+    lines.forEach(l => Array.from(l.querySelectorAll(".ln-blank")).forEach((b, i) => { b.className = "ln-blank filled"; b.innerHTML = fracs(esc(wide[Math.min(i, wide.length - 1)])); }));
   }
   let fs = parseFloat(getComputedStyle(lines[0]).fontSize);
   const over = () => lines.some(rowOver);
   for (let n = 0; n < 30 && fs > 12 && over(); n++) { fs -= 1; lines.forEach(l => { l.style.fontSize = fs + "px"; }); }
-  blanks.forEach((b, i) => { b.textContent = kept[i][0]; b.className = kept[i][1]; });
+  /* each blank is held as wide as the widest tile when the line still fits so, else as what it was sized for, so a word landing never grows its blank and slides the row (QA, 2026-11-08: 45 to 121px on permcomb) */
+  let mw = blanks.map(b => b.offsetWidth / parseFloat(getComputedStyle(b).fontSize));
+  if (wide.length) {
+    blanks.forEach(b => { b.innerHTML = fracs(esc(wide[0])); });
+    if (!over()) mw = blanks.map(b => b.offsetWidth / parseFloat(getComputedStyle(b).fontSize));
+  }
+  blanks.forEach((b, i) => { b.innerHTML = kept[i][0]; b.className = kept[i][1]; if (texts.length) b.style.minWidth = mw[i] + "em"; });
+  /* the example over it, when it is sums rather than a sentence, stays one line and shrinks to fit too */
+  const ex = root.parentElement && root.parentElement.querySelector(".rf-ex:not(.rf-say)");
+  if (ex) {
+    ex.style.fontSize = "";
+    let ef = parseFloat(getComputedStyle(ex).fontSize);
+    for (let n = 0; n < 14 && ef > 15 && ex.scrollWidth > ex.clientWidth + 1; n++) { ef -= 1; ex.style.fontSize = ef + "px"; }
+  }
 }
 /* the see card's rule on one line when it fits at two thirds of its size or more, else balanced lines */
 function ruleFit(el) {
@@ -4357,7 +4396,16 @@ function learnFillEq(it, verdict, unfill) {
     return it.lab && it.lab[j] ? `<span class="ln-bw">${b}<small>${esc(it.lab[j])}</small></span>` : b;
   };
   const rows = it.rf || it.type ? String(it.eq).split("\n") : learnSteps(it.eq);
-  const lines = rows.map(line => learnFmt(line).split("_").map((part, i, all) => i === all.length - 1 ? part : part + blank()).join(""));
+  /* a step that divides is drawn as the exam prints a fraction, as «كمّل الخطوة» is (rfStack) */
+  const stacked = line => {
+    const items = [];
+    line.split("_").forEach((part, i, all) => { rfTokens(part).forEach(t => items.push({ t, h: `<span class="ln-tk">${learnFmt(t)}</span>` })); if (i < all.length - 1) items.push({ t: "_", h: blank() }); });
+    return `<span class="ln-row">${rfStack(items)}</span>`;
+  };
+  /* a bracket never breaks across lines, blanks inside it included (QA, 2026-11-08: «(٦٣٠ + ☐» over «)» at 320 wide) */
+  const keep = h => h.replace(/\u0001/g, `<span class="ln-nw">(`).replace(/\u0002/g, `)</span>`);
+  const lines = rows.map(line => line.indexOf("÷") >= 0 ? stacked(line)
+    : keep(learnFmt(line.replace(/\(([^()]*)\)/g, "\u0001$1\u0002")).split("_").map((part, i, all) => i === all.length - 1 ? part : part + blank()).join("")));
   return lines.length > 1 ? lines.map(l => `<div class="ln-step">${l}</div>`).join("") : lines[0];
 }
 /* the two screens after a rule, drawn the way a fill is (the user,
@@ -4368,13 +4416,16 @@ function learnFillEq(it, verdict, unfill) {
 function rfBody(c, verdict, unfill, tile) {
   const words = (c.rf || (c.type === "rfill" ? "words" : "nums")) === "words";
   const tiles = `<div class="ln-tiles rf-tiles" id="lnTiles">${c._tiles.map(k =>
-    `<button class="ln-tile${c.ui.slots.indexOf(k) >= 0 ? " used" : ""}${c._out && c._out.indexOf(k) >= 0 ? " out" : ""}" data-k="${k}" onclick="${tile}(${k})"${verdict || (c._out && c._out.indexOf(k) >= 0) ? " disabled" : ""}>${esc(c.tiles[k])}</button>`).join("")}</div>`;
+    `<button class="ln-tile${c.ui.slots.indexOf(k) >= 0 ? " used" : ""}${c._out && c._out.indexOf(k) >= 0 ? " out" : ""}" data-k="${k}" onclick="${tile}(${k})"${verdict || (c._out && c._out.indexOf(k) >= 0) ? " disabled" : ""}>${fracs(esc(c.tiles[k]))}</button>`).join("")}</div>`;
   const hint = c._hint ? `<div class="rf-hint help${rfNow(c) ? " rf-fh" : ""}" id="rfHint">${c._hint}</div>` : `<div class="rf-hint" id="rfHint"></div>`;
   /* a numbers line stays one line; an example said in words wraps, a size down */
-  const ex = !words && c.q ? `<div class="ln-step rf-ex${/[ء-ي]{3}/.test(c.q) ? " rf-say" : ""}">${learnFmt(c.q)}</div>` : "";
+  /* sums over the box are drawn as its rows are, a «÷» stacked, so the example and its working read alike (QA, 2026-11-08) */
+  const exTok = t => ({ t, h: `<span class="rf-t${RULE_OP.test(t) ? " op" : /^[()]$/.test(t) ? " par" : t === "|" ? " abs" : ""}">${supAr(esc(t))}</span>` });
+  const exSay = c.q && /[ء-ي]{3}/.test(c.q), exFr = c.q && !exSay && / ÷ /.test(c.q) && !c.q.includes("\n");
+  const ex = !words && c.q ? `<div class="ln-step rf-ex${exSay ? " rf-say" : ""}">${exFr ? `<span class="rf-line rf-exl">${rfStack(rfTokens(c.q).map(exTok))}</span>` : learnFmt(c.q)}</div>` : "";
   return `<div class="ln-q rf-q">${words ? "كمّل القاعدة:" : "كمّل الخطوة:"}</div>
     <div class="ln-eq rf-box${words ? " rf-words" : " rf-num"}">${ex}<div class="rf-lines" id="lnEq">${learnFillEq(c, verdict, unfill)}</div></div>
-    ${hint}${tiles}`;
+    ${rfNow(c) ? tiles + hint : hint + tiles}`;   /* «كمّل الخطوة» has no button: its help goes under the tiles, so a miss never moves them mid-tap (QA, 2026-11-08) */
 }
 function learnBody(it) {
   const q = it.q && it.t !== "bank" ? `<div class="ln-q">${learnFmt(it.q)}</div>` : "";
@@ -4444,7 +4495,7 @@ function renderLearn() {
   const pct = sesPct();
   const btn = it.t === "see"
     ? `<button class="btn" onclick="A.next()">${esc(it.go || "فهمت")}</button>`
-    : rfNow(it) ? `<button class="btn rf-nobtn" disabled aria-hidden="true" tabindex="-1">تحقق</button>`
+    : rfNow(it) ? `<button class="btn rf-chk" id="checkBtn" onclick="A.check()" ${learnReady(it) ? "" : "disabled"}>تحقق</button>`
     : `<button class="btn" id="checkBtn" onclick="A.check()" ${learnReady(it) ? "" : "disabled"}>تحقق</button>`;
   $app.innerHTML = `
     <div class="screen screen-full screen-session screen-learn" style="--li-c:${u.c};--li-s:${u.s};--li-h:${u.h}">
@@ -4488,7 +4539,7 @@ function learnPaint() {
   }
   if (it.t === "type") {
     const box = document.getElementById("lnIn");
-    if (box) box.innerHTML = it.ui.val ? esc(it.ui.val) : `<span class="ln-caret"></span>`;
+    if (box) box.innerHTML = it.ui.val ? (/^[٠-٩]+\/[٠-٩]+$/.test(it.ui.val) ? fracs(esc(it.ui.val)) : esc(it.ui.val)) : `<span class="ln-caret"></span>`;   // a whole fraction typed is drawn stacked, as its answer is
   }
   const cb = document.getElementById("checkBtn"); if (cb) cb.disabled = !learnReady(it);
 }
@@ -4498,8 +4549,11 @@ A.lTile = function (k) {
     if (it.ui.slots.indexOf(k) >= 0) return;
     let j = 0; while (it.ui.slots[j] !== undefined) j++;
     if (j >= it.a.length) return;
+    /* «كمّل الخطوة» takes a number into the first empty blank it fits, so a number read off the example is never
+       refused because the answer's blank comes first in the line (QA, 2026-11-08: «٦٠» refused on «العلامات») */
+    /* except where the order is the question (`seq` on a learn.js `num`: «رتّبها» for the median), which fills in reading order
+       (QA, 2026-11-08: ٥، ٩، ٢ sorted themselves) */
     it.ui.slots[j] = k; stampTile(it.ui, k);
-    if (rfNow(it)) { rfInstant(it, j); return; }
   } else if (it.t === "order") {
     if (it.ui.seq.indexOf(k) >= 0) return;
     it.ui.seq.push(k);
@@ -4509,7 +4563,7 @@ A.lTile = function (k) {
 };
 A.lUnfill = function (j) {
   const it = SES && SES.queue[SES.idx]; if (!it || SES.locked) return;
-  if (it.t === "fill") { if (rfNow(it)) return; it.ui.slots[j] = undefined; }
+  if (it.t === "fill") { if (it.ui.lk && it.ui.lk[j]) return; it.ui.slots[j] = undefined; }   /* a number «تحقق» found right stays */
   else if (it.t === "order") it.ui.seq.splice(j, 1);
   snd("tile-remove"); learnPaint();
 };
@@ -4724,6 +4778,7 @@ function rfCheck(it) {
     eq.innerHTML = learnFillEq(it, true); rfFit(eq, it); lock();
     learnResolve(it, true, rfShown(it), null, false, it.why);
     rfHop(eq, it);
+    if (rfNow(it)) fbClear();
     return;
   }
   it._tries = (it._tries || 0) + 1;
@@ -4733,8 +4788,16 @@ function rfCheck(it) {
   const chips = eq.querySelectorAll(".ln-blank"), wrong = bad.map(j => chips[j]).filter(Boolean);
   if (window.gsap && !fxReduced()) gsap.fromTo(wrong, { x: 0 }, { keyframes: [{ x: -8, duration: .06 }, { x: 7, duration: .07 }, { x: -5, duration: .07 }, { x: 3, duration: .06 }, { x: 0, duration: .06 }] });
   snd("rule-fill-miss", () => sndBad()); buzz([30, 40, 30]);
-  it._hint = rfHelp(it, bad);
-  if (hint) { hint.innerHTML = it._hint; hint.className = "rf-hint help"; void hint.offsetWidth; hint.classList.add("go"); }
+  /* «كمّل الخطوة» is judged at «تحقق» again (the user, 2026-11-08, on judging each number as it landed: «ما حبيت الـUX انه يضغط ويجاوب على طول»):
+     the numbers that are right lock green, the wrong ones go back, and فهيم says what is wrong with the first, never its answer */
+  const nums = rfNow(it);
+  if (nums) {
+    it.ui.lk = it.ui.lk || {}; it._miss = it._miss || {};
+    it.ui.slots.forEach((k, j) => { if (bad.indexOf(j) < 0) it.ui.lk[j] = true; });
+    it._miss[bad[0]] = it._tries;   // «شلت لك …» comes with the tiles going, on the second miss
+  }
+  it._hint = nums ? rfMissSay(it, bad[0], it.tiles[it.ui.slots[bad[0]]], bad.length) : rfHelp(it, bad);
+  if (hint) { hint.innerHTML = it._hint; hint.className = "rf-hint help" + (nums ? " rf-fh" : ""); void hint.offsetWidth; hint.classList.add("go"); }
   setTimeout(() => {
     if (!SES || SES.queue[SES.idx] !== it) return;
     bad.forEach(j => { it.ui.slots[j] = undefined; });
@@ -4745,6 +4808,7 @@ function rfCheck(it) {
       x.disabled = out; x.classList.toggle("out", out);
     });
     learnPaint();
+    if (nums) { const ok = Array.from(document.querySelectorAll("#lnEq .ln-blank.lk")); if (ok.length) adWave(ok); }
     rfPoint(it, bad);
     const tl = document.getElementById("lnTiles");
     if (tl) tl.scrollIntoView({ block: "nearest", behavior: fxReduced() ? "auto" : "smooth" });
@@ -4770,12 +4834,40 @@ function rfOk(it, j, v) {
   }
   return pool.indexOf(v) >= 0;
 }
-function rfMissSay(it, j, v) {
-  const lab = it.lab && it.lab[j], rule = it.rule ? ruleSplit(it.rule).main : "";
-  const said = rule ? `<span class="rf-tr">${String(rule).split("*").map((p, k) => k % 2 ? (p ? `<b class="ln-hl">${esc(p)}</b>` : "") : esc(p)).join("")}</span>` : "";
-  const line = lab ? `هذا مكان <b class="ln-hl">${esc(lab)}</b> — دوّره في المثال.` : "احسبه من السطر اللي فوقه.";
-  const out = it._miss[j] >= 2 ? `<span>شلت لك الأرقام اللي ما لها مكان.</span>` : "";
-  return `${mascot("encourage", "rf-help-fh")}<span class="rf-help-tx"><b>«${esc(v)}» مو هنا.</b><span>${line}</span>${it._miss[j] === 1 && said ? said : ""}${out}</span>`;
+/* the blank whose number still belongs at j: in a «×» / «+» group placed the other way round, blank j now wants the number of
+   the term still unplaced, so its caption, answer and source are that term's (QA, 2026-11-08: ٤ put first on «المكان الأول»,
+   then a miss on the second blank said «هذا مكان المكان الثاني — احسبه بالقانون» for the ٥ of the example) */
+function rfWantAt(it, j) {
+  const groups = rfSwapRuns(it.eq).slice();
+  if (it.anyOrder) groups.push([0, it.anyOrder - 1]);
+  const g = groups.find(([a, b]) => j >= a && j <= b);
+  if (!g) return j;
+  const free = [];
+  for (let x = g[0]; x <= g[1]; x++) free.push(x);
+  for (let x = g[0]; x <= g[1]; x++) {
+    if (x === j || !(it.ui.lk && it.ui.lk[x])) continue;
+    const at = free.findIndex(y => it.a[y] === it.tiles[it.ui.slots[x]]); if (at >= 0) free.splice(at, 1);
+  }
+  return free.indexOf(j) >= 0 ? j : free.length ? free[0] : j;
+}
+function rfMissSay(it, j0, v, nBad) {
+  const j = rfWantAt(it, j0), lab = it.lab && it.lab[j];
+  /* a number standing as its own token in the example is read off it; any other number is worked out; a word is thought about
+     (QA, 2026-11-08: «دوّره في المثال» for ٥٫٥, which is the rule's, and for «مختلفان») */
+  /* a worked example may say where each of its numbers comes from (`how` in learn.js: f found in the example, n counted in it,
+     c worked out with the rule, u taken from the line above, t thought through, w worked out of the example's own numbers), since the guess got 11 blanks wrong
+     (QA, 2026-11-08: «دوّره في المثال» for «الفرق − ١» = ٤, which the example only holds by chance) */
+  const v0 = String(it.a[j]).replace(/°$/, ""), num = /^[−٠-٩٫/]+$/.test(v0);
+  const inEx = num && !(it.calc && it.calc.indexOf(j) >= 0) && (String(it.q || "").match(/[−٠-٩٫]+/g) || []).indexOf(v0) >= 0;
+  const how = { f: "دوّره في المثال.", n: "عدّها في المثال.", c: "احسبه بالقانون.", u: "خذه من السطر اللي فوقه.", t: "فكّر فيه مرة ثانية.", w: "طلّعه من أرقام المثال." }[it.how && it.how[j]]
+    || (!num ? "فكّر فيه مرة ثانية." : inEx ? "دوّره في المثال." : "احسبه بالقانون.");
+  /* a number of the example put out of its turn in a row that is ordered (`seq`): the order is the slip, not the number (QA, 2026-11-08) */
+  const early = it.seq && !lab && it.a.indexOf(v) >= 0 && it.a.indexOf(v) !== j;
+  const labG = lab && String(lab).replace(/^(ال)?(رمز|عملت|نرد)ان$/, (m, a, b) => "ال" + b + "ين");   // «مكان» takes the genitive: «هذا مكان النردين» (QA, 2026-11-08)
+  const line = early ? "رتّبها من الأصغر للأكبر." : lab ? `هذا مكان <b class="ln-hl">${esc(labG)}</b> <span class="ln-nw">— ${how}</span>` : how;   // «—» never ends a line
+  const out = it._miss[j0] >= 2 ? `<span>شلت لك ${it.tiles.every(t => /^[−٠-٩٫/°٪ ]+$/.test(String(t))) ? "الأرقام" : "البطاقات"} اللي ما لها مكان.</span>` : "";
+  const more = nBad > 1 ? `<span>وفيه ${nBad === 2 ? "واحد ثاني مو في مكانه" : toAr(nBad - 1) + "\u00A0غيره مو في مكانها"}.</span>` : "";
+  return `${mascot("encourage", "rf-help-fh")}<span class="rf-help-tx"><b>«${fracs(esc(v))}» مو هنا.</b><span>${line}</span>${out || more}</span>`;
 }
 function rfInstant(it, j) {
   const v = it.tiles[it.ui.slots[j]], hint = document.getElementById("rfHint");
@@ -4787,13 +4879,17 @@ function rfInstant(it, j) {
     const c = chipAt(); if (c) adWave([c]);
     const n = Object.keys(it.ui.lk).length;
     snd("rule-fill-step", () => sndTap(), "xp-tally-" + Math.min(n, 5)); buzz(8);
-    if (hint && hint.classList.contains("help")) { hint.className = "rf-hint"; hint.innerHTML = ""; it._hint = ""; }
+    /* the help card keeps its place and turns to praise, so nothing under it moves while the student is tapping (QA, 2026-11-08) */
+    if (hint && hint.classList.contains("help")) { it._hint = `${mascot("cheer", "rf-help-fh")}<span class="rf-help-tx"><b class="ok">صح!</b><span>${n === it.a.length ? "خلّصتها." : "كمّل الباقي."}</span></span>`; hint.innerHTML = it._hint; }
     if (n === it.a.length) {
       SES.locked = true;
       setTimeout(() => {
         if (!SES || SES.queue[SES.idx] !== it) return;
         document.querySelectorAll(".ln-tile, .ln-blank").forEach(x => { x.disabled = true; });
         learnResolve(it, true, rfShown(it), null, false, it.why);
+        /* the line it judged stays above the sheet: the step takes the sheet's own height back (style.css drops its tiles) */
+        /* only what the sheet covers is taken back, as on every verdict (fbClear): the sheet's whole height used to scroll the step and cut its example (QA, 2026-11-08) */
+        fbClear();
       }, 520);
     }
     return;
@@ -4826,7 +4922,7 @@ function rfInstant(it, j) {
 }
 function learnCheck() {
   const it = SES.queue[SES.idx];
-  if (SES.locked || !learnReady(it) || rfNow(it)) return;
+  if (SES.locked || !learnReady(it)) return;
   if (it.rf) { rfCheck(it); return; }
   SES.locked = true;
   const choices = Array.from(document.querySelectorAll(".ln-area .choice"));
@@ -4899,6 +4995,7 @@ function learnResolve(it, ok, shown, card, pairs, why) {
     let gain = 0;
     if (graded) {
       SES.run = first && !(pairs && !ok) ? (SES.run || 0) + 1 : 0; SES.done++;
+      if (!SES.run) fxPaintBar(0);   /* a right retry ends the run: its tag and the bar's colour go at once (QA, 2026-11-08) */
       const d = it.t === "bank" ? (it.q.difficulty || 2) : 0;
       gain = !first || SES.replay ? 1 : d ? [0, 3, 5, 8][d] : 2;
       SES.gems += gain;
@@ -4906,7 +5003,7 @@ function learnResolve(it, ok, shown, card, pairs, why) {
     }
     paintProg(SES.idx + 1);
     const head = pairs ? (ok ? "وصّلتها كلها!" : "وصّلتها — في المرة الجاية بدون غلط") : it.free ? (it.head || "صح!") : praiseFor(graded ? first : undefined);
-    fb.className = "feedback good show has-crest";
+    fb.className = "feedback good show has-crest"; fbClear();
     fb.innerHTML = `<svg class="fb-crest" viewBox="0 0 380 90" preserveAspectRatio="none" aria-hidden="true">
         <path class="fb-crest-fill"></path>
         <path class="fb-crest-line" fill="none" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"></path>
@@ -4923,8 +5020,8 @@ function learnResolve(it, ok, shown, card, pairs, why) {
       : hLeft === 0 ? `<div class="fb-hearts out">${ico("heart", 15)} لم يتبقَّ لك قلوب</div>`
       : hLeft === 1 ? `<div class="fb-hearts warn">${ico("heart", 15)} باقٍ لك قلب واحد — ركّز</div>` : "";
     const sol = it.t === "bank" && it.q ? `<div class="fb-solution" id="sol">${formatExplain(it.q.solution)}</div>` : "";
-    fb.className = "feedback bad show";
-    fb.innerHTML = `<div class="fb-head"><span class="fb-x">✕</span> ${it.free ? "الغلط هنا مجاني" : "ليست صحيحة"}</div>
+    fb.className = "feedback bad show"; fbClear();
+    fb.innerHTML = `<div class="fb-head"><span class="fb-x">✕</span> ${it.free ? "الغلط هنا مجاني" : "مو صح"}</div>
       ${heartLine}
       <div class="fb-correct">الصحيح: <b>${learnFmt(shown)}</b></div>
       ${why ? `<div class="ln-why">${learnFmt(why)}</div>` : ""}
@@ -5115,7 +5212,7 @@ function timeUp() {
   const correctTxt = LETTERS[q.answer] + " — " + (isCmp ? CMP_CHOICES[q.answer] : q.choices[q.answer]);
   snd("time-up", () => sndBad());
   const fb = document.getElementById("fb");
-  fb.className = "feedback bad show";
+  fb.className = "feedback bad show"; fbClear();
   fb.innerHTML = `<div class="fb-head"><span class="fb-x fb-clock">${TIMER_SVG}</span> انتهى الوقت!</div>
     <div class="fb-correct">الإجابة الصحيحة: ${fracs(correctTxt)}</div>
     <div class="fb-solution" id="sol">${formatExplain(q.solution)}</div>
@@ -5148,9 +5245,9 @@ function praiseFor(first) {
   if (first === false) return ["صحّحتها!", "كذا تمام!", "هذي هي!"][at % 3];   // right after a miss: no «أول وحدة صح» or «على التوالي»
   /* the first question anyone ever gets right deserves better than the fifth
      entry in a rotation */
-  if (SES.safe && SES.done === 1 && !SES.li) return "أول وحدة صح — يلا\u00a0كمّل!";
+  if (SES.safe && SES.done === 1 && !SES.li && (SES.run || 0) <= 1) return "أول وحدة صح — يلا\u00a0كمّل!";
   if (at >= n && SES.done >= SES.total) return "أنهيتها!";
-  if (SES.run >= 5) return "لا شيء يوقفك!";
+  if (SES.run >= 5 && SES.run % 5 === 0) return "لا شيء يوقفك!";   // once per run of five, not on every answer after it (QA, 2026-11-08)
   if (SES.run === 3) return "ثلاث على التوالي!";
   if (n >= 4 && at === Math.ceil(n / 2)) return "نصف الطريق!";
   if (at === n - 1) return "بقي سؤال واحد!";
@@ -5203,7 +5300,7 @@ A.check = function () {
     SES.xp += seenBefore || SES.retried[q.id] ? 3 : ([0, 6, 10, 16][d] || 10);
     SES.gems += gemGain;
     paintProg(SES.idx + 1);              // the bar moves with the answer, not with the next screen
-    fb.className = "feedback good show has-crest";
+    fb.className = "feedback good show has-crest"; fbClear();
     fb.innerHTML = `<svg class="fb-crest" viewBox="0 0 380 90" preserveAspectRatio="none" aria-hidden="true">
         <path class="fb-crest-fill"></path>
         <path class="fb-crest-line" fill="none" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"></path>
@@ -5222,7 +5319,7 @@ A.check = function () {
     requeue(q);
     paintProg();                         // the queue just grew, so the bar gives ground
     loseHeart();
-    fb.className = "feedback bad show";
+    fb.className = "feedback bad show"; fbClear();
     /* the heart counter lives in the opposite corner from where the eye is, so
        the cost has to be stated here, and the last heart has to be a warning */
     const hLeft = SES.hearts;
@@ -5256,6 +5353,88 @@ A.check = function () {
   save();
 };
 
+/* the sheet never covers what it judges (QA, 2026-11-08: «صح» / «خطأ» cut in half and «١١» under the sheet at 320 × 568):
+   once it has risen, a question whose answer line sits under it takes the overlap back as room at its foot, so the block
+   (anchored to the bottom of .q-area) moves up into the empty space over it and is zoomed down only if that is not enough.
+   A wrong sheet only uses the empty space: its solution may cover what it explains, as Duolingo's does. Trays of tiles
+   and keypads are left out of what must show; a solved «كمّل الخطوة» does its own (rfInstant) */
+function fbClear(again) {
+  requestAnimationFrame(() => setTimeout(() => {
+    const fb = document.getElementById("fb"), qa = document.querySelector(".screen-session .q-area");
+    if (!fb || !qa || !fb.classList.contains("show")) return;
+    /* measured at rest: the answer's jump is still in the air; a step that had to be zoomed is checked once more after, and one
+       still too tall at the smallest size slides to its foot inside the step, so the answer it judged is the part in sight
+       (QA, 2026-11-08: keylaws-07's «د» under the sheet at .6) */
+    const moved = fitSettled(qa.closest(".screen") || qa, () => fbClearAt(fb, qa));
+    if (qa._fbLift != null) Array.from(qa.children).forEach(c => { c.style.translate = qa._fbLift ? "0 " + (-qa._fbLift / (parseFloat(getComputedStyle(c).zoom) || 1)).toFixed(1) + "px" : ""; });   // a zoomed body scales its own translate
+    if (moved) fitSoon("size");
+    /* looked at once more when the answer's own motion has settled, which can leave it lower than it was measured */
+    if (!again) setTimeout(() => { if (qa.isConnected && fb.classList.contains("show")) fbClear(true); }, 360);
+    else if (qa.scrollHeight > qa.clientHeight + 1) setTimeout(() => { if (qa.isConnected) qa.scrollTo({ top: qa.scrollHeight, behavior: motionReduced() ? "auto" : "smooth" }); qa.style.overflow = "hidden"; }, 300);
+  }, 40));
+}
+function fbClearAt(fb, qa) {
+  const skip = e => e.matches(".ln-tiles, .ln-keys, .ln-pad, [class*=keypad]") || getComputedStyle(e).position === "absolute" || getComputedStyle(e).position === "fixed";
+  const judged = qa.querySelectorAll(".choice.correct, .choice.wrong");
+  /* after a miss the right choice the sheet names must stand whole; the wrong pick under it may go under the sheet (QA, 2026-11-08: «٣١» half under it in a review at 320 × 568) */
+  const right = fb.classList.contains("good") ? [] : Array.from(qa.querySelectorAll(".choice.correct")), must = right.length ? right : Array.from(judged);
+  const foot = () => {
+    let bottom = -1;
+    Array.from(qa.children).filter(e => !skip(e)).forEach(k => {
+      const b = k.getBoundingClientRect(); if (!b.height) return;
+      if (k.querySelector(".ln-tiles")) Array.from(k.children).forEach(c => { if (!skip(c) && !c.querySelector(".ln-tiles")) bottom = Math.max(bottom, c.getBoundingClientRect().bottom); });
+      else bottom = Math.max(bottom, b.bottom);
+    });
+    /* a choice still pressed or settling stands a little under its row */
+    qa.querySelectorAll(".choice").forEach(c => { bottom = Math.max(bottom, c.getBoundingClientRect().bottom); });
+    /* where choices were judged, only they must show: a choice under the right one may go under the sheet, so the step shrinks
+       only as far as the answer needs (QA, 2026-11-08: bank questions at .70 after a right answer) */
+    if (must.length) bottom = Math.max(...must.map(c => c.getBoundingClientRect().bottom));
+    return bottom;
+  };
+  const b0 = foot(); if (b0 < 0) return false;
+  const need = b0 - (innerHeight - fb.offsetHeight) + 6;
+  if (need <= .5) return false;
+  const pad0 = parseFloat(getComputedStyle(qa).paddingBottom) || 0, set = a => { qa.style.paddingBottom = (pad0 + a).toFixed(1) + "px"; };
+  const over = () => qa.scrollHeight > qa.clientHeight + .5;
+  /* a right answer: the step's room ends where the sheet begins, and fitNow sizes it into that room, whatever the block's anchor */
+  if (fb.classList.contains("good") && !judged.length) {
+    /* the tiles left over once it is right are done with: they go, rather than being fitted into the room with it (QA, 2026-11-08: a fill at .6 and still sliding) */
+    const tray = qa.querySelector(".ln-tiles");
+    if (tray && tray.offsetHeight) { tray.style.visibility = "hidden"; if (foot() - (innerHeight - fb.offsetHeight) + 6 <= .5) return true; }
+    const pad = qa.getBoundingClientRect().bottom - (innerHeight - fb.offsetHeight) + 6;
+    if (pad <= pad0 + .5) return false;
+    set(pad - pad0);
+    return true;
+  }
+  /* the block may sit centred rather than on the bottom, so it moves by a part of the room it is given: that part is measured */
+  set(need);
+  /* a block with no room left over it does not move at all: the zoom that follows makes the room */
+  const moved = b0 - foot(), k = !over() && moved > .5 ? Math.min(1, moved / need) : 1;
+  let add = Math.min(need / k, fb.offsetHeight);
+  set(add);
+  if (!fb.classList.contains("good")) {
+    if (over()) {
+      let lo = 0, hi = add;
+      for (let n = 0; n < 7; n++) { const m = (lo + hi) / 2; set(m); if (over()) hi = m; else lo = m; }
+      add = lo; set(add);
+      if (add < 1) qa.style.paddingBottom = pad0 ? pad0 + "px" : "";
+    }
+    /* after a miss the right choice still under the sheet is lifted by just what it lacks, the step slid up under its top
+       edge at full size: padding past the room zoomed the whole step to .6 and a scroll to its foot overshot into the
+       padding (QA, 2026-11-08: only a green sliver of the right choice left) */
+    if (right.length) {
+      const r = foot() - (innerHeight - fb.offsetHeight) + 6;
+      /* only the tag and the kicker over the question may slide out: the question and a statement being judged stay whole, and
+         where both cannot show over the sheet the choice gives way, as before (QA, 2026-11-08: «١٢ ÷ ٣ × ٢ = ٢» cut in half at 320) */
+      const keep = Array.from(qa.children).find(c => c.offsetHeight && !c.matches(".ln-tag, .q-top, .q-count, .q-kicker") && !(c.matches(".ln-q") && c.nextElementSibling && c.nextElementSibling.matches(".ln-big")));   // «صح ولا خطأ؟» over its statement may go too
+      const room = Math.min(...right.map(c => c.getBoundingClientRect().top), keep ? keep.getBoundingClientRect().top : Infinity) - qa.getBoundingClientRect().top - 4;
+      qa._fbLift = r > .5 ? Math.max(0, Math.min(r, room)) : 0;   /* measured at rest, so it is the whole lift; fbClear sets it once the measuring is put back */
+    }
+    return false;   /* the padding stays inside the room, so nothing is refitted: a zoom gliding after it moved the choice the lift was measured for */
+  }
+  return true;
+}
 A.toggleSol = function () {
   const s = document.getElementById("sol");
   if (s.style.display === "none") snd("help-open");
@@ -5268,7 +5447,9 @@ A.toggleSol = function () {
    choices upward by exactly the sheet's height, mid-jump — and a window scroll
    on top of that. The sheet is an overlay that states the answer itself, as
    Duolingo's does; the reserve under the choices already fits the correct
-   sheet, and the wrong sheet is allowed to cover what it explains. */
+   sheet, and the wrong sheet is allowed to cover what it explains. On a short
+   phone, where the reserve is not enough, fbClear (above) moves the block up
+   once the sheet has risen. */
 
 /* Method sheet (كيف أحلّها؟): teacher walks through how to approach THIS
    specific question — its own numbers, its own steps — but stops short of the
@@ -5457,15 +5638,21 @@ function failNote(done, total) {
   return "خذها من البداية بهدوء";
 }
 function sessionFailed() {
-  stopQTimer();
+  stopQTimer(); questBannerOff();   /* «اكتمل تمرين اليوم!» never lands on «نفدت القلوب!» (QA, 2026-11-08) */
   /* the work was real even though the lesson was not cleared: banking it is
      what stops a first session ending in four minutes with nothing to show.
      Stars still require a clear, so this cannot be farmed. */
   gainXP(SES.xp); gainGems(SES.gems);
   if (SES.xpBoost) { gainGems(BOOST_COST); SES.xpBoost = false; }   // refund the unused boost
   bumpStreak(); save();
-  const { domKey, lesKey, done, total, tSpent, tAnswered } = SES;
-  const avgSecs = tAnswered ? Math.round(tSpent / tAnswered) : 0;
+  const { domKey, lesKey, tSpent, tAnswered } = SES;
+  /* a short lesson has no question clock and is measured in steps, not right answers: how far the student got is the step
+     they were on, and the time is the wall clock over the steps behind them (QA, 2026-11-08: «٠:٠٠» and «١ من ٨» on
+     item 6 of 13) */
+  const learn = SES.mode === "learn";
+  const done = learn ? Math.min(SES.idx + 1, SES.queue.length) : SES.done, total = learn ? SES.queue.length : SES.total;
+  const avgSecs = learn && SES.t0 ? Math.round(Math.min(1800, (Date.now() - SES.t0) / 1000) / Math.max(1, done))
+    : tAnswered ? Math.round(tSpent / tAnswered) : 0;
   snd("lesson-failed", () => sndLose());
   const canRevive = S.xp >= REVIVE_COST;
   $app.innerHTML = `<div class="screen screen-full"><div class="complete fail-scene" id="failComp">
@@ -5473,12 +5660,12 @@ function sessionFailed() {
     <h1 class="fail-title">نفدت القلوب!</h1>
     <p class="fail-sub">وصلت إلى ${toAr(done)} من ${toAr(total)} — ${failNote(done, total)}<br>${canRevive ? "استعد قلوبك بالجواهر وأكمل من حيث توقفت" : "أعد المستوى وحاول مجدداً"}</p>
     <div class="result-cards fail-cards">
-      <div class="rcard rc-blue fail-time"><div class="rc-t">متوسط الوقت</div><div class="rc-v">${TIMER_SVG} <span id="cv-avg">${fmtTime(0)}</span></div></div>
+      <div class="rcard rc-blue fail-time"><div class="rc-t">متوسط الوقت</div><div class="rc-v">${TIMER_SVG} <span id="cv-avg">${fmtClock(0)}</span></div></div>
       <div class="rcard rc-green"><div class="rc-t">التقدم</div><div class="rc-v">${ico("target", 22)} ${toAr(done)}/${toAr(total)}</div></div>
     </div>
     <div class="fail-actions">
-      <button class="btn btn-revive" ${canRevive ? "" : "disabled"} onclick="A.reviveLesson()">${ico("gem", 20)} استعد قلوبك — ${toAr(REVIVE_COST)} جوهرة</button>
-      ${canRevive ? "" : `<div class="fail-wallet">معك ${toAr(S.xp || 0)} جوهرة — اكسب المزيد من الدروس وصندوق اليوم</div>`}
+      <button class="btn btn-revive" ${canRevive ? "" : "disabled"} onclick="A.reviveLesson()">${ico("gem", 20)} استعد قلوبك — ${toAr(REVIVE_COST)} جوهرة</button>
+      ${canRevive ? "" : `<div class="fail-wallet">${S.xp ? `معك ${gemCount(S.xp)}` : "ما معك جواهر"} — اكسب المزيد من الدروس وصندوق اليوم</div>`}
       <button class="btn ${canRevive ? "btn-ghost" : ""}" onclick="A.retryLevel('${domKey}','${lesKey}')">إعادة المستوى</button>
       <button class="btn btn-ghost" onclick="A.quitFailed()">العودة للمسار</button>
     </div>
@@ -5541,7 +5728,8 @@ function lessonComplete() {
   if (climb) climbSfxLoad();                         // decoded while the win screen plays
   const streakUp = bumpStreak(); save();
   pendingStreak = streakUp ? S.streak.count : 0;   // show the fire-streak celebration after this win screen
-  const xpWon = rankGain, gemsWon = SES.gems, boosted = SES.xpBoost, tTot = SES.tSpent;
+  /* a short lesson is timed on the clock from its start, so the rule screens drawn by js/law/ count too (QA, 2026-11-08: a 70s lesson read «٠:٢٩»); half an hour at most, for a phone left on the table */
+  const xpWon = rankGain, gemsWon = SES.gems, boosted = SES.xpBoost, tTot = SES.t0 ? Math.max(SES.tSpent, Math.min(1800, Math.round((Date.now() - SES.t0) / 1000))) : SES.tSpent;
   LAST_MISSES = learn
     ? SES.queue.filter(it => it.t === "bank" && it.q && SES.firstTry[it.uid] === false).map(it => it.q.id).filter((id, i, a) => a.indexOf(id) === i)
     : Object.keys(SES.firstTry).filter(k => SES.firstTry[k] === false);
@@ -5551,8 +5739,11 @@ function lessonComplete() {
      it instead: the star and فهيم stay, because the student really did answer
      every question, but the line stops calling it a clean finish and the review
      button becomes the thing to do next rather than an afterthought. */
-  const struggled = SES.safe && acc < 50 && missCount && !(learn && learn.k > 0);
-  const hardLearn = learn && learn.k > 0 && acc < 50;
+  /* a short lesson's misses are mostly its own items, not bank questions: the line tells the truth on the accuracy alone, and
+     the review button comes only when there are bank misses to review (QA, 2026-11-08: 25% read «بداية قوية!») */
+  const rough = SES.safe && acc < 50 && !(learn && learn.k > 0);
+  const struggled = rough && missCount;
+  const hardLearn = learn && acc < 50 && !rough;
   /* Duolingo's lesson-complete grammar, read from its own files: a headline
      that names what the run was — the first lesson makes you «a learner», a
      clean run is «perfect», a quick one «fast» — drawn from small pools so it
@@ -5560,20 +5751,23 @@ function lessonComplete() {
      ever flatter: a poor result falls back to the plain word. */
   const firstEver = Object.values(S.lessons).reduce((n, x) => n + (x.plays || 0), 0) === 1;
   const pickOne = a => a[Math.floor(Math.random() * a.length)];
-  const mins = Math.max(1, Math.ceil(tTot / 60));
-  const [head, say] = learn && learn.nodeDone ? ["ختمت المرحلة!", `«${SES.title}» آخر درس فيها — والمرحلة التالية *انفتحت*!`]
-    : struggled ? ["خلّصت درسك الأول", "الأول دايماً أصعب — راجع اللي فاتك وارجع له، بيصير أسهل."]
+  const mins = Math.floor(tTot / 60) + 1;   // «أقل من دقيقة» only under a minute (QA, 2026-11-08)
+  /* a node finished under half right opens the next one all the same, said plainly (QA, 2026-11-08) */
+  const [head, say] = learn && learn.nodeDone && acc < 50 ? ["أكملت المرحلة!", "والمرحلة التالية *انفتحت* — اللي فاتك يرجع لك في المراجعة."]
+    : learn && learn.nodeDone ? ["ختمت المرحلة!", `${/«/.test(SES.title) ? SES.title : `«${SES.title}»`} آخر درس فيها — والمرحلة التالية *انفتحت*!`]
+    : rough ? ["خلّصت درسك الأول", missCount ? "الأول دايماً أصعب — راجع اللي فاتك وارجع له، بيصير أسهل." : "الأول دايماً أصعب — اللي فاتك يرجع لك في الدرس الجاي."]
     : hardLearn ? ["أكملت الدرس!", "هذا كان أصعب — أول سؤال في الدرس الجاي بيرجّعك له."]
     : firstEver ? ["أنت متعلّم حقيقي!", "أول درس وخلّصته — *بداية قوية*!"]
     : perfect ? pickOne([["درس بلا أخطاء!", "خذ تحيّة — ولا *غلطة وحدة*!"], ["ولا غلطة!", "صفر أخطاء؟ لو أنت *آلة حاسبة* اعترف!"],
         ["كامل!", "هالعقل لازم *يندرس*!"]])
-    : tTot > 0 && tTot < 120 ? pickOne([["سريع جداً!", `أقل من *${toAr(mins)} ${mins === 1 ? "دقيقة" : mins === 2 ? "دقيقتين" : "دقائق"}*؟ تسافر عبر الزمن؟`],
+    : tTot > 0 && tTot < 120 && acc >= 80 ? pickOne([["سريع جداً!", `أقل من *${mins === 1 ? "دقيقة" : mins === 2 ? "دقيقتين" : toAr(mins) + " دقائق"}*؟ تسافر عبر الزمن؟`],
         ["خلّصت؟!", "بهالسرعة؟ *هذا المستوى*!"]])
-    : [pickOne(["أحسنت!", "تقدّم ممتاز!", "سوّيتها!", "شغل نظيف!"]),
+    : [pickOne(acc >= 80 ? ["أحسنت!", "تقدّم ممتاز!", "سوّيتها!", "كمّلتها!"] : ["سوّيتها!", "كمّلتها!"]),
        pickOne(["مهاراتك في الكمي *تتحسّن*.", "كل درس يقرّبك من *هدفك*.", "التقدّم *لابق* عليك."])];
   const lcTitle = head.replace(/\*/g, ""), lcSub = String(say).replace(/\*/g, "");
   const accTag = acc === 100 ? "مذهل" : acc >= 90 ? "رائع" : acc >= 60 ? "جيد" : "الدقة";
-  const timeTag = tTot < 90 ? "خاطف" : tTot < 180 ? "سريع" : tTot < 300 ? "منجز" : "ملتزم";
+  /* time is praised only beside a result worth it, as the headline is (QA, 2026-11-08: «سريع» at 25%) */
+  const timeTag = acc < 60 ? "الوقت" : tTot < 90 ? "خاطف" : tTot < 180 ? "سريع" : tTot < 300 ? "منجز" : "ملتزم";
   const goal = dailyGoal(), qd1 = Math.min(goal, (S.daily && S.daily.n) || 0), qd0 = Math.max(0, qd1 - (SES.qd || 0));
   WIN = { learn, title: SES.title, lesKey: SES.lesKey, uc: (UNIT_COLORS[(window.QBANK[SES.domKey] || {}).color] || UNIT_COLORS.purple), gems: gemsWon, boosted, goal, qd0, qd1, struggled, missCount, climb,
     nxt: learn && LAST_LEARN.next >= 0 ? { t: LAST_LEARN.nextTitle, m: LAST_LEARN.mins } : null };
@@ -5597,7 +5791,7 @@ function lessonComplete() {
     <div class="wst-row">
       ${stat(xpWon ? "gold" : "gray", "مجموع الخبرة", ico("lightning", 22), "cv-xp")}
       ${stat("green", accTag, ico("target", 22), "cv-acc", perfect ? " hi" : "")}
-      ${stat("blue", timeTag, TIMER_SVG, "cv-time", tTot > 0 && tTot < 120 ? " hi" : "")}
+      ${stat("blue", timeTag, TIMER_SVG, "cv-time", tTot > 0 && tTot < 120 && acc >= 60 ? " hi" : "")}
     </div></div>
     <div class="action-bar win-action wn-cta">
       ${struggled
@@ -5756,7 +5950,7 @@ function wstStop() {
 }
 function wstLoad(v) {
   wstStop();
-  if (motionReduced() || !document.getElementById("wstRive")) return;
+  if (motionReduced() || !document.getElementById("wstRive") || (v && +v.xp < 10)) return;   // its ticker writes ٥ as «٠٥» (QA, 2026-11-08)
   loadStreakLibs().then(() => {
     const cv = document.getElementById("wstRive");
     if (!cv || wstRv) return;
@@ -5788,7 +5982,7 @@ function wstLoad(v) {
           rv.setBooleanStateAtPath("shine_bool", !!v.perfect, "B_stat_box");
           rv.setNumberStateAtPath("main_num", Math.floor(t / 60), "C_stat_box");
           rv.setNumberStateAtPath("sec_num", t % 60, "C_stat_box");
-          rv.setBooleanStateAtPath("shine_bool", t > 0 && t < 120, "C_stat_box");
+          rv.setBooleanStateAtPath("shine_bool", t > 0 && t < 120 && v.acc >= 60, "C_stat_box");   // speed shines only beside a result worth it, as its label (QA, 2026-11-08)
           rv.ins = ins; rv.ready = true;
         } catch (e) { wstStop(); }
       }
@@ -6286,7 +6480,7 @@ A.winMore = function () {
   const W = WIN; if (!W) { A.winContinue(); return; }
   const L = W.learn, done = W.qd1 >= W.goal, justDone = done && W.qd0 < W.goal;
   const pct = n => Math.round(n / W.goal * 100);
-  const nxt = W.nxt ? `التالي: «${esc(W.nxt.t)}» — ${W.nxt.m <= 2 ? "دقيقتين" : `${toAr(W.nxt.m)} دقائق`}` : "";
+  const nxt = W.nxt ? `التالي: ${/«/.test(W.nxt.t) ? esc(W.nxt.t) : `«${esc(W.nxt.t)}»`} — ${W.nxt.m <= 2 ? "دقيقتين" : `${toAr(W.nxt.m)} دقائق`}` : "";
   $app.innerHTML = `<div class="screen screen-full"><div class="complete wp" id="comp">
     <h1 class="wp-title">تقدّمك اليوم</h1>
     <div class="wp-list">
@@ -6306,13 +6500,11 @@ A.winMore = function () {
       </div>
       ${W.gems ? `<div class="wp-card wp-gems">
         <span class="wp-gem">${ico("gem", 34)}<canvas class="wp-gem-rv" id="wpGemRv" width="240" height="240" aria-hidden="true"></canvas></span>
-        <span class="wn-tx"><b><span>+<span id="wpG">٠</span> جوهرة</span></b><span class="wn-next">رصيدك ${toAr(S.xp)} جوهرة${W.boosted ? " — الخبرة ×٢" : ""}</span></span>
+        <span class="wn-tx"><b><span>+<span id="wpG">٠</span> ${W.gems % 100 >= 3 && W.gems % 100 <= 10 ? "جواهر" : "جوهرة"}</span></b><span class="wn-next">رصيدك ${gemCount(S.xp || 0)}${W.boosted ? " — الخبرة ×٢" : ""}</span></span>
       </div>` : ""}
     </div>
     <div class="action-bar win-action wn-cta">
-      ${W.nxt ? `<button class="btn" onclick="A.winNext()">الدرس التالي</button>
-                 <button class="btn btn-white win-again" onclick="A.winContinue()">المسار</button>`
-              : `<button class="btn" onclick="A.winContinue()">متابعة</button>`}
+      <button class="btn" onclick="A.winContinue()">متابعة</button>
     </div>
   </div></div>`;
   window.scrollTo(0, 0);
@@ -6682,9 +6874,14 @@ A.mockEndSection = function () {
   snd("mock-end-section");
   const sec = MOCK.sections[MOCK.si];
   const un = sec.answers.filter(a => a === null).length;
-  if (un) {
-    askConfirm("إنهاء القسم؟", `لديك ${qCount(un)} بلا إجابة، وما تقدر ترجع للقسم بعد ما ينتهي.`,
-      "راجع أسئلتي", "أنهِ القسم", () => endMockSection(false));
+  /* a question marked for review is a question the student meant to come back to (QA, 2026-11-08) */
+  const fl = sec.flags.filter(Boolean).length;
+  if (un || fl) {
+    const parts = [un ? `${qCount(un)} بلا إجابة` : "", fl ? `${fl === 1 ? "سؤال واحد معلّم" : fl === 2 ? "سؤالان معلّمان" : qCount(fl) + " معلّمة"} للمراجعة` : ""].filter(Boolean);
+    askConfirm("إنهاء القسم؟", `لديك ${parts.join(" و")}، وما تقدر ترجع للقسم بعد ما ينتهي.`,
+      "راجع أسئلتي", "أنهِ القسم", () => endMockSection(false),
+      /* «راجع أسئلتي» opens the first one waiting: unanswered, else flagged (QA, 2026-11-08) */
+      () => { const i = sec.answers.indexOf(null) >= 0 ? sec.answers.indexOf(null) : sec.flags.findIndex(Boolean); if (i >= 0 && i !== MOCK.qi) A.mockGo(i); });
     return;
   }
   endMockSection(false);
@@ -6792,12 +6989,13 @@ function finishMock(timedOut) {
   MOCK_REVIEW = [];
   MOCK.sections.forEach(sec => sec.items.forEach((it, i) => MOCK_REVIEW.push({ q: it.q, picked: sec.answers[i] })));
   const gridCells = MOCK_REVIEW.map((r, i) =>
-    `<button class="mg-cell ${r.picked === r.q.answer ? "ok" : "bad"}" style="--d:${(0.6 + i * 0.035).toFixed(2)}s" onclick="A.mockDetail(${i})">${toAr(i + 1)}</button>`
+    `<button class="mg-cell ${r.picked === r.q.answer ? "ok" : r.picked == null ? "skip" : "bad"}" style="--d:${(0.6 + i * 0.035).toFixed(2)}s" onclick="A.mockDetail(${i})">${toAr(i + 1)}</button>`
   ).join("");
-  const answersCard = `<div class="card" style="text-align:right;width:100%"><h3>إجاباتك — اضغط أي رقم للمراجعة</h3>
+  /* the answers open in a sheet, so the result itself fits the phone (QA, 2026-11-08: it scrolled at every size, zoomed to 60%) */
+  MOCK_ANS = `<h2>إجاباتك</h2><p class="mk-ans-sub">اضغط أي رقم وتشوف السؤال وحلّه</p>
     <div class="mock-grid">${gridCells}</div>
-    <div id="mockDetail"></div>
-  </div>`;
+    <div id="mockDetail"></div>`;
+  const answersCard = `<button class="btn btn-ghost mock-ans-btn" onclick="A.mockAnswers()">راجع إجاباتك — ${toAr(score)} صح من ${toAr(total)}</button>`;
 
   MOCK = null;
   $app.innerHTML = `<div class="screen"><div class="complete win-scene mock-result" style="min-height:auto;padding-top:26px">
@@ -6807,11 +7005,11 @@ function finishMock(timedOut) {
     <div class="result-cards">
       <div class="rcard rc-gold"><div class="rc-t">نتيجتك</div><div class="rc-v">${ico("star-gold", 20)} <span dir="ltr" class="frac"><span id="mv-score">٠</span>/${toAr(total)}</span></div></div>
       <div class="rcard rc-blue"><div class="rc-t">تقديرك التقريبي</div><div class="rc-v">${ico("target", 20)} ~<span id="mv-est">٠</span></div></div>
-      <div class="rcard rc-green"><div class="rc-t">الوقت</div><div class="rc-v">${TIMER_SVG} ${toAr(mins)} د</div></div>
+      <div class="rcard rc-green"><div class="rc-t">الوقت</div><div class="rc-v">${TIMER_SVG} ${secsUsed < 60 ? `${toAr(Math.max(1, Math.round(secsUsed)))} ث` : `${toAr(mins)} د`}</div></div>
     </div>
     <div class="mock-band">${band}</div>
     <div class="mock-note">تقدير تقريبي لأغراض التدريب — النتيجة الرسمية تُحسب بمعادلة قياس المعيارية</div>
-    <div class="card" style="text-align:right;width:100%"><h3>أداؤك حسب القسم</h3>${domRows}</div>
+    <div class="card" style="text-align:right;width:100%"><h3>أداؤك حسب الوحدة</h3>${domRows}</div>
     ${answersCard}
     <div class="fail-actions" style="width:100%">
       <button class="btn" onclick="A.startMock()">محاكاة جديدة</button>
@@ -6824,9 +7022,24 @@ function finishMock(timedOut) {
     if (s) countUp(s, score); if (e) countUp(e, est);
   }, 600);
 }
-A.toggleEl = function (id) { const el = document.getElementById(id); el.style.display = el.style.display === "none" ? "block" : "none"; };
+/* the link says what it will do next, and an opened solution is brought into view: in the answers sheet it opened under the
+   sticky «تمام» and looked like nothing happened (QA, 2026-11-08) */
+A.toggleEl = function (id, btn) {
+  const el = document.getElementById(id); if (!el) return;
+  const open = el.style.display === "none";
+  el.style.display = open ? "block" : "none";
+  if (btn) btn.textContent = open ? "اخفِ الحل" : "اعرض الحل";
+  if (open) requestAnimationFrame(() => el.scrollIntoView({ block: "center", behavior: motionReduced() ? "auto" : "smooth" }));
+};
 
 /* tap a grid number → expand that question's review under the grid */
+let MOCK_ANS = "";
+A.mockAnswers = function () {
+  if (!MOCK_ANS) return;
+  const { veil, close } = backupSheet(MOCK_ANS + `<button class="btn" id="mkAnsOk">تمام</button>`, "إجاباتك");
+  veil.firstElementChild.classList.add("mock-sheet");
+  veil.querySelector("#mkAnsOk").onclick = close;
+};
 A.mockDetail = function (i) {
   const r = MOCK_REVIEW[i];
   const box = document.getElementById("mockDetail");
@@ -6840,14 +7053,17 @@ A.mockDetail = function (i) {
   const ch = isCmp ? CMP_CHOICES : r.q.choices;
   const ok = r.picked === r.q.answer;
   box.innerHTML = `<div class="review-item mock-detail">
-    <div class="ri-q">${toAr(i + 1)}. ${fracs(r.q.stem || "قارن بين القيمتين")}</div>
+    <div class="ri-q">${toAr(i + 1)}) ${fracs(r.q.stem || "قارن بين القيمتين")}</div>
+    ${r.q.figure ? `<div class="q-figure ri-fig">${r.q.figure}</div>` : ""}
     ${isCmp && r.q.value1 ? `<div class="ri-row" style="color:var(--gray)">القيمة الأولى: ${fracs(r.q.value1)} — القيمة الثانية: ${fracs(r.q.value2)}</div>` : ""}
     ${ok ? `<div class="ri-row" style="color:var(--green-dk)">✓ إجابتك صحيحة: ${fracs(ch[r.picked])}</div>`
       : `<div class="ri-row" style="color:var(--red)">✕ إجابتك: ${r.picked === null ? "لم تُجب" : fracs(ch[r.picked])}</div>
          <div class="ri-row" style="color:var(--green-dk)">✓ الصحيحة: ${fracs(ch[r.q.answer])}</div>`}
-    <button class="fb-solution-toggle" onclick="A.toggleEl('mdSol')">اعرض الحل</button>
+    <button class="fb-solution-toggle" onclick="A.toggleEl('mdSol', this)">اعرض الحل</button>
     <div class="fb-solution" id="mdSol" style="display:none">${formatExplain(r.q.solution)}</div>
   </div>`;
+  /* the sheet scrolls to the question just opened: under a full grid it opened out of sight (QA, 2026-11-08) */
+  requestAnimationFrame(() => box.scrollIntoView({ block: "start", behavior: "smooth" }));
 };
 
 /* ============================================================
@@ -7627,7 +7843,7 @@ function warmStreak() {
     .forEach(u => { try { fetch(u).catch(() => {}); } catch (e) {} });   // warm the HTTP cache (wasm is the big one)
 }
 function streakDayLabel(c) {
-  const word = c === 1 ? "يوم واحد" : c === 2 ? "يومان" : c <= 10 ? toAr(c) + " أيام" : toAr(c) + " يوماً";
+  const word = dayPhrase(c);
   return word + " من الحماس";
 }
 A.winContinue = function () {
@@ -7828,10 +8044,11 @@ function renderReview() {
     return `<div class="review-item" style="--d:${(0.05 + i * 0.04).toFixed(2)}s">
       <div class="ri-tag" style="color:${u.s}">${esc(x.rec.domTitle)}، ${esc(x.rec.lesTitle)}</div>
       <div class="ri-q">${fracs(q.stem || "قارن بين القيمتين")}</div>
+      ${q.figure ? `<div class="q-figure ri-fig">${q.figure}</div>` : ""}
       ${isCmp && q.value1 ? `<div class="ri-row" style="color:var(--gray)">القيمة الأولى: ${fracs(q.value1)} — القيمة الثانية: ${fracs(q.value2)}</div>` : ""}
       <div class="ri-acts">
         <button class="fb-solution-toggle" onclick="A.toggleEl('rvAns${i}')">أظهر الإجابة</button>
-        <button class="fb-solution-toggle" onclick="A.toggleEl('rvSol${i}')">اعرض الحل</button>
+        <button class="fb-solution-toggle" onclick="A.toggleEl('rvSol${i}', this)">اعرض الحل</button>
       </div>
       <div class="ri-row" id="rvAns${i}" style="display:none;color:var(--green-dk)">✓ الإجابة الصحيحة: ${fracs(ch[q.answer])}</div>
       <div class="fb-solution" id="rvSol${i}" style="display:none">${formatExplain(q.solution)}</div>
@@ -7891,6 +8108,7 @@ function renderStats() {
       <div class="mc-txt"><b>مراجعة الأخطاء</b><span>${mc ? qCount(mc) + " بحاجة لمراجعة" : (r + w) ? "لا أخطاء — أحسنت!" : "ستظهر أخطاؤك هنا لتراجعها"}</span></div>
       <span class="mc-go">${mc ? "راجع ←" : "عرض ←"}</span>
     </button>`; })()}
+    ${window.LAWX ? LAWX.statCard() : ""}
     ${weekCard()}
     ${(r + w) ? `<div class="card"><h3>الدقة حسب المجال</h3>${domBars}</div>` : statsEmpty()}
   </div></div>` + bottomnav("stats");
@@ -7949,7 +8167,7 @@ A.toggleMotion = function () {
    no server copy to delete; a Google sign-in kept no email and no token, and
    the sheet says where to remove the app from the Google account too. */
 const LAW_KEY = "qudrati.lawapp.v1";
-const ACCOUNT_KEYS = ["qudratState", MOCK_KEY, "qudratiFx", FX_LITE_KEY, LAW_KEY];
+const ACCOUNT_KEYS = ["qudratState", MOCK_KEY, "qudratiFx", FX_LITE_KEY, LAW_KEY, "qudratState.unread", "qudrati.lawapp.v1.unread"];
 const DELETED_FLAG = "qudratDeleted";
 A.deleteAccount = function () {
   const guest = !S.user || S.user.guest, g = !guest && S.user.google;
@@ -8004,17 +8222,27 @@ function backupRead(code) {
   } catch (e) { return null; }
 }
 /* what the student is about to overwrite their progress with, in their own terms */
-function backupSummary(s) {
-  const lessons = Object.keys(s.lessons || {}).length;
-  const stars = Object.values(s.lessons || {}).reduce((a, l) => a + (l.stars || 0), 0);
-  const day = s.streak && s.streak.count || 0;
+function backupSummary(s, law) {
+  /* counted as the restored save will hold it: what repair() drops is not counted (QA, 2026-11-08: «٣ محاكيات» for [null, 5, «x»]) */
+  const QB = window.QBANK || {}, ok = Object.keys(QB).flatMap(d => (QB[d].lessons || []).map(l => d + "." + l.key));
+  s = Object.assign({}, s, {
+    lessons: Object.fromEntries(Object.entries(s.lessons && typeof s.lessons === "object" ? s.lessons : {}).filter(([k, l]) => ok.includes(k) && l && typeof l === "object")),
+    mocks: (Array.isArray(s.mocks) ? s.mocks : []).filter(m => m && typeof m === "object" && +m.total > 0 && isFinite(+m.score))
+  });
+  const lessons = Object.values(s.lessons || {}).filter(l => l && +l.stars > 0).length;   // finished, as Settings counts them (QA, 2026-11-08: «١ درس مكتمل» beside «درسان»)
+  /* read as repair() will read it, so a hand-edited code never shows «سلسلة −٢» or «١e+٣٠٨ جوهرة» (QA, 2026-11-08) */
+  const whole = (v, hi) => { v = Math.floor(+v || 0); return isFinite(v) ? Math.max(0, Math.min(hi, v)) : 0; };
+  const stars = Object.values(s.lessons || {}).reduce((a, l) => a + whole(l && l.stars, 3), 0);
+  const day = whole(s.streak && s.streak.count, 1e5);
+  const laws = law && typeof law === "object" ? (window.LAWX && LAWX.metOf ? LAWX.metOf(s, law) : Object.keys(law).length) : 0;
+  /* nothing yet reads as the streak's and the mock's do, «بلا …», not «٠ درساً» (QA, 2026-11-08) */
   return [
-    qLessons(lessons),
-    arPlural(stars, "نجمة واحدة", "نجمتان", "نجوم", "نجمة"),
-    toAr(s.xp || 0) + " جوهرة",
+    lessons ? qLessons(lessons) : "بلا دروس",
+    stars ? arPlural(stars, "نجمة واحدة", "نجمتان", "نجوم", "نجمة") : "بلا نجوم",
+    gemCount(whole(s.xp, 1e9)),
     day ? "سلسلة " + arPlural(day, "يوم واحد", "يومان", "أيام", "يوماً") : "بلا سلسلة",
-    (s.mocks || []).length ? toAr((s.mocks || []).length) + " محاكاة" : "بلا محاكاة"
-  ].join("، ");
+    (s.mocks || []).length ? arPlural((s.mocks || []).length, "محاكاة واحدة", "محاكاتان", "محاكيات", "محاكاة") : "بلا محاكاة"
+  ].concat(laws ? [arPlural(laws, "قانون واحد", "قانونان", "قوانين", "قانوناً")] : []).join("، ");
 }
 const qLessons = n => arPlural(n, "درس واحد", "درسان", "دروس", "درساً");
 
@@ -8086,7 +8314,7 @@ A.backupShow = function () {
   const { veil, close } = backupSheet(`<h2>نسخة من تقدّمك</h2>
     <p>احفظ هذا الرمز في ملاحظاتك أو أرسله لنفسك. يعيد تقدّمك كما هو على أي جهاز.</p>
     <textarea class="bk-code" id="bkCode" readonly rows="4" spellcheck="false" dir="ltr"></textarea>
-    <div class="bk-sum">${backupSummary(S)}</div>
+    <div class="bk-sum">${backupSummary(S, lawSaved())}</div>
     <button class="btn" id="bkCopy">انسخ الرمز</button>
     <button class="ask-go" id="bkClose">إغلاق</button>`, "نسخة من تقدّمك");
   const ta = veil.querySelector("#bkCode");
@@ -8116,13 +8344,16 @@ A.restoreShow = function () {
     const s = migrate(Object.assign({}, DEFAULT_STATE, o.s));
     msg.className = "bk-msg ok";
     const law = o.law && typeof o.law === "object" && !Array.isArray(o.law) ? o.law : null;
-    const said = backupSummary(s) + (law && Object.keys(law).length ? "، " + arPlural(Object.keys(law).length, "قانون واحد", "قانونان", "قوانين", "قانوناً") : "");
+    const said = backupSummary(s, law);
     msg.textContent = said;
     close();
-    askConfirm("نستعيد هذه النسخة؟", said + " — تقدّمك الحالي على هذا الجهاز سيُستبدل.",
+    /* a code made before the rules carried none: the rules of its finished lessons start again from their first step (QA, 2026-11-08) */
+    const lawNow = Object.keys(lawSaved() || {}).length, lawSay = !law && lawNow ? " وقوانينك تبدأ من أول خطوة." : "";
+    askConfirm("نستعيد هذه النسخة؟", said + " — تقدّمك الحالي على هذا الجهاز سيُستبدل." + lawSay,
       "لا، رجوع", "نعم، استعد", () => {
-        try { localStorage.setItem("qudratState", JSON.stringify(s)); if (law) localStorage.setItem(LAW_KEY, JSON.stringify(law)); }
-        catch (e) { toast("تعذّر حفظ النسخة على هذا الجهاز — مساحة المتصفح ممتلئة أو الحفظ معطّل"); return; }   // it used to reload the old progress as if it had worked (the audit, 2026-10-28)
+        const old = localStorage.getItem("qudratState");   // all or nothing: the save is put back when the rules cannot be written (QA, 2026-11-08)
+        try { localStorage.setItem("qudratState", JSON.stringify(s)); if (law) localStorage.setItem(LAW_KEY, JSON.stringify(law)); else localStorage.removeItem(LAW_KEY); }
+        catch (e) { try { if (old != null) localStorage.setItem("qudratState", old); } catch (e2) {} toast("تعذّر حفظ النسخة على هذا الجهاز — مساحة المتصفح ممتلئة أو الحفظ معطّل"); return; }   // it used to reload the old progress as if it had worked (the audit, 2026-10-28)
         mockClear();
         location.reload();
       });
@@ -8189,7 +8420,7 @@ A.reportsShow = function () {
     "لا، رجوع", "امسح", () => { S.reports = {}; save(); render(); });
 };
 
-function askConfirm(title, body, stayText, goText, onGo) {
+function askConfirm(title, body, stayText, goText, onGo, onStay) {
   const old = document.querySelector(".ask-veil"); if (old) old.remove();
   const veil = document.createElement("div");
   veil.className = "ask-veil";
@@ -8203,7 +8434,7 @@ function askConfirm(title, body, stayText, goText, onGo) {
   veil.onclick = e => { if (e.target === veil) close(); };
   document.body.appendChild(veil);
   requestAnimationFrame(() => veil.classList.add("show"));
-  veil.querySelector("#askStay").onclick = close;
+  veil.querySelector("#askStay").onclick = () => { close(); if (onStay) onStay(); };
   veil.querySelector("#askGo").onclick = () => { close(); onGo(); };
   /* the safe answer takes the focus: Enter on a confirmation must not be the
      destructive one */
@@ -8731,7 +8962,7 @@ function renderWelcome() {
     <div class="wl-body">
       ${welcomeHero()}
       ${WORDMARK ? `<h1 class="wl-title wl-mark"><span class="qs-sr">قدراتي</span>${WORDMARK}</h1>` : `<h1 class="wl-title">قدراتي</h1>`}
-      <p class="wl-sub">تدرّب على القسم الكمي — درساً بعد درس</p>
+      <p class="wl-sub">تدرّب على القسم الكمي — درساً بعد درس</p>
       <div class="login-badges wl-badges"><span>حيل تختصر الوقت</span><span>مجاني بالكامل</span><span>تعلّم وأنت تلعب</span></div>
     </div>
     <div class="wl-cta">
@@ -8773,8 +9004,8 @@ const OB_LEVELS = [
    2026-10-22: no chest or gem talk on this screen) */
 const OB_GOALS = {
   5:  ["هادئ", "بداية حلوة! *خطوة صغيرة* كل يوم تفرق."],
-  10: ["معتاد", "اختيار ذكي! *درس كل يوم* ويثبت معك."],
-  20: ["جدّي", "حماس! هذا *الجدّ* — درسين وتحس بالفرق!"]
+  10: ["معتاد", "اختيار ذكي! *شوي كل يوم* ويثبت معك."],
+  20: ["جدّي", "حماس! هذا *الجدّ* — كل يوم وتحس بالفرق!"]
 };
 const goalSay = g => OB_GOALS[g][1];
 /* what a goal costs in a day, in real minutes (the user, 2026-10-30: «a time to it so they feel like
@@ -9272,7 +9503,7 @@ function renderSign() {
   if (step === "name") {
     obFrame(`<div class="si si-name">
         <h1 class="si-title">وش اسمك؟</h1>
-        <p class="si-sub">يظهر على ملفك وفي الدوري — ويبقى في جهازك بس.</p>
+        <p class="si-sub">يظهر على ملفك وفي الدوري، <span class="ln-nw">ويبقى في جهازك بس.</span></p>
         <input id="siName" class="login-input si-input" type="text" maxlength="30" placeholder="الاسم" autocomplete="given-name" enterkeyhint="done"
           value="${esc(SI.name)}" oninput="A.siName(this.value)" onkeydown="if(event.key==='Enter')A.siSave()">
       </div>`,
@@ -9566,7 +9797,7 @@ function fmtDayKey(k) {
 function setExamVal() {
   const days = examDaysLeft();
   return days === null ? "غير محدّد" : days < 0 ? "انتهى" : days === 0 ? "اليوم"
-    : days === 1 ? "غداً" : "باقٍ " + toAr(days) + (days <= 10 ? " أيام" : " يوماً");
+    : days === 1 ? "غداً" : "باقٍ " + dayPhrase(days);
 }
 const setHapticOn = () => S.haptic === undefined ? S.sound !== false : !!S.haptic;
 const setCanBuzz = () => !!(navigator && navigator.vibrate);
@@ -9590,7 +9821,7 @@ function setMain(guest, name) {
         <b>${guest ? "ضيف" : esc(name)}</b>
         <small>${guest ? "سوّ ملفك واحفظ تقدّمك باسمك" : (S.joined ? "بدأ معنا " + fmtDayKey(S.joined) : "عضو جديد")}</small>
         <span class="set-me-stats">
-          <i class="sm-fire">${toAr((S.streak && S.streak.count) || 0)} يوم</i>
+          <i class="sm-fire">${(c => c ? dayPhrase(c) : "٠ يوم")((S.streak && S.streak.count) || 0)}</i>
           <i class="sm-xp">${toAr(S.totalXp || 0)} XP</i>
           <i class="sm-tier">${rankImg(tier.key, 16)}${tier.name}</i>
         </span>
@@ -9608,7 +9839,7 @@ function setMain(guest, name) {
     <div class="set-lab">التطبيق</div>
     <div class="set-list">
       ${setRow({ ic: "sound", c: "purple", t: "الصوت والحركة", v: S.sound ? "الأصوات تعمل" : "صامت", on: "A.setPage('prefs')" })}
-      ${setRow({ ic: "data", c: "gold", t: "بياناتك", s: `${toAr(done)} درس مكتمل — محفوظ على جهازك`, on: "A.setPage('data')" })}
+      ${setRow({ ic: "data", c: "gold", t: "بياناتك", s: `${done ? arPlural(done, "درس واحد مكتمل", "درسان مكتملان", "دروس مكتملة", "درساً مكتملاً") : "ما فيه دروس مكتملة"} — محفوظ على جهازك`, on: "A.setPage('data')" })}
       ${window.__qInstall ? setRow({ ic: "phone", c: "green", t: "ثبّت التطبيق", v: "يعمل بلا اتصال", on: "A.installApp()" }) : ""}
     </div>
 
@@ -10159,9 +10390,11 @@ function backStep() {
   if (SES && document.querySelector(".q-area")) { A.quitSession(); return true; }
   if (MOCK && document.querySelector(".qnav")) return true;                 // a timed exam: back does not walk out of it
   if (document.getElementById("comp")) return true;                         // a win, a result: its own button moves on
+  if (document.querySelector(".lw-end")) { const e = document.getElementById("lwEnd"); if (e && !e.disabled) e.click(); return true; }   // the rules' review end: back is «متابعة» (QA, 2026-11-08: back left the app)
   const b = Array.from(document.querySelectorAll(".ob-back:not(.off), .set-back, .rv-back, .x-btn")).find(x => x.offsetParent !== null);
   if (b) { b.click(); return true; }
   if (!SES && !OB && view !== "path") { go("path"); return true; }
+  if (OB) return true;   /* a step with no way back (the sign-in wall, «أهلاً يا …!») stays: back used to leave the app (QA, 2026-11-08) */
   return false;
 }
 if (!DEV || /[?&]backtest=1(&|$)/.test(location.search)) {
@@ -10333,7 +10566,9 @@ if (document.fonts && document.fonts.addEventListener) document.fonts.addEventLi
 
 /* the rules (js/law/): they read the app's own state and helpers by name through this bridge */
 window.__QI = new Proxy({}, { get: (t, n) => { if (typeof n !== "string") return undefined; try { return eval(n); } catch (e) { return undefined; } } });
+/* the rules are ready before the first screen is drawn: a rule a finished lesson holds is counted in time for the path's card
+   (QA, 2026-11-08: backfilled after boot, it showed only after a tab change) */
+if (window.LAWX) LAWX.ready();
 boot();
 netBar();
-if (window.LAWX) LAWX.ready();
 })();

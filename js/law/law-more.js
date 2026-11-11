@@ -38,7 +38,9 @@
     /* a row of number tiles */
     cells: (vs, cls = '') => `<div class="cells ${cls}">${vs.map(v => `<span class="cell">${C.fx(N(v))}</span>`).join('')}</div>`,
     /* the labels under a proof, the last one the answer (green): [[label, start], …] */
-    lab: xs => `<div class="dlab">${xs.map((x, i) => `<span${i === xs.length - 1 ? ' class="l3"' : ''}>${x[0]}<b class="n${i + 1}">${x[1] == null ? '٠' : N(x[1])}</b></span>`).join('')}</div>`,
+    /* a label that ends in a number takes a colon, isolated and followed by a right-to-left mark, or «المجموع ٤» and its value ٣ read
+       as ٤٣, or as «٣:٤» (QA, 2026-11-08) */
+    lab: xs => `<div class="dlab">${xs.map((x, i) => `<span${i === xs.length - 1 ? ' class="l3"' : ''}>${/[٠-٩]$/.test(x[0]) ? `<bdi>${x[0]}:</bdi>‏ ` : x[0]}<b class="n${i + 1}">${x[1] == null ? '٠' : N(x[1])}</b></span>`).join('')}</div>`,
     /* a number changes and says so */
     set: (el, v) => { if (!el) return; el.innerHTML = C.fx(N(v)); C.pulse(el); },
     /* a line or path draws itself */
