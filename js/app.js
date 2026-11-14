@@ -756,7 +756,7 @@ function statbar() {
     <button class="stat stat-rank" onclick="A.go('league')" title="المستوى ${t.name}" aria-label="مستواك: ${t.name}">
       ${rankImg(t.key, 25)}<span>${t.name}</span>
     </button>
-    <div class="stat stat-xp" title="جواهرك">${ico("gem", 22)}${toAr(S.xp)}</div>
+    <div class="stat stat-xp" title="جواهرك">${ico("gem", 22)}<span class="stat-n">${toAr(S.xp)}</span></div>
   </div>`;
 }
 A.chestTap = function () {
@@ -1704,12 +1704,62 @@ A.claimChest = function (gems) {
      screen for the 380ms the veil takes to fade, and a double tap in that window
      used to pay the chest twice — found by pressing Enter on it with a keyboard. */
   if (!S.daily || S.daily.claimed) return;
+  const v = document.querySelector(".chest-veil"), from = S.xp;
+  const src = v && !motionReduced() ? Array.from(v.querySelectorAll(".cv-gem")).map(g => g.getBoundingClientRect()).filter(r => r.width > 2) : [];
   snd("continue"); gainGems(gems); S.daily.claimed = true; save();
-  const v = document.querySelector(".chest-veil");
   if (CV) { CV.running = false; removeEventListener("resize", CV.fit); if (CV.untrap) CV.untrap(); CV = null; }
-  if (v) { v.classList.add("out"); setTimeout(() => { v.remove(); render(); }, 380); }
-  else render();
+  if (!v) { render(); return; }
+  if (!src.length) { v.classList.add("out"); setTimeout(() => { v.remove(); render(); }, 380); return; }
+  render();
+  gemFly(src, from, gems);
+  v.classList.add("out"); setTimeout(() => v.remove(), 380);
 };
+/* The pile flies home (the user, 2026-11-14: «the gems … moving to my gems top
+   left like Clash Royale's crowns»): the screen under the chest comes back, the
+   gems stay where they lay while the veil fades, each bursts out a little and
+   then swoops on a curve into the gem counter of the stat bar, one after another,
+   and the counter pops and climbs a share with each one that lands. At most
+   fourteen fly, sampled across the pile; with no counter on screen they fly to
+   the top-left corner. Silent, as the chest's gem count is (the user, 2026-10-28) */
+function gemFly(src, from, n) {
+  const tgt = document.querySelector(".stat-xp"), num = tgt && tgt.querySelector(".stat-n");
+  const ic = tgt && (tgt.querySelector("img, svg") || tgt), tr = ic ? ic.getBoundingClientRect() : null;
+  const tx = tr && tr.width ? tr.left + tr.width / 2 : 34, ty = tr && tr.width ? tr.top + tr.height / 2 : 30, ts = tr && tr.width ? tr.width : 22;
+  if (num) num.textContent = toAr(from);
+  const K = Math.min(14, src.length), pick = Array.from({ length: K }, (_, i) => src[Math.round(i * (src.length - 1) / Math.max(1, K - 1))]);
+  pick.sort((a, b) => Math.hypot(a.left - tx, a.top - ty) - Math.hypot(b.left - tx, b.top - ty));
+  const layer = document.createElement("div");
+  layer.className = "gem-fly"; layer.setAttribute("aria-hidden", "true");
+  document.body.appendChild(layer);
+  const cx = pick.reduce((a, r) => a + r.left + r.width / 2, 0) / K, cy = pick.reduce((a, r) => a + r.top + r.height / 2, 0) / K;
+  let shown = from, landed = 0;
+  pick.forEach((r, i) => {
+    const g = document.createElement("span"), w = r.width, x0 = r.left + w / 2, y0 = r.top + r.height / 2;
+    g.className = "gf"; g.innerHTML = CV_GEM;
+    Object.assign(g.style, { left: x0 - w / 2 + "px", top: y0 - r.height / 2 + "px", width: w + "px", height: r.height + "px" });
+    layer.appendChild(g);
+    /* out from the pile's middle, then a curve that bows away from the straight line before it dives in */
+    const ang = Math.atan2(y0 - cy, x0 - cx) + (Math.random() - .5) * .6, out = 16 + Math.random() * 14;
+    const bx = Math.cos(ang) * out, by = Math.sin(ang) * out - 10;
+    const dx = tx - x0, dy = ty - y0, len = Math.hypot(dx, dy) || 1, side = -1, bow = Math.min(90, len * (.12 + Math.random() * .08));
+    const mx = bx + dx * .45 + (-dy / len) * bow * side, my = by + dy * .45 + (dx / len) * bow * side;
+    const end = Math.max(.25, ts / w), rot = (Math.random() * 40 - 20).toFixed(0);
+    const a = g.animate([
+      { translate: "0 0", scale: "1", rotate: "0deg", offset: 0, easing: "cubic-bezier(.2,.9,.3,1)" },
+      { translate: `${bx}px ${by}px`, scale: "1.18", rotate: rot / 2 + "deg", offset: .26, easing: "cubic-bezier(.5,0,.75,.4)" },
+      { translate: `${mx}px ${my}px`, scale: String((1.18 + end) / 2), rotate: rot + "deg", offset: .62, easing: "cubic-bezier(.3,0,.9,.6)" },
+      { translate: `${dx}px ${dy}px`, scale: String(end), rotate: "0deg", offset: 1 }
+    ], { duration: 900, delay: 120 + i * 55, fill: "both" });
+    a.onfinish = () => {
+      g.remove(); landed++;
+      shown = landed === K ? from + n : from + Math.round(n * landed / K);
+      if (num) num.textContent = toAr(shown);
+      if (tgt) { tgt.classList.remove("gf-bump"); void tgt.offsetWidth; tgt.classList.add("gf-bump"); }
+      buzz(landed === K ? 24 : 6);
+      if (landed === K) { if (tgt) tgt.classList.add("gf-done"); setTimeout(() => { layer.remove(); if (tgt) tgt.classList.remove("gf-done", "gf-bump"); }, 700); }
+    };
+  });
+}
 
 /* ---------------- PATH (home) ---------------- */
 /* A finished lesson is paid out on the path, not only on the win screen
@@ -5020,14 +5070,14 @@ function learnResolve(it, ok, shown, card, pairs, why) {
       : hLeft === 0 ? `<div class="fb-hearts out">${ico("heart", 15)} لم يتبقَّ لك قلوب</div>`
       : hLeft === 1 ? `<div class="fb-hearts warn">${ico("heart", 15)} باقٍ لك قلب واحد — ركّز</div>` : "";
     const sol = it.t === "bank" && it.q ? `<div class="fb-solution" id="sol">${formatExplain(it.q.solution)}</div>` : "";
-    fb.className = "feedback bad show"; fbClear();
+    fb.className = "feedback bad show" + (it.free ? " free" : ""); fbClear();
     fb.innerHTML = `<div class="fb-head"><span class="fb-x">✕</span> ${it.free ? "الغلط هنا مجاني" : "مو صح"}</div>
       ${heartLine}
       <div class="fb-correct">الصحيح: <b>${learnFmt(shown)}</b></div>
       ${why ? `<div class="ln-why">${learnFmt(why)}</div>` : ""}
       ${sol}
       ${graded && !it.again && SES.retried[it.uid] < 3 ? `<div class="ln-back">${typeof it.src === "function" ? "بيرجع لك آخر الدرس بأرقام جديدة" : "بيرجع لك آخر الدرس"}</div>` : ""}
-      <button class="btn btn-red" onclick="A.next()">${graded && hLeft === 0 && !SES.safe ? "شوف النتيجة" : "فهمت"}</button>`;
+      <button class="btn ${it.free ? "btn-blue" : "btn-red"}" onclick="A.next()">${graded && hLeft === 0 && !SES.safe ? "شوف النتيجة" : "فهمت"}</button>`;
     answerFxFail(card); ansBuzz(false);
   }
   setTimeout(() => (window.requestIdleCallback || (f => f()))(warmStreak), 1400);
@@ -9404,14 +9454,22 @@ A.obNext = function () {
    signGate once, for whoever has no name yet (S.profileAsked), and the flow is
      wall — فهيم among Brilliant's flat shapes: «لا تضيّع تقدّمك!», what the
             first win earned (streak, XP, league), «سوّ ملفي» / «لاحقاً»;
-     how  — «سوّ ملفك»: «المتابعة مع Google» and «أكمل باسمي» as Duolingo's
-            white 3D buttons, and what happens to their data;
-     name — Duolingo's own name step: «وش اسمك؟», one big field;
+     how  — Airbnb's «Log in or sign up» in our paint (the user, 2026-11-14):
+            فهيم where Airbnb's logo stands, «سجّل دخولك أو سوّ حسابك», the
+            email field and «متابعة», «أو», Google and Apple as two square 3D
+            buttons, and the terms line; a mistyped email turns the field red
+            and offers the address it was likely meant to be (Duolingo's);
+     name — Duolingo's name step: «وش اسمك؟», first and last name in one box,
+            «التالي» under it;
+     pass — Duolingo's password step: one field with an eye, «سوّ حسابي» lit
+            once it is eight letters, the terms under it;
      done — their avatar (the name's first letter, a colour from the name)
             pops in among the shapes, a gold ring draws round it, a blue tick
             lands, «أهلاً يا …!», and on to where the win was going.
    Settings opens it at «how» for a guest. «لاحقاً» keeps them a guest and is
-   never asked again. The name stays on the phone.
+   never asked again. There is no account server yet: A.siCreate keeps the name
+   and the email on the phone and never keeps the password, and Google and
+   Apple say «قريباً» until their client IDs are set.
 
    Google gives a first name only: Google Identity Services' token client, then
    Google's userinfo for given_name, all in the browser; the email is not kept.
@@ -9420,6 +9478,8 @@ A.obNext = function () {
    button says «قريباً» and does nothing. */
 const GOOGLE_CLIENT_ID = "";
 const siGoogleOk = () => !!GOOGLE_CLIENT_ID && navigator.onLine !== false && !window.Capacitor;
+const APPLE_CLIENT_ID = "";
+const siAppleOk = () => !!APPLE_CLIENT_ID && navigator.onLine !== false;
 const PV_PAINT = [["green", "green-lip", "green-bg"], ["blue", "blue-dk", "blue-light"], ["purple", "purple-dk", "purple-tint"],
   ["orange", "orange-dk", "orange-bg"], ["red", "red-dk2", "red-bg"], ["gold", "gold-dk", "gold-bg"]];
 function pvPaint(nm) {
@@ -9441,6 +9501,38 @@ const siShapes = () => `<span class="si-shapes" aria-hidden="true">${SI_SHAPES.m
 const SI_TICK = `<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12.5l4 4 8-9"/></svg>`;
 const SI_G = `<svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.2 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.9 6.2C12.4 13.7 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.5 28.5c-.5-1.4-.8-2.9-.8-4.5s.3-3.1.8-4.5l-7.9-6.2C.9 16.6 0 20.2 0 24s.9 7.4 2.6 10.7l7.9-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.8 2.3-8.5 2.3-6.3 0-11.6-4.2-13.5-10l-7.9 6.2C6.6 42.6 14.6 48 24 48z"/></svg>`;
 const SI_ME = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1-4 4-6 7.5-6s6.5 2 7.5 6"/></svg>`;
+const SI_APPLE = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.37 12.6c-.02-2.3 1.88-3.4 1.96-3.46-1.07-1.56-2.73-1.78-3.32-1.8-1.41-.14-2.76.83-3.47.83-.72 0-1.82-.81-2.99-.79-1.54.02-2.96.9-3.75 2.27-1.6 2.78-.41 6.9 1.15 9.15.76 1.1 1.67 2.34 2.86 2.3 1.15-.05 1.58-.74 2.97-.74 1.38 0 1.77.74 2.98.72 1.23-.02 2.01-1.12 2.76-2.23.87-1.28 1.23-2.52 1.25-2.58-.03-.01-2.4-.92-2.42-3.65zM14.1 5.85c.63-.77 1.06-1.83.94-2.89-.91.04-2.01.61-2.66 1.37-.58.67-1.1 1.76-.96 2.8 1.01.08 2.05-.52 2.68-1.28z"/></svg>`;
+const SI_EYE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const SI_EYE_OFF = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/></svg>`;
+const SI_ERR = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M12 7v6" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="16.6" r="1.5" fill="#fff"/></svg>`;
+const SI_PASS_MIN = 8;
+const SI_TERMS = `<p class="si-terms">بتسجيلك في قدراتي، أنت توافق على <a href="terms.html" target="_blank" rel="noopener">الشروط</a> و<a href="privacy.html" target="_blank" rel="noopener">سياسة الخصوصية</a>.</p>`;
+/* the email: well formed, and when its domain is a letter or two off a common
+   one («gmial.com», «hotmail.co», «gmail.c»), the address it was likely meant to be */
+const SI_DOMAINS = ["gmail.com", "hotmail.com", "outlook.com", "yahoo.com", "icloud.com", "live.com", "outlook.sa", "hotmail.sa"];
+const siEmailOk = e => /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)*\.[a-z]{2,}$/i.test(e);
+function siLev(a, b) {   /* edits to turn a into b, a swapped pair counting as one */
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i].concat(Array(b.length).fill(0)));
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) {
+    d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+  }
+  return d[a.length][b.length];
+}
+function siSuggest(e) {
+  const at = e.lastIndexOf("@"); if (at < 1) return "";
+  const user = e.slice(0, at), dom = e.slice(at + 1).toLowerCase();
+  if (!dom || SI_DOMAINS.includes(dom)) return "";
+  const parts = dom.split("."), two = parts.length <= 2 && parts[0].length >= 4;
+  let best = "", bd = 3;
+  for (const k of SI_DOMAINS) {
+    let n = k.startsWith(dom) && dom.includes(".") ? 1 : siLev(dom, k);
+    if (two) n = Math.min(n, siLev(parts[0], k.split(".")[0]) + (parts[1] && k.endsWith("." + parts[1]) ? 0 : 1));
+    if (n < bd) { bd = n; best = k; }
+  }
+  return best && bd <= 2 ? user + "@" + best : "";
+}
 const SI_LOCK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>`;
 let SI = null, siT = [];
 function siStop() { siT.forEach(clearTimeout); siT = []; }
@@ -9449,12 +9541,12 @@ function signGate(then) {
   signOpen("wall", then);
 }
 function signOpen(step, then, from) {
-  SI = { si: true, step, then, from: from || "win", name: "", pct: 0, dir: 1 };
+  SI = { si: true, step, then, from: from || "win", name: "", first: "", last: "", email: "", pass: "", show: false, err: "", pct: 0, dir: 1 };
   OB = SI;   // obFrame reads its slide direction from here
   renderSign();
 }
 A.signIn = function () { signOpen("how", () => A.go("settings"), "settings"); };
-const SI_ORDER = ["wall", "how", "name", "done"];
+const SI_ORDER = ["wall", "how", "name", "pass", "done"];
 function siGo(step) {
   SI.dir = SI_ORDER.indexOf(step) < SI_ORDER.indexOf(SI.step) ? -1 : 1;
   SI.step = step;
@@ -9462,6 +9554,7 @@ function siGo(step) {
 }
 A.siTo = function (step) { if (obLocked()) return; snd("signin-step", () => sndTap()); buzz(8); siGo(step); };
 A.siBack = function () {
+  if (SI.step === "pass") { siGo("name"); return; }
   if (SI.step === "name") { siGo("how"); return; }
   if (SI.step === "how" && SI.from !== "settings") { siGo("wall"); return; }
   A.siLater(true);
@@ -9485,56 +9578,93 @@ function renderSign() {
     return;
   }
   if (step === "how") {
-    const g = siGoogleOk();
+    const sug = SI.err || SI.hint ? siSuggest(SI.email) : "";
     obFrame(`<div class="si si-how">
-        <div class="si-art">${siShapes()}<span class="si-art-av">${SI_ME}</span></div>
-        <h1 class="si-title">سوّ ملفك</h1>
-        <p class="si-sub">احفظ تقدّمك باسمك — مجاناً، وفي ثوانٍ.</p>
-        <div class="si-ways">
-          <button class="si-way si-google${g ? "" : " soon"}" onclick="A.siGoogle()" ${g ? "" : 'aria-disabled="true"'}>${SI_G}<span>المتابعة مع Google</span>${g ? "" : `<i class="si-soon">قريباً</i>`}</button>
-          <button class="si-way si-named" onclick="A.siTo('name')">${SI_ME}<span>أكمل باسمي</span></button>
+        <div class="si-fh">${mascot("wave", "si-fh-img")}</div>
+        <h1 class="si-title">سجّل دخولك أو سوّ حسابك</h1>
+        <label class="si-field${SI.err ? " err" : ""}" for="siEmail">
+          <input id="siEmail" class="si-email" type="email" dir="ltr" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" enterkeyhint="next"
+            placeholder="إيميلك" value="${esc(SI.email)}" oninput="A.siEmail(this.value)" onkeydown="if(event.key==='Enter')A.siNext()">
+          ${SI.err ? `<i class="si-err-ic">${SI_ERR}</i>` : ""}
+        </label>
+        <div class="si-msg" id="siMsg" aria-live="polite">${SI.err ? `<p class="si-bad">${SI.err}</p>` : ""}${sug ? `<p class="si-sug-h">تقصد هذا الإيميل؟</p><button type="button" class="si-sug" dir="ltr" onclick="A.siUseSuggest()">${esc(sug)}</button>` : ""}</div>
+        <button class="btn si-go" id="siGo" onclick="A.siNext()" ${SI.email.trim() ? "" : "disabled"}>متابعة</button>
+        <div class="si-or"><span>أو</span></div>
+        <div class="si-squares">
+          <button class="si-sq si-google${siGoogleOk() ? "" : " soon"}" onclick="A.siGoogle()" aria-label="المتابعة مع Google">${SI_G}</button>
+          <button class="si-sq si-apple${siAppleOk() ? "" : " soon"}" onclick="A.siApple()" aria-label="المتابعة مع Apple">${SI_APPLE}</button>
         </div>
-        <p class="si-note">${SI_LOCK}<span>تقدّمك يبقى في جهازك — ما نحفظ إيميلك ولا نرسل بياناتك لأي مكان.</span></p>
+        ${SI_TERMS}
       </div>`,
       `<button class="login-skip" onclick="A.siLater()">لاحقاً</button>`, 0, "A.siBack()", "si-screen si-s-how", false);
-    if (g) siGsiLoad();
+    if (siGoogleOk()) siGsiLoad();
     return;
   }
   if (step === "name") {
     obFrame(`<div class="si si-name">
-        <h1 class="si-title">وش اسمك؟</h1>
-        <p class="si-sub">يظهر على ملفك وفي الدوري، <span class="ln-nw">ويبقى في جهازك بس.</span></p>
-        <input id="siName" class="login-input si-input" type="text" maxlength="30" placeholder="الاسم" autocomplete="given-name" enterkeyhint="done"
-          value="${esc(SI.name)}" oninput="A.siName(this.value)" onkeydown="if(event.key==='Enter')A.siSave()">
+        <h1 class="si-q">وش اسمك؟</h1>
+        <div class="si-pair">
+          <input id="siFirst" class="si-in" type="text" maxlength="20" placeholder="اسمك الأول" autocomplete="given-name" enterkeyhint="next"
+            value="${esc(SI.first)}" oninput="A.siNameIn('first', this.value)" onkeydown="if(event.key==='Enter')document.getElementById('siLast').focus()">
+          <input id="siLast" class="si-in" type="text" maxlength="20" placeholder="اسم العائلة (اختياري)" autocomplete="family-name" enterkeyhint="next"
+            value="${esc(SI.last)}" oninput="A.siNameIn('last', this.value)" onkeydown="if(event.key==='Enter')A.siNameNext()">
+        </div>
+        <p class="si-hint">يظهر على ملفك وفي الدوري.</p>
+        <button class="btn si-go" id="siGo" onclick="A.siNameNext()" ${SI.first.trim() ? "" : "disabled"}>التالي</button>
       </div>`,
-      `<button class="btn" id="siGo" onclick="A.siSave()" ${SI.name.trim() ? "" : "disabled"}>المتابعة</button>`, 0, "A.siBack()", "si-screen si-s-name", false);
-    setTimeout(() => { const n = document.getElementById("siName"); if (n) n.focus(); }, 380);
+      "", 50, "A.siBack()", "si-screen si-s-name", true);
+    setTimeout(() => { const n = document.getElementById("siFirst"); if (n) n.focus(); }, 380);
     return;
   }
-  /* done: their avatar arrives among the shapes and is sealed */
-  const nm = SI.name.trim();
-  obFrame(`<div class="si si-done" style="${pvPaint(nm)}">
-      <div class="si-art si-art-done">${siShapes()}
-        <span class="si-av-wrap"><svg class="si-ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="56" pathLength="100"/></svg>
-          <span class="si-av"><span>${esc(Array.from(nm)[0] || "")}</span></span><span class="si-tick" aria-hidden="true">${SI_TICK}</span></span>
-      </div>
-      <h1 class="si-title si-hi">أهلاً يا ${esc(String(nm).trim().split(/\s+/)[0])}!</h1>
-      <p class="si-sub">ملفك جاهز${S.user && S.user.google ? " — دخلت بحساب Google" : ""}. تقدّمك محفوظ باسمك.</p>
+  if (step === "pass") {
+    const ok = SI.pass.length >= SI_PASS_MIN;
+    obFrame(`<div class="si si-pass">
+        <h1 class="si-q">سوّ كلمة مرور</h1>
+        <label class="si-field si-pw" for="siPass">
+          <input id="siPass" class="si-email" type="${SI.show ? "text" : "password"}" dir="ltr" autocomplete="new-password" autocapitalize="off" spellcheck="false" enterkeyhint="done"
+            placeholder="كلمة المرور" value="${esc(SI.pass)}" oninput="A.siPassIn(this.value)" onkeydown="if(event.key==='Enter')A.siCreate()">
+          <button type="button" class="si-eye" onclick="A.siEye()" aria-label="${SI.show ? "اخفِ كلمة المرور" : "اعرض كلمة المرور"}">${SI.show ? SI_EYE_OFF : SI_EYE}</button>
+        </label>
+        <p class="si-rule${ok ? " ok" : ""}" id="siRule">${SI_TICK}<span>${toAr(SI_PASS_MIN)} أحرف أو أكثر</span></p>
+      </div>`,
+      `<button class="btn" id="siGo" onclick="A.siCreate()" ${ok ? "" : "disabled"}>سوّ حسابي</button>${SI_TERMS}`, 85, "A.siBack()", "si-screen si-s-pass", true);
+    setTimeout(() => { const n = document.getElementById("siPass"); if (n) n.focus(); }, 380);
+    return;
+  }
+  /* done: «ملفك جاهز» and the goal it is made for (the user, 2026-11-14: the
+     letter avatar was «orange a … I want something better», then «something
+     qudrati related like you will get 99%», then «simple»; picked from
+     tools/signin-done.html with the percent sign added): فهيم leaps in under his
+     bubble, «هدفك» and the number rolling to ٩٩٪, «إن شاء الله» landing green on
+     its hop. It is the student's goal, labelled so, never a predicted score */
+  const first = esc(String(SI.name).trim().split(/\s+/)[0]);
+  obFrame(`<div class="si si-done sd">
+      <h1 class="obt-bubble ob-say si-say">${sayHtml(`أهلاً يا *${first}*! ملفك جاهز${S.user && S.user.google ? " بحساب Google" : ""}.`)}</h1>
+      <div class="si-hero si-hero-done"><span class="si-joy">${mascot("celebrate", "si-duo si-leap")}</span></div>
+      <div class="sd-goal"><span class="sd-lab">هدفك</span><b><span id="sdN">٠</span>٪</b><span class="sd-ish">إن شاء الله</span></div>
+      <p class="sd-cap">وفهيم معك <b>درس درس</b> لين توصله</p>
     </div>`,
-    `<button class="btn" onclick="A.siDone()">يلا نكمل</button>`, 0, "", "si-screen si-s-done", false);
-  if (fxReduced()) { document.querySelector(".si-done").classList.add("sealed"); return; }
-  const at = (ms, f) => siT.push(setTimeout(f, ms));
-  at(700, () => {
-    const av = document.querySelector(".si-av-wrap");
-    if (av) av.animate([{ transform: "scale(1)" }, { transform: "scale(1.12,.86)", offset: .25 }, { transform: "scale(.94,1.08)", offset: .55 }, { transform: "scale(1)" }], { duration: 520, easing: "ease-out" });
-    const d = document.querySelector(".si-done"); if (d) d.classList.add("sealed");
-    snd("signin-done", () => { cvTone(784, 0, .5, "triangle", .12); cvTone(1175, 0, .4, "sine", .06, .06); }); buzz(28);
+    `<button class="btn si-done-go" onclick="A.siDone()">يلا نكمل</button>`, 0, "", "si-screen si-s-done", false);
+  const words = document.querySelectorAll(".ob-say .w").length, from = SAY_AT + words * SAY_STEP + 700;
+  const at = (ms, f) => siT.push(setTimeout(f, ms)), q = sel => document.querySelector(sel);
+  const goal = q(".sd-goal"), n = q("#sdN"), go = q(".si-done-go"), still = fxReduced(), RUN = 1400;
+  at(260, () => buzz([20, 60, 40]));
+  at(from, () => {
+    if (goal) goal.classList.add("run");
+    if (still) { if (n) n.textContent = toAr(99); return; }
+    snd("sd-count", null, "tutor-xp-countup-start");
+    const t0 = performance.now(), f = now => { const p = Math.min(1, (now - t0) / RUN), e = 1 - Math.pow(1 - p, 3); if (n) n.textContent = toAr(Math.round(99 * e)); if (p < 1 && n && n.isConnected) requestAnimationFrame(f); };
+    requestAnimationFrame(f);
   });
+  at(from + (still ? 0 : RUN), () => { if (goal) goal.classList.add("hit"); snd("sd-hit", null, "xp-tally-final"); buzz([20, 40, 30]); });
+  const end = from + (still ? 300 : RUN + 500);
+  at(end, () => {
+    const j = q(".si-joy");
+    if (j && !still) j.animate([{ translate: "0 0", scale: "1 1" }, { translate: "0 4px", scale: "1.06 .94", offset: .2 }, { translate: "0 -22px", scale: ".96 1.05", offset: .5 }, { translate: "0 2px", scale: "1.05 .95", offset: .82 }, { translate: "0 0", scale: "1 1" }], { duration: 620, easing: "ease-out" });
+    buzz(28);
+  });
+  if (go) go.style.animationDelay = (end + 250) / 1000 + "s";
 }
-A.siName = function (v) {
-  SI.name = String(v).replace(/[*<>]/g, "");
-  const go = document.getElementById("siGo"); if (go) go.disabled = !SI.name.trim();
-};
 function siKeep(name, google) {
   const n = String(name || "").replace(/[*<>]/g, "").trim().slice(0, 30);
   if (!n) return false;
@@ -9544,10 +9674,65 @@ function siKeep(name, google) {
   save();
   return true;
 }
-A.siSave = function () {
+A.siEmail = function (v) {
+  SI.email = String(v).trim();
+  const go = document.getElementById("siGo"); if (go) go.disabled = !SI.email;
+  if (SI.hint) { SI.hint = false; const m = document.getElementById("siMsg"); if (m && !SI.err) m.innerHTML = ""; }
+  if (SI.err) { SI.err = ""; const f = document.querySelector(".si-field"); if (f) f.classList.remove("err"); const i = document.querySelector(".si-err-ic"); if (i) i.remove(); const m = document.getElementById("siMsg"); if (m) m.innerHTML = ""; }
+};
+A.siNext = function () {
+  if (!SI || SI.step !== "how" || obLocked()) return;
+  const e = SI.email.trim();
+  if (!e) return;
+  if (!siEmailOk(e)) {
+    SI.err = "الإيميل مو صحيح.";
+    buzz(12);
+    renderSign();
+    const f = document.querySelector(".si-field"); if (f && !fxReduced()) f.animate([{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(6px)" }, { transform: "translateX(-3px)" }, { transform: "none" }], { duration: 320 });
+    return;
+  }
+  /* a well-formed address a letter off a common one: ask once, and a second «متابعة» keeps it as typed */
+  if (!SI.hint && siSuggest(e)) { SI.hint = true; buzz(8); renderSign(); return; }
+  SI.hint = false;
+  snd("signin-step", () => sndTap()); buzz(8); siGo("name");
+};
+A.siUseSuggest = function () {
+  const sug = siSuggest(SI.email); if (!sug) return;
+  SI.email = sug; SI.err = ""; SI.hint = false; snd("signin-step", () => sndTap()); renderSign();
+};
+A.siNameIn = function (k, v) {
+  SI[k] = String(v).replace(/[*<>]/g, "");
+  const go = document.getElementById("siGo"); if (go) go.disabled = !SI.first.trim();
+};
+A.siNameNext = function () {
   if (!SI || SI.step !== "name" || obLocked()) return;
-  if (!siKeep(SI.name)) { const n = document.getElementById("siName"); if (n) { n.classList.remove("err"); void n.offsetWidth; n.classList.add("err"); } return; }
+  if (!SI.first.trim()) { const n = document.getElementById("siFirst"); if (n) { n.classList.remove("err"); void n.offsetWidth; n.classList.add("err"); } return; }
+  snd("signin-step", () => sndTap()); buzz(8); siGo("pass");
+};
+A.siPassIn = function (v) {
+  SI.pass = String(v);
+  const ok = SI.pass.length >= SI_PASS_MIN;
+  const go = document.getElementById("siGo"); if (go) go.disabled = !ok;
+  const r = document.getElementById("siRule"); if (r) r.classList.toggle("ok", ok);
+};
+A.siEye = function () {
+  SI.show = !SI.show;
+  const i = document.getElementById("siPass"), b = document.querySelector(".si-eye");
+  if (i) { i.type = SI.show ? "text" : "password"; i.focus(); const n = i.value.length; try { i.setSelectionRange(n, n); } catch (e) {} }
+  if (b) { b.innerHTML = SI.show ? SI_EYE_OFF : SI_EYE; b.setAttribute("aria-label", SI.show ? "اخفِ كلمة المرور" : "اعرض كلمة المرور"); }
+};
+/* no account server yet: the name and the email stay on the phone, the password is never kept */
+A.siCreate = function () {
+  if (!SI || SI.step !== "pass" || obLocked() || SI.pass.length < SI_PASS_MIN) return;
+  if (!siKeep((SI.first.trim() + " " + SI.last.trim()).trim())) return;
+  S.user.email = SI.email.trim().slice(0, 120); save();
+  SI.pass = "";
   snd("signin-step", () => sndTap()); siGo("done");
+};
+A.siApple = function () {
+  const b = document.querySelector(".si-apple");
+  if (b && !fxReduced()) b.animate([{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(6px)" }, { transform: "translateX(-3px)" }, { transform: "none" }], { duration: 320 });
+  buzz(12); toast("الدخول بحساب Apple قريباً");
 };
 A.siLater = function (back) {
   if (obLocked()) return;
@@ -9577,7 +9762,7 @@ A.siGoogle = function () {
   const b = document.querySelector(".si-google");
   if (!siGoogleOk() || !(window.google && google.accounts && google.accounts.oauth2)) {
     if (b && !fxReduced()) b.animate([{ transform: "translateX(0)" }, { transform: "translateX(-6px)" }, { transform: "translateX(6px)" }, { transform: "translateX(-3px)" }, { transform: "none" }], { duration: 320 });
-    buzz(12);
+    buzz(12); toast("الدخول بحساب Google قريباً");
     return;
   }
   snd("signin-step", () => sndTap());
@@ -9593,8 +9778,11 @@ A.siGoogle = function () {
 /* dev harness: the flow on any step (preview.html#signin, #signin-how, #signin-name, #signin-done) */
 A.debugSignIn = function (step) {
   S.profileAsked = false;
-  signOpen(step === "done" || step === "name" ? "how" : step || "wall", () => A.go("path"));
-  if (step === "name") siGo("name");
+  signOpen(step === "done" || step === "name" || step === "pass" || step === "bad" || step === "typo" ? "how" : step || "wall", () => A.go("path"));
+  if (step === "bad") { SI.email = "sara@gmail.c"; SI.err = "الإيميل مو صحيح."; renderSign(); }
+  if (step === "typo") { SI.email = "sara@gmial.com"; SI.hint = true; renderSign(); }
+  if (step === "name" || step === "pass") { SI.email = "sara@gmail.com"; siGo("name"); }
+  if (step === "pass") { SI.first = "سارة"; siGo("pass"); }
   if (step === "done") { siKeep("سارة"); siGo("done"); }
 };
 A.obBack = function () {

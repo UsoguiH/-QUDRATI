@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>ملاحظات الفيديو</title>
+<style>
+  @font-face { font-family: "Baloo Bhaijaan 2"; src: url("../qudrat/assets/baloo-bhaijaan-2.woff2") format("woff2"); font-weight: 400 800; }
+  :root { --ink: #4B4B4B; --gray: #777; --line: #E5E5E5; --green: #58CC02; --green-dk: #58A700; --green-bg: #D7FFB8; --red: #FF4B4B; --red-bg: #FFDFE0; --blue: #1CB0F6; --blue-dk: #1899D6; --blue-bg: #DDF4FF; --gold: #FFC800; --gold-bg: #FFF5D3; --snow: #F7F7F7; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--snow); color: var(--ink); font-family: "Baloo Bhaijaan 2", system-ui, sans-serif; line-height: 1.6; }
+  header { background: #fff; border-bottom: 2px solid var(--line); padding: 28px 16px 22px; text-align: center; }
+  header h1 { margin: 0 0 4px; font-size: 30px; font-weight: 800; }
+  header p { margin: 0 auto; max-width: 680px; color: var(--gray); font-size: 16px; font-weight: 600; }
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 14px; }
+  .chip { padding: 2px 12px; border-radius: 999px; background: var(--snow); border: 2px solid var(--line); font-size: 14px; font-weight: 700; }
+  .chip.ok { background: var(--green-bg); border-color: #A5ED6E; color: var(--green-dk); }
+  nav { position: sticky; top: 0; z-index: 5; background: rgba(247,247,247,.95); backdrop-filter: blur(6px); border-bottom: 2px solid var(--line); padding: 8px 12px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+  nav a { flex: none; text-decoration: none; color: var(--ink); font-weight: 700; font-size: 14px; padding: 4px 12px; border-radius: 12px; background: #fff; border: 2px solid var(--line); border-bottom-width: 3px; }
+  nav a:hover { border-color: var(--blue); color: var(--blue-dk); }
+  main { max-width: 1180px; margin: 0 auto; padding: 18px 16px 60px; }
+  section { background: #fff; border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 22px; padding: 18px 18px 20px; margin: 0 0 22px; scroll-margin-top: 64px; }
+  .hd { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+  .n { flex: none; width: 38px; height: 38px; border-radius: 12px; background: var(--blue); box-shadow: 0 3px 0 var(--blue-dk); color: #fff; font-weight: 800; font-size: 19px; display: grid; place-items: center; }
+  h2 { margin: 2px 0 0; font-size: 22px; font-weight: 800; line-height: 1.35; }
+  .quote { margin: 0 0 10px; padding: 8px 14px; border-radius: 14px; background: var(--gold-bg); border: 2px solid #FFE38A; font-weight: 700; font-size: 16px; }
+  .quote b { color: #CD7900; font-weight: 800; }
+  .did { margin: 0 0 14px; padding-inline-start: 22px; font-size: 15.5px; font-weight: 600; }
+  .did li { margin: 2px 0; }
+  .did em { font-style: normal; font-weight: 800; color: var(--blue-dk); }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 16px; align-items: start; }
+  .col h3 { margin: 0 0 8px; font-size: 15px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; padding: 1px 12px; border-radius: 10px; }
+  .before h3 { background: var(--red-bg); color: #EA2B2B; }
+  .after h3 { background: var(--green-bg); color: var(--green-dk); }
+  .shots { display: flex; flex-wrap: wrap; gap: 12px; }
+  figure { margin: 0; width: 220px; }
+  .before figure { width: 100%; max-width: 250px; }
+  figure img { display: block; width: 100%; border-radius: 16px; border: 2px solid var(--line); cursor: zoom-in; background: #fff; }
+  .before img { border-color: #FFB2B2; }
+  .after img { border-color: #A5ED6E; }
+  figcaption { margin-top: 4px; font-size: 13.5px; font-weight: 700; color: var(--gray); text-align: center; }
+  .list { margin: 0; padding-inline-start: 22px; font-size: 15.5px; font-weight: 600; }
+  .list li { margin: 4px 0; }
+  .note { color: var(--gray); font-size: 14px; font-weight: 600; margin: 10px 0 0; }
+  .lb { position: fixed; inset: 0; background: rgba(0,0,0,.82); display: none; place-items: center; z-index: 20; cursor: zoom-out; padding: 16px; }
+  .lb.on { display: grid; }
+  .lb img { max-width: 100%; max-height: 92vh; border-radius: 16px; background: #fff; }
+  @media (max-width: 760px) { .row { grid-template-columns: 1fr; } figure { width: calc(50% - 6px); } .before figure { width: calc(50% - 6px); max-width: none; } h2 { font-size: 19px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>ملاحظات الفيديو — قبل وبعد</h1>
+  <p>كل ملاحظة كتبتها في <b>fix_these.mp4</b>: صورتك من الفيديو على اليمين، والشاشة الحين على اليسار (مصوّرة من التطبيق على جوال عرضه ٣٩٠).</p>
+  <div class="chips"><span class="chip ok">١٤ ملاحظة — كلها مصلّحة</span><span class="chip">٣٥ حيلة باللهجة</span><span class="chip">مو مرفوع للموقع</span></div>
+</header>
+<nav>
+  <a href="#s1">تحقق</a><a href="#s2">الناتج آخر شي</a><a href="#s3">الكسر</a><a href="#s4">الحيلة بدل الشرح</a><a href="#s5">١ + … + ٥٠</a><a href="#s6">فردي وزوجي</a><a href="#s7">آحاد الضرب</a><a href="#s8">السلسلة</a><a href="#s9">المقارنة</a><a href="#s10">دفتر القوانين</a><a href="#s11">تقدّمك اليوم</a><a href="#s12">الطالب التجريبي</a><a href="#s13">قرارات</a>
+</nav>
+<main>
+
+<section id="s1">
+  <div class="hd"><span class="n">١</span><h2>«كمّل الخطوة» ما يصحّح أول ما تضغط — ينتظر «تحقق»</h2></div>
+  <p class="quote">ملاحظتك: <b>«ما حبيت الـUX انه يضغط ويجاوب على طول»</b></p>
+  <ul class="did">
+    <li>تحط كل الأرقام براحتك، وتشيل أي رقم بضغطة، وبعدين <em>«تحقق»</em>.</li>
+    <li>الأرقام الصح تثبت بالأخضر وتنط، والغلط يرجع للبطاقات.</li>
+    <li>فهيم يقول وش الغلط بدون ما يعطيك الجواب: «هذا مكان آخر عدد — دوّره في المثال».</li>
+    <li>مكان المساعدة محجوز من البداية، فالشاشة ما تكبر ولا تتحرك لما تغلط.</li>
+  </ul>
+  <div class="row">
+    <div class="col before"><h3>قبل</h3><div class="shots"><figure><img src="lawapp/round5/b-instant.jpg" alt=""><figcaption>من الفيديو</figcaption></figure></div></div>
+    <div class="col after"><h3>بعد</h3><div class="shots">
+      <figure><img src="lawapp/round5/a-tri-nums-miss.jpg" alt=""><figcaption>بعد «تحقق» وفيه غلط</figcaption></figure>
+      <figure><img src="lawapp/round5/a-tri-nums-right.jpg" alt=""><figcaption>صح</figcaption></figure>
+    </div></div>
+  </div>
+</section>
+
+<section id="s2">
+  <div class="hd"><span class="n">٢</span><h2>الناتج آخر فراغ، مو أول واحد</h2></div>
+  <p class="quote">ملاحظتك: <b>«ليش ذي اجاوب اول شي الناتج ؟»</b></p>
+  <ul class="did">
+    <li>كل سطر كان يبدأ بالناتج («٢٥ = ٥ × ٥») انقلب: <em>٥ × ٥ = ٢٥</em>. ١٧ سطر في الدروس، ونفس الشي في شاشات القوانين.</li>
+    <li>المثال صار أكبر شوي (١ + ٣ + … + ١٥) عشان القانون يكون له فايدة، وتقدر تعدّه بيدك.</li>
+  </ul>
+  <div class="row">
+    <div class="col before"><h3>قبل</h3><div class="shots"><figure><img src="lawapp/round5/b-oddnums.jpg" alt=""><figcaption>من الفيديو</figcaption></figure></div></div>
+    <div class="col after"><h3>بعد</h3><div class="shots">
+      <figure><img src="lawapp/round5/a-odd-nums-miss.jpg" alt=""><figcaption>غلط في فراغ</figcaption></figure>
+      <figure><img src="lawapp/round5/a-odd-nums-right.jpg" alt=""><figcaption>صح — الناتج آخر شي</figcaption></figure>
+    </div></div>
+  </div>
+</section>
+
+<section id="s3">
+  <div class="hd"><span class="n">٣</span><h2>كل قسمة صارت كسر مثل الاختبار</h2></div>
+  <p class="quote">ملاحظتك: <b>«هنا ليش اجاوب اول ولازم كل شي فيه كسر يصير كسر موب قسمه»</b></p>
+  <ul class="did">
+    <li>كل «÷» في «كمّل الخطوة» وفي «الحيلة» ينرسم فوق خط، مثل ورقة القدرات.</li>
+    <li>قانون الزوجية نفسه تغيّر للطريقة اللي يدرّسها المعلمين: <em>نص آخر عدد × (نصه + ١)</em>، ما فيه ÷ ٤ أصلاً. ٢ + … + ٥٠ = ٢٥ × ٢٦ = ٦٥٠.</li>
+  </ul>
+  <div class="row">
+    <div class="col before"><h3>قبل</h3><div class="shots"><figure><img src="lawapp/round5/b-even.jpg" alt=""><figcaption>من الفيديو</figcaption></figure></div></div>
+    <div class="col after"><h3>بعد</h3><div class="shots">
+      <figure><img src="lawapp/round5/a-even-nums-miss.jpg" alt=""><figcaption>غلط: «٥٠» مو هنا</figcaption></figure>
+      <figure><img src="lawapp/round5/a-even-nums-right.jpg" alt=""><figcaption>صح</figcaption></figure>
+      <figure><img src="lawapp/round5/a-tri-nums-right.jpg" alt=""><figcaption>الكسر مرسوم فوق خط</figcaption></figure>
+    </div></div>
+  </div>
+</section>
+
+<section id="s4">
+  <div class="hd"><span class="n">٤</span><h2>«الحيلة» بدل الشرح والرسومات</h2></div>
+  <p class="quote">ملاحظاتك: <b>«الاشكال والصور حلوه بس الطالب يبي شي سريع ولا ينساه ويتنفس لغته ولهجته»</b> و<b>«الشروحات ذي ما تفيد طالب قدرات … يبي يعرف الخدعه السريعه بدون سبب»</b></p>
+  <ul class="did">
+    <li>بعد القانون تطلع بطاقة <em>«الحيلة»</em>: سطر واحد باللهجة، كلماته المهمة تنوّر بالأزرق وحدة ورا وحدة.</li>
+    <li>تحتها مثال بحجم أرقام الاختبار في سطرين، الأرقام تطلع وحدة وحدة، والجواب ينوّر أخضر مع صوت الصح.</li>
+    <li>٣٥ حيلة، كل قانون له حيلته، مأخوذة من طريقة المعلمين ومستوى أسئلة القدرات الحقيقية. راجعت حساب كل مثال.</li>
+    <li>ضغطة على البطاقة تعيدها.</li>
+  </ul>
+  <div class="row">
+    <div class="col before"><h3>قبل</h3><div class="shots">
+      <figure><img src="lawapp/round5/b-oddrule.jpg" alt=""><figcaption>رسمة النقاط</figcaption></figure>
+      <figure><img src="lawapp/round5/b-biggerrule.jpg" alt=""><figcaption>رسمة المستطيلات</figcaption></figure>
+    </div></div>
+    <div class="col after"><h3>بعد</h3><div class="shots">
+      <figure><img src="lawapp/round5/a-rule-oddsum.jpg" alt=""><figcaption>مجموع الفردية</figcaption></figure>
+      <figure><img src="lawapp/round5/a-rule-evensum.jpg" alt=""><figcaption>مجموع الزوجية</figcaption></figure>
+      <figure><img src="lawapp/round5/a-rule-bigger.jpg" alt=""><figcaption>المقارنة</figcaption></figure>
+    </div></div>
+  </div>
+</section>
+
+<section id="s5">
+  <div class="hd"><span class="n">٥</span><h2>١ + ٢ + … + ٥٠ — بطريقة طالب القدرات</h2></div>
+  <p class="quote">ملاحظاتك: <b>«شلون كالب قدرات يحسبها صح»</b> و<b>«ذي الطالب شلون يجيبها»</b></p>
+  <ul class="did">
+    <li>الحيلة: <em>نص آخر عدد × (آخر عدد + ١)</em> ← ٢٥ × ٥١ = ١٢٥٠ + ٢٥ = ١٢٧٥. بالراس، بدون ضرب طويل.</li>
+    <li>شاشة جديدة في الدرس: «الأسرع: خذ نص آخر عدد أول».</li>
+    <li>لما يغلط، الشرح يمشيه بالنص أول: «ضربت في اللي قبله. اضرب في اللي بعده: ٢٠ × ٤١».</li>
+    <li>المثال صار ٥٠ بدل ٢٠، لأن أسئلة القدرات تجي ٥٠ و٦٠ و١٠٠.</li>
+  </ul>
+  <div class="row">
+    <div class="col before"><h3>قبل</h3><div class="shots">
+      <figure><img src="lawapp/round5/b-sum50.jpg" alt=""><figcaption>١ + … + ٥٠</figcaption></figure>
+      <figure><img src="lawapp/round5/b-sum30.jpg" alt=""><figcaption>١ + … + ٣٠</figcaption></figure>
+    </div></div>
+    <div class="col after"><h3>بعد</h3><div class="shots">
+      <figure><img src="lawapp/round5/a-rule-tri.jpg" alt=""><figcaption>الحيلة</figcaption></figure>
+      <figure><img src="lawapp/round5/a-tri-half.jpg" alt=""><figcaption>خطوة النص أول</figcaption></figure>
+      <figure><img src="lawapp/round5/a-tri-pick-why.jpg" alt=""><figcaption>لما يغلط</figcaption></figure>
+    </div></div>
+  </div>
+</section>
+
+<section id="s6">
+  <div class="hd"><span class="n">٦</span><h2>كل فردي مع الزوجي اللي بعده</h2></div>
+  <p class="quote">ملاحظتك على الرسمة: <b>«كل فردي مع الزوجي اللي بعده»</b></p>
+  <ul class="did">
+    <li>الرسمة راحت، والحيلة تقولها مباشرة: <em>فردي ناقص زوجي؟ الجواب سالب عدد الأزواج</em> ← (١ + … + ٤٩) − (٢ + … + ٥٠) = −٢٥.</li>
+  </ul>
+  <div class="row">
+    <div class="col before"><h3>قبل</h3><div class="shots"><figure><img src="lawapp/round5/b-oddeven.jpg" alt=""><figcaption>من الفيديو</figcaption></figure></div></div>
+    <div class="col after"><h3>بعد</h3><div class="shots"><figure><img src="lawapp/round5/a-rule-oddeven.jpg" alt=""><figcaption>الحيلة</figcaption></figure></div></div>
+  </div>
+</section>
+
+<section id="s7">
+  <div class="hd"><span class="n">٧</span><h2>آحاد الضرب — مثال واضح</h2></div>
+  <p class="quote">ملاحظتك: <b>«This question is bad»</b> — في ٤٨ × ٣٦ الناتج ٨ × ٦ = ٤٨ نفس الرقم الأول، فيلخبط.</p>
+  <ul class="did">
+    <li>المثال صار <em>٣٧ × ٢٤</em>: ٧ × ٤ = ٢٨ ← الآحاد ٨، ما يشبه أي رقم في السؤال.</li>
+    <li>الحيلة بأرقام الاختبار: ٤٢٧ × ٣٥٨ ← ٧ × ٨ = ٥٦ ← الآحاد ٦.</li>
+  </ul>
+  <div class="row">
+    <div class="col before"><h3>قبل</h3><div class="shots"><figure><img src="lawapp/round5/b-units.jpg" alt=""><figcaption>من الفيديو</figcaption></figure></div></div>
+    <div class="col after"><h3>بعد</h3><div class="shots">
+      <figure><img src="lawapp/round5/a-rule-last.jpg" alt=""><figcaption>الحيلة</figcaption></figure>
+      <figure><img src="lawapp/round5/a-units-nums-miss.jpg" alt=""><figcaption>كمّل الخطوة — غلط</figcaption></figure>
+      <figure><img src="lawapp/round5/a-units-nums-right.jpg" alt=""><figcaption>صح</figcaption></figure>
+    </div></div>
+  </div>
+</section>
+
+<section id="s8">
+  <div class="hd"><span class="n">٨</span><h2>ضرب ثلاث أعداد — صار سطر واحد</h2></div>
+  <p class="quote">ملاحظتك: <b>«جدا طويل، خله اقصر»</b></p>
+  <ul class="did">
+    <li>بدل ست خطوات وفراغين: <em>آحاد ٤٧ × ٥٨ × ٢٣؟</em> ← ٧ × ٨ × ٣ ← ☐، فراغ واحد.</li>
+  </ul>
+  <div class="row">
+    <div class="col before"><h3>قبل</h3><div class="shots"><figure><img src="lawapp/round5/b-chain.jpg" alt=""><figcaption>من الفيديو</figcaption></figure></div></div>
+    <div class="col after"><h3>بعد</h3><div class="shots"><figure><img src="lawapp/round5/a-units-chain.jpg" alt=""><figcaption>سطر واحد</figcaption></figure></div></div>
+  </div>
+</section>
+
+<section id="s9">
+  <div class="hd"><span class="n">٩</span><h2>المقارنة — رجعت الأسئلة اللي كانت قبل</h2></div>
+  <p class="quote">ملاحظاتك: <b>«This is very bad, the previous version questions was better»</b> و<b>«And in here why the screen get bigger that very bad»</b></p>
+  <ul class="did">
+    <li>شاشة «كمّل الخطوة» حق المقارنة انشالت. بعد القانون تجي أسئلة «قارن بين القيمتين» على طول، مثل النسخة اللي قبل.</li>
+    <li>الحيلة صارت طريقة المعلمين الأسرع: <em>نفس المجموع؟ الأقرب لبعض ضربهم أكبر</em>، وشرح الغلط يقول نفس الكلام.</li>
+    <li>الشاشة اللي كانت تكبر لما تغلط ما عادت موجودة، وفي باقي شاشات «كمّل الخطوة» مكان المساعدة محجوز من البداية.</li>
+  </ul>
+  <div class="row">
+    <div class="col before"><h3>قبل</h3><div class="shots">
+      <figure><img src="lawapp/round5/b-biggernums.jpg" alt=""><figcaption>من الفيديو</figcaption></figure>
+      <figure><img src="lawapp/round5/b-biggermiss.jpg" alt=""><figcaption>الشاشة تكبر بعد الغلط</figcaption></figure>
+    </div></div>
+    <div class="col after"><h3>بعد</h3><div class="shots">
+      <figure><img src="lawapp/round5/a-rule-bigger.jpg" alt=""><figcaption>الحيلة</figcaption></figure>
+      <figure><img src="lawapp/round5/a-compare.jpg" alt=""><figcaption>بعدها سؤال المقارنة على طول</figcaption></figure>
+    </div></div>
+  </div>
+</section>
+
+<section id="s10">
+  <div class="hd"><span class="n">١٠</span><h2>دفتر القوانين — الدروس اللي ما وصلتها مقفلة، وكل شي أكبر</h2></div>
+  <p class="quote">ملاحظتك: <b>«the remaining levels i havent open make them not open and make the UX bigger»</b></p>
+  <ul class="did">
+    <li>الدرس اللي ما وصلته صف رمادي بقفل، ما ينفتح. لو ضغطته يهتز القفل ويقول «خلّص الدرس N أول».</li>
+    <li>الدروس المفتوحة صفوفها وخطها أكبر.</li>
+    <li>العدّاد صار يقول «… في الوحدة» عشان ما يتلخبط مع عدّاد مجموعتك.</li>
+  </ul>
+  <div class="row">
+    <div class="col before"><h3>قبل</h3><div class="shots"><figure><img src="lawapp/round5/b-unitbook.jpg" alt=""><figcaption>من الفيديو</figcaption></figure></div></div>
+    <div class="col after"><h3>بعد</h3><div class="shots"><figure><img src="lawapp/round5/a-unitbook.jpg" alt=""><figcaption>طالب جديد: الدرس الأول مفتوح والباقي مقفل</figcaption></figure></div></div>
+  </div>
+</section>
+
+<section id="s11">
+  <div class="hd"><span class="n">١١</span><h2>بطاقة القانون في «تقدّمك اليوم» صارت مفهومة</h2></div>
+  <p class="quote">في الصورة الأولى دوّرت على بطاقة «ترتيب العمليات ٢/٣٥» — كان مو واضح وش يعني الرقم ووش الخمس خطوات.</p>
+  <ul class="did">
+    <li>فوق الاسم: <em>«قانون جديد في مجموعتك»</em> و«٢ من ٣٥».</li>
+    <li>تحت الخطوات: <em>«ثبّته في ٥ مراجعات — يرجع لك بكرة»</em>، ويبقى ظاهر حتى في الجوالات القصيرة.</li>
+  </ul>
+  <div class="row">
+    <div class="col before"><h3>قبل</h3><div class="shots"><figure><img src="lawapp/round5/b-progress.jpg" alt=""><figcaption>من الفيديو</figcaption></figure></div></div>
+    <div class="col after"><h3>بعد</h3><div class="shots"><figure><img src="lawapp/round5/a-progress.jpg" alt=""><figcaption>بعد درس فيه قانونين</figcaption></figure></div></div>
+  </div>
+</section>
+
+<section id="s12">
+  <div class="hd"><span class="n">١٢</span><h2>اللي لقاه «الطالب التجريبي» وتصلّح</h2></div>
+  <p class="quote">خلّيت وكيل يلعب العقدة الأولى كأنه طالب قدرات عمره ١٧ سنة، على جوال ٣٩٠ و٣٢٠.</p>
+  <ul class="list">
+    <li>فقاعة فهيم كانت تكبر وهو يتكلم وتدفّ القانون والحيلة لتحت (١٤–٣٩ بكسل) — الحين محجوز لها سطرين من البداية.</li>
+    <li>جملة «نص آخر عدد × اللي بعده» كان لها معنيين في درسين — كل قانون صار له جملته.</li>
+    <li>أمثلة الحيلة كانت نفس سؤال القدرات اللي بعدها في الدرس — تغيّرت أرقامها.</li>
+    <li>حيلة «مجموع الفردية» كانت تحتاج «عدد الفردية» قبل ما ينشرح — مثالها صار تقدر تعدّه بيدك.</li>
+    <li>«كمّل الخطوة» لما تحلّها كانت تنزل ١٥٥–١٩٠ بكسل — الحين تتحرك أقصى شي حوالي ٥٠.</li>
+    <li>بطاقة الحيلة كانت تطلع تحت زر «كمّل» في جوال ٣٢٠ × ٥٦٨ — الحين تصغر شوي وتبقى فوقه.</li>
+    <li>«ليست صحيحة» الفصحى صارت <b>«مو صح»</b>.</li>
+  </ul>
+</section>
+
+<section id="s13">
+  <div class="hd"><span class="n">١٣</span><h2>قرارات أخذتها — قل لي لو تبي غيرها</h2></div>
+  <ul class="list">
+    <li><b>المقارنة:</b> الحيلة صارت «الأقرب لبعض ضربهم أكبر» (أسرع). بطاقة القانون فوقها لسا «الضرب = الأساس + الزيادة».</li>
+    <li><b>«وش الناقص؟»:</b> خلّيته قبل الحيلة مثل ما صممته، لأن فهيم يقول القانون قبله مباشرة.</li>
+    <li><b>بطاقة قانون المجموع من ١:</b> بقيت بالشكل المعروف «آخر عدد × (آخر عدد + ١) ÷ ٢»، والحيلة والشروحات تعلّم النص أول — نفس الجواب.</li>
+    <li><b>العدّادين:</b> دفتر القوانين يعدّ قوانين الوحدة اللي شفتها (… من ١١٩)، و«تقدّمك اليوم» يعدّ مجموعتك (… من ٣٥).</li>
+  </ul>
+  <p class="note">كل الفحوصات نجحت: أدوات التحقق، بناء الصفحات، وكل شاشات المعاينة على ٣٢٠ و٣٩٠ بدون أخطاء أو تمرير جانبي. ما رفعت شي للموقع ولا سوّيت commit.</p>
+</section>
+
+</main>
+<div class="lb" id="lb"><img alt=""></div>
+<script>
+  const lb = document.getElementById('lb'), im = lb.querySelector('img');
+  document.querySelectorAll('figure img').forEach(i => i.addEventListener('click', () => { im.src = i.src; lb.classList.add('on'); }));
+  lb.addEventListener('click', () => lb.classList.remove('on'));
+  addEventListener('keydown', e => { if (e.key === 'Escape') lb.classList.remove('on'); });
+</script>
+</body>
+</html>

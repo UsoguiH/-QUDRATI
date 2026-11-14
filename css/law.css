@@ -774,27 +774,6 @@ html[data-motion="reduced"] .lw3-shine { animation: none; display: none; }
 .bk2-lk { flex: none; width: 22px; height: 22px; color: var(--gray-icon, #AFAFAF); }
 .bk2-lk svg { width: 100%; height: 100%; display: block; }
 @media (max-height: 700px) { .bk2-les { padding: 6px 12px 6px 10px; } .bk2-les .bk2-hx { width: 44px; height: 40px; } .bk2-les-t b { font-size: 16px; } .bk2-les.lock { padding-block: 3px; } }
-/* «الحيلة» (the user, 2026-11-08: the quick trick, not the proof): a card on its lip under the rule, the trick in one line with its
-   key words lighting blue one after another, then the example in an inset, every «÷» stacked, the answer a green pill */
-.lw-learn .stage.tk-on { height: auto; flex: 0 1 auto; min-height: 0; cursor: pointer; display: flex; align-items: flex-start; justify-content: center; }
-.lw-tk { width: 100%; box-sizing: border-box; position: relative; padding: 18px 14px 12px; border: 2px solid var(--line, #E5E5E5); border-bottom-width: 5px; border-radius: 20px; background: #fff; text-align: center; }
-.tk-tag { position: absolute; top: -14px; inset-inline-start: 14px; display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 10px 0 8px; border-radius: 13px;
-  background: var(--gold, #FFC800); box-shadow: 0 2px 0 var(--gold-dk, #E5A500); color: #fff; font: 800 14px/26px var(--font); }
-.tk-tag svg { width: 15px; height: 15px; color: #fff; }
-.tk-say { margin: 0 0 10px; font-size: 19px; font-weight: 800; line-height: 1.55; color: var(--ink, #4B4B4B); text-wrap: balance; }
-.tk-k { font-weight: 800; color: inherit; padding: 0 5px 1px; border-radius: 8px; transition: background .25s, color .25s, box-shadow .25s; }
-.tk-k.lit { background: var(--blue-light, #DDF4FF); color: var(--blue-dk, #1899D6); box-shadow: 0 2px 0 var(--blue-border, #84D8FF); }
-.tk-ex { display: grid; gap: 6px; padding: 10px 10px; border-radius: 14px; background: #F7F7F7; }
-.tk-l { margin: 0; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0 4px; font-size: 18px; font-weight: 800; line-height: 1.5; color: var(--ink, #4B4B4B); }
-.tk-l + .tk-l { padding-top: 6px; border-top: 2px dashed var(--line, #E5E5E5); }
-.tk-n { display: inline-block; }
-.tk-fr { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.15; margin: 0 2px; }
-.tk-fr > i { display: block; align-self: stretch; height: 2.5px; margin: 2px 0; border-radius: 2px; background: currentColor; }
-.tk-ans { display: inline-block; font-style: normal; padding: 0 9px; border-radius: 10px; border: 2px solid transparent; transition: background .25s, color .25s, border-color .25s; }
-.tk-ans.lit { background: var(--green-bg, #D7FFB8); border-color: var(--green-pale, #A5ED6E); color: var(--green-dk, #58A700); box-shadow: 0 2px 0 var(--green-pale, #A5ED6E); }
-@media (max-height: 700px) { .lw-tk { padding: 16px 12px 10px; } .tk-say { font-size: 17px; margin-bottom: 8px; } .tk-l { font-size: 16px; } .tk-ex { padding: 8px; } }
-@media (max-height: 600px) { .tk-say { font-size: 16px; line-height: 1.45; } .tk-l { font-size: 15px; } }
-
 /* «تقدّمك اليوم»'s rule card says what each part is (the user, 2026-11-08, circling «ترتيب العمليات ٢/٣٥»): what it is over the
    name, the set's count in words, and the five reviews named under the bar */
 .wl2 .wl-kick { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 800; color: var(--gold-dk, #E5A500); }
@@ -802,7 +781,7 @@ html[data-motion="reduced"] .lw3-shine { animation: none; display: none; }
 .wl2 .wn-tx > b { display: block; }
 .wl2.won .wl-kick { color: var(--brown, #CD7900); }
 .wl2.many .wl-name, .wl2 .wl-name { font-size: 17px; }
-/* فهيم's bubble holds two lines from the start, so his second line never pushes the rule and «الحيلة» down while they are read (the
+/* فهيم's bubble holds two lines from the start, so his second line never pushes the rule and the proof down while they are read (the
    student tester, 2026-11-08: 14–39px) */
 .lw-learn .obs-bubble { min-height: calc(3em + 26px); box-sizing: border-box; display: flex; align-items: center; }
 .lw-learn .obs-bubble > .tx { display: block; width: 100%; }
@@ -812,11 +791,6 @@ html[data-motion="reduced"] .lw3-shine { animation: none; display: none; }
 @media (max-height: 700px) { .wl2 .wn-next.wl-next { display: block; font-size: 12px; } }
 /* the unit book on a narrow phone: the titles keep their room */
 @media (max-width: 380px) { .bk2-les .bk2-gold { display: none; } .bk2-les { gap: 8px; padding-inline: 10px 8px; } .bk2-les-t b { font-size: 15.5px; } .bk2-les .bk2-hx { width: 40px; height: 37px; } }
-.tk-k { padding: 0 3px 1px; }
-/* with «الحيلة» under it the rule card needs no room for numbers under its words */
-.lw-learn:has(.stage.tk-on) .kb13 .kb-card { padding-bottom: 18px; }
-@media (max-height: 700px) { .lw-learn:has(.stage.tk-on) .kb13 .kb-card { padding-top: 32px; padding-bottom: 12px; } .lw-learn .stage.tk-on { margin-top: 14px; } }
-.tk-k { display: inline-block; white-space: nowrap; }   /* a lit phrase («الأقرب لبعض») never breaks across two lines */
 
 /* the rules card on «إحصائياتي»: the stats cards' row with the gold hexagon in place of the round icon */
 

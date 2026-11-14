@@ -3176,6 +3176,14 @@ sub.pw { vertical-align: -.3em; }
 .screen-session .feedback.bad .fb-crest-fill { fill: var(--banner-r); }
 .screen-session .fb-crest-line { stroke: #8ee000; }
 .screen-session .feedback.bad .fb-crest-line { stroke: #ffb3b3; }
+/* a free guess is not a mistake: its miss is blue, the sheet and the choice picked (the user, 2026-11-14) */
+.screen-session .feedback.bad.free { background: var(--blue-light); }
+.screen-session .feedback.bad.free .fb-head,
+.screen-session .feedback.bad.free .fb-correct { color: var(--blue-dk); }
+.screen-session .feedback.bad.free .fb-x { color: var(--blue); }
+.screen-session .feedback.bad.free .btn { background: var(--blue); border-bottom-color: var(--blue-dk); }
+.screen-session:has(.feedback.free) .choice.wrong { background: var(--blue-light); border-color: var(--blue-border); color: var(--blue-dk); }
+.screen-session:has(.feedback.free) .choice.wrong .ch-letter { border-color: var(--blue-border); color: var(--blue-dk); }
 
 /* ============================================================
    WEB LAYOUT — responsive tiers
@@ -5069,63 +5077,98 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 }
 .si-earn b { font-size: 16px; font-weight: 800; color: var(--ink); }
 .si-earn img { width: 22px; height: 22px; object-fit: contain; }
-/* how */
-.si-how, .si-name, .si-done { justify-content: flex-start; padding-top: 8px; }
-.si-art { position: relative; width: 220px; height: 150px; display: grid; place-items: center; margin-bottom: 6px; }
-.si-art-av {
-  display: grid; place-items: center; width: 92px; height: 92px; border-radius: 50%;
-  background: var(--blue); box-shadow: 0 5px 0 var(--blue-dk); color: var(--snow);
-  animation: siAvIn .55s .1s cubic-bezier(.3, 1.6, .5, 1) backwards;
-}
-.si-art-av svg { width: 50px; height: 50px; }
-@keyframes siAvIn { 0% { opacity: 0; transform: scale(.3); } 60% { opacity: 1; transform: scale(1.1, .92); } 100% { transform: none; } }
+/* how: Airbnb's «Log in or sign up» in our paint — فهيم where its logo stands,
+   the email field, «متابعة», «أو», Google and Apple as square 3D buttons, the terms */
+.si-how, .si-name, .si-pass, .si-done { justify-content: flex-start; padding-top: 8px; }
+.si-fh { display: flex; justify-content: center; align-items: flex-end; height: 132px; }
+.si-fh-img { height: 132px; transform-origin: 50% 100%; animation: obDuoIn .5s .1s cubic-bezier(.3, 1.5, .5, 1) backwards; }
 .si-title { margin: 0; font-size: 28px; font-weight: 800; color: var(--ink); line-height: 1.3; animation: fadeUp .4s .2s ease backwards; }
+.si-how .si-title { margin-top: 10px; font-size: 24px; }
 .si-sub { margin: 6px 8px 0; font-size: 16px; font-weight: 600; line-height: 1.5; color: var(--gray); text-wrap: balance; animation: fadeUp .4s .28s ease backwards; }
-.si-ways { display: flex; flex-direction: column; gap: 12px; width: 100%; margin-top: 26px; }
-.si-way {
-  position: relative; display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; min-height: 56px; padding: 0 18px;
-  font: inherit; font-size: 17px; font-weight: 800; color: var(--ink); background: var(--snow);
+.si-field { position: relative; display: block; width: 100%; margin-top: 22px; animation: fadeUp .4s .28s ease backwards; }
+.si-email {
+  display: block; width: 100%; height: 56px; padding: 0 16px; box-sizing: border-box;
+  font-family: var(--font); font-size: 17px; font-weight: 600; color: var(--ink); text-align: left;
+  background: #F7F7F7; border: 2px solid var(--line); border-radius: 14px; outline: none;
+  transition: border-color .15s, background .15s;
+}
+.si-email:placeholder-shown { direction: rtl; text-align: right; }
+.si-email::placeholder { color: var(--gray-icon); font-weight: 600; }
+.si-email:focus { border-color: var(--blue-border); background: #fff; }
+.si-email:focus-visible { outline: none; }
+.si-field.err .si-email { border-color: var(--red); background: var(--red-bg); padding-right: 46px; }
+.si-err-ic { position: absolute; right: 14px; top: 50%; translate: 0 -50%; width: 22px; height: 22px; color: var(--red); }
+.si-err-ic svg { display: block; width: 100%; height: 100%; }
+.si-msg { width: 100%; text-align: start; }
+.si-bad { margin: 8px 4px 0; font-size: 14px; font-weight: 700; color: var(--red); }
+.si-sug-h { margin: 6px 4px 0; font-size: 14px; font-weight: 800; color: var(--ink); }
+.si-sug { display: block; margin: 4px auto 0; padding: 6px 10px; border: 0; background: none; font: inherit; font-size: 15px; font-weight: 800; color: var(--blue); cursor: pointer; }
+.si-go { width: 100%; margin-top: 14px; animation: fadeUp .4s .34s ease backwards; }
+.si-or { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 20px; font-size: 14px; font-weight: 700; color: var(--gray); animation: fadeUp .4s .4s ease backwards; }
+.si-or::before, .si-or::after { content: ""; flex: 1; height: 2px; background: var(--line); }
+.si-squares { display: flex; justify-content: center; gap: 14px; margin-top: 16px; }
+.si-sq {
+  display: grid; place-items: center; width: 68px; height: 62px; padding: 0; color: var(--ink); background: var(--snow);
   border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 16px; cursor: pointer;
-  animation: fadeUp .4s calc(.36s + var(--k, 0) * .08s) cubic-bezier(.3, 1.4, .5, 1) backwards;
+  animation: fadeUp .4s .46s cubic-bezier(.3, 1.4, .5, 1) backwards;
 }
-.si-way + .si-way { --k: 1; }
-.si-way svg { width: 24px; height: 24px; flex: none; }
-.si-named svg { color: var(--blue); }
-.si-way:active { transform: translateY(3px); border-bottom-width: 2px; margin-bottom: 3px; }
-.si-way.soon { color: var(--gray-icon); cursor: default; }
-.si-way.soon svg { opacity: .45; }
-.si-way.soon:active { transform: none; border-bottom-width: 5px; margin-bottom: 0; }
-.si-soon { position: absolute; inset-inline-end: 12px; font-style: normal; font-size: 12px; font-weight: 800; color: var(--blue-dk); background: var(--blue-light); border-radius: 8px; padding: 2px 8px; }
-.si-note { display: flex; align-items: flex-start; gap: 8px; margin: 20px 6px 0; font-size: 13.5px; font-weight: 600; line-height: 1.55; color: var(--gray); text-align: start; animation: fadeUp .4s .55s ease backwards; }
-.si-note svg { width: 18px; height: 18px; flex: none; margin-top: 2px; color: var(--gray-icon); }
-/* name */
-.si-name .si-title { margin-top: 18px; }
-.si-input { width: 100%; margin-top: 26px; font-size: 22px; height: 62px; text-align: center; animation: fadeUp .4s .3s ease backwards; }
-/* done */
-.si-done { justify-content: center; padding-bottom: 40px; }
-.si-art-done { width: 260px; height: 200px; }
-.si-av-wrap { position: relative; width: 120px; height: 120px; animation: siAvIn .6s .15s cubic-bezier(.3, 1.6, .5, 1) backwards; }
-.si-av {
-  display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%;
-  background: var(--pv); border: 5px solid var(--snow); box-shadow: 0 0 0 2px var(--line), 0 6px 0 var(--pv-dk);
+.si-sq + .si-sq { animation-delay: .52s; }
+.si-sq svg { width: 26px; height: 26px; }
+.si-sq:active { transform: translateY(3px); border-bottom-width: 2px; margin-top: 3px; }
+.si-terms { margin: 18px 8px 0; font-size: 13px; font-weight: 600; line-height: 1.6; color: var(--gray); text-align: center; text-wrap: balance; animation: fadeUp .4s .58s ease backwards; }
+.si-terms a { color: var(--ink); font-weight: 800; text-decoration: none; }
+.ob-cta .si-terms { margin-top: 12px; animation: none; }
+/* name and password: Duolingo's steps — the question on the start side, the fields under it */
+.si-name, .si-pass { align-items: stretch; text-align: start; }
+.si-q { margin: 6px 0 0; font-size: 24px; font-weight: 800; line-height: 1.35; color: var(--ink); animation: fadeUp .4s .1s ease backwards; }
+.si-pair { margin-top: 18px; border: 2px solid var(--line); border-radius: 14px; overflow: hidden; background: #F7F7F7; animation: fadeUp .4s .18s ease backwards; }
+.si-in { display: block; width: 100%; height: 54px; padding: 0 16px; box-sizing: border-box; border: 0; background: transparent; font-family: var(--font); font-size: 17px; font-weight: 600; color: var(--ink); outline: none; }
+.si-in + .si-in { border-top: 2px solid var(--line); }
+.si-in::placeholder { color: var(--gray-icon); font-weight: 600; }
+.si-in:focus { background: #fff; }
+.si-in.err { background: var(--red-bg); animation: shake .4s ease; }
+.si-hint { margin: 8px 4px 0; font-size: 14px; font-weight: 600; color: var(--gray); }
+.si-name .si-go { margin-top: 18px; }
+.si-pass .si-field { margin-top: 18px; animation-delay: .18s; }
+.si-pw .si-email { padding-right: 54px; }
+.si-eye { position: absolute; right: 6px; top: 50%; translate: 0 -50%; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; background: none; color: var(--blue); cursor: pointer; }
+.si-eye svg { width: 24px; height: 24px; }
+.si-rule { display: flex; align-items: center; gap: 7px; margin: 10px 4px 0; font-size: 14px; font-weight: 700; color: var(--gray); transition: color .2s; }
+.si-rule svg { width: 18px; height: 18px; padding: 2px; box-sizing: border-box; border-radius: 50%; background: var(--line); transition: background .2s; }
+.si-rule.ok { color: var(--green-dk); }
+.si-rule.ok svg { background: var(--green); }
+/* done: فهيم leaps in under his bubble, then what was saved is stamped green */
+.si-done { justify-content: center; gap: 4px; }
+.si-hero-done { height: 214px; }
+.si-joy { display: block; transform-origin: 50% 100%; }
+.si-duo.si-leap { animation: siLeap .9s .12s cubic-bezier(.3, 1.2, .5, 1) backwards; }
+@keyframes siLeap {
+  0% { opacity: 0; translate: 0 70px; scale: .7 .7; }
+  30% { opacity: 1; translate: 0 -34px; scale: .94 1.08; }
+  55% { translate: 0 6px; scale: 1.1 .9; }
+  75% { translate: 0 -8px; scale: .98 1.03; }
+  100% { translate: 0 0; scale: 1 1; }
 }
-.si-av span { font-size: 54px; font-weight: 800; line-height: 1; color: var(--snow); padding-top: 8px; }
-.si-ring { position: absolute; inset: -10px; width: calc(100% + 20px); height: calc(100% + 20px); transform: rotate(-90deg); pointer-events: none; }
-.si-ring circle { fill: none; stroke: var(--gold); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; }
-.sealed .si-ring circle { stroke-dashoffset: 0; transition: stroke-dashoffset .6s cubic-bezier(.6, 0, .2, 1); }
-.si-tick {
-  position: absolute; bottom: 2px; inset-inline-start: 0; display: grid; place-items: center; width: 36px; height: 36px;
-  border-radius: 50%; background: var(--blue); border: 3px solid var(--snow); transform: scale(0);
-}
-.si-tick svg { width: 20px; height: 20px; }
-.sealed .si-tick { animation: siTick .45s .45s cubic-bezier(.3, 1.8, .5, 1) forwards; }
-@keyframes siTick { from { transform: scale(0) rotate(-40deg); } to { transform: none; } }
-.si-hi { margin-top: 18px; animation-delay: .45s; }
-.si-done .si-sub { animation-delay: .55s; }
+.si-done-go { animation: fadeUp .4s 2.6s ease backwards; }
+/* the done screen: «هدفك ٩٩٪» */
+.sd .si-hero-done { height: 196px; }
+.sd .si-duo { height: 186px; }
+.sd-cap { margin: 16px 8px 0; font-size: 15px; font-weight: 700; color: var(--gray); line-height: 1.6; text-wrap: balance; animation: fadeUp .4s calc(var(--se, .9s) + .3s) ease backwards; }
+.sd-cap b { color: var(--ink); font-weight: 800; }
+/* 2 ٩٩ */
+.sd-goal { display: flex; flex-direction: column; align-items: center; margin-top: 4px; animation: fadeUp .4s var(--se, .9s) ease backwards; }
+.sd-lab { font-size: 15px; font-weight: 800; color: var(--gray); }
+.sd-goal b { font-size: 76px; font-weight: 800; line-height: 1.05; color: var(--ink); }
+.sd-ish { font-size: 18px; font-weight: 800; color: var(--green-dk); opacity: 0; translate: 0 6px; }
+.sd-goal.hit b { color: var(--green); animation: sdHit .5s cubic-bezier(.3, 1.6, .5, 1); }
+.sd-goal.hit .sd-ish { opacity: 1; translate: 0 0; transition: opacity .3s .1s, translate .3s .1s; }
+@keyframes sdHit { 0% { scale: 1; } 35% { scale: 1.25 .85; } 65% { scale: .94 1.06; } 100% { scale: 1; } }
+:root[data-motion="reduced"] .sd-cap, :root[data-motion="reduced"] .sd-goal { animation: none; }
 :root[data-motion="reduced"] .si-sh, :root[data-motion="reduced"] .si-sh svg, :root[data-motion="reduced"] .si-duo, :root[data-motion="reduced"] .si-earn span,
-:root[data-motion="reduced"] .si-art-av, :root[data-motion="reduced"] .si-title, :root[data-motion="reduced"] .si-sub, :root[data-motion="reduced"] .si-way,
-:root[data-motion="reduced"] .si-note, :root[data-motion="reduced"] .si-input, :root[data-motion="reduced"] .si-av-wrap { animation: none; }
-:root[data-motion="reduced"] .sealed .si-tick { animation: none; transform: none; }
+:root[data-motion="reduced"] .si-fh-img, :root[data-motion="reduced"] .si-title, :root[data-motion="reduced"] .si-sub, :root[data-motion="reduced"] .si-field,
+:root[data-motion="reduced"] .si-go, :root[data-motion="reduced"] .si-or, :root[data-motion="reduced"] .si-sq, :root[data-motion="reduced"] .si-terms,
+:root[data-motion="reduced"] .si-q, :root[data-motion="reduced"] .si-pair, :root[data-motion="reduced"] .si-leap,
+:root[data-motion="reduced"] .si-done-go { animation: none; }
 .ob-say .w { opacity: 0; transition: opacity .18s ease; }
 .ob-say .w.on { opacity: 1; }
 .ob-say .hl { color: var(--blue-dk); }
@@ -5659,3 +5702,33 @@ html:has(.fail-scene), body:has(.fail-scene) { overflow-x: clip; }
 /* on a 320 × 568 phone a solved four-line chain needs the room «القانون» stands in, or its example goes under the top bar (QA, 2026-11-08) */
 @media (max-height: 600px) { .screen-session:has(.rf-chk):has(.feedback.good.show) .lw-peek { display: none; } }
 @media (max-height: 700px) { .screen-session:has(.rf-chk):has(.feedback.good.show) .q-area > .rf-q { visibility: hidden; } }
+
+/* the sign-in steps on a short phone: فهيم and the gaps give way first, so the fields read at full size */
+@media (max-height: 700px) {
+  .si-fh, .si-fh-img { height: 104px; }
+  .si-field { margin-top: 16px; }
+  .si-or { margin-top: 14px; }
+  .si-squares { margin-top: 12px; }
+  .si-terms { margin-top: 12px; }
+}
+@media (max-height: 600px) {
+  .si-fh, .si-fh-img { height: 72px; }
+  .si-how .si-title { margin-top: 4px; font-size: 21px; }
+  .si-field { margin-top: 12px; }
+  .si-email { height: 50px; }
+  .si-bad, .si-sug-h { margin-top: 4px; }
+  .si-sug { padding: 2px 10px; }
+  .si-go { margin-top: 10px; }
+  .si-or { margin-top: 10px; }
+  .si-squares { margin-top: 10px; }
+  .si-sq { width: 62px; height: 54px; }
+  .si-terms { margin-top: 10px; font-size: 12.5px; }
+}
+/* the chest's gems flying home to the stat bar (gemFly) */
+.gem-fly { position: fixed; inset: 0; z-index: 10001; pointer-events: none; }
+.gf { position: absolute; display: block; filter: drop-shadow(0 3px 0 rgba(0, 0, 0, .14)); will-change: translate, scale; }
+.gf svg { display: block; width: 100%; height: 100%; }
+.stat-xp.gf-bump { animation: gfBump .28s cubic-bezier(.3, 1.6, .5, 1); }
+.stat-xp.gf-done { animation: gfDone .55s cubic-bezier(.3, 1.6, .5, 1); }
+@keyframes gfBump { 0% { scale: 1; } 40% { scale: 1.22; } 100% { scale: 1; } }
+@keyframes gfDone { 0% { scale: 1; } 35% { scale: 1.35; } 70% { scale: .94; } 100% { scale: 1; } }

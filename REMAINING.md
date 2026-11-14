@@ -4,6 +4,8 @@ Decisions that wait on you, and work put off until later. Newest first.
 
 ## Waiting on you
 
+- **Real accounts (2026-11-14).** The new sign-in (email, name, password, Google, Apple; `tools/signin.html`) has no server behind it: the name and email stay on the phone and the password is never kept. Before it is published: pick an auth service (Firebase Auth or Supabase Auth), set `GOOGLE_CLIENT_ID` (Google Cloud, origin https://qudrati.xyz) and `APPLE_CLIENT_ID` (Apple Developer account), rewrite privacy.html («لا نطلب بريداً إلكترونياً»), and have a lawyer read terms.html.
+
 - **From the rules QA pass (2026-11-08), three calls that are yours.**
   - **Questions with a figure or a long stem on 375 × 667 and 320 × 568 sit at about .62–.72 zoom** (parallel-04, angles-05, keylaws-07 in lessons and the mock). The stem, the figure and four stacked choices are taller than the screen even without the figure (.88), so it needs a layout change, for example short numeric choices in a 2 × 2 grid as on «جرّب».
   - **The mock's result says «تقديرك التقريبي ~٧٢»** while qudrat-score.html says no formula turns right answers into a score. Keep, reword (a range, «تقريباً بين …»), or drop.

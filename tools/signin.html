@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>شاشة التسجيل الجديدة</title>
+<style>
+  @font-face { font-family: "Baloo Bhaijaan 2"; src: url("../qudrat/assets/baloo-bhaijaan-2.woff2") format("woff2"); font-weight: 400 800; }
+  :root { --ink: #4B4B4B; --gray: #777; --line: #E5E5E5; --green: #58CC02; --green-dk: #58A700; --green-bg: #D7FFB8; --red: #FF4B4B; --red-bg: #FFDFE0; --blue: #1CB0F6; --blue-dk: #1899D6; --blue-bg: #DDF4FF; --gold: #FFC800; --gold-bg: #FFF5D3; --snow: #F7F7F7; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--snow); color: var(--ink); font-family: "Baloo Bhaijaan 2", system-ui, sans-serif; line-height: 1.6; }
+  header { background: #fff; border-bottom: 2px solid var(--line); padding: 26px 16px 20px; text-align: center; }
+  h1 { margin: 0 0 6px; font-size: 28px; font-weight: 800; }
+  header p { margin: 0 auto; max-width: 720px; color: var(--gray); font-weight: 600; }
+  .try { display: inline-block; margin-top: 12px; padding: 8px 22px; border-radius: 14px; background: var(--green); box-shadow: 0 4px 0 var(--green-dk); color: #fff; font-weight: 800; text-decoration: none; }
+  main { max-width: 1180px; margin: 0 auto; padding: 18px 16px 60px; }
+  section { background: #fff; border: 2px solid var(--line); border-bottom-width: 5px; border-radius: 22px; padding: 18px; margin: 0 0 22px; }
+  h2 { margin: 0 0 6px; font-size: 22px; font-weight: 800; }
+  .lead { margin: 0 0 12px; font-weight: 600; }
+  .row { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; align-items: flex-start; }
+  figure { margin: 0; width: 230px; }
+  figcaption { display: inline-block; margin-bottom: 6px; padding: 0 12px; border-radius: 10px; font-weight: 800; font-size: 14px; background: var(--green-bg); color: var(--green-dk); }
+  figure.old figcaption { background: var(--red-bg); color: #EA2B2B; }
+  figure img { display: block; width: 100%; border-radius: 18px; border: 2px solid #A5ED6E; cursor: zoom-in; }
+  figure.old img { border-color: #FFB2B2; }
+  small { display: block; text-align: center; color: var(--gray); font-weight: 700; margin-top: 4px; line-height: 1.45; }
+  .arrow { align-self: center; font-size: 34px; color: var(--gray); font-weight: 800; }
+  ul { margin: 0; padding-inline-start: 22px; font-weight: 600; }
+  li { margin: 4px 0; }
+  .warn { background: var(--gold-bg); border-color: var(--gold); }
+  .warn h2 { color: #CD7900; }
+  a { color: var(--blue-dk); }
+  .lb { position: fixed; inset: 0; background: rgba(0,0,0,.82); display: none; place-items: center; z-index: 9; cursor: zoom-out; padding: 16px; }
+  .lb.on { display: grid; }
+  .lb img { max-width: 100%; max-height: 94vh; border-radius: 16px; }
+  @media (max-width: 560px) { figure { width: calc(50% - 8px); } .arrow { display: none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>شاشة التسجيل الجديدة</h1>
+  <p>شاشة «سجّل دخولك» مثل Airbnb بألوان قدراتي وأزرارها، وفهيم مكان الشعار. ولو ما اختار Google ولا Apple، يكمل خطوات Duolingo: الاسم، ثم كلمة المرور، ثم «سوّ حسابي» وتحته الشروط. كل الصور من التطبيق على جوال ٣٩٠.</p>
+  <a class="try" href="../preview.html#signin-how" target="_blank">جرّبها بنفسك</a>
+</header>
+<main>
+
+<section>
+  <h2>١. الشاشة الأولى</h2>
+  <p class="lead">فهيم يلوّح مكان شعار Airbnb، خانة الإيميل، «متابعة»، «أو»، وزرين مربعين لـ Google وApple بأزرار قدراتي الثلاثية الأبعاد، وتحتها الشروط وسياسة الخصوصية. «لاحقاً» باقي تحت، عشان يقدر يكمل ضيف.</p>
+  <div class="row">
+    <figure class="old"><figcaption>قبل</figcaption><img src="signin/old-how.jpg" alt=""><small>«سوّ ملفك»</small></figure>
+    <span class="arrow">←</span>
+    <figure><figcaption>بعد</figcaption><img src="signin/how.jpg" alt=""><small>«سجّل دخولك أو سوّ حسابك»</small></figure>
+  </div>
+</section>
+
+<section>
+  <h2>٢. لو كتب الإيميل غلط</h2>
+  <p class="lead">مثل Duolingo: لو الإيميل ناقص، الخانة تصير حمراء وتهتز ويطلع «الإيميل مو صحيح». ولو فيه حرف غلط في gmail أو hotmail وغيرها، يقترح عليه الإيميل الصح، وضغطة عليه تصلّحه. لو الإيميل سليم بس شكله غلط (gmial.com)، يسأله مرة وحدة، ولو ضغط «متابعة» ثاني مرة يكمل بإيميله زي ما كتبه. إيميلات الجامعات مثل ksu.edu.sa ما يقترح عليها شي.</p>
+  <div class="row">
+    <figure><figcaption>إيميل ناقص</figcaption><img src="signin/bad.jpg" alt=""><small>sara@gmail.c</small></figure>
+    <figure><figcaption>إيميل فيه حرف غلط</figcaption><img src="signin/typo.jpg" alt=""><small>sara@gmial.com</small></figure>
+  </div>
+</section>
+
+<section>
+  <h2>٣. لو ما اختار Google ولا Apple: خطوات Duolingo</h2>
+  <p class="lead">شريط تقدّم فوق، وسؤال واحد في كل شاشة. الاسم الأول واسم العائلة في خانة وحدة مثل Duolingo، واسم العائلة اختياري. كلمة المرور فيها عين تعرضها وتخفيها، وتحتها «٨ أحرف أو أكثر» تصير خضراء أول ما يوصلها، و«سوّ حسابي» ما يشتغل قبلها. وتحت الزر سطر الشروط.</p>
+  <div class="row">
+    <figure><figcaption>الاسم</figcaption><img src="signin/name.jpg" alt=""></figure>
+    <figure><figcaption>كلمة المرور</figcaption><img src="signin/pass.jpg" alt=""><small>الزر رمادي قبل ٨ أحرف</small></figure>
+    <figure><figcaption>كلمة المرور جاهزة</figcaption><img src="signin/pass-ok.jpg" alt=""></figure>
+    <figure><figcaption>الحساب جاهز</figcaption><img src="signin/done.jpg" alt=""><small>الشاشة الجديدة، تحت</small></figure>
+  </div>
+</section>
+
+<section>
+  <h2>جديد: شاشة «ملفك جاهز»</h2>
+  <p class="lead">راح الحرف على الدائرة البرتقالية. شاشة التسجيل الأولى وعدته «لا تضيّع تقدّمك!»، فهذي الشاشة توريه إنه انحفظ: فهيم ينط من الفرح تحت فقاعته، وهي تكتب «أهلاً يا سارة! ملفك جاهز.» كلمة كلمة. بعدها تطلع ثلاث بطاقات لاللي كسبه (السلسلة، XP، الدوري)، وكل وحدة تنختم بالأخضر بموجة Duolingo حق الجواب الصح، مع علامة صح وصوت يعلى درجة كل مرة. بعد الثالثة فهيم ينط مرة ثانية، ويطلع زر «يلا نكمل».</p>
+  <div class="row">
+    <figure class="old"><figcaption>قبل</figcaption><img src="signin/old-done.jpg" alt=""></figure>
+    <span class="arrow">←</span>
+    <figure><figcaption>أول بطاقة تنختم</figcaption><img src="signin/done-mid.jpg" alt=""></figure>
+    <figure><figcaption>بعد</figcaption><img src="signin/done.jpg" alt=""></figure>
+  </div>
+  <p class="lead" style="margin-top:12px">جرّب الحركة: <a href="../preview.html#signin-done" target="_blank">preview.html#signin-done</a></p>
+</section>
+
+<section>
+  <h2>٤. شروط الاستخدام</h2>
+  <p class="lead">صفحة جديدة <a href="../terms.html" target="_blank">terms.html</a> بنفس شكل صفحة الخصوصية، والروابط في شاشات التسجيل تفتحها. فيها: من نحن (مستقلين ومو تابعين لقياس)، العمر (أقل من ١٨ بعلم ولي الأمر)، الخدمة مجانية والجواهر ما لها قيمة مالية، حسابك وكلمة المرور، الاستخدام المقبول، المحتوى ورخصة MIT، ما نضمن الدرجة، حدود المسؤولية، تغيير الخدمة، تعديل الشروط، أنظمة السعودية، والتواصل. وأضفت رابطها في أسفل صفحتي «عن قدراتي» والخصوصية، وصارت في خريطة الموقع.</p>
+  <div class="row"><figure><figcaption>الصفحة</figcaption><img src="signin/terms.jpg" alt=""></figure></div>
+</section>
+
+<section>
+  <h2>٥. أول سؤال «خمّن بسرعة»: الغلط صار أزرق</h2>
+  <p class="lead">لما يغلط في التخمين المجاني، الشريط تحت والجواب اللي اختاره صاروا أزرق بدل الأحمر، وزر «فهمت» أزرق. باقي الأسئلة يبقى غلطها أحمر.</p>
+  <div class="row">
+    <figure class="old"><figcaption>قبل</figcaption><img src="signin/old-free.jpg" alt=""></figure>
+    <span class="arrow">←</span>
+    <figure><figcaption>بعد</figcaption><img src="signin/free.jpg" alt=""></figure>
+  </div>
+</section>
+
+<section class="warn">
+  <h2>قبل ما ننشرها: لازم تعرف هذا</h2>
+  <ul>
+    <li><b>قدراتي ما عنده سيرفر.</b> عشان يصير الحساب حقيقي (يسجّل دخول من جوال ثاني ويرجع تقدّمه)، نحتاج خدمة حسابات مثل Firebase أو Supabase. الحين الشاشات تحفظ الاسم والإيميل في الجوال بس، وكلمة المرور ما تنحفظ في أي مكان.</li>
+    <li><b>Google وApple</b> يطلعون «الدخول بحساب … قريباً» لما ينضغطون. Google يشتغل أول ما نحط رقم العميل (Client ID) من Google Cloud، وApple يحتاج حساب مطوّر Apple.</li>
+    <li><b>صفحة الخصوصية</b> تقول الحين «لا نطلب بريداً إلكترونياً». لازم نعدّلها لما نربط الحسابات، وأكتبها لك أول ما نختار الخدمة.</li>
+    <li>شروط الاستخدام مكتوبة على اللي يسويه التطبيق فعلاً. بس لأن المشروع بينشر، الأفضل يراجعها شخص قانوني.</li>
+    <li>ما رفعت شي للموقع.</li>
+  </ul>
+</section>
+
+</main>
+<div class="lb" id="lb"><img alt=""></div>
+<script>
+  const lb = document.getElementById('lb'), im = lb.querySelector('img');
+  document.querySelectorAll('figure img').forEach(i => i.onclick = () => { im.src = i.src; lb.classList.add('on'); });
+  lb.onclick = () => lb.classList.remove('on');
+  addEventListener('keydown', e => { if (e.key === 'Escape') lb.classList.remove('on'); });
+</script>
+</body>
+</html>

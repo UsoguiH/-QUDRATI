@@ -289,119 +289,6 @@
     c.DIA[R.key].run(g, ctl).then(() => { if (alive()) then(); });
   }
 
-
-  /* ───── «الحيلة»: what a rule screen teaches after the rule (the user, 2026-11-08, on the proofs: «الشروحات ذي ما تفيد طالب
-     قدرات … يبي يعرف الخدعة السريعة بدون سبب», «يبي شي سريع ولا ينساه ويتنفس لغته ولهجته»): the quick way in one line of
-     his own dialect, then one example at the exam's own size in two lines, its numbers popping in, the answer in green.
-     The tricks and their numbers come from what Saudi teachers teach and the exam's own sizes (research of 2026-11-08) ───── */
-  const TRICK = {
-    tens: ['دوّر اللي *يكمّلون* ١٠٠ أو ١٠٠٠، واجمعهم أول', '٩٨٠ + ٤٥ + ٢٠ + ٥٥', '١٠٠٠ + ١٠٠ = ١١٠٠'],
-    ops: ['*قوس*، *أس*، ضرب وقسمة من اليمين، وآخر شي جمع وطرح', '١٠ − ٣ × (٥ − ٣)² ÷ ٦', '١٠ − ٣ × ٤ ÷ ٦ = ١٠ − ٢ = ٨'],
-    tri: ['*نص* آخر عدد × (آخر عدد *+ ١*)', '١ + ٢ + … + ٥٠ ← ٢٥ × ٥١', '١٢٥٠ + ٢٥ = ١٢٧٥'],
-    common: ['طلّع *المشترك* برّا، والباقي من ١ بقانون المجموع', '١٢ + ٢٤ + … + ١٢٠ = ١٢ × (١ + … + ١٠)', '١٢ × ٥٥ = ٦٦٠'],
-    oddsum: ['*عددها* في *نفسه*', '١ + ٣ + ٥ + ٧ + ٩ + ١١ ← ٦ أعداد', '٦ × ٦ = ٣٦'],
-    oddcnt: ['زد *واحد* على آخر فردي، وخذ *النص*', '١ ، ٣ ، ٥ ، … ، ٤٩', '(٤٩ + ١) ÷ ٢ = ٢٥'],
-    evensum: ['*نص* آخر عدد × (*نصه* + ١)', '٢ + ٤ + … + ٦٠ ← نص ٦٠ = ٣٠', '٣٠ × ٣١ = ٩٣٠'],
-    oddeven: ['فردي ناقص زوجي؟ الجواب *سالب* عدد الأزواج', '(١ + … + ٤٩) − (٢ + … + ٥٠) ← ٢٥ زوج', 'الجواب = −٢٥'],
-    last: ['اضرب *الآحاد* بس، وخذ آخر رقم', '٤٢٧ × ٣٥٨ ← ٧ × ٨ = ٥٦', 'الآحاد = ٦'],
-    bigger: ['نفس المجموع؟ *الأقرب لبعض* ضربهم أكبر', '٤٠ + ٥١ = ٤١ + ٥٠ = ٩١', '٤١ و ٥٠ أقرب لبعض ← ٤١ × ٥٠'],
-    fromto: ['من… إلى: الفرق *+ ١* ، بين: الفرق *− ١*', 'بين ٧ و ٥٩ ← ٥٩ − ٧ = ٥٢', '٥٢ − ١ = ٥١'],
-    evcount: ['نص (آخر − أول)، وزد *واحد*', '١٠ ، ١٢ ، … ، ١٠٠ ← ٩٠ ÷ ٢ = ٤٥', '٤٥ + ١ = ٤٦'],
-    evedge: ['زوجية بين فرديين؟ *نص الفرق* بس', 'بين ٩ و ٦٣ ← ٦٣ − ٩ = ٥٤', '٥٤ ÷ ٢ = ٢٧'],
-    hand: ['العدد × *اللي قبله*، وخذ *النص*', '١٢ شخص ← نص ١٢ = ٦', '٦ × ١١ = ٦٦'],
-    gifts: ['العدد × *اللي قبله*، *بدون* ما تقسم', '١٥ طالب، كل واحد يهدي الباقين', '١٥ × ١٤ = ٢١٠'],
-    league: ['مرة وحدة؟ مصافحات. *ذهاب وإياب*؟ شيل القسمة', '٩ فرق ذهاب وإياب', '٩ × ٨ = ٧٢'],
-    tris: ['عدّ الخطوط من الرأس *مع الضلعين*، وطبّق المصافحات', '٤ خطوط داخل + ٢ ضلع = ٦', '٦ × ٥ ÷ ٢ = ١٥'],
-    marks: ['قسّم الطول على المسافة، وزد *واحد* للبداية', '٨٠٠ ÷ ٥٠ = ١٦', '١٦ + ١ = ١٧ علامة'],
-    cuts: ['القصّات = القطع *− ١*', 'حبل لـ١٠ قطع ← ٩ قصّات', 'كل قصّة ٣ دقائق ← ٢٧ دقيقة'],
-    clock: ['الساعة *× ٣٠*، وفوق ١٨٠ اطرحها من ٣٦٠', 'الساعة ٨ ← ٨ × ٣٠ = ٢٤٠', '٣٦٠ − ٢٤٠ = ١٢٠°'],
-    clockm: ['الساعة *× ٣٠*، الدقائق *× ٥٫٥*، والفرق هو الزاوية', 'الساعة ٤:٤٠ ← ١٢٠ و ٢٢٠', 'الفرق = ١٠٠°'],
-    equal: ['اقسم فرق الفلوس على *فرق التوفير*', '٤٤٠ − ٣٠٠ = ١٤٠ ، ٨ − ٤ = ٤', '١٤٠ ÷ ٤ = ٣٥ يوم'],
-    work: ['*ضرب* الزمنين على *جمعهم*', 'حنفية ٤ ساعات وحنفية ٦', '٢٤ ÷ ١٠ = ٢٫٤ ساعة'],
-    prob: ['*المطلوب* فوق، و*الكل* تحت، وبسّط', 'بطاقات ١ إلى ١٢، مضاعفات ٤: ٤ ، ٨ ، ١٢', '٣ ÷ ١٢ = ١/٤'],
-    outcomes: ['عملة *٢*، نرد *٦*، واضربهم', 'عملتين ونرد', '٢ × ٢ × ٦ = ٢٤'],
-    order: ['نردين؟ الكل *٣٦*. مجموع ٧ أو أقل؟ الأزواج = المجموع *− ١*', 'مجموع ٥ ← ٥ − ١ = ٤ أزواج', '٤ ÷ ٣٦ = ١/٩'],
-    ways: ['من كل مجموعة واحد؟ *اضرب*، لا تجمع', '٥ شوربة، ٤ سلطة، ٣ عصير', '٥ × ٤ × ٣ = ٦٠'],
-    norep: ['كل خانة *تنقص واحد* عن اللي قبلها', '٣ خانات من ١ ، ٣ ، ٥ ، ٧ ، ٩', '٥ × ٤ × ٣ = ٦٠'],
-    median: ['*رتّب* أول، وخذ اللي في *النص*', '٧ ، ٣ ، ٩ ، ١٢ ، ٥ ، ٨ ، ١٥', '٣ ، ٥ ، ٧ ، ٨ ، ٩ ، ١٢ ، ١٥ ← ٨'],
-    mean: ['اجمع واقسم على عددها. الفرق ثابت؟ الوسط *اللي في النص*', '١٢ ، ١٥ ، ١٨ ، ٢١ ، ٢٤ ← الفرق ثابت', 'الوسط = ١٨ بدون جمع'],
-    total: ['الوسط × العدد = *المجموع*، واطرح اللي تعرفه', 'وسط ٥ أعداد ١٤ ← المجموع ٧٠', 'مجموع ٤ منها ٥٨ ← الخامس ١٢'],
-    permcomb: ['الترتيب يفرق؟ *تباديل*. ما يفرق؟ *توافيق*', 'رئيس ونائب من ٦ ← ٦ × ٥ = ٣٠', 'لجنة من ٢ من ٦ ← ١٥'],
-    places: ['ابدأ من الكل ونزّل، *بعدد الأماكن*', '٨ متسابقين، ٣ ميداليات', '٨ × ٧ × ٦ = ٣٣٦'],
-    choose: ['نازلة *فوق*، وصاعدة من ١ *تحت*، بعدد اللي تختاره', '٣ من ٧ ← (٧ × ٦ × ٥) ÷ (١ × ٢ × ٣)', '٢١٠ ÷ ٦ = ٣٥'],
-  };
-  const BOLT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.6 2.5 5 13.4h6.2l-1.1 8.1 8.9-11.2h-6.4z" fill="currentColor" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>';
-  /* a line of the example as the exam prints it: each «÷» stacks what it divides over what divides it, brackets round a whole top
-     dropped (the user, 2026-11-08: «لازم كل شي فيه كسر يصير كسر موب قسمه»), and the number after the last «=» or «←» is the answer */
-  function tkLine(line, last) {
-    const c = C(), fx = t => c.fx(t);
-    const T = line.split(' ');
-    const depth = t => (t.match(/\(/g) || []).length - (t.match(/\)/g) || []).length;
-    let out = [], i = 0;
-    while (i < T.length) {
-      const d = T.indexOf('÷', i);
-      if (d < 0) { out.push(T.slice(i).join(' ')); break; }
-      let s = d - 1, dp = 0;
-      for (; s >= i; s--) { dp += depth(T[s]); if (dp >= 0 && /^[+−=←،]$/.test(T[s])) { s++; break; } }
-      if (s < i) s = i;
-      let e = d + 1, de = depth(T[e] || '');
-      while (de > 0 && e + 1 < T.length) { e++; de += depth(T[e]); }
-      if (s > i) out.push(T.slice(i, s).join(' '));
-      let top = T.slice(s, d).join(' '), bot = T.slice(d + 1, e + 1).join(' ');
-      const bare = x => /^\([^()]*\)$/.test(x) ? x.slice(1, -1) : x;
-      out.push('\u0001' + bare(top) + '\u0002' + bare(bot) + '\u0003');
-      i = e + 1;
-    }
-    let h = out.join(' ');
-    if (last) { const m = /^(.*(?:=|←) )(\S+(?: [^\s=←]+){0,3})$/.exec(h); if (m && !/\u0003/.test(m[2])) h = m[1] + '\u0004' + m[2] + '\u0005'; }
-    return h.split(/(\u0001[^\u0002]*\u0002[^\u0003]*\u0003|\u0004[^\u0005]*\u0005)/).map(p => {
-      if (p[0] === '\u0001') { const [t, b] = p.slice(1, -1).split('\u0002'); return `<span class="tk-fr"><span>${fx(t)}</span><i></i><span>${fx(b)}</span></span>`; }
-      if (p[0] === '\u0004') return `<em class="tk-ans">${fx(p.slice(1, -1))}</em>`;
-      return p.split(/([٠-٩]+(?:[٫:][٠-٩]+)?°?)/).map((x, k) => k % 2 ? `<span class="tk-n">${x}</span>` : fx(x)).join('');
-    }).join('');
-  }
-  const tkSay = t => t.split('*').map((p, k) => k % 2 ? `<b class="tk-k">${C().fx(p)}</b>` : C().fx(p)).join('');
-  function trick(scr, R, then) {
-    const c = C(), T = TRICK[R.key];
-    if (!T) return proof(scr, R, then);
-    const tok = c.run(), alive = () => c.alive(tok) && scr.isConnected, st = scr.querySelector('#stage'), fc = scr.querySelector('#fc');
-    c.CARD.reset(fc);
-    if (st._ro) { st._ro.disconnect(); st._ro = null; }
-    st.style.display = ''; st.classList.add('tk-on');
-    scr.querySelector('#dcap').textContent = '';
-    st.innerHTML = `<div class="lw-tk"><span class="tk-tag">${BOLT}<span>الحيلة</span></span>
-      <p class="tk-say">${tkSay(T[0])}</p>
-      <div class="tk-ex">${T.slice(1).map((l, i) => `<p class="tk-l${i === T.length - 2 ? ' last' : ''}">${tkLine(l, i === T.length - 2)}</p>`).join('')}</div></div>`;
-    const box = st.firstElementChild, tag = box.querySelector('.tk-tag'), say = box.querySelector('.tk-say'), L = [...box.querySelectorAll('.tk-l')];
-    /* the card ends above «كمّل» on any phone: zoomed down only as far as it must (the student tester, 2026-11-08: 5–71px under the bar at 320 × 568) */
-    const fitTk = () => { const bar = scr.querySelector('.action-bar'); if (!bar || !box.isConnected) return; box.style.zoom = '';
-      const room = bar.getBoundingClientRect().top - 10 - box.getBoundingClientRect().top, h = box.getBoundingClientRect().height;
-      if (h > room && room > 0) box.style.zoom = Math.max(.62, Math.floor(room / h * 100) / 100); };
-    fitTk(); requestAnimationFrame(fitTk); c.later(400, fitTk); c.later(1200, fitTk);
-    if (!st._tkFit) { st._tkFit = 1; addEventListener('resize', () => { const b = st.querySelector('.lw-tk'); if (b && st.isConnected) fitTk(); }); }
-    if (c.reduce) { c.later(300, () => { if (alive()) then(); }); return; }
-    L.forEach(l => { l.style.opacity = 0; });
-    c.anim(box, [{ opacity: 0, transform: 'translateY(16px) scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: 340, easing: 'cubic-bezier(.3,1.4,.5,1)' });
-    c.anim(tag, c.POP, { duration: 420, delay: 120, fill: 'backwards' }); c.later(140, () => alive() && c.snd('on', 1, .4));
-    c.anim(say, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: 260, fill: 'backwards' });
-    const keys = [...say.querySelectorAll('.tk-k')];
-    keys.forEach((k, i) => { c.later(520 + i * 260, () => { if (!alive()) return; k.classList.add('lit'); c.snd('t' + Math.min(i + 1, 5), 1, .3); }); });
-    let at = 700 + keys.length * 260 + 250;
-    L.forEach((l, li) => {
-      const ns = [...l.querySelectorAll('.tk-n, .tk-fr, .tk-ans')];
-      c.later(at, () => { if (!alive()) return; l.style.opacity = ''; c.anim(l, [{ opacity: 0, transform: 'translateX(-14px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: 'ease-out' }); });
-      ns.forEach((n, i) => c.anim(n, c.POP, { duration: 360, delay: at + 120 + i * 70, fill: 'backwards' }));
-      at += 420 + ns.length * 70;
-      if (li === L.length - 1) {
-        const ans = l.querySelector('.tk-ans');
-        c.later(at, () => { if (!alive()) return; if (ans) { ans.classList.add('lit'); c.anim(ans, c.JUMP || c.POP, { duration: 520 }); } c.snd('right', 1, .45); c.buzz(12); });
-        at += 600;
-      }
-    });
-    c.later(at, () => { if (alive()) then(); });
-  }
-  const teach = (scr, R, then) => (TRICK[R.key] ? trick : proof)(scr, R, then);
-
   /* the rule's screen inside a lesson */
   const unitStyle = () => { const q = Q(), S = q.SES, d = window.QBANK[S.domKey], U = q.UNIT_COLORS || {}, u = U[d.color] || U.green || { c: '#58CC02', s: '#58A700', h: '#71DC1A' };
     return `--li-c:${u.c};--li-s:${u.s};--li-h:${u.h}`; };
@@ -1081,9 +968,9 @@
       /* once the card asks for its missing word, فهيم stops showing the rule he just said, so the answer is not read off his bubble (QA, 2026-11-08) */
       if (!fc._whole) { const mo = new MutationObserver(() => { if (!fc.querySelector('.kb-pick')) return; mo.disconnect(); if (!scr.isConnected) return; c.sayInto(tx, 'وش *الناقص* في القانون؟ تذكّر وش قلت لك.', 0);
         /* once the word is in, فهيم moves on with the proof instead of asking for six more seconds (QA, 2026-11-08) */
-        const done = new MutationObserver(() => { if (fc.querySelector('.kb-pick')) return; done.disconnect(); if (scr.isConnected) c.sayInto(tx, TRICK[R.key] ? 'صح! وهذي *الحيلة* اللي تختصر عليك:' : 'صح! *شوف* من وين يجي.', 0); });
+        const done = new MutationObserver(() => { if (fc.querySelector('.kb-pick')) return; done.disconnect(); if (scr.isConnected) c.sayInto(tx, 'صح! *شوف* من وين يجي.', 0); });
         done.observe(fc, { childList: true, subtree: true }); }); mo.observe(fc, { childList: true, subtree: true }); }
-      c.CARD.intro(fc, R, t2).then(() => { if (!fc.isConnected) return; ready(); st.style.visibility = ''; teach(scr, R, cue); });
+      c.CARD.intro(fc, R, t2).then(() => { if (!fc.isConnected) return; ready(); st.style.visibility = ''; proof(scr, R, cue); });
     } else {
       const tag = scr.querySelector('.lw-rv');
       c.anim(tag, [{ opacity: 0, transform: 'translateX(10px)' }, { opacity: 1, transform: 'none' }], { duration: 330, delay: 250, easing: 'cubic-bezier(.14,.76,0,1)', fill: 'backwards' });
@@ -1096,10 +983,10 @@
           c.sayInto(tx, playedIn(R.key) ? c.pick(['صح! *تذكرته* من أول مرة.', 'كفو! ما *نسيته*.', 'بالضبط! *ثابت* عندك.']) : c.pick(['صح! *عرفته* من أول مرة.', 'كفو! *تعرفه* زين.']), 150);
           go.disabled = false; c.jump(go, 700);
           if (onRemember) onRemember();
-        } else { c.sayInto(tx, c.pick(['ولا يهمك، شوفه مرة ثانية.', 'قريب! خلّنا نشوفه مرة ثانية.']), 100); c.later(350, () => teach(scr, R, cue)); }
+        } else { c.sayInto(tx, c.pick(['ولا يهمك، شوفه مرة ثانية.', 'قريب! خلّنا نشوفه مرة ثانية.']), 100); c.later(350, () => proof(scr, R, cue)); }
       });
     }
-    st.onclick = () => { if (!go.disabled) { c.snd('tap'); teach(scr, R, cue); } };
+    st.onclick = () => { if (!go.disabled) { c.snd('tap'); proof(scr, R, cue); } };
     go.onclick = () => { if (go.disabled) return; c.snd('tap'); onGo(); };
   }
 
