@@ -3143,6 +3143,11 @@ sub.pw { vertical-align: -.3em; }
   display: flex; flex-direction: column; justify-content: flex-end;
 }
 .screen-session .feedback.bad { background: var(--banner-r); }
+/* the green sheet is as tall as what it says, as Duolingo's is: held at 212px it covered the answer it judged, and the step was
+   zoomed down to clear it the moment it rose (the user, 2026-11-16: «they are getting bigger when i answer») */
+.screen-session .feedback.good { min-height: 0; }
+.screen-session .feedback.good .btn { margin-top: 6px; }
+.screen-session .feedback.good .ln-fb-note { margin-bottom: 8px; }
 /* brief section 5: 200ms power3.out for the win, 160ms power4.out for the miss */
 .screen-session .feedback.good { transition-duration: .2s;  transition-timing-function: cubic-bezier(.215,.61,.355,1); }
 .screen-session .feedback.bad  { transition-duration: .16s; transition-timing-function: cubic-bezier(.165,.84,.44,1); }
@@ -4912,28 +4917,49 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 .ts-opt:disabled { color: var(--ink); }
 .ts-opt.ok { background: var(--green-bg); border-color: var(--green); color: var(--green-dk); }
 .ts-opt.dim { opacity: .5; }
-.ts-rule, .ts-more { display: none; }
-.ts.shown .ts-rule {
-  display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: 16px; padding: 12px 14px;
-  border-radius: 16px; background: var(--gold-bg); text-align: center;
-  animation: titleIn .45s cubic-bezier(.3,1.5,.5,1) backwards;
-}
-.ts-rule b { font-size: 21px; font-weight: 800; color: var(--gold-dk); direction: rtl; }
-.ts-rule span { font-size: 14px; font-weight: 700; color: var(--ink); }
-.ts.shown .ts-more { display: block; margin-top: 12px; text-align: center; font-size: 14.5px; font-weight: 700; color: var(--gray); animation: fadeUp .4s .25s ease backwards; }
-.ts-more b { color: var(--ink); }
-/* the answer sheet: the lesson's correct sheet, cut short — it stays in the
-   flow at the foot of the screen (so it never covers the trick) and only holds
-   the verdict and the button */
+/* the answer sheet: the lesson's own green sheet with the trick on it. It stands at the foot of the step from the first frame,
+   hidden under «اختر إجابة» (which sits exactly where its «المتابعة» will), so the step is laid out and fitted for it; the
+   answer only slides it up, as a lesson's sheet rises (the user, 2026-11-16: «not making the screen shake or jumping») */
 .ob-cta.ts-up { padding-top: 0; margin: 0 -20px calc(-20px - env(safe-area-inset-bottom)); }
+.ob-cta.ts-cta { position: relative; gap: 0; background: none; padding-top: 12px; }   /* the sheet's wave stands 10px over it */
 .feedback.ts-fb { position: relative; bottom: auto; max-width: none; z-index: 5; box-shadow: none;
-  padding: 8px 20px calc(18px + env(safe-area-inset-bottom)); }
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 8px 20px calc(18px + env(safe-area-inset-bottom));
+  transform: translateY(100%); visibility: hidden;
+  transition: transform .2s cubic-bezier(.215,.61,.355,1), visibility 0s .2s; }
+.feedback.ts-fb.show { transform: none; visibility: visible; transition: transform .2s cubic-bezier(.215,.61,.355,1), visibility 0s; }
+.feedback.ts-fb.fx-anim { transition: none; }   /* the lesson's own slide (fxSheetIn) carries it, and must read it at rest */
+.ts-cta .ts-wait { position: absolute; z-index: 4; left: 20px; right: 20px; width: auto; bottom: calc(18px + env(safe-area-inset-bottom)); }
 .feedback.ts-fb .fb-head { font-size: 21px; gap: 8px; }
 .feedback.ts-fb .fb-ok { width: 26px; height: 26px; }
 .feedback.ts-fb .fb-ok svg { width: 15px; height: 15px; }
-.feedback.ts-fb .btn { margin-top: 10px; height: 50px; font-size: 17px; }
+.feedback.ts-fb .btn { margin-top: 12px; height: 50px; font-size: 17px; }
+/* the trick, flat on a white panel with no rim and no icon (the user, 2026-11-16: «remove the borders»,
+   then the bulb): the swap rule with its two letters as flat chips — أ blue, ب purple — so the swap reads
+   at a glance, then what it means */
+.ts-rl { display: flex; align-items: center; margin-top: 10px; padding: 10px 14px; border-radius: 16px; background: #fff; }
+.ts-rl-t { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; text-align: center; }
+.ts-rl-f { display: flex; align-items: center; justify-content: center; gap: 9px; font-size: 19px; font-weight: 800; line-height: 1.3; color: var(--ink); white-space: nowrap; }
+.ts-rl-s { display: inline-flex; align-items: center; gap: 3px; }
+.ts-rl-f em { font-style: normal; font-size: 22px; color: var(--green-dk); }
+.ts-l { display: inline-grid; place-items: center; min-width: 30px; height: 30px; padding: 0 5px; border-radius: 8px; font-style: normal; font-size: 18px; }
+.ts-l.a { background: var(--blue-light); color: var(--blue-dk); }
+.ts-l.b { background: var(--purple-tint); color: var(--purple-dk); }
+.ts-rl-c { font-size: 13.5px; font-weight: 700; line-height: 1.4; color: var(--gray); }
+.feedback.ts-fb.show:not(.still) .ts-rl { animation: fadeUp .3s .12s ease backwards; }
 .feedback.ts-fb.still, .feedback.ts-fb.still * { transition: none; animation: none; }
-:root[data-motion="reduced"] .ts-cmp, :root[data-motion="reduced"] .ts-rule, :root[data-motion="reduced"] .ts-more { animation: none; }
+:root[data-motion="reduced"] .ts-cmp, :root[data-motion="reduced"] .ts-rl { animation: none; }
+/* a short phone: the sheet a size tighter, so the step it is fitted around reads near full size */
+@media (max-height: 700px) {
+  .feedback.ts-fb { padding-top: 4px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
+  .feedback.ts-fb .fb-head { font-size: 19px; }
+  .ts-rl { margin-top: 6px; padding: 7px 12px; }
+  .ts-rl-f { font-size: 17px; gap: 7px; }
+  .ts-l { min-width: 26px; height: 26px; font-size: 16px; }
+  .ts-rl-c { font-size: 12.5px; }
+  .feedback.ts-fb .btn { margin-top: 8px; height: 48px; }
+  .ts-cta .ts-wait { bottom: calc(14px + env(safe-area-inset-bottom)); height: 48px; }
+}
 
 /* ---------- the level test ---------- */
 .pl-segs { flex: 1; display: flex; gap: 6px; }
@@ -5635,12 +5661,6 @@ body:has(.ask-veil, .method-veil, .chest-veil, .streak-veil, .lesson-pop-veil, .
 .mock-ans-btn { width: 100%; }
 /* no word left alone on a paragraph's last line («كان»، «٩.»; QA, 2026-11-08) */
 body { text-wrap-style: pretty; }
-/* «جرّب» on a short phone: once answered, only the right choice stays under the values, so the rule card and its line read
-   at full size instead of the step shrinking to three quarters (QA, 2026-11-08: 75% at 320 × 568, 88% at 375 × 667) */
-@media (max-height: 700px) {
-  .ts.shown .ts-opt:not(.ok) { display: none; }
-  .ts.shown .ts-opts { grid-template-columns: 1fr; }
-}
 /* the mock's result fits the phone (QA, 2026-11-08: 76% at 402 × 874, scrolling at 320 × 568): the section rows sit tight,
    the flame comes down a size on a phone and gives its room to the numbers on a short one */
 .mock-result .result-cards { gap: 12px; margin-bottom: 14px; }
@@ -5699,8 +5719,6 @@ html:has(.fail-scene), body:has(.fail-scene) { overflow-x: clip; }
 @media (max-height: 600px) { .screen-session:has(.rf-chk):has(.feedback.good.show) .q-area > .rf-q { visibility: hidden; } }
 /* solved, the help's reserve is let go: the tiles are gone and nothing more will be said under them (QA, 2026-11-08: the box pushed under the top bar at 320) */
 .screen-session:has(.rf-chk):has(.feedback.good.show) .q-area > #rfHint { visibility: hidden; }
-/* on a 320 × 568 phone a solved four-line chain needs the room «القانون» stands in, or its example goes under the top bar (QA, 2026-11-08) */
-@media (max-height: 600px) { .screen-session:has(.rf-chk):has(.feedback.good.show) .lw-peek { display: none; } }
 @media (max-height: 700px) { .screen-session:has(.rf-chk):has(.feedback.good.show) .q-area > .rf-q { visibility: hidden; } }
 
 /* the sign-in steps on a short phone: فهيم and the gaps give way first, so the fields read at full size */

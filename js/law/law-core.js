@@ -204,28 +204,82 @@
         await c.wait(280); c.val(0, '١', last); await c.wait(300);
       },
     },
+    /* the proof in «ترتيب العمليات»'s own grammar: the example big, its three steps under it, each step lighting as the
+       example turns into its number, and that number flying up into the rule. The sum folds into its last number, the
+       number is cut in two and one half drops away, then it is multiplied by the number after it */
     tri: {
-      html: () => {
-        let d = '';
-        for (let r = 0; r < 5; r++) for (let k = 0; k < 6; k++) { const blue = k <= r; d += `<circle class="${blue ? 'b' : 'o'}" data-r="${r}" cx="${232 - k * 30}" cy="${22 + r * 30}" r="10" fill="${blue ? '#1CB0F6' : '#FF9600'}" style="opacity:0"/>`; }
-        return `<div class="dg"><svg class="d" width="290" height="178" viewBox="0 -18 290 178">${d}
-          <text class="lw" x="157" y="-8" font-size="15" fill="#A568CC" text-anchor="middle" style="opacity:0">٦</text>
-          <text class="lh" x="262" y="86" font-size="15" fill="#1899D6" text-anchor="middle" style="opacity:0">٥</text></svg>
-          <div class="dlab"><span>آخر عدد<b class="n1">٠</b></span><span>آخر عدد + ١ =<b class="n2">؟</b></span><span class="l3">المجموع<b class="n3">٠</b></span></div></div>`;
-      },
+      html: () => `<div class="dg tq"><div class="ex tq-ex">${['١', '+', '٢', '+', '٣', '+', '…', '+', '٢٠'].map(t => `<span class="${/[+…]/.test(t) ? 'o' : ''}">${t}</span>`).join('')}</div>
+        <div class="ex-st tq-st">${[['آخر عدد', 'in'], ['نصّه', 'cn'], ['× اللي بعده', 'mk']].map(([t, r]) => `<span class="r-${r}">${t}</span>`).join('<i>←</i>')}</div></div>`,
       async run(st, c) {
-        const B = [...st.querySelectorAll('circle.b')], O = [...st.querySelectorAll('circle.o')], lw = st.querySelector('.lw'), lh = st.querySelector('.lh'), n1 = st.querySelector('.n1'), n2 = st.querySelector('.n2'), n3 = st.querySelector('.n3');
-        let sum = 0;
-        for (let r = 0; r < 5; r++) { B.filter(x => +x.dataset.r === r).forEach((x, i) => { show(x); anim(x, [{ opacity: 0 }, { opacity: 1 }], { duration: 240, delay: i * 40, fill: 'backwards' }); }); sum += r + 1; n1.textContent = A(r + 1); n3.textContent = A(sum); c.s('t' + (r + 1), 1, .42); await c.wait(320); }
-        pulse(n1); pop(lh); c.val(1, '٥', n1); await c.wait(500);
-        c.cap('نسخة ثانية مقلوبة تكمّل الدرج مستطيل');
-        O.forEach((x, i) => { show(x); anim(x, [{ opacity: 0, transform: 'translate(-40px, -40px)' }, { opacity: 1, transform: 'none' }], { duration: 360, delay: i * 25, easing: 'cubic-bezier(.3,1.2,.5,1)', fill: 'backwards' }); });
-        c.s('drop', 1, .4); await c.wait(680);
-        pop(lw); n2.textContent = '٦'; pulse(n2); c.s('click', 1.1, .4); c.val(2, '٦', lw); await c.wait(540);
-        c.cap('المستطيل ٥ × ٦ = ٣٠، والدرج نصّه'); n3.textContent = '٣٠'; pulse(n3); await c.wait(600);
-        O.forEach(x => { x.style.opacity = .15; anim(x, [{ opacity: 1 }, { opacity: .15 }], { duration: 420 }); });
-        n3.textContent = '١٥'; pulse(n3); c.s('hint', 1, .45); c.cap('٣٠ ÷ ٢ = ١٥');
-        await c.wait(360); c.val(0, '١٥', n3); await c.wait(300);
+        const ex = st.querySelector('.ex'), stp = [...st.querySelectorAll('.ex-st span')], toks = [...ex.children], k = () => scaleOf(ex);
+        const mk = (t, cls = '') => { const e = document.createElement('span'); e.className = cls; e.innerHTML = fx(t); return e; };
+        /* whatever stays glides to its new place when the line changes around it */
+        const glide = (els, f) => { const a = els.map(e => e.getBoundingClientRect()); f(); els.forEach((e, i) => { if (!e.isConnected) return; const b = e.getBoundingClientRect(), dx = (a[i].left - b.left) / k();
+          if (Math.abs(dx) > .5) anim(e, [{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 380, easing: XO }); }); };
+        const on = i => { stp.forEach((x, j) => { x.classList.toggle('on', j === i); x.classList.toggle('dn', j < i); }); pulse(stp[i]); };
+        ex.style.minWidth = ex.offsetWidth + 'px';   /* the drawing keeps its width, so it is never scaled again mid-proof */
+        toks.forEach((x, i) => anim(x, RISE, { duration: 280, delay: i * 45, fill: 'backwards' }));
+        anim(st.querySelector('.ex-st'), [{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 420, fill: 'backwards' });
+        await c.wait(900);
+
+        /* 1. آخر عدد: the last number lights, and the rest of the sum folds into it, the far end first */
+        const last = toks[toks.length - 1], rest = toks.slice(0, -1);
+        on(0); last.classList.add('hl', 'r-in'); pulse(last); c.s('t1', 1, .42); c.cap('خذ آخر عدد: ٢٠');
+        await c.wait(900);
+        const lr = last.getBoundingClientRect();
+        rest.forEach((x, i) => {
+          const r = x.getBoundingClientRect(), dx = (lr.left + lr.width / 2 - r.left - r.width / 2) / k();
+          anim(x, [{ transform: 'none', opacity: 1 }, { transform: `translate(${dx * .55}px, -14px) scale(.8)`, opacity: .9, offset: .55 }, { transform: `translate(${dx}px, 0) scale(.2)`, opacity: 0 }],
+            { duration: 460, delay: i * 50, easing: 'cubic-bezier(.45,0,.55,1)', fill: 'forwards' });
+          if (!x.classList.contains('o')) later(i * 50 + 380, () => { c.s('tap', 1 + i * .05, .26); anim(last, [{ transform: 'none' }, { transform: 'scale(1.08)', offset: .4 }, { transform: 'none' }], { duration: 200 }); });
+        });
+        await c.wait(rest.length * 50 + 480);
+        glide([last], () => { rest.forEach(x => x.remove()); last.classList.remove('hl'); last.classList.add('res'); });
+        pop(last, 340); c.s('drop', 1, .38); c.val(1, '٢٠', last);
+        await c.wait(900);
+
+        /* 2. نصّه: «÷ ٢» joins it, the number is cut in two halves, and one half drops away */
+        on(1); c.s('t2', 1, .42); c.cap('نصّه: ٢٠ ÷ ٢ = ١٠');
+        const dv = mk('÷', 'o'), two = mk('٢', 'hl r-cn');
+        glide([last], () => { ex.append(dv, two); });
+        [dv, two].forEach((e, i) => anim(e, RISE, { duration: 280, delay: i * 70, fill: 'backwards' }));
+        await c.wait(950);
+        glide([last], () => { dv.remove(); two.remove(); });
+        const cut = document.createElement('i'); cut.className = 'tq-cut'; last.appendChild(cut);
+        anim(cut, [{ transform: 'scaleY(0)', opacity: 1 }, { transform: 'scaleY(1)', opacity: 1, offset: .6 }, { transform: 'scaleY(1)', opacity: 0 }], { duration: 380, easing: 'ease-out', fill: 'forwards' });
+        c.s('off', 1.2, .36);
+        await c.wait(300);
+        /* the two halves break out of the number's own place, one each way */
+        const h1 = mk('١٠', 'res r-cn'), h2 = mk('١٠', 'res r-cn tq-gone'), c0 = last.getBoundingClientRect(), mid = c0.left + c0.width / 2;
+        last.replaceWith(h1); h1.after(h2);
+        [h1, h2].forEach(h => { const r = h.getBoundingClientRect(), dx = (mid - r.left - r.width / 2) / k();
+          anim(h, [{ transform: `translateX(${dx}px) scale(.6)`, opacity: 0 }, { opacity: 1, offset: .45 }, { transform: 'none', opacity: 1 }], { duration: 440, easing: 'cubic-bezier(.3,1.4,.5,1)' }); });
+        c.s('click', 1.2, .4);
+        await c.wait(560);
+        anim(h2, [{ transform: 'none', opacity: 1 }, { transform: 'translateY(22px) rotate(-14deg)', opacity: 0 }], { duration: 420, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' });
+        await c.wait(420);
+        glide([h1], () => h2.remove());
+        pulse(h1); c.s('drop', up(1), .36);
+        if (c.half) c.half(1, '١٠');   /* the card halves too: its ٢ rises into ٢٠, which turns ١٠ (the user: «you didnt make the half animation here») */
+        await c.wait(1100);
+
+        /* 3. × (آخر عدد + ١): the number after twenty comes in brackets, closes to ٢١, and the product lands green */
+        on(2); c.s('t3', 1, .42); c.cap('اضربه في اللي بعده: ٢٠ + ١ = ٢١');
+        const br = ['×', '(', '٢٠', '+', '١', ')'].map(t => mk(t, /[×()+]/.test(t) ? 'o' : 'hl r-mk'));
+        glide([h1], () => ex.append(...br));
+        br.forEach((e, i) => anim(e, RISE, { duration: 260, delay: i * 50, fill: 'backwards' }));
+        await c.wait(1050);
+        const r21 = mk('٢١', 'res r-mk');
+        glide([h1, br[0]], () => { br[1].before(r21); br.slice(1).forEach(e => e.remove()); });
+        pop(r21, 340); c.s('drop', up(2), .36); c.val(2, '٢١', r21);
+        await c.wait(950);
+        c.cap('١٠ × ٢١ = ٢١٠');
+        [h1, br[0], r21].forEach(e => anim(e, [{ transform: 'none' }, { transform: 'translateY(-5px)', offset: .4 }, { transform: 'none' }], { duration: 360 }));
+        await c.wait(650);
+        const ans = mk('٢١٠', 'ans');
+        glide([], () => { h1.replaceWith(ans); br[0].remove(); r21.remove(); });
+        pop(ans, 380); stp.forEach(x => { x.classList.remove('on'); x.classList.add('dn'); }); c.s('hint', 1, .45);
+        await c.wait(320); c.val(0, '٢١٠', ans); await c.wait(300);
       },
     },
     queue: {
@@ -339,9 +393,9 @@
       return { q, ans: A(r), ch: four(A(r), [A((ua + ub) % 10), A(Math.floor(ua * ub / 10) % 10), A((r + 5) % 10), A((r + 2) % 10), A((r + 4) % 10)]), sol };
     },
     tri(i) {
-      const n = [30, 40, 50, 25, 80, 100][(i + rnd(0, 5)) % 6], r = n * (n + 1) / 2;
+      const n = [30, 40, 50, 20, 80, 100][(i + rnd(0, 5)) % 6], r = n * (n + 1) / 2;   /* never ٦٠: bank bigsum-04 */
       const q = [`ما مجموع الأعداد الصحيحة من ١ إلى ${A(n)}؟`, `١ + ٢ + ٣ + … + ${A(n)} = ؟`, `ما مجموع أول ${A(n)} ${n % 100 ? 'عدداً صحيحاً موجباً' : 'عدد صحيح موجب'}؟`][i % 3];
-      return { q, ans: A(r), ch: four(A(r), [A(n * (n - 1) / 2), A(n * n), A(n * (n + 1))]), sol: `${A(n)} × ${A(n + 1)} ÷ ٢ = ${A(r)}` };
+      return { q, ans: A(r), ch: four(A(r), [A(n * (n - 1) / 2), A(n * n), A(n * (n + 1))]), sol: `${A(n)} ÷ ٢ × ${A(n + 1)} = ${A(n / 2)} × ${A(n + 1)} = ${A(r)}` };
     },
     queue(i) {
       const f = rnd(5, 15), b = rnd(5, 15), n = f + b - 1;
@@ -370,18 +424,21 @@
     { key: 'prob', name: 'الاحتمال', tok: [{ t: 'الاحتمال' }, '=', { t: 'المطلوب' }, '÷', { t: 'الكل' }],
       say: '*الاحتمال*: المطلوب، على الكل.', cue: 'تجيك لما تقرا «احتمال» أو «سُحب عشوائياً».', trap: 'تقسم على الكل، مو على الباقي.',
       num: { ex: 'نرد واحد: احتمال عدد أكبر من ٤', rows: [['=', B('٢'), '÷', B('٦')], ['=', B('١/٣')]], more: ['٤', '٢/٤', '١/٢'] } },
-    { key: 'mean', name: 'الوسط الحسابي', tok: [{ t: 'الوسط' }, '=', { t: 'المجموع' }, '÷', { t: 'العدد' }],
+    { key: 'mean', name: 'الوسط الحسابي', tok: [{ t: 'الوسط' }, '=', { t: 'المجموع', r: 'mk' }, '÷', { t: 'العدد' }],
       say: '*الوسط*: اجمعها كلها، واقسم على عددها.', cue: 'تجيك لما تقرا «متوسط» أو «معدّل». ولو طلب المجموع: الوسط × العدد.', trap: 'تقسم على عدد الأعداد، مو على ٢.',
       num: { ex: 'الوسط الحسابي للأعداد ٨، ١٢، ١٠', rows: [['=', B('٣٠'), '÷', B('٣')], ['=', B('١٠')]], more: ['٢', '١٥', '٢٨'] } },
-    { key: 'hand', name: 'المصافحات', tok: [{ t: 'المصافحات' }, '=', { t: 'العدد' }, '×', { t: '(العدد − ١)' }, '÷', '٢'], wswap: [1, 2],
+    { key: 'hand', name: 'المصافحات', tok: [{ t: 'المصافحات' }, '=', { t: 'العدد' }, '×', { t: '(العدد − ١)', r: 'mk' }, '÷', '٢'], wswap: [1, 2],
       say: '*المصافحات*: كل واحد يصافح الباقين، وكل مصافحة تنحسب مرة.', cue: 'تجيك لما تقرا «كل واحد مع كل واحد»: مصافحات، مباريات دوري، خطوط بين نقاط.', trap: 'لا تنسى ÷ ٢، كل مصافحة انحسبت مرتين.',
       num: { ex: '٧ أشخاص، كل واحد يصافح الباقين', rows: [['=', B('٧'), '×', B('٦'), '÷', '٢'], ['=', B('٤٢'), '÷', '٢'], ['=', B('٢١')]], more: ['٨', '٤٩', '١٤'], swap: [[0, 0, 1]] } },
     { key: 'last', name: 'رقم الآحاد في الضرب', tok: [{ t: 'آخر رقم في الناتج' }, '=', 'آخر رقم في ناتج', { t: 'آحاد' }, '×', { t: 'آحاد' }],
       say: '*آخر رقم* في الضرب يجي من ضرب الآحاد بس.', cue: 'تجيك لما تقرا «رقم الآحاد» في ضرب أعداد كبيرة.', trap: 'تضرب الآحاد، ما تجمعها.',
       num: { ex: 'رقم الآحاد في ٤٨ × ٢٧', rows: [[B('٨'), '×', B('٧'), '=', B('٥٦')], ['رقم الآحاد', '=', B('٦')]], more: ['٤', '٢', '٥'], swap: [[0, 0, 1]] } },
-    { key: 'tri', name: 'مجموع ١ إلى ن', tok: [{ t: 'المجموع' }, '=', { t: 'آخر عدد' }, '×', { t: '(آخر عدد + ١)' }, '÷', '٢'], wswap: [1, 2],
-      say: '*المجموع* من ١: اضرب آخر عدد في اللي بعده، وخذ النص.', cue: 'تجيك لما تقرا «من ١ إلى …» أو «أول … عدداً».', trap: 'آخر عدد + ١، مو − ١.',
-      num: { ex: '١ + ٢ + ٣ + … + ٢٠', rows: [['=', B('٢٠'), '×', B('٢١'), '÷', '٢'], ['=', B('٤٢٠'), '÷', '٢'], ['=', B('٢١٠')]], more: ['١٩', '٤٠٠', '٢٠٠'], swap: [[0, 0, 1]] } },
+    /* the card is the formula as the user drew it, «آخر عدد × اللي بعده» over its ٢ (2026-11-16: «make the 1 to n like this law»);
+       its proof works it as a student does in a minute, halving first, and the card halves with it (`half`). Each term carries its
+       role (`r`): the answer, a number read off the question, one worked out from it; the ٢ is the rule's own number, orange */
+    { key: 'tri', name: 'مجموع ١ إلى ن', tok: [{ t: 'المجموع', r: 'ans' }, '=', { t: 'آخر عدد', r: 'in' }, '×', { t: 'اللي بعده', r: 'mk' }, '÷', '٢'], wswap: [1, 2],
+      say: 'من ١ إلى أي عدد: *آخر عدد* × *اللي بعده*، والكل ÷ ٢.', cue: 'تجيك لما تقرا «من ١ إلى …» أو «أول … عدداً».', trap: 'اضرب في اللي بعده، مو اللي قبله. والأسرع: نصّ آخر عدد أول، ولو كان فردي نصّ اللي بعده: ١ + … + ١٥ = ١٥ × ٨.',
+      num: { ex: '١ + ٢ + ٣ + … + ٢٠', rows: [[B('٢٠'), '÷', '٢', '=', B('١٠')], [B('١٠'), '×', B('٢١'), '=', B('٢١٠')]], more: ['١٩', '٤٢٠', '٢٠٠'] } },
     { key: 'queue', name: 'الترتيب من الطرفين', tok: [{ t: 'العدد' }, '=', { t: 'من الأمام' }, '+', { t: 'من الخلف' }, '−', '١'], wswap: [1, 2],
       say: '*العدد*: اجمع ترتيبك من الجهتين، واطرح نفسك.', cue: 'تجيك لما تقرا «ترتيبه … من الأمام و… من الخلف»، أو الطوابق.', trap: 'لا تنسى − ١: صاحب الترتيب انحسب مرتين، مرة من كل جهة.',
       num: { ex: 'ترتيبك ٤ من الأمام و٩ من الخلف', rows: [['=', B('٤'), '+', B('٩'), '−', '١'], ['=', B('١٢')]], more: ['١٣', '٥', '١١'], swap: [[0, 0, 1]] } },
@@ -401,7 +458,7 @@
   const CV = '13';
   const parseF = R => {
     const terms = R.tok.filter(x => typeof x !== 'string');
-    const it = R.tok.map(x => typeof x === 'string' ? { p: x } : { t: x.t, s: terms.indexOf(x) });
+    const it = R.tok.map(x => typeof x === 'string' ? { p: x } : { t: x.t, s: terms.indexOf(x), r: x.r });
     /* a sentence rule (no «=» after its first word) is all one row, with no name standing apart */
     const eq = it[1] && it[1].p === '=', all = eq ? it.slice(2) : it, cut = R.tail ? R.tail - 2 : all.length, rhs = all.slice(0, cut), d = rhs.findIndex(x => x.p === '÷');
     return { lhs: eq ? it[0] : null, rhs: all, num: d < 0 ? null : rhs.slice(0, d), den: d < 0 ? null : rhs.slice(d + 1), tail: all.slice(cut) };
@@ -429,8 +486,8 @@
      the word rises inside it, a blue-500 line runs along its foot, and each number pushes its word up and out while the box
      grows or shrinks to the number; the word comes back small under it, and the answer's box turns Brilliant's correct green */
   const KBT = {
-    term: (x, l) => `<span class="k${l ? ' ca' : ''}" data-s="${x.s}"><span class="kb-m"><span class="kb-w">${x.t}</span><span class="kb-n"></span><i class="kb-u"></i></span><span class="kb-c" data-w="${x.t}">${x.t}</span></span>`,
-    plain: p => `<span class="pl">${fx(p)}</span>`, op: p => `<span class="op">${opTxt(p)}</span>`, frac: FRAC };
+    term: (x, l) => `<span class="k${l ? ' ca' : ''}${x.r ? ' r-' + x.r : ''}" data-s="${x.s}"><span class="kb-m"><span class="kb-w">${x.t}</span><span class="kb-n"></span><i class="kb-u"></i></span><span class="kb-c" data-w="${x.t}">${x.t}</span></span>`,
+    plain: p => `<span class="pl${/^[٠-٩]+$/.test(p) ? ' cn' : ''}">${fx(p)}</span>`, op: p => `<span class="op">${opTxt(p)}</span>`, frac: FRAC };
   /* the first three rules play the card as a student asked for it (tools/student-view.html; the user, 2026-10-30: «ok do it your way
      and lets do it for the first 3 lessons»): a short rule plays faster, a new rule leaves one term blank for the student to pick,
      a review asks for one term before it shows anything, and the card ends on the rule in words with its numbers small under it */
@@ -480,15 +537,17 @@
   /* one term is a blank and three words wait under the rule: the right one drops into it; a wrong one shakes and is spent.
      On a review a wrong pick counts against the rule, so it comes back sooner */
   function kbAsk(fc, k, review, done) {
-    const R = fc._R, card = fc.querySelector('.kb-card'), tag = fc.querySelector('.kb-tag'), right = k.querySelector('.kb-w').textContent;
+    const R = fc._R, card = fc.querySelector('.kb-card'), tag = fc.querySelector('.kb-tag'), right = k.querySelector('.kb-w').textContent, out = fc._pickHost;
     const mine = R.tok.filter(x => typeof x !== 'string').map(x => x.t);
     const names = RULES.map(r => r.tok[0].t), also = R.notDecoy || { mean: ['الكل'], hand: ['الكل'] }[R.key] || [];
     const pool = shuffle([...new Set(RULES.filter(r => r !== R).flatMap(r => r.tok.filter(x => typeof x !== 'string').map(x => x.t)))].filter(t => !mine.includes(t) && !names.includes(t) && !also.includes(t) && /[\u0621-\u064A]/.test(t)));
     /* a rule may name its own wrong answers, when other rules' words make no sense among its terms (the numbers of «الأعداد المكمّلة») */
     const near = pool.filter(t => Math.abs(t.length - right.length) <= 4), others = R.decoys ? shuffle(R.decoys.filter(t => !mine.includes(t) && !also.includes(t))).slice(0, 2) : (near.length >= 2 ? near : pool).slice(0, 2);
-    const pick = document.createElement('div'); pick.className = 'kb-pick';
+    const pick = document.createElement('div'); pick.className = 'kb-pick' + (out ? ' out' : '');
     pick.innerHTML = shuffle([right, ...others]).map(t => `<button class="kb-ch">${t}</button>`).join('');
-    card.appendChild(pick);
+    (out || card).appendChild(pick);
+    if (out && fc._placed) fc._placed(pick);
+    if (fc._asked) fc._asked(review);
     k.classList.add('gap', 'ask');
     /* the same word elsewhere in the rule is hidden too, or the answer stands in the card (QA, 2026-11-08: «من… إلى» showed «الفرق») */
     const twins = [...card.querySelectorAll('.k')].filter(x => x !== k && !x.classList.contains('gap') && x.querySelector('.kb-w') && x.querySelector('.kb-w').textContent === right);
@@ -498,24 +557,53 @@
     [...pick.children].forEach((b, i) => anim(b, RISE, { duration: 300, delay: 80 + i * 70, easing: XO, fill: 'backwards' }));
     later(80, () => snd('on', 1.1, .3));
     let miss = 0;
+    const m = k.querySelector('.kb-m'), w = k.querySelector('.kb-w'), QI = window.__QI;
+    /* the answer plays in the blank itself (the user, 2026-11-16: «i want the animation to happen here … like duolingo or ours»):
+       the word pops into it and the box answers with Duolingo's wave, as a fill's placed word does (kbWave: it crouches, springs,
+       turns green over a grey slab where it stood, a band of light and two sparkles cross it), then goes back to the term's blue; a
+       wrong word makes the blank shake red while its tile drops and shakes as a wrong choice does (answerFxFail). Outside a lesson
+       the tile itself waves, as before */
+    const fail = el => { const f = out && !reduce && QI && QI.answerFxFail; if (!f) return false; try { f(el); return true; } catch (e) { return false; } };
     pick.querySelectorAll('.kb-ch').forEach(b => b.onclick = () => {
       if (pick.dataset.done) return;
-      if (b.textContent !== right) {
-        miss++; b.classList.add('no'); b.disabled = true; anim(b, SHAKE, { duration: 400 }); snd('wrong', 1, .4); buzz([30, 40, 30]);
+      if (b.textContent.trim() !== right) {
+        miss++; b.classList.add('no'); b.disabled = true; snd('wrong', 1, .4); buzz([30, 40, 30]);
+        if (!fail(b)) anim(b, SHAKE, { duration: 400 });
+        if (out) { k.classList.add('bad'); anim(k, SHAKE, { duration: 420 }); later(520, () => k.classList.remove('bad')); }
         if (review && miss === 1 && L) L.miss++;
+        if (fc._missed) fc._missed(review, miss);
         return;
       }
-      pick.dataset.done = 1; kbWave(b); snd('right', 1, .45); buzz(12);
-      const m = k.querySelector('.kb-m'), w = k.querySelector('.kb-w');
-      k.classList.remove('gap', 'ask'); twins.forEach(x => x.classList.remove('gap'));
-      anim(w, [{ opacity: 0, transform: 'translateY(-115%)' }, { opacity: 1, transform: 'none' }], { duration: 520, easing: XO });
-      anim(m, [{ transform: 'none' }, { transform: 'scale(1.08)', offset: .4 }, { transform: 'none' }], { duration: 420, delay: 120, easing: 'cubic-bezier(.3,1.4,.5,1)' });
-      later(700, () => { anim(pick, [{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' }); later(250, () => pick.remove()); });
-      later(420, () => {
+      pick.dataset.done = 1; b.classList.add('ok'); snd('right', 1, .45); buzz(14);
+      k.classList.remove('gap', 'ask', 'bad'); twins.forEach(x => x.classList.remove('gap'));
+      if (out) {
+        anim(w, [{ opacity: 0, transform: 'scale(.5)' }, { opacity: 1, transform: 'none' }], { duration: 200, easing: 'cubic-bezier(.3,1.5,.5,1)' });
+        if (reduce) k.classList.add('ok'); else { kbWave(m); later(100, () => k.classList.add('ok')); }
+        later(1000, () => { k.classList.remove('ok'); m.classList.remove('ok'); });
+      } else {
+        kbWave(b);
+        anim(w, [{ opacity: 0, transform: 'translateY(-115%)' }, { opacity: 1, transform: 'none' }], { duration: 520, easing: XO });
+        anim(m, [{ transform: 'none' }, { transform: 'scale(1.08)', offset: .45 }, { transform: 'none' }], { duration: 440, delay: 120, easing: 'cubic-bezier(.3,1.4,.5,1)' });
+      }
+      if (fc._got) fc._got(review);
+      later(out ? 520 : 700, () => { anim(pick, [{ opacity: 1 }, { opacity: 0 }], { duration: 260, fill: 'forwards' }); later(270, () => pick.remove()); });
+      later(out ? 1100 : 420, () => {
         tag.textContent = 'القانون'; anim(tag, [{ opacity: 0 }, { opacity: 1 }], { duration: 300 });
         done(miss);
       });
     });
+  }
+  /* «حفظته»: the word sinks out of its box and the box comes back as a dashed blank (the twins with it) */
+  function kbHide(fc, k) {
+    const wd = e => e.querySelector('.kb-w').textContent, right = wd(k);
+    const all = [k, ...[...fc.querySelectorAll('.kb12 .k')].filter(x => x !== k && x.querySelector('.kb-w') && wd(x) === right)];
+    all.forEach((x, i) => {
+      const m = x.querySelector('.kb-m'), w = x.querySelector('.kb-w'), d = i * 70;
+      anim(w, [{ transform: 'none', opacity: 1 }, { transform: 'translateY(115%)', opacity: 0 }], { duration: 380, delay: d, easing: XIO, fill: 'forwards' });
+      anim(m, [{ transform: 'none' }, { transform: 'scale(.88)', offset: .45 }, { transform: 'scale(1.05)', offset: .78 }, { transform: 'none' }], { duration: 560, delay: d + 200, easing: 'ease-in-out' });
+      later(d + 330, () => { x.classList.add('gap'); w.getAnimations().forEach(a => a.cancel()); });
+    });
+    snd('off', 1, .38); buzz(8);
   }
   /* Duolingo's right answer on a tapped word, as the app plays it (adWave in app.js, from TapInput's AtomicDelightAnimation):
      it crouches, springs 23.6px, lands past its place and rebounds (650ms) with its squash and stretch, turns green 100ms in over
@@ -573,9 +661,10 @@
       stopA(w, n, c);
       anim(n, [{ transform: 'none' }, { transform: 'translateY(115%)' }], { duration: 520, delay: i * 60, easing: XIO, fill: 'backwards' });
       anim(w, [{ transform: 'translateY(-115%)' }, { transform: 'none' }], { duration: 600, delay: 60 + i * 60, easing: XIO, fill: 'backwards' });
-      c.innerHTML = n.firstChild ? n.firstChild.innerHTML : ''; c.classList.add('num'); c.style.opacity = 1;
+      c.innerHTML = n.dataset.back || (n.firstChild ? n.firstChild.innerHTML : ''); c.classList.remove('hv'); c.classList.add('num'); c.style.opacity = 1;
       anim(c, [{ opacity: 0, transform: 'translate(-50%, -6px)' }, { opacity: 1, transform: 'translateX(-50%)' }], { duration: 420, delay: 320 + i * 60, easing: XO, fill: 'backwards' });
     });
+    line.querySelectorAll('.pl.used').forEach(p => { p.classList.remove('used'); anim(p, [{ opacity: .4 }, { opacity: 1 }], { duration: 420, delay: 200 }); });
     snd('on', .9, .3);
     later(520, () => { const tag = fc.querySelector('.kb-tag'); if (tag) anim(tag, [{ transform: 'none' }, { transform: 'scale(1.12)', offset: .4 }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.3,1.4,.5,1)' }); });
   }
@@ -587,10 +676,15 @@
       anim(fc.querySelector('.kb-card'), [{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }], { duration: 520, delay: t0, easing: XO, fill: 'backwards' });
       anim(fc.querySelector('.kb-tag'), [{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: t0 + 120, fill: 'backwards' });
       if (!kbNew(fc) || fc._whole) return at$(kbIn(fc, t0 + 220));
+      /* the rule is shown whole first, for as long as the student wants (the user, 2026-11-16: the rule left at once, and asking
+         for a word nobody had seen made students «very angry and frustrated»); only once they say «حفظته» does a word hide */
       const ks = [...fc.querySelectorAll('.kb12 .k:not(.ca)')], wd = e => e.querySelector('.kb-w').textContent;
-      const k = ks.find(e => !ks.some(o => o !== e && wd(o).includes(wd(e)))) || fc.querySelector('.kb12 .k[data-s="1"]'); k.classList.add('gap');
+      const k = ks.find(e => !ks.some(o => o !== e && wd(o).includes(wd(e)))) || fc.querySelector('.kb12 .k[data-s="1"]');
       const end = kbIn(fc, t0 + 220);
-      return new Promise(res => later(end, () => kbAsk(fc, k, false, () => later(450, res))));
+      return new Promise(res => later(end, () => {
+        const ask = () => { if (!fc.isConnected) return; kbHide(fc, k); later(620, () => kbAsk(fc, k, false, () => later(450, res))); };
+        if (fc._study) fc._study().then(ask); else ask();
+      }));
     },
     review(fc, R, go) {
       fc._R = R;
@@ -614,15 +708,45 @@
     },
     reset(fc) {
       fc._kbT = (fc._kbT || 0) + 1;
-      const pk = fc.querySelector('.kb-pick'); if (pk) pk.remove();
+      const pk = fc.querySelector('.kb-pick') || (fc._pickHost && fc._pickHost.querySelector('.kb-pick')); if (pk) pk.remove();
       const tag = fc.querySelector('.kb-tag'); if (tag) tag.textContent = 'القانون';
       fc.querySelectorAll('.kb12 .k').forEach(k => {
         const m = k.querySelector('.kb-m'), c = k.querySelector('.kb-c');
         stopA(m, k.querySelector('.kb-w'), k.querySelector('.kb-n'), c);
-        k.classList.remove('ok', 'gap', 'ask'); m.style.width = ''; m.style.height = ''; k.querySelector('.kb-n').innerHTML = '';
-        c.classList.remove('num'); c.style.opacity = ''; c.innerHTML = c.dataset.w;
+        k.classList.remove('ok', 'gap', 'ask'); m.classList.remove('ok', 'halved'); m.style.width = ''; m.style.height = '';
+        const n = k.querySelector('.kb-n'); n.innerHTML = ''; delete n.dataset.back;
+        c.classList.remove('num', 'hv'); c.style.opacity = ''; c.innerHTML = c.dataset.w;
       });
+      fc.querySelectorAll('.pl.used').forEach(p => p.classList.remove('used'));
       const card = fc.querySelector('.kb-card'); if (card) { card.style.height = ''; stopA(fc.querySelector('.kb-fx')); kbFit(fc); }
+    },
+    /* the rule's own ٢ under the bar rises into a term's number, which rolls to its half; the ٢ stays struck through as used,
+       the caption over the term says «نصّه», and the term ends on its own number again when the rule comes back (kbBack) */
+    half(fc, slot, text) {
+      const k = fc.querySelector(`.k[data-s="${slot}"]`), d = fc.querySelector('.fq-d .pl.cn'); if (!k || !d) return;
+      const m = k.querySelector('.kb-m'), n = k.querySelector('.kb-n'), c = k.querySelector('.kb-c'); if (!n.firstChild) return;
+      n.dataset.back = n.firstChild.innerHTML;
+      const a = d.getBoundingClientRect(), z = m.getBoundingClientRect(), fs = parseFloat(getComputedStyle(d).fontSize) * (a.height / (d.offsetHeight || a.height));
+      const g = document.createElement('span'); g.className = 'kb-two'; g.innerHTML = d.innerHTML;
+      Object.assign(g.style, { left: a.left + 'px', top: a.top + 'px', width: a.width + 'px', height: a.height + 'px', fontSize: fs + 'px' });
+      document.body.appendChild(g);
+      pulse(d); d.classList.add('used'); snd('tap', 1.3, .3);
+      const dx = z.left + z.width / 2 - (a.left + a.width / 2), dy = z.top + z.height / 2 - (a.top + a.height / 2);
+      const up = g.animate([{ transform: 'none', opacity: 1 }, { transform: `translate(${dx * .5 + 18}px, ${dy * .5 - 26}px) scale(1.15)`, opacity: 1, offset: .5 },
+        { transform: `translate(${dx}px, ${dy}px) scale(.55)`, opacity: 0 }], { duration: 520, easing: 'cubic-bezier(.45,0,.3,1)', fill: 'forwards' });
+      TL.a.push(up); up.oncancel = () => g.remove();
+      up.onfinish = () => {
+        g.remove(); if (!k.isConnected) return;
+        m.classList.add('halved'); snd('drop', 1.25, .38); buzz(10);
+        anim(m, [{ transform: 'none' }, { transform: 'scale(.9)', offset: .3 }, { transform: 'scale(1.08)', offset: .65 }, { transform: 'none' }], { duration: 460, easing: 'ease-in-out' });
+        anim(n, [{ transform: 'none' }, { transform: 'translateY(-115%)' }], { duration: 200, easing: 'ease-in', fill: 'forwards' }).onfinish = () => {
+          n.innerHTML = `<span>${fx(text)}</span>`;
+          anim(n, [{ transform: 'translateY(115%)' }, { transform: 'none' }], { duration: 300, easing: XO, fill: 'both' });
+        };
+        c.textContent = 'نصّه'; c.classList.add('hv');
+        anim(c, [{ opacity: 0, transform: 'translate(-50%, 5px)' }, { opacity: 1, transform: 'translateX(-50%)' }], { duration: 360, delay: 120, easing: XO, fill: 'backwards' });
+        later(900, () => m.classList.remove('halved'));
+      };
     },
     val(fc, slot, text, src) {
       const k = fc.querySelector(`.k[data-s="${slot}"]`); if (!k) return;

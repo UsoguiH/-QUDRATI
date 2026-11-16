@@ -800,3 +800,125 @@ html[data-motion="reduced"] .lw3-shine { animation: none; display: none; }
   border: 2px solid var(--snow); font-size: 12px; font-weight: 800; line-height: 17px; text-align: center; }
 .lw-stat.due .mc-go { color: var(--gold-dk); }
 .lw-stat.clean .mc-go { color: var(--gray); }
+
+/* ───── «وش الناقص؟» under the card (the user, 2026-11-16) ─────
+   The rule stays whole until «حفظته»; a note under the card says a word will be hidden. Then the three words stand under the
+   card as the lesson's own answer tiles, and the right one flies up into its blank. The card's foot no longer keeps room for
+   words inside it, so it keeps one size from first to last. */
+.lw-learn .kb13 .kb-card { padding-bottom: 38px; }
+.lw-learn .lw-pk { flex: none; }
+.lw-learn .lw-pk:empty { display: none; }
+.lw-memo { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 16px 6px 0; text-align: center;
+  font-size: 15.5px; font-weight: 700; line-height: 1.5; color: var(--gray); }
+.lw-memo-ic { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--blue-light); color: var(--blue); }
+.lw-memo-ic svg { width: 18px; height: 18px; }
+.law .kb-pick.out { position: relative; inset: auto; display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 16px; padding: 0; }
+.law .kb-pick.out .kb-ch { min-height: 54px; padding: 6px 14px 8px; border: 2px solid var(--line); border-bottom-width: 4px; border-radius: 14px;
+  background: #fff; font: 800 19px/1.3 var(--font); color: var(--ink); white-space: normal; transition: background-color .15s, border-color .15s, color .15s; }
+.law .kb-pick.out .kb-ch:active:not(:disabled) { transform: translateY(2px); border-bottom-width: 2px; margin-top: 2px; min-height: 52px; }
+.law .kb-pick.out .kb-ch.ok { border-color: var(--green-pale); background: var(--green-bg); color: var(--green-dk); }
+.law .kb-pick.out .kb-ch.no { border-color: #FFB2B2; background: #FFDFE0; color: #EA2B2B; cursor: default; opacity: .7; }
+.law .kb-pick.out .kb-ch.spent { color: transparent; background: var(--line); border-color: var(--line); }
+.law .kb-pick.out .kb-ch.spent > * { visibility: hidden; }
+.law .kb-pick.out.two { grid-template-columns: 1fr 1fr; }
+.law .kb-pick.out.two .kb-ch:last-child:nth-child(odd) { grid-column: 1 / -1; }
+/* the words under the card drop and shake as a wrong choice does (answerFxFail), from their base */
+.law .kb-pick.out .kb-ch { transform-origin: 50% 100%; }
+/* the blank a wrong word was tried in: red for a moment while it shakes */
+.law .kb13 .k.gap.bad .kb-m { background: var(--red-bg); }
+.law .kb13 .k.gap.bad .kb-m::before { border-color: var(--red-dk2); }
+/* the card halving with the proof (CARD.half): the rule's ٢ rises into the number, is struck through as used, and the term
+   flashes orange while its number rolls to its half and its caption says «نصّه» */
+.kb-two { position: fixed; z-index: 5000; display: grid; place-items: center; font: 800 20px/1 var(--font); color: var(--orange); pointer-events: none; }
+.law .kb13 .pl.cn.used { display: inline-block; padding: 0 .16em; opacity: .45; transition: opacity .3s;
+  background: linear-gradient(to top right, transparent calc(50% - 1.5px), currentColor calc(50% - 1.5px), currentColor calc(50% + 1.5px), transparent calc(50% + 1.5px)); }
+.law .kb13 .k .kb-m.halved { background: var(--orange-bg); color: var(--orange-dk); box-shadow: inset 0 0 0 2px var(--orange), inset 0 -3px 0 var(--orange); }
+.law .kb13 .k .kb-m.halved .kb-n { color: var(--orange-dk); }
+.law .kb13 .kb-c.hv { color: var(--orange); font-weight: 800; }
+@media (max-height: 700px) {
+  .lw-learn .kb13 .kb-card { padding-bottom: 30px; }
+  .lw-memo { margin-top: 12px; font-size: 14.5px; }
+  .law .kb-pick.out { gap: 8px; margin-top: 12px; }
+  .law .kb-pick.out .kb-ch { min-height: 48px; font-size: 18px; }
+  .law .kb-pick.out .kb-ch:active:not(:disabled) { min-height: 46px; }
+}
+@media (max-height: 600px) {
+  .lw-learn .kb13 .kb-card { padding-bottom: 22px; }
+  .lw-memo { margin-top: 8px; font-size: 13.5px; }
+  .lw-memo-ic { width: 26px; height: 26px; }
+  .law .kb-pick.out { gap: 7px; margin-top: 10px; }
+  .law .kb-pick.out .kb-ch { min-height: 44px; font-size: 17px; padding: 4px 12px 6px; }
+  .law .kb-pick.out .kb-ch:active:not(:disabled) { min-height: 42px; }
+}
+
+/* «مجموع ١ إلى ن» in three steps (the user, 2026-11-16): the sum folds into its last number, which is cut in half */
+.law .tq .ex { justify-content: center; }
+.law .tq .ex > span { position: relative; }
+.law .tq .tq-cut { position: absolute; left: 50%; top: -6px; bottom: -6px; width: 3px; margin-left: -1.5px; border-radius: 2px; background: #fff;
+  box-shadow: 0 0 0 1.5px var(--blue-dk); transform-origin: 50% 0; pointer-events: none; }
+.law .tq-st span.dn { border-color: var(--blue-border, #84D8FF); color: var(--blue-dk); }
+/* «العدد المشترك» the same way: the ٥ each number gives up, on its way to the one in front */
+.law .tq .tq-g { position: absolute; z-index: 2; padding: 0 3px; border-radius: 9px; font-size: 32px; font-weight: 800; line-height: 1.3;
+  background: var(--blue-light); color: var(--blue-dk); pointer-events: none; }
+/* and the 1-to-n rule's name before its own steps, while the sum of the rest is worked with it */
+.law .tq-st .tq-tag { padding: 1px 8px; border: 2px solid var(--gold); border-radius: 9px; background: var(--gold-bg); color: var(--brown); white-space: nowrap; margin-inline-end: 2px; }
+
+/* the rule's colours, five ways (tools/law-colors.html; the user, 2026-11-16: «what is the best colors we put in the laws …
+   create 5 versions of colors»). A dev page picks one with ?hue=1…5 (law.js sets html[data-law-hue]); the app keeps its blue
+   until one is chosen. Every term has a role: .ca the answer, .r-mk a number worked out from the question, any other term a
+   number read off it, .cn the rule's own number. A version gives each role an ink (-c), a face (-b), a rim (-l) and a solid
+   (-s); the card, the numbers under it, the proof's numbers and its steps all read them */
+html[data-law-hue="1"] .law { --in-c: #1899D6; --in-b: #DDF4FF; --in-l: #84D8FF; --in-s: #1CB0F6; --mk-c: #9C55D9; --mk-b: #F4E6FF; --mk-l: #D9AEFF; --mk-s: #CE82FF;
+  --cn-c: #FF9600; --cn-b: #FFEFD6; --cn-l: #FFC77A; --cn-s: #FF9600; --an-c: var(--ink); --an-b: #fff; --an-l: var(--line); }
+html[data-law-hue="2"] .law { --in-c: #1899D6; --in-b: #DDF4FF; --in-l: #84D8FF; --in-s: #1CB0F6; --mk-c: #1899D6; --mk-b: #DDF4FF; --mk-l: #84D8FF; --mk-s: #1CB0F6;
+  --cn-c: #EA2B2B; --cn-b: #FFDFE0; --cn-l: #FFB2B2; --cn-s: #FF4B4B; --an-c: var(--ink); --an-b: #fff; --an-l: var(--line); }
+html[data-law-hue="3"] .law { --in-c: #D43F8D; --in-b: #FFE3F1; --in-l: #FFA8D3; --in-s: #FF4B9B; --mk-c: #0B9A88; --mk-b: #D5F7F2; --mk-l: #7EE0D2; --mk-s: #1FC2AE;
+  --o-c: #E07800; --o-b: #FFEFD6; --o-l: #FFC77A; --cn-c: var(--ink); --cn-b: #F0F0F0; --cn-l: var(--line); --cn-s: #777; --an-c: #CD7900; --an-b: #FFF4BF; --an-l: #FFC800; }
+html[data-law-hue="4"] .law { --in-c: #B07D00; --in-b: #FFE55C; --in-l: #FFE55C; --in-s: #FFD52E; --mk-c: #D43F8D; --mk-b: #FFB8DC; --mk-l: #FFB8DC; --mk-s: #FF9ACB;
+  --cn-c: #E8341C; --cn-b: #FFD3CC; --cn-l: #FF4B4B; --cn-s: #FF8A7A; --an-c: var(--ink); --an-b: transparent; --an-l: transparent; --ok-b: #B8F28B; --ok-l: #B8F28B; --ok-c: #3F8A00; }
+html[data-law-hue="5"] .law { --in-c: #49C0F8; --in-b: #12364A; --in-l: #1F5F80; --in-s: #1CB0F6; --mk-c: #FF8AD8; --mk-b: #3E1F3A; --mk-l: #7E3A72; --mk-s: #FF4B9B;
+  --cn-c: #FFC800; --cn-b: #3D3313; --cn-l: #806A1F; --cn-s: #FFC800; --cn-t: #4A3000; --an-c: #F1F7FB; --an-b: #26363F; --an-l: #3C4F59; --ok-c: #79D634; --ok-b: #1F3A1B; --ok-l: #3E7A2A; }
+/* the proof sits on the white screen, so the night card's proof keeps the same hues in their daylight tones */
+html[data-law-hue="5"] .law .dg { --in-c: #1899D6; --in-b: #DDF4FF; --in-l: #84D8FF; --mk-c: #D43F8D; --mk-b: #FFE3F1; --mk-l: #FFA8D3; --cn-c: #CD7900; --cn-b: #FFF4BF; --cn-l: #FFC800; }
+
+html[data-law-hue] .law .kb13 .k { --rc: var(--in-c); --rb: var(--in-b); --rl: var(--in-l); }
+html[data-law-hue] .law .kb13 .k.r-mk { --rc: var(--mk-c); --rb: var(--mk-b); --rl: var(--mk-l); }
+html[data-law-hue="3"] .law .kb13 .k[data-s="1"] { --rc: var(--in-c); --rb: var(--in-b); --rl: var(--in-l); }
+html[data-law-hue="3"] .law .kb13 .k[data-s="2"] { --rc: var(--mk-c); --rb: var(--mk-b); --rl: var(--mk-l); }
+html[data-law-hue="3"] .law .kb13 .k[data-s="3"] { --rc: var(--o-c); --rb: var(--o-b); --rl: var(--o-l); }
+html[data-law-hue] .law .kb13 .k.ca { --rc: var(--an-c); --rb: var(--an-b); --rl: var(--an-l); }
+html[data-law-hue] .law .kb13 .k.ok { --rc: var(--ok-c, var(--green-dk)); --rb: var(--ok-b, var(--green-bg)); --rl: var(--ok-l, var(--green-pale)); }
+html[data-law-hue] .law .kb13:not(.hide) .k:not(.gap) .kb-m,
+html[data-law-hue] .law .kb13.hide .k.ca:not(.gap) .kb-m { background: var(--rb); color: var(--rc); box-shadow: inset 0 0 0 2px var(--rl), inset 0 -3px 0 var(--rl); }
+html[data-law-hue] .law .kb13 .kb-n, html[data-law-hue] .law .kb13 .kb-c.num { color: var(--rc); }
+html[data-law-hue] .law .kb13 .kb-u { background: var(--rl); }
+html[data-law-hue] .law .kb13 .pl.cn { color: var(--cn-c); }
+html[data-law-hue] .law .r-in { --rc: var(--in-c); --rb: var(--in-b); --rl: var(--in-l); --rs: var(--in-s); }
+html[data-law-hue] .law .r-mk { --rc: var(--mk-c); --rb: var(--mk-b); --rl: var(--mk-l); --rs: var(--mk-s); }
+html[data-law-hue] .law .r-cn { --rc: var(--cn-c); --rb: var(--cn-b); --rl: var(--cn-l); --rs: var(--cn-s); --rt: var(--cn-t, #fff); }
+html[data-law-hue] .law .ex .hl[class*="r-"] { background: var(--rb); color: var(--rc); }
+html[data-law-hue] .law .ex .res[class*="r-"] { background: var(--rs); color: var(--rt, #fff); }
+html[data-law-hue] .law .ex-st span[class*="r-"].on { border-color: var(--rs); color: var(--rc); background: var(--rb); }
+html[data-law-hue] .law .ex-st span[class*="r-"].dn { border-color: var(--rl); color: var(--rc); background: #fff; }
+
+/* 2 — the rule's own number circled in red, the one a student forgets */
+html[data-law-hue="2"] .law .kb13 .pl.cn { display: inline-block; padding: 0 .26em; border-radius: 999px; box-shadow: 0 0 0 2.5px #FF4B4B; line-height: 1.2; }
+/* 4 — a student's notebook: ink words under highlighter strokes, the rule's number ringed in red pen */
+html[data-law-hue="4"] .law .kb13:not(.hide) .k:not(.gap) .kb-m,
+html[data-law-hue="4"] .law .kb13.hide .k.ca:not(.gap) .kb-m { background: linear-gradient(177deg, transparent 20%, var(--rb) 20%, var(--rb) 86%, transparent 86%); box-shadow: none; color: var(--ink); border-radius: 3px; }
+html[data-law-hue="4"] .law .kb13 .pl.cn { display: inline-block; padding: 0 .24em; border-radius: 52% 46% 55% 48%; box-shadow: 0 0 0 2.5px #E8341C; transform: rotate(-6deg); line-height: 1.2; }
+html[data-law-hue="4"] .law .ex .hl[class*="r-"], html[data-law-hue="4"] .law .ex .res[class*="r-"] { background: linear-gradient(177deg, transparent 16%, var(--rb) 16%, var(--rb) 88%, transparent 88%); color: var(--ink); }
+/* 5 — a night card: the rule glows on Duolingo's night colours */
+html[data-law-hue="5"] .law .kb13 .kb-card { background: #1B2A32; border-color: #2E4049; }
+html[data-law-hue="5"] .law .kb13 .kb-tag { color: #49C0F8; }
+html[data-law-hue="5"] .law .kb13 .kb-fx, html[data-law-hue="5"] .law .kb13 .pl:not(.cn) { color: #F1F7FB; }
+html[data-law-hue="5"] .law .kb13 .op { color: #8FA3AD; }
+html[data-law-hue="5"] .law .kb13 .fq-bar { background: #F1F7FB; }
+html[data-law-hue="5"] .law .kb13 .kb-c, html[data-law-hue="5"] .law .kb13 .kb-hint { color: #8FA3AD; }
+html[data-law-hue="5"] .law .kb13.hide .k:not(.ca) .kb-m, html[data-law-hue="5"] .law .kb13 .k.gap .kb-m { background: #22323A; }
+html[data-law-hue="5"] .law .kb13.hide .k:not(.ca) .kb-m::before, html[data-law-hue="5"] .law .kb13 .k.gap .kb-m::before { border-color: #4B5D66; }
+
+/* a rule's own number is orange on every rule card and fill, as the ٢ of «مجموع ١ إلى ن» (the user, 2026-11-16: «just make the 2 orange
+   like this one»), and the ٢ the proof brings in with it */
+.law .pl.cn, .law .kb13 .pl.cn { color: var(--orange); font-weight: 800; }
+.law .ex .hl.r-cn { background: var(--orange-bg); color: var(--orange); }

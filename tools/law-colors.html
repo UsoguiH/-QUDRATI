@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ألوان القانون</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@600;700;800&display=swap">
+<style>
+/* The rule's colours, five ways beside today's blue (2026-11-16; the user: «what is the best colors we put in the laws that will
+   make it better … create 5 versions of colors»). Each phone is tools/lawapp/run.html, the real app, opened on one rule's screen
+   with ?hue=N (css/law.css); the page presses «حفظته» and picks the missing word by itself so the proof plays hands-free */
+:root { --ink: #3C3C3C; --gray: #777; --line: #E5E5E5; --blue: #1CB0F6; --blue-dk: #1899D6; --blue-light: #DDF4FF; --blue-border: #84D8FF;
+  --green: #58CC02; --green-lip: #478700; --green-bg: #D7FFB8; --green-dk: #58A700; --gold: #FFC800; --brown: #CD7900;
+  --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif; color-scheme: light; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #EFEFEF; color: var(--ink); font-family: var(--font); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+h1, h2, p { margin: 0; }
+button { font-family: var(--font); cursor: pointer; color: inherit; }
+header { max-width: 1560px; margin: 0 auto; padding: 18px 20px 4px; }
+header h1 { font-size: 26px; font-weight: 800; line-height: 1.25; }
+header p { font-size: 15px; font-weight: 600; color: var(--gray); margin-top: 4px; max-width: 980px; }
+.bar { max-width: 1560px; margin: 0 auto; padding: 10px 20px 0; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bar .lbl { font-size: 14px; font-weight: 800; color: var(--gray); margin-inline-start: 6px; }
+.chipb { height: 38px; padding: 0 14px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 14.5px; font-weight: 800; }
+.chipb.on { border-color: var(--blue-border); background: var(--blue-light); color: var(--blue-dk); }
+.sep { width: 2px; height: 26px; background: #DADADA; margin: 0 4px; border-radius: 1px; }
+.play { height: 38px; padding: 0 18px; border-radius: 12px; border: 0; background: var(--green); box-shadow: 0 4px 0 var(--green-lip); color: #fff; font-size: 15px; font-weight: 800; }
+.play:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--green-lip); }
+.grid { max-width: 1560px; margin: 0 auto; padding: 16px 20px 40px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px 18px; }
+.col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tag { font-size: 13px; font-weight: 800; color: var(--brown); }
+.col.now .tag { color: var(--gray); }
+.col.rec .tag::after { content: ' — اقتراحي'; color: var(--green-lip); }
+.col h2 { font-size: 21px; font-weight: 800; line-height: 1.3; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px; }
+.sw { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 10px 0 8px; border-radius: 9px; background: #fff; border: 2px solid var(--line); font-size: 13px; font-weight: 800; }
+.sw i { width: 14px; height: 14px; border-radius: 4px; flex: none; }
+.col p.why { font-size: 13.5px; font-weight: 600; color: var(--gray); min-height: 62px; }
+.frame { position: relative; width: 100%; max-width: 390px; aspect-ratio: 390 / 700; margin: 0 auto; border: 9px solid #1F1F1F; border-bottom: 0;
+  border-radius: 38px 38px 0 0; overflow: hidden; background: #fff; box-shadow: 0 16px 34px rgba(0,0,0,.12); }
+.frame iframe { position: absolute; top: 0; left: 0; width: 390px; height: 780px; border: 0; transform-origin: 0 0; }
+.row { display: flex; gap: 8px; }
+.row button { flex: 1; height: 42px; border-radius: 12px; border: 2px solid var(--line); border-bottom-width: 4px; background: #fff; font-size: 14.5px; font-weight: 800; }
+.row .pick.on { border-color: var(--green); background: var(--green-bg); color: var(--green-dk); }
+.veil { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,.55); display: none; }
+.veil.on { display: block; }
+.col.big .frame { position: fixed; z-index: 21; top: 50%; left: 50%; width: min(390px, 92vw); max-width: none; transform: translate(-50%, -50%); border-bottom: 9px solid #1F1F1F; border-radius: 38px; }
+@media (max-width: 1150px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .grid { grid-template-columns: minmax(0, 1fr); padding: 12px 16px 32px; } header, .bar { padding-inline: 16px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>ألوان القانون: ٥ نسخ</h1>
+  <p>نفس شاشة القانون في التطبيق، بخمس طرق للتلوين وجنبها شكل اليوم. كل جوال يفتح القانون كأنه جديد، ويضغط «حفظته» ويختار الكلمة الناقصة بنفسه، فتشوف البطاقة والشرح كاملين. اقتراحي النسخة ١: اللون يعني نفس الشي في كل القوانين.</p>
+</header>
+<div class="bar">
+  <span class="lbl">القانون</span>
+  <button class="chipb on" data-rule="tri">مجموع ١ إلى ن</button><button class="chipb" data-rule="hand">المصافحات</button><button class="chipb" data-rule="mean">الوسط الحسابي</button><button class="chipb" data-rule="prob">الاحتمال</button>
+  <span class="sep"></span>
+  <span class="lbl">التشغيل</span>
+  <button class="chipb on" data-auto="1">يمشي لحاله</button><button class="chipb" data-auto="0">أنا أضغط</button>
+  <span class="sep"></span>
+  <button class="play" id="again">أعد التشغيل</button>
+</div>
+<div class="grid" id="grid"></div>
+<div class="veil" id="veil"></div>
+<script>
+const SW = (c, t) => `<span class="sw"><i style="background:${c}"></i>${t}</span>`;
+const LOOKS = [
+  { v: 0, cls: 'now', tag: 'اليوم', name: 'أزرق كله', legend: [SW('#1CB0F6', 'كل الحدود'), SW('#fff;box-shadow:inset 0 0 0 2px #E5E5E5', 'الجواب')],
+    why: 'الشكل اللي في التطبيق الآن: كل حد نفس الأزرق، فما فيه شي يقول لك وش تسوي بكل جزء.' },
+  { v: 1, rec: true, tag: 'النسخة ١', name: 'حسب الدور', legend: [SW('#1CB0F6', 'تقراه من السؤال'), SW('#CE82FF', 'تحسبه بنفسك'), SW('#FF9600', 'رقم ثابت في القانون'), SW('#58CC02', 'الجواب')],
+    why: 'اللون له معنى ثابت في كل القوانين: الأزرق تدوّره في السؤال، البنفسجي تحسبه، والبرتقالي رقم القانون اللي ما يتغيّر (مثل ÷ ٢). ونفس اللون يمشي مع الرقم في الشرح.' },
+  { v: 2, tag: 'النسخة ٢', name: 'الفخ بس', legend: [SW('#1CB0F6', 'كل الحدود'), SW('#FF4B4B', 'الرقم اللي ينسونه')],
+    why: 'القانون يبقى هادي بالأزرق، وشي واحد بس يطلع: رقم القانون الثابت بدائرة حمراء، لأنه اللي ينساه الطالب. الشي الوحيد المختلف هو اللي يعلق في الذاكرة.' },
+  { v: 3, tag: 'النسخة ٣', name: 'كل حد بلونه', legend: [SW('#FF4B9B', 'الحد الأول'), SW('#1FC2AE', 'الحد الثاني'), SW('#FF9600', 'الحد الثالث'), SW('#FFC800', 'الجواب')],
+    why: 'كل جزء له لون يفرّقه عن اللي جنبه، فتتذكر القانون كصورة ملوّنة. بس اللون هنا حسب مكان الحد، ما له معنى واحد في كل القوانين.' },
+  { v: 4, tag: 'النسخة ٤', name: 'دفتر المذاكرة', legend: [SW('#FFE55C', 'هايلايتر: من السؤال'), SW('#FFB8DC', 'هايلايتر: تحسبه'), SW('#E8341C', 'قلم أحمر: الرقم الثابت')],
+    why: 'كأنه دفتر طالب يذاكر: الكلام بالأسود وتحته هايلايتر، والرقم المهم مدوّر بالقلم الأحمر. شكل يعرفه كل طالب، وبنفس منطق الأدوار.' },
+  { v: 5, tag: 'النسخة ٥', name: 'بطاقة ليلية', legend: [SW('#49C0F8', 'من السؤال'), SW('#FF8AD8', 'تحسبه'), SW('#FFC800', 'الرقم الثابت'), SW('#79D634', 'الجواب')],
+    why: 'القانون على بطاقة غامقة وألوانه تلمع عليها، فيبان مختلف عن باقي الشاشة وينحفظ كبطاقة. نفس منطق الأدوار بألوان أفتح.' },
+];
+let rule = 'tri', auto = true, picked = '', run = 0;
+try { picked = localStorage.getItem('qudrati.lawhue.pick') || ''; } catch (e) {}
+const grid = document.getElementById('grid'), veil = document.getElementById('veil');
+function build() {
+  grid.innerHTML = LOOKS.map(L => `<div class="col${L.cls ? ' ' + L.cls : ''}${L.rec ? ' rec' : ''}" data-v="${L.v}">
+    <span class="tag">${L.tag}</span><h2>${L.name}</h2><div class="legend">${L.legend.join('')}</div><p class="why">${L.why}</p>
+    <div class="frame"><iframe title="${L.name}" data-v="${L.v}"></iframe></div>
+    <div class="row"><button data-snd="${L.v}">شغّله بالصوت</button><button data-big="${L.v}">كبّر</button>
+      ${L.v ? `<button class="pick${picked == L.v ? ' on' : ''}" data-pick="${L.v}">${picked == L.v ? 'اخترتها' : 'اختر هذي'}</button>` : ''}</div>
+  </div>`).join('');
+  grid.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => {
+    picked = b.dataset.pick; try { localStorage.setItem('qudrati.lawhue.pick', picked); } catch (e) {}
+    grid.querySelectorAll('[data-pick]').forEach(x => { const on = x.dataset.pick === picked; x.classList.toggle('on', on); x.textContent = on ? 'اخترتها' : 'اختر هذي'; });
+  });
+  grid.querySelectorAll('[data-snd]').forEach(b => b.onclick = () => {
+    const f = grid.querySelector(`iframe[data-v="${b.dataset.snd}"]`); open1(f, false, ++run);
+  });
+  grid.querySelectorAll('[data-big]').forEach(b => b.onclick = () => big(b.closest('.col')));
+  load(); fit();
+}
+const url = (v, mute) => `lawapp/run.html?dev=1${v ? '&hue=' + v : ''}${mute ? '&mute=1' : ''}&a=${Date.now()}#rule:${rule}`;
+function open1(f, mute, r, then) {
+  f.dataset.run = r; f.onload = () => { drive(f, r); if (then) setTimeout(then, 300); };
+  f.src = url(+f.dataset.v, mute);
+}
+/* the phones load one after another: each one seeds the same student before the app reads it */
+function load() {
+  const r = ++run, fr = [...grid.querySelectorAll('iframe')];
+  let i = 0;
+  const next = () => { if (r !== run || i >= fr.length) return; open1(fr[i++], true, r, next); };
+  next();
+}
+/* hands-free: «حفظته» once the rule has been said, then the missing word, so the card and the proof play through */
+function drive(f, r) {
+  let seen = 0, asked = 0, pressed = false;
+  const tick = () => {
+    if (!f.isConnected || f.dataset.run != r || !auto) return;
+    let d; try { d = f.contentDocument; } catch (e) { return; }
+    if (!d) return setTimeout(tick, 200);
+    const go = d.querySelector('#lwGo');
+    if (!pressed && go && go.textContent.trim() === 'حفظته') { seen = seen || Date.now(); if (Date.now() - seen > 2400) { go.click(); pressed = true; } }
+    const ask = d.querySelector('.kb12 .k.ask .kb-w'), chs = [...d.querySelectorAll('.kb-pick .kb-ch:not(.spent)')];
+    if (ask && chs.length) { asked = asked || Date.now();
+      if (Date.now() - asked > 1300) { const b = chs.find(x => x.textContent.trim() === ask.textContent.trim()); if (b) { b.click(); return; } } }
+    setTimeout(tick, 200);
+  };
+  tick();
+}
+function fit() { grid.querySelectorAll('.frame').forEach(fr => { const f = fr.querySelector('iframe'); f.style.transform = `scale(${fr.clientWidth / 390})`; }); }
+function big(col) {
+  const on = !col.classList.contains('big');
+  grid.querySelectorAll('.col.big').forEach(c => c.classList.remove('big'));
+  col.classList.toggle('big', on); veil.classList.toggle('on', on);
+  col.querySelector('[data-big]').textContent = on ? 'صغّر' : 'كبّر';
+  requestAnimationFrame(fit);
+}
+veil.onclick = () => { const c = grid.querySelector('.col.big'); if (c) big(c); };
+addEventListener('keydown', e => { if (e.key === 'Escape') veil.onclick(); });
+addEventListener('resize', fit);
+document.querySelectorAll('[data-rule]').forEach(b => b.onclick = () => { rule = b.dataset.rule; document.querySelectorAll('[data-rule]').forEach(x => x.classList.toggle('on', x === b)); load(); });
+document.querySelectorAll('[data-auto]').forEach(b => b.onclick = () => { auto = b.dataset.auto === '1'; document.querySelectorAll('[data-auto]').forEach(x => x.classList.toggle('on', x === b)); load(); });
+document.getElementById('again').onclick = load;
+build();
+</script>
+</body>
+</html>

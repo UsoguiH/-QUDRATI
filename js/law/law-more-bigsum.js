@@ -15,7 +15,7 @@
     { key: 'ops', name: 'ترتيب العمليات', tok: [{ t: 'الناتج' }, '=', { t: 'القوس' }, '←', { t: 'الأس' }, '←', { t: '× ÷' }, '←', { t: '+ −' }],
       say: 'مين يبدأ أول؟ *القوس*، بعده الأس، بعده الضرب والقسمة، وآخر شي الجمع والطرح.', cue: 'تجيك في أي مسألة فيها أكثر من عملية: «٢ + ٣ × ٤».',
       trap: 'الضرب قبل الجمع حتى لو جا بعده، والضرب والقسمة بالترتيب من اليمين.' },
-    { key: 'common', name: 'العدد المشترك', tok: [{ t: 'المجموع' }, '=', { t: 'العدد المشترك' }, '×', { t: 'مجموع الباقي' }], wswap: [1, 2],
+    { key: 'common', name: 'العدد المشترك', tok: [{ t: 'المجموع', r: 'ans' }, '=', { t: 'العدد المشترك', r: 'in' }, '×', { t: 'مجموع الباقي', r: 'mk' }], wswap: [1, 2],
       say: 'كلها من جدول واحد؟ أخرج *العدد المشترك* برّا، واجمع الباقي بقانون من ١.', cue: 'تجيك لما تشوف «٥ + ١٠ + ١٥ + … + ٥٠» أو «٣ + ٦ + ٩ + …».',
       trap: 'الباقي يبدأ من ١: آخر عدد ÷ العدد المشترك.' },
     { key: 'oddsum', name: 'مجموع الفردية', tok: [{ t: 'مجموع الفردية' }, '=', { t: 'عددها' }, '×', { t: 'عددها' }],
@@ -34,6 +34,11 @@
       say: 'قارن *الزيادة* بس: الأساس نفسه في الاثنين، واللي زيادته أكبر يكسب.', cue: 'تجيك في المقارنة: «٢٠ × ٣١» و«٢١ × ٣٠».',
       trap: 'لا تضرب الاثنين كاملين، قارن الزيادة.' },
   ];
+
+  /* «العدد المشترك»'s steps, and the 1-to-n rule's own that stand in for them while the sum of the rest is worked */
+  const steps = (L, tag) => (tag ? `<b class="tq-tag">${tag}</b>` : '') + L.map(([t, r]) => `<span class="${r}">${t}</span>`).join('<i>←</i>');
+  const CM_ST = () => steps([['العدد المشترك', 'r-in'], ['مجموع الباقي', 'r-mk'], ['اضربهم', '']]);
+  const TRI_ST = () => steps([['آخر عدد', 'r-in'], ['نصّه', 'r-cn'], ['× اللي بعده', 'r-mk']], 'قانون ١ إلى ن');
 
   const dia = {
     tens: {
@@ -77,24 +82,163 @@
         await c.wait(300); c.val(0, '٧', last); await c.wait(300);
       },
     },
+    /* the proof in «مجموع ١ إلى ن»'s grammar (the user, 2026-11-16: «do the same thing you did to 1 to n law exactly»): the example
+       big and its three steps under it. Every number gives up its ٥, which arcs into one ٥ in front, and what is left closes into
+       brackets: «١ + ٢ + … + ٢٠», the very sum of the 1-to-n proof. فهيم says so, the steps under it become that rule's own, and it
+       plays exactly as it did there (the user: «make it like مجموع الباقي is like what we have learned and exactly like before … so
+       they say oh! then it is easy»); then ٥ × ٢١٠ lands green, each number flying into the card */
     common: {
-      html: () => `<div class="dg"><div class="cells sm cm1">${[5, 10, 15, 20, 25, 30, 35, 40, 45, 50].map(v => `<span class="cell">${A(v)}</span>`).join('')}</div>
-        <div class="cm2"><span class="cm-f">٥ ×</span><span class="cm-b">(</span>${H.cells([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 'sm cm-r')}<span class="cm-b">)</span></div>
-        ${H.lab([['العدد المشترك'], ['مجموع الباقي'], ['المجموع', '؟']])}</div>`,
+      html: () => `<div class="dg tq"><div class="ex tq-ex">${['٥', '+', '١٠', '+', '١٥', '+', '…', '+', '١٠٠'].map(t => `<span class="${/[+…]/.test(t) ? 'o' : ''}">${t}</span>`).join('')}</div>
+        <div class="ex-st tq-st">${CM_ST()}</div></div>`,
       async run(st, c) {
-        const top = $$(st, '.cm1 .cell'), f = $(st, '.cm-f'), br = $$(st, '.cm-b'), bot = $$(st, '.cm-r .cell'), n1 = $(st, '.n1'), n2 = $(st, '.n2'), n3 = $(st, '.n3');
-        [f, ...br, ...bot].forEach(e => show(e, false));
-        H.rise(top, 0, 40); await c.wait(700);
-        c.cap('كلها من جدول ٥'); top.forEach((x, i) => C.later(i * 50, () => { x.classList.add('ring'); }));
-        c.s('on', 1, .35); await c.wait(800);
-        pop(f, 360); H.set(n1, '٥'); c.s('t1', 1, .42); c.val(1, '٥', f); await c.wait(520);
-        br.forEach(b => pop(b, 300));
-        for (let i = 0; i < 10; i++) { show(bot[i]); anim(bot[i], [{ opacity: 0, transform: 'translateY(-26px)' }, { opacity: 1, transform: 'none' }], { duration: 300, easing: 'ease-out' }); top[i].classList.add('dim'); c.s('tap', up(i) * .75, .26); await c.wait(80); }
+        const ex = $(st, '.ex'), row = $(st, '.ex-st'), toks = [...ex.children], k = () => C.scaleOf(ex), all = () => [...ex.children];
+        const mk = (t, cls = '') => { const e = document.createElement('span'); e.className = cls; e.textContent = t; return e; };
+        const say = t => { if (c.say) c.say(t); };
+        /* whatever stays glides to its new place when the line changes around it */
+        const glide = (els, f) => { const a = els.map(e => e.getBoundingClientRect()); f(); els.forEach((e, i) => { if (!e.isConnected) return; const b = e.getBoundingClientRect(), dx = (a[i].left - b.left) / k();
+          if (Math.abs(dx) > .5) anim(e, [{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 380, easing: C.XO }); }); };
+        const on = i => { const sp = $$(st, '.ex-st span'); sp.forEach((x, j) => { x.classList.toggle('on', j === i); x.classList.toggle('dn', j < i); }); pulse(sp[i]); };
+        /* the steps under the example, swapped for the 1-to-n rule's own while its sum is worked, and back */
+        const swap = async html => {
+          anim(row, [{ opacity: 1, transform: 'none' }, { opacity: 0, transform: 'translateY(6px)' }], { duration: 170, easing: 'ease-in', fill: 'forwards' });
+          await c.wait(180);
+          row.getAnimations().forEach(a => a.cancel()); row.innerHTML = html;
+          anim(row, [{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }], { duration: 280, easing: C.XO });
+        };
+        /* the drawing is sized once for its widest lines, so it is never scaled again mid-proof */
+        const probe = L => { const p = ex.cloneNode(false); p.style.cssText = 'position:absolute;visibility:hidden';
+          p.innerHTML = L.map(([t, cl]) => `<span class="${cl}">${t}</span>`).join(''); st.appendChild(p); const w = p.offsetWidth; p.remove(); return w; };
+        const O = t => [t, 'o'];
+        ex.style.minWidth = Math.max(ex.offsetWidth,
+          probe([['٥', 'res'], O('×'), O('('), ['١', ''], O('+'), ['٢', ''], O('+'), ['٣', ''], O('+'), O('…'), O('+'), ['٢٠', 'hl'], O(')')]),
+          probe([['٥', 'res'], O('×'), O('('), ['١٠', 'res'], O('×'), O('('), ['٢٠', 'hl'], O('+'), ['١', 'hl'], O(')'), O(')')])) + 'px';
+        toks.forEach((x, i) => anim(x, RISE, { duration: 280, delay: i * 45, fill: 'backwards' }));
+        anim(row, [{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 420, fill: 'backwards' });
+        await c.wait(900);
+
+        /* 1. العدد المشترك: every number lights as a multiple of ٥ */
+        const ns = toks.filter(x => !x.classList.contains('o'));
+        on(0); c.s('t1', 1, .42); c.cap('كلها من جدول ٥');
+        for (let i = 0; i < ns.length; i++) { ns[i].classList.add('hl', 'r-in'); pulse(ns[i]); c.s('tap', up(i), .3); await c.wait(240); }
+        await c.wait(560);
+        /* each number gives its ٥ up, which rises out of it, and stays as what is left: ١، ٢، ٣، ٢٠ */
+        c.cap('أخرج ٥ من كل عدد: ١٠ ÷ ٥ = ٢، ١٥ ÷ ٥ = ٣ …');
+        const s = k(), gr = st.getBoundingClientRect(), LIFT = 44, Q = ['١', '٢', '٣', '٢٠'];
+        const gs = ns.map((n, i) => {
+          if (C.reduce) { n.textContent = Q[i]; n.classList.remove('hl', 'r-in'); return null; }
+          const r = n.getBoundingClientRect(), g = mk('٥', 'tq-g'); st.appendChild(g);
+          const cx = (r.left + r.width / 2 - gr.left) / s, cy = (r.top + r.height / 2 - gr.top) / s;
+          Object.assign(g.style, { left: cx - g.offsetWidth / 2 + 'px', top: cy - g.offsetHeight / 2 + 'px' });
+          anim(g, [{ transform: 'scale(.5)', opacity: 0 }, { transform: `translateY(${-LIFT * .6}px)`, opacity: 1, offset: .5 }, { transform: `translateY(${-LIFT}px)`, opacity: 1 }],
+            { duration: 380, delay: i * 110, easing: 'cubic-bezier(.3,1.3,.5,1)', fill: 'both' });
+          C.later(i * 110 + 120, () => { n.textContent = Q[i]; n.classList.remove('hl', 'r-in'); pop(n, 260); c.s('tap', up(i), .3); });
+          return { g, cx, cy };
+        }).filter(Boolean);
+        await c.wait(ns.length * 110 + 650);
+        /* then the line opens in front for one ٥ and its brackets, and the risen ٥s gather into it */
+        c.cap('كل عدد فيه ٥: طلّعها برّا مرة وحدة');
+        const f5 = mk('٥', 'res r-in'), tm = mk('×', 'o'), b1 = mk('(', 'o'), b2 = mk(')', 'o');
+        glide(toks, () => { ex.prepend(f5, tm, b1); ex.append(b2); });
+        const to = f5.getBoundingClientRect(), tx = (to.left + to.width / 2 - gr.left) / s, ty = (to.top + to.height / 2 - gr.top) / s;
+        [tm, b1, b2].forEach((e, i) => anim(e, RISE, { duration: 280, delay: 120 + i * 60, fill: 'backwards' }));
+        anim(f5, [{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'none' }], { duration: 200, delay: 360, easing: 'cubic-bezier(.3,1.5,.5,1)', fill: 'backwards' });
+        gs.forEach(({ g, cx, cy }, i) => {
+          const dx = tx - cx, dy = ty - cy;
+          g.getAnimations().forEach(a => a.cancel());
+          anim(g, [{ transform: `translateY(${-LIFT}px)`, opacity: 1 }, { transform: `translate(${dx * .5}px, ${Math.min(dy, -LIFT) - 16}px)`, opacity: 1, offset: .5 }, { transform: `translate(${dx}px, ${dy}px) scale(.8)`, opacity: 0 }],
+            { duration: 520, delay: i * 80, easing: 'cubic-bezier(.45,0,.55,1)', fill: 'both' });
+          C.later(i * 80 + 560, () => g.remove());
+          if (i) C.later(i * 80 + 480, () => { c.s('tap', 1 + i * .06, .26); anim(f5, [{ transform: 'none' }, { transform: 'scale(1.12)', offset: .4 }, { transform: 'none' }], { duration: 200 }); });
+        });
+        await c.wait(gs.length * 80 + 520);
+        c.s('drop', 1, .38); c.val(1, '٥', f5);
+        await c.wait(950);
+
+        /* 2. مجموع الباقي: the brackets hold «١ + ٢ + … + ٢٠», the sum the 1-to-n rule was just proved on. فهيم says so, and the
+           steps under it turn into that rule's own */
+        on(1); c.s('t2', 1, .42);
+        const inner = all().slice(3, -1);
+        say('*١\u00A0+\u00A0٢\u00A0+\u00A0…\u00A0+\u00A0٢٠*؟ هذا *قانون\u00A0١\u00A0إلى\u00A0ن* اللي تعلّمته قبل شوي!');   /* the sum and the rule's name never break across lines */
+        c.cap('هذا قانون ١ إلى ن اللي تعلّمته!');
+        [b1, ...inner, b2].forEach((x, i) => anim(x, [{ transform: 'none' }, { transform: 'translateY(-7px)', offset: .4 }, { transform: 'none' }], { duration: 360, delay: i * 40, easing: 'ease-out' }));
+        C.later(120, () => c.s('hint', 1.2, .4));
+        await c.wait(1700);
+        await swap(TRI_ST());
+        await c.wait(650);
+
+        /* the 1-to-n proof, as it played on its own: آخر عدد, the rest folding into it */
+        const last = inner[inner.length - 1], rest = inner.slice(0, -1);
+        on(0); last.classList.add('hl', 'r-in'); pulse(last); c.s('t1', 1, .42); c.cap('خذ آخر عدد: ٢٠');
+        await c.wait(900);
+        const lr = last.getBoundingClientRect();
+        rest.forEach((x, i) => {
+          const r = x.getBoundingClientRect(), dx = (lr.left + lr.width / 2 - r.left - r.width / 2) / k();
+          anim(x, [{ transform: 'none', opacity: 1 }, { transform: `translate(${dx * .55}px, -14px) scale(.8)`, opacity: .9, offset: .55 }, { transform: `translate(${dx}px, 0) scale(.2)`, opacity: 0 }],
+            { duration: 460, delay: i * 50, easing: 'cubic-bezier(.45,0,.55,1)', fill: 'forwards' });
+          if (!x.classList.contains('o')) C.later(i * 50 + 380, () => { c.s('tap', 1 + i * .05, .26); anim(last, [{ transform: 'none' }, { transform: 'scale(1.08)', offset: .4 }, { transform: 'none' }], { duration: 200 }); });
+        });
+        await c.wait(rest.length * 50 + 480);
+        glide(all(), () => { rest.forEach(x => x.remove()); last.classList.remove('hl'); last.classList.add('res'); });
+        pop(last, 340); c.s('drop', 1, .38);
+        await c.wait(900);
+
+        /* نصّه: «÷ ٢» joins it, the number is cut in two halves, and one half drops away */
+        on(1); c.s('t2', 1, .42); c.cap('نصّه: ٢٠ ÷ ٢ = ١٠');
+        const dv = mk('÷', 'o'), two = mk('٢', 'hl r-cn');
+        glide(all(), () => b2.before(dv, two));
+        [dv, two].forEach((e, i) => anim(e, RISE, { duration: 280, delay: i * 70, fill: 'backwards' }));
+        await c.wait(950);
+        glide(all(), () => { dv.remove(); two.remove(); });
+        const cut = document.createElement('i'); cut.className = 'tq-cut'; last.appendChild(cut);
+        anim(cut, [{ transform: 'scaleY(0)', opacity: 1 }, { transform: 'scaleY(1)', opacity: 1, offset: .6 }, { transform: 'scaleY(1)', opacity: 0 }], { duration: 380, easing: 'ease-out', fill: 'forwards' });
+        c.s('off', 1.2, .36);
+        await c.wait(300);
+        const h1 = mk('١٠', 'res r-cn'), h2 = mk('١٠', 'res r-cn tq-gone'), c0 = last.getBoundingClientRect(), mid = c0.left + c0.width / 2;
+        last.replaceWith(h1); h1.after(h2);
+        [h1, h2].forEach(h => { const r = h.getBoundingClientRect(), dx = (mid - r.left - r.width / 2) / k();
+          anim(h, [{ transform: `translateX(${dx}px) scale(.6)`, opacity: 0 }, { opacity: 1, offset: .45 }, { transform: 'none', opacity: 1 }], { duration: 440, easing: 'cubic-bezier(.3,1.4,.5,1)' }); });
+        c.s('click', 1.2, .4);
+        await c.wait(560);
+        anim(h2, [{ transform: 'none', opacity: 1 }, { transform: 'translateY(22px) rotate(-14deg)', opacity: 0 }], { duration: 420, easing: 'cubic-bezier(.5,0,.75,0)', fill: 'forwards' });
         await c.wait(420);
-        c.cap('الباقي من ١ إلى ١٠ ← ١٠ × ١١ ÷ ٢ = ٥٥'); bot.forEach((x, i) => C.later(i * 30, () => x.classList.add('on')));
-        H.set(n2, '٥٥'); c.s('t2', 1, .42); await c.wait(500); c.val(2, '٥٥', n2); await c.wait(700);
-        c.cap('٥ × ٥٥ = ٢٧٥'); H.set(n3, '٢٧٥'); c.s('hint', 1, .45);
-        await c.wait(320); c.val(0, '٢٧٥', n3); await c.wait(300);
+        glide(all(), () => h2.remove());
+        pulse(h1); c.s('drop', up(1), .36);
+        await c.wait(1000);
+
+        /* × اللي بعده: the number after twenty comes in brackets, closes to ٢١, and the product lands green, as it did there */
+        on(2); c.s('t3', 1, .42); c.cap('اضربه في اللي بعده: ٢٠ + ١ = ٢١');
+        const br = ['×', '(', '٢٠', '+', '١', ')'].map(t => mk(t, /[×()+]/.test(t) ? 'o' : 'hl r-mk'));
+        glide(all(), () => b2.before(...br));
+        br.forEach((e, i) => anim(e, RISE, { duration: 260, delay: i * 50, fill: 'backwards' }));
+        await c.wait(1050);
+        const r21 = mk('٢١', 'res r-mk');
+        glide(all(), () => { br[1].before(r21); br.slice(1).forEach(e => e.remove()); });
+        pop(r21, 340); c.s('drop', up(2), .36);
+        await c.wait(950);
+        c.cap('١٠ × ٢١ = ٢١٠');
+        [h1, br[0], r21].forEach(e => anim(e, [{ transform: 'none' }, { transform: 'translateY(-5px)', offset: .4 }, { transform: 'none' }], { duration: 360 }));
+        await c.wait(650);
+        const s210 = mk('٢١٠', 'ans');
+        glide(all(), () => { h1.replaceWith(s210); br[0].remove(); r21.remove(); });
+        pop(s210, 380); $$(st, '.ex-st span').forEach(x => { x.classList.remove('on'); x.classList.add('dn'); }); c.s('hint', 1, .45);
+        say('شفت؟ *نفس* اللي قبل بالضبط: *٢١٠*. سهلة!');
+        await c.wait(1500);
+
+        /* back to the rule's own steps: the brackets go, and ٢١٠ is the sum of the rest */
+        await swap(CM_ST());
+        on(1); c.cap('مجموع الباقي = ٢١٠');
+        glide(all(), () => { b1.remove(); b2.remove(); s210.classList.remove('ans'); s210.classList.add('res', 'r-mk'); });
+        c.s('drop', up(1), .38); c.val(2, '٢١٠', s210);
+        await c.wait(1300);
+
+        /* 3. اضربهم: the common number times the sum of the rest, and the product lands green */
+        on(2); c.s('t3', 1, .42); c.cap('٥ × ٢١٠ = ١٠٥٠');
+        [f5, tm, s210].forEach(e => anim(e, [{ transform: 'none' }, { transform: 'translateY(-5px)', offset: .4 }, { transform: 'none' }], { duration: 360 }));
+        await c.wait(750);
+        const ans = mk('١٠٥٠', 'ans');
+        glide([], () => { f5.replaceWith(ans); tm.remove(); s210.remove(); });
+        pop(ans, 380); $$(st, '.ex-st span').forEach(x => { x.classList.remove('on'); x.classList.add('dn'); }); c.s('hint', 1, .45);
+        await c.wait(320); c.val(0, '١٠٥٠', ans); await c.wait(300);
       },
     },
     oddsum: {
@@ -314,9 +458,6 @@
 .law .ex-st span { border: 2px solid var(--line); border-radius: 9px; padding: 1px 7px; transition: all .2s; white-space: nowrap; }
 .law .ex-st span.on { border-color: var(--blue); color: var(--blue-dk); background: var(--blue-light); }
 .law .ex-st i { font-style: normal; color: var(--gray-icon); }
-.law .cm2 { display: flex; align-items: center; gap: 3px; }
-.law .cm-f { font-size: 20px; font-weight: 800; color: var(--blue-dk); background: var(--blue-light); border-radius: 9px; padding: 0 6px; white-space: nowrap; }
-.law .cm-b { font-size: 30px; font-weight: 600; color: var(--gray-icon); line-height: 1; }
 .law .os { display: flex; align-items: center; gap: 14px; }
 .law .os circle { transform-box: fill-box; transform-origin: center; }
 .law .os-l { display: flex; flex-direction: column; gap: 6px; font-size: 15px; font-weight: 800; color: var(--gray); white-space: nowrap; }

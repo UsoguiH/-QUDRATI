@@ -36,7 +36,7 @@
     var ghosts = ["عبدالله", "نورة", "فهد", "ريم", "خالد", "لمى", "تركي", "جواهر", "عمر", "هند", "سلمان", "رنا", "بدر", "ليان"].map(function (n, i) { return { n: n, base: 30 + i * 9, rate: 18 + (i * 7) % 40 }; });
     var y = new Date(Date.now() - 864e5), yest = y.getFullYear() + "-" + (y.getMonth() + 1) + "-" + y.getDate();
     localStorage.setItem("qudratState", JSON.stringify({
-      v: 2, disclaimer: true, introSeen: true, track: "sci", sound: true, motion: "full", goal: 10,
+      v: 2, disclaimer: true, introSeen: true, track: "sci", sound: !/[?&]mute=1/.test(location.search), motion: "full", goal: 10,
       user: { name: "سارة", guest: false }, profileAsked: true, placeAsked: true, examAsked: true,
       league: { week: wk, base: 527 - 240, ghosts: ghosts },
       daily: { day: today, n: 4, claimed: false },

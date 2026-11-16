@@ -121,7 +121,8 @@
     mean: { ex: 'ما الوسط الحسابي للأعداد ٨ و١٢ و١٠؟', v: ['١٠', '٣٠', '٣'], more: ['٢', '١٥', '٢٠'], hint: { 1: 'احسبها: ٨ + ١٢ + ١٠ = ؟', 2: 'كم عدد في المثال؟' } },
     hand: { ex: '٧ أشخاص، صافح كل واحد منهم الباقين مرة. كم مصافحة؟', v: ['٢١', '٧', '٦'], more: ['٨', '٤٢', '١٤'], hint: { 2: 'كل واحد يصافح الباقين ما عدا نفسه: كم؟' } },
     last: { ex: 'ما رقم الآحاد في ناتج ٤٨ × ٢٧؟', v: ['٦', '٨', '٧'], more: ['٥٦', '٤', '٢'], hint: { 1: 'آحاد ٤٨ كم؟ وآحاد ٢٧ كم؟', 2: 'آحاد ٤٨ كم؟ وآحاد ٢٧ كم؟' } },
-    tri: { ex: 'ما مجموع الأعداد من ١ إلى ٢٠؟', v: ['٢١٠', '٢٠', '٢١'], more: ['١٩', '٤٢٠', '٢٠٠'], hint: { 2: 'آخر عدد ٢٠، وزد عليه ١: كم؟' } },
+    tri: { ex: 'ما مجموع الأعداد من ١ إلى ٢٠؟', v: ['٢١٠', '٢٠', '٢١'], more: ['١٩', '٤٢٠', '٢٠٠'], line: '٢٠ ÷ ٢ × ٢١ = ١٠ × ٢١ = ٢١٠',
+      hint: { 1: 'آخر عدد في المثال كم؟', 2: 'اللي بعد ٢٠ كم؟' } },
     queue: { ex: 'ترتيبك ٤ من الأمام و٩ من الخلف. كم واحد في الطابور؟', v: ['١٢', '٤', '٩'], more: ['١٣', '٥', '١١'] },
     clock: { ex: 'كم الزاوية بين عقربي الساعة عند الساعة ٥ تماماً؟', v: ['١٥٠°', '٥'], more: ['٦٠°', '٦', '١٢٠°'] },
     ways: { ex: 'عندك ٤ قمصان و٣ بناطيل. بكم طريقة تختار قميص وبنطلون؟', v: ['١٢', '٤', '٣'], more: ['٧', '١٦', '٩'] },
@@ -135,9 +136,11 @@
   /* the labs drive the app by hash and by message; the shipped app answers neither */
   /* never by host: the Android app serves itself from localhost (QA, 2026-11-08); the labs (tools/) and ?dev=1 are dev */
   const DEV = /\/tools\//.test(location.pathname) || /(^|\/)(preview|mobile)\.html$/.test(location.pathname) || /[?&]dev=1(&|$)/.test(location.search);
+  /* the rule's colours, five ways to choose from (tools/law-colors.html, `?hue=1…5`, law.css); the app keeps its blue until one is picked */
+  if (DEV) { const h = (/[?&]hue=([1-5])/.exec(location.search) || [])[1]; if (h) document.documentElement.dataset.lawHue = h; }
   const LF_SHORT = {
     tens: [{ t: 'المجموع' }, '=', { t: 'زوج ١' }, '+', { t: 'زوج ٢' }],
-    tri: [{ t: 'المجموع' }, '=', { t: 'الأخير' }, '×', { t: '(الأخير + ١)' }, '÷', '٢'],
+    tri: [{ t: 'المجموع' }, '=', { t: 'الأخير' }, '×', { t: 'اللي بعده' }, '÷', '٢'],
     common: [{ t: 'المجموع' }, '=', { t: 'المشترك' }, '×', { t: 'الباقي' }],
     evensum: [{ t: 'المجموع' }, '=', { t: 'النص' }, '×', { t: '(النص + ١)' }],
     last: [{ t: 'آحاد الناتج' }, '=', 'آخر رقم في ناتج', { t: 'آحاد' }, '×', { t: 'آحاد' }],
@@ -169,7 +172,7 @@
   function formula(R, cell, split) {
     let n = 0;
     const it = R.tok.map(x => typeof x === 'string' ? { p: x } : { t: x.t, s: n++ });
-    const row = xs => xs.map(x => x.p != null ? (OPR.test(x.p) ? `<span class="op">${x.p === '÷' ? '<i class="dv"></i>' : x.p}</span>` : `<span class="pl">${C().fx(x.p)}</span>`) : cell(x.s, x.t, false)).join('');
+    const row = xs => xs.map(x => x.p != null ? (OPR.test(x.p) ? `<span class="op">${x.p === '÷' ? '<i class="dv"></i>' : x.p}</span>` : `<span class="pl${/^[٠-٩]+$/.test(x.p) ? ' cn' : ''}">${C().fx(x.p)}</span>`) : cell(x.s, x.t, false)).join('');
     if (!it[1] || it[1].p !== '=') return split ? { head: '', body: row(it) } : row(it);
     const rhs = it.slice(2), cut = R.tail ? R.tail - 2 : rhs.length, body = rhs.slice(0, cut), d = body.findIndex(x => x.p === '÷');
     const r = d < 0 ? row(rhs) : `<span class="fq"><span class="fq-n">${row(body.slice(0, d))}</span><i class="fq-bar"></i><span class="fq-d">${row(body.slice(d + 1))}</span></span>${row(rhs.slice(cut))}`;
@@ -204,20 +207,19 @@
   }
   /* a screen's content fits the phone above its button, as the app's own steps do (fitNow): it is drawn at full size and
      zoomed down only as far as it must, never under .66; run again whenever the content grows (a help line, a turn) */
-  /* a solved hands-on screen keeps what it just revealed above the green sheet: the stage is drawn a little smaller, to .75 at
-     most, then slides up by a transform, never past the top bar (QA, 2026-11-08: the rule's line under the sheet at 375 × 667,
-     «أ» and «ب» under the bar at 320 × 568, the pairs' «= ٣٠٠» under the sheet at 320 × 568) */
+  /* a solved hands-on screen keeps what it just revealed above the green sheet by sliding up into the room over it, never by
+     being drawn smaller: answering never changes a step's size (the user, 2026-11-16: «they are getting bigger when i answer
+     … make it not happen again»). Its spent controls are hidden in place, so nothing under the box moves either; the box
+     itself never slides under the top bar */
   function liftAbove(scr, fb) {
     const area = scr.querySelector('.lw-area'), inn = area && area.querySelector('.lw-in'); if (!inn) return;
     if (inn._liftA) { inn._liftA.cancel(); inn._liftA = null; }
     inn._lift = () => fb.isConnected && liftAbove(scr, fb);
-    const foot = innerHeight - fb.offsetHeight - 8, roof = area.getBoundingClientRect().top + 4;
-    const h = inn.getBoundingClientRect().height, z0 = parseFloat(inn.style.zoom) || 1;
-    if (h > foot - roof) inn.style.zoom = Math.max(.75 * z0, z0 * (foot - roof) / h).toFixed(3);
-    const lift = inn.getBoundingClientRect().bottom - foot;
+    const box = inn.querySelector('.pr-box') || inn, r = box.getBoundingClientRect(), z = parseFloat(inn.style.zoom) || 1;
+    const lift = Math.min(r.bottom - (innerHeight - fb.offsetHeight - 8), r.top - (area.getBoundingClientRect().top + 4));
     if (lift > 0) {
       area.style.overflowY = 'hidden';
-      inn._liftA = inn.animate([{ translate: '0 0' }, { translate: `0 ${-lift}px` }], { duration: 320, easing: 'cubic-bezier(.3,.7,.4,1)', fill: 'forwards' });
+      inn._liftA = inn.animate([{ translate: '0 0' }, { translate: `0 ${(-lift / z).toFixed(1)}px` }], { duration: 300, easing: 'cubic-bezier(.3,.7,.4,1)', fill: 'forwards' });
     }
   }
   function fitIn(root) {
@@ -234,10 +236,15 @@
       /* a sheet (a list, a book) reads at .85 at least and scrolls past that; a step zooms to .66 (QA, 2026-11-08: «قوانيني»
          and the unit book at 9px) */
       const sheet = root.classList.contains('lw-veil') || !!(root.closest && root.closest('.lw-veil')), floor = sheet ? .85 : .66;
-      if (h > room + 1) {
-        const fits = z => { inn.style.zoom = z; return inn.getBoundingClientRect().height <= room + 1; };
-        let lo = Math.max(floor, Math.floor(room / h * 100) / 100), hi = 1;
-        if (!fits(lo)) hi = lo; else for (let n = 0; n < 6 && hi - lo > .01; n++) { const m = (lo + hi) / 2; if (fits(m)) lo = m; else hi = m; }
+      /* a hands-on screen is fitted for the moment it is solved, so solving it never changes its size (the user, 2026-11-16):
+         its box, slid up under the top bar, must end above the green sheet it will get */
+      const held = root.matches && root.matches('.lw-play, .lw-pairs') && inn.querySelector('.pr-box');
+      const clear = () => !held || held.getBoundingClientRect().height <= innerHeight - playSheetH() - 8 - (box.getBoundingClientRect().top + 4);
+      if (h > room + 1 || !clear()) {
+        const fits = z => { inn.style.zoom = z; return inn.getBoundingClientRect().height <= room + 1 && clear(); };
+        let lo = Math.min(1, Math.max(floor, Math.floor(room / h * 100) / 100)), hi = 1;
+        if (!fits(lo)) { hi = lo; lo = floor; if (!fits(lo)) hi = lo; }
+        for (let n = 0; n < 7 && hi - lo > .01; n++) { const m = (lo + hi) / 2; if (fits(m)) lo = m; else hi = m; }
         inn.style.zoom = Math.floor(lo * 100) / 100;
       }
       /* a long list that is still taller than the screen at the smallest size scrolls rather than hiding its foot
@@ -251,13 +258,24 @@
     if (!root._fit) { root._fit = run; FITS.add(root); }
     return run;
   }
+  /* how tall the green sheet of a solved hands-on screen stands: its verdict, a worked line with a fraction, its button */
+  const PSH = {};
+  function playSheetH() {
+    const k = innerWidth + 'x' + innerHeight; if (PSH[k]) return PSH[k];
+    const w = document.createElement('div'); w.className = 'screen screen-session law'; w.setAttribute('aria-hidden', 'true');
+    w.style.cssText = 'position:fixed;inset:0;visibility:hidden;pointer-events:none;animation:none;z-index:-1';
+    w.innerHTML = `<div class="feedback good show has-crest" style="transition:none"><div class="fb-row"><div class="fb-head"><span class="fb-ok">${Q().CHECK_BADGE || ''}</span> ممتاز!</div></div>
+      <div class="ln-fb-note">${stack('٤ × (٤ − ١)', '٢')} = ٦</div><button class="btn">متابعة</button></div>`;
+    document.body.appendChild(w); const h = w.firstChild.offsetHeight; w.remove();
+    return PSH[k] = h;
+  }
   /* one resize listener for every screen that fits itself, dropping the ones that have left the page */
   const FITS = new Set();
   addEventListener('resize', () => FITS.forEach(r => { if (r.isConnected) r._fit(); else FITS.delete(r); }));
   const least = () => innerWidth < 380 ? 12 : 15;
   /* «وش الناقص؟»'s three words stay inside their card: a row too wide for it is set a size or two smaller */
   new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => {
-    if (!n.classList || !n.classList.contains('kb-pick')) return;
+    if (!n.classList || !n.classList.contains('kb-pick') || n.classList.contains('out')) return;
     requestAnimationFrame(() => { let fz = 17; const bs = [...n.querySelectorAll('.kb-ch')];
       while (fz > 12 && n.scrollWidth > n.clientWidth + 1) { fz -= 1; bs.forEach(b => { b.style.fontSize = fz + 'px'; b.style.paddingInline = Math.round(fz * .6) + 'px'; }); } });
   }))).observe(document.body, { childList: true, subtree: true });
@@ -285,10 +303,23 @@
       s: (k, r, v) => { if (alive()) c.snd(k, r, v); },
       cap: t => { const p = scr.querySelector('#dcap'); if (!p || !alive()) return; p.innerHTML = c.fx(t); c.anim(p, c.RISE, { duration: 260 }); },
       val: (slot, text, src) => { if (alive()) c.CARD.val(fc, slot, text, src); },
+      half: (slot, text) => { if (alive() && c.CARD.half) c.CARD.half(fc, slot, text); },
+      say: text => { const tx = scr.querySelector('.tx'); if (tx && alive()) c.sayInto(tx, text, 0); },
     };
     c.DIA[R.key].run(g, ctl).then(() => { if (alive()) then(); });
   }
 
+  /* the three words stand above «كمّل»: a column too tall for the room goes two to a row, then a size smaller */
+  function fitPick(scr, pick) {
+    const area = scr.querySelector('.lw-area'); if (!area) return;
+    const over = () => pick.getBoundingClientRect().bottom - (area.getBoundingClientRect().bottom - (parseFloat(getComputedStyle(area).paddingBottom) || 0) - 4);
+    if (over() <= 0) return;
+    pick.classList.add('two');
+    const bs = [...pick.querySelectorAll('.kb-ch')];
+    let fz = parseFloat(getComputedStyle(bs[0]).fontSize);
+    while (over() > 0 && fz > 13) { fz -= 1; bs.forEach(b => { b.style.fontSize = fz + 'px'; }); }
+  }
+  const EYE_IC = '<svg viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg>';
   /* the rule's screen inside a lesson */
   const unitStyle = () => { const q = Q(), S = q.SES, d = window.QBANK[S.domKey], U = q.UNIT_COLORS || {}, u = U[d.color] || U.green || { c: '#58CC02', s: '#58A700', h: '#71DC1A' };
     return `--li-c:${u.c};--li-s:${u.s};--li-h:${u.h}`; };
@@ -306,6 +337,7 @@
         ${review ? revTag() : c.nwTag(R)}
         ${obs('teach')}
         <div class="lw-fc" id="fc">${c.CARD.html(R)}</div>
+        <div class="lw-pk" id="lwPk"></div>
         <div class="stage" id="stage" title="أعد الرسم"></div><p class="dcap" id="dcap"></p>
       </div>
       <div class="action-bar"><button class="btn" id="lwGo" disabled>كمّل</button></div>
@@ -581,7 +613,7 @@
         call('playCorrect'); c.buzz(12);
         chk.parentNode.style.visibility = 'hidden';
         /* the spent tiles go once the sum is made, as the other hands-on screens' controls do (QA, 2026-11-08) */
-        const pt = scr.querySelector('.pr-tiles'); if (pt) { pt.style.display = 'none'; fitIn(scr); }
+        const pt = scr.querySelector('.pr-tiles'); if (pt) pt.style.visibility = 'hidden';
         const fb = scr.querySelector('#fb');
         fb.className = 'feedback good show has-crest';
         fb.innerHTML = `<svg class="fb-crest" viewBox="0 0 380 90" preserveAspectRatio="none" aria-hidden="true"><path class="fb-crest-fill"></path><path class="fb-crest-line" fill="none" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"></path></svg>
@@ -669,7 +701,7 @@
           const area = scr.querySelector('.lw-area'), inn = area && area.querySelector('.lw-in');
           /* solved, the controls and the ask have done their work: they go, as «كمّل الخطوة»'s tiles do, so the stage itself
              stays whole above the sheet (QA, 2026-11-08: half the grid and the people cut at 320 × 568) */
-          if (inn) { inn.querySelectorAll('.pl-under, .lf-ask').forEach(x => { x.style.display = 'none'; }); fitIn(scr); }
+          if (inn) inn.querySelectorAll('.pl-under, .lf-ask').forEach(x => { x.style.visibility = 'hidden'; });
           liftAbove(scr, fb);
         });
       },
@@ -947,7 +979,11 @@
   }
   /* the one screen both the lesson and the review use: فهيم, the header, the card; returns through `onGo` */
   function play(scr, R, review, onGo, onRemember) {
-    const c = C(), tx = scr.querySelector('.tx'), fc = scr.querySelector('#fc'), go = scr.querySelector('#lwGo'), st = scr.querySelector('#stage');
+    const c = C(), tx = scr.querySelector('.tx'), fc = scr.querySelector('#fc'), go = scr.querySelector('#lwGo'), st = scr.querySelector('#stage'), pk = scr.querySelector('#lwPk');
+    /* «وش الناقص؟»'s words stand under the card as the lesson's own tiles, not squeezed into it */
+    fc._pickHost = pk;
+    fc._placed = pick => fitPick(scr, pick);
+    let study = null;
     c.anim(scr.querySelector('.obs-duo'), [{ opacity: 0, transform: 'translateY(30px) scale(.82)' }, { opacity: 1, transform: 'none' }], { duration: 460, delay: 120, easing: 'cubic-bezier(.3,1.5,.5,1)', fill: 'backwards' });
     const t = c.sayInto(tx, review ? `${playedIn(R.key) ? 'تتذكّر' : 'تعرف'} *${R.name}*؟ وش الناقص فيه؟` : R.say, 380);
     const line = () => fc.querySelector('.kb-fx');
@@ -965,11 +1001,22 @@
       st.style.visibility = 'hidden';
       /* the path's very first lesson shows its rule whole: nobody can name a missing word they have never seen (the user, 2026-11-08) */
       fc._whole = firstLes();
-      /* once the card asks for its missing word, فهيم stops showing the rule he just said, so the answer is not read off his bubble (QA, 2026-11-08) */
-      if (!fc._whole) { const mo = new MutationObserver(() => { if (!fc.querySelector('.kb-pick')) return; mo.disconnect(); if (!scr.isConnected) return; c.sayInto(tx, 'وش *الناقص* في القانون؟ تذكّر وش قلت لك.', 0);
+      if (!fc._whole) {
+        /* the whole rule stays up until the student says «حفظته», and they are told what comes next, so a hidden word is never
+           a surprise (the user, 2026-11-16: «the law على طول يروح … make him very angry and frustrated») */
+        fc._study = () => new Promise(res => {
+          if (!scr.isConnected) return;
+          study = res;
+          pk.innerHTML = `<p class="lw-memo"><span class="lw-memo-ic" aria-hidden="true">${EYE_IC}</span><span>${c.fx('ركّز فيه زين — بخبّي كلمة منه وأسألك عنها')}</span></p>`;
+          c.anim(pk.firstChild, c.RISE, { duration: 320, easing: c.XO });
+          go.textContent = 'حفظته'; go.disabled = false; c.jump(go, 150);
+        });
+        /* once the card asks for its missing word, فهيم stops showing the rule he just said, so the answer is not read off his bubble (QA, 2026-11-08) */
+        fc._asked = () => { if (scr.isConnected) c.sayInto(tx, 'وش *الناقص* في القانون؟', 0); };
+        fc._missed = (rv, n) => { if (scr.isConnected && n === 1) c.sayInto(tx, 'قريب! تذكّر *القانون* اللي شفته.', 0); };
         /* once the word is in, فهيم moves on with the proof instead of asking for six more seconds (QA, 2026-11-08) */
-        const done = new MutationObserver(() => { if (fc.querySelector('.kb-pick')) return; done.disconnect(); if (scr.isConnected) c.sayInto(tx, 'صح! *شوف* من وين يجي.', 0); });
-        done.observe(fc, { childList: true, subtree: true }); }); mo.observe(fc, { childList: true, subtree: true }); }
+        fc._got = () => { if (scr.isConnected) c.sayInto(tx, 'صح! *شوف* من وين يجي.', 0); };
+      }
       c.CARD.intro(fc, R, t2).then(() => { if (!fc.isConnected) return; ready(); st.style.visibility = ''; proof(scr, R, cue); });
     } else {
       const tag = scr.querySelector('.lw-rv');
@@ -987,7 +1034,19 @@
       });
     }
     st.onclick = () => { if (!go.disabled) { c.snd('tap'); proof(scr, R, cue); } };
-    go.onclick = () => { if (go.disabled) return; c.snd('tap'); onGo(); };
+    go.onclick = () => {
+      if (go.disabled) return;
+      c.snd('tap');
+      if (study) {
+        const res = study; study = null;
+        go.disabled = true; go.textContent = 'كمّل';
+        const memo = pk.firstChild;
+        if (memo) { c.anim(memo, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-6px)' }], { duration: 200, fill: 'forwards' }); c.later(210, () => { if (memo.parentNode) memo.remove(); }); }
+        c.later(memo ? 120 : 0, res);
+        return;
+      }
+      onGo();
+    };
   }
 
   /* ───── «تقدّمك اليوم»: the rule joins the set ───── */
@@ -1660,7 +1719,7 @@
   const DECOYS = {
     prob: ['الباقي', 'غير المطلوب', '(الكل − ١)'], mean: ['(العدد − ١)', 'أصغر عدد', 'أكبر عدد'],
     hand: ['(العدد + ١)', '(العدد − ٢)', '٢'], last: ['عشرات', 'أول رقم', 'مئات'],
-    tri: ['(آخر عدد − ١)', 'أول عدد', '(آخر عدد + ٢)'], queue: ['من الوسط', 'الطابور', 'الأول'],
+    tri: ['اللي قبله', 'أول عدد'], queue: ['من الوسط', 'الطابور', 'الأول'],
     clock: ['الدقائق', '(الساعة + ١)', '(الدقائق ÷ ٥)'], ops: ['الأكبر أول', 'من اليسار', 'الجمع أول'], ways: ['خيارات الكل', 'جمع الخيارات', 'الخيار الأخير'],
     common: ['عدد الحدود', 'نصف الباقي', 'أكبر حد'], oddsum: ['(عددها + ١)', 'نصفها', '٢'],
     oddcnt: ['(آخر فردي − ١)', '(آخر فردي + ٢)', 'أول فردي'], evensum: ['آخر عدد', '(آخر عدد + ١)', '(نص الأخير − ١)'],

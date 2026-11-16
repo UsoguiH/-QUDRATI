@@ -4162,7 +4162,10 @@ A.startLearn = function (domKey, lesKey, li, boost) {
     /* a rule card of nodes 1–3 becomes the rule's own three screens (js/law/law.js) */
     const lx = window.LAWX && LAWX.swap(src, key, les, L);
     if (lx) { lx.forEach(x => queue.push(learnMake(x))); return; }
-    queue.push(learnMake(src));
+    const it = learnMake(src), last = queue[queue.length - 1];
+    /* an «ahead» item (the rule with numbers in it) goes before the worked example its rule just got */
+    if (it && it.ahead && last && (last.rf === "nums" || last.fill === "play")) queue.splice(queue.length - 1, 0, it);
+    else queue.push(it);
     if (src && src.t === "see" && src.rule && li < (RF_LESSONS[key] || 0)) [learnRuleWords(src, L), learnRuleNums(src)].forEach(x => { if (x) queue.push(learnMake(x)); });
   });
   /* One item from the lesson before opens this one: recalling it a day — or
@@ -5403,87 +5406,81 @@ A.check = function () {
   save();
 };
 
-/* the sheet never covers what it judges (QA, 2026-11-08: «صح» / «خطأ» cut in half and «١١» under the sheet at 320 × 568):
-   once it has risen, a question whose answer line sits under it takes the overlap back as room at its foot, so the block
-   (anchored to the bottom of .q-area) moves up into the empty space over it and is zoomed down only if that is not enough.
-   A wrong sheet only uses the empty space: its solution may cover what it explains, as Duolingo's does. Trays of tiles
-   and keypads are left out of what must show; a solved «كمّل الخطوة» does its own (rfInstant) */
+/* the sheet never covers what it judges, and answering never changes the step's size (the user, 2026-11-16: «they are getting
+   bigger when i answer … fix this very bad problem and make it not happen again»). The step was fitted from its first frame
+   to the room above the green sheet it will get (fbGoodH, fitTarget), so a right answer finds its answer clear already. What
+   a sheet still covers — a red one's solution over the right choice, a note that ran to two lines — is cleared by sliding the
+   step up into the room over it, never by zooming it: only the tag and the kicker over the question may slide out, the
+   question and what is judged stay whole, and whatever still lies under the sheet is left there, as Duolingo's sheet does.
+   Trays of tiles and keypads are left out of what must show. */
+const FB_TRAY = ".ln-tiles, .ln-keys, .ln-pad, [class*=keypad], #rfHint, .rf-hint";
+function fbFoot(qa) {
+  const skip = e => e.matches(FB_TRAY) || getComputedStyle(e).position === "absolute" || getComputedStyle(e).position === "fixed";
+  let bottom = -1;
+  Array.from(qa.children).filter(e => !skip(e)).forEach(k => {
+    const b = k.getBoundingClientRect(); if (!b.height) return;
+    if (k.querySelector(".ln-tiles")) Array.from(k.children).forEach(c => { if (!skip(c) && !c.querySelector(".ln-tiles")) bottom = Math.max(bottom, c.getBoundingClientRect().bottom); });
+    else bottom = Math.max(bottom, b.bottom);
+  });
+  return bottom;
+}
 function fbClear(again) {
   requestAnimationFrame(() => setTimeout(() => {
     const fb = document.getElementById("fb"), qa = document.querySelector(".screen-session .q-area");
     if (!fb || !qa || !fb.classList.contains("show")) return;
-    /* measured at rest: the answer's jump is still in the air; a step that had to be zoomed is checked once more after, and one
-       still too tall at the smallest size slides to its foot inside the step, so the answer it judged is the part in sight
-       (QA, 2026-11-08: keylaws-07's «د» under the sheet at .6) */
-    const moved = fitSettled(qa.closest(".screen") || qa, () => fbClearAt(fb, qa));
-    if (qa._fbLift != null) Array.from(qa.children).forEach(c => { c.style.translate = qa._fbLift ? "0 " + (-qa._fbLift / (parseFloat(getComputedStyle(c).zoom) || 1)).toFixed(1) + "px" : ""; });   // a zoomed body scales its own translate
-    if (moved) fitSoon("size");
+    /* measured at rest: the answer's jump is still in the air, and a slide already made is lifted while it is measured */
+    const lift = fitSettled(qa.closest(".screen") || qa, () => fbLiftOf(fb, qa));
+    if (Math.abs(lift.by - (qa._fbLift || 0)) > .5) fbLiftTo(qa, lift);
     /* looked at once more when the answer's own motion has settled, which can leave it lower than it was measured */
     if (!again) setTimeout(() => { if (qa.isConnected && fb.classList.contains("show")) fbClear(true); }, 360);
-    else if (qa.scrollHeight > qa.clientHeight + 1) setTimeout(() => { if (qa.isConnected) qa.scrollTo({ top: qa.scrollHeight, behavior: motionReduced() ? "auto" : "smooth" }); qa.style.overflow = "hidden"; }, 300);
   }, 40));
 }
-function fbClearAt(fb, qa) {
-  const skip = e => e.matches(".ln-tiles, .ln-keys, .ln-pad, [class*=keypad]") || getComputedStyle(e).position === "absolute" || getComputedStyle(e).position === "fixed";
-  const judged = qa.querySelectorAll(".choice.correct, .choice.wrong");
-  /* after a miss the right choice the sheet names must stand whole; the wrong pick under it may go under the sheet (QA, 2026-11-08: «٣١» half under it in a review at 320 × 568) */
-  const right = fb.classList.contains("good") ? [] : Array.from(qa.querySelectorAll(".choice.correct")), must = right.length ? right : Array.from(judged);
-  const foot = () => {
-    let bottom = -1;
-    Array.from(qa.children).filter(e => !skip(e)).forEach(k => {
-      const b = k.getBoundingClientRect(); if (!b.height) return;
-      if (k.querySelector(".ln-tiles")) Array.from(k.children).forEach(c => { if (!skip(c) && !c.querySelector(".ln-tiles")) bottom = Math.max(bottom, c.getBoundingClientRect().bottom); });
-      else bottom = Math.max(bottom, b.bottom);
-    });
-    /* a choice still pressed or settling stands a little under its row */
-    qa.querySelectorAll(".choice").forEach(c => { bottom = Math.max(bottom, c.getBoundingClientRect().bottom); });
-    /* where choices were judged, only they must show: a choice under the right one may go under the sheet, so the step shrinks
-       only as far as the answer needs (QA, 2026-11-08: bank questions at .70 after a right answer) */
-    if (must.length) bottom = Math.max(...must.map(c => c.getBoundingClientRect().bottom));
-    return bottom;
-  };
-  const b0 = foot(); if (b0 < 0) return false;
-  const need = b0 - (innerHeight - fb.offsetHeight) + 6;
-  if (need <= .5) return false;
-  const pad0 = parseFloat(getComputedStyle(qa).paddingBottom) || 0, set = a => { qa.style.paddingBottom = (pad0 + a).toFixed(1) + "px"; };
-  const over = () => qa.scrollHeight > qa.clientHeight + .5;
-  /* a right answer: the step's room ends where the sheet begins, and fitNow sizes it into that room, whatever the block's anchor */
-  if (fb.classList.contains("good") && !judged.length) {
-    /* the tiles left over once it is right are done with: they go, rather than being fitted into the room with it (QA, 2026-11-08: a fill at .6 and still sliding) */
-    const tray = qa.querySelector(".ln-tiles");
-    if (tray && tray.offsetHeight) { tray.style.visibility = "hidden"; if (foot() - (innerHeight - fb.offsetHeight) + 6 <= .5) return true; }
-    const pad = qa.getBoundingClientRect().bottom - (innerHeight - fb.offsetHeight) + 6;
-    if (pad <= pad0 + .5) return false;
-    set(pad - pad0);
-    return true;
-  }
-  /* the block may sit centred rather than on the bottom, so it moves by a part of the room it is given: that part is measured */
-  set(need);
-  /* a block with no room left over it does not move at all: the zoom that follows makes the room */
-  const moved = b0 - foot(), k = !over() && moved > .5 ? Math.min(1, moved / need) : 1;
-  let add = Math.min(need / k, fb.offsetHeight);
-  set(add);
-  if (!fb.classList.contains("good")) {
-    if (over()) {
-      let lo = 0, hi = add;
-      for (let n = 0; n < 7; n++) { const m = (lo + hi) / 2; set(m); if (over()) hi = m; else lo = m; }
-      add = lo; set(add);
-      if (add < 1) qa.style.paddingBottom = pad0 ? pad0 + "px" : "";
-    }
-    /* after a miss the right choice still under the sheet is lifted by just what it lacks, the step slid up under its top
-       edge at full size: padding past the room zoomed the whole step to .6 and a scroll to its foot overshot into the
-       padding (QA, 2026-11-08: only a green sliver of the right choice left) */
-    if (right.length) {
-      const r = foot() - (innerHeight - fb.offsetHeight) + 6;
-      /* only the tag and the kicker over the question may slide out: the question and a statement being judged stay whole, and
-         where both cannot show over the sheet the choice gives way, as before (QA, 2026-11-08: «١٢ ÷ ٣ × ٢ = ٢» cut in half at 320) */
-      const keep = Array.from(qa.children).find(c => c.offsetHeight && !c.matches(".ln-tag, .q-top, .q-count, .q-kicker") && !(c.matches(".ln-q") && c.nextElementSibling && c.nextElementSibling.matches(".ln-big")));   // «صح ولا خطأ؟» over its statement may go too
-      const room = Math.min(...right.map(c => c.getBoundingClientRect().top), keep ? keep.getBoundingClientRect().top : Infinity) - qa.getBoundingClientRect().top - 4;
-      qa._fbLift = r > .5 ? Math.max(0, Math.min(r, room)) : 0;   /* measured at rest, so it is the whole lift; fbClear sets it once the measuring is put back */
-    }
-    return false;   /* the padding stays inside the room, so nothing is refitted: a zoom gliding after it moved the choice the lift was measured for */
-  }
-  return true;
+function fbLiftOf(fb, qa) {
+  const right = fb.classList.contains("good") ? [] : Array.from(qa.querySelectorAll(".choice.correct"));
+  const judged = Array.from(qa.querySelectorAll(".choice.correct, .choice.wrong")), must = right.length ? right : judged;
+  /* a wrong sheet with no right choice to show covers what it explains, as Duolingo's does */
+  const none = { by: 0, out: [] };
+  if (fb.classList.contains("bad") && !right.length) return none;
+  const foot = must.length ? Math.max(...must.map(c => c.getBoundingClientRect().bottom)) : fbFoot(qa);
+  const need = foot - (innerHeight - fb.offsetHeight) + (fb.classList.contains("has-crest") ? 12 : 6);   /* a good sheet's wave stands 10px over its box */
+  if (foot < 0 || need <= .5) return none;
+  /* «صح ولا خطأ؟» over its statement may slide out too; the statement stays */
+  const keep = Array.from(qa.children).find(c => c.offsetHeight && !c.matches(".ln-tag, .q-top, .q-count, .q-kicker, .lw-peek") && !(c.matches(".ln-q") && c.nextElementSibling && c.nextElementSibling.matches(".ln-big")));
+  const roof = qa.getBoundingClientRect().top, top = Math.min(...must.map(c => c.getBoundingClientRect().top), keep ? keep.getBoundingClientRect().top : Infinity);
+  const by = Math.max(0, Math.min(need, top - roof - 4));
+  /* what slides past the top fades as it goes, so no line is left cut in half under the bar */
+  return { by, out: Array.from(qa.children).filter(c => c.offsetHeight && c.getBoundingClientRect().top - by < roof + 2) };
+}
+/* the step glides to its place in the sheet's own time; a zoomed body scales its own translate */
+function fbLiftTo(qa, lift) {
+  const by = lift.by;
+  qa._fbLift = by;
+  Array.from(qa.children).forEach(c => {
+    const z = parseFloat(getComputedStyle(c).zoom) || 1, to = by > .5 ? "0 " + (-by / z).toFixed(1) + "px" : "", from = c.style.translate || "0 0";
+    const gone = lift.out.includes(c);
+    c.style.translate = to;
+    if (gone) c.style.opacity = "0";
+    if (!fxReduced() && c.animate) c.animate(gone ? [{ translate: from, opacity: 1 }, { translate: to || "0 0", opacity: 0 }] : [{ translate: from }, { translate: to || "0 0" }], { duration: 300, easing: "cubic-bezier(.3,.7,.4,1)" });
+  });
+}
+/* how tall the green sheet will stand over this step: built once per step and phone size on a hidden copy of it (its verdict,
+   its gems, the step's own note under them, its button), so the step is fitted above it before anything is answered */
+const FB_GOOD_H = {};
+function fbGoodH(scr) {
+  if (!SES || !scr.matches(".screen-session") || !scr.querySelector("#fb") || scr.matches(".screen-place") || scr.querySelector(".mock-bar, .q-area.lt-see")) return 0;
+  const it = SES.queue && SES.queue[SES.idx];
+  const note = SES.mode === "learn" && it && it.ok ? learnFmt(it.ok) : "";
+  const key = innerWidth + "x" + innerHeight + "|" + note;
+  if (FB_GOOD_H[key] != null) return FB_GOOD_H[key];
+  const w = document.createElement("div");
+  w.className = "screen screen-session"; w.setAttribute("aria-hidden", "true");
+  w.style.cssText = "position:fixed;inset:0;visibility:hidden;pointer-events:none;animation:none;z-index:-1";
+  w.innerHTML = `<div class="feedback good show has-crest" style="transition:none"><div class="fb-row"><div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> ثلاث على التوالي!</div>
+    <span class="fb-gain">${ico("gem", 15)} +٨</span></div>${note ? `<div class="ln-fb-note">${note}</div>` : ""}<button class="btn">متابعة</button></div>`;
+  document.body.appendChild(w);
+  const h = w.firstChild.offsetHeight;
+  w.remove();
+  return FB_GOOD_H[key] = h;
 }
 A.toggleSol = function () {
   const s = document.getElementById("sol");
@@ -9207,7 +9204,7 @@ const OB_VIEW = {
   taste: () => {
     const done = OB.taste != null;
     sfxLoad("right");
-    return { cta: done ? tasteSheet(true) : `<button class="btn" id="obGo" disabled>اختر إجابة</button>`,
+    return { cta: tasteSheet(done),
       html: `${obSide(done ? "cheer" : "encourage", done ? tasteSay() : "سؤال بأسلوب *القدرات* — خمّن بدون ما تحسب:")}
       <div class="ts${done ? " shown" : ""}">
         <div class="ts-cmp">
@@ -9217,8 +9214,6 @@ const OB_VIEW = {
         </div>
         <div class="ts-opts" role="radiogroup" aria-label="الإجابة">${CMP_CHOICES.map((c, i) =>
           `<button class="ob-opt ts-opt${done && i === 2 ? " ok" : done && i === OB.taste ? " dim" : ""}" data-v="${i}" style="--d:calc(var(--se, .3s) + ${(i * 0.07).toFixed(2)}s)" ${done ? "disabled" : `onclick="A.obTaste(${i})"`}>${c}</button>`).join("")}</div>
-        <div class="ts-rule" aria-live="polite"><b>أ٪ من ب = ب٪ من أ</b><span>اقلب الرقمين — والقيمة نفسها بالضبط</span></div>
-        <p class="ts-more">ومثلها <b>حيل كثير</b> تختصر عليك الوقت — كلها هنا</p>
       </div>` };
   },
   level: () => ({ cta: obCta(OB.level),
@@ -9301,7 +9296,7 @@ function renderOb() {
   obFrame(v.html, v.cta, pct, OB.i > 0 || !S.user || OB.steps[0] === "hello" ? "A.obBack()" : "", "ob-" + step, !v.top);
   if (OB_BUZZ[step]) setTimeout(() => buzz(OB_BUZZ[step]), 250);
   if (step === "goal" && OB.goal != null) setTimeout(() => glWave(OB.goal), 700);
-  if (step === "taste" && OB.taste != null) { document.querySelector(".ob-cta").classList.add("ts-up"); fxDrawCrest(); }
+  if (step === "taste") { document.querySelector(".ob-cta").classList.add("ts-up", "ts-cta"); if (OB.taste != null) fxDrawCrest(); }
 }
 /* An answer to a question in the first run (the taste item) lands with the
    lesson's own jump (fxAddJump) — the same launch, hang, fall, squash and
@@ -9332,23 +9327,33 @@ function ruleCount() {
   domains().forEach(d => d.lessons.forEach(l => { n += (l.rules || []).length; }));
   return n;
 }
-const tasteSay = () => OB.taste === 2 ? "صح! وبدون ولا عملية حسابية — هذي حيلة *التبديل*."
-  : "هذي تطيّح ناس كثير! السر إنك *تقلب الرقمين* — نفس القيمة بالضبط.";
+/* فهيم reacts and promises more like it; the trick itself is on the sheet */
+const tasteSay = () => OB.taste === 2 ? "صح! وبدون ولا حساب. وعندي *حيل كثير* زيها."
+  : "هذي تطيّح ناس كثير! وعندي *حيل كثير* زيها.";
 /* The answer is taken, and then the trick is shown rather than told: the two
    numbers of the first value lift, cross over each other and land swapped, the
-   first value now reads exactly as the second, an «=» slams down between them
-   and both jump together. Right or wrong, nobody is marked red here.
-   The tap itself only selects — no jump (the user, 2026-10-26: the one
-   exception to «every answer jumps»); the jump, Duolingo's own right-answer
-   sound and the green sheet come with the answer, the sheet a short one that
-   only takes the foot of the screen. */
-const tasteSheet = still => `<div class="feedback good show has-crest ts-fb${still ? " still" : ""}" id="fb" role="status" aria-live="polite">
+   first value now reads exactly as the second, an «=» draws itself between them
+   and both hop. Then it is answered as a lesson answers (the user, 2026-11-16:
+   «make the animation like our answering animation and not making the screen
+   shake or jumping»): the right choice jumps and turns green where it stands,
+   the others stay where they are, and the lesson's green sheet slides up with
+   the trick on it. Right or wrong, nobody is marked red here. The tap itself
+   only selects — no jump (the user, 2026-10-26).
+   The sheet stands in the step from its first frame, hidden under «اختر إجابة»
+   at the button's own place, so the step is laid out and fitted for it and
+   nothing on the screen moves or changes size when it rises; it says the
+   longer verdict while hidden, so the shorter one never makes it grow. */
+const TASTE_HEAD = ["صح! القيمتان متساويتان", "الجواب: القيمتان متساويتان"];
+const tasteSheet = done => `<div class="feedback good has-crest ts-fb${done ? " show still" : ""}" id="fb" role="status" aria-live="polite">
     <svg class="fb-crest" viewBox="0 0 380 90" preserveAspectRatio="none" aria-hidden="true">
       <path class="fb-crest-fill"></path>
       <path class="fb-crest-line" fill="none" stroke-width="4" vector-effect="non-scaling-stroke" stroke-linecap="round"></path>
-    </svg><div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> ${OB.taste === 2 ? "صح!" : "الجواب: القيمتان متساويتان"}</div>
-    <button class="btn" onclick="A.obNext()">المتابعة</button>
-  </div><div class="storm" id="storm" aria-hidden="true"></div>`;
+    </svg><div class="fb-head"><span class="fb-ok">${CHECK_BADGE}</span> <span class="ts-verdict">${TASTE_HEAD[done && OB.taste === 2 ? 0 : 1]}</span></div>
+    <div class="ts-rl"><div class="ts-rl-t">
+      <b class="ts-rl-f" dir="rtl"><span class="ts-rl-s"><i class="ts-l a">أ</i>٪ من <i class="ts-l b">ب</i></span><em>=</em><span class="ts-rl-s sw"><i class="ts-l b">ب</i>٪ من <i class="ts-l a">أ</i></span></b>
+      <span class="ts-rl-c">اقلب الرقمين، والقيمة نفسها بالضبط</span></div></div>
+    <button class="btn" onclick="A.obNext()"${done ? "" : ' tabindex="-1"'}>المتابعة</button>
+  </div>${done ? "" : `<button class="btn ts-wait" id="obGo" disabled>اختر إجابة</button>`}<div class="storm" id="storm" aria-hidden="true"></div>`;
 A.obTaste = function (i) {
   if (!OB || OB.taste != null || !document.querySelector(".ts")) return;
   OB.taste = i;
@@ -9357,18 +9362,24 @@ A.obTaste = function (i) {
   const opts = document.querySelectorAll(".ts-opt");
   opts.forEach(b => { b.disabled = true; b.classList.toggle("sel", +b.dataset.v === i); });
   const ns = Array.from(document.querySelectorAll(".ts-n")), boxes = document.querySelectorAll(".ts-box"),
-        eq = document.querySelector(".ts-eq"), wrap = document.querySelector(".ts"), cta = document.querySelector(".ob-cta");
+        eq = document.querySelector(".ts-eq"), wrap = document.querySelector(".ts");
   const finish = () => {
     if (!wrap.isConnected) return;   // left with the back arrow mid-swap: its reaction used to land in the hello bubble (the audit, 2026-10-28)
     opts.forEach(b => { const v = +b.dataset.v; b.classList.remove("sel"); b.classList.toggle("ok", v === 2); b.classList.toggle("dim", v === i && v !== 2); });
     wrap.classList.add("shown");
+    /* his row keeps its height, so his shorter words never move what is under them */
+    const row = document.querySelector(".ob-taste .obs"); if (row) row.style.minHeight = (row.getBoundingClientRect().height / fitZ(row)).toFixed(2) + "px";
     obReact(tasteSay());
     const duo = document.querySelector(".obs-duo"); if (duo) duo.src = "assets/mascot/qaddour-cheer.png";
     sfxPlay("right", 1, playCorrect); buzz(20);
-    if (cta) {
-      cta.classList.add("ts-up"); cta.innerHTML = tasteSheet(false); fxDrawCrest();
-      /* a short phone (320×568) had the sheet and its «المتابعة» below the fold with no cue: bring it up */
-      requestAnimationFrame(() => { if (cta.getBoundingClientRect().bottom > innerHeight + 2) cta.scrollIntoView({ block: "end", behavior: fxReduced() ? "auto" : "smooth" }); });
+    const fb = document.getElementById("fb");
+    if (fb) {
+      fb.style.minHeight = fb.getBoundingClientRect().height.toFixed(2) + "px";
+      fb.querySelector(".ts-verdict").textContent = TASTE_HEAD[i === 2 ? 0 : 1];
+      const b = fb.querySelector(".btn"); if (b) b.removeAttribute("tabindex");
+      if (window.gsap && fxOn()) fb.classList.add("fx-anim");
+      fxDrawCrest(); fb.classList.add("show");
+      tasteRuleSwap(fb);
     }
     const ok = Array.from(opts).find(b => +b.dataset.v === 2);
     /* the lesson's card settles lifted off its base; here the cards sit in a tight grid and a lifted
@@ -9381,6 +9392,20 @@ A.obTaste = function (i) {
   }
   tasteSwap(ns, boxes, eq, finish);
 };
+/* the rule on the sheet says the swap the screen just played: its second side's two letters
+   start in the first side's order and trade places, one over the top and one underneath, once the
+   sheet has risen (the user, 2026-11-16: «can you make this thing have better UI») */
+function tasteRuleSwap(fb) {
+  const sw = fb.querySelector(".ts-rl-s.sw"), ls = sw ? sw.querySelectorAll(".ts-l") : [];
+  if (ls.length !== 2 || fxReduced()) return;
+  const z = fitZ(sw) || 1, r0 = ls[0].getBoundingClientRect(), r1 = ls[1].getBoundingClientRect(),
+        dx = ((r1.left + r1.width / 2) - (r0.left + r0.width / 2)) / z, at = 380;
+  [[ls[0], dx, -14], [ls[1], -dx, 12]].forEach(([el, d, up]) => el.animate([
+    { transform: `translate(${d}px, 0)` }, { transform: `translate(${d * .5}px, ${up}px) scale(1.12)`, offset: .5 }, { transform: "none" }
+  ], { duration: 520, delay: at, easing: "cubic-bezier(.45,0,.3,1)", fill: "backwards" }));
+  const eq = fb.querySelector(".ts-rl-f em");
+  if (eq) eq.animate([{ transform: "scale(1)" }, { transform: "scale(1.35)", offset: .45 }, { transform: "scale(1)" }], { duration: 300, delay: at + 470, easing: "ease-out" });
+}
 /* the swap, in the star flip's grammar (the user, 2026-10-27: «make the
    animation … better and more amazing like what you did with star flipping …
    the same level, and replace the = with better UI not this 3D»). The two
@@ -10618,8 +10643,15 @@ function fitZ(el) {
 function fitTarget(scr) {
   const qa = scr.querySelector(".q-area");
   if (qa) {
-    return { els: Array.from(qa.children).filter(e => getComputedStyle(e).position !== "absolute" && getComputedStyle(e).position !== "fixed"),
-      over: () => qa.scrollHeight - qa.clientHeight, room: () => qa.clientHeight };
+    /* a step that will get a verdict is fitted to the room above its green sheet, not above «تحقق»: what the sheet must not
+       cover (the step without its trays) ends where the sheet will begin, so the answer finds it clear and nothing is fitted
+       again (the user, 2026-11-16) */
+    /* the block is centred in its area, so the room over it is the most it can rise into: only what is left after that has to
+       be found by zooming (fitRise sets the rise once the size is chosen) */
+    const els = Array.from(qa.children).filter(e => getComputedStyle(e).position !== "absolute" && getComputedStyle(e).position !== "fixed");
+    const fbH = fbGoodH(scr), keep = () => fbH ? fbFoot(qa) - (innerHeight - fbH - 12) : 0;
+    const gap = () => els.length ? els[0].getBoundingClientRect().top - qa.getBoundingClientRect().top - (parseFloat(getComputedStyle(qa).paddingTop) || 0) : 0;
+    return { els, qa, keep, gap, over: () => Math.max(qa.scrollHeight - qa.clientHeight, fbH ? keep() - Math.max(0, gap()) : 0), room: () => qa.clientHeight };
   }
   const body = scr.querySelector(".ob-stage, .wl-body, .teach-body, .complete, .exam-pick") || scr;
   return { els: [body], page: true, over: () => document.scrollingElement.scrollHeight - innerHeight, room: () => innerHeight };
@@ -10656,13 +10688,21 @@ function fitNow(glide, why) {
   /* a screen may opt out (data-fit="off") while something else places it, or ask to be fitted without
      a glide (data-fit="still") when it glides its own moves and a zoom glide on top would fight it */
   if (!scr || $app.querySelector(":scope > .bottomnav") || scr.matches('[data-fit="off"]') || scr.querySelector('[data-fit="off"]')) return;
+  /* once a step is answered its size is final: the sheet rising, the line turning green, the tiles going may change what is
+     inside it, and none of that may zoom it (the user, 2026-11-16: «they are getting bigger when i answer»). Only the phone
+     itself changing size fits it again; the sheet's own solution is still fitted to the sheet */
+  const vp = innerWidth + "x" + innerHeight;
+  if (scr.querySelector(".q-area") && scr.querySelector("#fb.show") && scr._fitVP === vp) { fitSettled(scr, () => fitSheet(scr)); return; }
+  /* «جرّب» once answered too: فهيم's shorter reaction left room, and the step grew into it */
+  if (scr.querySelector(".ts-fb.show") && scr._fitVP === vp) return;
   const t = fitTarget(scr);
   /* a glide under way lands on the size it was set for; measuring mid-glide would cut it, and cost a layout a frame */
   if (t.els.some(e => e.getAnimations && e.getAnimations().some(a => a.id === "fit" && a.playState === "running"))) return;
   /* a change in the DOM is first read as it stands, one layout the frame needs anyway: only an overflow
      sends it to the measurement at rest (which lays the page out twice); a sheet always goes, to be fitted */
-  if (why === "mut" && t.over() <= .5 && !scr.querySelector(".feedback.show .fb-solution")) return;
+  if (why === "mut" && t.over() <= .5 && !scr.querySelector(".feedback.show .fb-solution")) { scr._fitVP = vp; return; }
   fitSettled(scr, () => { fitScreen(scr, glide, why, t); fitSheet(scr); });
+  scr._fitVP = vp;
 }
 /* one fit a frame at most, whatever asked: measuring forces the page to lay out twice, and a clock that
    ticks or a word typed in used to pay that on every change (the mock's clock cost a 70ms task a second
@@ -10692,14 +10732,27 @@ function fitSheet(scr) {
   if (over() <= .5) { for (let i = 0; i < 8; i++) { z = (lo + hi) / 2; sol.style.zoom = z; if (over() <= .5) lo = z; else hi = z; } z = lo; }
   sol.style.zoom = z.toFixed(4);
 }
+/* a question centred in its area with room to spare rises into that room until what the sheet must not cover ends where the
+   sheet will begin: the area's foot grows by twice the rise, as the block is centred */
+function fitRise(t) {
+  const k = t.keep(), g = t.gap();
+  if (k <= .5 || g <= .5) return;
+  const p0 = parseFloat(getComputedStyle(t.qa).paddingBottom) || 0;
+  t.qa.style.paddingBottom = (p0 + 2 * Math.min(k, g)).toFixed(1) + "px";
+}
 function fitScreen(scr, glide, why, t) {
   t = t || fitTarget(scr);
   if (!t.els.length) return;
+  if (t.qa) t.qa.style.paddingBottom = "";
+  fitZoom(scr, glide, why, t);
+}
+function fitZoom(scr, glide, why, t) {
   const z0 = parseFloat(t.els[0].style.zoom) || 1;
+  const rise = () => { if (t.qa) fitRise(t); };
   let o = t.over();
   /* an overflow never reads below zero, so a zoomed body that fits is searched again from full size
      when something changed size: once something tall went (a late font, a sheet), it grows back */
-  if (o <= .5 && (z0 >= 1 || why !== "size")) return;
+  if (o <= .5 && (z0 >= 1 || why !== "size")) { rise(); return; }
   /* a body as tall as the phone (min-height 100dvh) would come out short once zoomed: keep it the phone's height */
   const tall = t.page && parseFloat(getComputedStyle(t.els[0]).minHeight) >= innerHeight - 2;
   let z = z0;
@@ -10709,7 +10762,7 @@ function fitScreen(scr, glide, why, t) {
      (each layout is the whole screen, and on a slow phone a search of ten was a long task) */
   if (z0 < 1 && o <= .5) {
     z = Math.min(1, z0 + .01); set();
-    if (!fits()) { z = z0; set(); return; }
+    if (!fits()) { z = z0; set(); rise(); return; }
   }
   t.els.forEach(e => { e.getAnimations().forEach(a => { if (a.id === "fit") a.cancel(); }); e.style.zoom = ""; if (t.page) e.style.minHeight = ""; });
   z = 1;
@@ -10730,6 +10783,7 @@ function fitScreen(scr, glide, why, t) {
       z = lo; set();
     }
   }
+  rise();
   if (glide && Math.abs(z - z0) > .004 && !fxReduced() && !scr.matches('[data-fit="still"]'))
     t.els.forEach(e => { if (e.animate) e.animate([{ zoom: z0 }, { zoom: z }], { id: "fit", duration: 260, easing: "cubic-bezier(.3,.7,.4,1)" }); });
 }

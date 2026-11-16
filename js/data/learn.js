@@ -181,10 +181,7 @@ window.QLEARN = window.QLEARN || {};
             tiles: ["٣", "٩", "٦", "١١", "١٨", "٢٣"], a: ["٣", "٩", "٦", "١١"],
             why: "القوس والأس: (٤ − ١)² = ٩ ، ثم ٢ × ٩ ÷ ٣ = ٦ ، ثم ٥ + ٦ = ١١"
           },
-          { t: "bank", id: "bigsum-01" },
-          /* the repeated sum (٤٥ six times): its own lesson, «العدد المكرر», was the node's first until
-             2026-10-30, when the user cut it («delete the first lesson fully»); its exam question stays in the node */
-          { t: "bank", id: "bigsum-02" }
+          { t: "bank", id: "bigsum-01" }
         ]
       },
 
@@ -202,31 +199,24 @@ window.QLEARN = window.QLEARN || {};
             why: "تبي طريقة ما تحتاج تجمع عشرة أعداد؟ الشاشة الجاية",
             ok: "والحين تخيّل لو كانت لين ١٠٠…"
           },
+          /* half the last number, times the one after it (the user, 2026-11-16: «make it take last number then make it half then
+             multiply with last number plus 1»): halving first is how a student does ١ + … + ٥٠ in a minute, and how Saudi teachers teach it */
           {
             t: "see", kick: "الحيلة",
-            h: "اجمع *الطرفين* مع بعض",
-            rows: ["١ + ٢ + ٣ + … + ١٠", "(١ + ١٠) ، (٢ + ٩) ، (٣ + ٨) …", "· كل زوج = *١١* ، و *٥* أزواج (نص العشرة)", "٥ × ١١ = ١٠ × ١١ ÷ ٢", "!٥٥"],
-            rule: "من ١ إلى أي عدد: *آخر عدد* × (*آخر عدد* + ١) ÷ ٢",
-            num: {"q":"١ + ٢ + ٣ + … + ٥٠","eq":"{٥٠} × ({٥٠} + ١) ÷ ٢ = {١٢٧٥}","lab":["آخر عدد","آخر عدد","المجموع"],"more":["٥١","٢٥٥٠"]},
+            h: "خذ *نص* آخر عدد، واضربه في اللي بعده",
+            rows: ["١ + ٢ + ٣ + … + ١٠", "آخر عدد *١٠* ← نصّه *٥*", "٥ × (١٠ + ١) = ٥ × ١١", "!٥٥"],
+            rule: "من ١ إلى أي عدد: *آخر عدد* × *اللي بعده* ÷ ٢",
+            num: {"how":"fccuc","q":"١ + ٢ + ٣ + … + ٥٠","eq":"{٥٠} ÷ ٢ × {٥١} = {٢٥} × {٥١} = {١٢٧٥}","lab":["آخر عدد","اللي بعده","نصّه","اللي بعده","المجموع"],"more":["٤٩","٢٥٥٠"]},
           },
+          /* «ahead»: the rule with numbers in it is played before the worked example of «كمّل الخطوة», not after it
+             (the user, 2026-11-16: «ذي مفروض تكون قبل موب بعد ما فيه مثال فعلي») */
           R => {
-            const n = R.pick([20, 30, 40, 50]);
+            const n = R.pick([20, 30, 40, 50]), h = n / 2;
             return {
-              t: "fill", q: "كمّل القانون:", recall: true,
-              eq: `١ + ٢ + … + ${R.ar(n)} = ${R.ar(n)} × _ ÷ _`,
-              tiles: [R.ar(n + 1), R.ar(n - 1), "٢", "٤"], a: [R.ar(n + 1), "٢"],
-              why: `آخر عدد ${R.ar(n)} ، والعدد اللي بعده ${R.ar(n + 1)} ، ثم ÷ ٢`
-            };
-          },
-          /* halve first, as a student does it in a minute: «نص آخر عدد × اللي بعده» (the user, 2026-11-08, on ١ + … + ٥٠:
-             «شلون طالب قدرات يحسبها صح؟»; research: the way Saudi teachers teach it) */
-          R => {
-            const n = R.pick([30, 40, 50, 60]), h = n / 2;
-            return {
-              t: "fill", q: "الأسرع: خذ *نص* آخر عدد أول",
-              eq: `١ + ٢ + … + ${R.ar(n)} = ${R.ar(h)} × _ = _`,
-              tiles: [R.ar(n + 1), R.ar(n - 1), R.ar(h * (n + 1)), R.ar(n * (n + 1))], a: [R.ar(n + 1), R.ar(h * (n + 1))],
-              why: `نص ${R.ar(n)} = ${R.ar(h)} ، في اللي بعد ${R.ar(n)}: ${R.ar(h)} × ${R.ar(n + 1)} = ${R.ar(h * n)} + ${R.ar(h)} = ${R.ar(h * (n + 1))}`
+              t: "fill", q: "كمّل القانون بالأرقام:", recall: true, ahead: true,
+              eq: `١ + ٢ + … + ${R.ar(n)} = _ × _`,
+              tiles: [R.ar(h), R.ar(n + 1), R.ar(n), R.ar(n - 1)], a: [R.ar(h), R.ar(n + 1)],
+              why: `نصّ ${R.ar(n)} = ${R.ar(h)} ، واللي بعد ${R.ar(n)} = ${R.ar(n + 1)}`
             };
           },
           R => {
@@ -255,7 +245,7 @@ window.QLEARN = window.QLEARN || {};
             h: "كلها تقبل القسمة على عدد واحد؟ *أخرجه*",
             rows: ["٥ + ١٠ + ١٥ + … + ٥٠", "*٥* × (١ + ٢ + ٣ + … + ١٠)", "٥ × ٥٥", "!٢٧٥"],
             rule: "أخرج *العدد المشترك* برّا، واجمع *الباقي* بقانون من ١",
-            num: {"q":"٣ + ٦ + ٩ + … + ٣٠","eq":"{٣} × (١ + … + {١٠}) = {١٦٥}","lab":["العدد المشترك","آخر عدد في الباقي","المجموع"],"more":["٣٠","٥٥"]},
+            num: {"how":"fccc","q":"٣ + ٦ + ٩ + … + ٣٠","eq":"{٣} × (١ + … + {١٠}) = ٣ × {٥٥} = {١٦٥}","lab":["العدد المشترك","آخر عدد في الباقي","مجموع الباقي","المجموع"],"more":["٣٠","١١","٣٣٠"]},
           },
           R => {
             const k = R.pick([3, 4, 6, 20]), s = k * 55;
@@ -270,6 +260,10 @@ window.QLEARN = window.QLEARN || {};
               ok: `${R.ar(k)} × ٥٥ = ${R.ar(s)}`
             };
           },
+          /* the repeated sum (٤٥ six times) is the same trick at its smallest: ٤٥ is the common number, six times.
+             Its own lesson, «العدد المكرر», was cut on 2026-10-30; its exam question sat in «مين يبدأ أول؟» until
+             the user asked why it was there (2026-11-16: «ليش ذا السؤال موجود في ترتيب العمليات») */
+          { t: "bank", id: "bigsum-02" },
           { t: "bank", id: "bigsum-07" }
         ]
       },
@@ -359,7 +353,7 @@ window.QLEARN = window.QLEARN || {};
           R => {
             const L = R.pick([20, 30, 50, 60]);
             return {
-              t: "fill", q: "كمّل القانون:",
+              t: "fill", q: "كمّل القانون بالأرقام:", ahead: true,
               eq: `٢ + ٤ + … + ${R.ar(L)} = ${R.ar(L / 2)} × _`,
               tiles: [R.ar(L / 2 + 1), R.ar(L + 1), R.ar(L + 2), R.ar(L / 2 - 1)], a: [R.ar(L / 2 + 1)],
               why: `نص ${R.ar(L)} = ${R.ar(L / 2)} ، واللي بعده ${R.ar(L / 2 + 1)}`
