@@ -200,6 +200,15 @@
         A.startLearn(dk, lk, li);
         if (m[4]) A.debugLearnFinish(m[4] === "winmiss" ? 2 : 0);   // #learnwinmiss: two missed, the green banner
         if (m[4] === "more") A.winMore();   // #learnmore: the «تقدّمك اليوم» screen after it
+      } else if (h.indexOf("les-") === 0) {
+        /* any node's whole lesson by its key, #les-numbers.fractions: its teaching cards and questions; a node taught by
+           short lessons plays as it does once finished, its timed exam practice */
+        const m = /^les-([a-z]+)\.([a-z]+)$/.exec(h) || [], d = m[1] && window.QBANK[m[1]];
+        if (d && d.lessons.some(l => l.key === m[2])) {
+          const key = m[1] + "." + m[2], L = window.__QI.S.lessons;
+          if (window.QLEARN && window.QLEARN[key]) L[key] = Object.assign({ plays: 1 }, L[key], { stars: Math.max(1, (L[key] || {}).stars || 0) });
+          A.startLesson(m[1], m[2]);
+        }
       } else if (h === "book") {
         A.go("path"); A.openBook("skills", "bigsum");
       } else if (h === "unitbook") {

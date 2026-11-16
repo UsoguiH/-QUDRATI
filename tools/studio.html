@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<!-- استوديو المعاينة: the app in a real-size phone (preview.html or the app itself in an iframe at the device's exact width),
+     with every unit, level and short lesson, every screen grouped, two phones side by side, and live reload. The new version
+     of mobile.html (the user, 2026-11-16: «create a new version of the whole preview … very nice UI … more organizing», then
+     «make the UI better for the buttons … add a button for showing the right panel or not») -->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>استوديو المعاينة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&display=swap" rel="stylesheet">
+<!-- the lessons, read for the lesson tree -->
+<script src="../js/data/skills.js"></script>
+<script src="../js/data/numbers.js"></script>
+<script src="../js/data/ratios.js"></script>
+<script src="../js/data/geometry.js"></script>
+<script src="../js/data/learn.js"></script>
+<style>
+  /* the app's own paint: white faces on a 2px rim with a lip, Duolingo's green, blue for what is chosen */
+  :root {
+    --green: #58CC02; --green-dk: #58A700; --green-bg: #D7FFB8;
+    --blue: #1CB0F6; --blue-dk: #1899D6; --blue-light: #DDF4FF; --blue-border: #84D8FF;
+    --purple: #CE82FF; --purple-dk: #A568CC; --purple-light: #F3E6FF; --purple-border: #E0BFFF;
+    --gold: #FFC800; --orange: #FF9600; --red: #FF4B4B;
+    --ink: #3C3C3C; --ink2: #4B4B4B; --gray: #777; --gray-icon: #AFAFAF; --line: #E5E5E5; --line2: #D7DBE0;
+    --snow: #FFFFFF; --polar: #F7F7F7; --well: #F1F3F6; --stage: #EDF0F4; --dot: #D3D9E1;
+    --sw: 352px;
+    --font: 'Baloo Bhaijaan 2', 'Segoe UI', Tahoma, sans-serif;
+    --spring: cubic-bezier(.3, 1.35, .5, 1);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--stage); color: var(--ink); font-family: var(--font); -webkit-font-smoothing: antialiased; overflow: hidden;
+    display: grid; grid-template-columns: var(--sw) minmax(0, 1fr); transition: grid-template-columns .32s cubic-bezier(.4, 0, .2, 1); }
+  body.collapsed { grid-template-columns: 0px minmax(0, 1fr); }
+  button, input { font-family: inherit; }
+  button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  svg { flex: none; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #D5D9DF; border-radius: 10px; border: 3px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  /* ───────── buttons: Duolingo's face on its lip ───────── */
+  .btn { position: relative; height: 42px; padding: 0 15px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--snow); color: var(--ink2); border: 2px solid var(--line); border-radius: 14px; box-shadow: 0 4px 0 var(--line);
+    font-size: 14.5px; font-weight: 800; white-space: nowrap; transition: background .15s, border-color .15s, box-shadow .15s, transform .08s, color .15s; }
+  .btn:hover { background: var(--polar); }
+  .btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--line); }
+  .btn svg { width: 19px; height: 19px; }
+  .btn.ic { width: 42px; padding: 0; }
+  .btn.blue { background: var(--blue); border-color: var(--blue); color: #fff; box-shadow: 0 4px 0 var(--blue-dk); }
+  .btn.blue:hover { background: #3FBDF8; }
+  .btn.blue:active { box-shadow: 0 0 0 var(--blue-dk); }
+  .btn:disabled { background: var(--well); border-color: var(--line); color: var(--gray-icon); box-shadow: 0 4px 0 var(--line); pointer-events: none; }
+  .btn:focus-visible, .tb:focus-visible { outline: 3px solid rgba(28, 176, 246, .45); outline-offset: 2px; }
+
+  /* a tooltip under anything with data-tip */
+  [data-tip] { position: relative; }
+  [data-tip]::after { content: attr(data-tip); position: absolute; top: calc(100% + 10px); left: 50%; z-index: 40; transform: translate(-50%, -4px);
+    padding: 3px 10px 5px; border-radius: 9px; background: var(--ink); color: #fff; font-size: 12.5px; font-weight: 700; white-space: nowrap;
+    opacity: 0; pointer-events: none; transition: opacity .15s, transform .15s; }
+  [data-tip]:hover::after { opacity: 1; transform: translate(-50%, 0); transition-delay: .35s; }
+
+  /* ───────── the side panel ───────── */
+  .side { position: relative; z-index: 6; min-width: 0; overflow: hidden; background: var(--snow); box-shadow: inset 1px 0 0 var(--line); }
+  .side-in { width: var(--sw); height: 100%; display: flex; flex-direction: column; }
+  .head { display: flex; align-items: center; gap: 12px; padding: 18px 18px 16px; }
+  .head .logo { width: 44px; height: 41px; }
+  .head .ht { flex: 1; min-width: 0; }
+  .head b { display: block; font-size: 19.5px; font-weight: 800; line-height: 1.15; }
+  .head span { display: block; font-size: 12.5px; font-weight: 700; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .search { position: relative; margin: 0 16px 14px; }
+  .search input { width: 100%; height: 48px; border: 2px solid var(--line); border-radius: 16px; background: var(--polar); padding: 0 44px 2px 44px;
+    font-size: 15.5px; font-weight: 700; color: var(--ink); outline: 0; transition: border-color .15s, background .15s, box-shadow .15s; }
+  .search input::placeholder { color: var(--gray-icon); }
+  .search input::-webkit-search-cancel-button { display: none; }
+  .search input:focus { border-color: var(--blue-border); background: var(--snow); box-shadow: 0 0 0 4px rgba(28, 176, 246, .12); }
+  .search .ic { position: absolute; top: 50%; right: 15px; width: 19px; height: 19px; margin-top: -9.5px; color: var(--gray-icon); pointer-events: none; }
+  .search kbd { position: absolute; top: 50%; left: 11px; transform: translateY(-50%); }
+  .search input:focus ~ kbd, .search.has kbd { display: none; }
+  .search .clear { position: absolute; top: 50%; left: 9px; transform: translateY(-50%); width: 30px; height: 30px; border: 0; border-radius: 10px; background: var(--well);
+    color: var(--gray); display: none; place-items: center; }
+  .search .clear svg { width: 14px; height: 14px; }
+  .search.has .clear { display: grid; }
+  kbd { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; font: 800 12px var(--font); color: var(--gray); background: var(--snow);
+    border: 1.5px solid var(--line); border-bottom-width: 3px; border-radius: 7px; }
+
+  /* a segmented switch: a white thumb on its lip over a grey well */
+  .seg { display: flex; gap: 4px; padding: 4px; background: var(--well); border-radius: 16px; }
+  .seg > button { flex: 1; min-width: 0; height: 38px; display: flex; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 12px;
+    background: none; font-size: 13.5px; font-weight: 800; color: var(--gray); white-space: nowrap; transition: background .18s, color .18s, box-shadow .18s; }
+  .seg > button svg { width: 16px; height: 16px; }
+  .seg > button:hover { color: var(--ink); }
+  .seg > button.on { background: var(--snow); color: var(--ink); box-shadow: 0 0 0 2px var(--line), 0 3px 0 var(--line); }
+  .seg > button b { font-size: 11.5px; font-weight: 800; color: var(--gray-icon); background: var(--snow); border-radius: 7px; padding: 0 6px; line-height: 18px; }
+  .seg > button.on b { color: var(--blue-dk); background: var(--blue-light); }
+  .src { margin: 0 16px 14px; }
+
+  .recent-w { margin: 0 0 12px; }
+  .recent-w[hidden] { display: none; }
+  .recent-h { display: flex; align-items: center; justify-content: space-between; margin: 0 18px 6px; font-size: 12.5px; font-weight: 800; color: var(--gray); }
+  .recent-h button { border: 0; background: none; padding: 0 4px; font-size: 12px; font-weight: 800; color: var(--gray-icon); }
+  .recent-h button:hover { color: var(--blue); }
+  .recent { display: flex; gap: 6px; padding: 2px 16px 6px; overflow-x: auto; scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to left, #000 88%, transparent); mask-image: linear-gradient(to left, #000 88%, transparent); }
+  .recent::-webkit-scrollbar { display: none; }
+  .rc { flex: none; display: inline-flex; align-items: center; gap: 7px; max-width: 190px; height: 32px; padding: 0 11px; border: 2px solid var(--line);
+    border-radius: 11px; box-shadow: 0 2px 0 var(--line); background: var(--snow); font-size: 12.5px; font-weight: 800; color: var(--ink2); white-space: nowrap; }
+  .rc span { overflow: hidden; text-overflow: ellipsis; }
+  .rc i { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--c, var(--gray-icon)); }
+  .rc:hover { border-color: var(--blue-border); box-shadow: 0 2px 0 var(--blue-border); }
+  .rc:active { transform: translateY(2px); box-shadow: none; }
+
+  .tabs { margin: 2px 16px 4px; }
+  .list { position: relative; flex: 1; min-height: 0; overflow: auto; padding: 4px 12px 28px; }
+  .empty { padding: 40px 14px; text-align: center; color: var(--gray); font-weight: 700; }
+
+  /* a unit is its banner in the unit's colour, as the path draws it */
+  .unit { margin: 14px 0 18px; }
+  .u-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 10px; padding: 11px 14px 12px; border-radius: 16px; color: #fff;
+    background: var(--uc); box-shadow: 0 4px 0 var(--us), 0 -6px 0 var(--snow); }
+  .u-head::after { content: ""; position: absolute; left: -12px; right: -12px; top: calc(100% + 4px); height: 14px; background: linear-gradient(var(--snow), rgba(255,255,255,0)); pointer-events: none; }
+  .u-head .u-t { flex: 1; min-width: 0; }
+  .u-head small { display: block; font-size: 12px; font-weight: 800; opacity: .85; }
+  .u-head b { display: block; font-size: 15.5px; font-weight: 800; line-height: 1.3; }
+  .u-head .u-n { flex: none; font-size: 12px; font-weight: 800; background: rgba(255,255,255,.22); border-radius: 9px; padding: 1px 8px; }
+  .u-yellow .u-head { color: #6B4A00; }
+  .u-yellow .u-head .u-n { background: rgba(255,255,255,.45); }
+  .nodes { margin-top: 10px; display: flex; flex-direction: column; gap: 2px; }
+  .n-row { display: flex; align-items: center; gap: 11px; width: 100%; padding: 7px 9px; border: 2px solid transparent; border-radius: 15px; background: none; text-align: start; color: var(--ink); transition: background .15s; }
+  .n-row:hover { background: var(--polar); }
+  .n-row.on { background: var(--blue-light); border-color: var(--blue-border); }
+  .n-row .hex { width: 38px; height: 35px; transition: transform .2s var(--spring); }
+  .n-row:hover .hex { transform: translateY(-2px); }
+  .n-row .n-t { flex: 1; min-width: 0; }
+  .n-row .n-t b { display: block; font-size: 14.5px; font-weight: 800; line-height: 1.3; }
+  .n-row .n-t span { display: block; font-size: 12px; font-weight: 700; color: var(--gray); }
+  .n-row .chev { width: 26px; height: 26px; padding: 4px; border-radius: 8px; color: var(--gray-icon); transition: transform .22s var(--spring), background .15s; }
+  .n-row:hover .chev { background: var(--snow); }
+  .node.open > .n-row .chev { transform: rotate(-90deg); }
+  .subs { display: none; margin: 4px 26px 10px 0; padding-inline-start: 12px; border-inline-start: 2px dashed var(--line); }
+  .node.open > .subs { display: block; animation: subIn .24s ease-out; }
+  @keyframes subIn { from { opacity: 0; transform: translateY(-5px); } }
+  .s-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 8px; border: 2px solid transparent; border-radius: 13px; background: none; text-align: start;
+    font-size: 14px; font-weight: 700; color: var(--ink2); transition: background .15s; }
+  .s-row:hover { background: var(--polar); }
+  .s-row.on { background: var(--blue-light); border-color: var(--blue-border); color: var(--ink); font-weight: 800; }
+  .s-row .num { width: 27px; height: 27px; flex: none; display: grid; place-items: center; border-radius: 9px; font-size: 13px; font-weight: 800; color: var(--uk); background: var(--ub); }
+  .s-row.on .num { background: var(--uc); color: #fff; }
+  .u-yellow .s-row.on .num { color: #6B4A00; }
+  .s-row.practice { color: var(--gray); }
+  .s-row.practice .num { background: var(--well); color: var(--gray); }
+  .s-row.practice.on .num { background: var(--gray); color: #fff; }
+  .s-row .num svg { width: 15px; height: 15px; }
+
+  /* the screens: a row of the groups to jump with, then each group as a card in its own colour */
+  .jump { position: sticky; top: -4px; z-index: 3; display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin: 0 -12px; padding: 10px 12px;
+    background: rgba(255,255,255,.96); box-shadow: 0 1px 0 var(--line); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+  .jump button { aspect-ratio: 1; display: grid; place-items: center; padding: 0; border: 2px solid transparent; border-radius: 13px; background: var(--gt); transition: transform .18s var(--spring), border-color .15s, box-shadow .15s; }
+  .jump button img { width: 68%; height: 68%; }
+  .jump button:hover { transform: translateY(-2px); }
+  .jump button.on { border-color: var(--gc); box-shadow: 0 3px 0 var(--gc); }
+  .jump [data-tip]::after { top: calc(100% + 6px); }
+  .g { margin: 14px 0; border-radius: 22px; background: var(--gt); border: 2px solid var(--gr); padding: 4px 8px 10px; scroll-margin-top: 70px; }
+  .g-h { display: flex; align-items: center; gap: 11px; width: 100%; padding: 8px 6px 10px; border: 0; background: none; text-align: start; color: var(--ink); }
+  .g-h img { width: 38px; height: 38px; flex: none; transition: transform .25s var(--spring); }
+  .g-h:hover img { transform: rotate(-8deg) scale(1.08); }
+  .g-t { flex: 1; min-width: 0; }
+  .g-t b { display: block; font-size: 16.5px; font-weight: 800; line-height: 1.25; }
+  .g-t small { display: block; font-size: 12px; font-weight: 700; color: var(--gray); }
+  .g-n { flex: none; min-width: 28px; height: 24px; padding: 0 8px; display: grid; place-items: center; border-radius: 9px; background: var(--gc); color: #fff; font-size: 13px; font-weight: 800; }
+  .g.dark .g-n { color: #6B4A00; }
+  .g-h .chev { width: 26px; height: 26px; padding: 4px; color: var(--gray-icon); transform: rotate(-90deg); transition: transform .22s var(--spring); }
+  .g.shut .g-h .chev { transform: none; }
+  .g.shut .g-items { display: none; }
+  .g.shut { padding-bottom: 4px; }
+  .g-items { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; animation: subIn .24s ease-out; }
+  .c-row { display: flex; align-items: center; gap: 9px; min-height: 50px; padding: 6px 9px 6px 8px; border: 2px solid var(--line); border-radius: 15px; box-shadow: 0 3px 0 var(--line);
+    background: var(--snow); text-align: start; font-size: 13px; font-weight: 800; line-height: 1.3; color: var(--ink2); transition: border-color .15s, box-shadow .15s, background .15s, color .15s; }
+  .c-row img { width: 28px; height: 28px; flex: none; transition: transform .22s var(--spring); }
+  .c-row:hover { border-color: var(--gr); box-shadow: 0 3px 0 var(--gr); }
+  .c-row:hover img { transform: scale(1.12); }
+  .c-row:active { transform: translateY(3px); box-shadow: 0 0 0 var(--line); }
+  .c-row.on { background: var(--gc); border-color: var(--gc); box-shadow: 0 3px 0 var(--gd); color: #fff; }
+  .g.dark .c-row.on { color: #5A3E00; }
+  .c-row.on img { background: rgba(255,255,255,.92); border-radius: 9px; padding: 3px; width: 32px; height: 32px; margin: -2px; }
+  .rc img { width: 18px; height: 18px; flex: none; }
+
+  .keys { flex: none; display: flex; flex-wrap: wrap; gap: 6px 12px; padding: 11px 16px 13px; border-top: 1px solid var(--line); font-size: 12px; font-weight: 700; color: var(--gray); }
+  .keys span { display: inline-flex; align-items: center; gap: 4px; }
+  .keys kbd { min-width: 20px; height: 20px; font-size: 11px; }
+
+  /* ───────── the main area ───────── */
+  .main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+  .top { display: flex; align-items: center; gap: 14px; padding: 14px 22px; background: var(--snow); box-shadow: 0 1px 0 var(--line); position: relative; z-index: 4; }
+  .open-side { display: none; }
+  body.collapsed .open-side { display: inline-flex; }
+  .crumb { flex: 1; min-width: 0; }
+  .cp { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 800; color: var(--gray); white-space: nowrap; overflow: hidden; }
+  .cp .pill { color: #fff; background: var(--c, var(--gray-icon)); border-radius: 8px; padding: 0 8px; line-height: 20px; }
+  .cp .pill.dark { color: #6B4A00; }
+  .cp svg { width: 10px; height: 10px; color: var(--gray-icon); }
+  .cp .src-note { color: var(--orange); }
+  .crumb h1 { margin: 2px 0 0; font-size: 22px; font-weight: 800; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stepper { display: flex; align-items: center; gap: 10px; flex: none; }
+  .count { min-width: 64px; text-align: center; font-size: 14px; font-weight: 800; color: var(--gray); font-variant-numeric: tabular-nums; }
+  .count b { color: var(--ink); }
+
+  /* the stage: a dotted board, a floating dock, the phones */
+  .stage { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 16px 22px 18px;
+    background-color: var(--stage); background-image: radial-gradient(var(--dot) 1.1px, transparent 1.4px); background-size: 22px 22px; container-type: inline-size; }
+  .dock { position: relative; z-index: 3; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; max-width: 100%; padding: 6px;
+    background: rgba(255,255,255,.94); border: 1.5px solid var(--line); border-radius: 20px; box-shadow: 0 10px 30px -8px rgba(16,24,40,.16), 0 2px 0 var(--line);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .dock .sep { width: 2px; height: 28px; border-radius: 2px; background: var(--well); margin: 0 3px; }
+  .tb { position: relative; height: 40px; min-width: 40px; padding: 0 11px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 0; border-radius: 13px;
+    background: none; color: var(--ink2); font-size: 13.5px; font-weight: 800; white-space: nowrap; transition: background .15s, color .15s, box-shadow .15s, transform .08s; }
+  .tb svg { width: 19px; height: 19px; }
+  .tb:hover { background: var(--well); }
+  .tb:active { transform: scale(.94); }
+  .tb.on { background: var(--blue-light); color: var(--blue-dk); box-shadow: inset 0 0 0 2px var(--blue-border); }
+  .tb.ic { padding: 0; width: 40px; }
+  /* the devices: each a phone outline drawn at its own proportions */
+  .devs { display: flex; gap: 2px; padding: 3px; background: var(--well); border-radius: 15px; }
+  .dv { height: 38px; padding: 0 10px; display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 12px; background: none; color: var(--gray);
+    font-size: 12.5px; font-weight: 800; white-space: nowrap; transition: background .18s, color .18s, box-shadow .18s; }
+  .dv svg { width: 18px; height: 22px; }
+  .dv:hover { color: var(--ink); }
+  .dv.on { background: var(--snow); color: var(--blue-dk); box-shadow: 0 0 0 2px var(--blue-border), 0 3px 0 var(--blue-border); }
+  .dv-more { display: none; }
+  .dv-more svg { width: 13px; height: 13px; }
+  @container (max-width: 1120px) { .dv:not(.on) { display: none; } .dv.on { box-shadow: none; background: none; } .devs { background: var(--blue-light); box-shadow: inset 0 0 0 2px var(--blue-border); }
+    .dv-more { display: inline-flex; align-items: center; height: 38px; padding: 0 8px 0 4px; border: 0; background: none; color: var(--blue-dk); } }
+  @container (max-width: 760px) { .tb .tl { display: none; } .tb:not(.ic) { padding: 0 10px; } }
+  .live { gap: 8px; }
+  .live i { width: 9px; height: 9px; border-radius: 50%; background: var(--gray-icon); transition: background .2s; }
+  .live.on { background: #E9FAD9; color: var(--green-dk); box-shadow: inset 0 0 0 2px #B8EC8F; }
+  .live.on i { background: var(--green); animation: live 1.8s infinite; }
+  @keyframes live { 0% { box-shadow: 0 0 0 0 rgba(88,204,2,.55); } 70% { box-shadow: 0 0 0 7px rgba(88,204,2,0); } 100% { box-shadow: 0 0 0 0 rgba(88,204,2,0); } }
+  .spin svg { animation: spin .6s ease-in-out; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .view { position: relative; flex: 1; min-height: 0; width: 100%; display: flex; overflow: hidden; }
+  .view.full { overflow: auto; }
+  .rig { position: relative; flex: none; margin: auto; }
+  .rig-in { position: absolute; top: 0; left: 0; display: flex; align-items: flex-start; gap: 48px; transform-origin: 0 0; }
+  .ph { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  /* the bezel is decoration; the iframe inside is the device's real size */
+  .phone { position: relative; padding: 12px; border-radius: 50px; background: linear-gradient(155deg, #4A4D55 0%, #1D1F24 40%, #0B0C0E 100%);
+    box-shadow: 0 0 0 1.5px #2B2D33, inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1px 0 rgba(0,0,0,.6), 0 34px 70px -14px rgba(16,24,40,.38), 0 12px 24px rgba(16,24,40,.12); }
+  .phone::before { content: ""; position: absolute; top: 4.5px; left: 50%; width: 54px; height: 4px; margin-left: -27px; border-radius: 3px; background: rgba(255,255,255,.2); }
+  .phone::after { content: ""; position: absolute; bottom: 4px; left: 50%; width: 100px; height: 4px; margin-left: -50px; border-radius: 3px; background: rgba(255,255,255,.28); }
+  .phone .key { position: absolute; width: 4px; border-radius: 2px; background: #2B2D33; }
+  .phone .k1 { right: -4px; top: 150px; height: 72px; }
+  .phone .k2 { left: -4px; top: 120px; height: 44px; }
+  .phone .k3 { left: -4px; top: 176px; height: 44px; }
+  .phone.land::before, .phone.land::after, .phone.land .key { display: none; }
+  .phone iframe { display: block; border: 0; border-radius: 38px; background: #fff; }
+  .phone.land iframe { border-radius: 28px; }
+  .ph .busy { position: absolute; inset: 12px; border-radius: 38px; background: rgba(255,255,255,.75); display: grid; place-items: center; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .ph.loading .busy { opacity: 1; }
+  .busy svg { width: 50px; height: 46px; animation: hop .9s var(--spring) infinite; }
+  @keyframes hop { 40% { transform: translateY(-12px); } }
+  /* the phone's own name under it, a button that changes its device */
+  .cap { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px 0 10px; border: 2px solid var(--line); border-radius: 13px; box-shadow: 0 3px 0 var(--line);
+    background: var(--snow); font-size: 14px; font-weight: 800; color: var(--ink2); white-space: nowrap; }
+  .cap:hover { border-color: var(--blue-border); box-shadow: 0 3px 0 var(--blue-border); }
+  .cap:active { transform: translateY(3px); box-shadow: none; }
+  .cap i { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); }
+  .ph.second .cap i { background: var(--purple); }
+  .cap .sz { color: var(--gray); font-weight: 700; direction: ltr; unicode-bidi: isolate; }
+  .cap .pct { color: var(--gray-icon); font-weight: 700; }
+  .cap svg { width: 13px; height: 13px; color: var(--gray-icon); }
+
+  .pop { position: fixed; z-index: 60; width: 236px; padding: 6px; background: var(--snow); border: 2px solid var(--line); border-radius: 18px;
+    box-shadow: 0 18px 40px -10px rgba(16,24,40,.25), 0 3px 0 var(--line); animation: popIn .2s var(--spring); }
+  @keyframes popIn { from { opacity: 0; transform: translateY(6px) scale(.97); } }
+  .pop p { margin: 4px 10px 6px; font-size: 12px; font-weight: 800; color: var(--gray); }
+  .pop button { display: flex; align-items: center; gap: 10px; width: 100%; height: 40px; padding: 0 10px; border: 0; border-radius: 12px; background: none; text-align: start;
+    font-size: 14px; font-weight: 800; color: var(--ink2); }
+  .pop button:hover { background: var(--polar); }
+  .pop button.on { background: var(--blue-light); color: var(--blue-dk); }
+  .pop button svg { width: 18px; height: 22px; color: var(--gray-icon); }
+  .pop button.on svg { color: var(--blue); }
+  .pop button span { margin-inline-start: auto; font-size: 12px; font-weight: 700; color: var(--gray); direction: ltr; }
+
+  .toast { position: fixed; left: 50%; bottom: 26px; z-index: 70; display: flex; align-items: center; gap: 8px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+    background: var(--ink); color: #fff; font-size: 14px; font-weight: 800; padding: 10px 18px 12px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,.2);
+    transition: opacity .2s, transform .3s var(--spring); }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast svg { width: 18px; height: 18px; color: var(--green); }
+  .scrim { display: none; }
+
+  /* a narrow window: the panel is a drawer over the stage */
+  @media (max-width: 980px) {
+    body, body.collapsed { grid-template-columns: minmax(0, 1fr); }
+    .side { position: fixed; top: 0; bottom: 0; right: 0; width: min(var(--sw), 92vw); transform: translateX(105%); transition: transform .28s cubic-bezier(.4, 0, .2, 1); box-shadow: -20px 0 40px rgba(0,0,0,.15); }
+    .side-in { width: 100%; }
+    body.drawer .side { transform: none; }
+    .open-side, body.collapsed .open-side { display: inline-flex; }
+    .scrim { display: block; position: fixed; inset: 0; z-index: 5; background: rgba(20, 24, 31, .35); opacity: 0; pointer-events: none; transition: opacity .25s; }
+    body.drawer .scrim { opacity: 1; pointer-events: auto; }
+    .top { padding: 12px 14px; gap: 10px; }
+    .stepper .btn .tl { display: none; }
+    .stepper .btn { width: 42px; padding: 0; }
+    .count { min-width: 48px; }
+    .stage { padding: 12px 10px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<aside class="side" id="side" aria-label="الدروس والشاشات">
+  <div class="side-in">
+    <div class="head">
+      <svg class="logo" viewBox="0 0 71 65" aria-hidden="true" id="logo"></svg>
+      <div class="ht"><b>استوديو المعاينة</b><span>كل درس وكل شاشة في جوال حقيقي</span></div>
+      <button class="btn ic" id="closeSide" data-tip="أخفِ اللوحة (B)" aria-label="أخفِ اللوحة"></button>
+    </div>
+    <div class="search" id="searchBox">
+      <svg class="ic" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="8.5" cy="8.5" r="6"/><path d="M13 13l4.5 4.5"/></svg>
+      <input id="q" type="search" placeholder="دوّر درس أو شاشة…" autocomplete="off" aria-label="بحث">
+      <kbd>/</kbd>
+      <button class="clear" id="qClear" aria-label="امسح"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 3l8 8M11 3l-8 8"/></svg></button>
+    </div>
+    <div class="seg src" id="srcSeg" role="tablist" aria-label="المصدر"></div>
+    <div class="recent-w" id="recentW">
+      <div class="recent-h">آخر اللي فتحته <button id="recentClear">امسح</button></div>
+      <div class="recent" id="recent"></div>
+    </div>
+    <div class="seg tabs" role="tablist">
+      <button data-tab="les">الدروس <b id="nLes"></b></button>
+      <button data-tab="scr">الشاشات <b id="nScr"></b></button>
+    </div>
+    <div class="list" id="list"></div>
+    <div class="keys"><span><kbd>/</kbd>بحث</span><span><kbd>←</kbd><kbd>→</kbd>التالي والسابق</span><span><kbd>R</kbd>تحديث</span><span><kbd>C</kbd>مقارنة</span><span><kbd>B</kbd>اللوحة</span></div>
+  </div>
+</aside>
+<div class="scrim" id="scrim"></div>
+
+<div class="main" id="main">
+  <div class="top">
+    <button class="btn ic open-side" id="openSide" data-tip="أظهر اللوحة (B)" aria-label="أظهر اللوحة"></button>
+    <div class="crumb"><div class="cp" id="cp"></div><h1 id="ttl"></h1></div>
+    <div class="stepper">
+      <button class="btn" id="prev"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4l6 6-6 6"/></svg><span class="tl">السابق</span></button>
+      <span class="count" id="count"></span>
+      <button class="btn blue" id="next"><span class="tl">التالي</span><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l-6 6 6 6"/></svg></button>
+    </div>
+  </div>
+  <div class="stage" id="stage">
+    <div class="dock" id="dock">
+      <div class="devs" id="devs" role="radiogroup" aria-label="الجهاز"></div>
+      <span class="sep"></span>
+      <button class="tb ic" id="rot" data-tip="تدوير"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="8" height="15" rx="2"/><path d="M2.5 7.5a7 7 0 0 1 3-4M17.5 12.5a7 7 0 0 1-3 4"/><path d="M2.3 3.6l.3 4 3.6-1.5M17.7 16.4l-.3-4-3.6 1.5"/></svg></button>
+      <button class="tb" id="cmp" data-tip="جوالين جنب بعض (C)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="2" y="3" width="7" height="14" rx="1.8"/><rect x="11.5" y="5" width="6.5" height="12" rx="1.8"/></svg><span class="tl">مقارنة</span></button>
+      <span class="sep"></span>
+      <div class="seg" id="zoomSeg" style="padding:3px;border-radius:15px">
+        <button data-z="fit" style="height:34px;padding:0 11px" data-tip="يصغّر الجوال لين يدخل الشاشة">ملاءمة</button>
+        <button data-z="real" style="height:34px;padding:0 11px" data-tip="كل بكسل بحجمه">١٠٠٪</button>
+      </div>
+      <span class="sep"></span>
+      <button class="tb live" id="auto" data-tip="يحدّث لحاله إذا تغيّر ملف"><i></i><span class="tl">مباشر</span></button>
+      <button class="tb ic" id="rel" data-tip="تحديث (R)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 10a6.5 6.5 0 1 1-2-4.7"/><path d="M16.8 3.5v3.8H13"/></svg></button>
+      <span class="sep"></span>
+      <button class="tb ic" id="tab" data-tip="افتحه في تبويب لحاله"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3h6v6M17 3l-8 8"/><path d="M15 12v4a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 3 16V6.5A1.5 1.5 0 0 1 4.5 5H8"/></svg></button>
+      <button class="tb ic" id="copy" data-tip="انسخ رابط هذي الشاشة"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 11.5a3.5 3.5 0 0 0 5 0l2.5-2.5a3.5 3.5 0 0 0-5-5l-1 1"/><path d="M11.5 8.5a3.5 3.5 0 0 0-5 0L4 11a3.5 3.5 0 0 0 5 5l1-1"/></svg></button>
+    </div>
+    <div class="view" id="view"><div class="rig" id="rig"><div class="rig-in" id="rigIn"></div></div></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const AR = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
+  /* the panel's choices are a convenience per viewer: kept in this browser, never needed */
+  const store = {
+    get(k, d) { try { const v = JSON.parse(localStorage.getItem('qudrati.studio.' + k)); return v == null ? d : v; } catch (e) { return d; } },
+    set(k, v) { try { localStorage.setItem('qudrati.studio.' + k, JSON.stringify(v)); } catch (e) {} },
+  };
+  const svgI = (body, w = 2.3) => `<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+  /* the panel's own icon: a window with the panel on its right, as the page has it */
+  const PANEL_IC = svgI('<rect x="2.5" y="3.5" width="15" height="13" rx="3"/><path d="M12 3.5v13"/>');
+  $('closeSide').innerHTML = PANEL_IC + '';
+  $('openSide').innerHTML = PANEL_IC;
+
+  /* ───── the path's own node: the rounded hexagon, its lip 7 units lower, its shine (app.js roundPoly / hexPts / NODE_HEX) ───── */
+  function roundPoly(pts, r, start) {
+    const n = pts.length, at = (p, q, d) => { const dx = q[0] - p[0], dy = q[1] - p[1], l = Math.hypot(dx, dy); return [p[0] + dx / l * d, p[1] + dy / l * d]; };
+    const f = p => p[0].toFixed(2) + ' ' + p[1].toFixed(2);
+    let d = 'M' + f(start);
+    for (let k = 0; k < n; k++) { const P = pts[k], A = pts[(k + n - 1) % n], B = pts[(k + 1) % n]; d += ' L' + f(at(P, A, r)) + ' Q' + f(P) + ' ' + f(at(P, B, r)); }
+    return d + ' Z';
+  }
+  const hexPts = (x, y, w, h) => [[x + w * .25, y], [x, y + h / 2], [x + w * .25, y + h], [x + w * .75, y + h], [x + w, y + h / 2], [x + w * .75, y]];
+  const HEX = roundPoly(hexPts(0, 0, 71, 58), 10, [35.5, 0]), HEX_HI = roundPoly(hexPts(9, 4, 53, 40), 8, [35.5, 4]);
+  const STAR = 'M18.27 6.05c1.06-2.36 4.4-2.36 5.47 0l2.22 4.91c.44.99 1.39 1.66 2.47 1.75l5.33.47c2.66.24 3.71 3.57 1.66 5.29l-3.8 3.18a3.2 3.2 0 0 0-1 2.99l1.15 4.85c.6 2.55-2.12 4.59-4.4 3.3l-4.89-2.76a3.2 3.2 0 0 0-2.95 0l-4.89 2.76c-2.28 1.29-5-.75-4.4-3.3l1.15-4.85a3.2 3.2 0 0 0-1-2.99l-3.8-3.18c-2.05-1.72-1-5.05 1.66-5.29l5.33-.47a3.2 3.2 0 0 0 2.47-1.75z';
+  const UC = { green: { c: '#58CC02', s: '#58A700', h: '#71DC1A', b: '#E6F8D4', k: '#58A700' }, blue: { c: '#1CB0F6', s: '#1899D6', h: '#55C5F9', b: '#DDF4FF', k: '#1899D6' },
+    purple: { c: '#CE82FF', s: '#A568CC', h: '#DAA0FF', b: '#F3E6FF', k: '#A568CC' }, yellow: { c: '#FFC800', s: '#E6A000', h: '#FFE700', b: '#FFF5CC', k: '#B07A00' } };
+  const hexSvg = (col, inner) => `<path d="${HEX}" fill="${col.s}" transform="translate(0 7)"/><path d="${HEX}" fill="${col.c}"/><path d="${HEX_HI}" fill="${col.h}"/>${inner}`;
+  $('logo').innerHTML = hexSvg(UC.green, `<svg x="16.5" y="10" width="38" height="38" viewBox="0 0 40 40"><path d="${STAR}" fill="#fff"/></svg>`);
+
+  /* ───── the devices, each drawn as a phone outline at its own proportions ───── */
+  const DEVICES = [
+    { id: 'i14', n: 'iPhone 14', w: 390, h: 844 }, { id: 'se', n: 'iPhone SE', w: 375, h: 667 }, { id: 'max', n: 'Pro Max', w: 430, h: 932 },
+    { id: 'px', n: 'Pixel 7', w: 412, h: 915 }, { id: 's8', n: 'Galaxy', w: 360, h: 740 }, { id: 'sm', n: 'صغير', w: 320, h: 568 }, { id: 'fold', n: 'Fold', w: 280, h: 653 },
+  ];
+  const devOf = id => DEVICES.find(d => d.id === id) || DEVICES[0];
+  function glyph(d, land) {
+    const k = 20 / 932; let w = d.w * k * 1.18, h = d.h * k; if (land) [w, h] = [h, w];
+    const x = (18 - w) / 2, y = (22 - h) / 2;
+    return `<svg viewBox="0 0 18 22" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="${x.toFixed(2)}" y="${y.toFixed(2)}" width="${w.toFixed(2)}" height="${h.toFixed(2)}" rx="2.4"/></svg>`;
+  }
+
+  /* ───── every lesson, in path order: a node taught by short lessons lists each of them and its exam practice; any other node
+     opens whole (preview.html #learn-<unit>.<node>-<n> / #les-<unit>.<node>) ───── */
+  const QB = window.QBANK || {}, QL = window.QLEARN || {};
+  const UNITS = [['skills', 'green'], ['numbers', 'blue'], ['ratios', 'purple'], ['geometry', 'yellow']];
+  const ENTRIES = [], BY = {};
+  const add = e => { ENTRIES.push(e); BY[e.hash] = e; return e; };
+  const TREE = UNITS.map(([dk, cn], ui) => {
+    const d = QB[dk]; if (!d) return null;
+    const col = UC[cn], unit = { dk, cn, col, ui, title: d.title, nodes: [] };
+    d.lessons.forEach((l, li) => {
+      const key = dk + '.' + l.key, L = QL[key], node = { key, li, title: l.title, unit, subs: [] };
+      const base = { kind: 'les', unit, node, col };
+      if (L) {
+        L.lessons.forEach((x, i) => node.subs.push(add(Object.assign({ hash: `learn-${key}-${i + 1}`, label: x.title, n: i + 1 }, base))));
+        node.subs.push(add(Object.assign({ hash: `les-${key}`, label: 'تدريب أسئلة المستوى', practice: true }, base)));
+      } else node.whole = add(Object.assign({ hash: `les-${key}`, label: l.title, whole: true }, base));
+      unit.nodes.push(node);
+    });
+    return unit;
+  }).filter(Boolean);
+
+  /* ───── every screen preview.html knows, in the order a student meets them ───── */
+  const IC = {
+    flag: '<path d="M4 17V3M4 3.5h9l-2 3.5 2 3.5H4"/>', gauge: '<path d="M3 14a7 7 0 1 1 14 0"/><path d="M10 14l3.5-4.5"/>',
+    path: '<path d="M10 2.5l5.5 3.2v6.6L10 15.5l-5.5-3.2V5.7z"/>', pencil: '<path d="M13.5 3.5l3 3L7 16H4v-3z"/>',
+    trophy: '<path d="M6 3h8v4a4 4 0 0 1-8 0zM10 11v4M7 17h6M6 5H3.5a2.5 2.5 0 0 0 2.6 3M14 5h2.5a2.5 2.5 0 0 1-2.6 3"/>',
+    user: '<circle cx="10" cy="7" r="3.5"/><path d="M3.5 17a6.5 6.5 0 0 1 13 0"/>', grid: '<rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5"/>',
+    gift: '<rect x="3" y="8" width="14" height="9" rx="1.5"/><path d="M2.5 5.5h15v2.5h-15zM10 5.5V17M10 5.5C8 2 5 3 6.5 5.5M10 5.5C12 2 15 3 13.5 5.5"/>',
+    clock: '<circle cx="10" cy="10.5" r="6.5"/><path d="M10 7v3.7l2.4 1.6M8 2.5h4"/>',
+    flask: '<path d="M8 2.5h4M8.5 2.5v5L4 15.5a1.5 1.5 0 0 0 1.3 2h9.4a1.5 1.5 0 0 0 1.3-2L11.5 7.5v-5"/><path d="M6 12.5h8"/>',
+    plus: '<circle cx="8" cy="7" r="3.3"/><path d="M2.5 17a5.5 5.5 0 0 1 9.6-3.7M15 11v6M12 14h6"/>',
+    disk: '<path d="M4 3h9.5L17 6.5V16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M6.5 3v4h6V3M6.5 17v-5h7v5"/>',
+  };
+  /* each group in one of Duolingo's colours (face, lip, tint, rim), each screen with one of Duolingo's own icons (tools/studio/duo/, cut out of the
+     decompiled app's vector drawables) */
+  const SCREENS = [
+    { g: 'أول ما يفتح', sub: 'من شاشة البداية لين أول درس', ic: 'flag_math', c: '#58CC02', d: '#58A700', t: '#F2FCEA', r: '#CDF2AE', items: [
+      ['welcome', 'شاشة البداية', 'flag_math'], ['ob-hello', 'أهلاً، أنا فهيم', 'profile_active'], ['ob-taste', 'جرّب', 'ic_calculator_blue'], ['ob-value', 'وش هو قدراتي؟', 'gem'],
+      ['ob-journey', '٤ أسئلة سريعة', 'tab_redesign_tab_learn'], ['ob-level', 'كم تعرف؟', 'fork_placement'], ['ob-goal', 'هدفك اليومي', 'target_green'], ['ob-start', 'من وين تبدأ؟', 'tab_redesign_tab_bar_practice_hub'],
+      ['ob-splash', 'قبل أول درس', 'ramp_up_lightning_icon'], ['ob-pintro', 'قبل اختبار المستوى', 'clock_blue']] },
+    { g: 'اختبار المستوى', sub: 'الأسئلة ونتائجها', ic: 'fork_placement', c: '#1CB0F6', d: '#1899D6', t: '#EDF8FE', r: '#BDE7FC', items: [
+      ['placeintro', 'مقدمة الاختبار', 'fork_placement'], ['place', 'الاختبار', 'ic_calculator_blue'], ['placeweak', 'النتيجة: من الصفر', 'leagues_league_bronze_v2'],
+      ['placemid', 'النتيجة: متوسط', 'leagues_league_gold_v2'], ['placegood', 'النتيجة: ممتاز', 'leagues_league_diamond_v2'], ['placegap', 'النتيجة: فجوة في الوحدة ١', 'practice_hub_free_mistakes_icon']] },
+    { g: 'المسار', sub: 'الرئيسية وما يصير فيها', ic: 'tab_redesign_tab_learn', c: '#FFC800', d: '#E6A000', t: '#FFF9E0', r: '#FFE58A', dark: 1, items: [
+      ['path', 'المسار', 'tab_redesign_tab_learn'], ['pop', 'نافذة الدرس', 'crown_active'], ['pathpay', 'بعد درس قصير', 'checkmark_green'], ['pathgold', 'آخر درس: يصير ذهبي', 'kudos_trophy_gold'],
+      ['chestready', 'الصندوق جاهز', 'daily_quests_chest_closed_gold'], ['book', 'دفتر القوانين', 'ic_shortcut_path_foreground'], ['unitbook', 'قوانين الوحدة', 'medal_lessons']] },
+    { g: 'داخل الدرس', sub: 'البطاقات والأسئلة والإجابات', ic: 'icon_practice', c: '#CE82FF', d: '#A568CC', t: '#FAF2FF', r: '#E9CCFF', items: [
+      ['learn', 'أول درس قصير', 'icon_practice'], ['warm', 'سؤال الإحماء', 'update_card_lightning_bolt'], ['warmdone', 'الإحماء: صح', 'checkmark_green'], ['teach', 'بطاقة البداية', 'ic_shortcut_path_foreground'],
+      ['teachrule', 'بطاقة قانون', 'ic_word_bank_blue'], ['teachcheck', 'التحقق: غلط', 'reward_available_fab'], ['rules', 'قبل ما نبدأ', 'calendar_checkmark'], ['lesson', 'سؤال', 'ic_calculator_blue'],
+      ['fb', 'إجابة غلط', 'heart'], ['fbgood', 'إجابة صح', 'checkmark_green'], ['method', 'كيف أحلّها؟', 'settings_icon'], ['rulewords', 'كمّل القانون', 'ic_word_bank_blue'],
+      ['rulenums', 'كمّل الخطوة', 'ic_keyboard_blue'], ['learnfrac', 'الكسور كالاختبار', 'flag_math'], ['learnpairs', 'وصّل', 'heart_unlimited'], ['learntype', 'اكتب الناتج', 'ic_keyboard_blue'],
+      ['questbanner', 'بطاقة هدف اليوم', 'daily_quests_chest_closed_gold']] },
+    { g: 'بعد الدرس', sub: 'الفوز والدوري والخسارة', ic: 'kudos_trophy_gold', c: '#FF9600', d: '#E08600', t: '#FFF5E8', r: '#FFD9A8', items: [
+      ['learnwin', 'فوز درس قصير', 'kudos_trophy_gold'], ['learnwinmiss', 'فوز مع غلطتين', 'tab_redesign_medal_silver'], ['learnmore', 'تقدّمك اليوم', 'gem_chest'], ['done', 'إكمال الدرس', 'tab_redesign_medal_gold'],
+      ['climb', 'صعود الدوري', 'leagues_active'], ['climbtop', 'إلى القمة', 'crown'], ['fail', 'نفدت القلوب', 'heart']] },
+    { g: 'الحساب', sub: 'تسجيل الدخول وملفك', ic: 'tab_redesign_tab_profile', c: '#2B70C9', d: '#1F5AA6', t: '#EEF4FC', r: '#C6D9F3', items: [
+      ['signin', 'سوّ ملفك', 'tab_redesign_tab_profile'], ['signin-how', 'طرق الدخول', 'ic_google_icon_multi_colored'], ['signin-bad', 'إيميل غلط', 'reward_available_fab'], ['signin-typo', 'اقتراح تصحيح', 'email_icon_purple'],
+      ['signin-name', 'اسمك', 'profile_active'], ['signin-pass', 'كلمة المرور', 'lock_reward'], ['signin-done', 'ملفك جاهز', 'checkmark_green']] },
+    { g: 'التبويبات', sub: 'الدوري والتجريبي والإحصائيات', ic: 'tab_redesign_tab_overflow', c: '#00B8A0', d: '#009A86', t: '#EAFAF7', r: '#B6EDE4', items: [
+      ['league', 'الدوري', 'tab_redesign_leaderboard_default'], ['mock', 'الاختبار التجريبي', 'clock_blue'], ['mocktest', 'داخل التجريبي', 'ramp_up_timer_icon'], ['mockdone', 'نتيجة التجريبي', 'medal_lessons'],
+      ['stats', 'إحصائياتي', 'leagues_stat_medal_tab_redesign'], ['review', 'مراجعة الأخطاء', 'practice_hub_mistakes_collection_icon'], ['reviewempty', 'ما فيه أخطاء', 'checkmark_green'],
+      ['reviewdo', 'داخل المراجعة', 'practice_hub_free_mistakes_icon'], ['settings', 'الإعدادات', 'settings_icon']] },
+    { g: 'الاحتفالات', sub: 'الصندوق والترقية والسلسلة', ic: 'party_horn', c: '#FF4B4B', d: '#EA2B2B', t: '#FFF0F0', r: '#FFCACA', items: [
+      ['chest', 'فتح الصندوق', 'chest_epic_open'], ['rankup', 'ترقية المستوى', 'newpath_trophy_passed_sculpture'], ['streak7', 'السلسلة', 'calendar_checkmark']] },
+  ];
+  const DUO = n => 'studio/duo/' + n + '.svg';
+  SCREENS.forEach((G, gi) => { G.i = gi; G.items.forEach(([h, l, ic]) => add({ hash: h, label: l, ic, kind: 'scr', group: G })); });
+  const LES = ENTRIES.filter(e => e.kind === 'les'), SCR = ENTRIES.filter(e => e.kind === 'scr');
+  $('nLes').textContent = AR(LES.length); $('nScr').textContent = AR(SCR.length);
+  const entryOf = h => BY[h] || { hash: h, label: h, kind: 'scr', ic: 'tab_redesign_tab_overflow', group: { g: 'شاشة', c: '#777', d: '#555', t: '#F4F4F4', r: '#DDD', ic: 'tab_redesign_tab_overflow', i: -1 } };
+
+  /* ───── state ───── */
+  const narrow = () => matchMedia('(max-width: 980px)').matches;
+  const S = {
+    hash: decodeURIComponent(location.hash.slice(1)) || store.get('hash', 'path'),
+    src: location.hash ? 'demo' : store.get('src', 'demo'), tab: store.get('tab', 'les'),
+    dev: store.get('dev', 'i14'), dev2: store.get('dev2', 'sm'), compare: store.get('compare', false), land: false, full: store.get('full', false),
+    auto: store.get('auto', true), open: store.get('open', ['skills.bigsum']), collapsed: store.get('collapsed', false),
+  };
+  /* the panel opens on what is on the phone: its tab, and its level unfolded */
+  if (BY[S.hash]) { const e = BY[S.hash]; S.tab = e.kind; if (e.node && e.node.subs.length && !S.open.includes(e.node.key)) S.open = S.open.concat(e.node.key); }
+
+  /* ───── showing and hiding the panel ───── */
+  function setPanel(show) {
+    if (narrow()) { document.body.classList.toggle('drawer', show); return; }
+    S.collapsed = !show; store.set('collapsed', S.collapsed);
+    document.body.classList.toggle('collapsed', S.collapsed);
+  }
+  const panelShown = () => narrow() ? document.body.classList.contains('drawer') : !S.collapsed;
+  $('closeSide').onclick = () => setPanel(false);
+  $('openSide').onclick = () => setPanel(true);
+  $('scrim').onclick = () => setPanel(false);
+  document.body.classList.toggle('collapsed', S.collapsed);
+
+  /* ───── the side panel ───── */
+  const norm = s => String(s).replace(/[ً-ْـ]/g, '').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').toLowerCase();
+  const CHEV = '<svg class="chev" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l-6 6 6 6"/></svg>';
+  function drawList() {
+    const q = norm($('q').value.trim()), list = $('list');
+    $('searchBox').classList.toggle('has', !!q);
+    const hit = t => !q || norm(t).includes(q);
+    let html = '';
+    if (S.tab === 'les') {
+      TREE.forEach(u => {
+        const nodes = u.nodes.map(nd => {
+          const own = hit(nd.title) || hit(u.title), subs = nd.subs.filter(e => own || hit(e.label));
+          if (q && !own && !subs.length) return '';
+          const isOpen = q ? true : S.open.includes(nd.key), on = nd.whole && nd.whole.hash === S.hash;
+          const count = nd.subs.length ? `${AR(nd.subs.length - 1)} دروس قصيرة` : 'بطاقات وأسئلة';
+          const row = `<button class="n-row${on ? ' on' : ''}" data-node="${nd.key}"${nd.whole ? ` data-hash="${nd.whole.hash}"` : ''}>
+              <svg class="hex" viewBox="0 0 71 65" aria-hidden="true">${hexSvg(u.col, `<text x="35.5" y="31" text-anchor="middle" dominant-baseline="central" font-family="Baloo Bhaijaan 2" font-weight="800" font-size="27" fill="${u.cn === 'yellow' ? '#7A5200' : '#fff'}">${AR(nd.li + 1)}</text>`)}</svg>
+              <span class="n-t"><b>${nd.title}</b><span>${count}</span></span>${nd.subs.length ? CHEV : ''}</button>`;
+          const sub = nd.subs.length ? `<div class="subs">${(q && !own ? subs : nd.subs).map(e => `<button class="s-row${e.practice ? ' practice' : ''}${e.hash === S.hash ? ' on' : ''}" data-hash="${e.hash}">
+              <span class="num">${e.practice ? svgI(IC.clock, 2.4) : AR(e.n)}</span><span>${e.label}</span></button>`).join('')}</div>` : '';
+          return `<div class="node${isOpen && nd.subs.length ? ' open' : ''}">${row}${sub}</div>`;
+        }).join('');
+        if (!nodes) return;
+        html += `<section class="unit u-${u.cn}" style="--uc:${u.col.c};--us:${u.col.s};--ub:${u.col.b};--uk:${u.col.k}">
+          <div class="u-head"><span class="u-t"><small>الوحدة ${AR(u.ui + 1)}</small><b>${u.title}</b></span><span class="u-n">${AR(u.nodes.length)} مستويات</span></div>
+          <div class="nodes">${nodes}</div></section>`;
+      });
+    } else {
+      const shut = q ? [] : store.get('shut', []);
+      if (!q) html += `<nav class="jump" aria-label="المجموعات">${SCREENS.map(G => `<button data-jump="${G.i}" style="--gc:${G.c};--gt:${G.t};--gr:${G.r}" data-tip="${G.g}"><img src="${DUO(G.ic)}" alt=""></button>`).join('')}</nav>`;
+      SCREENS.forEach(G => {
+        const its = G.items.filter(([h, l]) => hit(l) || hit(G.g) || hit(h));
+        if (!its.length) return;
+        const closed = shut.includes(G.i) && !its.some(([h]) => h === S.hash);
+        html += `<section class="g${closed ? ' shut' : ''}${G.dark ? ' dark' : ''}" id="g${G.i}" style="--gc:${G.c};--gd:${G.d};--gt:${G.t};--gr:${G.r}">
+          <button class="g-h" data-shut="${G.i}"><img src="${DUO(G.ic)}" alt=""><span class="g-t"><b>${G.g}</b><small>${G.sub}</small></span><span class="g-n">${AR(G.items.length)}</span>${CHEV}</button>
+          <div class="g-items">${its.map(([h, l, ic]) => `<button class="c-row${h === S.hash ? ' on' : ''}" data-hash="${h}"><img src="${DUO(ic)}" alt=""><span>${l}</span></button>`).join('')}</div></section>`;
+      });
+    }
+    list.innerHTML = html || '<p class="empty">ما لقيت شي بهذا الاسم.</p>';
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === S.tab));
+  }
+  $('list').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.hash) { open(b.dataset.hash); if (narrow()) setPanel(false); return; }
+    if (b.dataset.jump) { const g = $('g' + b.dataset.jump), j = document.querySelector('#list .jump'); if (g) { if (g.classList.contains('shut')) foldGroup(+b.dataset.jump, false); $('list').scrollTo({ top: g.offsetTop - (j ? j.offsetHeight : 0) - 10, behavior: 'smooth' }); } return; }
+    if (b.dataset.shut) { const g = b.parentElement; foldGroup(+b.dataset.shut, !g.classList.contains('shut')); return; }
+    const key = b.dataset.node; if (!key) return;
+    const node = b.parentElement, on = !node.classList.contains('open');
+    node.classList.toggle('open', on);
+    S.open = on ? [...new Set(S.open.concat(key))] : S.open.filter(k => k !== key); store.set('open', S.open);
+  });
+  function foldGroup(i, shut) {
+    const sh = store.get('shut', []).filter(x => x !== i); if (shut) sh.push(i); store.set('shut', sh);
+    const g = $('g' + i); if (g) g.classList.toggle('shut', shut);
+  }
+  /* the jump row lights the group in view */
+  $('list').addEventListener('scroll', () => {
+    const j = document.querySelector('#list .jump'); if (!j) return;
+    const top = $('list').scrollTop + j.offsetHeight + 24; let cur = 0;
+    const L = $('list'), gs = [...document.querySelectorAll('#list .g')];
+    gs.forEach(g => { if (g.offsetTop <= top) cur = +g.id.slice(1); });
+    /* at the very foot the last group can never reach the top, so it is the one in view */
+    if (gs.length && L.scrollTop + L.clientHeight >= L.scrollHeight - 2) cur = +gs[gs.length - 1].id.slice(1);
+    j.querySelectorAll('button').forEach(b => b.classList.toggle('on', +b.dataset.jump === cur));
+  }, { passive: true });
+  /* the list opens where the chosen row is, or at its top */
+  function revealOn(how) { const on = document.querySelector('#list .c-row.on, #list .s-row.on, #list .n-row.on'); if (on) on.scrollIntoView({ block: 'center', behavior: how }); else $('list').scrollTop = 0; $('list').dispatchEvent(new Event('scroll')); }
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { S.tab = b.dataset.tab; store.set('tab', S.tab); drawList(); revealOn('auto'); });
+  $('q').addEventListener('input', drawList);
+  $('qClear').onclick = () => { $('q').value = ''; drawList(); $('q').focus(); };
+
+  function drawRecent() {
+    const r = store.get('recent', []).filter(h => h !== S.hash).slice(0, 10);
+    $('recentW').hidden = !r.length;
+    $('recent').innerHTML = r.map(h => { const e = entryOf(h), c = e.kind === 'les' ? e.col.c : e.group.c;
+      return `<button class="rc" data-hash="${h}" style="--c:${c}" title="${e.label}">${e.kind === 'scr' ? `<img src="${DUO(e.ic)}" alt="">` : '<i></i>'}<span>${e.label}</span></button>`; }).join('');
+  }
+  $('recent').addEventListener('click', e => { const b = e.target.closest('[data-hash]'); if (b) open(b.dataset.hash); });
+  $('recentClear').onclick = () => { store.set('recent', [S.hash]); drawRecent(); };
+
+  /* ───── the source ───── */
+  const SRCS = [['demo', 'بيانات تجريبية', 'flask', 'طالبة تجريبية، وتقدر تفتح أي درس أو شاشة'], ['fresh', 'طالب جديد', 'plus', 'يمسح الحفظ ويبدأ من شاشة البداية'], ['save', 'حفظك', 'disk', 'التطبيق نفسه بحفظك الحالي']];
+  const SRC_NOTE = { fresh: 'طالب جديد: الحفظ ينمسح ويبدأ من شاشة البداية', save: 'التطبيق نفسه بحفظك الحالي في هذا المتصفح' };
+  $('srcSeg').innerHTML = SRCS.map(([k, l, ic, tip]) => `<button data-src="${k}" title="${tip}">${svgI(IC[ic], 2.1)}${l}</button>`).join('');
+  function drawSrc() { document.querySelectorAll('#srcSeg button').forEach(b => b.classList.toggle('on', b.dataset.src === S.src)); }
+  document.querySelectorAll('#srcSeg button').forEach(b => b.onclick = () => { S.src = b.dataset.src; store.set('src', S.src); drawSrc(); drawCrumb(); load(); });
+
+  /* ───── the title over the stage ───── */
+  const SEP = '<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 2L3.5 5l3 3"/></svg>';
+  function drawCrumb() {
+    if (S.src !== 'demo') {
+      $('cp').innerHTML = `<span class="src-note">${SRC_NOTE[S.src]}</span>`; $('ttl').textContent = S.src === 'fresh' ? 'أول ما يفتح التطبيق' : 'التطبيق';
+    } else {
+      const e = entryOf(S.hash);
+      if (e.kind === 'les') {
+        const dark = e.unit.cn === 'yellow' ? ' dark' : '';
+        $('cp').innerHTML = `<span class="pill${dark}" style="--c:${e.col.c}">الوحدة ${AR(e.unit.ui + 1)}</span>${SEP}<span>${AR(e.node.li + 1)}. ${e.node.title}</span>`;
+        $('ttl').textContent = e.whole ? 'المستوى كامل: البطاقات والأسئلة' : e.practice ? e.label : `الدرس ${AR(e.n)}: ${e.label}`;
+      } else {
+        $('cp').innerHTML = `<span class="pill${e.group.dark ? ' dark' : ''}" style="--c:${e.group.c}">الشاشات</span>${SEP}<span>${e.group.g}</span>`;
+        $('ttl').textContent = e.label;
+      }
+    }
+    document.title = $('ttl').textContent + ' — استوديو المعاينة';
+    stepState();
+  }
+  function seq() { const e = entryOf(S.hash); return e.kind === 'les' ? LES : SCR; }
+  function stepState() {
+    const L = seq(), i = L.findIndex(e => e.hash === S.hash), off = S.src !== 'demo' || i < 0;
+    $('prev').disabled = off || i <= 0; $('next').disabled = off || i >= L.length - 1;
+    $('count').innerHTML = off ? '' : `<b>${AR(i + 1)}</b> / ${AR(L.length)}`;
+  }
+  function step(d) { if (S.src !== 'demo') return; const L = seq(), i = L.findIndex(e => e.hash === S.hash); if (i < 0) return; const e = L[i + d]; if (e) open(e.hash, true); }
+  $('prev').onclick = () => step(-1); $('next').onclick = () => step(1);
+
+  /* ───── open a lesson or a screen ───── */
+  function open(hash, reveal) {
+    S.hash = hash; S.src = 'demo';
+    store.set('hash', hash); store.set('src', 'demo');
+    const r = store.get('recent', []).filter(h => h !== hash); r.unshift(hash); store.set('recent', r.slice(0, 12));
+    try { history.replaceState(null, '', '#' + hash); } catch (e) {}
+    const e = entryOf(hash);
+    if (e.kind === 'les' && e.node && e.node.subs.length && !S.open.includes(e.node.key)) { S.open = S.open.concat(e.node.key); store.set('open', S.open); }
+    if (BY[hash] && S.tab !== e.kind) { S.tab = e.kind; store.set('tab', S.tab); }
+    drawSrc(); drawList(); drawRecent(); drawCrumb();
+    if (reveal) revealOn('smooth');
+    load();
+  }
+
+  /* ───── the phones ───── */
+  let frames = [];
+  const dims = d => S.land ? { w: d.h, h: d.w } : { w: d.w, h: d.h };
+  const DOWN = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5L7 9l3.5-3.5"/></svg>';
+  function buildPhones() {
+    const list = S.compare ? [devOf(S.dev), devOf(S.dev2)] : [devOf(S.dev)];
+    $('rigIn').innerHTML = list.map((d, i) => `<div class="ph${i ? ' second' : ''}"><div class="phone${S.land ? ' land' : ''}">
+        <i class="key k1"></i><i class="key k2"></i><i class="key k3"></i><iframe title="معاينة ${d.n}" allow="autoplay"></iframe>
+        <div class="busy"><svg viewBox="0 0 71 65">${hexSvg(UC.green, `<svg x="16.5" y="10" width="38" height="38" viewBox="0 0 40 40"><path d="${STAR}" fill="#fff"/></svg>`)}</svg></div></div>
+        <button class="cap" data-i="${i}" aria-label="غيّر الجهاز"><i></i>${d.n} <span class="sz">${dims(d).w} × ${dims(d).h}</span><span class="pct"></span>${DOWN}</button></div>`).join('');
+    frames = [...document.querySelectorAll('#rigIn iframe')];
+    frames.forEach((f, i) => { const s = dims(list[i]); f.style.width = s.w + 'px'; f.style.height = s.h + 'px'; f.onload = () => f.closest('.ph').classList.remove('loading'); });
+    $('cmp').classList.toggle('on', S.compare);
+    $('rot').classList.toggle('on', S.land);
+    fit();
+  }
+  /* the iframe keeps the device's real pixel size; only the bezel and its screen are scaled down to fit the stage */
+  function fit() {
+    const view = $('view'), ins = $('rigIn');
+    ins.style.transform = 'none';
+    const W = ins.scrollWidth, H = ins.scrollHeight;
+    const k = S.full ? 1 : Math.max(.2, Math.min(1, (view.clientWidth - 24) / W, (view.clientHeight - 8) / H));
+    ins.style.transform = `scale(${k})`;
+    $('rig').style.width = W * k + 'px'; $('rig').style.height = H * k + 'px';
+    view.classList.toggle('full', S.full);
+    ins.querySelectorAll('.pct').forEach(b => { b.textContent = k < .999 ? `${AR(Math.round(k * 100))}٪` : ''; });
+    document.querySelectorAll('#zoomSeg button').forEach(b => b.classList.toggle('on', (b.dataset.z === 'real') === S.full));
+  }
+  function srcUrl() {
+    const t = Date.now();
+    return S.src === 'demo' ? `../preview.html?t=${t}#${S.hash || 'path'}` : `../index.html?t=${t}&dev=1`;
+  }
+  function load() {
+    /* «طالب جديد» is the only way to see the first run: the seeded preview starts past it, and the app keeps whatever save this
+       browser has. The frames are same-origin, so clearing here clears what they read */
+    if (S.src === 'fresh') { try { localStorage.removeItem('qudratState'); } catch (e) {} }
+    const u = srcUrl();
+    frames.forEach(f => { f.closest('.ph').classList.add('loading'); f.src = u; });
+    const r = $('rel'); r.classList.remove('spin'); void r.offsetWidth; r.classList.add('spin');
+  }
+
+  function drawDevs() {
+    $('devs').innerHTML = DEVICES.map(d => `<button class="dv${d.id === S.dev ? ' on' : ''}" data-dev="${d.id}" role="radio" aria-checked="${d.id === S.dev}" data-tip="${d.w} × ${d.h}">${glyph(d, S.land)}<span class="dv-n">${d.n}</span></button>`).join('')
+      + `<button class="dv-more" aria-label="كل الأجهزة">${DOWN}</button>`;
+  }
+  $('devs').addEventListener('click', e => {
+    /* folded, the chosen device opens the list rather than choosing itself again */
+    if (e.target.closest('.dv-more') || (e.target.closest('.dv.on') && getComputedStyle($('devs').querySelector('.dv-more')).display !== 'none')) { e.stopPropagation(); pop ? closePop() : openPop(0, $('devs')); return; }
+    const b = e.target.closest('[data-dev]'); if (!b) return; S.dev = b.dataset.dev; store.set('dev', S.dev); drawDevs(); buildPhones(); load(); });
+
+  /* each phone's name under it opens its own device list */
+  let pop = null;
+  const CHECK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;color:var(--blue)"><path d="M3 8.5l3.2 3L13 4.5"/></svg>';
+  function closePop() { if (pop) { pop.remove(); pop = null; } }
+  function openPop(i, anchor) {
+    closePop();
+    const cur = i ? S.dev2 : S.dev;
+    pop = document.createElement('div'); pop.className = 'pop';
+    pop.innerHTML = `<p>${S.compare ? (i ? 'الجوال الثاني' : 'الجوال الأول') : 'الجهاز'}</p>` + DEVICES.map(d => `<button class="${d.id === cur ? 'on' : ''}" data-dev="${d.id}">${glyph(d)}${d.n}<span>${d.w}×${d.h}</span>${d.id === cur ? CHECK : ''}</button>`).join('');
+    document.body.appendChild(pop);
+    const r = anchor.getBoundingClientRect(), pw = pop.offsetWidth, ph = pop.offsetHeight;
+    pop.style.left = Math.max(10, Math.min(innerWidth - pw - 10, r.left + r.width / 2 - pw / 2)) + 'px';
+    pop.style.top = (anchor.id === 'devs' ? r.bottom + 10 : Math.max(10, r.top - ph - 10)) + 'px';
+    pop.onclick = e => {
+      const b = e.target.closest('[data-dev]'); if (!b) return;
+      if (i) { S.dev2 = b.dataset.dev; store.set('dev2', S.dev2); } else { S.dev = b.dataset.dev; store.set('dev', S.dev); drawDevs(); }
+      closePop(); buildPhones(); load();
+    };
+  }
+  $('rigIn').addEventListener('click', e => { const c = e.target.closest('.cap'); if (c) { e.stopPropagation(); pop ? closePop() : openPop(+c.dataset.i, c); } });
+  document.addEventListener('pointerdown', e => { if (pop && !pop.contains(e.target) && !e.target.closest('.cap, .devs')) closePop(); });
+
+  const toggleCompare = () => { S.compare = !S.compare; store.set('compare', S.compare); buildPhones(); load(); };
+  $('cmp').onclick = toggleCompare;
+  $('rot').onclick = () => { S.land = !S.land; drawDevs(); buildPhones(); load(); };
+  const setFull = v => { S.full = v; store.set('full', v); fit(); };
+  document.querySelectorAll('#zoomSeg button').forEach(b => b.onclick = () => setFull(b.dataset.z === 'real'));
+  $('rel').onclick = load;
+  $('tab').onclick = () => window.open(srcUrl(), '_blank');
+  $('copy').onclick = () => {
+    const done = () => toast('انتسخ الرابط');
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(location.href).then(done, () => toast(location.href, true));
+    else toast(location.href, true);
+  };
+  /* the stage refits whenever its room changes: a resize, the panel sliding, a font */
+  let fitRaf = 0;
+  new ResizeObserver(() => { cancelAnimationFrame(fitRaf); fitRaf = requestAnimationFrame(fit); }).observe($('view'));
+
+  let tt = 0;
+  const OK = '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 9.5l3.5 3.5 7.5-8"/></svg>';
+  function toast(t, plain) { const el = $('toast'); el.innerHTML = (plain ? '' : OK) + `<span>${t}</span>`; el.classList.add('show'); clearTimeout(tt); tt = setTimeout(() => el.classList.remove('show'), 1700); }
+
+  /* ───── live reload: the files that change in a session ───── */
+  const WATCH = ['../css/style.css', '../css/law.css', '../css/law-core.css', '../js/app.js', '../js/law/law.js', '../js/law/law-core.js', '../js/law/law-more-bigsum.js', '../js/data/learn.js'];
+  const stamps = {}; let timer = 0;
+  function poll() {
+    WATCH.forEach(f => fetch(f, { method: 'HEAD', cache: 'no-store' }).then(r => {
+      const m = r.headers.get('last-modified'); if (!m) return;
+      if (stamps[f] && stamps[f] !== m) { stamps[f] = m; load(); toast('تحدّث: ' + f.split('/').pop()); } else stamps[f] = m;
+    }).catch(() => {}));
+  }
+  function setAuto(on) { S.auto = on; store.set('auto', on); $('auto').classList.toggle('on', on); clearInterval(timer); if (on) { poll(); timer = setInterval(poll, 1300); } }
+  $('auto').onclick = () => setAuto(!S.auto);
+
+  /* ───── keys, by their place on the keyboard so an Arabic layout works the same ───── */
+  addEventListener('keydown', e => {
+    const typing = /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName);
+    if (e.key === 'Escape') { if (pop) { closePop(); return; } if (document.activeElement === $('q')) { $('q').value = ''; drawList(); $('q').blur(); return; } if (narrow()) setPanel(false); return; }
+    if ((e.key === '/' || e.code === 'Slash') && !typing) { e.preventDefault(); if (!panelShown()) setPanel(true); setTimeout(() => $('q').focus(), 60); return; }
+    if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); step(1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); step(-1); }
+    else if (e.code === 'KeyR') load();
+    else if (e.code === 'KeyC') toggleCompare();
+    else if (e.code === 'KeyB') setPanel(!panelShown());
+  });
+  addEventListener('hashchange', () => { const h = decodeURIComponent(location.hash.slice(1)); if (h && h !== S.hash) open(h, true); });
+
+  drawDevs(); drawSrc(); drawList(); drawRecent(); drawCrumb(); buildPhones(); load(); setAuto(S.auto);
+  requestAnimationFrame(() => revealOn('auto'));
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+})();
+</script>
+</body>
+</html>

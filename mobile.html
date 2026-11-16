@@ -11,6 +11,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- the lessons, read for the level and lesson pickers -->
+<script src="js/data/skills.js"></script>
+<script src="js/data/numbers.js"></script>
+<script src="js/data/ratios.js"></script>
+<script src="js/data/geometry.js"></script>
+<script src="js/data/learn.js"></script>
 <style>
   /* The harness borrows the app's own palette so the tool and the thing it
      previews stop looking like two different products. Light, because the app
@@ -86,6 +92,10 @@
   }
   button.on:hover { background: var(--green-dk); border-color: var(--green-lip); }
   button:focus-visible { outline: 0; box-shadow: 0 0 0 3px rgba(28,176,246,.22); }
+
+  button.go { background: var(--green); border-color: var(--green-dk); border-bottom-color: var(--green-lip); color: #fff; }
+  button.go:hover { background: var(--green-dk); border-color: var(--green-lip); }
+  #lvl { max-width: 260px; } #les { max-width: 230px; }
 
   .spacer { flex: 1; }
   .size {
@@ -178,6 +188,14 @@
   <div class="grp" id="scrGrp">
     <label for="scr">الشاشة</label>
     <select id="scr"></select>
+  </div>
+
+  <div class="grp">
+    <label for="lvl">المستوى</label>
+    <select id="lvl"></select>
+    <label for="les">الدرس</label>
+    <select id="les"></select>
+    <button id="go" class="go" title="يفتح الدرس في الجوال">ادخل</button>
   </div>
 
   <button id="rot" title="تدوير">تدوير ⟳</button>
@@ -294,6 +312,49 @@
     frame.src = src();
     fit();
   }
+
+  /* any level and any lesson (the user, 2026-11-16: «i want to enter any level i want and any lesson i want»): every node of
+     the four units, and for a node taught by short lessons each of them, or its exam practice (preview.html #learn-… / #les-…) */
+  var AR = function (n) { return String(n).replace(/\d/g, function (d) { return "٠١٢٣٤٥٦٧٨٩"[d]; }); };
+  var lvl = $("lvl"), les = $("les"), QB = window.QBANK || {}, QL = window.QLEARN || {};
+  ["skills", "numbers", "ratios", "geometry"].forEach(function (dk, u) {
+    var d = QB[dk]; if (!d) return;
+    var g = document.createElement("optgroup"); g.label = "الوحدة " + AR(u + 1) + " — " + d.title;
+    d.lessons.forEach(function (l, i) { var o = document.createElement("option"); o.value = dk + "." + l.key; o.textContent = AR(i + 1) + ". " + l.title; g.appendChild(o); });
+    lvl.appendChild(g);
+  });
+  function fillLessons(pickHash) {
+    var key = lvl.value, L = QL[key], rows = [];
+    if (L) {
+      L.lessons.forEach(function (x, i) { rows.push(["learn-" + key + "-" + (i + 1), "الدرس " + AR(i + 1) + ": " + x.title]); });
+      rows.push(["les-" + key, "تدريب أسئلة المستوى"]);
+    } else rows.push(["les-" + key, "المستوى كامل: البطاقات والأسئلة"]);
+    les.innerHTML = rows.map(function (r) { return '<option value="' + r[0] + '">' + r[1] + "</option>"; }).join("");
+    if (pickHash && rows.some(function (r) { return r[0] === pickHash; })) les.value = pickHash;
+  }
+  function labelOf(hash) {
+    var o = [].slice.call(lvl.options).filter(function (x) { return x.selected; })[0], l = les.options[les.selectedIndex];
+    return (o ? o.textContent.replace(/^[٠-٩]+\. /, "") : hash) + " — " + (l ? l.textContent : "");
+  }
+  function openLesson() {
+    var h = les.value; if (!h) return;
+    var opt = [].slice.call(scr.options).filter(function (x) { return x.value === h; })[0];
+    if (!opt) { opt = document.createElement("option"); opt.value = h; scr.appendChild(opt); }
+    opt.textContent = labelOf(h);
+    scr.value = h; tgt.value = "preview";
+    try { history.replaceState(null, "", "#" + h); } catch (e) {}
+    load();
+  }
+  lvl.onchange = function () { fillLessons(); };
+  $("go").onclick = openLesson;
+  les.ondblclick = openLesson;
+  /* a lesson named in the address (mobile.html#learn-skills.keylaws-3, #les-geometry.circle) shows in the pickers too */
+  (function () {
+    var m = /^(?:learn-([a-z]+\.[a-z]+)-\d+|les-([a-z]+\.[a-z]+))$/.exec(want || "");
+    var key = m && (m[1] || m[2]);
+    if (key && [].slice.call(lvl.options).some(function (o) { return o.value === key; })) { lvl.value = key; fillLessons(want); var o = [].slice.call(scr.options).filter(function (x) { return x.value === want; })[0]; if (o) o.textContent = labelOf(want); }
+    else fillLessons();
+  })();
 
   dev.onchange = fit;
   tgt.onchange = load;
