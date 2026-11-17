@@ -1,9 +1,9 @@
 {
  "submitted": {
   "https://qudrati.xyz/": {
-   "lastmod": "2026-11-01",
-   "hash": "949e1650682dc1ba",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "af969926ac8a0d88",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat-kami.html": {
    "lastmod": "2026-11-01",
@@ -11,24 +11,24 @@
    "at": "2026-11-01T01:10:03.046Z"
   },
   "https://qudrati.xyz/qudrat/": {
-   "lastmod": "2026-11-01",
-   "hash": "20d1d07a89990b31",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "2bf6958c66de6adb",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat/laws.html": {
-   "lastmod": "2026-11-01",
-   "hash": "7efcba1e8d53c1de",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "2df089308006817a",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat-methods.html": {
-   "lastmod": "2026-11-01",
-   "hash": "eb310a5f4a564dc5",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "93092cc71d8089c5",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat/comparisons.html": {
-   "lastmod": "2026-11-01",
-   "hash": "1434216ffbed535e",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "71dc885ff8da2325",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat-mock-test.html": {
    "lastmod": "2026-11-01",
@@ -36,14 +36,14 @@
    "at": "2026-11-01T01:10:03.046Z"
   },
   "https://qudrati.xyz/about.html": {
-   "lastmod": "2026-11-01",
-   "hash": "6bb6d63d27ad7b7e",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "62ff407df7188912",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/privacy.html": {
-   "lastmod": "2026-11-01",
-   "hash": "85114f929af13b1e",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-14",
+   "hash": "6a1e175b4f51aae2",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat/big-numbers.html": {
    "lastmod": "2026-11-01",
@@ -56,9 +56,9 @@
    "at": "2026-11-01T01:10:03.046Z"
   },
   "https://qudrati.xyz/qudrat/probability-statistics.html": {
-   "lastmod": "2026-11-01",
-   "hash": "7020b38aa8319272",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-08",
+   "hash": "c9ac86ff9e81ed1f",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat/fastest-methods.html": {
    "lastmod": "2026-11-01",
@@ -76,9 +76,9 @@
    "at": "2026-11-01T01:10:03.046Z"
   },
   "https://qudrati.xyz/qudrat/equations-squares.html": {
-   "lastmod": "2026-11-01",
-   "hash": "af02f77246b6815c",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "bd4c94f24d199656",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat/lcm-gcd.html": {
    "lastmod": "2026-11-01",
@@ -106,9 +106,9 @@
    "at": "2026-11-01T01:10:03.046Z"
   },
   "https://qudrati.xyz/qudrat/speed-distance-time.html": {
-   "lastmod": "2026-11-01",
-   "hash": "c7958853ccdd400a",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "31ba4f604bba0336",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat/percent.html": {
    "lastmod": "2026-11-01",
@@ -116,9 +116,9 @@
    "at": "2026-11-01T01:10:03.046Z"
   },
   "https://qudrati.xyz/qudrat/profit-loss.html": {
-   "lastmod": "2026-11-01",
-   "hash": "25f4e55b76cc6e24",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "9d972d4e59d7d8f7",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat/proportion.html": {
    "lastmod": "2026-11-01",
@@ -126,59 +126,64 @@
    "at": "2026-11-01T01:10:03.046Z"
   },
   "https://qudrati.xyz/qudrat/arithmetic-mean.html": {
-   "lastmod": "2026-11-01",
-   "hash": "72d756ce9597e91b",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "0777d1a83780bf89",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat/angles-polygons.html": {
-   "lastmod": "2026-11-01",
-   "hash": "d2d5436df4a1c5b9",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "55a690f5fd2553e2",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat/triangle.html": {
-   "lastmod": "2026-11-01",
-   "hash": "924e2af98be93c0c",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "2d10abe3fc6635fe",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat/rectangle.html": {
-   "lastmod": "2026-11-01",
-   "hash": "85d780031d488b80",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "64eae35ad33582c9",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat/square.html": {
-   "lastmod": "2026-11-01",
-   "hash": "a7b05cfff4c5585a",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "7c085178ac4b0c10",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat/quadrilaterals.html": {
-   "lastmod": "2026-11-01",
-   "hash": "a11e6c453df81f82",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "71ae11bd323c8c00",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat/shaded-areas.html": {
-   "lastmod": "2026-11-01",
-   "hash": "5bdb3ae92ddb66af",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "4dfe8ddf874101bd",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat/circle.html": {
-   "lastmod": "2026-11-01",
-   "hash": "3097437fd4aa9f89",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "a931f651c0eb9255",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat/parallel-lines.html": {
-   "lastmod": "2026-11-01",
-   "hash": "d8d8128d30594bda",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "d8af64a2e6f23e21",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat/solids.html": {
-   "lastmod": "2026-11-01",
-   "hash": "d2bfd06a651c33b2",
-   "at": "2026-11-01T01:10:03.046Z"
+   "lastmod": "2026-11-17",
+   "hash": "5a8e6f9b083dedb2",
+   "at": "2026-11-17T11:26:42.373Z"
   },
   "https://qudrati.xyz/qudrat-score.html": {
    "lastmod": "2026-11-01",
    "hash": "b52728128f624951",
    "at": "2026-11-01T01:10:03.046Z"
+  },
+  "https://qudrati.xyz/terms.html": {
+   "lastmod": "2026-11-14",
+   "hash": "41c9cefd64677042",
+   "at": "2026-11-17T11:26:42.373Z"
   }
  },
  "log": [
@@ -194,6 +199,13 @@
    "endpoint": "https://api.indexnow.org/indexnow",
    "status": 200,
    "urls": 36,
+   "skipped": 0
+  },
+  {
+   "at": "2026-11-17T11:26:42.373Z",
+   "endpoint": "https://api.indexnow.org/indexnow",
+   "status": 200,
+   "urls": 22,
    "skipped": 0
   }
  ]
