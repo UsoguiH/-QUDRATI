@@ -332,6 +332,114 @@
    "url": "https://qudrati.xyz/about.html",
    "top": "qudrati.xyz",
    "note": "cites qudrati.xyz/about.html, /qudrat-mock-test.html and / — its own crawler has read our pages"
+  },
+  {
+   "date": "2026-11-17",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "laws-hub",
+   "cited": false,
+   "url": null,
+   "top": "scribd.com",
+   "note": "AI summary shown; organic top: scribd.com, njah.online, x.com, youtube.com, jeem1.com — read with Claude in Chrome on a signed-in profile (hl=ar, gl=sa, pws=0), first results page; no qudrati.xyz link anywhere on it"
+  },
+  {
+   "date": "2026-11-17",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "mock",
+   "cited": false,
+   "url": null,
+   "top": "mulaqn.sa",
+   "note": "AI summary cites mulaqn.sa, abdihqt.com; organic top: mulaqn.sa, qiyas.sa, thiqa.net, arab-exams.com — read with Claude in Chrome on a signed-in profile (hl=ar, gl=sa, pws=0), first results page; no qudrati.xyz link anywhere on it"
+  },
+  {
+   "date": "2026-11-17",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "comparison",
+   "cited": false,
+   "url": null,
+   "top": "qudrat-test.com",
+   "note": "AI summary cites dalqdrat.com, qudrat-test.com, tiktok.com; organic top: qudrat-test.com, dalqdrat.com, maarf.com, ekhtibarat.com — on 2026-11-03 qudrati.xyz was the first source of this summary — read with Claude in Chrome on a signed-in profile (hl=ar, gl=sa, pws=0), first results page; no qudrati.xyz link anywhere on it"
+  },
+  {
+   "date": "2026-11-17",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "app",
+   "cited": false,
+   "url": null,
+   "top": "apps.apple.com",
+   "note": "AI summary cites mujtahidacademy.com, nabras.app, mulaqn.sa, apps.apple.com, dalqdrat.com — read with Claude in Chrome on a signed-in profile (hl=ar, gl=sa, pws=0), first results page; no qudrati.xyz link anywhere on it"
+  },
+  {
+   "date": "2026-11-17",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "free-site",
+   "cited": false,
+   "url": null,
+   "top": "qiyas.sa",
+   "note": "AI summary cites qudrat-test.com, almfkr.sa, qiyas.sa, mulaqn.sa; organic top: qiyas.sa, qudurat.com, mulaqn.sa, ayedacademy.co — read with Claude in Chrome on a signed-in profile (hl=ar, gl=sa, pws=0), first results page; no qudrati.xyz link anywhere on it"
+  },
+  {
+   "date": "2026-11-17",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "foundation",
+   "cited": false,
+   "url": null,
+   "top": "youtube.com",
+   "note": "AI summary cites aanaab.com, youtube.com, qudurat.com, instein100.com, scribd.com — read with Claude in Chrome on a signed-in profile (hl=ar, gl=sa, pws=0), first results page; no qudrati.xyz link anywhere on it"
+  },
+  {
+   "date": "2026-11-17",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "handshakes",
+   "cited": false,
+   "url": null,
+   "top": "youtube.com",
+   "note": "AI summary cites x.com, youtube.com, ekhtibarat.com, test-q.com, tiktok.com, instagram.com, moosa.tv; organic 1–3 youtube.com — read with Claude in Chrome on a signed-in profile (hl=ar, gl=sa, pws=0), first results page; no qudrati.xyz link anywhere on it"
+  },
+  {
+   "date": "2026-11-17",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "score-calc",
+   "cited": false,
+   "url": null,
+   "top": "khaleejcalculators.com",
+   "note": "typed «حساب درجة القدرات»; AI summary shown; organic top: khaleejcalculators.com, saudicalculator.com, qudratksa.com, services.kfu.edu.sa, mubhir.ai — read with Claude in Chrome on a signed-in profile (hl=ar, gl=sa, pws=0), first results page; no qudrati.xyz link anywhere on it"
+  },
+  {
+   "date": "2026-11-17",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "powers-table",
+   "cited": false,
+   "url": null,
+   "top": "x.com",
+   "note": "AI summary cites x.com, youtube.com, tiktok.com, instagram.com; Search Console had this query at average position 6.9 over the 28 days before — read with Claude in Chrome on a signed-in profile (hl=ar, gl=sa, pws=0), first results page; no qudrati.xyz link anywhere on it"
+  },
+  {
+   "date": "2026-11-17",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "game",
+   "cited": false,
+   "url": null,
+   "top": "wordwall.net",
+   "note": "AI summary shown; organic top: wordwall.net, mulaqn.sa, thiqa.net, qiyas.sa, tafrud.com — read with Claude in Chrome on a signed-in profile (hl=ar, gl=sa, pws=0), first results page; no qudrati.xyz link anywhere on it"
+  },
+  {
+   "date": "2026-11-17",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "probability",
+   "cited": false,
+   "url": null,
+   "top": "x.com",
+   "note": "AI summary cites x.com, atahdak.com, youtube.com, tiktok.com, maarf.com; organic top: x.com, abdihqt.com, facebook.com, maarf.com — on 2026-11-03 qudrati.xyz was organic #1 and cited in the summary — read with Claude in Chrome on a signed-in profile (hl=ar, gl=sa, pws=0), first results page; no qudrati.xyz link anywhere on it"
+  },
+  {
+   "date": "2026-11-17",
+   "engine": "Google (google.com.sa) incl. AI Overviews",
+   "id": "brand",
+   "cited": false,
+   "url": null,
+   "top": "qudurati.sa",
+   "note": "typed «قدراتي qudrati»; AI summary cites qudrati.io, qudratai.com, qodoraty.com, qudraty.com, qudurati.sa; organic top: qudurati.sa, qudraty.com, qodoraty.com, qudrattutor.com, qudratai.com, qudorati.com — on 2026-11-03 organic 1–4 were qudrati.xyz — read with Claude in Chrome on a signed-in profile (hl=ar, gl=sa, pws=0), first results page; no qudrati.xyz link anywhere on it. Separately, «قدراتي» alone the same day: no AI summary; organic top qodoraty.com, qudurati.sa, qudorati.com, instagram.com, etec.gov.sa; qudrati.xyz is linked lower on that page, below the first eight results"
   }
  ],
  "queries": [
@@ -1071,6 +1179,106 @@
     "textAny": [
      "النسبة الموزونة"
     ]
+   }
+  },
+  {
+   "id": "time-rule",
+   "query": "قانون الزمن",
+   "alt": [
+    "قانون السرعة"
+   ],
+   "source": "Search Console 2026-11-17 (28 days): «قانون الزمن» 18 impressions at position 8.1, «قانون زمن» 4",
+   "page": "/qudrat/speed-distance-time.html",
+   "intent": "one rule + an example",
+   "expect": {
+    "rule": {
+     "lesson": "numbers.speed",
+     "n": 3
+    }
+   }
+  },
+  {
+   "id": "square-area-diagonal",
+   "query": "مساحة المربع بالقطر",
+   "alt": [
+    "قانون مساحة المربع بالقطر",
+    "مساحة المربع بدلالة القطر"
+   ],
+   "source": "Search Console 2026-11-17 (28 days): 29 impressions at position 9.8, and its variants 11 + 9",
+   "page": "/qudrat/square.html",
+   "intent": "one rule + an example",
+   "expect": {
+    "rule": {
+     "lesson": "geometry.square",
+     "n": 2
+    }
+   }
+  },
+  {
+   "id": "square-area",
+   "query": "قانون مساحة المربع",
+   "source": "Search Console 2026-11-17 (28 days): 11 impressions at position 14.9, «قانون مساحه المربع» 11 at 9.3",
+   "page": "/qudrat/square.html",
+   "intent": "one rule + an example",
+   "expect": {
+    "rule": {
+     "lesson": "geometry.square",
+     "n": 1
+    }
+   }
+  },
+  {
+   "id": "circle-laws",
+   "query": "قوانين الدائرة",
+   "source": "Search Console 2026-11-17 (28 days): 29 impressions at position 4.7, the site's most shown page",
+   "page": "/qudrat/circle.html",
+   "intent": "a topic page",
+   "expect": {
+    "titleHas": [
+     "قوانين الدائرة"
+    ]
+   }
+  },
+  {
+   "id": "rose",
+   "query": "قانون الوردة قدرات",
+   "source": "Search Console 2026-11-17 (28 days): 3 impressions at position 9.0",
+   "page": "/qudrat/circle.html",
+   "intent": "one rule",
+   "expect": {
+    "rule": {
+     "lesson": "geometry.circle",
+     "n": 17
+    }
+   }
+  },
+  {
+   "id": "new-mean",
+   "query": "قانون المتوسط الجديد",
+   "source": "Search Console 2026-11-17 (28 days): 7 impressions at position 6.6",
+   "page": "/qudrat/arithmetic-mean.html",
+   "intent": "one rule + an example",
+   "expect": {
+    "rule": {
+     "lesson": "ratios.mean",
+     "n": 3
+    }
+   }
+  },
+  {
+   "id": "square-of-difference",
+   "query": "قانون فك المربع الكامل",
+   "alt": [
+    "قانون مربع فرق حدين"
+   ],
+   "source": "Search Console 2026-11-17 (28 days): «قانون فك المربع الكامل», «قانون فك المربع», «الفرق بين مربعين والمربع الكامل» 14 at 7.9",
+   "page": "/qudrat/equations-squares.html",
+   "intent": "one rule + an example",
+   "expect": {
+    "rule": {
+     "lesson": "skills.equations",
+     "n": 10
+    }
    }
   }
  ],

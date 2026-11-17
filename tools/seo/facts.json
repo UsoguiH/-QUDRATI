@@ -2,7 +2,7 @@
   "_about": "Exam facts the SEO audit (tools/seo/audit.js) holds our pages to, and watches ETEC for. Every value here was read off the official page named in `source` on the date in `checked`; the audit re-reads that page (unless --offline) and warns when ETEC's table no longer matches. Never add a value that was not read off an official ETEC/Qiyas page. `etec.pdfs` are the other official PDFs our pages cite (ETEC’s two practice tests), watched like the guide: size, Last-Modified and the file’s own last /ModDate. `pdfs[].exam` are the practice tests’ shape, counted by eye: sections, questions a section, minutes a section and the quantitative questions in each (the counts our pages state as «٤٤ سؤالاً كمياً من ٩٦» and «١١ من ٢٤»).",
   "etec": {
     "gatPage": "https://etec.gov.sa/ar/centers/qiyas/p/p-7d1870ff-a881-4e9a-9f9d-8f2a2c4df032",
-    "checked": "2026-10-31",
+    "checked": "2026-11-17",
     "how": "curl of gatPage (200, 1,234,388 bytes); the tables are in the page's embedded JSON as `markup` strings, decoded with JSON.parse and read cell by cell",
     "quant": {
       "sci": {
@@ -71,8 +71,8 @@
         "id": "7d1870ff-a881-4e9a-9f9d-8f2a2c4df032",
         "name": "اختبار القدرات العامة",
         "url": "https://etec.gov.sa/ar/centers/qiyas/p/p-7d1870ff-a881-4e9a-9f9d-8f2a2c4df032",
-        "updateDate": "2026-09-08T11:15:37.87Z",
-        "read": "2026-10-31, curl of the page (200, 1,234,388 B): the item's updateDate in the embedded JSON",
+        "updateDate": "2026-11-16T11:44:15.16Z",
+        "read": "2026-11-17, fetch of the page (200, 1,264,923 B) after ETEC updated the item on 2026-11-16: the quantitative and verbal tables, the six score-table rows and the five `statements` were each found unchanged, and every ETEC quotation on /qudrat-score.html is still on the page; before that, 2026-10-31 (1,234,388 B, updateDate 2026-09-08T11:15:37.87Z)",
         "quotedOn": [
           "/",
           "/qudrat-kami.html",

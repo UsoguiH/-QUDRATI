@@ -3409,13 +3409,14 @@ function dataHash() {
     }
     add("info", "gap-rule-headings", "", `${covered.length} of ${named.length} named rules in js/data have a heading on an indexable page`, opp.ruleHeadings.missingSample.slice(0, 6).join(" | "));
     /* a lesson's page: its structured data names the lesson (LearningResource / Article / Course
-       name or the breadcrumb's last item), or its H1 does */
-    const lessonPage = l => indexable.find(p => {
+       name or the breadcrumb's last item), or its H1 does. A page named exactly comes before any
+       H1 that only contains the title: «المربع» is also inside «المعادلات والمربع الكامل…» */
+    const namedFor = (p, l) => {
       const nodes = p.meta.ld.flatMap(ldNodes); const t = norm(l.title);
       if (nodes.some(n => typesOf(n).some(x => /LearningResource|Article|Course/.test(x)) && norm(n.name || "") === t)) return true;
-      if (nodes.some(n => typesOf(n).includes("BreadcrumbList") && (() => { const it = [].concat(n.itemListElement || []); const last = it[it.length - 1]; return last && norm(last.name || (last.item && last.item.name) || "") === t; })())) return true;
-      return p.meta.h1.some(h => skel(h).includes(skel(l.title)));
-    });
+      return nodes.some(n => typesOf(n).includes("BreadcrumbList") && (() => { const it = [].concat(n.itemListElement || []); const last = it[it.length - 1]; return last && norm(last.name || (last.item && last.item.name) || "") === t; })());
+    };
+    const lessonPage = l => indexable.find(p => namedFor(p, l)) || indexable.find(p => p.meta.h1.some(h => skel(h).includes(skel(l.title))));
     const lp = DATA.lessons.map(l => ({ l, p: lessonPage(l) }));
     for (const x of lp) if (x.p) LESSON_PAGE.set(x.l.key, x.p);
     opp.lessonPages = { withPage: lp.filter(x => x.p).length, of: DATA.lessons.length, missing: lp.filter(x => !x.p).map(x => x.l.key) };

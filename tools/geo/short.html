@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<!-- One short video of a rule, 1080 × 1920, for YouTube Shorts / TikTok / Reels (the GEO check of 2026-11-17, tools/geo.html).
+     ?id=square|circle|speed|squares|powers|proportion. Nothing here runs on a clock: render(t) draws the frame at t seconds,
+     so tools/geo/record.js can step it frame by frame into an mp4. Opened by hand it plays itself (?t=7 holds one frame).
+     The rules, numbers and examples are the lesson pages' own. Silent on purpose: the sound is added when posting.
+     Everything sits between y = 150 and y = 1560: the apps draw their own buttons and captions over the rest. -->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=1080">
+<title>فيديو قصير</title>
+<style>
+@font-face { font-family: "Baloo Bhaijaan 2"; src: url("/assets/fonts/baloo-bhaijaan-2.ttf") format("truetype"); font-weight: 400 800; font-display: block; }
+:root { --ink: #3C3C3C; --muted: #777; --line: #E5E5E5; --green: #58CC02; --green-dk: #46A302; --green-bg: #D7FFB8; --green-pale: #A5ED6E;
+  --blue: #1CB0F6; --blue-dk: #1899D6; --blue-light: #DDF4FF; --blue-border: #84D8FF; --gold: #FFC800; --gold-dk: #E5A500; --gold-bg: #FFF5D3; --brown: #8A5A00; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1080px; height: 1920px; overflow: hidden; background: #fff; }
+body { font-family: "Baloo Bhaijaan 2", system-ui, sans-serif; color: var(--ink); font-weight: 800; position: relative; }
+.abs { position: absolute; inset-inline: 70px; will-change: transform, opacity; }
+
+.bar { position: absolute; top: 0; inset-inline: 0; height: 14px; background: var(--line); }
+.bar i { display: block; height: 100%; width: 100%; background: var(--green); transform-origin: right center; }
+.brand { top: 150px; display: flex; align-items: center; gap: 22px; }
+.brand img { width: 92px; height: 92px; border-radius: 22px; }
+.brand b { font-size: 54px; line-height: 1; }
+.brand span { margin-inline-start: auto; font-size: 36px; color: var(--blue-dk); background: var(--blue-light); border: 3px solid var(--blue-border); border-bottom-width: 7px; border-radius: 20px; padding: 6px 24px 4px; }
+
+.hook { top: 620px; text-align: center; }
+.hook div { font-size: 92px; line-height: 1.5; }
+.hook div.em { color: var(--blue-dk); }
+
+.name { top: 310px; text-align: center; font-size: 62px; line-height: 1.3; }
+.rule { top: 450px; background: var(--gold-bg); border: 5px solid var(--gold); border-bottom-width: 14px; border-radius: 40px; padding: 34px 36px 30px; }
+.rule .lab { display: inline-block; font-size: 38px; color: var(--brown); background: var(--gold); border-radius: 16px; padding: 2px 22px 0; margin-bottom: 18px; }
+.row { display: flex; flex-wrap: nowrap; justify-content: center; align-items: center; gap: 12px 16px; margin: 22px 0; font-size: 56px; line-height: 1.25; direction: rtl; }
+.tk { display: inline-block; white-space: nowrap; will-change: transform, opacity; }
+.tk.op { color: var(--gold-dk); font-size: 1.14em; }
+.tk.chip { background: #fff; border: 4px solid var(--line); border-bottom-width: 9px; border-radius: 20px; padding: 2px 22px 0; }
+.tk.chip.on { background: var(--blue-light); border-color: var(--blue-border); color: var(--blue-dk); }
+/* the power stands at the upper left of its base, as Arabic maths prints it and as the lesson pages draw it */
+sup { unicode-bidi: isolate; font-size: .62em; line-height: 0; position: relative; top: -.55em; vertical-align: baseline; margin-inline-start: 2px; }
+
+.ex { background: #fff; border: 5px solid var(--line); border-bottom-width: 14px; border-radius: 40px; padding: 30px 36px 34px; }
+.ex .lab { display: inline-block; font-size: 38px; color: #fff; background: var(--blue); border-radius: 16px; padding: 2px 22px 0; margin-bottom: 10px; }
+.ex .row { font-size: 58px; }
+.ex .row .tk.op { color: var(--muted); }
+.ans { display: flex; justify-content: center; margin-top: 22px; }
+.ans b { font-size: 66px; line-height: 1.3; color: var(--green-dk); background: var(--green-bg); border: 5px solid var(--green-pale); border-bottom-width: 12px; border-radius: 28px; padding: 6px 40px 2px; }
+
+.end { top: 470px; text-align: center; }
+.end img { width: 300px; height: 300px; border-radius: 70px; display: block; margin: 0 auto 36px; }
+.end h1 { font-size: 150px; line-height: 1.15; }
+.end .url { display: inline-block; direction: ltr; font-size: 78px; color: #fff; background: var(--green); border-radius: 30px; box-shadow: 0 14px 0 var(--green-dk); padding: 10px 54px 4px; margin: 26px 0 50px; }
+.end p { font-size: 52px; color: var(--muted); line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="bar"><i id="barFill"></i></div>
+<div class="abs brand" id="brand"><img src="/assets/app-icon/icon-512.png" alt=""><b>قدراتي</b><span id="tag"></span></div>
+<div class="abs hook" id="hook"></div>
+<div class="abs name" id="name"></div>
+<div class="abs rule" id="rule"><span class="lab">القاعدة</span><div id="ruleRows"></div></div>
+<div class="abs ex" id="ex"><span class="lab">مثال</span><div id="exRows"></div><div class="ans"><b id="ans"></b></div></div>
+<div class="abs end" id="end"><img src="/assets/app-icon/icon-512.png" alt=""><h1>قدراتي</h1><div class="url">qudrati.xyz</div><p id="endLine"></p><p>مجاناً — بدون تسجيل</p></div>
+<script>
+/* *…* marks a term (a blue chip), as js/data/learn.js marks them; a line of `hook` starting with «!» is the stressed one */
+var SHORTS = {
+  square: { tag: "قدرات كمي", name: "مساحة المربع بالقطر",
+    hook: ["أعطاك قطر المربع", "وطلب المساحة؟", "!لا تحسب الضلع."],
+    rule: ["*المساحة* = *القطر* × *القطر* ÷ ٢"],
+    ex: ["القطر = ١٠", "١٠ × ١٠ = ١٠٠", "١٠٠ ÷ ٢ = ٥٠"], ans: "المساحة = ٥٠", end: "قوانين المربع وأسئلتها المحلولة" },
+  circle: { tag: "قدرات كمي", name: "محيط الدائرة ومساحتها",
+    hook: ["محيط الدائرة ومساحتها:", "مين فيهم التربيع", "!ومين الضرب في ٢؟"],
+    rule: ["*المحيط* = ٢ × ط × *نصف القطر*", "*المساحة* = ط × *نصف القطر^٢*"],
+    ex: ["نصف القطر = ٧", "المحيط = ٢ × ط × ٧ = ١٤ ط", "مساحة ٣٦ ط ← نصف القطر ٦"], ans: "ومحيطها = ١٢ ط", end: "كل قوانين الدائرة بأمثلتها" },
+  speed: { tag: "قدرات كمي", name: "مثلث فَزَع",
+    hook: ["اكتب ف فوق،", "و ز و ع تحت،", "!وغطِّ المطلوب بإصبعك."],
+    rule: ["*المسافة* = *السرعة* × *الزمن*", "*السرعة* = *المسافة* ÷ *الزمن*", "*الزمن* = *المسافة* ÷ *السرعة*"],
+    ex: ["السرعة ٨٠ كم في الساعة", "الزمن ٣ ساعات", "٨٠ × ٣ = ٢٤٠"], ans: "المسافة = ٢٤٠ كم", end: "السرعة والمسافة والزمن بأسئلتها" },
+  squares: { tag: "قدرات كمي", name: "الفرق بين مربعين",
+    hook: ["مربع ١٠٥", "ناقص مربع ٩٥", "!بدون ورقة؟"],
+    rule: ["*فرق المربعين* = *الفرق* × *المجموع*"],
+    ex: ["الفرق = ١٠٥ − ٩٥ = ١٠", "المجموع = ١٠٥ + ٩٥ = ٢٠٠", "١٠ × ٢٠٠"], ans: "الناتج = ٢٠٠٠", end: "الفرق بين مربعين والمربع الكامل" },
+  powers: { tag: "قدرات كمي", name: "الأسس المشهورة",
+    hook: ["شفت ٦٤ في السؤال؟", "لا تحسبها.", "!احفظها."],
+    rule: ["*٦٤* = ٢^٦ = ٤^٣ = ٨^٢", "*٨١* = ٣^٤ = ٩^٢"],
+    ex: ["٢^س = ٦٤", "٦٤ = ٢^٦", "الأساس نفسه ← الأس نفسه"], ans: "س = ٦", end: "جدول الأسس المشهورة كاملاً" },
+  proportion: { tag: "قدرات كمي", name: "التناسب الطردي",
+    hook: ["تزيد هذه فتزيد تلك؟", "!طردي.", "اضرب قطرياً واقسم."],
+    rule: ["*المجهول* =", "*ضرب القطرين* ÷ *العدد الثالث*"],
+    ex: ["٤٥ علبة في ٣ دقائق", "كم علبة في ١٢ دقيقة؟", "( ٤٥ × ١٢ ) ÷ ٣"], ans: "= ١٨٠ علبة", end: "التناسب الطردي والعكسي بأسئلته" }
+};
+var Q = new URLSearchParams(location.search), S = SHORTS[Q.get("id")] || SHORTS.square;
+var $ = function (id) { return document.getElementById(id); };
+var esc = function (s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;"); };
+var OPS = /^[=×÷+−←()]$/;
+/* a line as tokens: a *term* is one chip however many words it has; a sign stands alone; ٢^٦ is drawn raised */
+function tokens(line) {
+  var out = [], re = /\*([^*]+)\*|(\S+)/g, m;
+  while ((m = re.exec(line))) out.push(m[1] ? { chip: 1, t: m[1] } : { op: OPS.test(m[2]), t: m[2] });
+  return out;
+}
+function rowHtml(line) {
+  return '<div class="row">' + tokens(line).map(function (k) {
+    var t = esc(k.t).replace(/\^(\S+)/g, "<sup>$1</sup>");
+    return '<span class="tk' + (k.chip ? " chip" : k.op ? " op" : "") + '">' + t + "</span>";
+  }).join("") + "</div>";
+}
+$("tag").textContent = S.tag; $("name").textContent = S.name; $("ans").textContent = S.ans; $("endLine").textContent = S.end;
+$("hook").innerHTML = S.hook.map(function (h) { return h[0] === "!" ? '<div class="em">' + esc(h.slice(1)) + "</div>" : "<div>" + esc(h) + "</div>"; }).join("");
+$("ruleRows").innerHTML = S.rule.map(rowHtml).join("");
+$("exRows").innerHTML = S.ex.map(rowHtml).join("");
+
+/* ---- the timeline: every moment is a number of seconds, worked out from how much there is to say */
+var clamp = function (x) { return x < 0 ? 0 : x > 1 ? 1 : x; };
+var outCubic = function (p) { return 1 - Math.pow(1 - p, 3); };
+var outBack = function (p) { var c = 1.7; return 1 + (c + 1) * Math.pow(p - 1, 3) + c * Math.pow(p - 1, 2); };
+var A = [];                                   // { el, t0, kind } entrances; { el, t1 } exits
+function enter(el, t0, kind) { A.push({ el: el, t0: t0, kind: kind || "rise" }); }
+function leave(el, t1) { A.push({ el: el, t1: t1 }); }
+var t = 0.3;
+enter($("brand"), 0.15);
+var hookLines = [].slice.call($("hook").children);
+hookLines.forEach(function (d, i) { enter(d, t, "pop"); t += 0.85; });
+t += 1.5; var tHookOut = t; leave($("hook"), tHookOut); t += 0.35;
+enter($("name"), t); enter($("rule"), t + 0.15, "pop"); t += 0.75;
+var chips = [];
+[].slice.call($("ruleRows").querySelectorAll(".row")).forEach(function (row) {
+  [].slice.call(row.children).forEach(function (k) { enter(k, t, "rise"); if (k.classList.contains("chip")) chips.push(k); t += 0.16; });
+  t += 0.35;
+});
+t += 0.3; chips.forEach(function (k) { k._lit = t; t += 0.42; });
+t += 1.2; var tEx = t;
+enter($("ex"), tEx, "pop"); t += 0.7;
+[].slice.call($("exRows").querySelectorAll(".row")).forEach(function (row) { enter(row, t, "rise"); t += 1.25; });
+enter($("ans").parentNode, t, "pop"); var tAns = t; t += 2.3;
+var tEnd = t; ["name", "rule", "ex"].forEach(function (id) { leave($(id), tEnd); });
+t += 0.35; enter($("end"), t, "pop"); t += 3.0;
+window.DUR = Math.ceil(t * 10) / 10;
+
+/* every line is one line: a row too wide for its card comes down a size until it fits. Then the name, the rule and
+   the example are stacked and centred in the part of the frame the apps leave clear */
+function place() {
+  [].forEach.call(document.querySelectorAll("#ruleRows .row, #exRows .row"), function (row) {
+    var size = parseFloat(getComputedStyle(row).fontSize);
+    while (row.scrollWidth > row.clientWidth + 1 && size > 34) { size -= 2; row.style.fontSize = size + "px"; }
+  });
+  var rule = $("rule"), ex = $("ex"), total = 140 + rule.offsetHeight + 50 + ex.offsetHeight;
+  var top0 = Math.max(300, Math.round(290 + (1290 - total) / 2));
+  $("name").style.top = top0 + "px"; rule.style.top = (top0 + 140) + "px"; ex.style.top = (top0 + 190 + rule.offsetHeight) + "px";
+}
+
+window.render = function (now) {
+  A.forEach(function (a) {
+    var el = a.el;
+    if (a.t1 != null) { el._out = clamp((now - a.t1) / 0.3); return; }
+    var p = clamp((now - a.t0) / (a.kind === "pop" ? 0.5 : 0.42));
+    el._in = p; el._kind = a.kind;
+  });
+  A.forEach(function (a) {
+    var el = a.el, p = el._in == null ? 1 : el._in, o = el._out || 0;
+    var op = Math.min(1, p * 2.2) * (1 - o), tr = "";
+    if (el._kind === "pop") tr = "scale(" + (0.72 + 0.28 * outBack(p)).toFixed(4) + ")";
+    else tr = "translateY(" + ((1 - outCubic(p)) * 46).toFixed(2) + "px)";
+    if (o) tr += " translateY(" + (-40 * o).toFixed(2) + "px)";
+    el.style.opacity = op.toFixed(3); el.style.transform = tr;
+  });
+  chips.forEach(function (k) {
+    var on = now >= k._lit, q = clamp((now - k._lit) / 0.36);
+    k.classList.toggle("on", on);
+    if (on && k._in >= 1) k.style.transform = "scale(" + (1 + 0.14 * Math.sin(Math.PI * q)).toFixed(4) + ")";
+  });
+  var q = clamp((now - tAns) / 0.5);
+  if (now >= tAns) $("ans").style.transform = "scale(" + (1 + 0.1 * Math.sin(Math.PI * q)).toFixed(4) + ")";
+  $("barFill").style.transform = "scaleX(" + clamp(now / window.DUR).toFixed(4) + ")";
+};
+
+window.READY = (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(function () {
+  return Promise.all([].map.call(document.images, function (im) { return im.complete ? 0 : new Promise(function (r) { im.onload = im.onerror = r; }); }));
+}).then(function () { place(); window.render(0); return window.DUR; });
+
+/* by hand: ?t= holds a frame, otherwise it plays and loops */
+if (!Q.has("rec")) window.READY.then(function () {
+  if (Q.has("t")) return window.render(+Q.get("t"));
+  var s = performance.now();
+  (function tick() { var x = ((performance.now() - s) / 1000) % (window.DUR + 1); window.render(x); requestAnimationFrame(tick); })();
+});
+</script>
+</body>
+</html>
